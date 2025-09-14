@@ -1,0 +1,14 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text;
+global using System.Threading.Tasks;
+global using MoralesLarios.OOFP.Helpers;
+global using static MoralesLarios.OOFP.Helpers.Constants;
+global using Microsoft.AspNetCore.Mvc;
+global using MoralesLarios.OOFP.Types;
+global using MoralesLarios.OOFP.Types.Errors;
+global using MoralesLarios.OOFP.ValueObjects;
+global using Microsoft.AspNetCore.Http;
+global using MoralesLarios.OOFP.Helpers.Extensions;
+global using MoralesLarios.OOFP.Internals.Info;

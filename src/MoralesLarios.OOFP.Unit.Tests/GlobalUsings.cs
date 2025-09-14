@@ -1,0 +1,16 @@
+global using AutoFixture;
+global using AutoFixture.AutoMoq;
+global using FluentAssertions;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Moq;
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text;
+global using System.Threading.Tasks;
+global using Xunit;
+global using MoralesLarios.OOFP.Helpers;
+global using MoralesLarios.OOFP.Helpers.Extensions;
+global using MoralesLarios.OOFP.Types;
+global using static MoralesLarios.OOFP.Helpers.Constants;

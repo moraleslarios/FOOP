@@ -1,0 +1,286 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34622.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP", "MoralesLarios.FOOP\MoralesLarios.OOFP.csproj", "{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Extensions.Loggers", "MoralesLarios.OOFP.Extensions.Loggers\MoralesLarios.OOFP.Extensions.Loggers.csproj", "{5BB633B9-8B3F-4A58-B3FE-82559BE792EF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EFCore", "MoralesLarios.OOFP.EFCore\MoralesLarios.OOFP.EFCore.csproj", "{716DE563-4802-4DFF-946A-41C63EBE49EF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EFCore.Integration.Tests", "MoralesLarios.OOFP.EFCore.Integration.Tests\MoralesLarios.OOFP.EFCore.Integration.Tests.csproj", "{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Unit.Tests", "MoralesLarios.OOFP.Unit.Tests\MoralesLarios.OOFP.Unit.Tests.csproj", "{EE89C980-EFE8-4239-8716-0211019190CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Extensions.Loggers.Console.Tests", "MoralesLarios.OOFP.Extensions.Loggers.Console.Tests\MoralesLarios.OOFP.Extensions.Loggers.Console.Tests.csproj", "{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation", "MoralesLarios.OOFP.Validation\MoralesLarios.OOFP.Validation.csproj", "{43AE87C0-2DDA-4A9B-93F7-CB425094FB53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.Dataannotations", "MoralesLarios.OOFP.Validation.Dataannotations\MoralesLarios.OOFP.Validation.Dataannotations.csproj", "{4934EE81-D911-4BDD-8FDB-90C74C6E2B26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit", "MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit\MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit.csproj", "{C3202EAA-F3EF-4172-9695-52C24283CAC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.FluentValidations", "MoralesLarios.OOFP.Validation.FluentValidations\MoralesLarios.OOFP.Validation.FluentValidations.csproj", "{316C2157-1246-4F8A-A4D6-D265CD37CFB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit", "MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit\MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit.csproj", "{4D2261EB-D834-406C-B983-6A0CCBDEC690}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebApi", "MoralesLarios.OOFP.WebApi\MoralesLarios.OOFP.WebApi.csproj", "{453CD9D8-7490-4A14-AD99-D02E71093A2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Utilities", "MoralesLarios.OOFP.Utilities\MoralesLarios.OOFP.Utilities.csproj", "{21346E0E-1C6C-4D3E-9694-2C04DDF8EDC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Utilities.Tests.Unit", "MoralesLarios.OOFP.Utilities.Tests.Unit\MoralesLarios.OOFP.Utilities.Tests.Unit.csproj", "{82BB9E3A-F775-4F64-9DB3-2284B68A529A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects", "MoralesLarios.OOFP.ValueObjects\MoralesLarios.OOFP.ValueObjects.csproj", "{FF0AFBDD-FEB3-4A08-86FA-A139D9859481}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "MoralesLarios.OOFP.ValueObjects.Tests.Unit\MoralesLarios.OOFP.ValueObjects.Tests.Unit.csproj", "{B23C5B79-C25D-4379-8BF6-68E490490039}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.HttpClients", "MoralesLarios.OOFP.HttpClients\MoralesLarios.OOFP.HttpClients.csproj", "{C565808B-15AC-4A19-A564-5D1142469F1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.HttpClients.Tests.Integration", "MoralesLarios.OOFP.HttpClients.Tests.Integration\MoralesLarios.OOFP.HttpClients.Tests.Integration.csproj", "{F720E251-B07E-4108-BBC6-FC1416D7700F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebApi.Tests.Unit", "MoralesLarios.OOFP.WebApi.Tests.Unit\MoralesLarios.OOFP.WebApi.Tests.Unit.csproj", "{05CD0A01-1C9E-4397-96DA-8E4CD42B3167}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.HttpClients.Tests.Unit", "MoralesLarios.OOFP.HttpClients.Tests.Unit\MoralesLarios.OOFP.HttpClients.Tests.Unit.csproj", "{394050A0-C3EE-47FF-9DD4-18BA663809A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Internals", "MoralesLarios.OOFP.Internals\MoralesLarios.OOFP.Internals.csproj", "{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.EFCore.WebApi", "MoralesLarios.OOFP.EFCore.WebApi\MoralesLarios.OOFP.EFCore.WebApi.csproj", "{A34FFF65-561B-4CD8-829A-F5B22406FE48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.IO", "MoralesLarios.OOFP.ValueObjects.IO\MoralesLarios.OOFP.ValueObjects.IO.csproj", "{503D8BEB-1FCA-B3BC-EBD8-540262455E24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.IO.Test.Unit", "MoralesLarios.OOFP.ValueObjects.IO.Test.Unit\MoralesLarios.OOFP.ValueObjects.IO.Test.Unit.csproj", "{EFD19A6F-537C-4406-91CE-1DEA8B84BD93}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.IO", "MoralesLarios.OOFP.IO\MoralesLarios.OOFP.IO.csproj", "{22464FE8-051B-4DAF-91BE-D3684D015FE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebServices", "MoralesLarios.OOFP.WebServices\MoralesLarios.OOFP.WebServices.csproj", "{E234A3DF-2111-469D-B0DC-EDB0FD8C14EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebServices.Tests.Unit", "MoralesLarios.OOFP.WebServices.Tests.Unit\MoralesLarios.OOFP.WebServices.Tests.Unit.csproj", "{6E585EFC-1785-411F-9DEB-36DF65185531}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebControllers", "MoralesLarios.OOFP.WebControllers\MoralesLarios.OOFP.WebControllers.csproj", "{1CE27521-6489-4443-B117-96F0F635492D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.EFCore.Infrastructure.Tests", "MoralesLarios.OOFP.EFCore.Infrastructure.Tests\MoralesLarios.OOFP.EFCore.Infrastructure.Tests.csproj", "{A2672982-BB4B-422C-962E-301DAB45ED3D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BB633B9-8B3F-4A58-B3FE-82559BE792EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BB633B9-8B3F-4A58-B3FE-82559BE792EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BB633B9-8B3F-4A58-B3FE-82559BE792EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BB633B9-8B3F-4A58-B3FE-82559BE792EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{716DE563-4802-4DFF-946A-41C63EBE49EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{716DE563-4802-4DFF-946A-41C63EBE49EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{716DE563-4802-4DFF-946A-41C63EBE49EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{716DE563-4802-4DFF-946A-41C63EBE49EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE89C980-EFE8-4239-8716-0211019190CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE89C980-EFE8-4239-8716-0211019190CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE89C980-EFE8-4239-8716-0211019190CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE89C980-EFE8-4239-8716-0211019190CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43AE87C0-2DDA-4A9B-93F7-CB425094FB53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43AE87C0-2DDA-4A9B-93F7-CB425094FB53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43AE87C0-2DDA-4A9B-93F7-CB425094FB53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43AE87C0-2DDA-4A9B-93F7-CB425094FB53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4934EE81-D911-4BDD-8FDB-90C74C6E2B26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4934EE81-D911-4BDD-8FDB-90C74C6E2B26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4934EE81-D911-4BDD-8FDB-90C74C6E2B26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4934EE81-D911-4BDD-8FDB-90C74C6E2B26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3202EAA-F3EF-4172-9695-52C24283CAC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3202EAA-F3EF-4172-9695-52C24283CAC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3202EAA-F3EF-4172-9695-52C24283CAC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3202EAA-F3EF-4172-9695-52C24283CAC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{316C2157-1246-4F8A-A4D6-D265CD37CFB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{316C2157-1246-4F8A-A4D6-D265CD37CFB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{316C2157-1246-4F8A-A4D6-D265CD37CFB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{316C2157-1246-4F8A-A4D6-D265CD37CFB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D2261EB-D834-406C-B983-6A0CCBDEC690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D2261EB-D834-406C-B983-6A0CCBDEC690}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D2261EB-D834-406C-B983-6A0CCBDEC690}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D2261EB-D834-406C-B983-6A0CCBDEC690}.Release|Any CPU.Build.0 = Release|Any CPU
+		{453CD9D8-7490-4A14-AD99-D02E71093A2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{453CD9D8-7490-4A14-AD99-D02E71093A2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{453CD9D8-7490-4A14-AD99-D02E71093A2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{453CD9D8-7490-4A14-AD99-D02E71093A2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21346E0E-1C6C-4D3E-9694-2C04DDF8EDC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21346E0E-1C6C-4D3E-9694-2C04DDF8EDC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21346E0E-1C6C-4D3E-9694-2C04DDF8EDC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21346E0E-1C6C-4D3E-9694-2C04DDF8EDC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82BB9E3A-F775-4F64-9DB3-2284B68A529A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82BB9E3A-F775-4F64-9DB3-2284B68A529A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82BB9E3A-F775-4F64-9DB3-2284B68A529A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82BB9E3A-F775-4F64-9DB3-2284B68A529A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF0AFBDD-FEB3-4A08-86FA-A139D9859481}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF0AFBDD-FEB3-4A08-86FA-A139D9859481}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF0AFBDD-FEB3-4A08-86FA-A139D9859481}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF0AFBDD-FEB3-4A08-86FA-A139D9859481}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B23C5B79-C25D-4379-8BF6-68E490490039}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B23C5B79-C25D-4379-8BF6-68E490490039}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B23C5B79-C25D-4379-8BF6-68E490490039}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B23C5B79-C25D-4379-8BF6-68E490490039}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C565808B-15AC-4A19-A564-5D1142469F1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C565808B-15AC-4A19-A564-5D1142469F1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C565808B-15AC-4A19-A564-5D1142469F1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C565808B-15AC-4A19-A564-5D1142469F1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F720E251-B07E-4108-BBC6-FC1416D7700F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F720E251-B07E-4108-BBC6-FC1416D7700F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F720E251-B07E-4108-BBC6-FC1416D7700F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F720E251-B07E-4108-BBC6-FC1416D7700F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05CD0A01-1C9E-4397-96DA-8E4CD42B3167}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05CD0A01-1C9E-4397-96DA-8E4CD42B3167}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05CD0A01-1C9E-4397-96DA-8E4CD42B3167}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05CD0A01-1C9E-4397-96DA-8E4CD42B3167}.Release|Any CPU.Build.0 = Release|Any CPU
+		{394050A0-C3EE-47FF-9DD4-18BA663809A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{394050A0-C3EE-47FF-9DD4-18BA663809A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{394050A0-C3EE-47FF-9DD4-18BA663809A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{394050A0-C3EE-47FF-9DD4-18BA663809A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A34FFF65-561B-4CD8-829A-F5B22406FE48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A34FFF65-561B-4CD8-829A-F5B22406FE48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A34FFF65-561B-4CD8-829A-F5B22406FE48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A34FFF65-561B-4CD8-829A-F5B22406FE48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{503D8BEB-1FCA-B3BC-EBD8-540262455E24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{503D8BEB-1FCA-B3BC-EBD8-540262455E24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{503D8BEB-1FCA-B3BC-EBD8-540262455E24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{503D8BEB-1FCA-B3BC-EBD8-540262455E24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFD19A6F-537C-4406-91CE-1DEA8B84BD93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFD19A6F-537C-4406-91CE-1DEA8B84BD93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFD19A6F-537C-4406-91CE-1DEA8B84BD93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFD19A6F-537C-4406-91CE-1DEA8B84BD93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22464FE8-051B-4DAF-91BE-D3684D015FE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22464FE8-051B-4DAF-91BE-D3684D015FE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22464FE8-051B-4DAF-91BE-D3684D015FE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22464FE8-051B-4DAF-91BE-D3684D015FE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E234A3DF-2111-469D-B0DC-EDB0FD8C14EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E234A3DF-2111-469D-B0DC-EDB0FD8C14EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E234A3DF-2111-469D-B0DC-EDB0FD8C14EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E234A3DF-2111-469D-B0DC-EDB0FD8C14EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E585EFC-1785-411F-9DEB-36DF65185531}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E585EFC-1785-411F-9DEB-36DF65185531}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E585EFC-1785-411F-9DEB-36DF65185531}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E585EFC-1785-411F-9DEB-36DF65185531}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CE27521-6489-4443-B117-96F0F635492D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CE27521-6489-4443-B117-96F0F635492D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CE27521-6489-4443-B117-96F0F635492D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CE27521-6489-4443-B117-96F0F635492D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2672982-BB4B-422C-962E-301DAB45ED3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2672982-BB4B-422C-962E-301DAB45ED3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2672982-BB4B-422C-962E-301DAB45ED3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2672982-BB4B-422C-962E-301DAB45ED3D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F47F40C7-1235-44A5-A60E-8DBBF0255CBA}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 30
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://moraleslarios.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = MoralesLarios.FOOP\\MoralesLarios.OOFP.csproj
+		SccProjectName1 = MoralesLarios.FOOP
+		SccLocalPath1 = MoralesLarios.FOOP
+		SccProjectUniqueName2 = MoralesLarios.OOFP.Extensions.Loggers\\MoralesLarios.OOFP.Extensions.Loggers.csproj
+		SccProjectName2 = MoralesLarios.OOFP.Extensions.Loggers
+		SccLocalPath2 = MoralesLarios.OOFP.Extensions.Loggers
+		SccProjectUniqueName3 = MoralesLarios.OOFP.EFCore\\MoralesLarios.OOFP.EFCore.csproj
+		SccProjectName3 = MoralesLarios.OOFP.EFCore
+		SccLocalPath3 = MoralesLarios.OOFP.EFCore
+		SccProjectUniqueName4 = MoralesLarios.OOFP.EFCore.Integration.Tests\\MoralesLarios.OOFP.EFCore.Integration.Tests.csproj
+		SccProjectName4 = MoralesLarios.OOFP.EFCore.Integration.Tests
+		SccLocalPath4 = MoralesLarios.OOFP.EFCore.Integration.Tests
+		SccProjectUniqueName5 = MoralesLarios.OOFP.Unit.Tests\\MoralesLarios.OOFP.Unit.Tests.csproj
+		SccProjectName5 = MoralesLarios.OOFP.Unit.Tests
+		SccLocalPath5 = MoralesLarios.OOFP.Unit.Tests
+		SccProjectUniqueName6 = MoralesLarios.OOFP.Extensions.Loggers.Console.Tests\\MoralesLarios.OOFP.Extensions.Loggers.Console.Tests.csproj
+		SccProjectName6 = MoralesLarios.OOFP.Extensions.Loggers.Console.Tests
+		SccLocalPath6 = MoralesLarios.OOFP.Extensions.Loggers.Console.Tests
+		SccProjectUniqueName7 = MoralesLarios.OOFP.Validation\\MoralesLarios.OOFP.Validation.csproj
+		SccProjectName7 = MoralesLarios.OOFP.Validation
+		SccLocalPath7 = MoralesLarios.OOFP.Validation
+		SccProjectUniqueName8 = MoralesLarios.OOFP.Validation.Dataannotations\\MoralesLarios.OOFP.Validation.Dataannotations.csproj
+		SccProjectName8 = MoralesLarios.OOFP.Validation.Dataannotations
+		SccLocalPath8 = MoralesLarios.OOFP.Validation.Dataannotations
+		SccProjectUniqueName9 = MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit\\MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit.csproj
+		SccProjectName9 = MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit
+		SccLocalPath9 = MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit
+		SccProjectUniqueName10 = MoralesLarios.OOFP.Validation.FluentValidations\\MoralesLarios.OOFP.Validation.FluentValidations.csproj
+		SccProjectName10 = MoralesLarios.OOFP.Validation.FluentValidations
+		SccLocalPath10 = MoralesLarios.OOFP.Validation.FluentValidations
+		SccProjectUniqueName11 = MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit\\MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit.csproj
+		SccProjectName11 = MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit
+		SccLocalPath11 = MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit
+		SccProjectUniqueName12 = MoralesLarios.OOFP.WebApi\\MoralesLarios.OOFP.WebApi.csproj
+		SccProjectName12 = MoralesLarios.OOFP.WebApi
+		SccLocalPath12 = MoralesLarios.OOFP.WebApi
+		SccProjectUniqueName13 = MoralesLarios.OOFP.Utilities\\MoralesLarios.OOFP.Utilities.csproj
+		SccProjectName13 = MoralesLarios.OOFP.Utilities
+		SccLocalPath13 = MoralesLarios.OOFP.Utilities
+		SccProjectUniqueName14 = MoralesLarios.OOFP.Utilities.Tests.Unit\\MoralesLarios.OOFP.Utilities.Tests.Unit.csproj
+		SccProjectName14 = MoralesLarios.OOFP.Utilities.Tests.Unit
+		SccLocalPath14 = MoralesLarios.OOFP.Utilities.Tests.Unit
+		SccProjectUniqueName15 = MoralesLarios.OOFP.ValueObjects\\MoralesLarios.OOFP.ValueObjects.csproj
+		SccProjectName15 = MoralesLarios.OOFP.ValueObjects
+		SccLocalPath15 = MoralesLarios.OOFP.ValueObjects
+		SccProjectUniqueName16 = MoralesLarios.OOFP.ValueObjects.Tests.Unit\\MoralesLarios.OOFP.ValueObjects.Tests.Unit.csproj
+		SccProjectName16 = MoralesLarios.OOFP.ValueObjects.Tests.Unit
+		SccLocalPath16 = MoralesLarios.OOFP.ValueObjects.Tests.Unit
+		SccProjectUniqueName17 = MoralesLarios.OOFP.HttpClients\\MoralesLarios.OOFP.HttpClients.csproj
+		SccProjectName17 = MoralesLarios.OOFP.HttpClients
+		SccLocalPath17 = MoralesLarios.OOFP.HttpClients
+		SccProjectUniqueName18 = MoralesLarios.OOFP.HttpClients.Tests.Integration\\MoralesLarios.OOFP.HttpClients.Tests.Integration.csproj
+		SccProjectName18 = MoralesLarios.OOFP.HttpClients.Tests.Integration
+		SccLocalPath18 = MoralesLarios.OOFP.HttpClients.Tests.Integration
+		SccProjectUniqueName19 = MoralesLarios.OOFP.WebApi.Tests.Unit\\MoralesLarios.OOFP.WebApi.Tests.Unit.csproj
+		SccProjectName19 = MoralesLarios.OOFP.WebApi.Tests.Unit
+		SccLocalPath19 = MoralesLarios.OOFP.WebApi.Tests.Unit
+		SccProjectUniqueName20 = MoralesLarios.OOFP.HttpClients.Tests.Unit\\MoralesLarios.OOFP.HttpClients.Tests.Unit.csproj
+		SccProjectName20 = MoralesLarios.OOFP.HttpClients.Tests.Unit
+		SccLocalPath20 = MoralesLarios.OOFP.HttpClients.Tests.Unit
+		SccProjectUniqueName21 = MoralesLarios.OOFP.Internals\\MoralesLarios.OOFP.Internals.csproj
+		SccProjectName21 = MoralesLarios.OOFP.Internals
+		SccLocalPath21 = MoralesLarios.OOFP.Internals
+		SccProjectUniqueName22 = MoralesLarios.OOFP.EFCore.WebApi\\MoralesLarios.OOFP.EFCore.WebApi.csproj
+		SccProjectName22 = MoralesLarios.OOFP.EFCore.WebApi
+		SccLocalPath22 = MoralesLarios.OOFP.EFCore.WebApi
+		SccProjectUniqueName23 = MoralesLarios.OOFP.ValueObjects.IO\\MoralesLarios.OOFP.ValueObjects.IO.csproj
+		SccProjectName23 = MoralesLarios.OOFP.ValueObjects.IO
+		SccLocalPath23 = MoralesLarios.OOFP.ValueObjects.IO
+		SccProjectUniqueName24 = MoralesLarios.OOFP.ValueObjects.IO.Test.Unit\\MoralesLarios.OOFP.ValueObjects.IO.Test.Unit.csproj
+		SccProjectName24 = MoralesLarios.OOFP.ValueObjects.IO.Test.Unit
+		SccLocalPath24 = MoralesLarios.OOFP.ValueObjects.IO.Test.Unit
+		SccProjectUniqueName25 = MoralesLarios.OOFP.IO\\MoralesLarios.OOFP.IO.csproj
+		SccProjectName25 = MoralesLarios.OOFP.IO
+		SccLocalPath25 = MoralesLarios.OOFP.IO
+		SccProjectUniqueName26 = MoralesLarios.OOFP.WebServices\\MoralesLarios.OOFP.WebServices.csproj
+		SccProjectName26 = MoralesLarios.OOFP.WebServices
+		SccLocalPath26 = MoralesLarios.OOFP.WebServices
+		SccProjectUniqueName27 = MoralesLarios.OOFP.WebServices.Tests.Unit\\MoralesLarios.OOFP.WebServices.Tests.Unit.csproj
+		SccProjectName27 = MoralesLarios.OOFP.WebServices.Tests.Unit
+		SccLocalPath27 = MoralesLarios.OOFP.WebServices.Tests.Unit
+		SccProjectUniqueName28 = MoralesLarios.OOFP.WebControllers\\MoralesLarios.OOFP.WebControllers.csproj
+		SccProjectName28 = MoralesLarios.OOFP.WebControllers
+		SccLocalPath28 = MoralesLarios.OOFP.WebControllers
+		SccProjectUniqueName29 = MoralesLarios.OOFP.EFCore.Infrastructure.Tests\\MoralesLarios.OOFP.EFCore.Infrastructure.Tests.csproj
+		SccProjectName29 = MoralesLarios.OOFP.EFCore.Infrastructure.Tests
+		SccLocalPath29 = MoralesLarios.OOFP.EFCore.Infrastructure.Tests
+	EndGlobalSection
+EndGlobal

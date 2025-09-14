@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<Version>1.0.2</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MoralesLarios.FOOP\MoralesLarios.OOFP.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.Extensions.Loggers\MoralesLarios.OOFP.Extensions.Loggers.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.Internals\MoralesLarios.OOFP.Internals.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.Validation.Dataannotations\MoralesLarios.OOFP.Validation.Dataannotations.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.Validation\MoralesLarios.OOFP.Validation.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.ValueObjects\MoralesLarios.OOFP.ValueObjects.csproj" />
+  </ItemGroup>
+
+</Project>

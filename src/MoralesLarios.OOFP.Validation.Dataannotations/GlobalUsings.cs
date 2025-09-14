@@ -1,0 +1,10 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text;
+global using System.Threading.Tasks;
+global using MoralesLarios.OOFP.Types;
+global using MoralesLarios.OOFP.Helpers;
+global using MoralesLarios.OOFP.Helpers.Extensions;
+global using System.ComponentModel.DataAnnotations;
+global using MoralesLarios.OOFP.Validation.Dataannotations.Helpers;

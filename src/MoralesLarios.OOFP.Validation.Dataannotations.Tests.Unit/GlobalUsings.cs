@@ -1,0 +1,15 @@
+global using AutoFixture;
+global using AutoFixture.AutoMoq;
+global using FluentAssertions;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Moq;
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text;
+global using System.Threading.Tasks;
+global using Xunit;
+global using MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit.Models;
+global using MoralesLarios.OOFP.Validation.Dataannotations.Helpers;
+global using MoralesLarios.OOFP.Types;
