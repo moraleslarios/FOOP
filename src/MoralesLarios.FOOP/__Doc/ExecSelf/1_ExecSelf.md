@@ -170,10 +170,9 @@ var result = GetUserData(userId)
 #### `ExecSelfAsync<T>()` - Todas las Combinaciones
 ```csharp
 // Ambas acciones asíncronas desde resultado síncrono
-public static async Task<MlResult<T>> ExecSelfAsync<T>(
-    this MlResult<T> source,
-    Func<T, Task> actionValidAsync,
-    Func<MlErrorsDetails, Task> actionFailAsync)
+public static async Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T>                 source,
+                                                            Func<T, Task>               actionValidAsync,
+                                                            Func<MlErrorsDetails, Task> actionFailAsync)
 
 // Ambas acciones asíncronas desde resultado asíncrono
 public static async Task<MlResult<T>> ExecSelfAsync<T>(
