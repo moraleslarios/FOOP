@@ -264,6 +264,9 @@ public static class MlResultActionsSeveral
 
 
 
+    #region Combine
+
+
     public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(this MlResult<TResult1> source, 
                                                                                                 TResult2           otherValue)
         => source.Match(
@@ -554,7 +557,7 @@ public static class MlResultActionsSeveral
 
 
 
-
+    #endregion
 
 
 
