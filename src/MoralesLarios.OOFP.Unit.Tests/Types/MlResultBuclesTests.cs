@@ -1,4 +1,6 @@
-﻿namespace MoralesLarios.OOFP.Unit.Tests.Types;
+﻿using System.Threading.Tasks;
+
+namespace MoralesLarios.OOFP.Unit.Tests.Types;
 public class MlResultBuclesTests
 {
 
@@ -159,7 +161,44 @@ public class MlResultBuclesTests
         resultValue.All(x => x.Date == DateTime.MinValue).Should().BeTrue();
     }
 
+    [Fact]
+    public void CompleteDataWhile_When_2_completeFuncTransformGenerateError_return_Fail_with_1_errors_Concat()
+    {
+        var IEnumerable = new List<TestType>
+        {
+            new TestType(1, "Name1", DateTime.Now),
+            new TestType(0, "Name2", DateTime.Now),
+            new TestType(0, "Name3", DateTime.Now)
+        };
 
+        MlResult<IEnumerable<TestType>> result = IEnumerable.CompleteDataWhile<TestType>(x => x.Id == 0 ?
+                                                                                         $"Error {x.Name}".ToMlResultFail<TestType>() :
+                                                                                         (x with { Date = DateTime.Now.AddYears(-1) }));
+
+        MlResult<IEnumerable<TestType>> expected = MlResult<IEnumerable<TestType>>.Fail("Error Name2");
+
+        result.Should().BeEquivalentTo(expected);
+    }
+
+
+    [Fact]
+    public async Task CompleteDataParallelAsync_differentResult_When_All_completeFuncTransforms_OK_return_valid_with_allElements_whit_correctTransform()
+    {
+        var IEnumerable = new List<TestType>
+        {
+            new TestType(1, "Name1", DateTime.Now),
+            new TestType(2, "Name2", DateTime.Now),
+            new TestType(3, "Name3", DateTime.Now)
+        };
+
+        MlResult<IEnumerable<TestType2>> result = await IEnumerable.CompleteDataParallelAsync(x => x.Id == 0 ?
+                                                                                              ($"Error {x.Name}".ToMlResultFailAsync<TestType2>()) :
+                                                                                              (new TestType2(x.Id, x.Name, DateTime.MinValue).ToMlResultValidAsync()));
+
+        var resultValue = result.Match(x => x, x => new List<TestType2>());
+
+        resultValue.All(x => x.Date == DateTime.MinValue).Should().BeTrue();
+    }
 
 }
 
