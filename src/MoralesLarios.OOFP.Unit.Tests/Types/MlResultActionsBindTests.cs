@@ -1525,7 +1525,7 @@ public class MlResultActionsBindTests
 
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
-        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id => 1.ToMlResultValid(),
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
                                                                            x_name => "Error".ToMlResultFail<string>(),
                                                                            x_date => date.ToMlResultValid(),
                                                                            x_date => date.ToMlResultValid());

@@ -2038,20 +2038,33 @@ public static class MlResultActionsBind
 
 
 
-    private static MlResult<IEnumerable<object>> ApplyValues<T>(MlResult<T> source,
-                                                                        IEnumerable<Func<T, MlResult<object>>> funcTransforms)
+    private static MlResult<IEnumerable<object>> ApplyValues<T>(MlResult<T>                            source,
+                                                                IEnumerable<Func<T, MlResult<object>>> funcTransforms)
     {
-        foreach (var f in funcTransforms)
-        {
-            var data = ApplyValue(f(source.SecureValidValue()));
-        }
-
-
-
         var result = source.Bind(value => funcTransforms.Select(func => ApplyValue(func(value)))
-                                                                .VerifiedEnumerableResultData());
+                                                            .VerifiedEnumerableResultData());
         return result;
     }
+
+    //private static MlResult<IEnumerable<object>> ApplyValuesWhile<T>(MlResult<T> source,
+    //                                                                 IEnumerable<Func<T, MlResult<object>>> funcTransforms)
+    //{
+    //    var result = source.Map(value =>
+    //                                {
+    //                                    List<MlResult<Object>> partialResult = [];
+
+    //                                    foreach (var func in funcTransforms)
+    //                                    {
+    //                                        var mlResult = ApplyValue(func(value));
+
+    //                                        partialResult.Add(mlResult);
+
+    //                                        if (mlResult.IsFail) break;
+    //                                    }
+    //                                    return partialResult;
+    //                                }).VerifiedEnumerableResultData();
+    //    return result;
+    //}
 
 
     private static MlResult<object> ApplyValue(MlResult<object> source)
