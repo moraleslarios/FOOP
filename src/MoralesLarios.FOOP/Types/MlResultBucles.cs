@@ -6,19 +6,20 @@ public static class MlResultBucles
                                                                 Func<T, MlResult<T>> completeFuncTransform)
     {
         var result = source.ToMlResultValid()
-                            .Bind(x =>
-                            {
-                                var partialData = x.Select(completeFuncTransform).ToList();
-
-                                var result = partialData.Any(x => x.IsFail) ?
-                                             FusionFailErros(partialData)   :
-                                             MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.Value));
-
-                                return result;
-                            });
+                            .Bind(x => completeFuncTransform.GestionCollection(x));
         return result;
     }
 
+    public static MlResult<IEnumerable<T>> GestionCollection<T>(this Func<T, MlResult<T>> completeFuncTransform, IEnumerable<T> x)
+    {
+        var partialData = x.Select(completeFuncTransform).ToList();
+
+        var result = partialData.Any(x => x.IsFail) ?
+                     FusionFailErros(partialData) :
+                     MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.Value));
+
+        return result;
+    }
 
     public static Task<MlResult<IEnumerable<T>>> CompleteDataAsync<T>(this IEnumerable<T> source,
                                                                            Func<T, MlResult<T>> completeFuncTransform)
@@ -149,7 +150,7 @@ public static class MlResultBucles
 
 
 
-    public static MlResult<IEnumerable<T>> CompleteDataWhile<T>(this IEnumerable<T> source,
+    public static MlResult<IEnumerable<T>> CompleteDataWhile<T>(this IEnumerable<T>       source,
                                                                      Func<T, MlResult<T>> completeFuncTransform)
     {
         var result = source.ToMlResultValid()
@@ -173,7 +174,7 @@ public static class MlResultBucles
         return result;
     }
 
-    public static Task<MlResult<IEnumerable<T>>> CompleteDataWhileAsync<T>(this IEnumerable<T> source,
+    public static Task<MlResult<IEnumerable<T>>> CompleteDataWhileAsync<T>(this IEnumerable<T>       source,
                                                                                 Func<T, MlResult<T>> completeFuncTransform)
         => source.CompleteDataWhile<T>(completeFuncTransform).ToAsync();
 
@@ -203,7 +204,7 @@ public static class MlResultBucles
         return result;
     }
 
-    public static async Task<MlResult<IEnumerable<T>>> CompleteDataWhileAsync<T>(this IEnumerable<T> source,
+    public static async Task<MlResult<IEnumerable<T>>> CompleteDataWhileAsync<T>(this IEnumerable<T>             source,
                                                                                       Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
@@ -227,7 +228,7 @@ public static class MlResultBucles
         return result;
     }
 
-    public static MlResult<IEnumerable<TResult>> CompleteDataWhile<T, TResult>(this IEnumerable<T> source,
+    public static MlResult<IEnumerable<TResult>> CompleteDataWhile<T, TResult>(this IEnumerable<T>             source,
                                                                                     Func<T, MlResult<TResult>> completeFuncTransform)
     {
         var result = source.ToMlResultValid()
@@ -251,11 +252,11 @@ public static class MlResultBucles
         return result;
     }
 
-    public static Task<MlResult<IEnumerable<TResult>>> CompleteDataWhileAsync<T, TResult>(this IEnumerable<T> source,
+    public static Task<MlResult<IEnumerable<TResult>>> CompleteDataWhileAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                                Func<T, MlResult<TResult>> completeFuncTransform)
         => source.CompleteDataWhile(completeFuncTransform).ToAsync();
 
-    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataWhileAsync<T, TResult>(this Task<IEnumerable<T>> sourceAsync,
+    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                      Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
@@ -281,7 +282,7 @@ public static class MlResultBucles
         return result;
     }
 
-    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataWhileAsync<T, TResult>(this IEnumerable<T> source,
+    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataWhileAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                      Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
@@ -306,7 +307,7 @@ public static class MlResultBucles
     }
 
 
-    public static async Task<MlResult<IEnumerable<T>>> CompleteDataParallelAsync<T>(this Task<IEnumerable<T>> sourceAsync,
+    public static async Task<MlResult<IEnumerable<T>>> CompleteDataParallelAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
                                                                                          Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
@@ -329,7 +330,7 @@ public static class MlResultBucles
         return result;
     }
 
-    public static async Task<MlResult<IEnumerable<T>>> CompleteDataParallelAsync<T>(this IEnumerable<T> source,
+    public static async Task<MlResult<IEnumerable<T>>> CompleteDataParallelAsync<T>(this IEnumerable<T>             source,
                                                                                          Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
@@ -350,7 +351,7 @@ public static class MlResultBucles
         return result;
     }
 
-    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataParallelAsync<T, TResult>(this Task<IEnumerable<T>> sourceAsync,
+    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataParallelAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                         Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
@@ -374,8 +375,8 @@ public static class MlResultBucles
     }
 
 
-    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataParallelAsync<T, TResult>(this IEnumerable<T> source,
-                                                                                                       Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+    public static async Task<MlResult<IEnumerable<TResult>>> CompleteDataParallelAsync<T, TResult>(this IEnumerable<T>                   source,
+                                                                                                        Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
                             .BindAsync(async colec =>
@@ -457,7 +458,10 @@ public static class MlResultBucles
 
 
 
-
+    public static MlResult<IEnumerable<T>> VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>> source)
+        => source.Any(x => x.IsFail) ?
+           FusionFailErros(source)   :
+           MlResult<IEnumerable<T>>.Valid(source.Select(x => x.Value));
 
 
 

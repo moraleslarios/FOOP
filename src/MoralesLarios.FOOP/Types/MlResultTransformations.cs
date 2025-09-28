@@ -1,4 +1,6 @@
 ﻿
+using System.Reflection;
+
 namespace MoralesLarios.OOFP.Types;
 public static class MlResultTransformations
 {
@@ -432,7 +434,7 @@ public static class MlResultTransformations
 
 
 
-
+        
 
     public static string BuildErrorMessage(string errorMessage, Exception ex)
         => string.IsNullOrWhiteSpace(errorMessage) ? errorMessage : DEFAULT_EX_ERROR_MESSAGE(ex);
@@ -489,7 +491,28 @@ public static class MlResultTransformations
 
 
 
+    public static object SecureToValueObject(this object source)
+    {
+        var properties = source.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 
+        var partialResult = MlResult.Empty()
+                                        .Map      ( _              => properties.FirstOrDefault(p => p.Name == "IsValid" && p.PropertyType == typeof(bool)))
+                                        .MapEnsure(isValidProperty => isValidProperty is not null,
+                                                    _              => "The encapsulated MlResult object does not have a property 'IsValid' of type bool. The type isn't MlResult.")
+                                        .Map      (isValidProperty => isValidProperty!.GetValue(source))
+                                        .MapEnsure(isValidObj      => isValidObj is bool,
+                                                    _              => "The 'IsValid' property is not of type bool")
+                                        .MapEnsure(isValid         => (bool)isValid!,
+                                                    _              => "The encapsulated MlResult object in obj, from which you want to extract the 'Value' property, is in a Fail state, so this information cannot be retrieved.")
+                                        .Map      ( _              => properties.FirstOrDefault(p => p.Name == "Value"))
+                                        .MapEnsure(valueProperty   => valueProperty is not null,
+                                                    _              => "The source object does not have a property 'Value'")
+                                        .Map      ( valueProperty  => valueProperty!.GetValue(source));
+
+        var result = partialResult.IsValid ? partialResult.Value : throw new ArgumentException(partialResult.ErrorsDetails.ToString());
+
+        return result;
+    }
 
 
 

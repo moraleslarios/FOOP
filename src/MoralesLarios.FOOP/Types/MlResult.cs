@@ -1,14 +1,10 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace MoralesLarios.OOFP.Types;
+﻿namespace MoralesLarios.OOFP.Types;
 
 
 public partial record MlResult
 {
     public static MlResult _  => new(default!);
     public static MlResult Discard  => _ ;
-
-    private string MyField;
     public static MlResult<T> Valid<T>(T t) => new(t);
 
     public static MlResult<T> Fail<T>(params MlError[]            errors)        => new(errors);

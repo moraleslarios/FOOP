@@ -1,8 +1,4 @@
-﻿using MoralesLarios.OOFP.Types.Errors;
-using System;
-using System.Text.RegularExpressions;
-
-namespace MoralesLarios.OOFP.Types;
+﻿namespace MoralesLarios.OOFP.Types;
 public static class MlResultActionsBind
 {
 
@@ -2013,7 +2009,62 @@ public static class MlResultActionsBind
     #endregion
 
 
+    #region BuindBuild
 
+    public static MlResult<TResult> BindBuild<T, TResult>(this   MlResult<T>                 source,
+                                                          params Func<T, MlResult<object>>[] funcArgs)
+    {
+        var result = EnsureFp.NotEmpty(funcArgs, $"The parameter {nameof(funcArgs)}, can't be empty.")
+                              .Bind     ( _                        => source)
+                              .TryBind  (func               : x    => ApplyValues(x, funcArgs), 
+                                         errorMessageBuilder: ex   => $"Unexpected error applying the functions in {nameof(BindBuild)}: {ex.Message}" )
+                              .TryMap   (func:                args => Activator.CreateInstance(typeof(TResult), args.ToArray())! ,
+                                         errorMessageBuilder: ex   => $"Unexpected error creating the instance of {typeof(TResult).Name} in {nameof(BindBuild)}. The instance must have the same parameters and in the same order as the constructor of the type {typeof(TResult).Name}, and these must be constructed with each of the calls to each element of the parameter {nameof(funcArgs)}: {ex.Message}" )
+                              .MapEnsure(partialResult             => partialResult is TResult,
+                                         errorDetailsResult:          $"The created instance is not of type {typeof(TResult).Name} in {nameof(BindBuild)}.")
+                              .Map      (partialResult             => (TResult)partialResult);
+        return result;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private static MlResult<IEnumerable<object>> ApplyValues<T>(MlResult<T> source,
+                                                                        IEnumerable<Func<T, MlResult<object>>> funcTransforms)
+    {
+        foreach (var f in funcTransforms)
+        {
+            var data = ApplyValue(f(source.SecureValidValue()));
+        }
+
+
+
+        var result = source.Bind(value => funcTransforms.Select(func => ApplyValue(func(value)))
+                                                                .VerifiedEnumerableResultData());
+        return result;
+    }
+
+
+    private static MlResult<object> ApplyValue(MlResult<object> source)
+    {
+        var result = source.BindIf<object, object>(condition: value => value.GetType().IsGenericType && value.GetType().GetGenericTypeDefinition() == typeof(MlResult<>),
+                                                   funcTrue : value => value.SecureToValueObject(),
+                                                   funcFalse: value => value);
+
+        return result;
+    }   
+
+
+    #endregion
 
 
 

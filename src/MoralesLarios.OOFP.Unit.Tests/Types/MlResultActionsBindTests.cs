@@ -1415,7 +1415,129 @@ public class MlResultActionsBindTests
 
     #endregion
 
-            
+
+
+    #region BuindBuild
+
+    [Fact]
+    public void BindBuild_sourceValid_returnValid()
+    {
+        MlResult<int> partialResult = 1;
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1,
+                                                                           x_name => "Name",
+                                                                           x_date => date);
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void BindBuild_sourceFail_returnFail()
+    {
+        MlResult<int> partialResult = "Error".ToMlResultFail<int>();
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1,
+                                                                           x_name => "Name",
+                                                                           x_date => date);
+        result.IsFail.Should().BeTrue();
+    }
+
+
+
+    [Fact]
+    public void BindBuild_sourceValid_allSimpleParams_allFuncValids_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1,
+                                                                           x_name => "Name",
+                                                                           x_date => date);
+
+        MlResult<TestType> expected = new TestType(1, "Name", date);
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+    [Fact]
+    public void BindBuild_sourceValid_allResultParams_allFuncValids_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1     .ToMlResultValid(),
+                                                                           x_name => "Name".ToMlResultValid(),
+                                                                           x_date => date  .ToMlResultValid());
+
+        MlResult<TestType> expected = new TestType(1, "Name", date);
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+    [Fact]
+    public void BindBuild_sourceValid_mixResultParams_allFuncValids_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1,
+                                                                           x_name => "Name".ToMlResultValid(),
+                                                                           x_date => date.ToMlResultValid());
+
+        MlResult<TestType> expected = new TestType(1, "Name", date);
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+    [Fact]
+    public void BindBuild_sourceValid_allResultParams_oneFuncFail_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
+                                                                           x_name => "Error".ToMlResultFail<string>(),
+                                                                           x_date => date.ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public void BindBuild_sourceValid_minusResultParams_oneFuncFail_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
+                                                                           x_name => "Error".ToMlResultFail<string>());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public void BindBuild_sourceValid_mayorResultParams_oneFuncFail_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = partialResult.BindBuild<int, TestType>(x_id => 1.ToMlResultValid(),
+                                                                           x_name => "Error".ToMlResultFail<string>(),
+                                                                           x_date => date.ToMlResultValid(),
+                                                                           x_date => date.ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+
+
+    #endregion
+
+
+
 
 
 
@@ -1449,4 +1571,7 @@ public class MlResultActionsBindTests
     private Task<MlResult<string>> BindTestMethodStringThrowExceptionAsync(int x)
         => BindTestMethodStringThrowException(x).ToAsync();
 }
+
+
+
 
