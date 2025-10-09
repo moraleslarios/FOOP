@@ -2009,70 +2009,70 @@ public static class MlResultActionsBind
     #endregion
 
 
-    #region BuindBuild
+    #region TryBindBuild
 
-    public static MlResult<TResult> BindBuild<T, TResult>(this   MlResult<T>                 source,
-                                                          params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalBindBuild<T, TResult>(false, funcArgs);
-
-
-    public static Task<MlResult<TResult>> BindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
-                                                                         params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalBindBuildSyncAsync<T, TResult>(false, funcArgs);
+    public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
+                                                             params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(false, funcArgs);
 
 
-    public static async Task<MlResult<TResult>> BindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
-                                                                               params Func<T, MlResult<object>>[] funcArgs)
-        => await sourceAsync.InternalBindBuildSyncAsync<T, TResult>(false, funcArgs);
-
-    public static async Task<MlResult<TResult>> BindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
-                                                                           params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
-        => await sourceAsync.InternalBindBuildAsync<T, TResult>(false, funcArgsAsync);
+    public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                            params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(false, funcArgs);
 
 
+    public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                  params Func<T, MlResult<object>>[] funcArgs)
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, funcArgs);
+
+    public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
+                                                                              params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, funcArgsAsync);
 
 
 
-    private static MlResult<TResult> InternalBindBuild<T, TResult>(this   MlResult<T>                 source,
-                                                                          bool                        breakInError,
-                                                                   params Func<T, MlResult<object>>[] funcArgs)
+
+
+    private static MlResult<TResult> InternalTryBindBuild<T, TResult>(this   MlResult<T>                 source,
+                                                                             bool                        breakInError,
+                                                                      params Func<T, MlResult<object>>[] funcArgs)
     {
         var result = EnsureFp.NotEmpty(funcArgs, $"The parameter {nameof(funcArgs)}, can't be empty.")
                               .Bind     ( _                        => source)
                               .TryBind  (func               : x    => ApplyValues(x, funcArgs, breakInError), 
-                                         errorMessageBuilder: ex   => $"Unexpected error applying the functions in {nameof(BindBuild)}: {ex.Message}" )
+                                         errorMessageBuilder: ex   => $"Unexpected error applying the functions in {nameof(TryBindBuild)}: {ex.Message}" )
                               .TryMap   (func:                args => Activator.CreateInstance(typeof(TResult), args.ToArray())! ,
-                                         errorMessageBuilder: ex   => $"Unexpected error creating the instance of {typeof(TResult).Name} in {nameof(BindBuild)}. The instance must have the same parameters and in the same order as the constructor of the type {typeof(TResult).Name}, and these must be constructed with each of the calls to each element of the parameter {nameof(funcArgs)}: {ex.Message}" )
+                                         errorMessageBuilder: ex   => $"Unexpected error creating the instance of {typeof(TResult).Name} in {nameof(TryBindBuild)}. The instance must have the same parameters and in the same order as the constructor of the type {typeof(TResult).Name}, and these must be constructed with each of the calls to each element of the parameter {nameof(funcArgs)}: {ex.Message}" )
                               .MapEnsure(partialResult             => partialResult is TResult,
-                                         errorDetailsResult:          $"The created instance is not of type {typeof(TResult).Name} in {nameof(BindBuild)}.")
+                                         errorDetailsResult:          $"The created instance is not of type {typeof(TResult).Name} in {nameof(TryBindBuild)}.")
                               .Map      (partialResult             => (TResult)partialResult);
         return result;
     }
 
 
-    private static Task<MlResult<TResult>> InternalBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
-                                                                                         bool                        breakInError,
-                                                                                  params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalBindBuild<T, TResult>(breakInError, funcArgs).ToAsync();
+    private static Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                                            bool                        breakInError,
+                                                                                     params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(breakInError, funcArgs).ToAsync();
 
 
-    private static async Task<MlResult<TResult>> InternalBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
-                                                                                               bool                        breakInError,
-                                                                                        params Func<T, MlResult<object>>[] funcArgs)
-        => await (await sourceAsync).InternalBindBuildSyncAsync<T, TResult>(breakInError, funcArgs);
+    private static async Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                                  bool                        breakInError,
+                                                                                           params Func<T, MlResult<object>>[] funcArgs)
+        => await (await sourceAsync).InternalTryBindBuildSyncAsync<T, TResult>(breakInError, funcArgs);
 
-    private static async Task<MlResult<TResult>> InternalBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
-                                                                                           bool                              breakInError,
-                                                                                    params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
+    private static async Task<MlResult<TResult>> InternalTryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
+                                                                                              bool                              breakInError,
+                                                                                       params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
     {
         var result = await EnsureFp.NotEmptyAsync(funcArgsAsync, $"The parameter {nameof(funcArgsAsync)}, can't be empty.")
                       .BindAsync     ( _                        => sourceAsync)
                       .TryBindAsync  (funcAsync          : x    => ApplyValuesAsync(x, funcArgsAsync, breakInError),
-                                      errorMessageBuilder: ex   => $"Unexpected error applying the functions in {nameof(BindBuild)}: {ex.Message}")
+                                      errorMessageBuilder: ex   => $"Unexpected error applying the functions in {nameof(TryBindBuild)}: {ex.Message}")
                       .TryMapAsync   (func               : args => Activator.CreateInstance(typeof(TResult), args.ToArray())!,
-                                      errorMessageBuilder: ex   => $"Unexpected error creating the instance of {typeof(TResult).Name} in {nameof(BindBuild)}. The instance must have the same parameters and in the same order as the constructor of the type {typeof(TResult).Name}, and these must be constructed with each of the calls to each element of the parameter {nameof(funcArgsAsync)}: {ex.Message}")
+                                      errorMessageBuilder: ex   => $"Unexpected error creating the instance of {typeof(TResult).Name} in {nameof(TryBindBuild)}. The instance must have the same parameters and in the same order as the constructor of the type {typeof(TResult).Name}, and these must be constructed with each of the calls to each element of the parameter {nameof(funcArgsAsync)}: {ex.Message}")
                       .MapEnsureAsync(partialResult             => partialResult is TResult,
-                                      errorDetailsResult:          $"The created instance is not of type {typeof(TResult).Name} in {nameof(BindBuild)}.")
+                                      errorDetailsResult:          $"The created instance is not of type {typeof(TResult).Name} in {nameof(TryBindBuild)}.")
                       .MapAsync      (partialResult             => (TResult)partialResult);
         return result;
     }
@@ -2082,27 +2082,26 @@ public static class MlResultActionsBind
     #endregion
 
 
-
-    #region BuindBuildWhile
-
-
-        public static MlResult<TResult> BindBuildWhile<T, TResult>(this   MlResult<T>                 source,
-                                                                   params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalBindBuild<T, TResult>(true, funcArgs);
+    #region TryBindBuildWhile
 
 
-    public static Task<MlResult<TResult>> BindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
-                                                                          params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalBindBuildSyncAsync<T, TResult>(true, funcArgs);
+        public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
+                                                                      params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(true, funcArgs);
 
 
-    public static async Task<MlResult<TResult>> BindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
-                                                                                params Func<T, MlResult<object>>[] funcArgs)
-        => await sourceAsync.InternalBindBuildSyncAsync<T, TResult>(true, funcArgs);
+    public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                             params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(true, funcArgs);
 
-    public static async Task<MlResult<TResult>> BindBuildWhileAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
-                                                                                params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
-        => await sourceAsync.InternalBindBuildAsync<T, TResult>(true, funcArgsAsync);
+
+    public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                   params Func<T, MlResult<object>>[] funcArgs)
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, funcArgs);
+
+    public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
+                                                                                   params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, funcArgsAsync);
 
 
 
@@ -2166,28 +2165,6 @@ public static class MlResultActionsBind
                                                             });
         return result;
     }
-
-
-    //private static MlResult<IEnumerable<object>> ApplyValuesWhile<T>(MlResult<T> source,
-    //                                                                 IEnumerable<Func<T, MlResult<object>>> funcTransforms)
-    //{
-    //    var result = source.Map(value =>
-    //                                {
-    //                                    List<MlResult<Object>> partialResult = [];
-
-    //                                    foreach (var func in funcTransforms)
-    //                                    {
-    //                                        var mlResult = ApplyValue(func(value));
-
-    //                                        partialResult.Add(mlResult);
-
-    //                                        if (mlResult.IsFail) break;
-    //                                    }
-    //                                    return partialResult;
-    //                                }).VerifiedEnumerableResultData();
-    //    return result;
-    //}
-
 
     private static MlResult<object> ApplyValue(MlResult<object> source)
     {
