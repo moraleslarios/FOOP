@@ -14,3 +14,4 @@ global using MoralesLarios.OOFP.Helpers;
 global using MoralesLarios.OOFP.Helpers.Extensions;
 global using MoralesLarios.OOFP.Types;
 global using static MoralesLarios.OOFP.Helpers.Constants;
+global using MoralesLarios.OOFP.Types.Errors;

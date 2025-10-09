@@ -491,7 +491,7 @@ public static class MlResultTransformations
 
 
 
-    public static object SecureToValueObject(this object source)
+    public static object SecureGetValueFromMlResultBoxed(this object source)
     {
         var properties = source.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 
@@ -511,10 +511,29 @@ public static class MlResultTransformations
 
         var result = partialResult.IsValid ? partialResult.Value : throw new ArgumentException(partialResult.ErrorsDetails.ToString());
 
-        return result;
+        return result!;
     }
 
+    public static Task<object> SecureGetValueFromMlResultBoxedAsync(this object source)
+        => source.SecureGetValueFromMlResultBoxed().ToAsync();
 
+    public static async Task<object> SecureGetValueFromMlResultBoxedAsync(this Task<object> sourceAsync)
+        => await (await sourceAsync).SecureGetValueFromMlResultBoxedAsync();
+
+
+    public static MlResult<object> ToMlResultObject<T>(this MlResult<T> source)
+    {
+        var result = source.Match(
+                            fail: errorDetails => errorDetails.ToMlResultFail<object>(),
+                            valid: value => ((object)value).ToMlResultValid<object>()
+                        );
+        return result;
+    }
+    public static Task<MlResult<object>> ToMlResultObjectAsync<T>(this MlResult<T> source)
+        => source.ToMlResultObject<T>().ToAsync();
+
+    public static async Task<MlResult<object>> ToMlResultObjectAsync<T>(this Task<MlResult<T>> sourceAsync)
+        => await (await sourceAsync).ToMlResultObjectAsync<T>();
 
 
 

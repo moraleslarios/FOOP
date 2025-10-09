@@ -8,7 +8,7 @@ public class MlResultTransformationsTests
     {
         object source = new TestType(1, "hi", DateTime.Today);
 
-        Action act = () => source.SecureToValueObject();
+        Action act = () => source.SecureGetValueFromMlResultBoxed();
 
         act.Should().Throw<ArgumentException>();
     }
@@ -18,7 +18,7 @@ public class MlResultTransformationsTests
     {
         object source = 1.ToMlResultValid();
 
-        object result = source.SecureToValueObject();
+        object result = source.SecureGetValueFromMlResultBoxed();
 
         object expected = 1;
 
