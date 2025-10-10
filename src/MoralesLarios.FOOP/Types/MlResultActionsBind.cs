@@ -2013,66 +2013,125 @@ public static class MlResultActionsBind
 
     public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
                                                              params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuild<T, TResult>(false, funcArgs);
+        => source.InternalTryBindBuild<T, TResult>(false, errorMessageBuilder: null!, funcArgs: funcArgs);
+
+    public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
+                                                                    Func<Exception, string>     errorMessageBuilder,
+                                                             params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(false, errorMessageBuilder, funcArgs);
+
+    public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
+                                                                    string                      exceptionAditionalMessage,
+                                                             params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(false, exceptionAditionalMessage, funcArgs);
 
 
     public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
                                                                             params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuildSyncAsync<T, TResult>(false, funcArgs);
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder: null!, funcArgs: funcArgs);
 
+    public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                                   Func<Exception, string>     errorMessageBuilder,
+                                                                            params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder, funcArgs);
+
+    public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                                   string                      exceptionAditionalMessage,
+                                                                            params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAditionalMessage, funcArgs);
 
     public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                   params Func<T, MlResult<object>>[] funcArgs)
-        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, funcArgs);
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder: null!, funcArgs: funcArgs);
+
+    public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                         Func<Exception, string>     errorMessageBuilder,
+                                                                                  params Func<T, MlResult<object>>[] funcArgs)
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder, funcArgs);
+
+        public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                             string                      exceptionAditionalMessage,
+                                                                                      params Func<T, MlResult<object>>[] funcArgs)
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAditionalMessage, funcArgs);
 
     public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                               params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
-        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, funcArgsAsync);
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, errorMessageBuilder: null!, funcArgsAsync: funcArgsAsync);
 
+    public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
+                                                                                     Func<Exception, string>           errorMessageBuilder,
+                                                                              params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, errorMessageBuilder, funcArgsAsync);
 
+    public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
+                                                                                     string                            exceptionAditionalMessage,
+                                                                              params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, ex => exceptionAditionalMessage, funcArgsAsync);
 
 
 
     private static MlResult<TResult> InternalTryBindBuild<T, TResult>(this   MlResult<T>                 source,
                                                                              bool                        breakInError,
+                                                                             Func<Exception, string>     errorMessageBuilder = null!,
                                                                       params Func<T, MlResult<object>>[] funcArgs)
     {
         var result = EnsureFp.NotEmpty(funcArgs, $"The parameter {nameof(funcArgs)}, can't be empty.")
                               .Bind     ( _                        => source)
                               .TryBind  (func               : x    => ApplyValues(x, funcArgs, breakInError), 
-                                         errorMessageBuilder: ex   => $"Unexpected error applying the functions in {nameof(TryBindBuild)}: {ex.Message}" )
+                                         errorMessageBuilder: ex   => CreatePartialErrorMessage(ex,$"Unexpected error applying the functions in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
                               .TryMap   (func:                args => Activator.CreateInstance(typeof(TResult), args.ToArray())! ,
                                          errorMessageBuilder: ex   => $"Unexpected error creating the instance of {typeof(TResult).Name} in {nameof(TryBindBuild)}. The instance must have the same parameters and in the same order as the constructor of the type {typeof(TResult).Name}, and these must be constructed with each of the calls to each element of the parameter {nameof(funcArgs)}: {ex.Message}" )
                               .MapEnsure(partialResult             => partialResult is TResult,
-                                         errorDetailsResult:          $"The created instance is not of type {typeof(TResult).Name} in {nameof(TryBindBuild)}.")
+                                         errorDetailsResult:          CreatePartialErrorMessage(new Exception(), $"The created instance is not of type {typeof(TResult).Name} in {nameof(TryBindBuild)}.", errorMessageBuilder))
                               .Map      (partialResult             => (TResult)partialResult);
         return result;
     }
 
+        private static MlResult<TResult> InternalTryBindBuild<T, TResult>(this   MlResult<T>                 source,
+                                                                                 bool                        breakInError,
+                                                                                 string                      exceptionAditionalMessage,
+                                                                          params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(breakInError, ex => exceptionAditionalMessage, funcArgs);
+
 
     private static Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
                                                                                             bool                        breakInError,
+                                                                                            Func<Exception, string>     errorMessageBuilder = null!,
                                                                                      params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuild<T, TResult>(breakInError, funcArgs).ToAsync();
+        => source.InternalTryBindBuild<T, TResult>(breakInError, errorMessageBuilder, funcArgs).ToAsync();
+
+    private static Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                                            bool                        breakInError,
+                                                                                            string                      exceptionAditionalMessage,
+                                                                                     params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(breakInError, exceptionAditionalMessage, funcArgs).ToAsync();
 
 
     private static async Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                                   bool                        breakInError,
+                                                                                                  Func<Exception, string>     errorMessageBuilder = null!,
                                                                                            params Func<T, MlResult<object>>[] funcArgs)
-        => await (await sourceAsync).InternalTryBindBuildSyncAsync<T, TResult>(breakInError, funcArgs);
+        => await (await sourceAsync).InternalTryBindBuildSyncAsync<T, TResult>(breakInError, errorMessageBuilder, funcArgs);
+
+    private static async Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                                  bool                        breakInError,
+                                                                                                  string                      exceptionAditionalMessage,
+                                                                                           params Func<T, MlResult<object>>[] funcArgs)
+        => await (await sourceAsync).InternalTryBindBuildSyncAsync<T, TResult>(breakInError, exceptionAditionalMessage, funcArgs);
 
     private static async Task<MlResult<TResult>> InternalTryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                               bool                              breakInError,
+                                                                                              Func<Exception, string>           errorMessageBuilder = null!,
                                                                                        params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
     {
         var result = await EnsureFp.NotEmptyAsync(funcArgsAsync, $"The parameter {nameof(funcArgsAsync)}, can't be empty.")
                       .BindAsync     ( _                        => sourceAsync)
                       .TryBindAsync  (funcAsync          : x    => ApplyValuesAsync(x, funcArgsAsync, breakInError),
-                                      errorMessageBuilder: ex   => $"Unexpected error applying the functions in {nameof(TryBindBuild)}: {ex.Message}")
+                                      errorMessageBuilder: ex   => CreatePartialErrorMessage(ex, $"Unexpected error applying the functions in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
                       .TryMapAsync   (func               : args => Activator.CreateInstance(typeof(TResult), args.ToArray())!,
                                       errorMessageBuilder: ex   => $"Unexpected error creating the instance of {typeof(TResult).Name} in {nameof(TryBindBuild)}. The instance must have the same parameters and in the same order as the constructor of the type {typeof(TResult).Name}, and these must be constructed with each of the calls to each element of the parameter {nameof(funcArgsAsync)}: {ex.Message}")
                       .MapEnsureAsync(partialResult             => partialResult is TResult,
-                                      errorDetailsResult:          $"The created instance is not of type {typeof(TResult).Name} in {nameof(TryBindBuild)}.")
+                                      errorDetailsResult:          CreatePartialErrorMessage(new Exception(), $"The created instance is not of type {typeof(TResult).Name} in {nameof(TryBindBuild)}.", errorMessageBuilder))
                       .MapAsync      (partialResult             => (TResult)partialResult);
         return result;
     }
@@ -2087,23 +2146,61 @@ public static class MlResultActionsBind
 
         public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
                                                                       params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuild<T, TResult>(true, funcArgs);
+        => source.InternalTryBindBuild<T, TResult>(true, errorMessageBuilder: null!, funcArgs: funcArgs);
+
+        public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
+                                                                             Func<Exception, string>     errorMessageBuilder,
+                                                                      params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(true, errorMessageBuilder, funcArgs);
+
+        public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
+                                                                             string                      exceptionAditionalMessage,
+                                                                      params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuild<T, TResult>(true, exceptionAditionalMessage, funcArgs);
 
 
     public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
                                                                              params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuildSyncAsync<T, TResult>(true, funcArgs);
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder: null!, funcArgs: funcArgs);
+
+    public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                                    Func<Exception, string>     errorMessageBuilder,
+                                                                             params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder, funcArgs);
+
+    public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
+                                                                                    string                      exceptionAditionalMessage,
+                                                                             params Func<T, MlResult<object>>[] funcArgs)
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(true, ex => exceptionAditionalMessage, funcArgs);
 
 
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                    params Func<T, MlResult<object>>[] funcArgs)
-        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, funcArgs);
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder: null!, funcArgs: funcArgs);
+
+    public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                          Func<Exception, string>     errorMessageBuilder,
+                                                                                   params Func<T, MlResult<object>>[] funcArgs)
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder, funcArgs);
+
+    public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
+                                                                                          string                      exceptionAditionalMessage,
+                                                                                   params Func<T, MlResult<object>>[] funcArgs)
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, exceptionAditionalMessage, funcArgs);
 
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                    params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
-        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, funcArgsAsync);
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, errorMessageBuilder: null!, funcArgsAsync: funcArgsAsync);
 
+    public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
+                                                                                          Func<Exception, string>           errorMessageBuilder,
+                                                                                   params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, errorMessageBuilder, funcArgsAsync);
 
+    public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
+                                                                                          string                            exceptionAditionalMessage,
+                                                                                   params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, ex => exceptionAditionalMessage, funcArgsAsync);
 
 
     #endregion
@@ -2177,6 +2274,17 @@ public static class MlResultActionsBind
     
     private static async Task<MlResult<object>> ApplyValueAsync(Task<MlResult<object>> sourceAsync)
         => ApplyValue(await sourceAsync);
+
+
+    private static string CreatePartialErrorMessage(Exception ex, string principalMessage, Func<Exception, string> errorMessageBuilder = null!)
+    {
+        string result = errorMessageBuilder is not null && !string.IsNullOrWhiteSpace(errorMessageBuilder(ex))
+                            ? $"{errorMessageBuilder(ex)}{Environment.NewLine}{principalMessage}"
+                            : principalMessage;
+
+        return result;
+    }
+
 
 
 
