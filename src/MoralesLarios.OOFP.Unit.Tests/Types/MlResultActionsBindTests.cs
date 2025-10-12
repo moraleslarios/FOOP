@@ -1497,12 +1497,6 @@ public class MlResultActionsBindTests
     {
         MlResult<int> partialResult = 1;
 
-        var uuu = "Error".ToMlResultFail<string>();
-
-        Func<int, MlResult<object>> func = _ => "Error".ToMlResultFail<string>().ToMlResultObject();
-
-        var yyy = func(1);
-
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
@@ -1666,8 +1660,257 @@ public class MlResultActionsBindTests
     }
 
 
+    [Fact]
+    public async Task TryBindBuildAsync_sourceValid_paramsMlResultAndNotMlResul_allParamsValid_returnValid()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1                            .ToMlResultObjectAsync(),
+                                                                                              x_name => BindTestMethodAsync(x_name)  .ToMlResultObjectAsync(),
+                                                                                              x_date => date.  ToMlResultValidAsync().ToMlResultObjectAsync());
+        result.IsValid.Should().BeTrue();
+    }
+
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceValid_paramsMlResultAndNotMlResult_paramsValidAndNotValid_returnFail()
+    {
+        Task<MlResult<int>> partialResultAsync = 0.ToMlResultValidAsync();
+
+        var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+        MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1.ToMlResultObjectAsync(),
+                                                                                              x_name => BindTestMethodAsync(x_name).ToMlResultObjectAsync(), //Fail
+                                                                                              x_date => date.ToMlResultValidAsync().ToMlResultObjectAsync());
+        result.IsFail.Should().BeTrue();
+    }
+
+
+
 
     #endregion
+
+
+    #region TryBindBuild_Tuple
+
+
+    [Fact]
+    public void TryBindBuild_Tuple_sourceValid_returnValid()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string)> result = partialResult.TryBindBuild(x_id   => 1     .ToMlResultValid(),
+                                                                    x_name => "Name".ToMlResultValid());
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TryBindBuild_Tuple_sourceFail_returnFail()
+    {
+        MlResult<int> partialResult = "Error".ToMlResultFail<int>();
+
+        MlResult<(int, string)> result = partialResult.TryBindBuild(x_id => 1.ToMlResultValid(),
+                                                                    x_name => "Name".ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TryBindBuild_Tuple_sourceValid_withAnyFuncFail_returnFail()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string)> result = partialResult.TryBindBuild(x_id   => "Error_force".ToMlResultFail<int>(),
+                                                                    x_name => "Name".ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TryBindBuild_Tuple_sourceValid_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string)> result = partialResult.TryBindBuild(x_id   => 1.ToMlResultValid(),
+                                                                    x_name => "Name".ToMlResultValid());
+
+        MlResult<(int, string)> expected = (1, "Name");
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+
+
+
+
+    [Fact]
+    public async Task TryBindBuildAsync_Tuple_sourceValid_returnValid()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string)> result = await partialResult.TryBindBuildAsync(x_id   => 1     .ToMlResultValid(),
+                                                                               x_name => "Name".ToMlResultValid());
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_Tuple_sourceFail_returnFail()
+    {
+        MlResult<int> partialResult = "Error".ToMlResultFail<int>();
+
+        MlResult<(int, string)> result = await partialResult.TryBindBuildAsync(x_id => 1.ToMlResultValid(),
+                                                                               x_name => "Name".ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_Tuple_sourceValid_withAnyFuncFail_returnFail()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string)> result = await partialResult.TryBindBuildAsync(x_id   => "Error_force".ToMlResultFail<int>(),
+                                                                               x_name => "Name".ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_Tuple_sourceValid_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string)> result = await partialResult.TryBindBuildAsync(x_id   => 1.ToMlResultValid(),
+                                                                               x_name => "Name".ToMlResultValid());
+
+        MlResult<(int, string)> expected = (1, "Name");
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+
+
+
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceValid_returnValid()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => 1.ToMlResultValid(),
+                                                                                    x_name => "Name".ToMlResultValid());
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceFail_returnFail()
+    {
+        Task<MlResult<int>> partialResultAsync = "Error".ToMlResultFailAsync<int>();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => 1.ToMlResultValid(),
+                                                                                    x_name => "Name".ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceValid_withAnyFuncFail_returnFail()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => "Error_force".ToMlResultFail<int>(),
+                                                                                    x_name => "Name".ToMlResultValid());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceValid_returnValidData()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => 1.ToMlResultValid(),
+                                                                                    x_name => "Name".ToMlResultValid());
+
+        MlResult<(int, string)> expected = (1, "Name");
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+
+
+
+
+
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceValidAsync_returnValid()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => 1.ToMlResultValidAsync(),
+                                                                                    x_name => "Name".ToMlResultValidAsync());
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceFailAsync_returnFail()
+    {
+        Task<MlResult<int>> partialResultAsync = "Error".ToMlResultFailAsync<int>();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => 1.ToMlResultValidAsync(),
+                                                                                    x_name => "Name".ToMlResultValidAsync());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceValid_withAnyFuncFailAsync_returnFail()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => "Error_force".ToMlResultFailAsync<int>(),
+                                                                                    x_name => "Name".ToMlResultValidAsync());
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryBindBuildAsync_sourceAsync_Tuple_sourceValidAsync_returnValidData()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.TryBindBuildAsync(x_id   => 1.ToMlResultValidAsync(),
+                                                                                    x_name => "Name".ToMlResultValidAsync());
+
+        MlResult<(int, string)> expected = (1, "Name");
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+
+
+    [Fact]
+    public void TryBindBuild_8_parameters_Tuple_sourceValid_returnValidData()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string, string, string, string, string, string, decimal)> result = partialResult.TryBindBuild(x_id      => 1.ToMlResultValid(),
+                                                                                                                     x_name    => "Name".ToMlResultValid(),
+                                                                                                                     x_name    => "Name".ToMlResultValid(),
+                                                                                                                     x_name    => "Name".ToMlResultValid(),
+                                                                                                                     x_name    => "Name".ToMlResultValid(),
+                                                                                                                     x_name    => "Name".ToMlResultValid(),
+                                                                                                                     x_name    => "Name".ToMlResultValid(),
+                                                                                                                     x_decimal => 9m.ToMlResultValid<decimal>());
+
+        MlResult<(int, string, string, string, string, string, string, decimal)> expected = (1, "Name", "Name", "Name", "Name", "Name", "Name", 9m);
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+
+
+
+
+    #endregion
+
+
+
 
 
 
@@ -1675,7 +1918,7 @@ public class MlResultActionsBindTests
     #region TryBindBuildWhile
 
 
-        [Fact]
+    [Fact]
     public void TryBindBuildWhile_sourceValid_returnValid()
     {
         MlResult<int> partialResult = 1;

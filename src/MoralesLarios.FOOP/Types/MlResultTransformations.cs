@@ -524,16 +524,43 @@ public static class MlResultTransformations
     public static MlResult<object> ToMlResultObject<T>(this MlResult<T> source)
     {
         var result = source.Match(
-                            fail: errorDetails => errorDetails.ToMlResultFail<object>(),
-                            valid: value => ((object)value).ToMlResultValid<object>()
+                            fail : errorDetails => errorDetails    .ToMlResultFail <object>(),
+                            valid: value        => ((object)value!).ToMlResultValid()
                         );
         return result;
     }
     public static Task<MlResult<object>> ToMlResultObjectAsync<T>(this MlResult<T> source)
-        => source.ToMlResultObject<T>().ToAsync();
+        => source.ToMlResultObject().ToAsync();
 
     public static async Task<MlResult<object>> ToMlResultObjectAsync<T>(this Task<MlResult<T>> sourceAsync)
-        => await (await sourceAsync).ToMlResultObjectAsync<T>();
+        => await (await sourceAsync).ToMlResultObjectAsync();
+
+
+    public static MlResult<object> ToMlResultObject<T>(this T source) => ((object)source!).ToMlResultValid();
+
+    public static Task<MlResult<object>> ToMlResultObjectAsync<T>(this T source) => source.ToMlResultObject().ToAsync();
+
+    public static async Task<MlResult<object>> ToMlResultObjectAsync<T>(this Task<T> sourceAsync) => await (await sourceAsync).ToMlResultObjectAsync();
+
+
+    public static MlResult<T> FromMlResultObject<T>(this MlResult<object> source)
+    {
+        var result = source.Match(
+                                    fail : errorDetails => errorDetails.ToMlResultFail<T>(),
+                                    valid: value        => (value is T tValue) ? tValue.ToMlResultValid() : MlResult<T>.Fail($"The value '{value}' of type '{value?.GetType()}' cannot be cast to the requested type '{typeof(T)}'.")
+                                );
+        return result;
+    }
+
+    public static Task<MlResult<T>> FromMlResultObjectAsync<T>(this MlResult<object> source)
+        => source.FromMlResultObject<T>().ToAsync();
+
+    public static async Task<MlResult<T>> FromMlResultObjectAsync<T>(this Task<MlResult<object>> sourceAsync)
+        => await (await sourceAsync).FromMlResultObjectAsync<T>();
+
+
+
+
 
 
 
@@ -604,7 +631,7 @@ public static class MlResultTransformations
             string msg = BuildErrorMessage(errorMessageBuilder, ex);
 
             result = new MlErrorsDetails(Errors : new List<MlError> { new MlError(msg) },
-                                         Details: new Dictionary<string, object> { { "Ex", ex } });
+                                         Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
             
         }
 
