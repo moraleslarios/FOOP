@@ -1,0 +1,12 @@
+*.exe
+*.dll
+*.obj
+*.user
+*.suo
+*.cache
+*.pdb
+bin/
+obj/
+.vs/
+
+/src/MoralesLarios.FOOP/MoralesLarios.OOFP.csproj

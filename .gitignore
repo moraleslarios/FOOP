@@ -1,12 +1,68 @@
-*.exe
-*.dll
-*.obj
-*.user
+# Archivos de usuario
 *.suo
-*.cache
-*.pdb
-bin/
-obj/
-.vs/
+*.user
+*.userosscache
+*.sln.docstates
 
-/src/MoralesLarios.FOOP/MoralesLarios.OOFP.csproj
+# Visual Studio y VS Code
+.vs/
+.vscode/
+
+# Resultados de compilación
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]uild/
+[Bb]uildLog/
+[Rr]elease/
+[Dd]ebug/
+
+# Archivos generados por MSBuild
+*.log
+*.tlog
+*.cache
+msbuild.*.txt
+
+# Paquetes NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+*.psmdcp
+
+# Archivos de configuración locales
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de herramientas o dependencias
+node_modules/
+dist/
+wwwroot/lib/
+
+# Archivos de bloqueo y dependencias
+project.lock.json
+*.lock.json
+
+# Configuración de Rider y otros IDEs
+.idea/
+*.sln.iml
+
+# Herramientas externas (como Paket)
+.paket/
+paket-files/
+
+# Logs
+*.log
+
+# Archivos de publicación
+publish/
