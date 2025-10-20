@@ -12,9 +12,9 @@ public class IntMoreThan : ValueObject<int>
 
 
     public static IntMoreThan FromIntLenght(int value, int lenght) => new IntMoreThan(value, lenght);
-    public static MlResult<IntMoreThan> ByIntLength(int value, int lenght)
+    public static MlResult<IntMoreThan> ByIntLength(int value, int lenght, MlErrorsDetails errorsDetails = null!)
         => MlResult.Empty()
-                    .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), BuildErrorMessage(value, lenght)))
+                    .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), errorsDetails ?? BuildErrorMessage(value, lenght)))
                     .Map ( _ => new IntMoreThan(value, lenght));
 
     public static implicit operator int (IntMoreThan valueObject) => valueObject.Value;

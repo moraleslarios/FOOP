@@ -12,9 +12,9 @@ public class Age : IntMoreThan
     public static bool IsValid(int value) => Age.IsValid(value, Limit);
 
     public static Age FromInt(int value) => new Age(value);
-    public static MlResult<Age> ByInt(int value)
+    public static MlResult<Age> ByInt(int value, MlErrorsDetails errorsDetails = null!)
         => MlResult.Empty()
-                    .Bind( _ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)))
+                    .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                     .Map ( _ => new Age(value));
 
     public static implicit operator int (Age valueObject) => valueObject.Value;

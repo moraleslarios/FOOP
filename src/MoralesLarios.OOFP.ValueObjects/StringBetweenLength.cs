@@ -13,9 +13,9 @@ public class StringBetweenLength : ValueObject<NotEmptyString>
 
     public static StringBetweenLength FromStringLenght(string value, int minLenght, int maxLenght) => new StringBetweenLength(value, minLenght, maxLenght);
 
-    public static MlResult<StringBetweenLength> ByStringLength(string value, int minLenght, int maxLenght)
+    public static MlResult<StringBetweenLength> ByStringLength(string value, int minLenght, int maxLenght, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
-                            .Bind( _ => EnsureFp.That(value, IsValid(value, minLenght, maxLenght), BuildErrorMessage(value, minLenght, maxLenght)))
+                            .Bind( _ => EnsureFp.That(value, IsValid(value, minLenght, maxLenght), errorsDetails ?? BuildErrorMessage(value, minLenght, maxLenght)))
                             .Map ( _ => new StringBetweenLength(value, minLenght, maxLenght));
 
     public static implicit operator string         (StringBetweenLength valueObject) => valueObject.Value;

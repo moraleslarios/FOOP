@@ -13,9 +13,9 @@ public class StringMaxLength : ValueObject<NotEmptyString>
 
     public static StringMaxLength FromStringLenght(string value, int lenght) => new StringMaxLength(value, lenght);
 
-    public static MlResult<StringMaxLength> ByStringLength(string value, int lenght)
+    public static MlResult<StringMaxLength> ByStringLength(string value, int lenght, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
-                            .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), BuildErrorMessage(value, lenght)))
+                            .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), errorsDetails ?? BuildErrorMessage(value, lenght)))
                             .Map ( _ => new StringMaxLength(value, lenght));
 
     public static implicit operator string         (StringMaxLength valueObject) => valueObject.Value;

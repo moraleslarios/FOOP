@@ -11,9 +11,9 @@ public class IntLessThan : ValueObject<int>
     public static bool IsValid(int value, int length) => value < length;
 
     public static IntLessThan FromIntLenght(int value, int lenght) => new IntLessThan(value, lenght);
-    public static MlResult<IntLessThan> ByIntLength(int value, int lenght)
+    public static MlResult<IntLessThan> ByIntLength(int value, int lenght, MlErrorsDetails errorsDetails = null!)
         => MlResult.Empty()
-                    .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), BuildErrorMessage(value, lenght)))
+                    .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), errorsDetails ?? BuildErrorMessage(value, lenght)))
                     .Map ( _ => new IntLessThan(value, lenght));
 
     public static implicit operator int (IntLessThan valueObject) => valueObject.Value;

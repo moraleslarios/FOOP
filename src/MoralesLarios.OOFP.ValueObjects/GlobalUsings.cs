@@ -5,3 +5,4 @@ global using System.Text;
 global using System.Threading.Tasks;
 global using MoralesLarios.OOFP.Types;
 global using MoralesLarios.OOFP.Helpers;
+global using MoralesLarios.OOFP.Types.Errors;

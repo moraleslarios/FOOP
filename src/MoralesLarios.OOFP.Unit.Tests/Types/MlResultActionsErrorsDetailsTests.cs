@@ -147,6 +147,35 @@ public class MlResultActionsErrorsDetailsTests
 
 
 
+    [Fact]
+    public void AddValueIfFail_sourceValid_return_source()
+    {
+        MlResult<int> source = 1;
+
+        MlResult<int> result = source.AddValueIfFail<int, int>(69);
+
+        MlResult<int> expected = 1;
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public void AddValueIfFail_sourceFail_return_failWithValueAdded()
+    {
+        MlResult<int> source = "miError".ToMlResultFail<int>();
+
+        MlResult<int> result = source.AddValueIfFail<int, int>(69);
+
+        MlResult<int> expected = ("miError", new Dictionary<string, object> 
+                                            { 
+                                                { VALUE_KEY, 69 }
+                                            }
+                                    );
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+
 
 
     #region MergeErrorsDetails

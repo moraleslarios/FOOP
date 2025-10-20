@@ -11,9 +11,9 @@ public class Mail : RegexValue
 
     public static Mail FromString(string value) => new Mail(value);
 
-    public static MlResult<Mail> ByString(string value)
+    public static MlResult<Mail> ByString(string value, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
-                            .Bind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)))
+                            .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                             .Map (_ => new Mail(value));
 
     public static implicit operator string(Mail valueObject) => valueObject.Value;

@@ -13,9 +13,9 @@ public class IntBetween : ValueObject<int>
 
     public static IntBetween FromIntLenght(int value, int minLenght, int maxLenght) => new IntBetween(value, minLenght, maxLenght);
 
-    public static MlResult<IntBetween> ByIntLength(int value, int minLenght, int maxLenght)
+    public static MlResult<IntBetween> ByIntLength(int value, int minLenght, int maxLenght, MlErrorsDetails errorsDetails = null!)
         => MlResult.Empty()
-                    .Bind( _ => EnsureFp.That(value, IsValid(value, minLenght, maxLenght), BuildErrorMessage(value, minLenght, maxLenght)))
+                    .Bind( _ => EnsureFp.That(value, IsValid(value, minLenght, maxLenght), errorsDetails ?? BuildErrorMessage(value, minLenght, maxLenght)))
                     .Map ( _ => new IntBetween(value, minLenght, maxLenght));
 
     public static implicit operator int (IntBetween valueObject) => valueObject.Value;

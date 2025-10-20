@@ -8,7 +8,7 @@ public class RegexValue : ValueObject<NotEmptyString>
 
     protected RegexValue(NotEmptyString value, string pattern) : base(value)
     {
-        if (!IsValid(value, pattern)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, pattern));
+        if ( ! IsValid(value, pattern)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, pattern));
 
         _pattern = pattern;
     }
@@ -22,9 +22,9 @@ public class RegexValue : ValueObject<NotEmptyString>
 
     public static RegexValue FromRegex(string value, string pattern) => new RegexValue(NotEmptyString.FromString(value), pattern);
 
-    public static MlResult<RegexValue> ByRegex(string value, string pattern)
+    public static MlResult<RegexValue> ByRegex(string value, string pattern, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
-            .Bind( _ => EnsureFp.That(value, IsValid(value, pattern), BuildErrorMessage(value, pattern)))
+            .Bind( _ => EnsureFp.That(value, IsValid(value, pattern), errorsDetails ?? BuildErrorMessage(value, pattern)))
             .Map ( _ => new RegexValue(value, pattern));
 
     public static implicit operator string(RegexValue valueObject) => valueObject.Value;

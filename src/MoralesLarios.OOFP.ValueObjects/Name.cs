@@ -13,8 +13,8 @@ public class Name : StringMinLength
 
     public static Name FromString(string value) => new Name(value);
 
-    public static MlResult<Name> ByString(string value)
-        => StringMinLength.ByStringLength(value, MinLenght)  
+    public static MlResult<Name> ByString(string value, MlErrorsDetails errorsDetails = null!)
+        => StringMinLength.ByStringLength(value, MinLenght, errorsDetails)  
                             .Map ( _ => new Name(value));
 
     public static implicit operator string(Name   valueObject) => valueObject.Value;

@@ -87,19 +87,19 @@ public static class MlResultActionsErrorsDetails
     }
 
 
-    public static MlResult<T> AddIfFailValue<T, TValue>(this MlResult<T> source,
+    public static MlResult<T> AddValueIfFail<T, TValue>(this MlResult<T> source,
                                                              TValue      value)
         => source.Match(
                             fail : errorsDetails => errorsDetails.AddDetailValue(value),
                             valid: _             => source
                         );
 
-    public static async Task<MlResult<T>> AddIfFailValueAsync<T, TValue>(this MlResult<T> source,
+    public static async Task<MlResult<T>> AddValueIfFailAsync<T, TValue>(this MlResult<T> source,
                                                                               TValue      value)
-        => await source.AddIfFailValue(value).ToAsync();
+        => await source.AddValueIfFail(value).ToAsync();
 
-    public static async Task<MlResult<T>> AddIfFailValue<T, TValue>(this Task<MlResult<T>> sourceAsync,
-                                                             TValue            value)
+    public static async Task<MlResult<T>> AddValueIfFailAsync<T, TValue>(this Task<MlResult<T>> sourceAsync,
+                                                                              TValue            value)
     {
         var result = await sourceAsync.MatchAsync(
                                                     failAsync : errorsDetails => errorsDetails.AddDetailValue(value).ToMlResultFailAsync<T>(),

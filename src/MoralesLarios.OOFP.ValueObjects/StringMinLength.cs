@@ -13,9 +13,9 @@ public class StringMinLength : ValueObject<NotEmptyString>
 
     public static StringMinLength FromStringLenght(string value, int lenght) => new StringMinLength(value, lenght);
 
-    public static MlResult<StringMinLength> ByStringLength(string value, int lenght)
+    public static MlResult<StringMinLength> ByStringLength(string value, int lenght, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
-                            .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), BuildErrorMessage(value, lenght)))
+                            .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), errorsDetails ?? BuildErrorMessage(value, lenght)))
                             .Map ( _ => new StringMinLength(value, lenght));
 
     public static implicit operator string         (StringMinLength valueObject) => valueObject.Value;

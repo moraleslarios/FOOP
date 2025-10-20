@@ -11,8 +11,8 @@ public class Key : StringMinLength
 
     public static Key FromString(string value) => new Key(value);
 
-    public static MlResult<Key> ByString(string value)
-        => StringMinLength.ByStringLength(value, MinLenght)
+    public static MlResult<Key> ByString(string value, MlErrorsDetails errorsDetails = null!)
+        => StringMinLength.ByStringLength(value, MinLenght, errorsDetails)
                             .Map(_ => new Key(value));
 
     public static implicit operator string(Key   valueObject) => valueObject.Value;
