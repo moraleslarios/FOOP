@@ -23,8 +23,12 @@ public class MlErrorsDetails(IEnumerable<MlError>       Errors  = null!,
     public static MlErrorsDetails FromEnumerableStrings      (IEnumerable<string> errorsMessages                                            ) => FromErrorsMessagesDetails(errorsMessages);
     public static MlErrorsDetails FromError                  (MlError             error                                                     ) => new(new List<MlError> { error });
     public static MlErrorsDetails FromErrorDetails           (MlError             error         , Dictionary<string, object> details = null!) => new(new List<MlError> { error }, details);
+    public static MlErrorsDetails FromErrorDetails           (string              errorMessage  , string key, object detail                 ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { key, detail} }); 
     public static MlErrorsDetails FromErrorMessage           (string              errorMessage                                              ) => FromErrorMessageDetails(errorMessage);
 
+    public static MlErrorsDetails FromErrorMessageWithException(string errorMessage, Exception exception) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { EX_DESC_KEY, exception} });
+    public static MlErrorsDetails FromErrorMessageWithValue    (string errorMessage, object    value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { VALUE_KEY , value     } });
+    public static MlErrorsDetails FromErrorMessageWithValue<T> (string errorMessage, T         value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { VALUE_KEY , value!    } });
 
 
     public static implicit operator MlErrorsDetails(List<MlError> errors        ) => new(errors);
@@ -38,6 +42,7 @@ public class MlErrorsDetails(IEnumerable<MlError>       Errors  = null!,
     public static implicit operator MlErrorsDetails((IEnumerable<string >, Dictionary<string, object>) errorDetails) => new(errorDetails.Item1, errorDetails.Item2);
     public static implicit operator MlErrorsDetails((MlError             , Dictionary<string, object>) errorDetails) => new(new List<MlError> { errorDetails.Item1 }, errorDetails.Item2);
     public static implicit operator MlErrorsDetails((string              , Dictionary<string, object>) errorDetails) => FromErrorMessageDetails(errorDetails.Item1, errorDetails.Item2);
+    public static implicit operator MlErrorsDetails((string              , string, object)             errorDetail ) => FromErrorMessageDetails(errorDetail.Item1, new Dictionary<string, object>() { { errorDetail.Item2, errorDetail.Item3} });
 
 
 

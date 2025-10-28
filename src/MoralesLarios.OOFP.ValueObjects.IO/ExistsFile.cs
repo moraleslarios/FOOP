@@ -1,6 +1,4 @@
-﻿
-
-namespace MoralesLarios.OOFP.ValueObjects.IO;
+﻿namespace MoralesLarios.OOFP.ValueObjects.IO;
 
 public class ExistsFile : NotEmptyString
 {
@@ -15,9 +13,9 @@ public class ExistsFile : NotEmptyString
 
     public new static ExistsFile FromString(string pathStr) => new ExistsFile(pathStr);
 
-    public new static MlResult<ExistsFile> ByString(string pathStr)
+    public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(pathStr)
-                            .Bind( _ => EnsureFp.That(pathStr, IsValid(pathStr), BuildErrorMessage(pathStr))
+                            .Bind( _ => EnsureFp.That(pathStr, IsValid(pathStr), errorsDetails ?? BuildErrorMessage(pathStr))
                             .Map ( _ => new ExistsFile(pathStr)));
 
     public static implicit operator string    (ExistsFile pathStrObject) => pathStrObject.Value;

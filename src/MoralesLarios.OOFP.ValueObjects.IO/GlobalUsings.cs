@@ -7,3 +7,4 @@ global using System.IO;
 global using MoralesLarios.OOFP.Types;
 global using MoralesLarios.OOFP.Helpers;
 global using MoralesLarios.OOFP.ValueObjects;
+global using MoralesLarios.OOFP.Types.Errors;

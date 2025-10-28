@@ -1424,8 +1424,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1,
-                                                                           x_name => "Name",
-                                                                           x_date => date);
+                                                                              x_name => "Name",
+                                                                              x_date => date);
         result.IsValid.Should().BeTrue();
     }
 
@@ -1437,8 +1437,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1,
-                                                                           x_name => "Name",
-                                                                           x_date => date);
+                                                                              x_name => "Name",
+                                                                              x_date => date);
         result.IsFail.Should().BeTrue();
     }
 
@@ -1452,8 +1452,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1,
-                                                                           x_name => "Name",
-                                                                           x_date => date);
+                                                                              x_name => "Name",
+                                                                              x_date => date);
 
         MlResult<TestType> expected = new TestType(1, "Name", date);
 
@@ -1468,8 +1468,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1     .ToMlResultValid(),
-                                                                           x_name => "Name".ToMlResultValid(),
-                                                                           x_date => date  .ToMlResultValid());
+                                                                              x_name => "Name".ToMlResultValid(),
+                                                                              x_date => date  .ToMlResultValid());
 
         MlResult<TestType> expected = new TestType(1, "Name", date);
 
@@ -1484,8 +1484,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1,
-                                                                           x_name => "Name".ToMlResultValid(),
-                                                                           x_date => date  .ToMlResultValid());
+                                                                              x_name => "Name".ToMlResultValid(),
+                                                                              x_date => date  .ToMlResultValid());
 
         MlResult<TestType> expected = new TestType(1, "Name", date);
 
@@ -1500,8 +1500,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
-                                                                           x_name => "Error".ToMlResultFail<string>().ToMlResultObject(),
-                                                                           x_date => date.ToMlResultValid());
+                                                                              x_name => "Error".ToMlResultFail<string>().ToMlResultObject(),
+                                                                              x_date => date.ToMlResultValid());
         result.IsFail.Should().BeTrue();
     }
 
@@ -1512,9 +1512,9 @@ public class MlResultActionsBindTests
 
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
-        MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id => 1.ToMlResultValid(),
-                                                                           x_name => "Error_Name".ToMlResultFail<string>()  .ToMlResultObject(),
-                                                                           x_date => "Error_Date".ToMlResultFail<DateTime>().ToMlResultObject());
+        MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
+                                                                              x_name => "Error_Name".ToMlResultFail<string>()  .ToMlResultObject(),
+                                                                              x_date => "Error_Date".ToMlResultFail<DateTime>().ToMlResultObject());
         var errors = result.SecureFailErrorsDetails().Errors.Count();
 
         errors.Should().Be(2);
@@ -1526,7 +1526,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult = 1;
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
-                                                                           x_name => "Error".ToMlResultFail<string>().ToMlResultObject());
+                                                                              x_name => "Error".ToMlResultFail<string>().ToMlResultObject());
         result.IsFail.Should().BeTrue();
     }
 
@@ -1538,9 +1538,9 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
-                                                                           x_name => "Error".ToMlResultFail<string>().ToMlResultObject(),
-                                                                           x_date => date.ToMlResultValid(),
-                                                                           x_date => date.ToMlResultValid());
+                                                                              x_name => "Error".ToMlResultFail<string>().ToMlResultObject(),
+                                                                              x_date => date.ToMlResultValid(),
+                                                                              x_date => date.ToMlResultValid());
 
         result.IsFail.Should().BeTrue();
     }
@@ -1554,8 +1554,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1     .ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
+                                                                                              x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
+                                                                                              x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
         result.IsValid.Should().BeTrue();
     }
 
@@ -1567,8 +1567,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1     .ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
+                                                                                              x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
+                                                                                              x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
         result.IsFail.Should().BeTrue();
     }
 
@@ -1580,8 +1580,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1     .ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
+                                                                                              x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
+                                                                                              x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
 
         MlResult<TestType> expected = new TestType(1, "Name", date);
 
@@ -1597,8 +1597,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1     .ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
+                                                                                              x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
+                                                                                              x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
 
         MlResult<TestType> expected = new TestType(1, "Name", date);
 
@@ -1613,8 +1613,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1     .ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
-                                                                                           x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
+                                                                                              x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
+                                                                                              x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
 
         MlResult<TestType> expected = new TestType(1, "Name", date);
 
@@ -1629,8 +1629,8 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1      .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
-                                                                                           x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync(),
-                                                                                           x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync());
+                                                                                              x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync(),
+                                                                                              x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync());
         result.IsFail.Should().BeTrue();
     }
 
@@ -1640,7 +1640,7 @@ public class MlResultActionsBindTests
         Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1      .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
-                                                                                           x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync());
+                                                                                              x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync());
 
         result.IsFail.Should().BeTrue();
     }
@@ -1653,9 +1653,9 @@ public class MlResultActionsBindTests
         var date = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1      .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
-                                                                                           x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync(),
-                                                                                           x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
-                                                                                           x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync());
+                                                                                              x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync(),
+                                                                                              x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
+                                                                                              x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync());
         result.IsFail.Should().BeTrue();
     }
 

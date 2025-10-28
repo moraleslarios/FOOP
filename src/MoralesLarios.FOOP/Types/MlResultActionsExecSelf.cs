@@ -1,7 +1,4 @@
-﻿using System;
-using System.Net.Http.Headers;
-
-namespace MoralesLarios.OOFP.Types;
+﻿namespace MoralesLarios.OOFP.Types;
 public static class MlResultActionsExecSelf
 {
 

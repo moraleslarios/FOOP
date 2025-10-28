@@ -44,5 +44,36 @@ public class ExistsFileTests
         result.ToString().Should().Be(expected.ToString());
     }
 
+    [Fact]
+    public void ByString_nullvalue_return_invalid()
+    {
+        string? pathStr = null;
+        MlResult<ExistsFile> result = ExistsFile.ByString(pathStr!);
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ByString_ExistFile_return_valid()
+    {
+        string pathStr = Path.Combine(AppContext.BaseDirectory,
+                                        "FakeFiles",
+                                        "TextFile1.txt");
+        MlResult<ExistsFile> result = ExistsFile.ByString(pathStr);
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ByString_ExistFile_return_valid_with_correctValue()
+    {
+        string pathStr = Path.Combine(AppContext.BaseDirectory,
+                                        "FakeFiles",
+                                        "TextFile1.txt");
+        MlResult<ExistsFile> result = ExistsFile.ByString(pathStr, "Error ...");
+
+        MlResult<ExistsFile> expected = ExistsFile.FromString(pathStr).ToMlResultValid();
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
 
 }

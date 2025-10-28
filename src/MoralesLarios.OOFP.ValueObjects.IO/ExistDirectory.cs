@@ -13,9 +13,9 @@ public class ExistDirectory : NotEmptyString
 
     public new static ExistDirectory FromString(string directoryStr) => new ExistDirectory(directoryStr);
 
-    public new static MlResult<ExistDirectory> ByString(string directoryStr)
+    public new static MlResult<ExistDirectory> ByString(string directoryStr, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(directoryStr)
-                            .Bind(_ => EnsureFp.That(directoryStr, IsValid(directoryStr), BuildErrorMessage(directoryStr))
+                            .Bind(_ => EnsureFp.That(directoryStr, IsValid(directoryStr), errorsDetails ?? BuildErrorMessage(directoryStr))
                             .Map(_ => new ExistDirectory(directoryStr)));
 
     public static implicit operator string        (ExistDirectory directoryStrObject) => directoryStrObject.Value;
