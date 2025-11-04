@@ -2140,371 +2140,371 @@ public static class MlResultActionsBind
     #endregion
 
 
-    #region TryBindBuild Tuple
+    #region TryBindBuildTuple Tuple
 
 
 
 
-    public static MlResult<(TR1, TR2)> TryBindBuild<T, TR1, TR2>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                       Func<T, MlResult<TR2>>  funcBuild2)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, errorMessageBuilder: null!);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: null!);
 
-    public static MlResult<(TR1, TR2)> TryBindBuild<T, TR1, TR2>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                       Func<T, MlResult<TR2>>  funcBuild2,
                                                                       Func<Exception, string> errorMessageBuilder)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
 
-    public static MlResult<(TR1, TR2)> TryBindBuild<T, TR1, TR2>(this MlResult<T>            source,
+    public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>            source,
                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                       Func<T, MlResult<TR2>> funcBuild2,
                                                                       string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
 
 
-    public static Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>             source,
                                                                                  Func<T, MlResult<TR1>>  funcBuild1,
                                                                                  Func<T, MlResult<TR2>>  funcBuild2)
-        => source.TryBindBuild(funcBuild1, funcBuild2).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>             source,
                                                                                  Func<T, MlResult<TR1>>  funcBuild1,
                                                                                  Func<T, MlResult<TR2>>  funcBuild2,
                                                                                  Func<Exception, string> errorMessageBuilder)
-        => source.TryBindBuild(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this MlResult<T>            source,
+    public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>            source,
                                                                                  Func<T, MlResult<TR1>> funcBuild1,
                                                                                  Func<T, MlResult<TR2>> funcBuild2,
                                                                                  string                 exceptionAditionalMessage)
-        => source.TryBindBuild(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
 
-    public static async Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
                                                                                        Func<T, MlResult<TR1>> funcBuild1,
                                                                                        Func<T, MlResult<TR2>> funcBuild2)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2);
 
-    public static async Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>       sourceAsync,
                                                                                        Func<T, MlResult<TR1>>  funcBuild1,
                                                                                        Func<T, MlResult<TR2>>  funcBuild2,
                                                                                        Func<Exception, string> errorMessageBuilder)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
 
-    public static async Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
                                                                                        Func<T, MlResult<TR1>> funcBuild1,
                                                                                        Func<T, MlResult<TR2>> funcBuild2,
                                                                                        string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                  Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                  Func<T, Task<MlResult<TR2>>> funcBuild2Async)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: null!);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: null!);
 
-    public static Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                  Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                  Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                  Func<Exception, string>      errorMessageBuilder)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: errorMessageBuilder);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: errorMessageBuilder);
 
-    public static Task<MlResult<(TR1, TR2)>> TryBindBuildAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                  Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                  Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                  string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: ex => exceptionAditionalMessage);
 
 
     // TR3
-    public static MlResult<(TR1, TR2, TR3)> TryBindBuild<T, TR1, TR2, TR3>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3)> TryBindBuildTuple<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
                                                                                 Func<T, MlResult<TR3>>  funcBuild3)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: null!);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: null!);
 
-    public static MlResult<(TR1, TR2, TR3)> TryBindBuild<T, TR1, TR2, TR3>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3)> TryBindBuildTuple<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
                                                                                 Func<T, MlResult<TR3>>  funcBuild3,
                                                                                 Func<Exception, string> errorMessageBuilder)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder);
 
-    public static MlResult<(TR1, TR2, TR3)> TryBindBuild<T, TR1, TR2, TR3>(this MlResult<T>            source,
+    public static MlResult<(TR1, TR2, TR3)> TryBindBuildTuple<T, TR1, TR2, TR3>(this MlResult<T>            source,
                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                 Func<T, MlResult<TR2>> funcBuild2,
                                                                                 Func<T, MlResult<TR3>> funcBuild3,
                                                                                 string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                            Func<T, MlResult<TR1>>  funcBuild1,
                                                                                            Func<T, MlResult<TR2>>  funcBuild2,
                                                                                            Func<T, MlResult<TR3>>  funcBuild3)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                            Func<T, MlResult<TR1>>  funcBuild1,
                                                                                            Func<T, MlResult<TR2>>  funcBuild2,
                                                                                            Func<T, MlResult<TR3>>  funcBuild3,
                                                                                            Func<Exception, string> errorMessageBuilder)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this MlResult<T>            source,
+    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>            source,
                                                                                            Func<T, MlResult<TR1>> funcBuild1,
                                                                                            Func<T, MlResult<TR2>> funcBuild2,
                                                                                            Func<T, MlResult<TR3>> funcBuild3,
                                                                                            string                 exceptionAditionalMessage)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
 
-    public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>      sourceAsync,
                                                                                                   Func<T, MlResult<TR1>> funcBuild1,
                                                                                                   Func<T, MlResult<TR2>> funcBuild2,
                                                                                                   Func<T, MlResult<TR3>> funcBuild3)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3);
 
-    public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>       sourceAsync,
                                                                                                   Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                   Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                   Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                   Func<Exception, string> errorMessageBuilder)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder);
 
-    public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>      sourceAsync,
                                                                                                   Func<T, MlResult<TR1>> funcBuild1,
                                                                                                   Func<T, MlResult<TR2>> funcBuild2,
                                                                                                   Func<T, MlResult<TR3>> funcBuild3,
                                                                                                   string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                            Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                            Func<T, Task<MlResult<TR3>>> funcBuild3Async)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: null!);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: null!);
 
-    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                            Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                            Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                            Func<Exception, string>      errorMessageBuilder)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: errorMessageBuilder);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: errorMessageBuilder);
 
-    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                            Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                            Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                            string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: ex => exceptionAditionalMessage);
 
     // TR4
-    public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuild<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
                                                                                           Func<T, MlResult<TR3>>  funcBuild3,
                                                                                           Func<T, MlResult<TR4>>  funcBuild4)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: null!);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: null!);
 
-    public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuild<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
                                                                                           Func<T, MlResult<TR3>>  funcBuild3,
                                                                                           Func<T, MlResult<TR4>>  funcBuild4,
                                                                                           Func<Exception, string> errorMessageBuilder)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder);
 
-    public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuild<T, TR1, TR2, TR3, TR4>(this MlResult<T>            source,
+    public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>            source,
                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                           Func<T, MlResult<TR2>> funcBuild2,
                                                                                           Func<T, MlResult<TR3>> funcBuild3,
                                                                                           Func<T, MlResult<TR4>> funcBuild4,
                                                                                           string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                      Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                      Func<T, MlResult<TR4>>  funcBuild4)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                      Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                      Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                      Func<Exception, string> errorMessageBuilder)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>            source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>            source,
                                                                                                      Func<T, MlResult<TR1>> funcBuild1,
                                                                                                      Func<T, MlResult<TR2>> funcBuild2,
                                                                                                      Func<T, MlResult<TR3>> funcBuild3,
                                                                                                      Func<T, MlResult<TR4>> funcBuild4,
                                                                                                      string                 exceptionAditionalMessage)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>      sourceAsync,
                                                                                                             Func<T, MlResult<TR1>> funcBuild1,
                                                                                                             Func<T, MlResult<TR2>> funcBuild2,
                                                                                                             Func<T, MlResult<TR3>> funcBuild3,
                                                                                                             Func<T, MlResult<TR4>> funcBuild4)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>       sourceAsync,
                                                                                                             Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                             Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                             Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                             Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                             Func<Exception, string> errorMessageBuilder)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>      sourceAsync,
                                                                                                             Func<T, MlResult<TR1>> funcBuild1,
                                                                                                             Func<T, MlResult<TR2>> funcBuild2,
                                                                                                             Func<T, MlResult<TR3>> funcBuild3,
                                                                                                             Func<T, MlResult<TR4>> funcBuild4,
                                                                                                             string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
                                                                                                      Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                      Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                      Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                      Func<T, Task<MlResult<TR4>>> funcBuild4Async)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: null!);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: null!);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
                                                                                                      Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                      Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                      Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                      Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                      Func<Exception, string>      errorMessageBuilder)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: errorMessageBuilder);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: errorMessageBuilder);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
                                                                                                      Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                      Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                      Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                      Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                      string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: ex => exceptionAditionalMessage);
 
     // TR5
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                     Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                     Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                     Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                     Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                     Func<T, MlResult<TR5>>  funcBuild5)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: null!);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: null!);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                     Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                     Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                     Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                     Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                     Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                     Func<Exception, string> errorMessageBuilder)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>            source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>            source,
                                                                                                     Func<T, MlResult<TR1>> funcBuild1,
                                                                                                     Func<T, MlResult<TR2>> funcBuild2,
                                                                                                     Func<T, MlResult<TR3>> funcBuild3,
                                                                                                     Func<T, MlResult<TR4>> funcBuild4,
                                                                                                     Func<T, MlResult<TR5>> funcBuild5,
                                                                                                     string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                                Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                                Func<T, MlResult<TR5>>  funcBuild5)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                                Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                                Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                                Func<Exception, string> errorMessageBuilder)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>            source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>            source,
                                                                                                                Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                Func<T, MlResult<TR3>> funcBuild3,
                                                                                                                Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                string                 exceptionAditionalMessage)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                       Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                       Func<T, MlResult<TR3>> funcBuild3,
                                                                                                                       Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                       Func<T, MlResult<TR5>> funcBuild5)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                       Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                       Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                                       Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                                       Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                                       Func<Exception, string> errorMessageBuilder)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                       Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                       Func<T, MlResult<TR3>> funcBuild3,
                                                                                                                       Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                       Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                       string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                                Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                                Func<T, Task<MlResult<TR5>>> funcBuild5Async)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: null!);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: null!);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                                Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                                Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                Func<Exception, string>      errorMessageBuilder)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: errorMessageBuilder);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: errorMessageBuilder);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                                Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                                Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: ex => exceptionAditionalMessage);
 
     // TR6
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                               Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                               Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                               Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                               Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                               Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                               Func<T, MlResult<TR6>>  funcBuild6)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: null!);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: null!);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                               Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                               Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                               Func<T, MlResult<TR3>>  funcBuild3,
@@ -2512,9 +2512,9 @@ public static class MlResultActionsBind
                                                                                                               Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                               Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                               Func<Exception, string> errorMessageBuilder)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>            source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>            source,
                                                                                                               Func<T, MlResult<TR1>> funcBuild1,
                                                                                                               Func<T, MlResult<TR2>> funcBuild2,
                                                                                                               Func<T, MlResult<TR3>> funcBuild3,
@@ -2522,18 +2522,18 @@ public static class MlResultActionsBind
                                                                                                               Func<T, MlResult<TR5>> funcBuild5,
                                                                                                               Func<T, MlResult<TR6>> funcBuild6,
                                                                                                               string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                                          Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                          Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                          Func<T, MlResult<TR3>>  funcBuild3,
                                                                                                                          Func<T, MlResult<TR4>>  funcBuild4,
                                                                                                                          Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                                          Func<T, MlResult<TR6>>  funcBuild6)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                                          Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                          Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                          Func<T, MlResult<TR3>>  funcBuild3,
@@ -2541,9 +2541,9 @@ public static class MlResultActionsBind
                                                                                                                          Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                                          Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                          Func<Exception, string> errorMessageBuilder)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>            source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>            source,
                                                                                                                          Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                          Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                          Func<T, MlResult<TR3>> funcBuild3,
@@ -2551,18 +2551,18 @@ public static class MlResultActionsBind
                                                                                                                          Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                          Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                          string                 exceptionAditionalMessage)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                 Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                 Func<T, MlResult<TR3>> funcBuild3,
                                                                                                                                 Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                                 Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                                 Func<T, MlResult<TR6>> funcBuild6)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                 Func<T, MlResult<TR3>>  funcBuild3,
@@ -2570,9 +2570,9 @@ public static class MlResultActionsBind
                                                                                                                                 Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                                                 Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                                 Func<Exception, string> errorMessageBuilder)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                 Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                 Func<T, MlResult<TR3>> funcBuild3,
@@ -2580,18 +2580,18 @@ public static class MlResultActionsBind
                                                                                                                                 Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                                 Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                 string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                          Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                          Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                                          Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                                          Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                          Func<T, Task<MlResult<TR6>>> funcBuild6Async)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: null!);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: null!);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                          Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                          Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2599,9 +2599,9 @@ public static class MlResultActionsBind
                                                                                                                          Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                          Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                          Func<Exception, string>      errorMessageBuilder)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: errorMessageBuilder);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: errorMessageBuilder);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                          Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                          Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2609,10 +2609,10 @@ public static class MlResultActionsBind
                                                                                                                          Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                          Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                          string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: ex => exceptionAditionalMessage);
 
     // TR7
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                         Func<T, MlResult<TR3>>  funcBuild3,
@@ -2620,9 +2620,9 @@ public static class MlResultActionsBind
                                                                                                                         Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                                         Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                         Func<T, MlResult<TR7>>  funcBuild7)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: null!);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: null!);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                         Func<T, MlResult<TR3>>  funcBuild3,
@@ -2631,9 +2631,9 @@ public static class MlResultActionsBind
                                                                                                                         Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                         Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                         Func<Exception, string> errorMessageBuilder)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>            source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>            source,
                                                                                                                         Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                         Func<T, MlResult<TR3>> funcBuild3,
@@ -2642,9 +2642,9 @@ public static class MlResultActionsBind
                                                                                                                         Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                         Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                         string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                    Func<T, MlResult<TR3>>  funcBuild3,
@@ -2652,9 +2652,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, MlResult<TR5>>  funcBuild5,
                                                                                                                                    Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                                    Func<T, MlResult<TR7>>  funcBuild7)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                    Func<T, MlResult<TR3>>  funcBuild3,
@@ -2663,9 +2663,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                                    Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                                    Func<Exception, string> errorMessageBuilder)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>            source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>            source,
                                                                                                                                    Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                    Func<T, MlResult<TR3>> funcBuild3,
@@ -2674,9 +2674,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                    Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                                    string                 exceptionAditionalMessage)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                           Func<T, MlResult<TR3>> funcBuild3,
@@ -2684,9 +2684,9 @@ public static class MlResultActionsBind
                                                                                                                                           Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                                           Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                           Func<T, MlResult<TR7>> funcBuild7)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                           Func<T, MlResult<TR3>>  funcBuild3,
@@ -2695,9 +2695,9 @@ public static class MlResultActionsBind
                                                                                                                                           Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                                           Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                                           Func<Exception, string> errorMessageBuilder)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                           Func<T, MlResult<TR3>> funcBuild3,
@@ -2706,9 +2706,9 @@ public static class MlResultActionsBind
                                                                                                                                           Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                           Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                                           string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                    Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2716,9 +2716,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                                    Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: null!);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: null!);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                    Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2727,9 +2727,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async,
                                                                                                                                    Func<Exception, string>      errorMessageBuilder)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: errorMessageBuilder);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: errorMessageBuilder);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                    Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2738,13 +2738,13 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async,
                                                                                                                                    string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: ex => exceptionAditionalMessage);
 
 
 
 
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                         Func<T, MlResult<TR3>>  funcBuild3,
@@ -2753,9 +2753,9 @@ public static class MlResultActionsBind
                                                                                                                         Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                         Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                         Func<T, MlResult<TR8>>  funcBuild8)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: null!);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: null!);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                         Func<T, MlResult<TR3>>  funcBuild3,
@@ -2765,9 +2765,9 @@ public static class MlResultActionsBind
                                                                                                                         Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                         Func<T, MlResult<TR8>> funcBuild8,
                                                                                                                         Func<Exception, string> errorMessageBuilder)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder);
 
-    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>            source,
+    public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>            source,
                                                                                                                         Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                         Func<T, MlResult<TR3>> funcBuild3,
@@ -2777,9 +2777,9 @@ public static class MlResultActionsBind
                                                                                                                         Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                         Func<T, MlResult<TR8>> funcBuild8,
                                                                                                                         string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                    Func<T, MlResult<TR3>>  funcBuild3,
@@ -2788,9 +2788,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, MlResult<TR6>>  funcBuild6,
                                                                                                                                    Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                                    Func<T, MlResult<TR8>> funcBuild8)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                    Func<T, MlResult<TR3>>  funcBuild3,
@@ -2800,9 +2800,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                                    Func<T, MlResult<TR8>>  funcBuild8,
                                                                                                                                    Func<Exception, string> errorMessageBuilder)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>            source,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>            source,
                                                                                                                                    Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                    Func<T, MlResult<TR3>> funcBuild3,
@@ -2812,9 +2812,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                                    Func<T, MlResult<TR8>> funcBuild8,
                                                                                                                                    string                 exceptionAditionalMessage)
-        => source.TryBindBuild(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                           Func<T, MlResult<TR3>> funcBuild3,
@@ -2823,9 +2823,9 @@ public static class MlResultActionsBind
                                                                                                                                           Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                           Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                                           Func<T, MlResult<TR8>> funcBuild8)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                           Func<T, MlResult<TR3>>  funcBuild3,
@@ -2835,9 +2835,9 @@ public static class MlResultActionsBind
                                                                                                                                           Func<T, MlResult<TR7>>  funcBuild7,
                                                                                                                                           Func<T, MlResult<TR8>>  funcBuild8,
                                                                                                                                           Func<Exception, string> errorMessageBuilder)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder);
 
-    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
                                                                                                                                           Func<T, MlResult<TR3>> funcBuild3,
@@ -2847,9 +2847,9 @@ public static class MlResultActionsBind
                                                                                                                                           Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                                           Func<T, MlResult<TR8>> funcBuild8,
                                                                                                                                           string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                    Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2858,9 +2858,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async,
                                                                                                                                    Func<T, Task<MlResult<TR8>>> funcBuild8Async)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: null!);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: null!);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                    Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2870,9 +2870,9 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async,
                                                                                                                                    Func<T, Task<MlResult<TR8>>> funcBuild8Async,
                                                                                                                                    Func<Exception, string>      errorMessageBuilder)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: errorMessageBuilder);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: errorMessageBuilder);
 
-    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
+    public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                    Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -2882,7 +2882,7 @@ public static class MlResultActionsBind
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async,
                                                                                                                                    Func<T, Task<MlResult<TR8>>> funcBuild8Async,
                                                                                                                                    string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: ex => exceptionAditionalMessage);
 
 
 
@@ -2891,7 +2891,7 @@ public static class MlResultActionsBind
         #region private Tuple MlResult<T>
 
 
-    private static MlResult<(TR1, TR2)> InternalTryBindBuild<T, TR1, TR2>(this MlResult<T>             source,
+    private static MlResult<(TR1, TR2)> InternalTryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
                                                                                 Func<Exception, string> errorMessageBuilder = null!)
@@ -2899,11 +2899,11 @@ public static class MlResultActionsBind
         var result =                EnsureFp.NotNull(funcBuild1, $"The parameter {nameof(funcBuild1)}, can't be empty.")
                         .Bind( _ => EnsureFp.NotNull(funcBuild2, $"The parameter {nameof(funcBuild2)}, can't be empty."))
                         .Bind( _ => source)
-                        .Bind( x => InternalTryBindBuild(source: x, funcBuild1, funcBuild2, errorMessageBuilder));
+                        .Bind( x => InternalTryBindBuildTuple(source: x, funcBuild1, funcBuild2, errorMessageBuilder));
         return result;
     }
 
-    private static MlResult<(TR1, TR2, TR3)> InternalTryBindBuild<T, TR1, TR2, TR3>(this MlResult<T>             source,
+    private static MlResult<(TR1, TR2, TR3)> InternalTryBindBuildTuple<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                             Func<T, MlResult<TR1>>  funcBuild1,
                                                                                             Func<T, MlResult<TR2>>  funcBuild2,
                                                                                             Func<T, MlResult<TR3>>  funcBuild3,
@@ -2913,11 +2913,11 @@ public static class MlResultActionsBind
                         .Bind( _ => EnsureFp.NotNull(funcBuild2, $"The parameter {nameof(funcBuild2)}, can't be empty."))
                         .Bind( _ => EnsureFp.NotNull(funcBuild3, $"The parameter {nameof(funcBuild3)}, can't be empty."))
                         .Bind( _ => source)
-                        .Bind( x => InternalTryBindBuild(source: x, funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder));
+                        .Bind( x => InternalTryBindBuildTuple(source: x, funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder));
         return result;
     }
 
-    private static MlResult<(TR1, TR2, TR3, TR4)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
+    private static MlResult<(TR1, TR2, TR3, TR4)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                     Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                     Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                     Func<T, MlResult<TR3>>  funcBuild3,
@@ -2929,11 +2929,11 @@ public static class MlResultActionsBind
                         .Bind( _ => EnsureFp.NotNull(funcBuild3, $"The parameter {nameof(funcBuild3)}, can't be empty."))
                         .Bind( _ => EnsureFp.NotNull(funcBuild4, $"The parameter {nameof(funcBuild4)}, can't be empty."))
                         .Bind( _ => source)
-                        .Bind( x => InternalTryBindBuild(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder));
+                        .Bind( x => InternalTryBindBuildTuple(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder));
         return result;
     }
 
-    private static MlResult<(TR1, TR2, TR3, TR4, TR5)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
+    private static MlResult<(TR1, TR2, TR3, TR4, TR5)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                 Func<T, MlResult<TR3>>  funcBuild3,
@@ -2947,11 +2947,11 @@ public static class MlResultActionsBind
                         .Bind( _ => EnsureFp.NotNull(funcBuild4, $"The parameter {nameof(funcBuild4)}, can't be empty."))
                         .Bind( _ => EnsureFp.NotNull(funcBuild5, $"The parameter {nameof(funcBuild5)}, can't be empty."))
                         .Bind( _ => source)
-                        .Bind( x => InternalTryBindBuild(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder));
+                        .Bind( x => InternalTryBindBuildTuple(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder));
         return result;
     }
 
-    private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
+    private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                         Func<T, MlResult<TR3>>  funcBuild3,
@@ -2967,11 +2967,11 @@ public static class MlResultActionsBind
                         .Bind( _ => EnsureFp.NotNull(funcBuild5, $"The parameter {nameof(funcBuild5)}, can't be empty."))
                         .Bind( _ => EnsureFp.NotNull(funcBuild6, $"The parameter {nameof(funcBuild6)}, can't be empty."))
                         .Bind( _ => source)
-                        .Bind( x => InternalTryBindBuild(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder));
+                        .Bind( x => InternalTryBindBuildTuple(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder));
         return result;
     }
 
-    private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
+    private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                                     Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                     Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                     Func<T, MlResult<TR3>>  funcBuild3,
@@ -2989,11 +2989,11 @@ public static class MlResultActionsBind
                         .Bind( _ => EnsureFp.NotNull(funcBuild6, $"The parameter {nameof(funcBuild6)}, can't be empty."))
                         .Bind( _ => EnsureFp.NotNull(funcBuild7, $"The parameter {nameof(funcBuild7)}, can't be empty."))
                         .Bind( _ => source)
-                        .Bind( x => InternalTryBindBuild(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder));
+                        .Bind( x => InternalTryBindBuildTuple(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder));
         return result;
     }
 
-    private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
+    private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                                             Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                             Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                             Func<T, MlResult<TR3>>  funcBuild3,
@@ -3013,14 +3013,14 @@ public static class MlResultActionsBind
                         .Bind( _ => EnsureFp.NotNull(funcBuild7, $"The parameter {nameof(funcBuild7)}, can't be empty."))
                         .Bind( _ => EnsureFp.NotNull(funcBuild8, $"The parameter {nameof(funcBuild8)}, can't be empty."))
                         .Bind( _ => source)
-                        .Bind( x => InternalTryBindBuild(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder));
+                        .Bind( x => InternalTryBindBuildTuple(source: x, funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder));
         return result;
     }
 
 
 
 
-    private static async Task<MlResult<(TR1, TR2)>> InternalTryBindBuildAsync<T, TR1, TR2>(this Task<MlResult<T>>             sourceAsync,
+    private static async Task<MlResult<(TR1, TR2)>> InternalTryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>             sourceAsync,
                                                                                                 Func<T, Task<MlResult<TR1>>>  funcBuild1Async,
                                                                                                 Func<T, Task<MlResult<TR2>>>  funcBuild2Async,
                                                                                                 Func<Exception, string>       errorMessageBuilder = null!)
@@ -3028,11 +3028,11 @@ public static class MlResultActionsBind
         var result = await               EnsureFp.NotNullAsync(funcBuild1Async, $"The parameter {nameof(funcBuild1Async)}, can't be empty.")
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild2Async, $"The parameter {nameof(funcBuild2Async)}, can't be empty."))
                         .BindAsync( _ => sourceAsync)
-                        .BindAsync( x => InternalTryBindBuildAsync(source: x, funcBuild1Async, funcBuild2Async, errorMessageBuilder));
+                        .BindAsync( x => InternalTryBindBuildTupleAsync(source: x, funcBuild1Async, funcBuild2Async, errorMessageBuilder));
         return result;
     }
 
-    private static async Task<MlResult<(TR1, TR2, TR3)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>             sourceAsync,
+    private static async Task<MlResult<(TR1, TR2, TR3)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>             sourceAsync,
                                                                                                           Func<T, Task<MlResult<TR1>>>  funcBuild1Async,
                                                                                                           Func<T, Task<MlResult<TR2>>>  funcBuild2Async,
                                                                                                           Func<T, Task<MlResult<TR3>>>  funcBuild3Async,
@@ -3042,11 +3042,11 @@ public static class MlResultActionsBind
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild2Async, $"The parameter {nameof(funcBuild2Async)}, can't be empty."))
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild3Async, $"The parameter {nameof(funcBuild3Async)}, can't be empty."))
                         .BindAsync( _ => sourceAsync)
-                        .BindAsync( x => InternalTryBindBuildAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder));
+                        .BindAsync( x => InternalTryBindBuildTupleAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder));
         return result;
     }
 
-    private static async Task<MlResult<(TR1, TR2, TR3, TR4)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>             sourceAsync,
+    private static async Task<MlResult<(TR1, TR2, TR3, TR4)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>             sourceAsync,
                                                                                                                     Func<T, Task<MlResult<TR1>>>  funcBuild1Async,
                                                                                                                     Func<T, Task<MlResult<TR2>>>  funcBuild2Async,
                                                                                                                     Func<T, Task<MlResult<TR3>>>  funcBuild3Async,
@@ -3058,11 +3058,11 @@ public static class MlResultActionsBind
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild3Async, $"The parameter {nameof(funcBuild3Async)}, can't be empty."))
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild4Async, $"The parameter {nameof(funcBuild4Async)}, can't be empty."))
                         .BindAsync( _ => sourceAsync)
-                        .BindAsync( x => InternalTryBindBuildAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder));
+                        .BindAsync( x => InternalTryBindBuildTupleAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder));
         return result;
     }
 
-    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>             sourceAsync,
+    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>             sourceAsync,
                                                                                                                               Func<T, Task<MlResult<TR1>>>  funcBuild1Async,
                                                                                                                               Func<T, Task<MlResult<TR2>>>  funcBuild2Async,
                                                                                                                               Func<T, Task<MlResult<TR3>>>  funcBuild3Async,
@@ -3076,11 +3076,11 @@ public static class MlResultActionsBind
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild4Async, $"The parameter {nameof(funcBuild4Async)}, can't be empty."))
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild5Async, $"The parameter {nameof(funcBuild5Async)}, can't be empty."))
                         .BindAsync( _ => sourceAsync)
-                        .BindAsync( x => InternalTryBindBuildAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder));
+                        .BindAsync( x => InternalTryBindBuildTupleAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder));
         return result;
     }
 
-    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>             sourceAsync,
+    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>             sourceAsync,
                                                                                                                                         Func<T, Task<MlResult<TR1>>>  funcBuild1Async,
                                                                                                                                         Func<T, Task<MlResult<TR2>>>  funcBuild2Async,
                                                                                                                                         Func<T, Task<MlResult<TR3>>>  funcBuild3Async,
@@ -3096,11 +3096,11 @@ public static class MlResultActionsBind
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild5Async, $"The parameter {nameof(funcBuild5Async)}, can't be empty."))
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild6Async, $"The parameter {nameof(funcBuild6Async)}, can't be empty."))
                         .BindAsync( _ => sourceAsync)
-                        .BindAsync( x => InternalTryBindBuildAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder));
+                        .BindAsync( x => InternalTryBindBuildTupleAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder));
         return result;
     }
 
-    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>             sourceAsync,
+    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>             sourceAsync,
                                                                                                                                                   Func<T, Task<MlResult<TR1>>>  funcBuild1Async,
                                                                                                                                                   Func<T, Task<MlResult<TR2>>>  funcBuild2Async,
                                                                                                                                                   Func<T, Task<MlResult<TR3>>>  funcBuild3Async,
@@ -3118,11 +3118,11 @@ public static class MlResultActionsBind
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild6Async, $"The parameter {nameof(funcBuild6Async)}, can't be empty."))
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild7Async, $"The parameter {nameof(funcBuild7Async)}, can't be empty."))
                         .BindAsync( _ => sourceAsync)
-                        .BindAsync( x => InternalTryBindBuildAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder));
+                        .BindAsync( x => InternalTryBindBuildTupleAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder));
         return result;
     }
 
-    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>             sourceAsync,
+    private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>             sourceAsync,
                                                                                                                                                             Func<T, Task<MlResult<TR1>>>  funcBuild1Async,
                                                                                                                                                             Func<T, Task<MlResult<TR2>>>  funcBuild2Async,
                                                                                                                                                             Func<T, Task<MlResult<TR3>>>  funcBuild3Async,
@@ -3142,7 +3142,7 @@ public static class MlResultActionsBind
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild7Async, $"The parameter {nameof(funcBuild7Async)}, can't be empty."))
                         .BindAsync( _ => EnsureFp.NotNullAsync(funcBuild8Async, $"The parameter {nameof(funcBuild8Async)}, can't be empty."))
                         .BindAsync( _ => sourceAsync)
-                        .BindAsync( x => InternalTryBindBuildAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder));
+                        .BindAsync( x => InternalTryBindBuildTupleAsync(source: x, funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder));
         return result;
     }
 
@@ -3157,20 +3157,20 @@ public static class MlResultActionsBind
         #region private Tuple T
 
 
-    private static MlResult<(TR1, TR2)> InternalTryBindBuild<T, TR1, TR2>(T                       source,
+    private static MlResult<(TR1, TR2)> InternalTryBindBuildTuple<T, TR1, TR2>(T                       source,
                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                           Func<T, MlResult<TR2>>  funcBuild2,
                                                                           Func<Exception, string> errorMessageBuilder = null!)
         {
             var result = MlResult.Empty()
                                     .TryBind(func               : _           => funcBuild1(source), 
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild2(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static MlResult<(TR1, TR2, TR3)> InternalTryBindBuild<T, TR1, TR2, TR3>(T                       source,
+        private static MlResult<(TR1, TR2, TR3)> InternalTryBindBuildTuple<T, TR1, TR2, TR3>(T                       source,
                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
                                                                                         Func<T, MlResult<TR3>>  funcBuild3,
@@ -3178,15 +3178,15 @@ public static class MlResultActionsBind
         {
             var result = MlResult.Empty()
                                     .TryBind(func               : _           => funcBuild1(source), 
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild2(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild3(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static MlResult<(TR1, TR2, TR3, TR4)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4>(T                       source,
+        private static MlResult<(TR1, TR2, TR3, TR4)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4>(T                       source,
                                                                                                   Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                   Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                   Func<T, MlResult<TR3>>  funcBuild3,
@@ -3195,17 +3195,17 @@ public static class MlResultActionsBind
         {
             var result = MlResult.Empty()
                                     .TryBind(func               : _           => funcBuild1(source), 
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild2(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild3(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild4(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static MlResult<(TR1, TR2, TR3, TR4, TR5)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5>(T                       source,
+        private static MlResult<(TR1, TR2, TR3, TR4, TR5)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(T                       source,
                                                                                                             Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                             Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                             Func<T, MlResult<TR3>>  funcBuild3,
@@ -3215,19 +3215,19 @@ public static class MlResultActionsBind
         {
             var result = MlResult.Empty()
                                     .TryBind(func               : _           => funcBuild1(source), 
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild2(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild3(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild4(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild5(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6>(T                       source,
+        private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(T                       source,
                                                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                       Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                       Func<T, MlResult<TR3>>  funcBuild3,
@@ -3238,21 +3238,21 @@ public static class MlResultActionsBind
         {
             var result = MlResult.Empty()
                                     .TryBind(func               : _           => funcBuild1(source), 
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild2(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild3(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild4(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild5(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild6(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(T                       source,
+        private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(T                       source,
                                                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                 Func<T, MlResult<TR3>>  funcBuild3,
@@ -3264,23 +3264,23 @@ public static class MlResultActionsBind
         {
             var result = MlResult.Empty()
                                     .TryBind(func               : _           => funcBuild1(source), 
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild2(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild3(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild4(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild5(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild6(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild7(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> InternalTryBindBuild<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(T                       source,
+        private static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> InternalTryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(T                       source,
                                                                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                                                           Func<T, MlResult<TR3>>  funcBuild3,
@@ -3293,40 +3293,40 @@ public static class MlResultActionsBind
         {
             var result = MlResult.Empty()
                                     .TryBind(func               : _           => funcBuild1(source), 
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild2(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild3(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild4(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild5(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild6(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild7(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBind(func               : previewData => previewData.Combine(funcBuild8(source)),
-                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild8)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                             errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild8)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
 
-        private static async Task<MlResult<(TR1, TR2)>> InternalTryBindBuildAsync<T, TR1, TR2>(T                      source,
+        private static async Task<MlResult<(TR1, TR2)>> InternalTryBindBuildTupleAsync<T, TR1, TR2>(T                      source,
                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                          Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                          Func<Exception, string>      errorMessageBuilder = null!)
         {
             var result = await MlResult.EmptyAsync()
                                     .TryBindAsync(funcAsync          : _           => funcBuild1Async(source), 
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild2Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
 
         }
 
-        private static async Task<MlResult<(TR1, TR2, TR3)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3>(T                             source,
+        private static async Task<MlResult<(TR1, TR2, TR3)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3>(T                             source,
                                                                                                           Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                           Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                           Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -3334,15 +3334,15 @@ public static class MlResultActionsBind
         {
             var result = await MlResult.EmptyAsync()
                                     .TryBindAsync(funcAsync          : _           => funcBuild1Async(source), 
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild2Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild3Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static async Task<MlResult<(TR1, TR2, TR3, TR4)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4>(T                             source,
+        private static async Task<MlResult<(TR1, TR2, TR3, TR4)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(T                             source,
                                                                                                                     Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                     Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                     Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -3351,17 +3351,17 @@ public static class MlResultActionsBind
         {
             var result = await MlResult.EmptyAsync()
                                     .TryBindAsync(funcAsync          : _           => funcBuild1Async(source), 
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild2Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild3Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild4Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5>(T                             source,
+        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(T                             source,
                                                                                                                               Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                               Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                               Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -3371,19 +3371,19 @@ public static class MlResultActionsBind
         {
             var result = await MlResult.EmptyAsync()
                                     .TryBindAsync(funcAsync          : _           => funcBuild1Async(source), 
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild2Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild3Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild4Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild5Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(T                             source,
+        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(T                             source,
                                                                                                                                         Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                         Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                         Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -3394,21 +3394,21 @@ public static class MlResultActionsBind
         {
             var result = await MlResult.EmptyAsync()
                                     .TryBindAsync(funcAsync          : _           => funcBuild1Async(source), 
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild2Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild3Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild4Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild5Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild6Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(T                             source,
+        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(T                             source,
                                                                                                                                                   Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                                   Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                                   Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -3420,23 +3420,23 @@ public static class MlResultActionsBind
         {
             var result = await MlResult.EmptyAsync()
                                     .TryBindAsync(funcAsync          : _           => funcBuild1Async(source), 
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild2Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild3Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild4Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild5Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild6Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild7Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 
-        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> InternalTryBindBuildAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(T                             source,
+        private static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> InternalTryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(T                             source,
                                                                                                                                                             Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                                             Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                                                                             Func<T, Task<MlResult<TR3>>> funcBuild3Async,
@@ -3449,21 +3449,21 @@ public static class MlResultActionsBind
         {
             var result = await MlResult.EmptyAsync()
                                     .TryBindAsync(funcAsync          : _           => funcBuild1Async(source), 
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild1Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild2Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild2Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild3Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild3Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild4Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild4Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild5Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild5Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild6Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild6Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild7Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder))
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild7Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder))
                                     .TryBindAsync(funcAsync          : previewData => previewData.CombineAsync(funcBuild8Async(source)),
-                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild8Async)} in {nameof(TryBindBuild)}: {ex.Message}", errorMessageBuilder));
+                                                  errorMessageBuilder: ex          => CreatePartialErrorMessage(ex, $"Unexpected error applying the {nameof(funcBuild8Async)} in {nameof(TryBindBuildTuple)}: {ex.Message}", errorMessageBuilder));
             return result;
         }
 

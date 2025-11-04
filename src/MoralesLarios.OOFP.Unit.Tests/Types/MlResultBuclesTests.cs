@@ -6,7 +6,7 @@ public class MlResultBuclesTests
 
 
     [Fact]
-    public void CompleteData_When_2_completeFuncTransformGenerateError_return_Fail_with_2_errors_Concat()
+    public void Project_When_2_completeFuncTransformGenerateError_return_Fail_with_2_errors_Concat()
     {
         var IEnumerable = new List<TestType>
         {
@@ -15,7 +15,7 @@ public class MlResultBuclesTests
             new TestType(0, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType>> result = IEnumerable.CompleteData<TestType>(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                                    $"Error {x.Name}".ToMlResultFail<TestType>() : 
                                                                                    ( x with { Date = DateTime.Now.AddYears(-1) } ));
 
@@ -26,7 +26,7 @@ public class MlResultBuclesTests
 
 
     [Fact]
-    public void CompleteData_When_All_completeFuncTransforms_OK_return_valid()
+    public void Project_When_All_completeFuncTransforms_OK_return_valid()
     {
         var IEnumerable = new List<TestType>
         {
@@ -35,7 +35,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType>> result = IEnumerable.CompleteData<TestType>(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                                 $"Error {x.Name}".ToMlResultFail<TestType>() : 
                                                                                 ( x with { Date = DateTime.Now.AddYears(-1) } ));
 
@@ -45,7 +45,7 @@ public class MlResultBuclesTests
     }
 
     [Fact]
-    public void CompleteData_When_All_completeFuncTransforms_OK_return_valid_with_allElements_in_Value()
+    public void Project_When_All_completeFuncTransforms_OK_return_valid_with_allElements_in_Value()
     {
         var IEnumerable = new List<TestType>
         {
@@ -54,7 +54,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType>> result = IEnumerable.CompleteData<TestType>(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                                 $"Error {x.Name}".ToMlResultFail<TestType>() : 
                                                                                 ( x with { Date = DateTime.Now.AddYears(-1) } ));
 
@@ -64,7 +64,7 @@ public class MlResultBuclesTests
     }
 
     [Fact]
-    public void CompleteData_When_All_completeFuncTransforms_OK_return_valid_with_allElements_whit_correctTransform()
+    public void Project_When_All_completeFuncTransforms_OK_return_valid_with_allElements_whit_correctTransform()
     {
         var IEnumerable = new List<TestType>
         {
@@ -73,7 +73,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType>> result = IEnumerable.CompleteData<TestType>(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                                 $"Error {x.Name}".ToMlResultFail<TestType>() : 
                                                                                 ( x with { Date = DateTime.MinValue } ));
 
@@ -83,7 +83,7 @@ public class MlResultBuclesTests
     }
 
     [Fact]
-    public void CompleteData_differentResult_When_2_completeFuncTransformGenerateError_return_Fail_with_2_errors_Concat()
+    public void Project_differentResult_When_2_completeFuncTransformGenerateError_return_Fail_with_2_errors_Concat()
     {
         var IEnumerable = new List<TestType>
         {
@@ -92,7 +92,7 @@ public class MlResultBuclesTests
             new TestType(0, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = IEnumerable.CompleteData(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType2>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                            $"Error {x.Name}".ToMlResultFail<TestType2>() : 
                                                                            ( new TestType2(x.Id, x.Name, DateTime.Now.AddYears(-1) )));
 
@@ -105,7 +105,7 @@ public class MlResultBuclesTests
 
 
     [Fact]
-    public void CompleteData_differentResult_When_All_completeFuncTransforms_OK_return_valid()
+    public void Project_differentResult_When_All_completeFuncTransforms_OK_return_valid()
     {
         var IEnumerable = new List<TestType>
         {
@@ -114,7 +114,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = IEnumerable.CompleteData(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType2>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                            $"Error {x.Name}".ToMlResultFail<TestType2>() : 
                                                                            ( new TestType2(x.Id, x.Name, DateTime.Now.AddYears(-1) )));
 
@@ -124,7 +124,7 @@ public class MlResultBuclesTests
     }
 
     [Fact]
-    public void CompleteData_differentResult_When_All_completeFuncTransforms_OK_return_valid_with_allElements_in_Value()
+    public void Project_differentResult_When_All_completeFuncTransforms_OK_return_valid_with_allElements_in_Value()
     {
         var IEnumerable = new List<TestType>
         {
@@ -133,7 +133,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = IEnumerable.CompleteData(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType2>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                           $"Error {x.Name}".ToMlResultFail<TestType2>() : 
                                                                           ( new TestType2(x.Id, x.Name, DateTime.Now.AddYears(-1) )));
 
@@ -143,7 +143,7 @@ public class MlResultBuclesTests
     }
 
     [Fact]
-    public void CompleteData_differentResult_When_All_completeFuncTransforms_OK_return_valid_with_allElements_whit_correctTransform()
+    public void Project_differentResult_When_All_completeFuncTransforms_OK_return_valid_with_allElements_whit_correctTransform()
     {
         var IEnumerable = new List<TestType>
         {
@@ -152,7 +152,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = IEnumerable.CompleteData(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType2>> result = IEnumerable.Project(x => x.Id == 0 ? 
                                                                            $"Error {x.Name}".ToMlResultFail<TestType2>() : 
                                                                            ( new TestType2(x.Id, x.Name, DateTime.MinValue )));
 
@@ -162,7 +162,7 @@ public class MlResultBuclesTests
     }
 
     [Fact]
-    public void CompleteDataWhile_When_2_completeFuncTransformGenerateError_return_Fail_with_1_errors_Concat()
+    public void ProjectWhile_When_2_completeFuncTransformGenerateError_return_Fail_with_1_errors_Concat()
     {
         var IEnumerable = new List<TestType>
         {
@@ -171,7 +171,7 @@ public class MlResultBuclesTests
             new TestType(0, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType>> result = IEnumerable.CompleteDataWhile<TestType>(x => x.Id == 0 ?
+        MlResult<IEnumerable<TestType>> result = IEnumerable.ProjectWhile(x => x.Id == 0 ?
                                                                                          $"Error {x.Name}".ToMlResultFail<TestType>() :
                                                                                          (x with { Date = DateTime.Now.AddYears(-1) }));
 
@@ -182,7 +182,7 @@ public class MlResultBuclesTests
 
 
     [Fact]
-    public async Task CompleteDataParallelAsync_differentResult_When_All_completeFuncTransforms_OK_return_valid_with_allElements_whit_correctTransform()
+    public async Task ProjectParallelAsync_differentResult_When_All_completeFuncTransforms_OK_return_valid_with_allElements_whit_correctTransform()
     {
         var IEnumerable = new List<TestType>
         {
@@ -191,7 +191,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = await IEnumerable.CompleteDataParallelAsync(x => x.Id == 0 ?
+        MlResult<IEnumerable<TestType2>> result = await IEnumerable.ProjectParallelAsync(x => x.Id == 0 ?
                                                                                               ($"Error {x.Name}".ToMlResultFailAsync<TestType2>()) :
                                                                                               (new TestType2(x.Id, x.Name, DateTime.MinValue).ToMlResultValidAsync()));
 
