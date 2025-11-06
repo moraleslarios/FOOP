@@ -19,6 +19,7 @@ public class MlErrorsDetails(IEnumerable<MlError>       Errors  = null!,
     public static MlErrorsDetails FromErrorsMessagesDetails  (IEnumerable<string> errorsMessages, Dictionary<string, object> details = null!) => new(errorsMessages, details);
     public static MlErrorsDetails FromErrorMessageDetails    (string              errorMessage  , Dictionary<string, object> details = null!) => new(new List<MlError>{ MlError.FromErrorMessage(errorMessage) }, details);
     public static MlErrorsDetails FromEnumerableErrors       (IEnumerable<MlError> errors                                                   ) => new(errors);
+    public static MlErrorsDetails FromEnumerableErrors       (IEnumerable<string>  errors                                                   ) => new(errors, null!);
     public static MlErrorsDetails FromEnumerableErrorsDetails(IEnumerable<MlError> errors       , Dictionary<string, object> details = null!) => new(errors, details);
     public static MlErrorsDetails FromEnumerableStrings      (IEnumerable<string> errorsMessages                                            ) => FromErrorsMessagesDetails(errorsMessages);
     public static MlErrorsDetails FromError                  (MlError             error                                                     ) => new(new List<MlError> { error });
