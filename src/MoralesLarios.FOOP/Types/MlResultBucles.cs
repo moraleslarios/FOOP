@@ -3,7 +3,7 @@
 public static class MlResultBucles
 {
 
-    //public static MlResult<IEnumerable<T>> Project<T>(this IEnumerable<T> source,
+    //public static MlResult<IEnumerable<T>> Projection<T>(this IEnumerable<T> source,
     //                                                            Func<T, MlResult<T>> completeFuncTransform)
     //{
     //    var result = source.ToMlResultValid()
@@ -22,11 +22,11 @@ public static class MlResultBucles
     //    return result;
     //}
 
-    //public static Task<MlResult<IEnumerable<T>>> ProjectAsync<T>(this IEnumerable<T> source,
+    //public static Task<MlResult<IEnumerable<T>>> ProjectionAsync<T>(this IEnumerable<T> source,
     //                                                                       Func<T, MlResult<T>> completeFuncTransform)
-    //    => source.Project<T>(completeFuncTransform).ToAsync();
+    //    => source.Projection<T>(completeFuncTransform).ToAsync();
 
-    //public static async Task<MlResult<IEnumerable<T>>> ProjectAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
+    //public static async Task<MlResult<IEnumerable<T>>> ProjectionAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
     //                                                                             Func<T, Task<MlResult<T>>> completeFuncTransformAsync) //
     //{
     //    var result = await sourceAsync.ToMlResultValidAsync()
@@ -52,7 +52,7 @@ public static class MlResultBucles
     //}
 
 
-    //public static async Task<MlResult<IEnumerable<T>>> ProjectAsync<T>(this IEnumerable<T> source,
+    //public static async Task<MlResult<IEnumerable<T>>> ProjectionAsync<T>(this IEnumerable<T> source,
     //                                                                             Func<T, Task<MlResult<T>>> completeFuncTransformAsync) //
     //{
     //    var result = await source.ToMlResultValidAsync()
@@ -77,7 +77,7 @@ public static class MlResultBucles
 
 
 
-    public static MlResult<IEnumerable<TResult>> Project<T, TResult>(this IEnumerable<T>             source,
+    public static MlResult<IEnumerable<TResult>> Projection<T, TResult>(this IEnumerable<T>             source,
                                                                                Func<T, MlResult<TResult>> completeFuncTransform)
     {
         var result = source.ToMlResultValid()
@@ -95,13 +95,13 @@ public static class MlResultBucles
     }
 
 
-    public static Task<MlResult<IEnumerable<TResult>>> ProjectAsync<T, TResult>(this IEnumerable<T>             source,
+    public static Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                           Func<T, MlResult<TResult>> completeFuncTransform)
-        => source.Project(completeFuncTransform).ToAsync();
+        => source.Projection(completeFuncTransform).ToAsync();
 
 
-    public static async Task<MlResult<IEnumerable<TResult>>> ProjectAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
-                                                                                                Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync) //
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+                                                                                                Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
                             .BindAsync(async x =>
@@ -126,8 +126,8 @@ public static class MlResultBucles
     }
 
 
-    public static async Task<MlResult<IEnumerable<TResult>>> ProjectAsync<T, TResult>(this IEnumerable<T>                   source,
-                                                                                                Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync) //
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this IEnumerable<T>                   source,
+                                                                                                Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
                             .BindAsync(async colec =>
@@ -151,7 +151,7 @@ public static class MlResultBucles
 
 
 
-    //public static MlResult<IEnumerable<T>> ProjectWhile<T>(this IEnumerable<T>       source,
+    //public static MlResult<IEnumerable<T>> ProjectionWhile<T>(this IEnumerable<T>       source,
     //                                                                 Func<T, MlResult<T>> completeFuncTransform)
     //{
     //    var result = source.ToMlResultValid()
@@ -175,11 +175,11 @@ public static class MlResultBucles
     //    return result;
     //}
 
-    //public static Task<MlResult<IEnumerable<T>>> ProjectWhileAsync<T>(this IEnumerable<T>       source,
+    //public static Task<MlResult<IEnumerable<T>>> ProjectionWhileAsync<T>(this IEnumerable<T>       source,
     //                                                                            Func<T, MlResult<T>> completeFuncTransform)
-    //    => source.ProjectWhile<T>(completeFuncTransform).ToAsync();
+    //    => source.ProjectionWhile<T>(completeFuncTransform).ToAsync();
 
-    //public static async Task<MlResult<IEnumerable<T>>> ProjectWhileAsync<T>(this Task<IEnumerable<T>> sourceAsync,
+    //public static async Task<MlResult<IEnumerable<T>>> ProjectionWhileAsync<T>(this Task<IEnumerable<T>> sourceAsync,
     //                                                                                  Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
     //{
     //    var result = await sourceAsync.ToMlResultValidAsync()
@@ -205,7 +205,7 @@ public static class MlResultBucles
     //    return result;
     //}
 
-    //public static async Task<MlResult<IEnumerable<T>>> ProjectWhileAsync<T>(this IEnumerable<T>             source,
+    //public static async Task<MlResult<IEnumerable<T>>> ProjectionWhileAsync<T>(this IEnumerable<T>             source,
     //                                                                                  Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
     //{
     //    var result = await source.ToMlResultValidAsync()
@@ -229,7 +229,7 @@ public static class MlResultBucles
     //    return result;
     //}
 
-    public static MlResult<IEnumerable<TResult>> ProjectWhile<T, TResult>(this IEnumerable<T>             source,
+    public static MlResult<IEnumerable<TResult>> ProjectionWhile<T, TResult>(this IEnumerable<T>             source,
                                                                                     Func<T, MlResult<TResult>> completeFuncTransform)
     {
         var result = source.ToMlResultValid()
@@ -253,11 +253,11 @@ public static class MlResultBucles
         return result;
     }
 
-    public static Task<MlResult<IEnumerable<TResult>>> ProjectWhileAsync<T, TResult>(this IEnumerable<T>             source,
+    public static Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                                Func<T, MlResult<TResult>> completeFuncTransform)
-        => source.ProjectWhile(completeFuncTransform).ToAsync();
+        => source.ProjectionWhile(completeFuncTransform).ToAsync();
 
-    public static async Task<MlResult<IEnumerable<TResult>>> ProjectWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                      Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
@@ -283,7 +283,7 @@ public static class MlResultBucles
         return result;
     }
 
-    public static async Task<MlResult<IEnumerable<TResult>>> ProjectWhileAsync<T, TResult>(this IEnumerable<T>                   source,
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                      Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
@@ -308,7 +308,7 @@ public static class MlResultBucles
     }
 
 
-    //public static async Task<MlResult<IEnumerable<T>>> ProjectParallelAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
+    //public static async Task<MlResult<IEnumerable<T>>> ProjectionParallelAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
     //                                                                                     Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
     //{
     //    var result = await sourceAsync.ToMlResultValidAsync()
@@ -331,7 +331,7 @@ public static class MlResultBucles
     //    return result;
     //}
 
-    //public static async Task<MlResult<IEnumerable<T>>> ProjectParallelAsync<T>(this IEnumerable<T>             source,
+    //public static async Task<MlResult<IEnumerable<T>>> ProjectionParallelAsync<T>(this IEnumerable<T>             source,
     //                                                                                     Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
     //{
     //    var result = await source.ToMlResultValidAsync()
@@ -352,7 +352,7 @@ public static class MlResultBucles
     //    return result;
     //}
 
-    public static async Task<MlResult<IEnumerable<TResult>>> ProjectParallelAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                         Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
@@ -376,7 +376,7 @@ public static class MlResultBucles
     }
 
 
-    public static async Task<MlResult<IEnumerable<TResult>>> ProjectParallelAsync<T, TResult>(this IEnumerable<T>                   source,
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                         Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
