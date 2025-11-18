@@ -2,7 +2,7 @@
 
 public class IntNotNegative : IntMoreThan
 {
-    public static int limit = -1;
+    public static int limit = 0;
 
     protected IntNotNegative(int value) : base(value, limit)
     {
@@ -10,7 +10,7 @@ public class IntNotNegative : IntMoreThan
     }
 
     public static string BuildErrorMessage(int value) => $"{value} must be More than {limit}";
-    public static bool IsValid(int value) => value > limit;
+    public static bool IsValid(int value) => value < limit;
 
 
     public static IntNotNegative FromInt(int value) => new IntNotNegative(value);

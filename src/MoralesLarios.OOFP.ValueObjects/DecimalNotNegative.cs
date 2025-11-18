@@ -2,7 +2,7 @@
 
 public class DecimalNotNegative : DecimalMoreThan
 {
-    public static decimal limit { get; private set; } =  -1.0m;
+    public static decimal limit { get; private set; } =  0m;
 
     protected DecimalNotNegative(decimal value) : base(value, limit)
     {
@@ -10,7 +10,7 @@ public class DecimalNotNegative : DecimalMoreThan
     }
 
     public static string BuildErrorMessage(decimal value) => $"{value} must be More than {limit}";
-    public static bool IsValid(decimal value) => value > limit;
+    public static bool IsValid(decimal value) => value < limit;
 
 
     public static DecimalNotNegative FromDecimal(decimal value) => new DecimalNotNegative(value);

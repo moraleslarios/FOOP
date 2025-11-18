@@ -2,7 +2,7 @@
 
 public class DoubleNotNegative : DoubleMoreThan
 {
-    public static double limit { get; private set; } =  -1.0;
+    public static double limit { get; private set; } =  0m;
 
     protected DoubleNotNegative(double value) : base(value, limit)
     {
@@ -10,7 +10,7 @@ public class DoubleNotNegative : DoubleMoreThan
     }
 
     public static string BuildErrorMessage(double value) => $"{value} must be More than {limit}";
-    public static bool IsValid(double value) => value > limit;
+    public static bool IsValid(double value) => value < limit;
 
 
     public static DoubleNotNegative FromDouble(double value) => new DoubleNotNegative(value);
