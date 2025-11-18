@@ -2,7 +2,7 @@
 
 public class DoubleNotNegative : DoubleMoreThan
 {
-    public static double limit { get; private set; } =  0m;
+    public static double limit { get; private set; } =  0;
 
     protected DoubleNotNegative(double value) : base(value, limit)
     {
