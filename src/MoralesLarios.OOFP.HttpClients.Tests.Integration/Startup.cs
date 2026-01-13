@@ -21,5 +21,15 @@ public class Startup
         {
             client.BaseAddress = new Uri("https://localhost:7240/api/Customer/");
         });
+
+
+        services.AddHttpClient("pruebas-api", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/");
+        });
+
+
+
+
     }
 }

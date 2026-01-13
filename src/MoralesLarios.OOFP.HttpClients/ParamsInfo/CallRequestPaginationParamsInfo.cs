@@ -5,14 +5,14 @@
 
 
 public record CallRequestPaginationParamsInfo(string            Url,
-                                              Name              HttpClientFactoryKey,
+                                              Key               HttpClientFactoryKey,
                                               IntNotNegative    PageNumber,
                                               IntNotNegative    PageSize,
                                               CancellationToken CancellationToken = default)
     : CallRequestParamsInfo(Url, HttpClientFactoryKey, CancellationToken)
 {
     public static implicit operator CallRequestPaginationParamsInfo((string            url,
-                                                                     Name              httpClientFactoryKey,
+                                                                     Key               httpClientFactoryKey,
                                                                      IntNotNegative    pageNumber,
                                                                      IntNotNegative    pageSize,
                                                                      CancellationToken cancellationToken) value)
@@ -25,15 +25,15 @@ public record CallRequestPaginationParamsInfo(string            Url,
 
 
 public record CallRequestPaginationParamsInfo<TRequest>(                     string            Url,
-                                                                             Name              HttpClientFactoryKey,
+                                                                             Key               HttpClientFactoryKey,
                                                         [property: Required] TRequest          RequestBody,
                                                                              IntNotNegative    PageNumber,
                                                                              IntNotNegative    PageSize,
                                                                              CancellationToken CancellationToken = default)
     : CallRequestParamsInfo<TRequest>(Url, HttpClientFactoryKey, RequestBody, CancellationToken)
 {
-    public static implicit operator CallRequestPaginationParamsInfo<TRequest>((string       url,
-                                                                               Name              httpClientFactoryKey,
+    public static implicit operator CallRequestPaginationParamsInfo<TRequest>((string            url,
+                                                                               Key               httpClientFactoryKey,
                                                                                TRequest          requestBody,
                                                                                IntNotNegative    pageNumber,
                                                                                IntNotNegative    pageSize,

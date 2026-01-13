@@ -2,12 +2,12 @@ namespace MoralesLarios.OOFP.HttpClients.ParamsInfo;
 
 
 public record CallRequestParamsInfo(string            Url,
-                                    Name              HttpClientFactoryKey,
+                                    Key               HttpClientFactoryKey,
                                     CancellationToken CancellationToken = default
 )
 {
     public static implicit operator CallRequestParamsInfo((NotEmptyString    url,
-                                                           Name              httpClientFactoryKey,
+                                                           Key               httpClientFactoryKey,
                                                            CancellationToken cancellationToken) value) 
         => new (value.url, value.httpClientFactoryKey, value.cancellationToken);
 }
@@ -16,13 +16,13 @@ public record CallRequestParamsInfo(string            Url,
 
 
 public record CallRequestParamsInfo<TRequest>(                     string            Url,
-                                                                   Name              HttpClientFactoryKey,
+                                                                   Key               HttpClientFactoryKey,
                                               [property: Required] TRequest          RequestBody,
                                                                    CancellationToken CancellationToken = default
 )
 {
     public static implicit operator CallRequestParamsInfo<TRequest>((string            url,
-                                                                     Name              httpClientFactoryKey,
+                                                                     Key               httpClientFactoryKey,
                                                                      TRequest          requestBody,
                                                                      CancellationToken cancellationToken) value) 
         => new (value.url, value.httpClientFactoryKey, value.requestBody, value.cancellationToken);
