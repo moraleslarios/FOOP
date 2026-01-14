@@ -831,14 +831,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.BindIfFailWithException(ex => (ex != null! ? 1 : 0).ToMlResultValid());
 
-        MlResult<int> expected = (new MlError[] { "miError" , "The key Ex does not exist in the details" },
-                                            new Dictionary<string, object>
-                                            {
-                                                { "key2", "value2" }
-                                            }
-                                        );
-
-        result.ToString().Should().BeEquivalentTo(expected.ToString());
+        result.ToString().Should().BeEquivalentTo(partialResult.ToString());
     }
 
     [Fact]
@@ -882,14 +875,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResult.BindIfFailWithExceptionAsync(ex => (ex != null! ? 1 : 0).ToMlResultValidAsync());
 
-        MlResult<int> expected = (new MlError[] { "miError" , "The key Ex does not exist in the details" },
-                                    new Dictionary<string, object>
-                                    {
-                                        { "key2", "value2" }
-                                    }
-                                );
-
-        result.ToString().Should().BeEquivalentTo(expected.ToString());
+        result.ToString().Should().BeEquivalentTo(partialResult.ToString());
     }
 
 
@@ -934,14 +920,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResultAsync.BindIfFailWithExceptionAsync(ex => (ex != null! ? 1 : 0).ToMlResultValidAsync());
 
-        MlResult<int> expected = (new MlError[] { "miError" , "The key Ex does not exist in the details" },
-                            new Dictionary<string, object>
-                            {
-                                { "key2", "value2" }
-                            }
-                        );
-
-        result.ToString().Should().BeEquivalentTo(expected.ToString());
+        result.ToString().Should().BeEquivalentTo(partialResultAsync.Result.ToString());
     }
 
 
@@ -1033,14 +1012,59 @@ public class MlResultActionsBindTests
         MlResult<DateTime> result = partialResult.BindIfFailWithException<int, DateTime>(funcValid: x  => new DateTime(x, x, x),
                                                                                          funcFail : ex => new DateTime(2, 2, 2));
 
-        MlResult<DateTime> expected = new DateTime(2, 2, 2);
+        result.ToString().Should().BeEquivalentTo(partialResult.ToString());
+    }
 
-        var hasExError = result.Match(
-                                            valid: _             => false,
-                                            fail : errorsDetails => errorsDetails.Errors.Any(error => error == "The key Ex does not exist in the details")
+
+
+
+
+
+
+
+    [Fact]
+    public void BindIfFailWithException_genericException_sourceValid_returnValid()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<int> result = partialResult.BindIfFailWithException<int, InvalidOperationException>(ex => (ex != null! ? 1 : 0).ToMlResultValid());
+
+        result.IsValid.Should().BeTrue();
+    }
+
+
+    [Fact]
+    public void BindIfFailWithException_genericException_sourceValid_invalidExceptionType_NotExecuteFuncException()
+    {
+        MlResult<int> partialResult = ("miError",
+                                            new Dictionary<string, object>
+                                            {
+                                                { EX_DESC_KEY, new InvalidOperationException("miException") },
+                                                { "key2", "value2" }
+                                            }
                                         );
 
-        hasExError.Should().BeTrue();
+        MlResult<int> result = partialResult.BindIfFailWithException<int, ApplicationException>(ex => 1.ToMlResultValid());
+
+        result.ToString().Should().BeEquivalentTo(partialResult.ToString());
+    }
+
+    [Fact]
+    public void BindIfFailWithException_genericException_sourceValid_validExceptionType_ExecuteFuncException()
+    {
+        MlResult<int> partialResult = ("miError",
+                                            new Dictionary<string, object>
+                                            {
+                                                { EX_DESC_KEY, new InvalidOperationException("miException") },
+                                                { "key2", "value2" }
+                                            }
+                                        );
+
+        MlResult<int> result = partialResult.BindIfFailWithException<int, InvalidOperationException>(ex => 1.ToMlResultValid());
+
+        MlResult<int> expected = 1;
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
 
 
