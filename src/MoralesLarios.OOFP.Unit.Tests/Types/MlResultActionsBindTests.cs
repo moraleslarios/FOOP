@@ -1068,6 +1068,34 @@ public class MlResultActionsBindTests
     }
 
 
+    [Fact]
+    public void BindIfFailWithException_genericException_specificExceptionType_notExecuteExceptionBase()
+    {
+        MlResult<int> partialResult = ("miError",
+                                            new Dictionary<string, object>
+                                            {
+                                                { EX_DESC_KEY, new InvalidOperationException("miException") },
+                                                { "key2", "value2" }
+                                            }
+                                        );
+
+        MlResult<int> result = partialResult.BindIfFailWithException<int, InvalidOperationException>(ex => 1.ToMlResultValid())
+                                            .BindIfFailWithException<int, Exception                >(ex => 2.ToMlResultValid());
+
+        MlResult<int> expected = 1;
+
+        result.ToString().Should().BeEquivalentTo(expected.ToString());
+    }
+
+
+
+
+
+
+
+
+
+
     #endregion
 
 
@@ -1134,10 +1162,13 @@ public class MlResultActionsBindTests
         result.IsValid.Should().BeTrue();
     }
 
+
+
+
     [Fact]
     public async Task BindIfFailWithoutExceptionAsync_sourceFailWithDetailsException_returnSource()
     {
-        MlResult<int> partialResult =  ("miError",
+        MlResult<int> partialResult = ("miError",
                                                                   new Dictionary<string, object>
                                                                   {
                                                 { EX_DESC_KEY, new Exception("miException") },
@@ -1149,6 +1180,7 @@ public class MlResultActionsBindTests
 
         result.ToString().Should().BeEquivalentTo(partialResult.ToString());
     }
+
 
 
     [Fact]

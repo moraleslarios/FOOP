@@ -550,14 +550,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = await partialResult.MapIfFailWithExceptionAsync(ex => (ex != null! ? 1 : 0).ToAsync());
 
-        MlResult<int> expected = (new MlError[] { "miError" , "The key Ex does not exist in the details" },
-                                    new Dictionary<string, object>
-                                    {
-                                        { "key2", "value2" }
-                                    }
-                                );
-
-        result.ToString().Should().BeEquivalentTo(expected.ToString());
+        result.ToString().Should().BeEquivalentTo(partialResult.ToString());
     }
 
 
