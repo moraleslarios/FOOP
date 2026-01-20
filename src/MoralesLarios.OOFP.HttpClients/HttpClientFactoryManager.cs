@@ -4,13 +4,13 @@ namespace MoralesLarios.OOFP.HttpClients;
 public class HttpClientFactoryManager(IHttpClientFactory                _httpClientFactory,
                                       ILogger<HttpClientFactoryManager> _logger) : IHttpClientFactoryManager
 {
-    public async Task<MlResult<IEnumerable<T>>> GetAsync<T>(Key  httpClientFactoryKey,
+    public async Task<MlResult<T>> GetAsync<T>(Key  httpClientFactoryKey,
                                                string            url = "", // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAdress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
                                                CancellationToken ct = default)
     {
         var result = await _logger.LogMlResultInformationAsync($"Consultando datos a la url {url}")
                                     .TryMapAsync( _      => _httpClientFactory.CreateClient(httpClientFactoryKey))
-                                    .TryMapAsync( client => client.GetFromJsonAsync<IEnumerable<T>>(url, ct))
+                                    .TryMapAsync( client => client.GetFromJsonAsync<T>(url, ct))
                                             .MyMethodFinalLogAsync(_logger, $"GetAsync<{typeof(T).Name}>");
         return result!;
     }
