@@ -46,4 +46,36 @@ public static class MlHttpRequestExtensions
     public static Task<MlResult<HttpClient>> SetHeaderPageInfoAsync(this HttpClient client, IntNotNegative pageNumber, IntNotNegative pageSize)
         => client.SetHeaderPageInfo(pageNumber, pageSize).ToAsync();
 
+
+
+
+    public static MlResult<HttpRequestMessage> SetHeaderInfo(this HttpRequestMessage request, Name headerKey, NotEmptyString headerValue)
+    {
+        var result =                                      EnsureFp.NotNull(request, $"{nameof(headerKey)} cannot be null if we want to set information in the header. ")
+                                .Bind              ( _ => EnsureFp.NotNull(headerValue, $"{nameof(headerValue)} cannot be null if we want to set information in the header. "))
+                                .TryExecSelfIfValid( _ => request.Headers.Add(headerKey, headerValue))
+                                .Map               ( _ => request);
+        return result;
+    }
+
+    public static Task<MlResult<HttpRequestMessage>> SetHeaderInfoAsync(this HttpRequestMessage request, Name headerKey, NotEmptyString headerValue)
+        => request.SetHeaderInfo(headerKey, headerValue).ToAsync();
+
+    public static MlResult<HttpRequestMessage> SetHeaders(this HttpRequestMessage request, Dictionary<string, string> headerKeyValues)
+    {
+        var result = EnsureFp.NotNull(request, $"{nameof(headerKeyValues)} cannot be null if we want to set information in the header. ")
+                                .TryExecSelfIfValid( _ =>
+                                                        {
+                                                            foreach (var kvp in headerKeyValues)
+                                                            {
+                                                                request.Headers.Add(kvp.Key, kvp.Value);
+                                                            }
+                                                        })
+                                .Map                ( _ => request);
+        return result;
+    }
+
+    public static Task<MlResult<HttpRequestMessage>> SetHeadersAsync(this HttpRequestMessage request, Dictionary<string, string> headerKeyValues)
+        => request.SetHeaders(headerKeyValues).ToAsync();
+
 }

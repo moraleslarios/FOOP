@@ -4,10 +4,6 @@ namespace MoralesLarios.OOFP.Helpers.Extensions;
 public static class Extensions
 {
 
-
-    //public static string ToDesc<T>(this IEnumerable<T> source) where T : struct => source.Select(x => x.ToString()).ToDesc();
-
-
     public static IEnumerable<ValidationResult> ValidateObject(this object source)
     {
         var valContext = new ValidationContext(source, null, null);
@@ -92,51 +88,6 @@ public static class Extensions
             return Task.CompletedTask;
         };
     }
-
-
-
-    //static void Main()
-    //{
-    //    Func<int, int> source = x => x + 2;
-
-    //    MethodInfo methodInfo = source.Method;
-    //    MethodBody methodBody = methodInfo.GetMethodBody();
-
-    //    byte[] ilBytes = methodBody.GetILAsByteArray();
-    //    string body = DisassembleIL(ilBytes);
-
-    //    Console.WriteLine(body);
-    //}
-
-
-    //public static string ToFuncDescBody(this MethodInfo source)
-    //{
-    //    MethodBody methodBody = source.GetMethodBody();
-
-    //    byte[] ilBytes = methodBody.GetILAsByteArray();
-    //    string result = DisassembleIL(ilBytes);
-
-    //    return result;
-    //}
-
-
-
-
-    //private static string DisassembleIL(byte[] ilBytes)
-    //{
-    //    DynamicMethod dynamicMethod = new DynamicMethod("Disassembly", typeof(string), new Type[] { typeof(byte[]) }, typeof(Extensions).Module);
-    //    ILGenerator ilGenerator = dynamicMethod.GetILGenerator();
-    //    ilGenerator.Emit(OpCodes.Ldarg_0);
-    //    ilGenerator.Emit(OpCodes.Ret);
-
-    //    object[] parameters = new object[] { ilBytes };
-
-    //    var data = dynamicMethod.Invoke(null, parameters);
-
-    //    string disassembledIL = (string)dynamicMethod.Invoke(null, parameters);
-
-    //    return disassembledIL;
-    //}
 
 
 
