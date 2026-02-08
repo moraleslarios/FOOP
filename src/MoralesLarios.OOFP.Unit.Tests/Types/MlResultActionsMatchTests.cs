@@ -124,17 +124,17 @@ public class MlResultActionsMatchTests
 
 
 
-    #region MatchAll
+    #region Match
 
 
 
 
     [Fact]
-    public void MatchAll_simple_valid_OK()
+    public void Match_simple_valid_OK()
     {
         MlResult<int> source = 11;
 
-        MlResult<int> result = source.MatchAll(() => 12);
+        MlResult<int> result = source.Match(() => 12);
 
         MlResult<int> expected = 12;
 
@@ -142,11 +142,11 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public void MatchAll_simple_fail_OK()
+    public void Match_simple_fail_OK()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
-        MlResult<int> result = source.MatchAll(() => 12);
+        MlResult<int> result = source.Match(() => 12);
 
         MlResult<int> expected = 12;
 
@@ -154,11 +154,11 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public async Task MatchAllAsync_simple_valid_OK()
+    public async Task MatchAsync_simple_valid_OK()
     {
         MlResult<int> source = 11;
 
-        MlResult<int> result = await source.MatchAllAsync(() => 12.ToAsync());
+        MlResult<int> result = await source.MatchAsync(() => 12.ToAsync());
 
         MlResult<int> expected = 12;
 
@@ -166,11 +166,11 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public async Task MatchAllAsync_simple_fail_OK()
+    public async Task MatchAsync_simple_fail_OK()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
-        MlResult<int> result = await source.MatchAllAsync(() => 12.ToAsync());
+        MlResult<int> result = await source.MatchAsync(() => 12.ToAsync());
 
         MlResult<int> expected = 12;
 
@@ -178,11 +178,11 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public async Task MatchAllAsync_sourceAysnc_simple_valid_OK()
+    public async Task MatchAsync_sourceAysnc_simple_valid_OK()
     {
         Task<MlResult<int>> sourceAsync = 11.ToMlResultValidAsync();
 
-        MlResult<int> result = await sourceAsync.MatchAllAsync(() => 12.ToAsync());
+        MlResult<int> result = await sourceAsync.MatchAsync(() => 12.ToAsync());
 
         MlResult<int> expected = 12;
 
@@ -190,11 +190,11 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public async Task MatchAllAsync_sourceAsync_simple_fail_OK()
+    public async Task MatchAsync_sourceAsync_simple_fail_OK()
     {
         Task<MlResult<int>> source = "error".ToMlResultFailAsync<int>();
 
-        MlResult<int> result = await source.MatchAllAsync(() => 12.ToAsync());
+        MlResult<int> result = await source.MatchAsync(() => 12.ToAsync());
 
         MlResult<int> expected = 12;
 
@@ -286,7 +286,7 @@ public class MlResultActionsMatchTests
 
 
     //[Fact]
-    //public void MatchAll_changeValue_simple_valid_OK()
+    //public void Match_changeValue_simple_valid_OK()
     //{
     //    MlResult<int> source = 11;
 
@@ -298,7 +298,7 @@ public class MlResultActionsMatchTests
     //}
 
     //[Fact]
-    //public void MatchAll_changeValue_simple_fail_OK()
+    //public void Match_changeValue_simple_fail_OK()
     //{
     //    MlResult<int> source = "error".ToMlResultFail<int>();
 
@@ -443,11 +443,11 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public void TryMatchAll_simple_valid_withoutException_OK()
+    public void TryMatch_simple_valid_withoutException_OK()
     {
         MlResult<int> source = 11;
 
-        MlResult<int> result = source.TryMatchAll(() => 12);
+        MlResult<int> result = source.TryMatch(() => 12);
 
         MlResult<int> expected = 12;
 
@@ -456,13 +456,13 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public void TryMatchAll_simple_valid_withoException_OK()
+    public void TryMatch_simple_valid_withoException_OK()
     {
         MlResult<int> source = 11;
 
         var divisor = 0;
 
-        MlResult<int> result = source.TryMatchAll(() => 12/divisor, "Test en error");
+        MlResult<int> result = source.TryMatch(() => 12/divisor, "Test en error");
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
@@ -473,11 +473,11 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public void TryMatchAll_simple_fail_withoutException_OK()
+    public void TryMatch_simple_fail_withoutException_OK()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
-        MlResult<int> result = source.TryMatchAll(() => 12);
+        MlResult<int> result = source.TryMatch(() => 12);
 
         MlResult<int> expected = 12;
 
@@ -486,13 +486,13 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public void TryMatchAll_simple_fail_withoException_OK()
+    public void TryMatch_simple_fail_withoException_OK()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
         var divisor = 0;
 
-        MlResult<int> result = source.TryMatchAll(() => 12/divisor, "Test en error");
+        MlResult<int> result = source.TryMatch(() => 12/divisor, "Test en error");
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
@@ -504,11 +504,11 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public async Task TryMatchAllAsync_simple_valid_withoutException_OK()
+    public async Task TryMatchAsync_simple_valid_withoutException_OK()
     {
         MlResult<int> source = 11;
 
-        MlResult<int> result = await source.TryMatchAllAsync(() => 12.ToAsync());
+        MlResult<int> result = await source.TryMatchAsync(() => 12.ToAsync());
 
         MlResult<int> expected = 12;
 
@@ -517,13 +517,13 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public async Task TryMatchAllAsync_simple_valid_withoException_OK()
+    public async Task TryMatchAsync_simple_valid_withoException_OK()
     {
         MlResult<int> source = 11;
 
         var divisor = 0;
 
-        MlResult<int> result = await source.TryMatchAllAsync(() => (12/divisor).ToAsync(), "Test en error");
+        MlResult<int> result = await source.TryMatchAsync(() => (12/divisor).ToAsync(), "Test en error");
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
@@ -535,11 +535,11 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public async Task TryMatchAllAsync_sourceAsync_simple_valid_withoutException_OK()
+    public async Task TryMatchAsync_sourceAsync_simple_valid_withoutException_OK()
     {
         Task<MlResult<int>> source = 11.ToMlResultValidAsync();
 
-        MlResult<int> result = await source.TryMatchAllAsync(() => 12.ToAsync());
+        MlResult<int> result = await source.TryMatchAsync(() => 12.ToAsync());
 
         MlResult<int> expected = 12;
 
@@ -548,13 +548,13 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public async Task TryMatchAllAsync_sourceAsync_simple_valid_withoException_OK()
+    public async Task TryMatchAsync_sourceAsync_simple_valid_withoException_OK()
     {
         Task<MlResult<int>> source = 11.ToMlResultValidAsync();
 
         var divisor = 0;
 
-        MlResult<int> result = await source.TryMatchAllAsync(() => (12/divisor).ToAsync(), "Test en error");
+        MlResult<int> result = await source.TryMatchAsync(() => (12/divisor).ToAsync(), "Test en error");
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
@@ -770,11 +770,11 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public void TryMatchAll_simple_withoutException_valid_OK()
+    public void TryMatch_simple_withoutException_valid_OK()
     {
         MlResult<int> source = 11;
 
-        MlResult<string> result = source.TryMatchAll<int, string>(funcAll: () => 12.ToString());
+        MlResult<string> result = source.TryMatch<int, string>(funcAll: () => 12.ToString());
 
         MlResult<string> expected = "12";
 
@@ -782,13 +782,13 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public void TryMatchAll_simple_withException_return_failWithEx()
+    public void TryMatch_simple_withException_return_failWithEx()
     {
         MlResult<int> source = 11;
 
         var divisor = 0;
 
-        MlResult<string> result = source.TryMatchAll<int, string>(funcAll: () => (12 / divisor).ToString());
+        MlResult<string> result = source.TryMatch<int, string>(funcAll: () => (12 / divisor).ToString());
 
         bool hasErrors = result.Match(
                                 valid: x             => false,
@@ -800,11 +800,11 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public void TryMatchAll_simple_withoutException_fail_OK()
+    public void TryMatch_simple_withoutException_fail_OK()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
-        MlResult<string> result = source.TryMatchAll<int, string>(funcAll: () => 12.ToString());
+        MlResult<string> result = source.TryMatch<int, string>(funcAll: () => 12.ToString());
 
         MlResult<string> expected = "12";
 
@@ -812,13 +812,13 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public void TryMatchAll_simple_withException_fail_failWithEx()
+    public void TryMatch_simple_withException_fail_failWithEx()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
         var divisor = 0;
 
-        MlResult<string> result = source.TryMatchAll<int, string>(funcAll: () => (12 / divisor).ToString());
+        MlResult<string> result = source.TryMatch<int, string>(funcAll: () => (12 / divisor).ToString());
 
         bool hasErrors = result.Match(
                                 valid: x             => false,
@@ -832,11 +832,11 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public async Task TryMatchAllAsync_simple_withoutException_valid_OK()
+    public async Task TryMatchAsync_simple_withoutException_valid_OK()
     {
         MlResult<int> source = 11;
 
-        MlResult<string> result = await source.TryMatchAllAsync(funcAllAsync: () => 12.ToString().ToAsync());
+        MlResult<string> result = await source.TryMatchAsync(funcAllAsync: () => 12.ToString().ToAsync());
 
         MlResult<string> expected = "12";
 
@@ -844,13 +844,13 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public async Task TryMatchAllAsync_simple_withException_return_failWithEx()
+    public async Task TryMatchAsync_simple_withException_return_failWithEx()
     {
         MlResult<int> source = 11;
 
         var divisor = 0;
 
-        MlResult<string> result = await source.TryMatchAllAsync(funcAllAsync: () => (12 / divisor).ToString().ToAsync());
+        MlResult<string> result = await source.TryMatchAsync(funcAllAsync: () => (12 / divisor).ToString().ToAsync());
 
         bool hasErrors = result.Match(
                                 valid: x             => false,
@@ -862,11 +862,11 @@ public class MlResultActionsMatchTests
 
 
     [Fact]
-    public async Task TryMatchAllAsync_simple_withoutException_fail_OK()
+    public async Task TryMatchAsync_simple_withoutException_fail_OK()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
-        MlResult<string> result = await source.TryMatchAllAsync(funcAllAsync: () => 12.ToString().ToAsync());
+        MlResult<string> result = await source.TryMatchAsync(funcAllAsync: () => 12.ToString().ToAsync());
 
         MlResult<string> expected = "12";
 
@@ -874,13 +874,13 @@ public class MlResultActionsMatchTests
     }
 
     [Fact]
-    public async Task TryMatchAllAsync_simple_withException_fail_failWithEx()
+    public async Task TryMatchAsync_simple_withException_fail_failWithEx()
     {
         MlResult<int> source = "error".ToMlResultFail<int>();
 
         var divisor = 0;
 
-        MlResult<string> result = await source.TryMatchAllAsync(funcAllAsync: () => (12 / divisor).ToString().ToAsync());
+        MlResult<string> result = await source.TryMatchAsync(funcAllAsync: () => (12 / divisor).ToString().ToAsync());
 
         bool hasErrors = result.Match(
                                 valid: x             => false,

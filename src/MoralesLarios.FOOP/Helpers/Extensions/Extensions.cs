@@ -90,7 +90,14 @@ public static class Extensions
     }
 
 
-
+    public static Func<Task> ToFuncTask(this Action action)
+    {
+        return () =>
+        {
+            action();
+            return Task.CompletedTask;
+        };
+    }
 
 
 

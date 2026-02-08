@@ -58,6 +58,35 @@ public static class MlResultActionsExecSelf
 
 
 
+    public static MlResult<T> ExecSelf<T>(this MlResult<T> source, 
+                                               Action      action)
+        => source.Match(
+                            valid: _ => { action(); return source; },
+                            fail : _ => { action(); return source; }
+                        );
+
+    public static async Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T> source,
+                                                                Func<Task> actionAsync)
+        => await source.MatchAsync(
+                                        validAsync: async _ => { await actionAsync(); return source; },
+                                        failAsync : async _ => { await actionAsync(); return source; }
+                                   );
+
+    public static async Task<MlResult<T>> ExecSelfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                Func<Task>        actionAsync)
+        => await sourceAsync.MatchAsync(
+                                            validAsync: async _ => { await actionAsync(); return await sourceAsync; },
+                                            failAsync : async _ => { await actionAsync(); return await sourceAsync; }
+                                       );
+
+    public static async Task<MlResult<T>> ExecSelfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                Action            action)
+        => await (await sourceAsync).ExecSelfAsync(action.ToFuncTask());
+
+
+
+
+
     /// <summary>
     /// Execute the actionSuccess if the source is valid, otherwise execute the actionFailure. Return same source every time.
     /// If an exception is thrown, the errorMessageBuilder is used to build the error message.
@@ -74,7 +103,7 @@ public static class MlResultActionsExecSelf
                                                   Func<Exception, string> errorMessageBuilder)
         => source.Match(
                             valid: x      => actionValid.TryToMlResult(x, errorMessageBuilder),
-                            fail : (Func<MlErrorsDetails, MlResult<T>>)(errors => MlResultTransformations.TryToMlResultErrors<T>(actionFail, errors, errorMessageBuilder))
+                            fail : errors => MlResultTransformations.TryToMlResultErrors<T>(actionFail, errors, errorMessageBuilder)
                         );
 
     public static MlResult<T> TryExecSelf<T>(this MlResult<T>             source,
@@ -154,6 +183,50 @@ public static class MlResultActionsExecSelf
                                                                    string                  errorMessage = null!)
         => await source.TryExecSelfAsync(actionValid.ToFuncTask(), actionFail.ToFuncTask(), errorMessage);
 
+
+
+
+
+
+
+    public static MlResult<T> TryExecSelf<T>(this MlResult<T>             source,
+                                                  Action                  action,
+                                                  Func<Exception, string> errorMessageBuilder)
+        => source.Match(
+                            valid: x      => action.TryToMlResult(x, errorMessageBuilder),
+                            fail : errors => MlResultTransformations.TryToMlResultErrors<T>(action, errors, errorMessageBuilder)
+                        );
+
+    public static MlResult<T> TryExecSelf<T>(this MlResult<T>             source,
+                                                  Action                  action,
+                                                  string                  errorMessage = null!)
+        => source.TryExecSelf(action, _ => errorMessage);
+
+    public static async Task<MlResult<T>> TryExecSelfAsync<T>(this Task<MlResult<T>>       sourceAsync,
+                                                                   Action                  action,
+                                                                   Func<Exception, string> errorMessageBuilder)
+        => await(sourceAsync).MatchAsync(
+                                            validAsync: x      => action.TryToMlResult(x, errorMessageBuilder).ToAsync(),
+                                            fail      : errors => MlResultTransformations.TryToMlResultErrors<T>(action, errors, errorMessageBuilder)
+                                        );
+
+    public static async Task<MlResult<T>> TryExecSelfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                   Action            action,
+                                                                   string            errorMessage = null!)
+        => await sourceAsync.TryExecSelfAsync(action, _ => errorMessage);
+
+    public static async Task<MlResult<T>> TryExecSelfAsync<T>(this MlResult<T>             source,
+                                                                   Func<Task>              actionAsync,
+                                                                   Func<Exception, string> errorMessageBuilder)
+        => await source.MatchAsync(
+                                        validAsync: async x      => await actionAsync.TryToMlResultAsync(x, errorMessageBuilder),
+                                        failAsync : async errors => await actionAsync.TryToMlResultErrorsAsync<T>(errors, errorMessageBuilder)
+                                   );
+
+    public static async Task<MlResult<T>> TryExecSelfAsync<T>(this MlResult<T> source,
+                                                                   Func<Task>  actionAsync,
+                                                                   string      errorMessage = null!)
+        => await source.TryExecSelfAsync(actionAsync, _ => errorMessage);
 
 
 

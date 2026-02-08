@@ -1,5 +1,6 @@
 ﻿
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Types;
 public static class MlResultTransformations
@@ -382,6 +383,100 @@ public static class MlResultTransformations
         => TryToInternalMlResultAsync<T>(sourceAsync, errorsDetails, errorMessageBuilder);
 
 
+
+    public static MlResult<T> TryToMlResult<T>(this Action                  source, 
+                                                    T                       value,
+                                                    Func<Exception, string> messageBuilder = null!)
+    {
+        /// ********** Cuando ees una MlResult en Fail y con errores, no se añaden los nuevos errores
+
+        try
+        {
+            source();
+
+            return value.ToMlResultValid();
+        }
+        catch (Exception ex)
+        {
+            string message = BuildErrorMessage(messageBuilder, ex);
+
+            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+                                                   Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+
+            return errorDetails.ToMlResultFail<T>();
+        }
+    }
+
+    public static MlResult<T> TryToMlResultErrors<T>(this Action                  source,
+                                                          MlErrorsDetails         errorsDetails,
+                                                          Func<Exception, string> errorMessageBuilder = null!)
+    {
+        MlResult<T> result = default!;
+
+        try
+        {
+            source();
+
+            result = errorsDetails.ToMlResultFail<T>();
+        }
+        catch (Exception ex)
+        {
+            result = errorsDetails.AppendExErrorDetail(ex, errorMessageBuilder);
+        }
+
+        return result;
+    }
+
+
+    public static async Task<MlResult<T>> TryToMlResultAsync<T>(this Func<Task>              sourceAsync, 
+                                                                     T                       value,
+                                                                     Func<Exception, string> messageBuilder = null!)
+    {
+        /// ********** Cuando ees una MlResult en Fail y con errores, no se añaden los nuevos errores
+
+        try
+        {
+            await sourceAsync();
+
+            return value.ToMlResultValid();
+        }
+        catch (Exception ex)
+        {
+            string message = BuildErrorMessage(messageBuilder, ex);
+
+            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+                                                   Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+
+            return errorDetails.ToMlResultFail<T>();
+        }
+    }
+
+
+
+    public static async Task<MlResult<T>> TryToMlResultErrorsAsync<T>(this Func<Task>              sourceAsync,
+                                                                           MlErrorsDetails         errorsDetails,
+                                                                           Func<Exception, string> errorMessageBuilder = null!)
+    {
+        MlResult<T> result = default!;
+
+        try
+        {
+            await sourceAsync();
+
+            result = errorsDetails.ToMlResultFail<T>();
+        }
+        catch (Exception ex)
+        {
+            result = errorsDetails.AppendExErrorDetail(ex, errorMessageBuilder);
+        }
+
+        return result;
+    }
+
+
+
+
+
     private static MlResult<T> TryToInternalMlResult<T>(this object                  source,
                                                              MlErrorsDetails         errorsDetails,
                                                              Func<Exception, string> errorMessageBuilder)
@@ -430,6 +525,15 @@ public static class MlResultTransformations
 
         return result;
     }
+
+
+
+
+
+
+
+
+
 
 
 
