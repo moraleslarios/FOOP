@@ -16,6 +16,9 @@ public static class MlResultActionsErrorsDetails
         return result;
     }
 
+    public static async Task<MlResult<T>> GetDetailAsync<T>(this Task<MlErrorsDetails> sourceAsync, string key)
+        => (await sourceAsync).GetDetail<T>(key);
+
 
 
     public static MlResult<T> MergeErrorsDetailsIfFail<T>(this MlResult<T> source,
@@ -46,6 +49,10 @@ public static class MlResultActionsErrorsDetails
                                                                                 Task<MlResult<T>> secondary)
         => (await sourceAsync).MergeErrorsDetailsIfFail(await secondary);
 
+    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailAsync<T>(this MlResult<T>       source,
+                                                                                Task<MlResult<T>> secondaryAsync)
+        => source.MergeErrorsDetailsIfFail(await secondaryAsync);
+
     public static MlResult<T> MergeErrorsDetailsIfFailDiferentTypes<T,T2>(this MlResult<T > source,
                                                                                MlResult<T2> secondary)
         => source.Match(
@@ -73,6 +80,10 @@ public static class MlResultActionsErrorsDetails
     public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T,T2>(this Task<MlResult<T>>  sourceAsync,
                                                                                                 Task<MlResult<T2>> secondaryAsync)
         => (await sourceAsync).MergeErrorsDetailsIfFailDiferentTypes(await secondaryAsync);
+
+    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T,T2>(this MlResult<T>       source,
+                                                                                                 Task<MlResult<T2>> secondaryAsync)
+        => source.MergeErrorsDetailsIfFailDiferentTypes(await secondaryAsync);
 
 
     public static MlResult<T> GetDetailValue<T>(this MlErrorsDetails source)
@@ -112,9 +123,14 @@ public static class MlResultActionsErrorsDetails
 
     public static Task<MlResult<T>> GetDetailValueAsync<T>(this MlErrorsDetails source) => source.GetDetailValue<T>().ToAsync();
 
+    public static async Task<MlResult<T>> GetDetailValueAsync<T>(this Task<MlErrorsDetails> sourceAsync)
+        => (await sourceAsync).GetDetailValue<T>();
+
 
     public static MlResult<T> GetDetailException<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(EX_DESC_KEY);
     public static Task<MlResult<T>> GetDetailExceptionAsync<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(EX_DESC_KEY).ToAsync();
+    public static async Task<MlResult<T>> GetDetailExceptionAsync<T>(this Task<MlErrorsDetails> sourceAsync) where T : Exception => (await sourceAsync).GetDetailException<T>();
     public static MlResult<Exception> GetDetailException(this MlErrorsDetails source) => source.GetDetail<Exception>(EX_DESC_KEY);
     public static Task<MlResult<Exception>> GetDetailExceptionAsync(this MlErrorsDetails source) => source.GetDetail<Exception>(EX_DESC_KEY).ToAsync();
+    public static async Task<MlResult<Exception>> GetDetailExceptionAsync(this Task<MlErrorsDetails> sourceAsync) => (await sourceAsync).GetDetailException();
 }

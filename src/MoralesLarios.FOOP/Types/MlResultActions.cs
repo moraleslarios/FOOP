@@ -79,6 +79,14 @@ public static class MlResultActions
                                                                                                    Func<T, Task<TReturn>> completeFuncAsync)
         => await (await sourceAsync).CompleteWithDataValueIfValidAsync(completeFuncAsync);
 
+    public static Task<MlResult<TReturn>> CompleteWithDataValueIfValidAsync<T, TReturn>(this MlResult<T>      source,
+                                                                                              Func<T, TReturn> completeFunc)
+        => source.CompleteWithDataValueIfValid(completeFunc).ToAsync();
+
+    public static async Task<MlResult<TReturn>> CompleteWithDataValueIfValidAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
+                                                                                                    Func<T, TReturn> completeFunc)
+        => await (await sourceAsync).CompleteWithDataValueIfValidAsync(completeFunc);
+
 
 
 
@@ -142,6 +150,16 @@ public static class MlResultActions
                                                                                                     TValue                 value,
                                                                                                     Func<T, Task<TReturn>> completeFuncAsync)
         => await (await sourceAsync).CompleteWithDataValueAsync(value, completeFuncAsync);
+
+    public static Task<MlResult<TReturn>> CompleteWithDataValueAsync<T, TValue, TReturn>(this MlResult<T>      source,
+                                                                                               TValue           value,
+                                                                                               Func<T, TReturn> completeFunc)
+        => source.CompleteWithDataValue(value, completeFunc).ToAsync();
+
+    public static async Task<MlResult<TReturn>> CompleteWithDataValueAsync<T, TValue, TReturn>(this Task<MlResult<T>> sourceAsync,
+                                                                                                     TValue           value,
+                                                                                                     Func<T, TReturn> completeFunc)
+        => await (await sourceAsync).CompleteWithDataValueAsync(value, completeFunc);
 
 
     #endregion CompleteWithValue

@@ -1,6 +1,7 @@
 using MoralesLarios.OOFP.HttpClients.Tests.Integration.Data;
 using System.Threading.Tasks;
 using MoralesLarios.OOFP.HttpClients.ParamsInfo;
+using System.Formats.Asn1;
 
 namespace MoralesLarios.OOFP.HttpClients.Tests.Integration;
 
@@ -85,8 +86,31 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
 
 
 
+    [Fact]
+    public async Task TestPostError()
+    {
+
+        //var data = await _sut.PostAsync<>("default", new CustomerDto
+        //{
+        //    CustomerAlternateKey = "Pakkko-A",
+        //    FirstName = "Pakkko-XX",
+        //    LastName = $"Tests - {DateTime.Now.ToString()}"
+        //}, null!, default);
 
 
+
+
+    }
+
+
+    [Fact]
+    public async Task TextGetAsync()
+    {
+
+        var data = await _sut.GetAsync<IEnumerable<VinoDto>>("vinos-api", "not-found/s", null!, default);
+
+
+    }
 
 
 

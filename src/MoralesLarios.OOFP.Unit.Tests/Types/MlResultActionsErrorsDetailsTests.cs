@@ -236,6 +236,80 @@ public class MlResultActionsErrorsDetailsTests
         result.ToString().Should().Be(expected.ToString());
     }
 
+    [Fact]
+    public async Task GetDetailAsync_sourceAsync_keyExist_return_valid()
+    {
+        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        {
+            { "key1", "value1" }
+        }).ToAsync();
+
+        MlResult<string> result = await errorsAsync.GetDetailAsync<string>("key1");
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetDetailValueAsync_sourceAsync_keyExist_return_valid()
+    {
+        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        {
+            { VALUE_KEY, 69 }
+        }).ToAsync();
+
+        MlResult<int> result = await errorsAsync.GetDetailValueAsync<int>();
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetDetailExceptionAsync_generic_sourceAsync_keyExist_return_valid()
+    {
+        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        {
+            { EX_DESC_KEY, new InvalidOperationException("oops") }
+        }).ToAsync();
+
+        MlResult<InvalidOperationException> result = await errorsAsync.GetDetailExceptionAsync<InvalidOperationException>();
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetDetailExceptionAsync_sourceAsync_keyExist_return_valid()
+    {
+        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        {
+            { EX_DESC_KEY, new InvalidOperationException("oops") }
+        }).ToAsync();
+
+        MlResult<Exception> result = await errorsAsync.GetDetailExceptionAsync();
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task MergeErrorsDetailsIfFailAsync_sourceSync_secondaryAsync_return_fail_with_merged_errors()
+    {
+        MlResult<int> source = "Error1".ToMlResultFail<int>();
+        Task<MlResult<int>> secondaryAsync = "Error2".ToMlResultFailAsync<int>();
+
+        MlResult<int> result = await source.MergeErrorsDetailsIfFailAsync(secondaryAsync);
+
+        result.ToString().Should().Be((new[] { "Error1", "Error2" }).ToMlResultFail<int>().ToString());
+    }
+
+    [Fact]
+    public async Task MergeErrorsDetailsIfFailDiferentTypesAsync_sourceSync_secondaryAsync_return_fail_with_merged_errors()
+    {
+        MlResult<int> source = "Error1".ToMlResultFail<int>();
+        Task<MlResult<string>> secondaryAsync = "Error2".ToMlResultFailAsync<string>();
+
+        MlResult<int> result = await source.MergeErrorsDetailsIfFailDiferentTypesAsync(secondaryAsync);
+
+        result.ToString().Should().Be((new[] { "Error1", "Error2" }).ToMlResultFail<int>().ToString());
+    }
+
 
 
 

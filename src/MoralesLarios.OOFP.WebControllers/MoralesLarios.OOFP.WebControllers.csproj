@@ -15,6 +15,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.9" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MoralesLarios.OOFP.WebApi\MoralesLarios.OOFP.WebApi.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.WebServices\MoralesLarios.OOFP.WebServices.csproj" />
   </ItemGroup>

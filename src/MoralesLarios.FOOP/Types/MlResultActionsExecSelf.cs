@@ -56,6 +56,21 @@ public static class MlResultActionsExecSelf
                                                                 Action<MlErrorsDetails> actionFail)
         => await (await sourceAsync).ExecSelfAsync(actionValid.ToFuncTask(), actionFail.ToFuncTask());
 
+    public static async Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T>                 source,
+                                                                Action<T>                   actionValid,
+                                                                Func<MlErrorsDetails, Task> actionFailAsync)
+        => await source.ExecSelfAsync(actionValid.ToFuncTask(), actionFailAsync);
+
+    public static async Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T>                 source,
+                                                                Func<T              , Task> actionValidAsync,
+                                                                Action<MlErrorsDetails>     actionFail)
+        => await source.ExecSelfAsync(actionValidAsync, actionFail.ToFuncTask());
+
+    public static Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T>             source,
+                                                         Action<T>               actionValid,
+                                                         Action<MlErrorsDetails> actionFail)
+        => source.ExecSelf(actionValid, actionFail).ToAsync();
+
 
 
     public static MlResult<T> ExecSelf<T>(this MlResult<T> source, 
@@ -82,6 +97,10 @@ public static class MlResultActionsExecSelf
     public static async Task<MlResult<T>> ExecSelfAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                 Action            action)
         => await (await sourceAsync).ExecSelfAsync(action.ToFuncTask());
+
+    public static Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T> source,
+                                                        Action            action)
+        => source.ExecSelf(action).ToAsync();
 
 
 
@@ -184,11 +203,6 @@ public static class MlResultActionsExecSelf
         => await source.TryExecSelfAsync(actionValid.ToFuncTask(), actionFail.ToFuncTask(), errorMessage);
 
 
-
-
-
-
-
     public static MlResult<T> TryExecSelf<T>(this MlResult<T>             source,
                                                   Action                  action,
                                                   Func<Exception, string> errorMessageBuilder)
@@ -227,6 +241,26 @@ public static class MlResultActionsExecSelf
                                                                    Func<Task>  actionAsync,
                                                                    string      errorMessage = null!)
         => await source.TryExecSelfAsync(actionAsync, _ => errorMessage);
+
+    public static Task<MlResult<T>> TryExecSelfAsync<T>(this MlResult<T>             source,
+                                                            Action                  action,
+                                                            Func<Exception, string> errorMessageBuilder)
+        => source.TryExecSelf(action, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryExecSelfAsync<T>(this MlResult<T>             source,
+                                                            Action                  action,
+                                                            string                  errorMessage = null!)
+        => source.TryExecSelf(action, errorMessage).ToAsync();
+
+    public static async Task<MlResult<T>> TryExecSelfAsync<T>(this Task<MlResult<T>>       sourceAsync,
+                                                                   Func<Task>              actionAsync,
+                                                                   Func<Exception, string> errorMessageBuilder)
+        => await (await sourceAsync).TryExecSelfAsync(actionAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<T>> TryExecSelfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                   Func<Task>  actionAsync,
+                                                                   string      errorMessage = null!)
+        => await (await sourceAsync).TryExecSelfAsync(actionAsync, errorMessage);
 
 
 
@@ -269,6 +303,10 @@ public static class MlResultActionsExecSelf
     public static async Task<MlResult<T>> ExecSelfIfValidAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                        Action<T>         actionValid)
         => await (await sourceAsync).ExecSelfIfValidAsync(actionValid.ToFuncTask());
+
+    public static Task<MlResult<T>> ExecSelfIfValidAsync<T>(this MlResult<T> source,
+                                                                Action<T>         actionValid)
+        => source.ExecSelfIfValid(actionValid).ToAsync();
 
 
     /// <summary>
@@ -329,6 +367,16 @@ public static class MlResultActionsExecSelf
                                                                           string            errorMessage = null!)
         => await (await sourceAsync).TryExecSelfIfValidAsync(actionValid.ToFuncTask(), errorMessage);
 
+    public static Task<MlResult<T>> TryExecSelfIfValidAsync<T>(this MlResult<T>             source,
+                                                                   Action<T>               actionValid,
+                                                                   Func<Exception, string> errorMessageBuilder)
+        => source.TryExecSelfIfValid(actionValid, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryExecSelfIfValidAsync<T>(this MlResult<T> source,
+                                                                   Action<T>   actionValid,
+                                                                   string      errorMessage = null!)
+        => source.TryExecSelfIfValid(actionValid, errorMessage).ToAsync();
+
 
     #endregion
 
@@ -365,6 +413,18 @@ public static class MlResultActionsExecSelf
     public static async Task<MlResult<T>> ExecSelfFailAsync<T>(this Task<MlResult<T>>       sourceAsync,
                                                                     Action<MlErrorsDetails> actionFail)
         => (await sourceAsync).ExecSelfIfFail(actionFail);
+
+    public static Task<MlResult<T>> ExecSelfIfFailAsync<T>(this MlResult<T>             source,
+                                                               Action<MlErrorsDetails> actionFail)
+        => source.ExecSelfIfFail(actionFail).ToAsync();
+
+    public static async Task<MlResult<T>> ExecSelfIfFailAsync<T>(this Task<MlResult<T>>           sourceAsync,
+                                                                     Func<MlErrorsDetails, Task> actionFailAsync)
+        => await sourceAsync.ExecSelfFailAsync(actionFailAsync);
+
+    public static async Task<MlResult<T>> ExecSelfIfFailAsync<T>(this Task<MlResult<T>>       sourceAsync,
+                                                                     Action<MlErrorsDetails> actionFail)
+        => await sourceAsync.ExecSelfFailAsync(actionFail);
 
 
     public static MlResult<T> TryExecSelfFail<T>(this MlResult<T>             source,
@@ -416,6 +476,36 @@ public static class MlResultActionsExecSelf
                                                                        string                  errorMessage = null!)
         => await (await sourceAsync).TryExecSelfIfFailAsync(actionFail.ToFuncTask(), errorMessage);
 
+    public static Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this MlResult<T>             source,
+                                                                  Action<MlErrorsDetails> actionFail,
+                                                                  Func<Exception, string> errorMessageBuilder)
+        => source.TryExecSelfFail(actionFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this MlResult<T>             source,
+                                                                  Action<MlErrorsDetails> actionFail,
+                                                                  string                  errorMessage = null!)
+        => source.TryExecSelfFail(actionFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this Task<MlResult<T>>           sourceAsync,
+                                                                        Func<MlErrorsDetails, Task> actionFailAsync,
+                                                                        Func<Exception, string>     errorMessageBuilder)
+        => await sourceAsync.TryExecSelfFailAsync(actionFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this Task<MlResult<T>>           sourceAsync,
+                                                                        Func<MlErrorsDetails, Task> actionFailAsync,
+                                                                        string                      errorMessage = null!)
+        => await sourceAsync.TryExecSelfFailAsync(actionFailAsync, errorMessage);
+
+    public static async Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this Task<MlResult<T>>       sourceAsync,
+                                                                        Action<MlErrorsDetails> actionFail,
+                                                                        Func<Exception, string> errorMessageBuilder)
+        => await sourceAsync.TryExecSelfFailAsync(actionFail, errorMessageBuilder);
+
+    public static async Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this Task<MlResult<T>>       sourceAsync,
+                                                                        Action<MlErrorsDetails> actionFail,
+                                                                        string                  errorMessage = null!)
+        => await sourceAsync.TryExecSelfFailAsync(actionFail, errorMessage);
+
 
     #endregion
 
@@ -461,6 +551,10 @@ public static class MlResultActionsExecSelf
     public static async Task<MlResult<T>> ExecSelfIfFailWithValueAsync<T, TValue>(this Task<MlResult<T>> sourceAsync,
                                                                                        Action<TValue>    actionFailValue)
         => await (await sourceAsync).ExecSelfIfFailWithValueAsync(actionFailValue.ToFuncTask());
+
+    public static Task<MlResult<T>> ExecSelfIfFailWithValueAsync<T, TValue>(this MlResult<T>    source,
+                                                                                 Action<TValue> actionFailValue)
+        => source.ExecSelfIfFailWithValue<T, TValue>(actionFailValue).ToAsync();
 
 
 
@@ -535,6 +629,16 @@ public static class MlResultActionsExecSelf
                                                                                           string            errorMessage = null!)
         => await (await sourceAsync).TryExecSelfIfFailWithValueAsync(actionFailValue.ToFuncTask(), errorMessage);
 
+    public static Task<MlResult<T>> TryExecSelfIfFailWithValueAsync<T, TValue>(this MlResult<T>             source,
+                                                                                    Action<TValue>          actionFailValue,
+                                                                                    Func<Exception, string> errorMessageBuilder)
+        => source.TryExecSelfIfFailWithValue<T, TValue>(actionFailValue, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryExecSelfIfFailWithValueAsync<T, TValue>(this MlResult<T>    source,
+                                                                                    Action<TValue> actionFailValue,
+                                                                                    string         errorMessage = null!)
+        => source.TryExecSelfIfFailWithValue<T, TValue>(actionFailValue, errorMessage).ToAsync();
+
 
     #endregion
 
@@ -579,6 +683,10 @@ public static class MlResultActionsExecSelf
     public static async Task<MlResult<T>> ExecSelfIfFailWithExceptionAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                    Action<Exception> actionFailException)
         => await (await sourceAsync).ExecSelfIfFailWithExceptionAsync(actionFailException.ToFuncTask());
+
+    public static Task<MlResult<T>> ExecSelfIfFailWithExceptionAsync<T>(this MlResult<T>       source,
+                                                                            Action<Exception> actionFailException)
+        => source.ExecSelfIfFailWithException(actionFailException).ToAsync();
 
 
 
@@ -652,6 +760,16 @@ public static class MlResultActionsExecSelf
                                                                                       string            errorMessage = null!)
         => await (await sourceAsync).TryExecSelfIfFailWithExceptionAsync(actionFailException.ToFuncTask(), errorMessage);
 
+    public static Task<MlResult<T>> TryExecSelfIfFailWithExceptionAsync<T>(this MlResult<T>             source,
+                                                                               Action<Exception>       actionFailException,
+                                                                               Func<Exception, string> errorMessageBuilder)
+        => source.TryExecSelfIfFailWithException<T>(actionFailException, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryExecSelfIfFailWithExceptionAsync<T>(this MlResult<T>       source,
+                                                                               Action<Exception> actionFailException,
+                                                                               string            errorMessage = null!)
+        => source.TryExecSelfIfFailWithException<T>(actionFailException, errorMessage).ToAsync();
+
     #endregion
 
 
@@ -694,6 +812,10 @@ public static class MlResultActionsExecSelf
     public static async Task<MlResult<T>> ExecSelfIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>       sourceAsync,
                                                                                       Action<MlErrorsDetails> actionFail)
         => await (await sourceAsync).ExecSelfIfFailWithoutExceptionAsync(actionFail.ToFuncTask());
+
+    public static Task<MlResult<T>> ExecSelfIfFailWithoutExceptionAsync<T>(this MlResult<T>             source,
+                                                                               Action<MlErrorsDetails> actionFail)
+        => source.ExecSelfIfFailWithoutException(actionFail).ToAsync();
 
 
     //public static MlResult<T> TryExecSelfIfFailWithoutException<T>(this MlResult<T>             source,

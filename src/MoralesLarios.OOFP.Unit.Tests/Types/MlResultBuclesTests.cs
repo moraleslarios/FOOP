@@ -200,6 +200,58 @@ public class MlResultBuclesTests
         resultValue.All(x => x.Date == DateTime.MinValue).Should().BeTrue();
     }
 
+
+    [Fact]
+    public async Task ProjectionAsync_sourceAsync_syncFunc_When_All_completeFuncTransforms_OK_return_valid()
+    {
+        Task<IEnumerable<TestType>> sourceAsync = ((IEnumerable<TestType>)new List<TestType>
+        {
+            new TestType(1, "Name1", DateTime.Now),
+            new TestType(2, "Name2", DateTime.Now)
+        }).ToAsync();
+
+        MlResult<IEnumerable<TestType>> result = await sourceAsync.ProjectionAsync<TestType, TestType>(x => x with { Date = DateTime.MinValue });
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ProjectionAsync_sourceAsync_syncFunc_When_completeFuncTransformGenerateError_return_Fail()
+    {
+        Task<IEnumerable<TestType>> sourceAsync = ((IEnumerable<TestType>)new List<TestType>
+        {
+            new TestType(1, "Name1", DateTime.Now),
+            new TestType(0, "Name2", DateTime.Now)
+        }).ToAsync();
+
+        MlResult<IEnumerable<TestType>> result = await sourceAsync.ProjectionAsync<TestType, TestType>(x => x.Id == 0
+                                                                                        ? $"Error {x.Name}".ToMlResultFail<TestType>()
+                                                                                        : (x with { Date = DateTime.MinValue }));
+
+        MlResult<IEnumerable<TestType>> expected = MlResult<IEnumerable<TestType>>.Fail("Error Name2");
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public async Task ProjectionWhileAsync_sourceAsync_syncFunc_When_2_completeFuncTransformGenerateError_return_Fail_with_first_error()
+    {
+        Task<IEnumerable<TestType>> sourceAsync = ((IEnumerable<TestType>)new List<TestType>
+        {
+            new TestType(1, "Name1", DateTime.Now),
+            new TestType(0, "Name2", DateTime.Now),
+            new TestType(0, "Name3", DateTime.Now)
+        }).ToAsync();
+
+        MlResult<IEnumerable<TestType>> result = await sourceAsync.ProjectionWhileAsync(x => x.Id == 0
+                                                                                              ? $"Error {x.Name}".ToMlResultFail<TestType>()
+                                                                                              : (x with { Date = DateTime.MinValue }));
+
+        MlResult<IEnumerable<TestType>> expected = MlResult<IEnumerable<TestType>>.Fail("Error Name2");
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
 }
 
 

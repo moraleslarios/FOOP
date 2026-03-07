@@ -46,6 +46,21 @@ public static class MlResultChangeReturnResult
                                         fail : errors => failValue.ToMlResultFail<TReturn>()
                                     );
 
+    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
+                                                                                         TReturn           validValue,
+                                                                                         MlError           failValue)
+        => await ChangeReturnResultAsync<T, TReturn>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
+
+    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
+                                                                                         TReturn           validValue,
+                                                                                         IEnumerable<string> failValue)
+        => await ChangeReturnResultAsync<T, TReturn>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
+
+    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
+                                                                                         TReturn           validValue,
+                                                                                         string            failValue)
+        => await ChangeReturnResultAsync<T, TReturn>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
+
 
 
 

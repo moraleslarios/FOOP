@@ -125,6 +125,14 @@ public static class MlResultActionsSeveral
                                                                     string  errorMessage)
         => await (await sourceAsync).NullToFailedAsync(errorMessage);
 
+    public static async Task<MlResult<T>> NullToFailedAsync<T>(this Task<T>       sourceAsync,
+                                                                    MlError       error)
+        => await (await sourceAsync).NullToFailedAsync(error);
+
+    public static async Task<MlResult<T>> NullToFailedAsync<T>(this Task<T>             sourceAsync,
+                                                                    MlErrorsDetails    errorsDetails)
+        => await (await sourceAsync).NullToFailedAsync(errorsDetails);
+
     public static async Task<MlResult<T>> NullToFailedAsync<T>(this Task<T>             sourceAsync,
                                                                     IEnumerable<string> errorsMessage)
         => await (await sourceAsync).NullToFailedAsync(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
@@ -188,6 +196,16 @@ public static class MlResultActionsSeveral
                                                                     bool    condition,
                                                                     string  errorMessage)
         => await (await sourceAsync).BoolToResultAsync(condition, errorMessage);
+
+    public static async Task<MlResult<T>> BoolToResultAsync<T>(this Task<T>       sourceAsync,
+                                                                    bool          condition,
+                                                                    MlError       error)
+        => await (await sourceAsync).BoolToResultAsync(condition, error);
+
+    public static async Task<MlResult<T>> BoolToResultAsync<T>(this Task<T>             sourceAsync,
+                                                                    bool                condition,
+                                                                    MlErrorsDetails    errorsDetails)
+        => await (await sourceAsync).BoolToResultAsync(condition, errorsDetails);
 
     public static async Task<MlResult<T>> BoolToResultAsync<T>(this Task<T>             sourceAsync,
                                                                     bool                condition,

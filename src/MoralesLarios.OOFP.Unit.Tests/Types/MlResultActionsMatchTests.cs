@@ -1018,6 +1018,73 @@ public class MlResultActionsMatchTests
     }
 
 
+    [Fact]
+    public async Task MatchAsync_sourceSync_validAndfailSync_sourceValid_OK()
+    {
+        MlResult<int> source = 11;
+
+        MlResult<int> result = await source.MatchAsync(valid: x => 12,
+                                                       fail: _ => 13);
+
+        MlResult<int> expected = 12;
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public async Task MatchAsync_sourceSync_validAndfailSync_sourceFail_OK()
+    {
+        MlResult<int> source = "Error".ToMlResultFail<int>();
+
+        MlResult<int> result = await source.MatchAsync(valid: x => 12,
+                                                       fail: _ => 13);
+
+        MlResult<int> expected = 13;
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public async Task TryMatchAsync_sourceSync_validAndfailSync_sourceValid_withoutException_OK()
+    {
+        MlResult<int> source = 11;
+
+        MlResult<int> result = await source.TryMatchAsync(valid: x => 12,
+                                                          fail: _ => 13);
+
+        MlResult<int> expected = 12;
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public async Task TryMatchAsync_sourceSync_validAndfailSync_sourceValid_withException_OK()
+    {
+        MlResult<int> source = 11;
+        var divisor = 0;
+
+        MlResult<int> result = await source.TryMatchAsync(valid: _ => 12 / divisor,
+                                                          fail: _ => 13);
+
+        bool hasErrors = result.Match(
+            valid: _ => false,
+            fail: errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY));
+
+        hasErrors.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task MatchAsync_simple_sourceSync_OK()
+    {
+        MlResult<int> source = 11;
+
+        MlResult<int> result = await source.MatchAsync(() => 12);
+        MlResult<int> expected = 12;
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+
 
 
 

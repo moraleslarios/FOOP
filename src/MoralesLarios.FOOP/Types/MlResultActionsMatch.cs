@@ -25,6 +25,11 @@ public static class MlResultActionsMatch
                                                                   Func<MlErrorsDetails,      TReturn>  fail)
         => source.IsValid ? await validAsync(source.Value) : fail(source.ErrorsDetails);
 
+    public static Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                    source,
+                                                            Func<T              , TReturn> valid,
+                                                            Func<MlErrorsDetails, TReturn> fail)
+        => source.Match(valid, fail).ToAsync();
+
 
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
@@ -138,6 +143,18 @@ public static class MlResultActionsMatch
                                                                          string                               errorMessage = null!)
         => source.TryMatchAsync(valid, failAsync, _ => errorMessage);
 
+    public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>              source,
+                                                                         Func<T, TResult>         valid,
+                                                                         Func<MlErrorsDetails, TResult> fail,
+                                                                         Func<Exception, string>  errorMessageBuilder)
+        => source.TryMatch(valid, fail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>              source,
+                                                                         Func<T, TResult>         valid,
+                                                                         Func<MlErrorsDetails, TResult> fail,
+                                                                         string                    errorMessage = null!)
+        => source.TryMatchAsync(valid, fail, _ => errorMessage);
+
 
 
 
@@ -207,6 +224,10 @@ public static class MlResultActionsMatch
     public static async Task<MlResult<TReturn>> MatchAsync<T, TReturn>(this MlResult<T>         source, 
                                                                             Func<Task<TReturn>> funcAllAsync)
         => await funcAllAsync();
+
+    public static Task<MlResult<TReturn>> MatchAsync<T, TReturn>(this MlResult<T>   source,
+                                                                      Func<TReturn> funcAll)
+        => source.Match(funcAll).ToAsync();
 
 
     public static async Task<MlResult<TReturn>> MatchAsync<T, TReturn>(this Task<MlResult<T>>   sourceAsync, 

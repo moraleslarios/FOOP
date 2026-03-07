@@ -342,6 +342,46 @@ public class MlResultActionsSeveralTests
         result.ToString().Should().BeEquivalentTo(expectred.ToString());
     }
 
+    [Fact]
+    public async Task NullToFailedAsync_sourceAsync_withMlError_nullSource_return_Fail()
+    {
+        Task<string?> sourceAsync = ((string?)null).ToAsync();
+
+        MlResult<string?> result = await sourceAsync.NullToFailedAsync(MlError.FromErrorMessage("Error"));
+
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task NullToFailedAsync_sourceAsync_withErrorsDetails_nonNullSource_return_Valid()
+    {
+        Task<string?> sourceAsync = ((string?)"value").ToAsync();
+
+        MlResult<string?> result = await sourceAsync.NullToFailedAsync(MlErrorsDetails.FromErrorMessage("Error"));
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task BoolToResultAsync_sourceAsync_withMlError_falseCondition_return_Fail()
+    {
+        Task<int> sourceAsync = 10.ToAsync();
+
+        MlResult<int> result = await sourceAsync.BoolToResultAsync(condition: false, error: MlError.FromErrorMessage("Error"));
+
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task BoolToResultAsync_sourceAsync_withErrorsDetails_trueCondition_return_Valid()
+    {
+        Task<int> sourceAsync = 10.ToAsync();
+
+        MlResult<int> result = await sourceAsync.BoolToResultAsync(condition: true, errorsDetails: MlErrorsDetails.FromErrorMessage("Error"));
+
+        result.IsValid.Should().BeTrue();
+    }
+
 
 
 

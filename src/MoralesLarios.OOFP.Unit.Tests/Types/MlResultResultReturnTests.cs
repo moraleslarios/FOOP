@@ -56,6 +56,28 @@ public class MlResultChangeReturnResultTests
         result.ToString().Should().Be(expected.ToString());
     }
 
+    [Fact]
+    public async Task ChangeReturnResultAsync_sourceAsync_failSource_withMlError_return_MlResultFailValue()
+    {
+        Task<MlResult<int>> partialResultAsync = "Error".ToMlResultFailAsync<int>();
+
+        MlResult<string> result = await partialResultAsync.ChangeReturnResultAsync(validValue: "valid", failValue: MlError.FromErrorMessage("invalid"));
+        MlResult<string> expected = "invalid".ToMlResultFail<string>();
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public async Task ChangeReturnResultAsync_sourceAsync_failSource_withErrorsCollection_return_MlResultFailValue()
+    {
+        Task<MlResult<int>> partialResultAsync = "Error".ToMlResultFailAsync<int>();
+
+        MlResult<string> result = await partialResultAsync.ChangeReturnResultAsync(validValue: "valid", failValue: new[] { "invalid-1", "invalid-2" }.AsEnumerable());
+        MlResult<string> expected = new[] { "invalid-1", "invalid-2" }.ToMlResultFail<string>();
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
 
 
     #endregion ChangeReturnResult

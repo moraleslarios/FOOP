@@ -125,6 +125,10 @@ public static class MlResultBucles
         return result;
     }
 
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+                                                                                                Func<T, MlResult<TResult>> completeFuncTransform)
+        => await (await sourceAsync).ProjectionAsync(completeFuncTransform);
+
 
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                 Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
@@ -282,6 +286,10 @@ public static class MlResultBucles
                             });
         return result;
     }
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+                                                                                                     Func<T, MlResult<TResult>> completeFuncTransform)
+        => await (await sourceAsync).ProjectionWhileAsync(completeFuncTransform);
 
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                      Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)

@@ -836,6 +836,61 @@ public class MlResultActionsTests
     }
 
 
+    [Fact]
+    public async Task CompleteWithDataValueIfValidAsync_syncFunc_validSource_returnValueCompleted()
+    {
+        MlResult<int> partialResult = 1;
+
+        MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethod(initialValue)
+                                                                                             .CompleteWithDataValueIfValidAsync(x => (initialValue, x)));
+
+        MlResult<(int, string)> expected = (1, "1");
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public async Task CompleteWithDataValueIfValidAsync_sourceAsync_syncFunc_validSource_returnValueCompleted()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.BindAsync(initialValue => BindTestMethod(initialValue)
+                                                                                                  .CompleteWithDataValueIfValidAsync(x => (initialValue, x)));
+
+        MlResult<(int, string)> expected = (1, "1");
+
+        result.ToString().Should().Be(expected.ToString());
+    }
+
+    [Fact]
+    public async Task CompleteWithDataValueAsync_syncFunc_failSource_returnFailWithValueDetail()
+    {
+        MlResult<int> partialResult = "Error".ToMlResultFail<int>();
+
+        MlResult<(int, string)> result = await partialResult.CompleteWithDataValueAsync<int, int, (int, string)>(
+            value: 69,
+            completeFunc: x => (x, x.ToString()));
+
+        bool hasValue = result.Match(
+            valid: _ => false,
+            fail: errors => errors.Details.ContainsKey(VALUE_KEY) && (int)errors.Details[VALUE_KEY] == 69);
+
+        hasValue.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CompleteWithDataValueAsync_sourceAsync_syncFunc_validSource_returnValid()
+    {
+        Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
+
+        MlResult<(int, string)> result = await partialResultAsync.CompleteWithDataValueAsync<int, int, (int, string)>(
+            value: 69,
+            completeFunc: x => (x, x.ToString()));
+
+        result.IsValid.Should().BeTrue();
+    }
+
+
 
 
 

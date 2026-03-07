@@ -524,6 +524,30 @@ public static class MlResultActionsBind
         => await sourceAsync.TryBindSaveValueInDetailsIfFaildFuncResultAsync(funcAsync, _ => errorMessage!);
 
 
+    public static Task<MlResult<TReturn>> BindSaveValueInDetailsIfFaildFuncResultAsync<T, TReturn>(this MlResult<T>                source,
+                                                                                                        Func<T, MlResult<TReturn>> func)
+        => source.BindSaveValueInDetailsIfFaildFuncResult(func).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TReturn>(this MlResult<T>                      source,
+                                                                                                                 Func<T, Task<MlResult<TReturn>>> funcAsync,
+                                                                                                                 Func<Exception, string>          errorMessageBuilder)
+        => await source.MatchAsync
+                                (
+                                    failAsync : errorsDetails => MlResult<TReturn>.FailAsync(errorsDetails),
+                                    validAsync: async value =>
+                                    {
+                                        var result = await funcAsync.TryToMlResultAsync(value, errorMessageBuilder);
+                                        if (result.IsFail) result.AddValueDetailIfFail(value!);
+                                        return result;
+                                    }
+                                );
+
+    public static async Task<MlResult<TReturn>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TReturn>(this MlResult<T>                      source,
+                                                                                                                 Func<T, Task<MlResult<TReturn>>> funcAsync,
+                                                                                                                 string                           errorMessage = null!)
+        => await source.TryBindSaveValueInDetailsIfFaildFuncResultAsync(funcAsync, _ => errorMessage!);
+
+
 
 
     #endregion
@@ -924,6 +948,20 @@ public static class MlResultActionsBind
                                                                   Func<MlErrorsDetails, MlResult<T>> func)
         => await (await sourceAsync).BindIfFailAsync(func.ToFuncTask());
 
+    public static Task<MlResult<T>> BindIfFailAsync<T>(this MlResult<T>                  source,
+                                                            Func<MlErrorsDetails, MlResult<T>> func)
+        => source.BindIfFail(func).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                        source,
+                                                               Func<MlErrorsDetails, MlResult<T>> func,
+                                                               Func<Exception, string>            errorMessageBuilder)
+        => source.TryBindIfFail(func, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                        source,
+                                                               Func<MlErrorsDetails, MlResult<T>> func,
+                                                               string                             errorMessage = null!)
+        => source.TryBindIfFail(func, errorMessage).ToAsync();
+
 
     public static MlResult<T> TryBindIfFail<T>(this MlResult<T>                        source, 
                                                     Func<MlErrorsDetails, MlResult<T>> func,
@@ -1083,6 +1121,74 @@ public static class MlResultActionsBind
                                                                                     string                                   errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask(), errorMessage);
 
+
+    public static Task<MlResult<TReturn>> BindIfFailAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                           Func<T              , MlResult<TReturn>> funcValid,
+                                                                           Func<MlErrorsDetails, MlResult<TReturn>> funcFail)
+        => source.BindIfFail(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                 Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                 Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail)
+        => await source.BindIfFailAsync(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                 Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                 Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync)
+        => await source.BindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static async Task<MlResult<TReturn>> BindIfFailAsync<T, TReturn>(this Task<MlResult<T>>                  sourceAsync,
+                                                                                 Func<T              , MlResult<TReturn>> funcValid,
+                                                                                 Func<MlErrorsDetails, MlResult<TReturn>> funcFail)
+        => (await sourceAsync).BindIfFail(funcValid, funcFail);
+
+    public static async Task<MlResult<TReturn>> BindIfFailAsync<T, TReturn>(this Task<MlResult<T>>                              sourceAsync,
+                                                                                 Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                 Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail)
+        => await (await sourceAsync).BindIfFailAsync(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailAsync<T, TReturn>(this Task<MlResult<T>>                              sourceAsync,
+                                                                                 Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                 Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync)
+        => await (await sourceAsync).BindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync);
+
+
+    public static Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                              Func<T              , MlResult<TReturn>> funcValid,
+                                                                              Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                              Func<Exception, string>                  errorMessageBuilder)
+        => source.TryBindIfFail(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                              Func<T              , MlResult<TReturn>> funcValid,
+                                                                              Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                              string                                   errorMessage = null!)
+        => source.TryBindIfFail(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                    Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                    Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                    Func<Exception, string>                        errorMessageBuilder)
+        => await source.TryBindIfFailAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                    Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                    Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                    string                                         errorMessage = null!)
+        => await source.TryBindIfFailAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                    Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                    Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                    Func<Exception, string>                        errorMessageBuilder)
+        => await source.TryBindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                    Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                    Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                    string                                         errorMessage = null!)
+        => await source.TryBindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
+
     #endregion
 
 
@@ -1178,6 +1284,20 @@ public static class MlResultActionsBind
                                                                               string                  errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValue.ToFuncTask(), errorMessage);
 
+    public static Task<MlResult<T>> BindIfFailWithValueAsync<T>(this MlResult<T>          source,
+                                                                    Func<T, MlResult<T>> funcValue)
+        => source.BindIfFailWithValue(funcValue).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>             source,
+                                                                        Func<T, MlResult<T>>    funcValue,
+                                                                        Func<Exception, string> errorMessageBuilder)
+        => source.TryBindIfFailWithValue(funcValue, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>          source,
+                                                                        Func<T, MlResult<T>> funcValue,
+                                                                        string               errorMessage = null!)
+        => source.TryBindIfFailWithValue(funcValue, errorMessage).ToAsync();
+
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
@@ -1216,6 +1336,36 @@ public static class MlResultActionsBind
                                                                                                   Func<TValue, Task<MlResult<TReturn>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithValueAsync(funcValidAsync, funcFailAsync);
 
+
+    public static Task<MlResult<TReturn>> BindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                     source,
+                                                                                           Func<T     , MlResult<TReturn>> funcValid,
+                                                                                           Func<TValue, MlResult<TReturn>> funcFail)
+        => source.BindIfFailWithValue(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                           source,
+                                                                                                  Func<T     , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                  Func<TValue,      MlResult<TReturn>>  funcFail)
+        => await source.BindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                           source,
+                                                                                                  Func<T     ,      MlResult<TReturn>>  funcValid,
+                                                                                                  Func<TValue, Task<MlResult<TReturn>>> funcFailAsync)
+        => await source.BindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithValueAsync<T, TValue, TReturn>(this Task<MlResult<T>>               sourceAsync,
+                                                                                                  Func<T     , MlResult<TReturn>> funcValid,
+                                                                                                  Func<TValue, MlResult<TReturn>> funcFail)
+        => (await sourceAsync).BindIfFailWithValue(funcValid, funcFail);
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithValueAsync<T, TValue, TReturn>(this Task<MlResult<T>>                     sourceAsync,
+                                                                                                  Func<T     , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                  Func<TValue,      MlResult<TReturn>>  funcFail)
+        => await (await sourceAsync).BindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithValueAsync<T, TValue, TReturn>(this Task<MlResult<T>>                     sourceAsync,
+                                                                                                  Func<T     ,      MlResult<TReturn>>  funcValid,
+                                                                                                  Func<TValue, Task<MlResult<TReturn>>> funcFailAsync)
+        => await (await sourceAsync).BindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync);
 
 
     public static MlResult<TReturn> TryBindIfFailWithValue<T, TValue, TReturn>(this MlResult<T>                     source,
@@ -1295,7 +1445,48 @@ public static class MlResultActionsBind
                                                                                                      Func<Exception, string>         errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask(), errorMessageBuilder);
 
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithValueAsync<T, TValue, TReturn>(this Task<MlResult<T>>               sourceAsync,
+                                                                                                     Func<T     , MlResult<TReturn>> funcValid,
+                                                                                                     Func<TValue, MlResult<TReturn>> funcFail,
+                                                                                                     string                          errorMessage = null!)
+        => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask(), errorMessage);
 
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                     source,
+                                                                                               Func<T     , MlResult<TReturn>> funcValid,
+                                                                                               Func<TValue, MlResult<TReturn>> funcFail,
+                                                                                               Func<Exception, string>         errorMessageBuilder)
+        => source.TryBindIfFailWithValue(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                     source,
+                                                                                               Func<T     , MlResult<TReturn>> funcValid,
+                                                                                               Func<TValue, MlResult<TReturn>> funcFail,
+                                                                                               string                          errorMessage = null!)
+        => source.TryBindIfFailWithValue(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                           source,
+                                                                                                     Func<T     , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                     Func<TValue,      MlResult<TReturn>>  funcFail,
+                                                                                                     Func<Exception, string>               errorMessageBuilder)
+        => await source.TryBindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                           source,
+                                                                                                     Func<T     , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                     Func<TValue,      MlResult<TReturn>>  funcFail,
+                                                                                                     string                                errorMessage = null!)
+        => await source.TryBindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                           source,
+                                                                                                     Func<T     ,      MlResult<TReturn>>  funcValid,
+                                                                                                     Func<TValue, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                     Func<Exception, string>               errorMessageBuilder)
+        => await source.TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithValueAsync<T, TValue, TReturn>(this MlResult<T>                           source,
+                                                                                                     Func<T     ,      MlResult<TReturn>>  funcValid,
+                                                                                                     Func<TValue, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                     string                                errorMessage = null!)
+        => await source.TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
 
 
@@ -2267,6 +2458,315 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
 
+    // ─── Missing sync-source overloads for BindIfFailWithException<T> ───────────────
+
+    public static Task<MlResult<T>> BindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
+                                                                         Func<Exception, MlResult<T>> funcException)
+        => source.BindIfFailWithException(funcException).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
+                                                                            Func<Exception, MlResult<T>> funcException,
+                                                                            Func<Exception, string>      errorMessageBuilder)
+        => source.TryBindIfFailWithException(funcException, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
+                                                                            Func<Exception, MlResult<T>> funcException,
+                                                                            string                       errorMessage = null!)
+        => source.TryBindIfFailWithException(funcException, errorMessage).ToAsync();
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithException<T, TReturn> ──────
+
+    public static Task<MlResult<TReturn>> BindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                        source,
+                                                                                       Func<T        , MlResult<TReturn>> funcValid,
+                                                                                       Func<Exception, MlResult<TReturn>> funcFail)
+        => source.BindIfFailWithException(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                              Func<T        , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                              Func<Exception,      MlResult<TReturn>>  funcFail)
+        => await source.BindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                              Func<T        ,      MlResult<TReturn>>  funcValid,
+                                                                                              Func<Exception, Task<MlResult<TReturn>>> funcFailAsync)
+        => await source.BindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                        source,
+                                                                                          Func<T        , MlResult<TReturn>> funcValid,
+                                                                                          Func<Exception, MlResult<TReturn>> funcFail,
+                                                                                          Func<Exception, string>            errorMessageBuilder)
+        => source.TryBindIfFailWithException(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                        source,
+                                                                                          Func<T        , MlResult<TReturn>> funcValid,
+                                                                                          Func<Exception, MlResult<TReturn>> funcFail,
+                                                                                          string                             errorMessage = null!)
+        => source.TryBindIfFailWithException(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                                 Func<T        , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                 Func<Exception,      MlResult<TReturn>>  funcFail,
+                                                                                                 Func<Exception, string>                  errorMessageBuilder)
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                                 Func<T        , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                 Func<Exception,      MlResult<TReturn>>  funcFail,
+                                                                                                 string                                   errorMessage = null!)
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                                 Func<T        ,      MlResult<TReturn>>  funcValid,
+                                                                                                 Func<Exception, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                 Func<Exception, string>                  errorMessageBuilder)
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                                 Func<T        ,      MlResult<TReturn>>  funcValid,
+                                                                                                 Func<Exception, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                 string                                   errorMessage = null!)
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithException<T, TException> ───
+
+    public static Task<MlResult<T>> BindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
+                                                                                     Func<TException, MlResult<T>> funcException)
+        where TException : Exception
+        => source.BindIfFailWithException<T, TException>(funcException).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
+                                                                                        Func<TException, MlResult<T>> funcException,
+                                                                                        Func<Exception, string>       errorMessageBuilder)
+        where TException : Exception
+        => source.TryBindIfFailWithException<T, TException>(funcException, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
+                                                                                        Func<TException, MlResult<T>> funcException,
+                                                                                        string                        errorMessage = null!)
+        where TException : Exception
+        => source.TryBindIfFailWithException<T, TException>(funcException, errorMessage).ToAsync();
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithException<T, TReturn, TException> ──
+
+    public static Task<MlResult<TReturn>> BindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                         source,
+                                                                                                   Func<T         , MlResult<TReturn>> funcValid,
+                                                                                                   Func<TException, MlResult<TReturn>> funcFail)
+        where TException : Exception
+        => source.BindIfFailWithException<T, TReturn, TException>(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                               source,
+                                                                                                         Func<T         , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                         Func<TException,      MlResult<TReturn>>  funcFail)
+        where TException : Exception
+        => await source.BindIfFailWithExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                               source,
+                                                                                                         Func<T         ,      MlResult<TReturn>>  funcValid,
+                                                                                                         Func<TException, Task<MlResult<TReturn>>> funcFailAsync)
+        where TException : Exception
+        => await source.BindIfFailWithExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                         source,
+                                                                                                       Func<T         , MlResult<TReturn>> funcValid,
+                                                                                                       Func<TException, MlResult<TReturn>> funcFail,
+                                                                                                       Func<Exception, string>             errorMessageBuilder)
+        where TException : Exception
+        => source.TryBindIfFailWithException<T, TReturn, TException>(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                         source,
+                                                                                                       Func<T         , MlResult<TReturn>> funcValid,
+                                                                                                       Func<TException, MlResult<TReturn>> funcFail,
+                                                                                                       string                              errorMessage = null!)
+        where TException : Exception
+        => source.TryBindIfFailWithException<T, TReturn, TException>(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                               source,
+                                                                                                             Func<T         , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                             Func<TException,      MlResult<TReturn>>  funcFail,
+                                                                                                             Func<Exception, string>                   errorMessageBuilder)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                               source,
+                                                                                                             Func<T         , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                             Func<TException,      MlResult<TReturn>>  funcFail,
+                                                                                                             string                                    errorMessage = null!)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                               source,
+                                                                                                             Func<T         ,      MlResult<TReturn>>  funcValid,
+                                                                                                             Func<TException, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                             Func<Exception, string>                   errorMessageBuilder)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn, TException>(this MlResult<T>                               source,
+                                                                                                             Func<T         ,      MlResult<TReturn>>  funcValid,
+                                                                                                             Func<TException, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                             string                                    errorMessage = null!)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T> ──────────
+
+    public static Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
+                                                                          Func<MlErrorsDetails, MlResult<T>> funcFail)
+        => source.BindIfFailWithExceptionError(funcFail).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
+                                                                             Func<MlErrorsDetails, MlResult<T>> funcFail,
+                                                                             Func<Exception, string>            errorMessageBuilder)
+        => source.TryBindIfFailWithExceptionError(funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
+                                                                             Func<MlErrorsDetails, MlResult<T>> funcFail,
+                                                                             string                             errorMessage = null!)
+        => source.TryBindIfFailWithExceptionError(funcFail, errorMessage).ToAsync();
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T, TReturn> ─
+
+    public static Task<MlResult<TReturn>> BindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                         Func<T              , MlResult<TReturn>> funcValid,
+                                                                                         Func<MlErrorsDetails, MlResult<TReturn>> funcFail)
+        => source.BindIfFailWithExceptionError(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                              Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                              Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail)
+        => await source.BindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                              Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                              Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync)
+        => await source.BindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                            Func<T              , MlResult<TReturn>> funcValid,
+                                                                                            Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                            Func<Exception, string>                  errorMessageBuilder)
+        => source.TryBindIfFailWithExceptionError(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                            Func<T              , MlResult<TReturn>> funcValid,
+                                                                                            Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                            string                                   errorMessage = null!)
+        => source.TryBindIfFailWithExceptionError(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                 Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                 Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                 Func<Exception, string>                        errorMessageBuilder)
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                 Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                 Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                 string                                         errorMessage = null!)
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                 Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                 Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                 Func<Exception, string>                        errorMessageBuilder)
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                 Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                 Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                 string                                         errorMessage = null!)
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T, TException> ──
+
+    public static Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                         source,
+                                                                                      Func<MlErrorsDetails, MlResult<T>> funcFail)
+        where TException : Exception
+        => source.BindIfFailWithExceptionError<T, TException>(funcFail).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                        source,
+                                                                                         Func<MlErrorsDetails, MlResult<T>> funcFail,
+                                                                                         Func<Exception, string>            errorMessageBuilder)
+        where TException : Exception
+        => source.TryBindIfFailWithExceptionError<T, TException>(funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                        source,
+                                                                                         Func<MlErrorsDetails, MlResult<T>> funcFail,
+                                                                                         string                             errorMessage = null!)
+        where TException : Exception
+        => source.TryBindIfFailWithExceptionError<T, TException>(funcFail, errorMessage).ToAsync();
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T, TReturn, TException> ──
+
+    public static Task<MlResult<TReturn>> BindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                              source,
+                                                                                                     Func<T              , MlResult<TReturn>> funcValid,
+                                                                                                     Func<MlErrorsDetails, MlResult<TReturn>> funcFail)
+        where TException : Exception
+        => source.BindIfFailWithExceptionError<T, TReturn, TException>(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                          Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                          Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail)
+        where TException : Exception
+        => await source.BindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                          Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                          Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync)
+        where TException : Exception
+        => await source.BindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                              source,
+                                                                                                        Func<T              , MlResult<TReturn>> funcValid,
+                                                                                                        Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                                        Func<Exception, string>                  errorMessageBuilder)
+        where TException : Exception
+        => source.TryBindIfFailWithExceptionError<T, TReturn, TException>(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                              source,
+                                                                                                        Func<T              , MlResult<TReturn>> funcValid,
+                                                                                                        Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                                        string                                   errorMessage = null!)
+        where TException : Exception
+        => source.TryBindIfFailWithExceptionError<T, TReturn, TException>(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                             Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                             Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                             Func<Exception, string>                        errorMessageBuilder)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                             Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                             Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                             string                                         errorMessage = null!)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                             Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                             Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                             Func<Exception, string>                        errorMessageBuilder)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                             Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                             Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                             string                                         errorMessage = null!)
+        where TException : Exception
+        => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
+
+
+
 
 
 
@@ -2782,6 +3282,161 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync.ToFuncTask(), funcFail.ToFuncTask(), errorMessage);
 
 
+    // ─── Missing sync-source overloads for BindIfFailWithoutException<T> ────────────
+
+    public static Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T>(this MlResult<T>                  source,
+                                                                            Func<MlErrorsDetails, MlResult<T>> func)
+        => source.BindIfFailWithoutException(func).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                        source,
+                                                                               Func<MlErrorsDetails, MlResult<T>> func,
+                                                                               Func<Exception, string>            errorMessageBuilder)
+        => source.TryBindIfFailWithoutException(func, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                        source,
+                                                                               Func<MlErrorsDetails, MlResult<T>> func,
+                                                                               string                             errorMessage = null!)
+        => source.TryBindIfFailWithoutException(func, errorMessage).ToAsync();
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithoutException<T, TReturn> ───
+
+    public static Task<MlResult<TReturn>> BindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                           Func<T              , MlResult<TReturn>> funcValid,
+                                                                                           Func<MlErrorsDetails, MlResult<TReturn>> funcFail)
+        => source.BindIfFailWithoutException(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                 Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                 Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail)
+        => await source.BindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                 Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                 Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync)
+        => await source.BindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                              Func<T              , MlResult<TReturn>> funcValid,
+                                                                                              Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                              Func<Exception, string>                  errorMessageBuilder)
+        => source.TryBindIfFailWithoutException(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                              source,
+                                                                                              Func<T              , MlResult<TReturn>> funcValid,
+                                                                                              Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                              string                                   errorMessage = null!)
+        => source.TryBindIfFailWithoutException(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                    Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                    Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                    Func<Exception, string>                        errorMessageBuilder)
+        => await source.TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                    Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                    Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                    string                                         errorMessage = null!)
+        => await source.TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                    Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                    Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                    Func<Exception, string>                        errorMessageBuilder)
+        => await source.TryBindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                                    source,
+                                                                                                    Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                    Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                    string                                         errorMessage = null!)
+        => await source.TryBindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithoutException<T, TException> ─
+
+    public static Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
+                                                                                        Func<MlErrorsDetails, MlResult<T>> func)
+        where TException : Exception
+        => source.BindIfFailWithoutException<T, TException>(func).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
+                                                                                           Func<MlErrorsDetails, MlResult<T>> func,
+                                                                                           Func<Exception, string>            errorMessageBuilder)
+        where TException : Exception
+        => source.TryBindIfFailWithoutException<T, TException>(func, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
+                                                                                           Func<MlErrorsDetails, MlResult<T>> func,
+                                                                                           string                             errorMessage = null!)
+        where TException : Exception
+        => source.TryBindIfFailWithoutException<T, TException>(func, errorMessage).ToAsync();
+
+
+    // ─── Missing sync-source overloads for BindIfFailWithoutException<T, TReturn, TException> ──
+
+    public static Task<MlResult<TReturn>> BindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                              source,
+                                                                                                       Func<T              , MlResult<TReturn>> funcValid,
+                                                                                                       Func<MlErrorsDetails, MlResult<TReturn>> funcFail)
+        where TException : Exception
+        => source.BindIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail).ToAsync();
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                             Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                             Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail)
+        where TException : Exception
+        => await source.BindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask());
+
+    public static async Task<MlResult<TReturn>> BindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                             Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                             Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync)
+        where TException : Exception
+        => await source.BindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync);
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                              source,
+                                                                                                          Func<T              , MlResult<TReturn>> funcValid,
+                                                                                                          Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                                          Func<Exception, string>                  errorMessageBuilder)
+        where TException : Exception
+        => source.TryBindIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                              source,
+                                                                                                          Func<T              , MlResult<TReturn>> funcValid,
+                                                                                                          Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
+                                                                                                          string                                   errorMessage = null!)
+        where TException : Exception
+        => source.TryBindIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                                Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                                Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                                Func<Exception, string>                        errorMessageBuilder)
+        where TException : Exception
+        => await source.TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                                Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
+                                                                                                                Func<MlErrorsDetails,      MlResult<TReturn>>  funcFail,
+                                                                                                                string                                         errorMessage = null!)
+        where TException : Exception
+        => await source.TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                                Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                                Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                                Func<Exception, string>                        errorMessageBuilder)
+        where TException : Exception
+        => await source.TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                                    source,
+                                                                                                                Func<T              ,      MlResult<TReturn>>  funcValid,
+                                                                                                                Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
+                                                                                                                string                                         errorMessage = null!)
+        where TException : Exception
+        => await source.TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
+
+
+
 
 
 
@@ -3079,6 +3734,55 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                     Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways,
                                                                                     string                                   errorMessage = null!)
         => (await sourceAsync).TryBindAlways(funcValidAlways, funcFailAlways, errorMessage);
+
+
+    // ─── Missing sync-source mixed overloads for BindAlways<T, TResult> ─────────────
+
+    public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
+                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
+                                                                                 Func<MlErrorsDetails,      MlResult<TResult>>  funcFailAlways)
+        => await source.BindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask());
+
+    public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
+                                                                                 Func<T              ,      MlResult<TResult>>  funcValidAlways,
+                                                                                 Func<MlErrorsDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync)
+        => await source.BindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync);
+
+    public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
+                                                                              Func<T              , MlResult<TResult>> funcValidAlways,
+                                                                              Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways,
+                                                                              Func<Exception, string>                  errorMessageBuilder)
+        => source.TryBindAlways(funcValidAlways, funcFailAlways, errorMessageBuilder).ToAsync();
+
+    public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
+                                                                              Func<T              , MlResult<TResult>> funcValidAlways,
+                                                                              Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways,
+                                                                              string                                   errorMessage = null!)
+        => source.TryBindAlways(funcValidAlways, funcFailAlways, errorMessage).ToAsync();
+
+    public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
+                                                                                    Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
+                                                                                    Func<MlErrorsDetails,      MlResult<TResult>>  funcFailAlways,
+                                                                                    Func<Exception, string>                        errorMessageBuilder)
+        => await source.TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask(), errorMessageBuilder);
+
+    public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
+                                                                                    Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
+                                                                                    Func<MlErrorsDetails,      MlResult<TResult>>  funcFailAlways,
+                                                                                    string                                         errorMessage = null!)
+        => await source.TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask(), errorMessage);
+
+    public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
+                                                                                    Func<T              ,      MlResult<TResult>>  funcValidAlways,
+                                                                                    Func<MlErrorsDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
+                                                                                    Func<Exception, string>                        errorMessageBuilder)
+        => await source.TryBindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync, errorMessageBuilder);
+
+    public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
+                                                                                    Func<T              ,      MlResult<TResult>>  funcValidAlways,
+                                                                                    Func<MlErrorsDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
+                                                                                    string                                         errorMessage = null!)
+        => await source.TryBindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync, errorMessage);
 
     #endregion
 

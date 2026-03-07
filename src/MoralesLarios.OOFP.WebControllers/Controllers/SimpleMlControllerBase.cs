@@ -1,4 +1,6 @@
-﻿namespace MoralesLarios.OOFP.WebControllers.Controllers;
+﻿using System.ComponentModel;
+
+namespace MoralesLarios.OOFP.WebControllers.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -21,8 +23,25 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
-                                    .BindAsync  (idObj => _genServiceFp.FindByIdAsync(ct: ct, pk: idObj))
-                                    .ToRepoGetActionResultAsync(this);
+
+                                    .MatchAsync(
+                                                    fail: _ => MlActionResults.NotFound(detail: $"Path {id} not exists or is diferent type to PK of '{typeof(TPk).Name}' was not found."),
+                                                    validAsync: idObj => _genServiceFp.FindByIdAsync(ct: ct, pk: idObj)
+                                                                            .ToRepoGetActionResultAsync(this)
+                                                );
+
+
+                                    //.BindAsync  (idObj => _genServiceFp.FindByIdAsync(ct: ct, pk: idObj))
+                                    //.ToRepoGetActionResultAsync(this);
+        
+        var data = new ObjectResult(new ProblemDetails
+        {
+            Status = StatusCodes.Status404NotFound,
+            Title = "Resource not found",
+            Detail = $"Entity with id '{id}' was not found.",
+            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4"
+        });
+            
         return result;
     }
 

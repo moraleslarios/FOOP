@@ -541,7 +541,7 @@ public static class MlResultTransformations
         
 
     public static string BuildErrorMessage(string errorMessage, Exception ex)
-        => string.IsNullOrWhiteSpace(errorMessage) ? errorMessage : DEFAULT_EX_ERROR_MESSAGE(ex);
+        => string.IsNullOrWhiteSpace(errorMessage) ? DEFAULT_EX_ERROR_MESSAGE(ex) : errorMessage;
 
     public static string BuildErrorMessage(Func<Exception, string> messageBuilder, Exception ex)
         => messageBuilder != null ? messageBuilder(ex) : DEFAULT_EX_ERROR_MESSAGE(ex);
