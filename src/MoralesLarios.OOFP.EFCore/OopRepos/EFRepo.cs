@@ -31,6 +31,14 @@ internal class EFRepo<T, TContext> : EFRepoBase, IEFRepo<T>
 
     public Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default) => _repoReader!.FirstOrDefaultAsync(filter, token);
 
+    public T Last(Expression<Func<T, bool>> filter) => _repoReader!.Last(filter);
+
+    public Task<T> LastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default) => _repoReader!.LastAsync(filter, token);
+
+    public T LastOrDefault(Expression<Func<T, bool>> filter) => _repoReader!.LastOrDefault(filter);
+
+    public Task<T> LastOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default) => _repoReader!.LastOrDefaultAsync(filter, token);
+
     public IEnumerable<T> All() => _repoReader!.All();
 
     public Task<IEnumerable<T>> AllAsync => _repoReader!.AllAsync();

@@ -6,7 +6,7 @@ public static class RegisterServices
 
     internal static IServiceProvider ServiceProvider
     {
-        get => _services?.BuildServiceProvider() ?? throw new ArgumentNullException("The fiel Provider is null");
+        get => _services?.BuildServiceProvider() ?? throw new ArgumentNullException("The field Provider is null");
     }
 
     public static TRepo ResolveRepoFp<TRepo>()

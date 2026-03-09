@@ -26,6 +26,16 @@ internal class EFRepoReader<T, TContext> : EFRepoBase, IEFRepoReader<T>
 
     public async Task<T> FirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default) => (await internalDbContext.Set<T>().FirstAsync(filter, token))!;
 
+    public T LastOrDefault(Expression<Func<T, bool>> filter) => internalDbContext.Set<T>().AsNoTracking().Where(filter).AsEnumerable().LastOrDefault()!;
+
+    public async Task<T> LastOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default)
+        => (await internalDbContext.Set<T>().AsNoTracking().Where(filter).ToListAsync(token)).LastOrDefault()!;
+
+    public T Last(Expression<Func<T, bool>> filter) => internalDbContext.Set<T>().AsNoTracking().Where(filter).AsEnumerable().Last();
+
+    public async Task<T> LastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default)
+        => (await internalDbContext.Set<T>().AsNoTracking().Where(filter).ToListAsync(token)).Last();
+
 
     public IEnumerable<T> All() => internalDbContext.Set<T>().AsNoTracking();
 

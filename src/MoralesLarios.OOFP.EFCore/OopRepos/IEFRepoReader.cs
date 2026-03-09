@@ -9,6 +9,10 @@ internal interface IEFRepoReader<T>
     T FirstOrDefault(Expression<Func<T, bool>> filter);
     Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
     Task<T> FirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
+    T Last(Expression<Func<T, bool>> filter);
+    T LastOrDefault(Expression<Func<T, bool>> filter);
+    Task<T> LastOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
+    Task<T> LastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
     IEnumerable<T> GetData(Expression<Func<T, bool>> filter);
     Task<IEnumerable<T>> GetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
     IEnumerable<T> All();

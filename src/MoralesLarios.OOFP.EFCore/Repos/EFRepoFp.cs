@@ -1,5 +1,4 @@
-﻿
-namespace MoralesLarios.OOFP.EFCore.Repos;
+﻿namespace MoralesLarios.OOFP.EFCore.Repos;
 
 public class EFRepoFp<T, TContext>(TContext dbContext): EFRepoBaseFp(dbContext), IEFRepoFp<T>
     where T        : class
@@ -33,6 +32,22 @@ public class EFRepoFp<T, TContext>(TContext dbContext): EFRepoBaseFp(dbContext),
     public MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderFp.TryFirst(filter, notFoundErrorDetails);
 
     public async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderFp.TryFirstAsync(filter, notFoundErrorDetails, token);
+
+    public MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter) => _repoReaderFp.TryLastOrDefault(filter);
+
+    public async Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderFp.TryLastOrDefaultAsync(filter, token);
+
+    public MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderFp.TryLastOrDefault(filter, notFoundErrorDetails);
+
+    public async Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderFp.TryLastOrDefaultAsync(filter, notFoundErrorDetails, token);
+
+    public MlResult<T> TryLast(Expression<Func<T, bool>> filter) => _repoReaderFp.TryLast(filter);
+
+    public async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderFp.TryLastAsync(filter, token);
+
+    public MlResult<T> TryLast(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderFp.TryLast(filter, notFoundErrorDetails);
+
+    public async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderFp.TryLastAsync(filter, notFoundErrorDetails, token);
 
     public MlResult<IEnumerable<T>> TryGetData(Expression<Func<T, bool>> filter) => _repoReaderFp.TryGetData(filter);
 

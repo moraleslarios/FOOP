@@ -17,7 +17,7 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
 
     public MlResult<T> TryFind(MlErrorsDetails notFoundErrorDetails, params object[] pk)
     {
-        var result = EnsureFp.NotNull(pk, "The object arrya pk cannot be null")
+        var result = EnsureFp.NotNull(pk, "The object array pk cannot be null")
                                 .TryMap (x => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
                                 .TryMap (x => _repoReader!.Find(pk))
                                 .TryBind(x => x.NullToFailed(notFoundErrorDetails));
@@ -30,8 +30,8 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
 
     public async Task<MlResult<T>> TryFindAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
     {
-        var result = await EnsureFp.NotNullAsync(pk, "The object arrya pk cannot be null")
-                                    .TryMapAsync (x => EnsureFp.NotEmptyAsync(pk, "The object arrya pk cannot be empty"))
+        var result = await EnsureFp.NotNullAsync(pk, "The object array pk cannot be null")
+                                    .TryMapAsync (x => EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty"))
                                     .TryMapAsync (x => _repoReader!.FindAsync(token, pk))
                                     .TryBindAsync(x => x.NullToFailedAsync(notFoundErrorDetails));
         return result;
@@ -81,14 +81,68 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
     public async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default!)
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
-                                    .TryMapAsync(x => _repoReader!.FirstAsync(filter, token))
-                                    .TryBindAsync(x => x.NullToFailedAsync($"The query did not return any elements"));
+                                .TryMapAsync(x => _repoReader!.FirstAsync(filter, token))
+                                .TryBindAsync(x => x.NullToFailedAsync(notFoundErrorDetails));
 
         return result;
     }
 
     public Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
         => TryFirstAsync(filter, $"The query did not return any elements", token);
+
+
+    public MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails)
+    {
+        var result = EnsureFp.NotNull(filter, "The filter cannot be null")
+                                .TryMap (x => _repoReader!.LastOrDefault(filter))
+                                .TryBind(x => x.NullToFailed(notFoundErrorDetails));
+
+        return result;
+    }
+
+
+    public MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter)
+        => TryLastOrDefault(filter, $"The query did not return any elements");
+
+
+    public async Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default!)
+    {
+        var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
+                                    .TryMapAsync (x => _repoReader!.LastOrDefaultAsync(filter, token))
+                                    .TryBindAsync(x => x.NullToFailedAsync(notFoundErrorDetails));
+
+        return result;
+    }
+
+    public Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
+        => TryLastOrDefaultAsync(filter, $"The query did not return any elements", token);
+
+
+    public MlResult<T> TryLast(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails)
+    {
+        var result = EnsureFp.NotNull(filter, "The filter cannot be null")
+                                .TryMap (x => _repoReader!.Last(filter))
+                                .TryBind(x => x.NullToFailed(notFoundErrorDetails));
+
+        return result;
+    }
+
+
+    public MlResult<T> TryLast(Expression<Func<T, bool>> filter)
+        => TryLast(filter, $"The query did not return any elements");
+
+
+    public async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default!)
+    {
+        var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
+                                    .TryMapAsync(x => _repoReader!.LastAsync(filter, token))
+                                    .TryBindAsync(x => x.NullToFailedAsync(notFoundErrorDetails));
+
+        return result;
+    }
+
+    public Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
+        => TryLastAsync(filter, $"The query did not return any elements", token);
 
 
 

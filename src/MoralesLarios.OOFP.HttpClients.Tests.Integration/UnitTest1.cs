@@ -107,13 +107,23 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     public async Task TextGetAsync()
     {
 
-        var data = await _sut.GetAsync<IEnumerable<VinoDto>>("vinos-api", "not-found/s", null!, default);
+        var data = await _sut.GetAsync<IEnumerable<VinoDto>>("vinos-api", "not-found", null!, default);
 
 
     }
 
 
+    [Fact]
+    public async Task TextBadAsync()
+    {
+        var item = new VinoDto
+        {
 
+        };
+
+        var result = await _sut.PostAsync<VinoDto>("vinos-api", item, "bad", default!);
+
+    }
 
 
 

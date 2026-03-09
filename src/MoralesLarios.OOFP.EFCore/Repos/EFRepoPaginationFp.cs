@@ -1,6 +1,4 @@
-﻿
-
-using MoralesLarios.OOFP.EFCore.OopRepos;
+﻿using MoralesLarios.OOFP.EFCore.OopRepos;
 using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EFCore.Repos;
@@ -36,6 +34,22 @@ public class EFRepoPaginationFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(
     public MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryFirst(filter, notFoundErrorDetails);
 
     public async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryFirstAsync(filter, notFoundErrorDetails, token);
+
+    public MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryLastOrDefault(filter);
+
+    public async Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryLastOrDefaultAsync(filter, token);
+
+    public MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryLastOrDefault(filter, notFoundErrorDetails);
+
+    public async Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryLastOrDefaultAsync(filter, notFoundErrorDetails, token);
+
+    public MlResult<T> TryLast(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryLast(filter);
+
+    public async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryLastAsync(filter, token);
+
+    public MlResult<T> TryLast(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryLast(filter, notFoundErrorDetails);
+
+    public async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryLastAsync(filter, notFoundErrorDetails, token);
 
     public MlResult<IEnumerable<T>> TryGetData(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryGetData(filter);
 
