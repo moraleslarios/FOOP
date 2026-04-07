@@ -114,6 +114,21 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
 
 
     [Fact]
+    public async Task TextGet2Async()
+    {
+
+        var data = await _sut.GetAsync<IEnumerable<VinoDto>>("vinos-api", "not-found", new Dictionary<string, string>
+                                                      {
+                                                          {  "prueba", "Cambiado"   }
+                                                      }, default);
+
+
+    }
+
+
+
+
+    [Fact]
     public async Task TextBadAsync()
     {
         var item = new VinoDto
@@ -124,6 +139,49 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
         var result = await _sut.PostAsync<VinoDto>("vinos-api", item, "bad", default!);
 
     }
+
+
+
+
+    //[Fact]
+    //public async Task TextBad2Async()
+    //{
+    //    var result = await _sut.PostGetAsync<IEnumerable<int>, IEnumerable<string>>(("bad2", 
+    //                                                  "vinos-api", 
+    //                                                  [1, 2, 3], 
+    //                                                  new Dictionary<string, string>
+    //                                                  {
+    //                                                      {  "prueba", "Cambiado"   }
+    //                                                  }  , default!));
+
+    //}
+
+
+    [Fact]
+    public async Task TextBad2_2Async()
+    {
+        var result = await _sut.PostGetAsync<IEnumerable<int>, IEnumerable<string>>(
+                                                      "vinos-api",
+                                                      [1, 2, 3],
+                                                      "bad2",
+                                                      new Dictionary<string, string>
+                                                      {
+                                                          {  "prueba", "Cambiado"   }
+                                                      }, default!);
+
+    }
+
+
+
+    [Fact]
+    public async Task Find_NotFound()
+    {
+        var result = await _sut.GetAsync<VinoDto>("vinos-api", "2", null!, default);
+
+
+
+    }
+
 
 
 

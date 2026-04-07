@@ -3345,7 +3345,13 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     #endregion
 
 
+    #region Several
 
+    
+
+
+
+    #endregion
 
 
 

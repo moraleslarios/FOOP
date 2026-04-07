@@ -20,3 +20,5 @@ global using MoralesLarios.OOFP.Internals.Info;
 global using System.Net.Http.Json;
 global using MoralesLarios.OOFP.HttpClients.ParamsInfo;
 global using MoralesLarios.OOFP.HttpClients.Helpers;
+global using Microsoft.Extensions.Logging;
+global using MoralesLarios.OOFP.HttpClients.Tests.Integration.Data;

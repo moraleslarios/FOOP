@@ -1,10 +1,4 @@
-﻿
-
-
-
-
-
-namespace MoralesLarios.OOFP.EFCore.Repos;
+﻿namespace MoralesLarios.OOFP.EFCore.Repos;
 public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoReaderFp<T, TContext>(dbContext), IEFRepoReaderPaginationFp<T>
     where T        : class
     where TContext : DbContext

@@ -10,35 +10,24 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     public virtual async Task<IActionResult> GetAll(CancellationToken ct = default!)
     {
         var result = await _genServiceFp.AllAsync(ct: ct)
-                                        .ToRepoGetActionResultAsync(this);
+                                        .ToGetPdActionResultAsync();
         return result;
     }
 
 
-    [HttpGet("{id}")]
+    [HttpGet("id-str/{id}", Name = $"[controller]_[action]")]
     public virtual async Task<IActionResult> GetById(string id, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
 
                                     .MatchAsync(
-                                                    fail: _ => MlActionResults.NotFound(detail: $"Path {id} not exists or is diferent type to PK of '{typeof(TPk).Name}' was not found."),
-                                                    validAsync: idObj => _genServiceFp.FindByIdAsync(ct: ct, pk: idObj)
-                                                                            .ToRepoGetActionResultAsync(this)
+                                                    fail      : _     => MlActionResults.NotFound(detail: $"Path {id} not exists or is diferent type to PK of '{typeof(TPk).Name}' was not found."),
+                                                    validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(), 
+                                                                                                                    ct                  : ct, 
+                                                                                                                    pk                  : idObj)
+                                                                            .ToGetPdActionResultAsync()
                                                 );
-
-
-                                    //.BindAsync  (idObj => _genServiceFp.FindByIdAsync(ct: ct, pk: idObj))
-                                    //.ToRepoGetActionResultAsync(this);
-        
-        //var data = new ObjectResult(new ProblemDetails
-        //{
-        //    Status = StatusCodes.Status404NotFound,
-        //    Title = "Resource not found",
-        //    Detail = $"Entity with id '{id}' was not found.",
-        //    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4"
-        //});
-            
         return result;
     }
 
@@ -46,7 +35,7 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     public virtual async Task<IActionResult> Post([FromBody] TDto dto, CancellationToken ct = default!)
     {
         var result = await _genServiceFp.CreateAsync(dto, ct: ct)
-                                        .ToSimpleRepoPostActionResultAsync(this);
+                                        .ToPostActionResultAsync();
         return result;
     }
 
@@ -55,7 +44,10 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
-                                    .BindAsync  (idObj => _genServiceFp.UpdateAsync(dto, ct: ct, pk: idObj))
+                                    .BindAsync  (idObj => _genServiceFp.UpdateProblemDetailsAsync(dto                 : dto,
+                                                                                                  notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                                                                                  ct                  : ct, 
+                                                                                                  pk                  : idObj))
                                     .ToRepoPutActionResultAsync(this);
         return result;
     }
@@ -64,7 +56,7 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     public virtual async Task<IActionResult> Put([FromBody] TDto dto, CancellationToken ct = default!)
     {
         var result = await _genServiceFp.UpdateAsync(dto, ct: ct)
-                                        .ToRepoPutActionResultAsync(this);
+                                        .ToPutPdActionResultAsync();
         return result;
     }
 
@@ -74,8 +66,10 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
-                                    .BindAsync  (idObj => _genServiceFp.DeleteAsync(ct: ct, pk: idObj))
-                                    .ToRepoDeleteActionResultAsync(this);
+                                    .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                                                                                  ct                  : ct, 
+                                                                                                  pk                  : idObj))
+                                    .ToDeletePdActionResultAsync();
         return result;
     }
 
@@ -83,7 +77,7 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     public virtual async Task<IActionResult> Delete([FromBody] TDto dto, CancellationToken ct = default!)
     {
         var result = await _genServiceFp.DeleteAsync(dto, ct: ct)
-                                        .ToRepoDeleteActionResultAsync(this);
+                                        .ToDeletePdActionResultAsync();
         return result;
     }
 

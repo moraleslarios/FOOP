@@ -1,5 +1,7 @@
 ﻿
 
+using MoralesLarios.OOFP.HttpClients.Tests.Integration.Clients;
+
 namespace MoralesLarios.OOFP.HttpClients.Tests.Integration;
 
 public class Startup
@@ -23,16 +25,23 @@ public class Startup
         });
 
 
-        services.AddHttpClient("pruebas-api", client =>
+        //services.AddHttpClient("pruebas-api", client =>
+        //{
+        //    client.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/");
+        //});
+
+
+        //services.AddHttpClient("vinos-api", client =>
+        //{
+        //    client.BaseAddress = new Uri("https://localhost:7197/api/Vinos/");
+        //});
+
+
+        services.AddGenClientFp<IPruebasClient, PruebasClient>(configureClient: client =>
         {
             client.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/");
         });
 
-
-        services.AddHttpClient("vinos-api", client =>
-        {
-            client.BaseAddress = new Uri("https://localhost:7197/api/Vinos/");
-        });
 
     }
 }

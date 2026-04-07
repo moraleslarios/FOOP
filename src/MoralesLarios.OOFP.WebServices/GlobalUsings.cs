@@ -20,3 +20,4 @@ global using Mapster;
 global using MoralesLarios.OOFP.EFCore.Helpers;
 global using MoralesLarios.OOFP.WebServices.Services;
 global using MoralesLarios.OOFP.EFCore;
+global using static MoralesLarios.OOFP.WebServices.Helpers.Constants;

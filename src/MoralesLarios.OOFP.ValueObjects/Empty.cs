@@ -9,4 +9,8 @@ public class Empty : ValueObject<string>
 
     public static Empty Create() => new Empty(string.Empty);
 
+
+    public static Task<Empty> CreateAsync() => Create().ToAsync();
+
+
 }

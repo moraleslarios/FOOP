@@ -12,3 +12,5 @@ global using MoralesLarios.OOFP.ValueObjects;
 global using Microsoft.AspNetCore.Http;
 global using MoralesLarios.OOFP.Helpers.Extensions;
 global using MoralesLarios.OOFP.Internals.Info;
+global using MoralesLarios.OOFP.WebApi.Data;
+global using MoralesLarios.OOFP.WebApi.Helpers;

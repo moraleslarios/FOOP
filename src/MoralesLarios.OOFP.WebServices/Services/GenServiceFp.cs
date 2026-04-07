@@ -8,13 +8,13 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
     public Task<MlResult<IEnumerable<TDto>>> AllAsync(CancellationToken               ct                  = default!,
                                                       string                          initialMessage      = null!,
                                                       Func<IEnumerable<TDto>, string> validMessageBuilder = null!,
-                                                      Func<MlErrorsDetails, string>   failMessageBuilder  = null!)
+                                                      Func<MlErrorsDetails  , string> failMessageBuilder  = null!)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying all records of the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync( _     => _repo.TryAllAsync(ct))
                             .MapAsync (bdData => bdData.Adapt<IEnumerable<TDto>>())
                             .LogMlResultFinalAsync(logger           : _logger,
-                                                   validBuildMessage: x      => validMessageBuilder is null ? $"Found {x.Count()} of table {typeof(TDto).Name}" : validMessageBuilder(x),
+                                                   validBuildMessage: x      => validMessageBuilder is null  ? $"Found {x.Count()} of table {typeof(TDto).Name}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null  ? $"An error occurred while querying the {typeof(TDto).Name} table. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
     }
@@ -23,10 +23,23 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
                                                string                        initialMessage      = null!,
                                                Func<TDto, string>            validMessageBuilder = null!,
                                                Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                               params object[] pk)
+                                               params object[]               pk)
+        => FindByIdProblemsDetailsAsync(ct                  : ct,
+                         initialMessage      : initialMessage,
+                         notFoundErrorDetails: BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk),
+                         validMessageBuilder : validMessageBuilder,
+                         failMessageBuilder  : failMessageBuilder,
+                         pk                  : pk);
+
+    public Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync(MlErrorsDetails               notFoundErrorDetails,
+                                                              CancellationToken             ct                   = default!,
+                                                              string                        initialMessage       = null!,
+                                                              Func<TDto, string>            validMessageBuilder  = null!,
+                                                              Func<MlErrorsDetails, string> failMessageBuilder   = null!,
+                                                              params object[]               pk)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TDto).Name} table by Id ({pk.GetPkValues()})")
-                            .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk),
+                            .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                     token               : ct,
                                                                     pk                  : pk))
                             .MapAsync (vinoBd => vinoBd?.Adapt<TDto>())
@@ -41,6 +54,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
                                                                                     : failMessageBuilder(errors));
         return result;
     }
+
 
 
     public Task<MlResult<TDto>> CreateAsync(TDto                          dto,
@@ -67,25 +81,38 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
                                             Func<TDto, string>            validMessageBuilder = null!,
                                             Func<MlErrorsDetails, string> failMessageBuilder  = null!,
                                             params object[] pk)
+        => UpdateProblemDetailsAsync(dto, BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk), ct, initialMessage, validMessageBuilder, failMessageBuilder, pk);
+
+
+    public Task<MlResult<TDto>> UpdateProblemDetailsAsync(TDto                          dto,
+                                                          MlErrorsDetails               notFoundErrorDetails,
+                                                          CancellationToken             ct                  = default!,
+                                                          string                        initialMessage      = null!,
+                                                          Func<TDto, string>            validMessageBuilder = null!,
+                                                          Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                          params object[]               pk)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Updating a record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
-                            .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: BuildNotFoundPkError(tableName: typeof(TDto).Name, 
-                                                                                                             pk       : pk),
-                                                                  token               : ct,
-                                                                  pk                  : pk))
+                            .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
+                                                                      token               : ct,
+                                                                      pk                  : pk))
                             .TryMapAsync( _     => dto.Adapt<TEntity>())
-                            .BindAsync  (bdData => _repo.TryUpdateAsync(bdData,
-                                                                        notFoundErrorDetails: BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk),
-                                                                        token: ct,
-                                                                        pk: pk))
+                            .BindAsync  (bdData => _repo.TryUpdateAsync(item                : bdData,
+                                                                        notFoundErrorDetails: notFoundErrorDetails,
+                                                                        token               : ct,
+                                                                        pk                  : pk))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogMlResultFinalAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was updated successfully in the table corresponding to dto {typeof(TDto).Name}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while updating a record in the table corresponding to dto {typeof(TDto).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
     }
+
+
+
+
 
     public Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
                                             CancellationToken             ct                  = default!,
@@ -105,16 +132,22 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
     }
 
 
-
     public Task<MlResult<TDto>> DeleteAsync(CancellationToken             ct                  = default!,
                                             string                        initialMessage      = null!,
                                             Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                            params object[] pk)
+                                            params object[]               pk)
+        => DeleteProblemDetailsAsync(BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk), ct, initialMessage, failMessageBuilder, pk);
+
+
+    public Task<MlResult<TDto>> DeleteProblemDetailsAsync(MlErrorsDetails               notFoundErrorDetails,
+                                                          CancellationToken             ct                  = default!,
+                                                          string                        initialMessage      = null!,
+                                                          Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                          params object[]               pk)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Deleting a record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
-                            .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: BuildNotFoundPkError(tableName: typeof(TDto).Name, 
-                                                                                                                 pk       : pk),
+                            .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                       token               : ct,
                                                                       pk                  : pk))
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
@@ -124,7 +157,6 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while deleting a record in the table corresponding to dto {typeof(TDto).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
     }
-
 
 
     public Task<MlResult<TDto>> DeleteAsync(TDto                          dto,

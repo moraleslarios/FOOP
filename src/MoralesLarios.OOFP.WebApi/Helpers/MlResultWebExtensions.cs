@@ -3,6 +3,7 @@
 /// <summary>
 /// Provides extension methods for converting <see cref="MlResult{T}"/> results to ASP.NET Core <see cref="IActionResult"/> types for Web API responses.
 /// </summary>
+[Obsolete("This class is deprecated and should not be used.")]
 public static class MlResultWebExtensions
 {
 

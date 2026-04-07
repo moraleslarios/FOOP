@@ -10,6 +10,14 @@ public interface IGenServiceFp<TEntity, TDto>
                                                Func<IEnumerable<TDto>, string> validMessageBuilder = null!,
                                                Func<MlErrorsDetails, string>   failMessageBuilder  = null!);
 
+    Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync(MlErrorsDetails               notFoundErrorDetails,
+                                                       CancellationToken             ct                   = default, 
+                                                       string                        initialMessage       = null!, 
+                                                       Func<TDto, string>            validMessageBuilder  = null!, 
+                                                       Func<MlErrorsDetails, string> failMessageBuilder   = null!, 
+                                                       params object[] pk);
+
+
     Task<MlResult<TDto?>> FindByIdAsync(CancellationToken             ct                  = default!,
                                         string                        initialMessage      = null!,
                                         Func<TDto, string>            validMessageBuilder = null!,
@@ -44,4 +52,6 @@ public interface IGenServiceFp<TEntity, TDto>
                                      CancellationToken             ct                  = default!,
                                      string                        initialMessage      = null!,
                                      Func<MlErrorsDetails, string> failMessageBuilder  = null!);
+    Task<MlResult<TDto>> UpdateProblemDetailsAsync(TDto dto, MlErrorsDetails notFoundErrorDetails, CancellationToken ct = default, string initialMessage = null, Func<TDto, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
+    Task<MlResult<TDto>> DeleteProblemDetailsAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken ct = default, string initialMessage = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
 }
