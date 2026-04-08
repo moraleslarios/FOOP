@@ -1,4 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using Microsoft.EntityFrameworkCore;
 using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EFCore.Repos;
@@ -83,4 +87,5 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
 
 
 }
+
 

@@ -1,4 +1,8 @@
-﻿
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+
 
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
@@ -94,3 +98,4 @@ public class CustomerDto
     //[InverseProperty("DimCustomers")]
     //public virtual DimGeography? GeographyKeyNavigation { get; set; }
 }
+

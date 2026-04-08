@@ -1,4 +1,8 @@
-﻿using System.Text.Json;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.Text.Json;
 
 namespace MoralesLarios.OOFP.HttpClients;
 
@@ -281,5 +285,6 @@ public class HttpClientFactoryManager(IHttpClientFactory                _httpCli
     #endregion
 
 }
+
 
 

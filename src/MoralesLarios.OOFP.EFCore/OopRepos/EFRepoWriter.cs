@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.EFCore.OopRepos;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.EFCore.OopRepos;
 
 internal class EFRepoWriter<T, TContext> : EFRepoBase, IEFRepoWriter<T>
     where T        : class
@@ -38,3 +42,4 @@ internal class EFRepoWriter<T, TContext> : EFRepoBase, IEFRepoWriter<T>
 
     public async Task<IEnumerable<T>> UpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoUpdater!.UpdateRangeAsync(items, token);
 }
+

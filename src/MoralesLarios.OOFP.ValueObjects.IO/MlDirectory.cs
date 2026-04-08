@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.ValueObjects.IO;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.ValueObjects.IO;
 
 public class MlDirectory : RegexValue
 {
@@ -19,3 +23,4 @@ public class MlDirectory : RegexValue
     public static implicit operator string     (MlDirectory valueObject) => valueObject.Value;
     public static implicit operator MlDirectory(string      value)       => new MlDirectory(value);
 }
+

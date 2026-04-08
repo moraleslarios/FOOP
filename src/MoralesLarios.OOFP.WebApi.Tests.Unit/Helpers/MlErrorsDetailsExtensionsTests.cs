@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using Microsoft.AspNetCore.Mvc;
 using MoralesLarios.OOFP.Types.Errors;
 using MoralesLarios.OOFP.WebApi.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -91,3 +95,4 @@ public class MlErrorsDetailsExtensionsTests
 
 
 }
+

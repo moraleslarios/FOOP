@@ -1,4 +1,8 @@
-﻿using MoralesLarios.OOFP.EFCore;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using MoralesLarios.OOFP.EFCore;
 
 namespace MoralesLarios.OOFP.EFCore.OopRepos;
 
@@ -33,3 +37,4 @@ internal class EFRepoPagination<T, TContext> : EFRepo<T, TContext>, IEFRepoPagin
     public Task<IEnumerable<T>> GetDataOrderbyDescendingAsync<TKey>(int pageNumber, int pageSize, Expression<Func<T, TKey>> orderByDescending, Expression<Func<T, bool>> filter = null!, CancellationToken token = default)
         => _repoReaderPagination!.GetDataOrderbyDescendingAsync(pageNumber, pageSize, orderByDescending, filter, token);
 }
+

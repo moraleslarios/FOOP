@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.ValueObjects;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.ValueObjects;
 
 public class IntNotNegative : IntMoreThan
 {
@@ -23,3 +27,4 @@ public class IntNotNegative : IntMoreThan
     public static implicit operator IntNotNegative (int            value      ) => new IntNotNegative(value);
 
 }
+

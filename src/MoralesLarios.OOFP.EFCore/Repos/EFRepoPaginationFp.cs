@@ -1,4 +1,8 @@
-﻿using MoralesLarios.OOFP.EFCore.OopRepos;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using MoralesLarios.OOFP.EFCore.OopRepos;
 using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EFCore.Repos;
@@ -113,3 +117,4 @@ public class EFRepoPaginationFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(
                                                                              CancellationToken ct                     = default!)
          => _repoReaderPaginatorFp.TryGetDataPaginationAsync(paginationInfo, orderBy, orderByField, filter, ct);
 }
+

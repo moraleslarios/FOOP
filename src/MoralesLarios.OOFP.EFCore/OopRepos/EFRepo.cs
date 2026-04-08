@@ -1,4 +1,8 @@
-﻿using MoralesLarios.OOFP.EFCore;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using MoralesLarios.OOFP.EFCore;
 
 namespace MoralesLarios.OOFP.EFCore.OopRepos;
 
@@ -65,4 +69,5 @@ internal class EFRepo<T, TContext> : EFRepoBase, IEFRepo<T>
     public Task<IEnumerable<T>> UpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => _repoWriter!.UpdateRangeAsync(items, token);
 
 }
+
 

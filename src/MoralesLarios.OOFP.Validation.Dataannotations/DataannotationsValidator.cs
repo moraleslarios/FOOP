@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.Validation.Dataannotations;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.Validation.Dataannotations;
 
 public static class DataannotationsValidator
 {
@@ -31,3 +35,4 @@ public static class DataannotationsValidator
     public static async Task<MlResult<IEnumerable<T>>> ValidateAsync<T>(Task<IEnumerable<T>> sourceAsync)
         => await (await sourceAsync).ValidateWithDataannotationsAsync();
 }
+

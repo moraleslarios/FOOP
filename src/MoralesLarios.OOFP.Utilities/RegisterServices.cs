@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MoralesLarios.OOFP.Utilities.Config;
 
@@ -17,3 +21,4 @@ public static class RegisterServices
 
 
 }
+

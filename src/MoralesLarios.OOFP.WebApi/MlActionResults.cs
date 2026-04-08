@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.WebApi;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.WebApi;
 
 public class ExtendedProblemDetails : ProblemDetails
 {
@@ -309,3 +313,4 @@ public static class MlActionResults
     }
 
 }
+

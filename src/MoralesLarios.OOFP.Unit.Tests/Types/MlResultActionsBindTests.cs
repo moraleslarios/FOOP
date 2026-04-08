@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Unit.Tests.Types;
 
@@ -2135,6 +2139,7 @@ public class MlResultActionsBindTests
     private Task<MlResult<string>> BindTestMethodStringThrowExceptionAsync(int x)
         => BindTestMethodStringThrowException(x).ToAsync();
 }
+
 
 
 

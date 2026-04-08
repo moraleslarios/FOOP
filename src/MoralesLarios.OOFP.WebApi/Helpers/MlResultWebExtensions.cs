@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.WebApi.Helpers;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.WebApi.Helpers;
 
 /// <summary>
 /// Provides extension methods for converting <see cref="MlResult{T}"/> results to ASP.NET Core <see cref="IActionResult"/> types for Web API responses.
@@ -316,3 +320,4 @@ public static class MlResultWebExtensions
 
 
 }
+

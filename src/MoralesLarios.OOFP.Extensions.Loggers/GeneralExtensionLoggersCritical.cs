@@ -1,4 +1,8 @@
-﻿using System.Net.Http.Headers;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.Net.Http.Headers;
 
 namespace MoralesLarios.OOFP.Extensions.Loggers;
 public static class GeneralExtensionLoggersCritical
@@ -461,3 +465,4 @@ public static class GeneralExtensionLoggersCritical
 
 
 }
+

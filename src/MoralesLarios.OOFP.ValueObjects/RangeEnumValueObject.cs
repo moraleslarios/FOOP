@@ -1,4 +1,8 @@
-﻿//using System;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+//using System;
 
 //namespace MoralesLarios.OOFP.ValueObjects;
 
@@ -67,3 +71,4 @@
 //    public static implicit operator RangeEnumValueObject<TEnum>(TEnum value ) => FromEnum  (value);
 
 //}
+

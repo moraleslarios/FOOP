@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Unit.Tests.Types;
 public class MlResultBuclesTests
@@ -259,3 +263,4 @@ public class MlResultBuclesTests
 public record TestType(int Id, string Name, DateTime Date);
 
 public record TestType2(int Id, string Name, DateTime Date, string Desc = null!);
+

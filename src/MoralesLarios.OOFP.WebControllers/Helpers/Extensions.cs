@@ -1,4 +1,8 @@
-﻿using System.Globalization;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.Globalization;
 
 namespace MoralesLarios.OOFP.WebControllers.Helpers;
 
@@ -89,3 +93,4 @@ public static class Extensions
     }
 
 }
+

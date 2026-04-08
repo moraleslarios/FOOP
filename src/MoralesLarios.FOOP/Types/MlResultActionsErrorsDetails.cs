@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Types;
 
@@ -134,3 +138,4 @@ public static class MlResultActionsErrorsDetails
     public static Task<MlResult<Exception>> GetDetailExceptionAsync(this MlErrorsDetails source) => source.GetDetail<Exception>(EX_DESC_KEY).ToAsync();
     public static async Task<MlResult<Exception>> GetDetailExceptionAsync(this Task<MlErrorsDetails> sourceAsync) => (await sourceAsync).GetDetailException();
 }
+

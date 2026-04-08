@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.EFCore.Repos;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.EFCore.Repos;
 
 public class EFRepoFp<T, TContext>(TContext dbContext): EFRepoBaseFp(dbContext), IEFRepoFp<T>
     where T        : class

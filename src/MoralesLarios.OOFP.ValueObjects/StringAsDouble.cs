@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class StringAsDouble : StringAsNumeric<double>
@@ -26,3 +30,4 @@ public class StringAsDouble : StringAsNumeric<double>
 
     public static implicit operator string(StringAsDouble valueObject) => valueObject.Value.ToString()!;
 }
+

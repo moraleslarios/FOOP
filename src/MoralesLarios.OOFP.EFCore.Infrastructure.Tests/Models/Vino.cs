@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,7 +22,7 @@ public class Vino
     public string Bodega { get; set; } = string.Empty;
     
     [Required]
-    public int A�o { get; set; }
+    public int Año { get; set; }
     
     [MaxLength(200)]
     public string Patrocinador { get; set; } = string.Empty;

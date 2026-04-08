@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class DecimalMoreThan : ValueObject<decimal>
@@ -19,3 +23,4 @@ public class DecimalMoreThan : ValueObject<decimal>
     public static implicit operator decimal(DecimalMoreThan valueObject) => valueObject.Value;
     public static implicit operator DecimalMoreThan((decimal value, decimal length) tupleValues) => new DecimalMoreThan(tupleValues.value, tupleValues.length);
 }
+

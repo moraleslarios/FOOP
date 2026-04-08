@@ -1,3 +1,7 @@
+Ôªø// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 using MoralesLarios.OOFP.HttpClients.Tests.Integration.Data;
 using System.Threading.Tasks;
 using MoralesLarios.OOFP.HttpClients.ParamsInfo;
@@ -216,8 +220,8 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
 
     //    var item = new PruebasDto
     //    {
-    //        Nombre = "Uno m·s",
-    //        Comentarios = "--- - DescriptiÛn"
+    //        Nombre = "Uno m√°s",
+    //        Comentarios = "--- - Descripti√≥n"
     //    };
 
     //    var result = await _sut.PostAsync<PruebasDto>("pruebas-api", item, null!, null!, default);
@@ -253,7 +257,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //    {
     //        Id = 1,
     //        Nombre = "Hola",
-    //        Comentarios = "Soy un chico simp·tico"
+    //        Comentarios = "Soy un chico simp√°tico"
     //    };
 
     //    var result = await _sut.PutAsync<PruebasDto>("pruebas-api", item, null!, null!, default);
@@ -288,7 +292,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //    {
     //        Id = 1,
     //        Nombre = "Hola",
-    //        Comentarios = "Soy un chico simp·tico"
+    //        Comentarios = "Soy un chico simp√°tico"
     //    };
 
     //    var result = await _sut.DeleteAsync<PruebasDto>("pruebas-api", item, null!, null!, default);
@@ -312,7 +316,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //    {
     //        Id = 1,
     //        Nombre = "Hola",
-    //        Comentarios = "Soy un chico simp·tico"
+    //        Comentarios = "Soy un chico simp√°tico"
     //    };
 
     //    var result = await _sut.DeleteAsync<PruebasDto>("pruebas-api", item, "with-header", headers, default);

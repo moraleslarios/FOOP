@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -36,3 +40,4 @@ internal static class TestControllerFactory
         };
     }
 }
+

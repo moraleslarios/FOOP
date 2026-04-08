@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.Helpers;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.Helpers;
 public static class Constants
 {
     public static string DEFAULT_ERROR_MESSAGE { get; } = "Without custom error message. For more info, view 'Ex(s) details exceptions.";
@@ -10,3 +14,4 @@ public static class Constants
     public static string DEFAULT_EX_ERROR_MESSAGE(Exception ex) => $"An error occurred while executing the function. Error: {ex.Message}.More info in Ex Details.";
 
 }
+

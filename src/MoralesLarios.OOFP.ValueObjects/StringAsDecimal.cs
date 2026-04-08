@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class StringAsDecimal : StringAsNumeric<decimal>
@@ -26,3 +30,4 @@ public class StringAsDecimal : StringAsNumeric<decimal>
 
     public static implicit operator string(StringAsDecimal valueObject) => valueObject.Value.ToString()!;
 }
+

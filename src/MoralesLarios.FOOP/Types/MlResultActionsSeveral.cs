@@ -1,4 +1,8 @@
-﻿using MoralesLarios.OOFP.Types.Errors;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using MoralesLarios.OOFP.Types.Errors;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MoralesLarios.OOFP.Types;
@@ -588,3 +592,4 @@ public static class MlResultActionsSeveral
 
 
 }
+

@@ -1,4 +1,8 @@
-﻿
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+
 namespace MoralesLarios.OOFP.EFCore.Repos;
 
 public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbContext), IEFRepoAdderFp<T>
@@ -46,4 +50,5 @@ public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCon
 
 
 }
+
 

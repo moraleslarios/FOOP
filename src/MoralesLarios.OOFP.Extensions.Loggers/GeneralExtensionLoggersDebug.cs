@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.Extensions.Loggers;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.Extensions.Loggers;
 public static class GeneralExtensionLoggersDebug
 {
 
@@ -483,3 +487,4 @@ public static class GeneralExtensionLoggersDebug
 
 
 }
+

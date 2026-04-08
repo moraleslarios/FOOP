@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.ValueObjects;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.ValueObjects;
 
 public class StringMaxLength : ValueObject<NotEmptyString>
 {
@@ -21,3 +25,4 @@ public class StringMaxLength : ValueObject<NotEmptyString>
     public static implicit operator string         (StringMaxLength valueObject) => valueObject.Value;
     public static implicit operator StringMaxLength((string value, int length) tupleValues) => new StringMaxLength(tupleValues.value, tupleValues.length);
 }
+

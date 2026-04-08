@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.WebServices.Services;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.WebServices.Services;
 
 public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                             _repo,
                                                    ILogger<GenServiceFp<TEntity, TDto>> _logger) : IGenServiceFp<TEntity, TDto>
@@ -181,3 +185,4 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
         => MlErrorsDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({pk.GetPkValues()})",
                                                    new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({pk.GetPkValues()})" });
 }
+

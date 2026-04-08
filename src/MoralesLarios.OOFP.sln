@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.9.34622.214
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11430.68 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP", "MoralesLarios.FOOP\MoralesLarios.OOFP.csproj", "{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}"
 EndProject
@@ -60,6 +60,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebControllers", "MoralesLarios.OOFP.WebControllers\MoralesLarios.OOFP.WebControllers.csproj", "{1CE27521-6489-4443-B117-96F0F635492D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.EFCore.Infrastructure.Tests", "MoralesLarios.OOFP.EFCore.Infrastructure.Tests\MoralesLarios.OOFP.EFCore.Infrastructure.Tests.csproj", "{A2672982-BB4B-422C-962E-301DAB45ED3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebControllers.Cache", "MoralesLarios.OOFP.WebControllers.Cache\MoralesLarios.OOFP.WebControllers.Cache.csproj", "{A44C4A77-2AC3-4614-AE27-F5929DB15CBE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -183,6 +185,10 @@ Global
 		{A2672982-BB4B-422C-962E-301DAB45ED3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2672982-BB4B-422C-962E-301DAB45ED3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2672982-BB4B-422C-962E-301DAB45ED3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A44C4A77-2AC3-4614-AE27-F5929DB15CBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A44C4A77-2AC3-4614-AE27-F5929DB15CBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A44C4A77-2AC3-4614-AE27-F5929DB15CBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A44C4A77-2AC3-4614-AE27-F5929DB15CBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

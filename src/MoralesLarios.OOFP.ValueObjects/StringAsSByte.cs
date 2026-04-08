@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class StringAsSByte : StringAsNumeric<sbyte>
@@ -26,3 +30,4 @@ public class StringAsSByte : StringAsNumeric<sbyte>
 
     public static implicit operator string(StringAsSByte valueObject) => valueObject.Value.ToString()!;
 }
+

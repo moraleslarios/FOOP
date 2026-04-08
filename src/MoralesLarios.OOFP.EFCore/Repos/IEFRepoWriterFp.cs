@@ -1,4 +1,8 @@
-﻿using MoralesLarios.OOFP.Types.Errors;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EFCore.Repos;
 
@@ -24,3 +28,4 @@ public interface IEFRepoWriterFp<T> : IEFRepoAdderFp<T>, IEFRepoUpdaterFp<T>, IE
     //MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items);
     //Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 }
+

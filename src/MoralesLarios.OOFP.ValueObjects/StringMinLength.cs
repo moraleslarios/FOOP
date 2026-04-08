@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.ValueObjects;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.ValueObjects;
 
 public class StringMinLength : ValueObject<NotEmptyString>
 {
@@ -21,3 +25,4 @@ public class StringMinLength : ValueObject<NotEmptyString>
     public static implicit operator string         (StringMinLength valueObject) => valueObject.Value;
     public static implicit operator StringMinLength((string value, int length) tupleValues) => new StringMinLength(tupleValues.value, tupleValues.length);
 }
+

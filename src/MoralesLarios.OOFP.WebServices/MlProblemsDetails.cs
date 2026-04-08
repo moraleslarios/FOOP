@@ -1,4 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.ComponentModel.DataAnnotations;
 
 namespace MoralesLarios.OOFP.WebServices;
 
@@ -331,3 +335,4 @@ public static class MlProblemsDetails
     }
 
 }
+

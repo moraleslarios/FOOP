@@ -1,4 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.Text.RegularExpressions;
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
@@ -31,3 +35,4 @@ public class RegexValue : ValueObject<NotEmptyString>
     public static implicit operator RegexValue((string value, string pattern) tupleValues)
         => new RegexValue(tupleValues.value, tupleValues.pattern);
 }
+

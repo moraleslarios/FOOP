@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class DoubleMoreThan : ValueObject<double>
@@ -19,3 +23,4 @@ public class DoubleMoreThan : ValueObject<double>
     public static implicit operator double(DoubleMoreThan valueObject) => valueObject.Value;
     public static implicit operator DoubleMoreThan((double value, double length) tupleValues) => new DoubleMoreThan(tupleValues.value, tupleValues.length);
 }
+

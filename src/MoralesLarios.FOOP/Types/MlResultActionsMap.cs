@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System;
 
 namespace MoralesLarios.OOFP.Types;
 public static class MlResultActionsMap
@@ -3356,3 +3360,4 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
 
 
 }
+

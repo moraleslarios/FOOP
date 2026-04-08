@@ -1,4 +1,8 @@
-﻿namespace MoralesLarios.OOFP.EFCore.Repos;
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.EFCore.Repos;
 public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoReaderFp<T, TContext>(dbContext), IEFRepoReaderPaginationFp<T>
     where T        : class
     where TContext : DbContext
@@ -126,3 +130,4 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
 
 
 }
+

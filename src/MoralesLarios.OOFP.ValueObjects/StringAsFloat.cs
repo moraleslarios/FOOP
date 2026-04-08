@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class StringAsFloat : StringAsNumeric<float>
@@ -26,3 +30,4 @@ public class StringAsFloat : StringAsNumeric<float>
 
     public static implicit operator string(StringAsFloat valueObject) => valueObject.Value.ToString()!;
 }
+

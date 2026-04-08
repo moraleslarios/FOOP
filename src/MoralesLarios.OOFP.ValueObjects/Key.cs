@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class Key : StringMinLength
@@ -18,3 +22,4 @@ public class Key : StringMinLength
     public static implicit operator string(Key   valueObject) => valueObject.Value;
     public static implicit operator Key   (string value      ) => new Key(value);
 }
+

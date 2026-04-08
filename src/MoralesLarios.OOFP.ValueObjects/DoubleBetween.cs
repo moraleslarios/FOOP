@@ -1,3 +1,7 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
 namespace MoralesLarios.OOFP.ValueObjects;
 
 public class DoubleBetween : ValueObject<double>
@@ -21,3 +25,4 @@ public class DoubleBetween : ValueObject<double>
     public static implicit operator DoubleBetween((double value, double minLength, double maxLength) tupleValues)
         => new DoubleBetween(tupleValues.value, tupleValues.minLength, tupleValues.maxLength);
 }
+
