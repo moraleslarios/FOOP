@@ -273,6 +273,154 @@ public static class MlResultActionsExecSelf
     #endregion
 
 
+    #region ExecSelfIf
+
+
+    public static MlResult<T> ExecSelfIf<T>(this MlResult<T>   source,
+                                                 Func<T, bool> condition,
+                                                 Action<T>     actionTrue,
+                                                 Action<T>     actionFalse)
+        => source.Match(
+                            valid: x      => 
+                                            { 
+                                                if (condition(x)) actionTrue(x); else actionFalse(x);
+                                                
+                                                return source; 
+                                            },
+                            fail : MlResult<T>.Fail
+                        );
+
+
+    public async static Task<MlResult<T>> ExecSelfIfAsync<T>(this MlResult<T>   source,
+                                                                  Func<T, bool> condition,
+                                                                  Func<T, Task> actionTrueAsync,
+                                                                  Func<T, Task> actionFalseAsync)
+        => await source.MatchAsync(
+                                        validAsync: async x =>
+                                                            {
+                                                                if (condition(x)) await actionTrueAsync(x); else await actionFalseAsync(x);
+
+                                                                return source;
+                                                            },
+                                        fail : MlResult<T>.Fail
+                                   );
+
+
+    public async static Task<MlResult<T>> ExecSelfIfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                  Func<T, bool>     condition,
+                                                                  Func<T, Task>     actionTrueAsync,
+                                                                  Func<T, Task>     actionFalseAsync)
+        => await sourceAsync.MatchAsync(
+                                            validAsync: async x      =>
+                                            {
+                                                if (condition(x)) await actionTrueAsync(x); else await actionFalseAsync(x);
+                                                return await sourceAsync;
+                                            },
+                                            fail: MlResult<T>.Fail
+                                       );
+
+
+    public async static Task<MlResult<T>> ExecSelfIfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                  Func<T, bool>     condition,
+                                                                  Action<T>         actionTrue,
+                                                                  Func<T, Task>     actionFalseAsync)
+        => await (await sourceAsync).ExecSelfIfAsync(condition, actionTrue.ToFuncTask(), actionFalseAsync);
+
+
+    public async static Task<MlResult<T>> ExecSelfIfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                  Func<T, bool>     condition,
+                                                                  Func<T, Task>     actionTrueAsync,
+                                                                  Action<T>         actionFalse)
+        => await (await sourceAsync).ExecSelfIfAsync(condition, actionTrueAsync, actionFalse.ToFuncTask());
+
+    public async static Task<MlResult<T>> ExecSelfIfAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                  Func<T, bool>     condition,
+                                                                  Action<T>         actionTrue,
+                                                                  Action<T>         actionFalse)
+        => await (await sourceAsync).ExecSelfIfAsync(condition, actionTrue.ToFuncTask(), actionFalse.ToFuncTask());
+
+
+
+
+
+    public static MlResult<T> TryExecSelfIf<T>(this MlResult<T>             source,
+                                                    Func<T, bool>           condition,
+                                                    Action<T>               actionTrue,
+                                                    Action<T>               actionFalse,
+                                                    Func<Exception, string> errorMessageBuilder)
+        => source.Match(
+                            valid: x => condition(x) ? actionTrue.TryToMlResult(x, errorMessageBuilder) : actionFalse.TryToMlResult(x, errorMessageBuilder),
+                            fail :      MlResult<T>.Fail
+                        );
+
+
+    public static MlResult<T> TryExecSelfIf<T>(this MlResult<T>   source,
+                                                    Func<T, bool> condition,
+                                                    Action<T>     actionTrue,
+                                                    Action<T>     actionFalse,
+                                                    string        errorMessage)
+        => source.TryExecSelfIf(condition, actionTrue, actionFalse, _ => errorMessage);
+
+
+    public async static Task<MlResult<T>> TryExecSelfIfAsync<T>(this MlResult<T>             source,
+                                                                     Func<T, bool>           condition,
+                                                                     Func<T, Task>           actionTrueAsync,
+                                                                     Action<T>               actionFalse,
+                                                                     Func<Exception, string> errorMessageBuilder)
+        => await source.MatchAsync(
+                                        validAsync: async x => condition(x) ? await actionTrueAsync.TryToMlResultAsync(x, errorMessageBuilder) : actionFalse.TryToMlResult(x, errorMessageBuilder),
+                                        fail      :            MlResult<T>.Fail
+                                   );
+
+    public async static Task<MlResult<T>> TryExecSelfIfAsync<T>(this MlResult<T>   source,
+                                                                     Func<T, bool> condition,
+                                                                     Func<T, Task> actionTrueAsync,
+                                                                     Action<T>     actionFalse,
+                                                                     string        errorMessage)
+        => await source.TryExecSelfIfAsync(condition, actionTrueAsync, actionFalse, _ => errorMessage);
+
+
+    public async static Task<MlResult<T>> TryExecSelfIfAsync<T>(this MlResult<T>             source,
+                                                                     Func<T, bool>           condition,
+                                                                     Func<T, Task>           actionTrueAsync,
+                                                                     Func<T, Task>           actionFalseAsync,
+                                                                     Func<Exception, string> errorMessageBuilder)
+        => await source.MatchAsync(
+                                        validAsync: async x => condition(x) ? await actionTrueAsync.TryToMlResultAsync(x, errorMessageBuilder) : await actionFalseAsync.TryToMlResultAsync(x, errorMessageBuilder),
+                                        fail      :            MlResult<T>.Fail
+                                   );
+
+    public async static Task<MlResult<T>> TryExecSelfIfAsync<T>(this MlResult<T>   source,
+                                                                     Func<T, bool> condition,
+                                                                     Func<T, Task> actionTrueAsync,
+                                                                     Func<T, Task> actionFalseAsync,
+                                                                     string        errorMessage)
+        => await source.TryExecSelfIfAsync(condition, actionTrueAsync, actionFalseAsync, _ => errorMessage);
+
+
+    public async static Task<MlResult<T>> TryExecSelfIfAsync<T>(this MlResult<T>             source,
+                                                                     Func<T, bool>           condition,
+                                                                     Action<T>               actionTrue,
+                                                                     Func<T, Task>           actionFalseAsync,
+                                                                     Func<Exception, string> errorMessageBuilder)
+        => await source.MatchAsync(
+                                        validAsync: async x => condition(x) ? actionTrue.TryToMlResult(x, errorMessageBuilder) : await actionFalseAsync.TryToMlResultAsync(x, errorMessageBuilder),
+                                        fail      :            MlResult<T>.Fail
+                                   );
+
+    public async static Task<MlResult<T>> TryExecSelfIfAsync<T>(this MlResult<T>   source,
+                                                                     Func<T, bool> condition,
+                                                                     Action<T>     actionTrue,
+                                                                     Func<T, Task> actionFalseAsync,
+                                                                     string        errorMessage)
+        => await source.TryExecSelfIfAsync(condition, actionTrue, actionFalseAsync, _ => errorMessage);
+
+
+
+    #endregion
+
+
+
 
     #region ExecSelfIfValid
 

@@ -7,3 +7,4 @@ global using System.Configuration;
 global using Microsoft.Extensions.Configuration;
 global using MoralesLarios.OOFP.Types;
 global using MoralesLarios.OOFP.Helpers;
+global using MoralesLarios.OOFP.Types.Errors;

@@ -36,16 +36,37 @@ public static class EnsureFp
         => condition ? MlResult<T>.Valid(value) : errorsDetails.ToMlResultFail<T>();
 
 
+    //public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, string errorMessage)
+    //    => condition ? MlResult<T>.Valid(value).ToAsync() : MlResult<T>.Fail(errorMessage).ToAsync();
+
+
     public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, string errorMessage)
-        => condition ? MlResult<T>.Valid(value).ToAsync() : MlResult<T>.Fail(errorMessage).ToAsync();
+    {
+        var result = condition ? MlResult<T>.Valid(value).ToAsync() : MlResult<T>.Fail(errorMessage).ToAsync();
+
+        return result;
+    }
+
+
 
     public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, MlErrorsDetails errorsDetails)
         => condition ? MlResult<T>.Valid(value).ToAsync() : errorsDetails.ToMlResultFail<T>().ToAsync();
 
 
 
-    public static Task<MlResult<T>> NotNullAsync<T>(T value, string errorMessage)
-        => ThatAsync(value, value is not null, errorMessage);
+    //public static async Task<MlResult<T>> NotNullAsync<T>(T value, string errorMessage)
+    //    => await ThatAsync(value, value is not null, errorMessage);
+
+    public static async Task<MlResult<T>> NotNullAsync<T>(T value, string errorMessage)
+    {
+        var result = await ThatAsync(value, value is not null, errorMessage);
+
+        return result;
+    }
+
+
+
+
 
     public static Task<MlResult<T>> NotNullAsync<T>(T value, MlErrorsDetails errorsDetails)
         => ThatAsync(value, value is not null, errorsDetails);

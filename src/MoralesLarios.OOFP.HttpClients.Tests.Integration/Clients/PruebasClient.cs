@@ -2,24 +2,57 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
+using System.Reflection.PortableExecutable;
+
 namespace MoralesLarios.OOFP.HttpClients.Tests.Integration.Clients;
 
 public class PruebasClient(ILogger<PruebasClient>    _logger,
                            IHttpClientFactoryManager _httpClientFactoryManager,
-                           Key                       _clientHttpFactoryKey) : GenClientFp<PruebasDto>(_logger, _httpClientFactoryManager, _clientHttpFactoryKey), IPruebasClient
+                           Key                       _httpClientFactoryKey) : GenClientFp<PruebasDto>(_logger, _httpClientFactoryManager, _httpClientFactoryKey), IPruebasClient
 {
 
 
     public async Task<MlResult<PruebasDto>> MyGetAsync(NotEmptyString data)
     {
-        var result = await _httpClientFactoryManager.GetAsync<PruebasDto>(_clientHttpFactoryKey, 
+        var result = await _httpClientFactoryManager.GetAsync<PruebasDto>(_httpClientFactoryKey, 
                                                                            $"with-header",
                                                                            new Dictionary<string, string> { {"data", data } });
         return result;
     }
 
 
+    public async Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithCacheAsync()
+    {
+        var result = await GetAllAsync();
 
+        return result;
+    }
+
+
+    public async Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithoutCacheAsync()
+    {
+        var result = await GetAllAsync(new Dictionary<string, string> { { "X-Bypass-Cache", "no-cache" } });
+
+        return result;
+    }
+
+
+
+    public async Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithCache2Async()
+    {
+        var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebasDto>>(_httpClientFactoryKey, "with-cache1");
+
+        //var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebasDto>>(_httpClientFactoryKey);
+
+        return result;
+    }
+
+    public async Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithoutCache2Async()
+    {
+        var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebasDto>>(_httpClientFactoryKey, "with-cache1", new Dictionary<string, string> { { "X-Bypass-Cache", "no-cache" } });
+
+        return result;
+    }
 
 
     //[Fact]

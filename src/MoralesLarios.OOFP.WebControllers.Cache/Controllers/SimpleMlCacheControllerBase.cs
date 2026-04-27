@@ -14,17 +14,57 @@ public class SimpleMlCacheControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEnti
     where TEntity : class
     where TDto    : class
 {
-    [OutputCache(PolicyName = "PerControllerTag")]
+    [MlControllerCache]
     public override async Task<IActionResult> GetAllAsync(CancellationToken ct = default!) => await base.GetAllAsync(ct);
 
-    [OutputCache(PolicyName = "PerControllerTag")]
+    [MlControllerCache]
     public override async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default) => await base.GetByIdAsync(id, ct);
 
 
     public override async Task<IActionResult> PostAsync([FromBody] TDto dto, CancellationToken ct = default)
     {
-        await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
+        await EvictControllerCacheAsync(ct);
 
         return await base.PostAsync(dto, ct);
     }
+
+    public override async Task<IActionResult> PutAsync(string id, [FromBody] TDto dto, CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.PutAsync(id, dto, ct);
+    }
+
+    public override async Task<IActionResult> PutAsync([FromBody] TDto dto, CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.PutAsync(dto, ct);
+    }
+
+    public override async Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.DeleteAsync(id, ct);
+    }
+
+    public override async Task<IActionResult> DeleteAsync([FromBody] TDto dto, CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.DeleteAsync(dto, ct);
+    }
+
+    [HttpGet("clear-cache/now")]
+    public virtual async Task EvictControllerCacheAsync(CancellationToken ct = default)
+        => await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
+
+
+
+
+
 }
+
+
+

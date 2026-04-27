@@ -264,3 +264,11 @@ public record TestType(int Id, string Name, DateTime Date);
 
 public record TestType2(int Id, string Name, DateTime Date, string Desc = null!);
 
+
+
+
+
+
+
+
+

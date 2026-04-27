@@ -72,5 +72,28 @@ public class GenClientFpPruebasTests(IPruebasClient _sut)
         };
         var result = await _sut.DeleteAsync(item);
     }
+
+
+
+
+
+
+
+    [Fact]
+    public async Task CacheTests()
+    {
+        var result = await _sut.MyGetAllwithCache2Async();
+    }
+
+    [Fact]
+    public async Task WithoutCache()
+    {
+        var result = await _sut.MyGetAllwithoutCache2Async();
+
+    }
+
+
+
+
 }
 

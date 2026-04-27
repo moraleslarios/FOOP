@@ -194,10 +194,19 @@ public static class MlResultActionsMap
         => source.MapEnsure(ensureFunc, errorDetailsResultBuilder).ToAsync();
 
 
-    public static Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T>   source,
+    //public static Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T>   source,
+    //                                                       Func<T, bool> ensureFunc,
+    //                                                       string        errorMessageResult)
+    //    => source.MapEnsure(ensureFunc, errorMessageResult).ToAsync();
+
+    public static async Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T> source,
                                                            Func<T, bool> ensureFunc,
-                                                           string        errorMessageResult)
-        => source.MapEnsure(ensureFunc, errorMessageResult).ToAsync();
+                                                           string errorMessageResult)
+    {
+        var result = await source.MapEnsure(ensureFunc, errorMessageResult).ToAsync();
+
+        return result;
+    }
 
 
     public static Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T>      source,

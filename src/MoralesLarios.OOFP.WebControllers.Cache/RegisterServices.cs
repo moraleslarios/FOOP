@@ -6,7 +6,7 @@ namespace MoralesLarios.OOFP.WebControllers.Cache;
 
 public static class RegisterServices
 {
-    public static IServiceCollection AddWebServices(this IServiceCollection services, Action<OutputCacheOptions> options = null!)
+    public static IServiceCollection AddWebControllersCache(this IServiceCollection services, Action<OutputCacheOptions> options = null!)
     {
         services.AddOutputCache(outputCacheOptions =>
         {

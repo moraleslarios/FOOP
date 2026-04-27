@@ -81,6 +81,13 @@ public static class MlResultActionsSeveral
     }
 
 
+
+
+
+
+
+
+
     #endregion EmptyToFailed
 
 
@@ -584,7 +591,22 @@ public static class MlResultActionsSeveral
 
 
 
+    #region Do
 
+
+    public static MlResult<TResult> Do<T, TResult>(this MlResult<T> source, Func<MlResult<T>, MlResult<TResult>> action)
+        => action(source);
+
+    public static async Task<MlResult<TResult>> DoAsync<T, TResult>(this MlResult<T>                                source, 
+                                                                         Func<MlResult<T>, Task<MlResult<TResult>>> actionAsync)
+        => await actionAsync(source);
+
+    public static async Task<MlResult<TResult>> DoAsync<T, TResult>(this Task<MlResult<T>>                                sourceAsync, 
+                                                                         Func<Task<MlResult<T>>, Task<MlResult<TResult>>> actionAsync)
+        => await actionAsync(sourceAsync);
+
+
+    #endregion
 
 
 
