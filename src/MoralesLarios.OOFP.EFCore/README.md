@@ -1,0 +1,103 @@
+# MoralesLarios.OOFP.EFCore
+
+Capa de repositorios EF Core en dos estilos:
+
+- **Funcional (`*Fp`)**: devuelve `MlResult<T>` y encapsula errores sin excepciones al consumidor.
+- **OOP (`OopRepos`)**: interfaces/repositorios clásicos.
+
+## Qué hace
+
+- CRUD completo (`add`, `update`, `delete`, `find`, `all`, filtros).
+- Paginación (`IEFPaginatorFp<T>`, `IEFRepoReaderPaginationFp<T>`).
+- Registro de todos los repositorios por entidad/contexto con una sola llamada.
+
+## Dependencias
+
+- `Microsoft.EntityFrameworkCore` 8.x
+- `MoralesLarios.OOFP` (FOOP core)
+- `MoralesLarios.OOFP.Internals`
+- `MoralesLarios.OOFP.ValueObjects`
+
+## Estructura principal
+
+- `Repos/*Fp.cs`: versión funcional.
+- `OopRepos/*.cs`: versión orientada a objetos.
+- `RegisterServices.cs`: registro masivo DI.
+- `Helpers/Extensions.cs`: utilidades (`GetPkValues`, ordenación).
+- `Enums/OrderBy.cs`.
+
+## Registro
+
+```csharp
+services.AddDbContext<AppDbContext>(...);
+
+services.AddScopedOOFPRepos<User, AppDbContext>();
+// o AddTransientOOFPRepos / AddSingletonOOFPRepos
+```
+
+Registra automáticamente interfaces:
+
+- OOP: `IEFRepo<T>`, `IEFRepoReader<T>`, `IEFRepoWriter<T>`, `IEFRepoAdder<T>`, `IEFRepoUpdater<T>`, `IEFRepoDeleter<T>`, `IEFRepoPagination<T>`, etc.
+- Funcional: `IEFRepoFp<T>`, `IEFRepoReaderFp<T>`, `IEFRepoWriterFp<T>`, `IEFRepoAdderFp<T>`, `IEFRepoUpdaterFp<T>`, `IEFRepoDeleterFp<T>`, `IEFRepoPaginationFp<T>`, `IEFRepoReaderPaginationFp<T>`.
+
+## Interfaces funcionales clave
+
+### `IEFRepoReaderFp<T>`
+
+Métodos de lectura:
+
+- `TryFind(...)`, `TryFindAsync(...)`
+- `TryFirst/Last/FirstOrDefault/LastOrDefault` + async
+- `TryGetData(filter)`
+- `TryAll()`
+- Todas con variantes `MlErrorsDetails notFoundErrorDetails`.
+
+### `IEFRepoWriterFp<T>`
+
+Agrupa escritura:
+
+- `IEFRepoAdderFp<T>`
+- `IEFRepoUpdaterFp<T>`
+- `IEFRepoDeleterFp<T>`
+
+### `IEFRepoFp<T>`
+
+Compuesto de lectura + escritura:
+
+```csharp
+public interface IEFRepoFp<T> : IEFRepoReaderFp<T>, IEFRepoWriterFp<T>
+```
+
+## Clase principal: `EFRepoFp<T, TContext>`
+
+Fachada que delega en `IEFRepoReaderFp<T>` y `IEFRepoWriterFp<T>` resueltos desde DI (`RegisterServices.ResolveRepoFp`).
+
+Ejemplo:
+
+```csharp
+public class UserService(IEFRepoFp<User> repo)
+{
+    public Task<MlResult<IEnumerable<User>>> AllAsync(CancellationToken ct)
+        => repo.TryAllAsync(ct);
+
+    public Task<MlResult<User>> FindAsync(int id, CancellationToken ct)
+        => repo.TryFindAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(), token: ct, pk: id);
+}
+```
+
+## Helpers
+
+### `Helpers.Extensions.GetPkValues`
+
+```csharp
+string txt = new object[] { 10, "A" }.GetPkValues(); // "(10, A)"
+```
+
+### `Helpers.Extensions.PrivateOrderBy`
+
+Ordena `IQueryable<T>` por campo y sentido (`OrderBy.Ascending` / `OrderBy.Descending`).
+
+## Notas
+
+- Diseñado para integrarse con `MoralesLarios.OOFP.WebServices` (`GenServiceFp<,>`).
+- La versión funcional es la recomendada para flujos con `MlResult<T>`.

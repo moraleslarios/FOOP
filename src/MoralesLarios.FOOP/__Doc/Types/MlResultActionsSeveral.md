@@ -1,0 +1,29 @@
+# `MlResultActionsSeveral` (`Types/MlResultActionsSeveral.cs`)
+
+Familia de utilidades de composición y transformación transversal.
+
+## Semántica
+
+Incluye helpers para escenarios comunes no cubiertos por `Bind/Map/Match` puros:
+
+- conversiones de nulos a fail
+- combinaciones de múltiples resultados
+- creación de resultados compuestos
+- utilidades de composición para colecciones
+
+## Ejemplos representativos
+
+```csharp
+var r = maybeNull.NullToFailed("No value");
+
+var combined = resultA.CreateCompleteMlResult(resultB);
+
+var fused = listOfResults.FusionErrosIfExists();
+```
+
+## Enlaces de detalle
+
+- `../Several/1_EmptyToFailed.md`
+- `../Several/2_NullToFailed.md`
+- `../Several/3_BoolToResult.md`
+- `../Several/4_Combine.md`

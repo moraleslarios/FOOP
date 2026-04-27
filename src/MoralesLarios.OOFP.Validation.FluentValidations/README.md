@@ -1,0 +1,42 @@
+# MoralesLarios.OOFP.Validation.FluentValidations
+
+Extensiones para validar objetos con `FluentValidation` y convertir el resultado a `MlResult<T>`.
+
+## Qué hace
+
+- Crea automáticamente un `TValidator` (`new()` + `Activator.CreateInstance`).
+- Ejecuta `validator.Validate(source)`.
+- Si hay errores, devuelve `Fail<T>` con mensajes.
+- Si no hay errores, devuelve `Valid<T>` con el mismo objeto.
+
+## Dependencias
+
+- `FluentValidation`
+- `MoralesLarios.OOFP.Validation`
+
+## Métodos
+
+En `Helpers/Extensions.cs`:
+
+- `ValidateWitHFluentValidations<T, TValidator>(this T source)`
+- `ValidateWitHFluentValidationsAsync<T, TValidator>(this T source)`
+
+## Ejemplo
+
+```csharp
+public class CreateUserValidator : AbstractValidator<CreateUserDto>
+{
+    public CreateUserValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+    }
+}
+
+MlResult<CreateUserDto> result = dto
+    .ValidateWitHFluentValidations<CreateUserDto, CreateUserValidator>();
+```
+
+## Notas
+
+- Si falla la creación del validator, también se devuelve `Fail`.
+- Este proyecto se centra solo en helpers de conversión `FluentValidation -> MlResult`.
