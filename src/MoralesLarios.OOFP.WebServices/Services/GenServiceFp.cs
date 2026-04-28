@@ -143,11 +143,11 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
         => DeleteProblemDetailsAsync(BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk), ct, initialMessage, failMessageBuilder, pk);
 
 
-    public Task<MlResult<TDto>> DeleteProblemDetailsAsync(MlErrorsDetails               notFoundErrorDetails,
-                                                          CancellationToken             ct                  = default!,
-                                                          string                        initialMessage      = null!,
-                                                          Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                                          params object[]               pk)
+    public Task<MlResult<TDto>> DeleteProblemDetailsAsync(       MlErrorsDetails               notFoundErrorDetails,
+                                                                 CancellationToken             ct                  = default!,
+                                                                 string                        initialMessage      = null!,
+                                                                 Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                          params object[]                      pk)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Deleting a record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
