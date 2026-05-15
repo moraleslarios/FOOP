@@ -70,6 +70,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
         string appSettingKey = "NotExists:ComplexKey";
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey);
         result.IsFail.Should().BeTrue();
+        result.IsFail.Should().BeTrue();
     }
 
 

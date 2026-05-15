@@ -42,9 +42,9 @@ public class MlConfigManager(IConfiguration configuration) : IMlConfigManager
     {
         var result = EnsureFp.NotNullEmptyOrWhitespace(configKey, "Tkey cannot be null white or empty")
                                 .Map ( _               => configSearch(configKey))
-                                .Bind(configSearchData => errorsDetails is not null 
-                                                                ? configSearchData.NullToFailed($"No value found configured with the key '{configKey}'")
-                                                                : configSearchData.NullToFailed(errorsDetails!));
+                                .MapEnsure(res => res is not null, errorsDetails is not null
+                                                                    ? errorsDetails
+                                                                    : $"No value found configured with the key '{configKey}'");                               
         return result!;
     }
 
