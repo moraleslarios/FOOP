@@ -4,9 +4,11 @@ Capa de **servicios genéricos funcionales** que conecta el repositorio EF Core (
 
 Componentes principales:
 
-- `IGenServiceFp<TEntity, TDto>` / `GenServiceFp<TEntity, TDto>`: servicio genérico de aplicación.
+- `IGenServiceFp<TEntity, TDto>` / `GenServiceFp<TEntity, TDto>`: servicio genérico de aplicación con todos sus métodos `virtual` (extensible por herencia).
 - `MlProblemsDetails`: factory de `MlErrorsDetails` con la estructura RFC 7807.
 - `RegisterServices`: extensiones para registrar el servicio genérico (transient/scoped/singleton).
+
+Soporta de forma nativa **PKs simples y compuestas**: todos los métodos `*ByIdAsync` reciben `params object[] pk`, por lo que un mismo servicio sirve tanto a `SimpleMlControllerBase<TEntity, TDto, TPk>` (PK simple) como a `SimpleMlComplexPkControllerBase<TEntity, TDto>` (PK compuesta).
 
 ---
 
@@ -87,6 +89,8 @@ MoralesLarios.OOFP.WebServices/
 
 Contrato funcional con todas las operaciones CRUD habituales. Cada método admite *callbacks* opcionales para construir mensajes de log de éxito y error.
 
+Todas las operaciones de la implementación `GenServiceFp<,>` están marcadas como `virtual`, por lo que puedes heredar y sobreescribir métodos puntuales sin reescribir el resto.
+
 ```csharp
 public interface IGenServiceFp<TEntity, TDto>
     where TEntity : class
@@ -111,6 +115,26 @@ public interface IGenServiceFp<TEntity, TDto>
     Task<MlResult<TDto>>  DeleteAsync                  (TDto dto, ...);
 }
 ```
+
+### PKs simples vs compuestas
+
+Las firmas usan `params object[] pk`, por lo que el mismo servicio cubre dos escenarios:
+
+```csharp
+// PK simple (un solo campo)
+_svc.FindByIdProblemsDetailsAsync(
+    notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+    ct                  : ct,
+    pk                  : userId);          // un único object
+
+// PK compuesta (varios campos)
+_svc.FindByIdProblemsDetailsAsync(
+    notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+    ct                  : ct,
+    pk                  : new object[] { nombre, lugar, precio, fecha }); // array
+```
+
+El repositorio EF de abajo (`IEFRepoFp<TEntity>.TryFindAsync(pk: ...)`) acepta el mismo `params object[]` y lo pasa directo a `DbSet<TEntity>.FindAsync`.
 
 ### Diferencia entre `*Async` y `*ProblemDetailsAsync`
 
@@ -233,7 +257,7 @@ Con eso `WebControllers` + `WebServices` + `WebApi` orquestan todo el ciclo: pet
 
 ## Combinarlo con `WebControllers`
 
-`SimpleMlControllerBase<TEntity, TDto, TPk>` (en `MoralesLarios.OOFP.WebControllers`) consume directamente `IGenServiceFp<TEntity, TDto>`. Registra primero las extensiones de este proyecto y heredar tus controladores es suficiente para tener el CRUD HTTP completo.
+`SimpleMlControllerBase<TEntity, TDto, TPk>` (PK simple) y `SimpleMlComplexPkControllerBase<TEntity, TDto>` (PK compuesta) en `MoralesLarios.OOFP.WebControllers` consumen directamente `IGenServiceFp<TEntity, TDto>`. Registra primero las extensiones de este proyecto y heredar tus controladores es suficiente para tener el CRUD HTTP completo.
 
 Ver:
 

@@ -27,7 +27,7 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     }
 
 
-    public MlResult<T> TryUpdate(T item, params object[] pk) => TryUpdate(item, null!, pk);
+    public virtual MlResult<T> TryUpdate(T item, params object[] pk) => TryUpdate(item, null!, pk);
 
     public MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, params object[] pk)
     {
@@ -41,7 +41,7 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     }
 
 
-    public async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default)
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to update cannot be null")
                             .TryMapAsync(x => _internalRepoUpdater!.UpdateAsync(item, token));
@@ -49,7 +49,7 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     }
 
 
-    public async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] pk)
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] pk)
     {
         var result = await EnsureFp.NotNullAsync( item, "The entity item to update cannot be null")
                                     .BindAsync  ( _  => EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty"))
@@ -58,7 +58,7 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
         return result;
     }
 
-    public async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
     {
         var result = await EnsureFp.NotNullAsync( item, "The entity item to update cannot be null")
                                     .BindAsync  ( _  => EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty"))
@@ -70,14 +70,14 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     }
 
 
-    public MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items)
+    public virtual MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to update cannot be null")
                             .TryMap(x => _internalRepoUpdater!.UpdateRange(items));
         return result;
     }
 
-    public async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default)
+    public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(items, "The entity items to update cannot be null")
                             .TryMapAsync(x => _internalRepoUpdater!.UpdateRangeAsync(items, token));

@@ -2,10 +2,6 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
-using Microsoft.AspNetCore.Mvc;
-using MoralesLarios.OOFP.WebControllers.Cache.Policies;
-using MoralesLarios.OOFP.WebControllers.Controllers;
-
 namespace MoralesLarios.OOFP.WebControllers.Cache.Controllers;
 
 public class SimpleMlCacheControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, TDto> _genServiceFp,

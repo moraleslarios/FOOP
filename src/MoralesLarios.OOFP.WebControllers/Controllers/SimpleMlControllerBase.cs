@@ -52,7 +52,7 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
                                                                                                   notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
-                                    .ToRepoPutActionResultAsync(this);
+                                    .ToPutPdActionResultAsync();
         return result;
     }
 

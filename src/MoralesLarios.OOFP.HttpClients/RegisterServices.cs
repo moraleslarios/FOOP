@@ -21,8 +21,8 @@ public static class RegisterServices
     public static IServiceCollection AddGenClientFp<TService, TImplementation>(this IServiceCollection services,
                                                                                     Action<Key>        configureHttpClientKey = null!,
                                                                                     Action<HttpClient> configureClient        = null!)
-    where TService        : class
-    where TImplementation : class, TService
+        where TService        : class
+        where TImplementation : class, TService
     {
         Key httpClientFactoryKey = null!;
 
@@ -38,6 +38,35 @@ public static class RegisterServices
 
         return services;
     }
+
+
+    public static IServiceCollection AddGenClientComplexFp<TService, TImplementation, TDto>(this IServiceCollection services,
+                                                                                                 Action<Key>        configureHttpClientKey = null!,
+                                                                                                 Action<HttpClient> configureClient        = null!)
+        where TService        : class
+        where TImplementation : class, TService
+        where TDto            : class
+    {
+
+        Key httpClientFactoryKey = null!;
+
+        if (configureHttpClientKey is not null) configureHttpClientKey(httpClientFactoryKey);
+        else httpClientFactoryKey = Key.FromString(typeof(TImplementation).Name!);
+
+        services.AddHttpClient(httpClientFactoryKey, client =>
+        {
+            if (configureClient is not null) configureClient(client);
+        });
+
+
+        services.AddTransient<IGenClientFp<TDto>>(sp => ActivatorUtilities.CreateInstance<GenClientFp<TDto>>(sp, httpClientFactoryKey));
+        services.AddTransient<TService          >(sp => ActivatorUtilities.CreateInstance<TImplementation  >(sp));
+
+        return services;
+    }
+
+
+
 
 
 

@@ -46,7 +46,15 @@ public class Startup
             client.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/");
         });
 
+        services.AddGenClientFp<ISimplePruebaComplexClient, SimplePruebaComplexClient>(configureClient: client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7197/api/PruebaComplex/");
+        });
 
+        services.AddGenClientComplexFp<IPruebaComplexClient, PruebaComplexClient, PruebaComplexDto>(configureClient: client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7197/api/PruebaComplex/");
+        });
     }
 }
 

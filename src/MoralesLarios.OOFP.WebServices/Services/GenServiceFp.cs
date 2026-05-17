@@ -9,10 +9,10 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
     where TEntity  : class
     where TDto     : class
 {
-    public Task<MlResult<IEnumerable<TDto>>> AllAsync(CancellationToken               ct                  = default!,
-                                                      string                          initialMessage      = null!,
-                                                      Func<IEnumerable<TDto>, string> validMessageBuilder = null!,
-                                                      Func<MlErrorsDetails  , string> failMessageBuilder  = null!)
+    public virtual Task<MlResult<IEnumerable<TDto>>> AllAsync(CancellationToken               ct                  = default!,
+                                                              string                          initialMessage      = null!,
+                                                              Func<IEnumerable<TDto>, string> validMessageBuilder = null!,
+                                                              Func<MlErrorsDetails  , string> failMessageBuilder  = null!)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying all records of the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync( _     => _repo.TryAllAsync(ct))
@@ -23,11 +23,11 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
         return result;
     }
 
-    public Task<MlResult<TDto?>> FindByIdAsync(CancellationToken             ct                  = default!,
-                                               string                        initialMessage      = null!,
-                                               Func<TDto, string>            validMessageBuilder = null!,
-                                               Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                               params object[]               pk)
+    public virtual Task<MlResult<TDto?>> FindByIdAsync(CancellationToken             ct                  = default!,
+                                                       string                        initialMessage      = null!,
+                                                       Func<TDto, string>            validMessageBuilder = null!,
+                                                       Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                       params object[]               pk)
         => FindByIdProblemsDetailsAsync(ct                  : ct,
                          initialMessage      : initialMessage,
                          notFoundErrorDetails: BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk),
@@ -35,12 +35,12 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
                          failMessageBuilder  : failMessageBuilder,
                          pk                  : pk);
 
-    public Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync(MlErrorsDetails               notFoundErrorDetails,
-                                                              CancellationToken             ct                   = default!,
-                                                              string                        initialMessage       = null!,
-                                                              Func<TDto, string>            validMessageBuilder  = null!,
-                                                              Func<MlErrorsDetails, string> failMessageBuilder   = null!,
-                                                              params object[]               pk)
+    public virtual Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync(MlErrorsDetails               notFoundErrorDetails,
+                                                                      CancellationToken             ct                   = default!,
+                                                                      string                        initialMessage       = null!,
+                                                                      Func<TDto, string>            validMessageBuilder  = null!,
+                                                                      Func<MlErrorsDetails, string> failMessageBuilder   = null!,
+                                                                      params object[]               pk)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TDto).Name} table by Id ({pk.GetPkValues()})")
                             .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
@@ -61,11 +61,11 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
 
 
 
-    public Task<MlResult<TDto>> CreateAsync(TDto                          dto,
-                                            CancellationToken             ct                  = default!,
-                                            string                        initialMessage      = null!,
-                                            Func<TDto, string>            validMessageBuilder = null!,
-                                            Func<MlErrorsDetails, string> failMessageBuilder  = null!)
+    public virtual Task<MlResult<TDto>> CreateAsync(TDto                          dto,
+                                                    CancellationToken             ct                  = default!,
+                                                    string                        initialMessage      = null!,
+                                                    Func<TDto, string>            validMessageBuilder = null!,
+                                                    Func<MlErrorsDetails, string> failMessageBuilder  = null!)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Creating a new record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))
@@ -79,22 +79,22 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
     }
 
 
-    public Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
-                                            CancellationToken             ct                  = default!,
-                                            string                        initialMessage      = null!,
-                                            Func<TDto, string>            validMessageBuilder = null!,
-                                            Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                            params object[] pk)
+    public virtual Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
+                                                    CancellationToken             ct                  = default!,
+                                                    string                        initialMessage      = null!,
+                                                    Func<TDto, string>            validMessageBuilder = null!,
+                                                    Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                    params object[] pk)
         => UpdateProblemDetailsAsync(dto, BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk), ct, initialMessage, validMessageBuilder, failMessageBuilder, pk);
 
 
-    public Task<MlResult<TDto>> UpdateProblemDetailsAsync(TDto                          dto,
-                                                          MlErrorsDetails               notFoundErrorDetails,
-                                                          CancellationToken             ct                  = default!,
-                                                          string                        initialMessage      = null!,
-                                                          Func<TDto, string>            validMessageBuilder = null!,
-                                                          Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                                          params object[]               pk)
+    public virtual Task<MlResult<TDto>> UpdateProblemDetailsAsync(TDto                          dto,
+                                                                  MlErrorsDetails               notFoundErrorDetails,
+                                                                  CancellationToken             ct                  = default!,
+                                                                  string                        initialMessage      = null!,
+                                                                  Func<TDto, string>            validMessageBuilder = null!,
+                                                                  Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                                  params object[]               pk)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Updating a record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))
@@ -118,11 +118,11 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
 
 
 
-    public Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
-                                            CancellationToken             ct                  = default!,
-                                            string                        initialMessage      = null!,
-                                            Func<TDto, string>            validMessageBuilder = null!,
-                                            Func<MlErrorsDetails, string> failMessageBuilder  = null!)
+    public virtual Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
+                                                    CancellationToken             ct                  = default!,
+                                                    string                        initialMessage      = null!,
+                                                    Func<TDto, string>            validMessageBuilder = null!,
+                                                    Func<MlErrorsDetails, string> failMessageBuilder  = null!)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Updating a record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))
@@ -136,18 +136,18 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
     }
 
 
-    public Task<MlResult<TDto>> DeleteAsync(CancellationToken             ct                  = default!,
-                                            string                        initialMessage      = null!,
-                                            Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                            params object[]               pk)
+    public virtual Task<MlResult<TDto>> DeleteAsync(CancellationToken             ct                  = default!,
+                                                    string                        initialMessage      = null!,
+                                                    Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                    params object[]               pk)
         => DeleteProblemDetailsAsync(BuildNotFoundPkError(tableName: typeof(TDto).Name, pk: pk), ct, initialMessage, failMessageBuilder, pk);
 
 
-    public Task<MlResult<TDto>> DeleteProblemDetailsAsync(       MlErrorsDetails               notFoundErrorDetails,
-                                                                 CancellationToken             ct                  = default!,
-                                                                 string                        initialMessage      = null!,
-                                                                 Func<MlErrorsDetails, string> failMessageBuilder  = null!,
-                                                          params object[]                      pk)
+    public virtual Task<MlResult<TDto>> DeleteProblemDetailsAsync(       MlErrorsDetails               notFoundErrorDetails,
+                                                                         CancellationToken             ct                  = default!,
+                                                                         string                        initialMessage      = null!,
+                                                                         Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                                  params object[]                      pk)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Deleting a record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
@@ -163,10 +163,10 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                     
     }
 
 
-    public Task<MlResult<TDto>> DeleteAsync(TDto                          dto,
-                                            CancellationToken             ct                  = default!,
-                                            string                        initialMessage      = null!,
-                                            Func<MlErrorsDetails, string> failMessageBuilder  = null!)
+    public virtual Task<MlResult<TDto>> DeleteAsync(TDto                          dto,
+                                                    CancellationToken             ct                  = default!,
+                                                    string                        initialMessage      = null!,
+                                                    Func<MlErrorsDetails, string> failMessageBuilder  = null!)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Deleting a record in the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))

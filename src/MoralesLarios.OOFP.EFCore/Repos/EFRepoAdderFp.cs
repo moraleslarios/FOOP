@@ -14,7 +14,7 @@ public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCon
 
 
 
-    public MlResult<T> TryAdd(T item)
+    public virtual MlResult<T> TryAdd(T item)
     {
         var result = EnsureFp.NotNull(item, "The entity item to add cannot be null")
                             .TryMap(x => _internalRepoAdder!.Add(item));
@@ -22,7 +22,7 @@ public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCon
         return result;
     }
 
-    public async Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default)
+    public virtual async Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to add cannot be null")
                             .TryMapAsync(x => _internalRepoAdder!.AddAsync(item, token));
@@ -31,7 +31,7 @@ public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCon
     }
 
 
-    public MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items)
+    public virtual MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to addRange cannot be null")
                             .TryMap(x => _internalRepoAdder!.AddRange(items));
@@ -39,7 +39,7 @@ public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCon
         return result;
     }
 
-    public async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default)
+    public virtual async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(items, "The entity items to addRange cannot be null")
                             .TryMapAsync(x => _internalRepoAdder!.AddRangeAsync(items, token));

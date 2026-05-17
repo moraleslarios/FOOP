@@ -19,6 +19,8 @@ public class UsersController(IGenServiceFp<User, UserDto> svc)
 - [Registro](#registro)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [`SimpleMlControllerBase<TEntity, TDto, TPk>`](#simplemlcontrollerbasetentity-tdto-tpk)
+- [`SimpleMlComplexPkControllerBase<TEntity, TDto>` (PK compuesta)](#simplemlcomplexpkcontrollerbasetentity-tdto-pk-compuesta)
+- [`Attributes.PkParameterAttribute`](#attributespkparameterattribute)
 - [`Helpers.Extensions.ConverterTo`](#helpersextensionsconverterto)
 - [Receta completa](#receta-completa)
 - [Combinarlo con caché](#combinarlo-con-caché)
@@ -64,11 +66,15 @@ services.AddTransientGenServicesFpWithoutReposGeneral();
 
 ```
 MoralesLarios.OOFP.WebControllers/
+??? Attributes/
+?   ??? PkParameterAttribute.cs    // documentación del parámetro PK en Swagger
 ??? Controllers/
-?   ??? SimpleMlControllerBase.cs   // controlador CRUD genérico
+?   ??? SimpleMlControllerBase.cs            // controlador CRUD con PK simple (TPk genérico)
+?   ??? SimpleMlComplexPkControllerBase.cs   // controlador CRUD con PK compuesta
 ??? Helpers/
 ?   ??? Extensions.cs               // ConverterTo (string -> tipo PK)
 ??? GlobalUsings.cs
+??? RegisterServices.cs             // AddWebControllers (placeholder, reservado)
 ```
 
 ---
@@ -149,6 +155,114 @@ Soporta:
 Si la cadena no se puede parsear, lanza la excepción del `Parse` correspondiente. Si el tipo no está soportado, lanza `FormatException`.
 
 `SimpleMlControllerBase` lo invoca dentro de un `TryMapAsync` para convertir la excepción en un `MlResult.Fail` que se traduce a `404 NotFound`.
+
+---
+
+## `SimpleMlComplexPkControllerBase<TEntity, TDto>` (PK compuesta)
+
+Variante de `SimpleMlControllerBase<,,>` pensada para entidades con **clave primaria compuesta** (más de un campo, o tipos no triviales como `DateTime`/`DateOnly`/`TimeOnly`). En lugar de un parámetro de tipo `TPk` recibe en el constructor primario un `Func<TEntity, object[]> _pkFields` que indica cómo extraer los valores de PK de una entidad.
+
+### Firma
+
+```csharp
+[ApiController]
+public class SimpleMlComplexPkControllerBase<TEntity, TDto>(
+        IGenServiceFp<TEntity, TDto> _genServiceFp,
+        Func<TEntity, object[]>      _pkFields)
+    : ControllerBase
+    where TEntity : class
+    where TDto    : class
+{
+    [HttpGet]                             public virtual Task<IActionResult> GetAllAsync(CancellationToken ct = default!);
+    [HttpGet("id-str/{ids}", Name = "[controller]_[action]")]
+                                          public virtual Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+    [HttpPost]                            public virtual Task<IActionResult> PostAsync([FromBody] TDto dto, CancellationToken ct = default!);
+    [HttpPut("{ids}")]                    public virtual Task<IActionResult> PutAsync([FromRoute][PkParameter] string ids, [FromBody] TDto dto, CancellationToken ct = default!);
+    [HttpPut]                             public virtual Task<IActionResult> PutAsync([FromBody] TDto dto, CancellationToken ct = default!);
+    [HttpDelete("{ids}")]                 public virtual Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+    [HttpDelete]                          public virtual Task<IActionResult> DeleteAsync([FromBody] TDto dto, CancellationToken ct = default!);
+
+    protected object[] GetPkValues(string[] values, Func<TEntity, object[]> pkFields);
+}
+```
+
+### Formato del parámetro `ids`
+
+El parámetro `ids` que viaja por la ruta es un **string con todos los valores de la PK separados por comas**, en el orden definido por `_pkFields`. El controlador los convierte automáticamente a los tipos correctos usando una instancia *sample* de `TEntity` (`Activator.CreateInstance<TEntity>()`) para inferir los `Type` esperados.
+
+Formatos soportados de elementos:
+
+| Tipo .NET     | Formato esperado           | Ejemplo                       |
+|---------------|----------------------------|-------------------------------|
+| `int`/`long`/numerics | Texto numérico       | `1`, `42`, `100`              |
+| `string`      | Texto literal              | `Prueba`                      |
+| `DateTime`    | ISO 8601 con ms            | `2026-05-16T07:34:29.239`     |
+| `DateOnly`    | `yyyy-MM-dd`               | `2026-05-16`                  |
+| `TimeOnly`    | `HH:mm:ss.fff`             | `07:34:29.239`                |
+| `Guid`        | Texto canónico             | `00000000-0000-...`           |
+
+Ejemplo de URL: `GET /api/PruebaComplex/id-str/Prueba,Lugar,100,2020-01-01T00:00:00.000`
+
+### Ejemplo de uso
+
+```csharp
+[Route("api/[controller]")]
+public class PruebaComplexController(IGenServiceFp<PruebaComplex, PruebaComplexDto> svc)
+    : SimpleMlComplexPkControllerBase<PruebaComplex, PruebaComplexDto>(
+          svc,
+          e => new object[] { e.Nombre, e.Lugar, e.Precio, e.Fecha }) { }
+```
+
+### Endpoints expuestos
+
+| Verbo  | Ruta                       | Acción                                            | Respuesta éxito  |
+|--------|----------------------------|---------------------------------------------------|------------------|
+| GET    | `/`                        | Lista todas las entidades                          | `200 OK`        |
+| GET    | `/id-str/{ids}`            | Recupera por PK compuesta (ids separados por `,`) | `200 OK` / `404`|
+| POST   | `/`                        | Crea una entidad                                  | `201 Created`   |
+| PUT    | `/{ids}`                   | Actualiza por PK compuesta                        | `204 NoContent` |
+| PUT    | `/`                        | Actualiza usando la PK del DTO                    | `204 NoContent` |
+| DELETE | `/{ids}`                   | Elimina por PK compuesta                          | `204 NoContent` |
+| DELETE | `/`                        | Elimina usando la PK del DTO                      | `204 NoContent` |
+
+> ? **Requisito**: `TEntity` debe tener un constructor sin parámetros para que `Activator.CreateInstance<TEntity>()` pueda crear el *sample*. Si la PK contiene tipos `string` u otros reference types nullables, el sample expondrá `null` y `GetPkValues` los tratará como `string`. Para escenarios más exigentes, sobreescribe `GetPkValues` en el controlador hijo.
+
+---
+
+## `Attributes.PkParameterAttribute`
+
+Atributo para documentar parámetros de tipo PK compuesta en Swagger/OpenAPI. Lo aplica internamente `SimpleMlComplexPkControllerBase` a sus parámetros `ids`, pero también está disponible para que lo uses en tus propios endpoints.
+
+### Firma
+
+```csharp
+[AttributeUsage(AttributeTargets.Parameter)]
+public class PkParameterAttribute : Attribute
+{
+    public string Description { get; set; }
+
+    public PkParameterAttribute(string description = null!);  // descripción por defecto si null
+}
+```
+
+La descripción por defecto es:
+
+> *"Valores de la clave primaria separados por comas. Para DateTime usa formato ISO 8601: yyyy-MM-ddTHH:mm:ss.fff (Ejemplo: '1,2' para PKs compuestas o '2026-05-16T07:34:29.239' para DateTime)"*
+
+### Ejemplo
+
+```csharp
+[HttpGet("by-pk/{ids}")]
+public Task<IActionResult> GetByPk(
+    [FromRoute]
+    [PkParameter("PK compuesta: 'A,B,C' — separados por comas en orden A>B>C")]
+    string ids)
+{
+    // ...
+}
+```
+
+> Para que Swagger consuma la descripción del atributo necesitas que tu generador OpenAPI (`Swashbuckle`, `NSwag`, o el `Microsoft.AspNetCore.OpenApi` integrado) inspeccione atributos personalizados. Con `Swashbuckle.AspNetCore` basta con habilitar XML doc o un `IOperationFilter` que lea `PkParameterAttribute.Description` desde los `ParameterDescriptor`.
 
 ---
 

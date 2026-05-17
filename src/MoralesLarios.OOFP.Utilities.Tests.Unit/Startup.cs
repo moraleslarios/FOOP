@@ -9,7 +9,7 @@ namespace MoralesLarios.OOFP.Utilities.Tests.Unit;
 public class Startup
 {
 
-    private IConfiguration _configuration;
+    private readonly IConfiguration _configuration;
 
     public Startup()
     {

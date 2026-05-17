@@ -17,26 +17,26 @@ public class EFRepoWriterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
 
 
 
-    public MlResult<T> TryAdd(T item) => _repoAdderFp.TryAdd(item);
-    public async Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default) => await _repoAdderFp.TryAddAsync(item, token);
-    public MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items) => _repoAdderFp.TryAddRange(items);
-    public async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoAdderFp.TryAddRangeAsync(items, token);
-    public MlResult<T> TryRemove(T item) => _repoDeleterFp.TryRemove(item);
-    public MlResult<T> TryRemove(params object[] pk) => _repoDeleterFp.TryRemove(pk);
-    public MlResult<T> TryRemove(MlErrorsDetails notFoundErrorDetails, params object[] pk) => _repoDeleterFp.TryRemove(notFoundErrorDetails, pk);
-    public async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default) => await _repoDeleterFp.TryRemoveAsync(item, token);
-    public async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] pk) => await _repoDeleterFp.TryRemoveAsync(token, pk);
-    public async Task<MlResult<T>> TryRemoveAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoDeleterFp.TryRemoveAsync(notFoundErrorDetails, token, pk);
-    public MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items) => _repoDeleterFp.TryRemoveRange(items);
-    public async Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoDeleterFp.TryRemoveRangeAsync(items, token);
-    public MlResult<T> TryUpdate(T item) => _repoUpdaterFp.TryUpdate(item);
-    public MlResult<T> TryUpdate(T item, params object[] pk) => _repoUpdaterFp.TryUpdate(item, pk);
-    public MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, params object[] pk) => _repoUpdaterFp.TryUpdate(item, notFoundErrorDetails, pk);
-    public async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateAsync(item, token);
-    public async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] pk) => await _repoUpdaterFp.TryUpdateAsync(item, token, pk);
-    public async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoUpdaterFp.TryUpdateAsync(item, notFoundErrorDetails, token, pk);
-    public MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items) => _repoUpdaterFp.TryUpdateRange(items);
-    public async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateRangeAsync(items, token);
+    public virtual MlResult<T> TryAdd(T item) => _repoAdderFp.TryAdd(item);
+    public virtual async Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default) => await _repoAdderFp.TryAddAsync(item, token);
+    public virtual MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items) => _repoAdderFp.TryAddRange(items);
+    public virtual async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoAdderFp.TryAddRangeAsync(items, token);
+    public virtual MlResult<T> TryRemove(T item) => _repoDeleterFp.TryRemove(item);
+    public virtual MlResult<T> TryRemove(params object[] pk) => _repoDeleterFp.TryRemove(pk);
+    public virtual MlResult<T> TryRemove(MlErrorsDetails notFoundErrorDetails, params object[] pk) => _repoDeleterFp.TryRemove(notFoundErrorDetails, pk);
+    public virtual async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default) => await _repoDeleterFp.TryRemoveAsync(item, token);
+    public virtual async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] pk) => await _repoDeleterFp.TryRemoveAsync(token, pk);
+    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoDeleterFp.TryRemoveAsync(notFoundErrorDetails, token, pk);
+    public virtual MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items) => _repoDeleterFp.TryRemoveRange(items);
+    public virtual async Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoDeleterFp.TryRemoveRangeAsync(items, token);
+    public virtual MlResult<T> TryUpdate(T item) => _repoUpdaterFp.TryUpdate(item);
+    public virtual MlResult<T> TryUpdate(T item, params object[] pk) => _repoUpdaterFp.TryUpdate(item, pk);
+    public virtual MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, params object[] pk) => _repoUpdaterFp.TryUpdate(item, notFoundErrorDetails, pk);
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateAsync(item, token);
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] pk) => await _repoUpdaterFp.TryUpdateAsync(item, token, pk);
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoUpdaterFp.TryUpdateAsync(item, notFoundErrorDetails, token, pk);
+    public virtual MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items) => _repoUpdaterFp.TryUpdateRange(items);
+    public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateRangeAsync(items, token);
 
 
 

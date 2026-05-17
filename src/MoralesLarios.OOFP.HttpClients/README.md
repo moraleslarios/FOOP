@@ -6,8 +6,9 @@ Permite:
 
 - Llamar a APIs HTTP devolviendo siempre `MlResult<T>` (válido o fallido).
 - Registrar clientes tipados con `IHttpClientFactory` mediante una sola extensión.
-- Heredar de `GenClientFp<TDto>` para tener listo todo el CRUD estándar.
+- Heredar de `GenClientFp<TDto>` (PK simple) o `GenComplexClientFp<TDto>` (PK **compuesta**) para tener listo todo el CRUD estándar.
 - Componer llamadas custom con `IHttpClientFactoryManager` y *value-objects* (`Key`, `NotEmptyString`, `IntNotNegative`, etc.).
+- Serializar automáticamente PKs compuestas (`DateTime`, `DateOnly`, `TimeOnly` con formato ISO 8601) cuando se llama por ID.
 
 ---
 
@@ -18,6 +19,7 @@ Permite:
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [`IHttpClientFactoryManager` / `HttpClientFactoryManager`](#ihttpclientfactorymanager--httpclientfactorymanager)
 - [`GenClientFp<TDto>` / `IGenClientFp<TDto>`](#genclientfptdto--igenclientfptdto)
+- [`GenComplexClientFp<TDto>` / `IGenComplexClientFp<TDto>` (PK compuesta)](#gencomplexclientfptdto--igencomplexclientfptdto-pk-compuesta)
 - [Records de parámetros](#records-de-parámetros)
 - [Helpers de cabeceras y respuestas](#helpers-de-cabeceras-y-respuestas)
 - [Receta completa de uso](#receta-completa-de-uso)
@@ -47,19 +49,31 @@ using MoralesLarios.OOFP.HttpClients;
 
 builder.Services.AddHttpClientsFp(); // registra IHttpClientFactoryManager
 
-// Registro de clientes tipados (ver más abajo)
+// Registro de clientes tipados con PK simple
 builder.Services.AddGenClientFp<IPruebasClient, PruebasClient>(
     configureClient: client =>
     {
         client.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/");
     });
+
+// Registro de clientes tipados con PK compuesta (heredan de GenComplexClientFp<TDto>)
+builder.Services.AddGenClientComplexFp<IPruebaComplexClient, PruebaComplexClient, PruebaComplexDto>(
+    configureClient: client =>
+    {
+        client.BaseAddress = new Uri("https://localhost:7197/api/PruebaComplex/");
+    });
 ```
 
-`AddGenClientFp<TService, TImplementation>`:
+`AddGenClientFp<TService, TImplementation>` (PK simple):
 
 - Registra automáticamente un `HttpClient` con nombre `typeof(TImplementation).Name`.
 - Inyecta ese `Key` en el constructor de la implementación junto con el resto de dependencias resueltas por DI.
 - Permite configurar el `HttpClient` (`BaseAddress`, headers comunes, etc.) y/o el `Key`.
+
+`AddGenClientComplexFp<TService, TImplementation, TDto>` (PK compuesta):
+
+- Hace lo mismo que `AddGenClientFp` **y además** registra automáticamente `IGenClientFp<TDto>` ? `GenClientFp<TDto>` para que `GenComplexClientFp<TDto>` pueda recibirlo por DI.
+- Requiere el parámetro de tipo `TDto` adicional porque el contenedor DI no puede deducir el genérico de la cadena de herencia.
 
 ---
 
@@ -147,6 +161,7 @@ public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>>      logger,
     public Task<MlResult<TDto>>              GetByIdAsync(NotEmptyString idStr, ...);
     public Task<MlResult<TDto>>              PostAsync(TDto itemBody, ...);
     public Task<MlResult<Empty>>             PutAsync(TDto itemBody, ...);
+    public Task<MlResult<Empty>>             PutByIdAsync(NotEmptyString idStr, TDto itemBody, ...);
     public Task<MlResult<Empty>>             DeleteAsync(TDto itemBody, ...);
     public Task<MlResult<Empty>>             DeleteByIdAsync(NotEmptyString idStr, ...);
 }
@@ -160,6 +175,7 @@ Mapea contra los endpoints estándar de `SimpleMlControllerBase<,,>`:
 | `GetByIdAsync(idStr)`         | GET    | `id-str/{idStr}`     |
 | `PostAsync(dto)`              | POST   | (BaseAddress)        |
 | `PutAsync(dto)`               | PUT    | (BaseAddress)        |
+| `PutByIdAsync(idStr, dto)`    | PUT    | `{idStr}`            |
 | `DeleteAsync(dto)`            | DELETE | (BaseAddress)        |
 | `DeleteByIdAsync(idStr)`      | DELETE | `{idStr}`            |
 
@@ -188,6 +204,97 @@ Y se registra:
 services.AddHttpClientsFp();
 services.AddGenClientFp<IPruebasClient, PruebasClient>(
     configureClient: c => c.BaseAddress = new Uri("https://api.example.com/api/Pruebas/"));
+```
+
+---
+
+## `GenComplexClientFp<TDto>` / `IGenComplexClientFp<TDto>` (PK compuesta)
+
+Cliente genérico CRUD para entidades con **clave primaria compuesta** (más de un campo, o tipos no triviales como `DateTime`/`DateOnly`/`TimeOnly`). Mapea contra los endpoints de `SimpleMlComplexPkControllerBase<,>` del proyecto `MoralesLarios.OOFP.WebControllers`.
+
+A diferencia de `GenClientFp<TDto>`, los métodos `*ByIdAsync` reciben `params object[] pk` y los serializan internamente a un string separado por comas, aplicando automáticamente el formato correcto para tipos temporales:
+
+```csharp
+public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> logger,
+                                      IGenClientFp<TDto>                genClientFp) : IGenComplexClientFp<TDto>
+{
+    public Task<MlResult<IEnumerable<TDto>>> GetAllAsync(...);
+    public Task<MlResult<TDto>>              GetByIdAsync(..., params object[] pk);
+    public Task<MlResult<TDto>>              GetByIdAsync(object[] pk, ...);     // sobrecarga ergonómica
+    public Task<MlResult<TDto>>              PostAsync(TDto itemBody, ...);
+    public Task<MlResult<Empty>>             PutAsync(TDto itemBody, ...);
+    public Task<MlResult<Empty>>             PutByIdAsync(TDto itemBody, ..., params object[] pk);
+    public Task<MlResult<Empty>>             PutByIdAsync(object[] pk, TDto itemBody, ...);
+    public Task<MlResult<Empty>>             DeleteAsync(TDto itemBody, ...);
+    public Task<MlResult<Empty>>             DeleteByIdAsync(..., params object[] pk);
+    public Task<MlResult<Empty>>             DeleteByIdAsync(object[] pk, ...);
+
+    protected virtual string GetPkValuesString(object[] pkValues);  // override para customizar el formato
+}
+```
+
+### Formato automático de PKs temporales
+
+El método `GetPkValuesString(object[] pkValues)` aplica este pattern matching:
+
+| Tipo .NET     | Formato resultante           | Ejemplo                       |
+|---------------|------------------------------|-------------------------------|
+| `DateTime`    | `yyyy-MM-ddTHH:mm:ss.fff`    | `2026-05-16T07:34:29.239`     |
+| `DateOnly`    | `yyyy-MM-dd`                 | `2026-05-16`                  |
+| `TimeOnly`    | `HH:mm:ss.fff`               | `07:34:29.239`                |
+| Otros         | `ToString()` por defecto     | `42`, `"abc"`, `Guid`, etc.   |
+
+Es `virtual protected`, por lo que cualquier cliente concreto puede sobrescribirlo para cambiar el formato.
+
+### Cliente personalizado heredando de `GenComplexClientFp<TDto>`
+
+```csharp
+public interface IPruebaComplexClient : IGenComplexClientFp<PruebaComplexDto> { }
+
+public class PruebaComplexClient(ILogger<PruebaComplexClient>      logger,
+                                  IGenClientFp<PruebaComplexDto>    genClientFp)
+    : GenComplexClientFp<PruebaComplexDto>(logger, genClientFp), IPruebaComplexClient { }
+```
+
+Y se registra con `AddGenClientComplexFp<TService, TImplementation, TDto>`:
+
+```csharp
+services.AddHttpClientsFp();
+services.AddGenClientComplexFp<IPruebaComplexClient, PruebaComplexClient, PruebaComplexDto>(
+    configureClient: c => c.BaseAddress = new Uri("https://api.example.com/api/PruebaComplex/"));
+```
+
+El registro hace **tres** cosas en un solo paso:
+
+1. Añade un `HttpClient` nombrado con la `Key` derivada del tipo `TImplementation`.
+2. Registra `IGenClientFp<TDto>` ? `GenClientFp<TDto>` con esa misma `Key` (requerido por el constructor primario de `GenComplexClientFp<TDto>`).
+3. Registra `TService` ? `TImplementation` para inyectarlo en consumidores.
+
+### Mapeo a endpoints del controlador con PK compuesta
+
+| Método del cliente                | Verbo  | URL                       | Endpoint del servidor             |
+|-----------------------------------|--------|---------------------------|------------------------------------|
+| `GetAllAsync()`                   | GET    | (BaseAddress)             | `GET  /`                          |
+| `GetByIdAsync(pk: ...)`           | GET    | `id-str/{pkValues}`       | `GET  /id-str/{ids}`              |
+| `PostAsync(dto)`                  | POST   | (BaseAddress)             | `POST /`                          |
+| `PutAsync(dto)`                   | PUT    | (BaseAddress)             | `PUT  /`                          |
+| `PutByIdAsync(dto, pk: ...)`      | PUT    | `{pkValues}`              | `PUT  /{ids}`                     |
+| `DeleteAsync(dto)`                | DELETE | (BaseAddress)             | `DELETE /`                        |
+| `DeleteByIdAsync(pk: ...)`        | DELETE | `{pkValues}`              | `DELETE /{ids}`                   |
+
+### Llamada típica
+
+```csharp
+// PK compuesta: (Nombre, Lugar, Precio, Fecha)
+var dto = await _client.GetByIdAsync(
+    pk: new object[]
+    {
+        "Prueba",
+        "Lugar de prueba",
+        100,
+        new DateTime(2020, 1, 1)
+    });
+// URL final: GET id-str/Prueba,Lugar de prueba,100,2020-01-01T00:00:00.000
 ```
 
 ---

@@ -9,6 +9,10 @@ public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>> _logger,
                                Key                        _httpClientFactoryKey) : IGenClientFp<TDto>
 { 
 
+    public IHttpClientFactoryManager GetIHttpClientFactoryManager() => _httpClientFactoryManager;
+    public Key                       GetHttpClientFactoryKey()      => _httpClientFactoryKey;
+
+
     public virtual Task<MlResult<IEnumerable<TDto>>> GetAllAsync(Dictionary<string, string> headers = null!, 
                                                                  CancellationToken          ct      = default)
         => _httpClientFactoryManager.GetAsync<IEnumerable<TDto>>(_httpClientFactoryKey, string.Empty, headers, ct);
@@ -27,6 +31,12 @@ public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>> _logger,
                                                   Dictionary<string, string> headers = null!, 
                                                   CancellationToken          ct      = default)
         => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+
+    public virtual Task<MlResult<Empty>> PutByIdAsync(NotEmptyString             idStr, 
+                                                      TDto                       itemBody,
+                                                      Dictionary<string, string> headers = null!, 
+                                                      CancellationToken          ct      = default)
+        => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, idStr, headers, ct);
 
 
     public virtual Task<MlResult<Empty>> DeleteAsync(TDto                       itemBody, 

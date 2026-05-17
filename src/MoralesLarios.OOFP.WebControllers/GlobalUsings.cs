@@ -17,3 +17,5 @@ global using MoralesLarios.OOFP.WebApi.Helpers;
 global using MoralesLarios.OOFP.WebControllers.Helpers;
 global using MoralesLarios.OOFP.WebApi;
 global using MoralesLarios.OOFP.WebServices;
+global using System.Globalization;
+global using MoralesLarios.OOFP.WebControllers.Attributes;

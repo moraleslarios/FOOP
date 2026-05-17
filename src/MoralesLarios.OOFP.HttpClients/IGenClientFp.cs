@@ -8,6 +8,8 @@ public interface IGenClientFp<TDto>
     Task<MlResult<Empty>> DeleteByIdAsync(NotEmptyString idStr, Dictionary<string, string> headers = null, CancellationToken ct = default);
     Task<MlResult<IEnumerable<TDto>>> GetAllAsync(Dictionary<string, string> headers = null, CancellationToken ct = default);
     Task<MlResult<TDto>> GetByIdAsync(NotEmptyString idStr, Dictionary<string, string> headers = null, CancellationToken ct = default);
+    IHttpClientFactoryManager GetIHttpClientFactoryManager();
     Task<MlResult<TDto>> PostAsync(TDto itemBody, Dictionary<string, string> headers = null, CancellationToken ct = default);
     Task<MlResult<Empty>> PutAsync(TDto itemBody, Dictionary<string, string> headers = null, CancellationToken ct = default);
+    Task<MlResult<Empty>> PutByIdAsync(NotEmptyString idStr, TDto itemBody, Dictionary<string, string> headers = null, CancellationToken ct = default);
 }

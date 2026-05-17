@@ -22,3 +22,6 @@ global using MoralesLarios.OOFP.WebServices.Services;
 global using MoralesLarios.OOFP.EFCore;
 global using Microsoft.AspNetCore.OutputCaching;
 global using static MoralesLarios.OOFP.WebServices.Helpers.Constants;
+global using Microsoft.AspNetCore.Mvc;
+global using MoralesLarios.OOFP.WebControllers.Cache.Policies;
+global using MoralesLarios.OOFP.WebControllers.Controllers;

@@ -3,8 +3,6 @@
 // Licensed under the Apache License, Version 2.0
 
 
-using MoralesLarios.OOFP.Types.Errors;
-
 namespace MoralesLarios.OOFP.EFCore.Repos;
 
 public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbContext), IEFRepoDeleterFp<T>
@@ -18,17 +16,17 @@ public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
 
 
 
-    public MlResult<T> TryRemove(T item)
+    public virtual MlResult<T> TryRemove(T item)
     {
         var result = EnsureFp.NotNull(item, "The entity item to remove cannot be null")
                             .TryMap(x => _internalRepoDeleter!.Remove(item));
         return result;
     }
 
-    public MlResult<T> TryRemove(params object[] pk)
+    public virtual MlResult<T> TryRemove(params object[] pk)
         => TryRemove(null!, pk);
 
-    public MlResult<T> TryRemove(MlErrorsDetails notFoundErrorDetails, params object[] pk)
+    public virtual MlResult<T> TryRemove(MlErrorsDetails notFoundErrorDetails, params object[] pk)
     {
         var result = EnsureFp.NotEmpty(pk, "The object array pk cannot be empty")
                                 .Bind  ( pk      => notFoundErrorDetails is null        
@@ -39,7 +37,7 @@ public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     }
 
 
-    public async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default)
+    public virtual async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to remove cannot be null")
                             .TryMapAsync(x => _internalRepoDeleter!.RemoveAsync(item, token));
@@ -47,7 +45,7 @@ public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     }
 
 
-    public async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] pk)
+    public virtual async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] pk)
     {
         var result = await EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty")
                                     .BindAsync  ( _       => _repoReaderFp!.TryFindAsync(token, pk))
@@ -55,7 +53,7 @@ public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
         return result;
     }
 
-    public async Task<MlResult<T>> TryRemoveAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
+    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
     {
         var result = await EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty")
                                     .BindAsync  ( _       => notFoundErrorDetails is null
@@ -66,14 +64,14 @@ public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     }
 
 
-    public MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items)
+    public virtual MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to remove cannot be null")
                             .TryMap(x => _internalRepoDeleter!.RemoveRange(items));
         return result;
     }
 
-    public Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default)
+    public virtual Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default)
     {
         var result = EnsureFp.NotNull(items, "The entity items to remove cannot be null")
                             .TryMapAsync(x => _internalRepoDeleter!.RemoveRangeAsync(items, token));

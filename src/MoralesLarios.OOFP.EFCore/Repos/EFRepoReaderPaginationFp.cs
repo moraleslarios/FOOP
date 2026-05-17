@@ -9,9 +9,9 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
 {
 
 
-    public MlResult<PaginationResultInfo<T>> TryAllPagination(PaginationInfo              paginationInfo,
-                                                              OrderBy                     orderBy           = OrderBy.Ascending,
-                                                              Expression<Func<T, object>> orderByField = null!)
+    public virtual MlResult<PaginationResultInfo<T>> TryAllPagination(PaginationInfo              paginationInfo,
+                                                                      OrderBy                     orderBy           = OrderBy.Ascending,
+                                                                      Expression<Func<T, object>> orderByField = null!)
     {
         var result = EnsureFp.NotNull(paginationInfo, nameof(paginationInfo))
                                 .Bind(paginationInfo => TryGetInternalData(paginationInfo.PageNumber, 
@@ -23,10 +23,10 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
     }
 
 
-    public async Task<MlResult<PaginationResultInfo<T>>> TryAllPaginationAsync(PaginationInfo              paginationInfo,
-                                                                               OrderBy                     orderBy      = OrderBy.Ascending,
-                                                                               Expression<Func<T, object>> orderByField = null!,
-                                                                               CancellationToken ct                     = default!)
+    public virtual async Task<MlResult<PaginationResultInfo<T>>> TryAllPaginationAsync(PaginationInfo              paginationInfo,
+                                                                                      OrderBy                     orderBy      = OrderBy.Ascending,
+                                                                                      Expression<Func<T, object>> orderByField = null!,
+                                                                                      CancellationToken ct                     = default!)
     {
         var result = await EnsureFp.NotNullAsync(paginationInfo, nameof(paginationInfo))
                                     .BindAsync(paginationInfo => TryGetInternalDataAsync(paginationInfo.PageNumber, 
@@ -40,10 +40,10 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
 
 
 
-    public MlResult<PaginationResultInfo<T>> TryGetDataPagination(PaginationInfo              paginationInfo,
-                                                                  OrderBy                     orderBy           = OrderBy.Ascending,
-                                                                  Expression<Func<T, object>> orderByField    = null!,
-                                                                  Expression<Func<T, bool  >> filter          = null!)
+    public virtual MlResult<PaginationResultInfo<T>> TryGetDataPagination(PaginationInfo              paginationInfo,
+                                                                          OrderBy                     orderBy           = OrderBy.Ascending,
+                                                                          Expression<Func<T, object>> orderByField    = null!,
+                                                                          Expression<Func<T, bool  >> filter          = null!)
     {
         var result = EnsureFp.NotNull(paginationInfo, nameof(paginationInfo))
                                 .Bind(paginationInfo => TryGetInternalData(paginationInfo.PageNumber,
@@ -53,12 +53,12 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
                                                                            orderByField));
         return result;
     }
-    
-    public async Task<MlResult<PaginationResultInfo<T>>> TryGetDataPaginationAsync(PaginationInfo              paginationInfo,
-                                                                                   OrderBy                     orderBy      = OrderBy.Ascending,
-                                                                                   Expression<Func<T, object>> orderByField = null!,
-                                                                                   Expression<Func<T, bool  >> filter       = null!,
-                                                                                   CancellationToken ct                     = default!)
+
+    public virtual async Task<MlResult<PaginationResultInfo<T>>> TryGetDataPaginationAsync(PaginationInfo              paginationInfo,
+                                                                                          OrderBy                     orderBy      = OrderBy.Ascending,
+                                                                                          Expression<Func<T, object>> orderByField = null!,
+                                                                                          Expression<Func<T, bool  >> filter       = null!,
+                                                                                          CancellationToken ct                     = default!)
     {
         var result = await EnsureFp.NotNullAsync(paginationInfo, nameof(paginationInfo))
                                     .BindAsync(paginationInfo => TryGetInternalDataAsync(paginationInfo.PageNumber,
@@ -81,11 +81,11 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
 
 
 
-    protected MlResult<PaginationResultInfo<T>> TryGetInternalData(int pageNumber, 
-                                                                   int pageSize,
-                                                                   OrderBy                     orderBy      = OrderBy.Ascending,
-                                                                   Expression<Func<T, bool  >> filter       = null!,
-                                                                   Expression<Func<T, object>> orderByField = null!)
+    protected virtual MlResult<PaginationResultInfo<T>> TryGetInternalData(int pageNumber, 
+                                                                           int pageSize,
+                                                                           OrderBy                     orderBy      = OrderBy.Ascending,
+                                                                           Expression<Func<T, bool  >> filter       = null!,
+                                                                           Expression<Func<T, object>> orderByField = null!)
     {
         var result = (filter ?? (x => true)).ToMlResultValid()
                         .TryMap(filter => GetContext().Set<T>()
@@ -102,12 +102,12 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
         return result;
     }
 
-    protected async Task<MlResult<PaginationResultInfo<T>>> TryGetInternalDataAsync(int                         pageNumber, 
-                                                                                    int                         pageSize,
-                                                                                    OrderBy                     orderBy      = OrderBy.Ascending,
-                                                                                    Expression<Func<T, bool  >> filter       = null!,
-                                                                                    Expression<Func<T, object>> orderByField = null!,
-                                                                                    CancellationToken ct                     = default!)
+    protected virtual async Task<MlResult<PaginationResultInfo<T>>> TryGetInternalDataAsync(int                         pageNumber, 
+                                                                                            int                         pageSize,
+                                                                                            OrderBy                     orderBy      = OrderBy.Ascending,
+                                                                                            Expression<Func<T, bool  >> filter       = null!,
+                                                                                            Expression<Func<T, object>> orderByField = null!,
+                                                                                            CancellationToken ct                     = default!)
     {
         var result = await (filter ?? (x => true)).ToMlResultValidAsync()
                         .TryMapAsync(filter => GetContext().Set<T>()
