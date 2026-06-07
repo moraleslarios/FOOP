@@ -1,65 +1,49 @@
-# MoralesLarios.FOOP
+# MoralesLarios.FOOP / MoralesLarios.OOFP
 
-**MoralesLarios.FOOP** es una plataforma modular de librerías .NET construida sobre una base funcional común.  
-Su centro técnico es **`MoralesLarios.OOFP`**, el núcleo sobre el que se apoyan el resto de proyectos: validación, persistencia, servicios de aplicación, controladores web, caché, clientes HTTP, logging, IO, value objects y utilidades de infraestructura.
+**MoralesLarios.OOFP** es una solución modular de librerías .NET diseñada para construir software con un enfoque **funcional, consistente y reutilizable**.
 
-La propuesta del ecosistema es ofrecer una forma homogénea de trabajar con:
+La pieza central es la librería **`MoralesLarios.OOFP`**, sobre la que se apoyan el resto de proyectos: validación, persistencia, servicios de aplicación, Web API, controladores REST, caché, clientes HTTP, logging, IO y utilidades de infraestructura.
+
+El objetivo del ecosistema es ofrecer una forma homogénea de trabajar con:
 
 - `MlResult<T>` como contenedor de éxito/error
 - composición funcional con `Bind`, `Map`, `Match` y `ExecSelf`
-- manejo explícito de errores sin usar excepciones como flujo principal de control
+- manejo explícito de errores sin depender de excepciones como flujo de control
 - integración natural con ASP.NET Core, EF Core y DI
-- tipos seguros mediante value objects y validación dedicada
+- tipado fuerte mediante value objects y validaciones dedicadas
 - documentación técnica extensa y enlazada por módulos
-
----
-
-## Visión general
-
-Esta solución está pensada para proyectos que quieran combinar:
-
-- núcleo funcional
-- validación de dominio
-- persistencia segura
-- exposición web limpia
-- consumo HTTP tipado
-- caché por controlador
-- logging funcional
-- configuración e IO seguras
-
-El resultado es una arquitectura en capas, consistente y reutilizable, donde cada proyecto aporta una pieza concreta del ecosistema.
 
 ---
 
 ## Cómo navegar esta solución
 
-### Núcleo OOFP
+### Documentación principal del núcleo OOFP
 
-- [Documentación técnica completa de `MoralesLarios.OOFP`](./src/__Doc/1_Intro.md)
-- [Documentación por tipos](./src/__Doc/Types/README.md)
-- [Tipos y modelo base `MlResult`](./src/__Doc/Types/MlResult.md)
-- [Operaciones `Bind`](./src/__Doc/Types/MlResultActionsBind.md)
-- [Operaciones `Map`](./src/__Doc/Types/MlResultActionsMap.md)
-- [Operaciones `Match`](./src/__Doc/Types/MlResultActionsMatch.md)
-- [Operaciones `ExecSelf`](./src/__Doc/Types/MlResultActionsExecSelf.md)
-- [Operaciones `Several`](./src/__Doc/Types/MlResultActionsSeveral.md)
-- [Transformaciones](./src/__Doc/Types/MlResultTransformations.md)
-- [Bucles funcionales](./src/__Doc/Types/MlResultBucles.md)
-- [Cambio de tipo de retorno](./src/__Doc/Types/MlResultChangeReturnResult.md)
-- [Modelo de errores](./src/__Doc/Types/MlResultErrors.md)
+- [Documentación técnica completa de `MoralesLarios.OOFP`](./__Doc/1_Intro.md)
+- [Documentación por tipos de `MoralesLarios.OOFP`](./__Doc/Types/README.md)
+- [Modelo de resultados y tipos base](./__Doc/Types/MlResult.md)
+- [Operaciones `Bind`](./__Doc/Types/MlResultActionsBind.md)
+- [Operaciones `Map`](./__Doc/Types/MlResultActionsMap.md)
+- [Operaciones `Match`](./__Doc/Types/MlResultActionsMatch.md)
+- [Operaciones `ExecSelf`](./__Doc/Types/MlResultActionsExecSelf.md)
+- [Operaciones `Several`](./__Doc/Types/MlResultActionsSeveral.md)
+- [Transformaciones](./__Doc/Types/MlResultTransformations.md)
+- [Bucles funcionales](./__Doc/Types/MlResultBucles.md)
+- [Cambio de tipo de retorno](./__Doc/Types/MlResultChangeReturnResult.md)
+- [Modelo de errores](./__Doc/Types/MlResultErrors.md)
 
 ### Documentación por concepto dentro de `__Doc`
 
-- [Intro general](./src/__Doc/1_Intro.md)
-- [Bind](./src/__Doc/Bind/3_Bind.md)
-- [Map](./src/__Doc/Map/1_Map.md)
-- [Match](./src/__Doc/Match/1_Match.md)
-- [ExecSelf](./src/__Doc/ExecSelf/1_ExecSelf.md)
-- [Several](./src/__Doc/Several/1_EmptyToFailed.md)
-- [EnsureFp](./src/__Doc/EnsureFp/EnsureFp.md)
-- [Extensions](./src/__Doc/Extensions/Extensions.md)
-- [Transformations](./src/__Doc/Transformations/Transformations.md)
-- [Bucles](./src/__Doc/Bucle/Bucles.md)
+- [Intro general](./__Doc/1_Intro.md)
+- [Bind](./__Doc/Bind/3_Bind.md)
+- [Map](./__Doc/Map/1_Map.md)
+- [Match](./__Doc/Match/1_Match.md)
+- [ExecSelf](./__Doc/ExecSelf/1_ExecSelf.md)
+- [Several](./__Doc/Several/1_EmptyToFailed.md)
+- [EnsureFp](./__Doc/EnsureFp/EnsureFp.md)
+- [Extensions](./__Doc/Extensions/Extensions.md)
+- [Transformations](./__Doc/Transformations/Transformations.md)
+- [Bucles](./__Doc/Bucle/Bucles.md)
 
 ---
 
@@ -99,11 +83,11 @@ Esa convención se repite en todo el ecosistema para que el comportamiento sea p
 
 ## Mapa del ecosistema
 
-### Resumen de proyectos principales
+### Paquetes principales
 
-| Proyecto | Propósito | Documentación |
+| Proyecto | Rol en la solución | Documentación |
 |---|---|---|
-| `MoralesLarios.OOFP` | Núcleo funcional de la solución | [Intro](./src/__Doc/1_Intro.md) · [Tipos](./src/__Doc/Types/README.md) |
+| `MoralesLarios.OOFP` | Núcleo funcional de toda la solución | [__Doc/1_Intro.md](./__Doc/1_Intro.md) · [__Doc/Types](./__Doc/Types/README.md) |
 | `MoralesLarios.OOFP.ValueObjects` | Value objects tipados y validados | [README](./src/MoralesLarios.OOFP.ValueObjects/README.md) |
 | `MoralesLarios.OOFP.ValueObjects.IO` | Value objects para rutas y sistema de archivos | [README](./src/MoralesLarios.OOFP.ValueObjects.IO/README.md) |
 | `MoralesLarios.OOFP.Validation` | Base de validación funcional | [README](./src/MoralesLarios.OOFP.Validation/README.md) |
@@ -123,7 +107,7 @@ Esa convención se repite en todo el ecosistema para que el comportamiento sea p
 
 ### Proyectos de pruebas y verificación
 
-La solución incluye distintos proyectos de pruebas e integración que sirven como validación viva del ecosistema:
+Estos proyectos validan la solución desde distintos ángulos y sirven como referencia de uso real:
 
 - `MoralesLarios.OOFP.Unit.Tests`
 - `MoralesLarios.OOFP.ValueObjects.Tests.Unit`
@@ -142,38 +126,38 @@ La solución incluye distintos proyectos de pruebas e integración que sirven co
 
 ## La pieza central: `MoralesLarios.OOFP`
 
-Aunque toda la solución tiene valor por sí misma, **`MoralesLarios.OOFP` es el fundamento común**.
+Aunque toda la solución tiene valor por sí misma, `MoralesLarios.OOFP` es el fundamento común.
 
 ### Qué resuelve
 
 - abstrae el patrón `Result`
-- unifica el tratamiento de errores
+- unifica tratamiento de errores
 - permite composición funcional sin pérdida de contexto
 - proporciona la base para logging, validación, persistencia y web
 
 ### Qué encontrarás en su documentación técnica
 
-- [Introducción general](./src/__Doc/1_Intro.md)
-- [Guía por tipos](./src/__Doc/Types/README.md)
-- [Detalles de `MlResult<T>`](./src/__Doc/Types/MlResult.md)
-- [Operaciones de `Bind`](./src/__Doc/Types/MlResultActionsBind.md)
-- [Operaciones de `Map`](./src/__Doc/Types/MlResultActionsMap.md)
-- [Operaciones de `Match`](./src/__Doc/Types/MlResultActionsMatch.md)
-- [Operaciones de `ExecSelf`](./src/__Doc/Types/MlResultActionsExecSelf.md)
-- [Operaciones de `Several`](./src/__Doc/Types/MlResultActionsSeveral.md)
-- [Transformaciones](./src/__Doc/Types/MlResultTransformations.md)
-- [Bucles funcionales](./src/__Doc/Types/MlResultBucles.md)
-- [Cambio de retorno](./src/__Doc/Types/MlResultChangeReturnResult.md)
-- [Errores y detalles](./src/__Doc/Types/MlResultErrors.md)
+- [Introducción general](./__Doc/1_Intro.md)
+- [Guía por tipos](./__Doc/Types/README.md)
+- [Detalles de `MlResult<T>`](./__Doc/Types/MlResult.md)
+- [Operaciones de `Bind`](./__Doc/Types/MlResultActionsBind.md)
+- [Operaciones de `Map`](./__Doc/Types/MlResultActionsMap.md)
+- [Operaciones de `Match`](./__Doc/Types/MlResultActionsMatch.md)
+- [Operaciones de `ExecSelf`](./__Doc/Types/MlResultActionsExecSelf.md)
+- [Operaciones de `Several`](./__Doc/Types/MlResultActionsSeveral.md)
+- [Transformaciones](./__Doc/Types/MlResultTransformations.md)
+- [Bucles funcionales](./__Doc/Types/MlResultBucles.md)
+- [Cambio de retorno](./__Doc/Types/MlResultChangeReturnResult.md)
+- [Errores y detalles](./__Doc/Types/MlResultErrors.md)
 
 ### Por qué es importante
 
-Porque el resto de proyectos reutilizan el mismo estilo y semántica:
+Porque el resto de librerías reutilizan exactamente el mismo estilo:
 
 - `ValueObjects` usa `MlResult<T>` para crear y validar tipos seguros.
 - `Validation` transforma validaciones en resultados funcionales.
 - `EFCore` encapsula operaciones de base de datos en resultados.
-- `WebServices` expone la lógica de aplicación en la misma semántica.
+- `WebServices` expone la lógica de aplicación en la misma semántica funcional.
 - `WebApi` convierte esos resultados en respuestas HTTP.
 - `HttpClients` consume esas respuestas con la misma filosofía.
 
@@ -181,7 +165,7 @@ Porque el resto de proyectos reutilizan el mismo estilo y semántica:
 
 ## Capas de la solución
 
-### Dominio, semántica y tipos seguros
+### 1. Dominio, semántica y tipos seguros
 
 #### `MoralesLarios.OOFP.ValueObjects`
 Librería de value objects tipados para evitar el uso de primitivos sin semántica.
@@ -194,7 +178,7 @@ Aporta, entre otros:
 - `IntNotNegative`
 - value objects numéricos y de texto
 
-📘 [README](./src/MoralesLarios.OOFP.ValueObjects/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.ValueObjects/README.md)
 
 #### `MoralesLarios.OOFP.ValueObjects.IO`
 Especialización de value objects para rutas y filesystem.
@@ -206,50 +190,50 @@ Aporta:
 - `ExistsFile`
 - `ExistDirectory`
 
-📘 [README](./src/MoralesLarios.OOFP.ValueObjects.IO/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.ValueObjects.IO/README.md)
 
 #### `MoralesLarios.OOFP.Validation`
 Base de validación funcional con `MlValidableFp<T>`.
 
-📘 [README](./src/MoralesLarios.OOFP.Validation/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.Validation/README.md)
 
 #### `MoralesLarios.OOFP.Validation.Dataannotations`
 Extiende la validación funcional con atributos de `DataAnnotations`.
 
-📘 [README](./src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)
 
 #### `MoralesLarios.OOFP.Validation.FluentValidations`
 Extiende la validación funcional con `FluentValidation`.
 
-📘 [README](./src/MoralesLarios.OOFP.Validation.FluentValidations/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.Validation.FluentValidations/README.md)
 
 ---
 
-### Infraestructura común
+### 2. Infraestructura común
 
 #### `MoralesLarios.OOFP.Internals`
-Tipos internos reutilizables, especialmente para paginación y metadatos compartidos.
+Tipos internos reutilizables, especialmente para paginación y metadatos comunes.
 
-📘 [README](./src/MoralesLarios.OOFP.Internals/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.Internals/README.md)
 
 #### `MoralesLarios.OOFP.Extensions.Loggers`
 Extensiones para registrar trazas sobre `MlResult<T>` sin romper el flujo funcional.
 
-📘 [README](./src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
 
 #### `MoralesLarios.OOFP.Utilities`
 Lectura segura de configuración y connection strings con `MlResult<T>`.
 
-📘 [README](./src/MoralesLarios.OOFP.Utilities/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.Utilities/README.md)
 
 #### `MoralesLarios.OOFP.IO`
 Wrapper funcional sobre `System.IO` para ficheros y directorios.
 
-📘 [README](./src/MoralesLarios.OOFP.IO/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.IO/README.md)
 
 ---
 
-### Persistencia
+### 3. Persistencia
 
 #### `MoralesLarios.OOFP.EFCore`
 Capa de repositorios EF Core en dos estilos:
@@ -265,18 +249,18 @@ Soporta:
 - consultas posicionales
 - registro masivo por DI
 
-📘 [README](./src/MoralesLarios.OOFP.EFCore/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.EFCore/README.md)
 
 #### `MoralesLarios.OOFP.EFCore.WebApi`
 Proyecto de integración entre EF Core y Web API.
 
 Actualmente es una base/skeleton para extender con lógica de aplicación específica.
 
-📘 [README](./src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
 
 ---
 
-### Servicios de aplicación
+### 4. Servicios de aplicación
 
 #### `MoralesLarios.OOFP.WebServices`
 Capa funcional entre repositorio y web.
@@ -290,11 +274,11 @@ Aporta:
 - `MlProblemsDetails`
 - extensiones de registro para ciclo de vida clásico y duplex
 
-📘 [README](./src/MoralesLarios.OOFP.WebServices/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.WebServices/README.md)
 
 ---
 
-### Exposición web
+### 5. Exposición web
 
 #### `MoralesLarios.OOFP.WebApi`
 Puente funcional entre `MlResult<T>` e `IActionResult`.
@@ -308,7 +292,7 @@ Aporta:
 - `MlErrorsDetailsExtensions`
 - helpers para headers del request
 
-📘 [README](./src/MoralesLarios.OOFP.WebApi/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.WebApi/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers`
 Controladores genéricos ASP.NET Core para CRUD estándar.
@@ -321,7 +305,7 @@ Aporta:
 - soporte duplex con PK compuesta
 - atributo para documentar parámetros PK en Swagger/OpenAPI
 
-📘 [README](./src/MoralesLarios.OOFP.WebControllers/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.WebControllers/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers.Cache`
 Extensión cacheada de los controladores genéricos.
@@ -335,11 +319,11 @@ Aporta:
 - soporte clásico y duplex
 - soporte para PK compuesta
 
-📘 [README](./src/MoralesLarios.OOFP.WebControllers.Cache/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.WebControllers.Cache/README.md)
 
 ---
 
-### Consumo HTTP
+### 6. Consumo HTTP
 
 #### `MoralesLarios.OOFP.HttpClients`
 Cliente HTTP funcional integrado con `MlResult<T>` y `IHttpClientFactory`.
@@ -352,18 +336,18 @@ Aporta:
 - manager funcional sobre `IHttpClientFactory`
 - helpers de cabeceras y respuestas HTTP
 
-📘 [README](./src/MoralesLarios.OOFP.HttpClients/README.md)
+📘 [README del proyecto](./src/MoralesLarios.OOFP.HttpClients/README.md)
 
 ---
 
-## End-to-end: cómo usar el ecosistema
+## End-to-end: cómo se usa este ecosistema
 
-### Caso típico
+### Caso clásico de API
 
 1. Modela el dominio con `ValueObjects`.
 2. Valida con `Validation`.
 3. Persiste con `EFCore`.
-4. Expón la lógica con `WebServices`.
+4. Expón lógica con `WebServices`.
 5. Publica con `WebControllers` y `WebApi`.
 6. Añade `WebControllers.Cache` si necesitas caché.
 7. Consume desde otro servicio con `HttpClients`.
@@ -384,20 +368,20 @@ services.AddControllers();
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController(IGenServiceFp<User, UserDto> service)
-	: SimpleMlControllerBase<User, UserDto, int>(service) { }
+    : SimpleMlControllerBase<User, UserDto, int>(service) { }
 ```
 
 ```csharp
 builder.Services.AddHttpClientsFp();
 builder.Services.AddGenClientFp<IUsersClient, UsersClient>(
-	configureClient: c => c.BaseAddress = new Uri("https://api.example.com/api/users/"));
+    configureClient: c => c.BaseAddress = new Uri("https://api.example.com/api/users/"));
 ```
 
 ---
 
 ## Proyectos de pruebas
 
-La solución también incluye proyectos de pruebas unitarias e integración que funcionan como verificación viva del comportamiento:
+La solución también incluye una capa de validación mediante proyectos de prueba unitarios e integración:
 
 - `MoralesLarios.OOFP.Unit.Tests`
 - `MoralesLarios.OOFP.ValueObjects.Tests.Unit`
@@ -420,18 +404,18 @@ Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escena
 
 ### Documentación raíz del núcleo OOFP
 
-- [Intro general y filosofía técnica](./src/__Doc/1_Intro.md)
-- [Documentación por tipos](./src/__Doc/Types/README.md)
-- [Tipos y resultados](./src/__Doc/Types/MlResult.md)
-- [Bind](./src/__Doc/Bind/3_Bind.md)
-- [Map](./src/__Doc/Map/1_Map.md)
-- [Match](./src/__Doc/Match/1_Match.md)
-- [ExecSelf](./src/__Doc/ExecSelf/1_ExecSelf.md)
-- [Several](./src/__Doc/Several/1_EmptyToFailed.md)
-- [EnsureFp](./src/__Doc/EnsureFp/EnsureFp.md)
-- [Extensions](./src/__Doc/Extensions/Extensions.md)
-- [Transformations](./src/__Doc/Transformations/Transformations.md)
-- [Bucles](./src/__Doc/Bucle/Bucles.md)
+- [Intro general y filosofía técnica](./__Doc/1_Intro.md)
+- [Documentación por tipos](./__Doc/Types/README.md)
+- [Tipos y resultados](./__Doc/Types/MlResult.md)
+- [Bind](./__Doc/Bind/3_Bind.md)
+- [Map](./__Doc/Map/1_Map.md)
+- [Match](./__Doc/Match/1_Match.md)
+- [ExecSelf](./__Doc/ExecSelf/1_ExecSelf.md)
+- [Several](./__Doc/Several/1_EmptyToFailed.md)
+- [EnsureFp](./__Doc/EnsureFp/EnsureFp.md)
+- [Extensions](./__Doc/Extensions/Extensions.md)
+- [Transformations](./__Doc/Transformations/Transformations.md)
+- [Bucles](./__Doc/Bucle/Bucles.md)
 
 ### README de cada proyecto
 
@@ -477,16 +461,15 @@ La solución está organizada para proyectos objetivo de:
 
 ## Licencia y estilo de trabajo
 
-La solución está pensada para crecer por capas, manteniendo una misma forma de trabajo en todo el stack.
+La solución está pensada para ser usada como base de aplicaciones reales y para crecer por capas, manteniendo una misma forma de trabajo en todo el stack.
 
 Si buscas una entrada rápida para entender la librería, empieza por:
 
-1. [Intro general de `MoralesLarios.OOFP`](./src/__Doc/1_Intro.md)
-2. [Documentación por tipos](./src/__Doc/Types/README.md)
-3. [WebServices](./src/MoralesLarios.OOFP.WebServices/README.md)
-4. [WebApi](./src/MoralesLarios.OOFP.WebApi/README.md)
-5. [WebControllers](./src/MoralesLarios.OOFP.WebControllers/README.md)
-6. [HttpClients](./src/MoralesLarios.OOFP.HttpClients/README.md)
+1. [Intro general de `MoralesLarios.OOFP`](./__Doc/1_Intro.md)
+2. [README del proyecto principal](./src/MoralesLarios.OOFP.WebServices/README.md)
+3. [WebApi](./src/MoralesLarios.OOFP.WebApi/README.md)
+4. [WebControllers](./src/MoralesLarios.OOFP.WebControllers/README.md)
+5. [HttpClients](./src/MoralesLarios.OOFP.HttpClients/README.md)
 
 ---
 
