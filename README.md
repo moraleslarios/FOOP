@@ -1,4 +1,4 @@
-# MoralesLarios.FOOP / MoralesLarios.OOFP
+# MoralesLarios.FOOP
 
 **MoralesLarios.OOFP** es una solución modular de librerías .NET diseñada para construir software con un enfoque **funcional, consistente y reutilizable**.
 
