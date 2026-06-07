@@ -43,6 +43,32 @@ public static class RegisterServices
         return services;
     }
 
+
+    public static IServiceCollection AddTransientGenServicesDuplexFpWithoutReposGeneral(this IServiceCollection services)
+    {
+        services.AddTransient(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
+
+        return services;
+    }
+
+    public static IServiceCollection AddScopedtGenServicesDuplexFpWithoutReposGeneral(this IServiceCollection services)
+    {
+
+        services.AddScoped(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
+
+        return services;
+    }
+
+
+    public static IServiceCollection AddSingletonGenServicesDuplexFpWithoutReposGeneral(this IServiceCollection services)
+    {
+        services.AddSingleton(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
+
+        return services;
+    }
+
+
+
 }
 
 

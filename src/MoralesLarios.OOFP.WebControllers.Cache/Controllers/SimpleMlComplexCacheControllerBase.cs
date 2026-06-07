@@ -65,3 +65,79 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(IGenServiceFp<TEn
     public virtual async Task EvictControllerCacheAsync(CancellationToken ct = default)
         => await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
 }
+
+
+
+/*********************************************************************************
+ * 
+ *                                      DUPLEX
+ *                      
+ * ********************************************************************************/
+
+
+
+
+public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+                                                                              Func<TEntity, object[]>                     _pkFields,
+                                                                              IOutputCacheStore                           _outputCacheStore)
+        : SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _pkFields)
+    where TEntity   : class
+    where TRequest  : class
+    where TResponse : class
+{
+    [MlControllerCache]
+    public override async Task<IActionResult> GetAllAsync(CancellationToken ct = default!) => await base.GetAllAsync(ct);
+
+
+    [MlControllerCache]
+    public override async Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+        => await base.GetByIdAsync(ids, ct);
+
+
+    public override async Task<IActionResult> PostAsync([FromBody] TRequest dto, CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.PostAsync(dto, ct);
+    }
+
+
+
+
+    public override async Task<IActionResult> PutAsync([FromRoute][PkParameter] string            ids, 
+                                                                  [FromBody]    TRequest          dto,
+                                                                                CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.PutAsync(ids, dto, ct);
+    }
+
+    public override async Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.PutAsync(dto, ct);
+    }
+
+
+    public override async Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.DeleteAsync(ids, ct);
+    }
+
+
+    public override async Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!)
+    {
+        await EvictControllerCacheAsync(ct);
+
+        return await base.DeleteAsync(dto, ct);
+    }
+
+
+        [HttpGet("clear-cache/now")]
+    public virtual async Task EvictControllerCacheAsync(CancellationToken ct = default)
+        => await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
+}

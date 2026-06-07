@@ -6,7 +6,7 @@ Permite:
 
 - Llamar a APIs HTTP devolviendo siempre `MlResult<T>` (válido o fallido).
 - Registrar clientes tipados con `IHttpClientFactory` mediante una sola extensión.
-- Heredar de `GenClientFp<TDto>` (PK simple) o `GenComplexClientFp<TDto>` (PK **compuesta**) para tener listo todo el CRUD estándar.
+- Heredar de `GenClientFp<TDto>` (PK simple), `GenClientFp<TRequest, TResponse>` (cliente **duplex**) o `GenComplexClientFp<TDto>` (PK **compuesta**) para tener listo todo el CRUD estándar.
 - Componer llamadas custom con `IHttpClientFactoryManager` y *value-objects* (`Key`, `NotEmptyString`, `IntNotNegative`, etc.).
 - Serializar automáticamente PKs compuestas (`DateTime`, `DateOnly`, `TimeOnly` con formato ISO 8601) cuando se llama por ID.
 
@@ -19,6 +19,7 @@ Permite:
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [`IHttpClientFactoryManager` / `HttpClientFactoryManager`](#ihttpclientfactorymanager--httpclientfactorymanager)
 - [`GenClientFp<TDto>` / `IGenClientFp<TDto>`](#genclientfptdto--igenclientfptdto)
+- [`GenClientFp<TRequest, TResponse>` / `IGenClientFp<TRequest, TResponse>`](#genclientfprequest-tresponse--igenclientfprequest-tresponse)
 - [`GenComplexClientFp<TDto>` / `IGenComplexClientFp<TDto>` (PK compuesta)](#gencomplexclientfptdto--igencomplexclientfptdto-pk-compuesta)
 - [Records de parámetros](#records-de-parámetros)
 - [Helpers de cabeceras y respuestas](#helpers-de-cabeceras-y-respuestas)
@@ -69,6 +70,13 @@ builder.Services.AddGenClientComplexFp<IPruebaComplexClient, PruebaComplexClient
 - Registra automáticamente un `HttpClient` con nombre `typeof(TImplementation).Name`.
 - Inyecta ese `Key` en el constructor de la implementación junto con el resto de dependencias resueltas por DI.
 - Permite configurar el `HttpClient` (`BaseAddress`, headers comunes, etc.) y/o el `Key`.
+
+`AddGenClientDuplexComplexFp<TService, TImplementation, TRequest, TResponse>` (cliente duplex):
+
+- Registra automáticamente un `HttpClient` con nombre `typeof(TImplementation).Name`.
+- Registra `IGenClientFp<TRequest, TResponse>` ? `GenClientFp<TRequest, TResponse>` para el cliente base duplex.
+- Registra `TService` ? `TImplementation` para inyectarlo en consumidores.
+- Es la opción recomendada cuando el body de entrada y el DTO de salida son distintos.
 
 `AddGenClientComplexFp<TService, TImplementation, TDto>` (PK compuesta):
 

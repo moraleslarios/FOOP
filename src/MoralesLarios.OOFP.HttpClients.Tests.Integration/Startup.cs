@@ -55,6 +55,11 @@ public class Startup
         {
             client.BaseAddress = new Uri("https://localhost:7197/api/PruebaComplex/");
         });
+
+        services.AddGenClientDuplexComplexFp<IPruebaDuplexClient, PruebaDuplexClient, PruebaRequestDto, PruebaResponseDto>(configureClient: client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7197/api/PruebaDuplex/");
+        });
     }
 }
 

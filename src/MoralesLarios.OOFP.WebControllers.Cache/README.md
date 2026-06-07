@@ -6,7 +6,8 @@ Capa de **caché HTTP** sobre los controladores genéricos de
 Ofrece:
 
 - Una **clase base de controlador** con los endpoints CRUD ya cacheados (`GET`)
-  e invalidación automática del caché en escrituras (`POST`, `PUT`, `DELETE`).
+  e invalidación automática del caché en escrituras (`POST`, `PUT`, `DELETE`),
+  tanto para escenarios de DTO único como para escenarios **duplex**.
 - Una **política de OutputCache por controlador** (`PerControllerOutputCachePolicy`)
   que etiqueta cada respuesta con un *tag* único por controlador, lo que permite
   invalidar de forma selectiva sin afectar a otros endpoints.
@@ -27,7 +28,9 @@ Ofrece:
 - [`PerControllerOutputCachePolicy`](#percontrolleroutputcachepolicy)
 - [`MlControllerCacheAttribute`](#mlcontrollercacheattribute)
 - [`SimpleMlCacheControllerBase<TEntity, TDto, TPk>`](#simplemlcachecontrollerbasetentity-tdto-tpk)
+- [`SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>`](#simplemlcachecontrollerbasetentity-trequest-tresponse-tpk)
 - [`SimpleMlComplexCacheControllerBase<TEntity, TDto>` (PK compuesta)](#simplemlcomplexcachecontrollerbasetentity-tdto-pk-compuesta)
+- [`SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)](#simplemlcomplexcachecontrollerbasetentity-trequest-tresponse-pk-compuesta-duplex)
 - [Bypass dinámico del caché](#bypass-dinámico-del-caché)
 - [Invalidación manual](#invalidación-manual)
 - [Personalización avanzada](#personalización-avanzada)
@@ -215,28 +218,6 @@ Hereda de `SimpleMlControllerBase<TEntity, TDto, TPk>`
 
 ### Firma
 
-```csharp
-public class SimpleMlCacheControllerBase<TEntity, TDto, TPk>(
-        IGenServiceFp<TEntity, TDto> _genServiceFp,
-        IOutputCacheStore            _outputCacheStore)
-    : SimpleMlControllerBase<TEntity, TDto, TPk>(_genServiceFp)
-    where TEntity : class
-    where TDto    : class
-{
-    [MlControllerCache] public override Task<IActionResult> GetAllAsync(CancellationToken ct = default!);
-    [MlControllerCache] public override Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default);
-
-    public override Task<IActionResult> PostAsync([FromBody] TDto dto, CancellationToken ct = default);
-    public override Task<IActionResult> PutAsync(string id, [FromBody] TDto dto, CancellationToken ct = default!);
-    public override Task<IActionResult> PutAsync([FromBody] TDto dto, CancellationToken ct = default!);
-    public override Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default);
-    public override Task<IActionResult> DeleteAsync([FromBody] TDto dto, CancellationToken ct = default!);
-
-    [HttpGet("clear-cache/now")]
-    public virtual Task EvictControllerCacheAsync(CancellationToken ct = default);
-}
-```
-
 ### Ejemplo de uso
 
 ```csharp
@@ -277,6 +258,40 @@ public async Task<IActionResult> GetWithCache1(CancellationToken ct = default)
 > ?? Devuelve directamente el `IActionResult` que produce el método base; no lo
 > envuelvas en `Ok(result)` porque ya es un `OkObjectResult` y se serializaría
 > como objeto en lugar de array.
+
+---
+
+## `SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>`
+
+Variante duplex de `SimpleMlCacheControllerBase<TEntity, TDto, TPk>` para escenarios donde la petición y la respuesta usan modelos distintos. Hereda de `SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>` y mantiene exactamente las mismas garantías de cacheado e invalidación.
+
+### Firma
+
+```csharp
+public class SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+                                                                            IOutputCacheStore                           _outputCacheStore)
+    : SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(_genServiceFp)
+    where TEntity   : class
+    where TRequest  : class
+    where TResponse : class
+{
+    [MlControllerCache] public override Task<IActionResult> GetAllAsync(CancellationToken ct = default!);
+    [MlControllerCache] public override Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default);
+
+    public override Task<IActionResult> PostAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    public override Task<IActionResult> PutAsync(string id, [FromBody] TRequest dto, CancellationToken ct = default!);
+    public override Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    public override Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default);
+    public override Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+
+    [HttpGet("clear-cache/now")]
+    public virtual Task EvictControllerCacheAsync(CancellationToken ct = default);
+}
+```
+
+### Cuándo usarlo
+
+Úsalo cuando quieras cachear un controlador estándar pero la capa de escritura y la de lectura no compartan el mismo DTO.
 
 ---
 
@@ -341,6 +356,41 @@ Endpoints disponibles automáticamente:
 | GET    | `/api/PruebaComplex/clear-cache/now` | Vacía manualmente el caché del controlador      |
 
 Ver detalles del formato de `ids` (PK compuesta con `DateTime`, `DateOnly`, etc.) en el [README de `MoralesLarios.OOFP.WebControllers`](../MoralesLarios.OOFP.WebControllers/README.md).
+
+---
+
+## `SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)
+
+Variante duplex de `SimpleMlComplexCacheControllerBase<TEntity, TDto>` para entidades con clave primaria compuesta cuando la petición y la respuesta usan modelos distintos. Hereda de `SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>` y mantiene el mismo cacheado por controlador, invalidación automática y endpoint de borrado manual.
+
+### Firma
+
+```csharp
+public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+                                                                              Func<TEntity, object[]>                     _pkFields,
+                                                                              IOutputCacheStore                           _outputCacheStore)
+    : SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _pkFields)
+    where TEntity   : class
+    where TRequest  : class
+    where TResponse : class
+{
+    [MlControllerCache] public override Task<IActionResult> GetAllAsync(CancellationToken ct = default!);
+    [MlControllerCache] public override Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+
+    public override Task<IActionResult> PostAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    public override Task<IActionResult> PutAsync([FromRoute][PkParameter] string ids, [FromBody] TRequest dto, CancellationToken ct = default!);
+    public override Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    public override Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+    public override Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+
+    [HttpGet("clear-cache/now")]
+    public virtual Task EvictControllerCacheAsync(CancellationToken ct = default);
+}
+```
+
+### Cuándo usarlo
+
+Úsalo cuando combines PK compuesta, caché por controlador y separación entre modelos de lectura y escritura.
 
 ---
 

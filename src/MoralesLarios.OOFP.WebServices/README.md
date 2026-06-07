@@ -2,6 +2,8 @@
 
 Capa de **servicios genéricos funcionales** que conecta el repositorio EF Core (`IEFRepoFp<TEntity>`) con los controladores web. Implementa el CRUD estándar devolviendo siempre `MlResult<T>`, mapea entidades ? DTOs con [Mapster](https://github.com/MapsterMapper/Mapster) y produce `ProblemDetails` ya estructurados (`MlProblemsDetails`) listos para que `MoralesLarios.OOFP.WebApi` los transforme en `IActionResult`.
 
+También soporta escenarios **duplex** donde el DTO de entrada y el DTO de salida son distintos.
+
 Componentes principales:
 
 - `IGenServiceFp<TEntity, TDto>` / `GenServiceFp<TEntity, TDto>`: servicio genérico de aplicación con todos sus métodos `virtual` (extensible por herencia).
@@ -18,7 +20,9 @@ Soporta de forma nativa **PKs simples y compuestas**: todos los métodos `*ByIdAs
 - [Registro](#registro)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [`IGenServiceFp<TEntity, TDto>`](#igenservicefptentity-tdto)
+- [`IGenServiceFp<TEntity, TRequest, TResponse>`](#igenservicefptentity-trequest-tresponse)
 - [`GenServiceFp<TEntity, TDto>`](#genservicefptentity-tdto)
+- [`GenServiceFp<TEntity, TRequest, TResponse>`](#genservicefptentity-trequest-tresponse)
 - [`MlProblemsDetails`](#mlproblemsdetails)
 - [Receta completa](#receta-completa)
 - [Combinarlo con `WebControllers`](#combinarlo-con-webcontrollers)
@@ -41,7 +45,7 @@ Target framework: **`net8.0`**.
 
 ## Registro
 
-`RegisterServices` ofrece tres extensiones para elegir el ciclo de vida del servicio genérico:
+`RegisterServices` ofrece extensiones para elegir el ciclo de vida del servicio genérico, tanto en modo clásico como en modo duplex:
 
 ```csharp
 using MoralesLarios.OOFP.WebServices;
@@ -51,12 +55,19 @@ services.AddTransientGenServicesFpWithoutReposGeneral();
 services.AddScopedtGenServicesFpWithoutReposGeneral();
 // o
 services.AddSingletonGenServicesFpWithoutReposGeneral();
+
+services.AddTransientGenServicesDuplexFpWithoutReposGeneral();
+// o
+services.AddScopedtGenServicesDuplexFpWithoutReposGeneral();
+// o
+services.AddSingletonGenServicesDuplexFpWithoutReposGeneral();
 ```
 
 Cada una registra:
 
 ```csharp
-typeof(IGenServiceFp<,>) ? typeof(GenServiceFp<,>)
+typeof(IGenServiceFp<,>)  ? typeof(GenServiceFp<,>)
+typeof(IGenServiceFp<,,>) ? typeof(GenServiceFp<,,>)
 ```
 
 Necesitas también registrar el repositorio EF, p. ej.:
@@ -90,6 +101,8 @@ MoralesLarios.OOFP.WebServices/
 Contrato funcional con todas las operaciones CRUD habituales. Cada método admite *callbacks* opcionales para construir mensajes de log de éxito y error.
 
 Todas las operaciones de la implementación `GenServiceFp<,>` están marcadas como `virtual`, por lo que puedes heredar y sobreescribir métodos puntuales sin reescribir el resto.
+
+### Firma
 
 ```csharp
 public interface IGenServiceFp<TEntity, TDto>
@@ -143,6 +156,36 @@ El repositorio EF de abajo (`IEFRepoFp<TEntity>.TryFindAsync(pk: ...)`) acepta e
 
 ---
 
+## `IGenServiceFp<TEntity, TRequest, TResponse>`
+
+Contrato funcional duplex para escenarios donde el DTO de entrada y el DTO de salida son distintos. Mantiene las mismas ideas que el contrato clásico, pero separa explícitamente `TRequest` y `TResponse`.
+
+### Firma
+
+```csharp
+public interface IGenServiceFp<TEntity, TRequest, TResponse>
+    where TEntity   : class
+    where TRequest  : class
+    where TResponse : class
+{
+    Task<MlResult<IEnumerable<TResponse>>> AllAsync(...);
+    Task<MlResult<TResponse?>> FindByIdAsync(..., params object[] pk);
+    Task<MlResult<TResponse?>> FindByIdProblemsDetailsAsync(..., params object[] pk);
+    Task<MlResult<TResponse>>  CreateAsync(TRequest dtoRequest, ...);
+    Task<MlResult<TResponse>>  UpdateAsync(TRequest dtoRequest, ..., params object[] pk);
+    Task<MlResult<TResponse>>  UpdateAsync(TRequest dtoRequest, ...);
+    Task<MlResult<TResponse>>  DeleteAsync(..., params object[] pk);
+    Task<MlResult<TResponse>>  DeleteAsync(TRequest dtoRequest, ...);
+    Task<MlResult<TResponse>>  UpdateProblemDetailsAsync(TRequest dtoRequest, MlErrorsDetails notFoundErrorDetails, ..., params object[] pk);
+}
+```
+
+### Cuándo usarlo
+
+Úsalo cuando tu API reciba comandos de escritura distintos del modelo que devuelve en lectura.
+
+---
+
 ## `GenServiceFp<TEntity, TDto>`
 
 Implementación funcional que:
@@ -174,6 +217,35 @@ public class UserAppService(IGenServiceFp<User, UserDto> _svc)
             failMessageBuilder : e => $"User creation failed: {e}");
 
     public Task<MlResult<UserDto?>> FindAsync(int id, CancellationToken ct)
+        => _svc.FindByIdProblemsDetailsAsync(
+            notFoundErrorDetails: MlProblemsDetails.NotFoundError(detail: $"User {id} not found"),
+            ct                  : ct,
+            pk                  : id);
+}
+```
+
+---
+
+## `GenServiceFp<TEntity, TRequest, TResponse>`
+
+Implementación funcional duplex que:
+
+1. Usa `IEFRepoFp<TEntity>` para acceder a la BD.
+2. Mapea entidad ? `TResponse` con `Mapster.Adapt<TX>()`.
+3. Encadena operaciones con `BindAsync`/`MapAsync`/`TryMapAsync` para no lanzar excepciones.
+4. Loguea en cada paso vía `LogMlResultInformationAsync` y `LogMlResultFinalAsync`.
+
+### Ejemplo de uso
+
+```csharp
+public class UserAppService(IGenServiceFp<User, UserRequestDto, UserResponseDto> _svc)
+{
+    public Task<MlResult<UserResponseDto>> CreateAsync(UserRequestDto dto, CancellationToken ct)
+        => _svc.CreateAsync(dto, ct: ct,
+            validMessageBuilder: x => $"User {x.Id} created",
+            failMessageBuilder : e => $"User creation failed: {e}");
+
+    public Task<MlResult<UserResponseDto?>> FindAsync(int id, CancellationToken ct)
         => _svc.FindByIdProblemsDetailsAsync(
             notFoundErrorDetails: MlProblemsDetails.NotFoundError(detail: $"User {id} not found"),
             ct                  : ct,
@@ -234,13 +306,16 @@ Se integra **automáticamente** con:
 services.AddDbContext<AppDbContext>(o => o.UseSqlServer(connectionString));
 services.AddTransient(typeof(IEFRepoFp<>), typeof(EFRepoFp<>));
 
-// 2. Servicios funcionales
+// 2. Servicios funcionales clásicos
 services.AddTransientGenServicesFpWithoutReposGeneral();
 
-// 3. Mapster (mappings personalizados, opcional)
+// 3. Servicios funcionales duplex
+services.AddTransientGenServicesDuplexFpWithoutReposGeneral();
+
+// 4. Mapster (mappings personalizados, opcional)
 TypeAdapterConfig<User, UserDto>.NewConfig().Map(d => d.FullName, s => s.Name + " " + s.Surname);
 
-// 4. Controllers
+// 5. Controllers
 services.AddControllers();
 ```
 
@@ -249,6 +324,13 @@ services.AddControllers();
 [Route("api/[controller]")]
 public class UsersController(IGenServiceFp<User, UserDto> svc)
     : SimpleMlControllerBase<User, UserDto, int>(svc) { }
+```
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class UsersDuplexController(IGenServiceFp<User, UserRequestDto, UserResponseDto> svc)
+    : SimpleMlControllerBase<User, UserRequestDto, UserResponseDto, int>(svc) { }
 ```
 
 Con eso `WebControllers` + `WebServices` + `WebApi` orquestan todo el ciclo: petición HTTP ? servicio funcional ? repositorio EF ? DTO ? `IActionResult` con `ProblemDetails` correcto.

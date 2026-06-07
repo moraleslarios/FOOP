@@ -92,5 +92,42 @@ public static class Extensions
         throw new FormatException(string.Format("The type {0} is not soported", typeof(DateTime)));
     }
 
+
+
+
+
+
+
+
+    public static object[] GetPkValues<TEntity>(this string ids, Func<TEntity, object[]> pkFields)
+        where TEntity : class
+    {
+        var result = GetPkValues(ids.Split(','), pkFields);
+
+        return result;
+    }
+    public static string GetPkValuesErrorMessage(this Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
+
+
+
+    public static object[] GetPkValues<TEntity>(string[] values, Func<TEntity, object[]> pkFields)
+        where TEntity : class
+    {
+        var sample = Activator.CreateInstance<TEntity>();   // requiere new() o reflexión
+        var sampleP = pkFields(sample);                       // todos serán default/null
+        if (values.Length != sampleP.Length) throw new ArgumentException($"The number of provided values ({values.Length}) does not match the number of primary key fields ({sampleP.Length}).", nameof(values));
+
+        // ⚠️ Esto sólo funciona si los miembros devueltos son value types con default no-null.
+        // Si la PK es int / long / Guid → ok. Si es string → sampleP[i] será null y NO sabrás el tipo.
+        var result = new object[values.Length];
+        for (int i = 0; i < values.Length; i++)
+        {
+            var t = sampleP[i]?.GetType() ?? typeof(string);
+            result[i] = Convert.ChangeType(values[i], t, CultureInfo.InvariantCulture);
+        }
+        return result;
+    }
+
+
 }
 

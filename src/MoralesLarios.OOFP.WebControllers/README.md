@@ -19,7 +19,9 @@ public class UsersController(IGenServiceFp<User, UserDto> svc)
 - [Registro](#registro)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [`SimpleMlControllerBase<TEntity, TDto, TPk>`](#simplemlcontrollerbasetentity-tdto-tpk)
+- [`SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>`](#simplemlcontrollerbasetentity-trequest-tresponse-tpk)
 - [`SimpleMlComplexPkControllerBase<TEntity, TDto>` (PK compuesta)](#simplemlcomplexpkcontrollerbasetentity-tdto-pk-compuesta)
+- [`SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)](#simplemlcomplexpkcontrollerbasetentity-trequest-tresponse-pk-compuesta-duplex)
 - [`Attributes.PkParameterAttribute`](#attributespkparameterattribute)
 - [`Helpers.Extensions.ConverterTo`](#helpersextensionsconverterto)
 - [Receta completa](#receta-completa)
@@ -83,6 +85,8 @@ MoralesLarios.OOFP.WebControllers/
 
 Controlador `[ApiController]` que delega cada acción HTTP en `IGenServiceFp<TEntity, TDto>` y convierte el `MlResult<>` en `IActionResult` mediante `MlResultWebExtensionsPlus`.
 
+Sirve para el caso clásico donde entidad y DTO comparten el mismo contrato de lectura/escritura.
+
 ### Firma
 
 ```csharp
@@ -136,6 +140,78 @@ public class UsersController(IGenServiceFp<User, UserDto> svc)
 ```
 
 > ?? Si sobreescribes un método y devuelves directamente lo del `base.*`, **no** lo envuelvas en `Ok(...)`: `base` ya devuelve un `IActionResult`. Hacer `Ok(result)` lo serializaría como objeto y deformaría el JSON.
+
+---
+
+## `SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>`
+
+Variante duplex de `SimpleMlControllerBase<,,,>` para escenarios donde el tipo de entrada (`TRequest`) y el tipo de salida (`TResponse`) son distintos. Conserva la misma semántica REST y el mismo comportamiento de conversión de PK, pero delega en `IGenServiceFp<TEntity, TRequest, TResponse>`.
+
+Sirve para separar comandos de escritura y modelos de lectura sin perder el patrón estándar del controlador genérico.
+
+### Firma
+
+```csharp
+[ApiController]
+public class SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp)
+    : ControllerBase
+    where TEntity   : class
+    where TRequest  : class
+    where TResponse : class
+{
+    [HttpGet]                         public virtual Task<IActionResult> GetAllAsync(CancellationToken ct = default!);
+    [HttpGet("id-str/{id}", Name = "[controller]_[action]")]
+                                      public virtual Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!);
+    [HttpPost]                        public virtual Task<IActionResult> PostAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpPut("{id}")]                 public virtual Task<IActionResult> PutAsync(string id, [FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpPut]                         public virtual Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpDelete("{id}")]              public virtual Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default!);
+    [HttpDelete]                      public virtual Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+}
+```
+
+### Cuándo usarlo
+
+Úsalo cuando tu API recibe un DTO de escritura distinto del DTO que devuelve, por ejemplo para separar comandos de creación/actualización de modelos de lectura.
+
+### Ejemplo
+
+```csharp
+public class PruebasDuplexController(IGenServiceFp<Pruebas, PruebaRequestDto, PruebaResponseDto> svc)
+    : SimpleMlControllerBase<Pruebas, PruebaRequestDto, PruebaResponseDto, int>(svc) { }
+```
+
+---
+
+## `SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)
+
+Variante duplex de `SimpleMlComplexPkControllerBase<TEntity, TDto>` para entidades con clave primaria compuesta cuando la petición y la respuesta usan tipos distintos. Utiliza `IGenServiceFp<TEntity, TRequest, TResponse>` y mantiene el mismo mecanismo de `_pkFields` y de parsing de `ids`.
+
+### Firma
+
+```csharp
+[ApiController]
+public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+                                                                           Func<TEntity, object[]>                     _pkFields)
+    : ControllerBase
+    where TEntity   : class
+    where TRequest  : class
+    where TResponse : class
+{
+    [HttpGet]                             public virtual Task<IActionResult> GetAllAsync(CancellationToken ct = default!);
+    [HttpGet("id-str/{ids}", Name = "[controller]_[action]")]
+                                          public virtual Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+    [HttpPost]                            public virtual Task<IActionResult> PostAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpPut("{ids}")]                    public virtual Task<IActionResult> PutAsync([FromRoute][PkParameter] string ids, [FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpPut]                             public virtual Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpDelete("{ids}")]                 public virtual Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+    [HttpDelete]                          public virtual Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+}
+```
+
+### Cuándo usarlo
+
+Úsalo cuando tengas entidades con PK compuesta y además quieras separar modelos de entrada y salida, por ejemplo para lecturas enriquecidas o comandos de escritura más restringidos.
 
 ---
 
@@ -226,6 +302,38 @@ public class PruebaComplexController(IGenServiceFp<PruebaComplex, PruebaComplexD
 | DELETE | `/`                        | Elimina usando la PK del DTO                      | `204 NoContent` |
 
 > ? **Requisito**: `TEntity` debe tener un constructor sin parámetros para que `Activator.CreateInstance<TEntity>()` pueda crear el *sample*. Si la PK contiene tipos `string` u otros reference types nullables, el sample expondrá `null` y `GetPkValues` los tratará como `string`. Para escenarios más exigentes, sobreescribe `GetPkValues` en el controlador hijo.
+
+---
+
+## `SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)
+
+Variante duplex de `SimpleMlComplexPkControllerBase<TEntity, TDto>` para entidades con clave primaria compuesta cuando la petición y la respuesta usan tipos distintos. Utiliza `IGenServiceFp<TEntity, TRequest, TResponse>` y mantiene el mismo mecanismo de `_pkFields` y de parsing de `ids`.
+
+### Firma
+
+```csharp
+[ApiController]
+public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+                                                                           Func<TEntity, object[]>                     _pkFields)
+    : ControllerBase
+    where TEntity   : class
+    where TRequest  : class
+    where TResponse : class
+{
+    [HttpGet]                             public virtual Task<IActionResult> GetAllAsync(CancellationToken ct = default!);
+    [HttpGet("id-str/{ids}", Name = "[controller]_[action]")]
+                                          public virtual Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+    [HttpPost]                            public virtual Task<IActionResult> PostAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpPut("{ids}")]                    public virtual Task<IActionResult> PutAsync([FromRoute][PkParameter] string ids, [FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpPut]                             public virtual Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+    [HttpDelete("{ids}")]                 public virtual Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!);
+    [HttpDelete]                          public virtual Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!);
+}
+```
+
+### Cuándo usarlo
+
+Úsalo cuando tengas entidades con PK compuesta y además quieras separar modelos de entrada y salida, por ejemplo para lecturas enriquecidas o comandos de escritura más restringidos.
 
 ---
 

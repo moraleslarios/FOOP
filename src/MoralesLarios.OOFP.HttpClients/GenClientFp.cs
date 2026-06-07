@@ -53,3 +53,63 @@ public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>> _logger,
 
 }
 
+
+/*********************************************************************************
+ * 
+ *                                      DUPLEX
+ *                      
+ * ********************************************************************************/
+
+
+
+
+
+
+public class GenClientFp<TRequest, TResponse>(ILogger<GenClientFp<TRequest, TResponse>> _logger,
+                                              IHttpClientFactoryManager                 _httpClientFactoryManager,
+                                              Key                                       _httpClientFactoryKey) : IGenClientFp<TRequest, TResponse>
+{ 
+
+    public IHttpClientFactoryManager GetIHttpClientFactoryManager() => _httpClientFactoryManager;
+    public Key                       GetHttpClientFactoryKey()      => _httpClientFactoryKey;
+
+
+    public virtual Task<MlResult<IEnumerable<TResponse>>> GetAllAsync(Dictionary<string, string> headers = null!, 
+                                                                 CancellationToken          ct      = default)
+        => _httpClientFactoryManager.GetAsync<IEnumerable<TResponse>>(_httpClientFactoryKey, string.Empty, headers, ct);
+
+    public virtual Task<MlResult<TResponse>> GetByIdAsync(NotEmptyString             idStr,
+                                                     Dictionary<string, string> headers = null!, 
+                                                     CancellationToken          ct      = default)
+        => _httpClientFactoryManager.GetAsync<TResponse>(_httpClientFactoryKey, $"id-str/{idStr}", headers, ct);
+
+    public virtual Task<MlResult<TResponse>> PostAsync(TRequest                   itemBody, 
+                                                       Dictionary<string, string> headers = null!, 
+                                                       CancellationToken          ct      = default)
+        => _httpClientFactoryManager.PostAsync<TRequest, TResponse>(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+
+    public virtual Task<MlResult<Empty>> PutAsync(TRequest                   itemBody, 
+                                                  Dictionary<string, string> headers = null!, 
+                                                  CancellationToken          ct      = default)
+        => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+
+    public virtual Task<MlResult<Empty>> PutByIdAsync(NotEmptyString             idStr,
+                                                      TRequest                   itemBody,
+                                                      Dictionary<string, string> headers = null!, 
+                                                      CancellationToken          ct      = default)
+        => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, idStr, headers, ct);
+
+
+    public virtual Task<MlResult<Empty>> DeleteAsync(TRequest                   itemBody, 
+                                                     Dictionary<string, string> headers = null!, 
+                                                     CancellationToken          ct      = default)
+        => _httpClientFactoryManager.DeleteAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+
+    public virtual Task<MlResult<Empty>> DeleteByIdAsync(NotEmptyString             idStr, 
+                                                         Dictionary<string, string> headers = null!, 
+                                                         CancellationToken          ct      = default)
+        => _httpClientFactoryManager.DeleteByIdAsync<TResponse>(_httpClientFactoryKey, $"{idStr}", headers, ct);
+
+
+
+}

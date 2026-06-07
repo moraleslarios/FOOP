@@ -95,6 +95,22 @@ public class HttpClientFactoryManager(IHttpClientFactory                _httpCli
                                                                               url, 
                                                                               ct));
 
+    public virtual async Task<MlResult<K>> PostAsync<T, K>(Key                        httpClientFactoryKey,
+                                                           T                          itemBody,
+                                                           string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAdress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                           Dictionary<string, string> headers = null!,
+                                                           CancellationToken          ct      = default)
+        => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
+                            .TryMapAsync( _             => JsonSerializer.Serialize(itemBody))
+                            .BindAsync  (jsonBody       => new HttpRequestMessage(HttpMethod.Post, url)
+                                                                      {
+                                                                          Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+                                                                      }.SetHeadersAsync(headers ?? []))
+                            .BindAsync  (requestMessage => ActionPostAsync<K>(httpClientFactoryKey,
+                                                                              requestMessage, 
+                                                                              url, 
+                                                                              ct));
+
 
     public virtual async Task<MlResult<Empty>> PutAsync<T>(Key                        httpClientFactoryKey,
                                                            T                          itemBody,

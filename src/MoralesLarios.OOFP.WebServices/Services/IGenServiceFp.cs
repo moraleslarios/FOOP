@@ -59,3 +59,21 @@ public interface IGenServiceFp<TEntity, TDto>
     Task<MlResult<TDto>> UpdateProblemDetailsAsync(TDto dto, MlErrorsDetails notFoundErrorDetails, CancellationToken ct = default, string initialMessage = null, Func<TDto, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
     Task<MlResult<TDto>> DeleteProblemDetailsAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken ct = default, string initialMessage = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
 }
+
+
+public interface IGenServiceFp<TEntity, TRequest, TResponse>
+    where TEntity : class
+    where TRequest : class
+    where TResponse : class
+{
+    Task<MlResult<IEnumerable<TResponse>>> AllAsync(CancellationToken ct = default, string initialMessage = null, Func<IEnumerable<TResponse>, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null);
+    Task<MlResult<TResponse>> CreateAsync(TRequest dtoRequest, CancellationToken ct = default, string initialMessage = null, Func<TResponse, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null);
+    Task<MlResult<TResponse>> DeleteAsync(CancellationToken ct = default, string initialMessage = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
+    Task<MlResult<TResponse>> DeleteAsync(TRequest dtoRequest, CancellationToken ct = default, string initialMessage = null, Func<MlErrorsDetails, string> failMessageBuilder = null);
+    Task<MlResult<TResponse>> DeleteProblemDetailsAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken ct = default, string initialMessage = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
+    Task<MlResult<TResponse?>> FindByIdAsync(CancellationToken ct = default, string initialMessage = null, Func<TResponse, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
+    Task<MlResult<TResponse?>> FindByIdProblemsDetailsAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken ct = default, string initialMessage = null, Func<TResponse, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
+    Task<MlResult<TResponse>> UpdateAsync(TRequest dtoRequest, CancellationToken ct = default, string initialMessage = null, Func<TResponse, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
+    Task<MlResult<TResponse>> UpdateAsync(TRequest dtoRequest, CancellationToken ct = default, string initialMessage = null, Func<TResponse, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null);
+    Task<MlResult<TResponse>> UpdateProblemDetailsAsync(TRequest dtoRequest, MlErrorsDetails notFoundErrorDetails, CancellationToken ct = default, string initialMessage = null, Func<TResponse, string> validMessageBuilder = null, Func<MlErrorsDetails, string> failMessageBuilder = null, params object[] pk);
+}

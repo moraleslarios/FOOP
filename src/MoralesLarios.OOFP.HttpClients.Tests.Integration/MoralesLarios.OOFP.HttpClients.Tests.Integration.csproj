@@ -40,6 +40,7 @@
     <ProjectReference Include="..\MoralesLarios.OOFP.Extensions.Loggers\MoralesLarios.OOFP.Extensions.Loggers.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.HttpClients\MoralesLarios.OOFP.HttpClients.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Internals\MoralesLarios.OOFP.Internals.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.WebServices\MoralesLarios.OOFP.WebServices.csproj" />
   </ItemGroup>
 
   <ItemGroup>

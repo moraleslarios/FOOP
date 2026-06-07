@@ -19,4 +19,5 @@ public interface IHttpClientFactoryManager
     Task<MlResult<Empty>> PutAsync<T>(Key httpClientFactoryKey, T itemBody, string url = null!, Dictionary<string, string> headers = null!, CancellationToken ct = default);
     Task<MlResult<Empty>> DeleteAsync<T>(Key httpClientFactoryKey, T itemBody, string url = null!, Dictionary<string, string> headers = null!, CancellationToken ct = default);
     Task<MlResult<Empty>> DeleteByIdAsync<T>(Key httpClientFactoryKey, NotEmptyString url, Dictionary<string, string> headers = null!, CancellationToken ct = default);
+    Task<MlResult<K>> PostAsync<T, K>(Key httpClientFactoryKey, T itemBody, string url = null, Dictionary<string, string> headers = null, CancellationToken ct = default);
 }
