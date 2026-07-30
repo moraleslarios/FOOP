@@ -5,33 +5,35 @@ Su centro técnico es **`MoralesLarios.OOFP`**, el núcleo sobre el que se apoyan 
 
 La propuesta del ecosistema es ofrecer una forma homogénea de trabajar con:
 
-- `MlResult<T>` como contenedor de éxito/error
-- composición funcional con `Bind`, `Map`, `Match` y `ExecSelf`
+El objetivo del ecosistema es ofrecer una forma homogÃ©nea de trabajar con:
+
+- `MlResult<T>` como contenedor de Ã©xito/error
+- composiciÃ³n funcional con `Bind`, `Map`, `Match` y `ExecSelf`
 - manejo explícito de errores sin usar excepciones como flujo principal de control
-- integración natural con ASP.NET Core, EF Core y DI
+- integraciÃ³n natural con ASP.NET Core, EF Core y DI
 - tipos seguros mediante value objects y validación dedicada
-- documentación técnica extensa y enlazada por módulos
+- documentaciÃ³n tÃ©cnica extensa y enlazada por mÃ³dulos
 
 ---
 
-## Visión general
+## VisiÃ³n general
 
-Esta solución está pensada para proyectos que quieran combinar:
+Esta soluciÃ³n estÃ¡ pensada para proyectos que quieran combinar:
 
-- núcleo funcional
-- validación de dominio
+- nÃºcleo funcional
+- validaciÃ³n de dominio
 - persistencia segura
-- exposición web limpia
+- exposiciÃ³n web limpia
 - consumo HTTP tipado
-- caché por controlador
+- cachÃ© por controlador
 - logging funcional
-- configuración e IO seguras
+- configuraciÃ³n e IO seguras
 
 El resultado es una arquitectura en capas, consistente y reutilizable, donde cada proyecto aporta una pieza concreta del ecosistema.
 
 ---
 
-## Cómo navegar esta solución
+## CÃ³mo navegar esta soluciÃ³n
 
 ### Núcleo OOFP
 
@@ -48,7 +50,7 @@ El resultado es una arquitectura en capas, consistente y reutilizable, donde cad
 - [Cambio de tipo de retorno](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultChangeReturnResult.md)
 - [Modelo de errores](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultErrors.md)
 
-### Documentación por concepto dentro de `__Doc`
+### DocumentaciÃ³n por concepto dentro de `__Doc`
 
 - [Intro general](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
 - [Bind](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Bind/3_Bind.md)
@@ -63,37 +65,37 @@ El resultado es una arquitectura en capas, consistente y reutilizable, donde cad
 
 ---
 
-## Qué aporta la librería principal `MoralesLarios.OOFP`
+## QuÃ© aporta la librerÃ­a principal `MoralesLarios.OOFP`
 
-`MoralesLarios.OOFP` define el lenguaje común del ecosistema. Su idea principal es que la aplicación trabaje con resultados explícitos, en lugar de encadenar excepciones como mecanismo primario de control.
+`MoralesLarios.OOFP` define el lenguaje comÃºn del ecosistema. Su idea principal es que la aplicaciÃ³n trabaje con resultados explÃ­citos, en lugar de encadenar excepciones como mecanismo primario de control.
 
-### Principios de diseño
+### Principios de diseÃ±o
 
-- **Railway-Oriented Programming**: cada operación puede continuar por la vía de éxito o desviarse a la vía de error.
-- **Composición funcional**: los métodos se encadenan de forma fluida y predecible.
+- **Railway-Oriented Programming**: cada operaciÃ³n puede continuar por la vÃ­a de Ã©xito o desviarse a la vÃ­a de error.
+- **ComposiciÃ³n funcional**: los mÃ©todos se encadenan de forma fluida y predecible.
 - **Errores como datos**: el error no se oculta; se transporta, se inspecciona y se transforma.
-- **Asincronía segura**: existe soporte coherente para versiones `Async` y variantes que capturan excepciones.
-- **Extensibilidad**: el sistema está construido por familias de extensiones y tipos reutilizables.
+- **AsincronÃ­a segura**: existe soporte coherente para versiones `Async` y variantes que capturan excepciones.
+- **Extensibilidad**: el sistema estÃ¡ construido por familias de extensiones y tipos reutilizables.
 
 ### Convenciones de nombres
 
-El proyecto sigue una convención uniforme:
+El proyecto sigue una convenciÃ³n uniforme:
 
 - `Bind*`: encadena operaciones que ya devuelven `MlResult`
-- `Map*`: transforma valores puros dentro de un resultado válido
-- `Match*`: ramifica según `valid` o `fail`
+- `Map*`: transforma valores puros dentro de un resultado vÃ¡lido
+- `Match*`: ramifica segÃºn `valid` o `fail`
 - `ExecSelf*`: ejecuta efectos secundarios y devuelve el mismo resultado
 - `Try*`: captura excepciones y las convierte en fallos funcionales
-- `*Async`: versión asíncrona
+- `*Async`: versiÃ³n asÃ­ncrona
 
-Esa convención se repite en todo el ecosistema para que el comportamiento sea predecible.
+Esa convenciÃ³n se repite en todo el ecosistema para que el comportamiento sea predecible.
 
-### Ideas clave del núcleo
+### Ideas clave del nÃºcleo
 
-- `MlResult<T>` es el tipo base de éxito/error.
+- `MlResult<T>` es el tipo base de Ã©xito/error.
 - `MlErrorsDetails` transporta el detalle estructurado del error.
 - `EnsureFp` aporta precondiciones funcionales.
-- Las extensiones de `Types` cubren composición, transformación, coincidencia y cambio de forma del resultado.
+- Las extensiones de `Types` cubren composiciÃ³n, transformaciÃ³n, coincidencia y cambio de forma del resultado.
 
 ---
 
@@ -121,7 +123,7 @@ Esa convención se repite en todo el ecosistema para que el comportamiento sea pr
 | `MoralesLarios.OOFP.HttpClients` | Clientes HTTP tipados y funcionales | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.HttpClients/README.md) |
 | `MoralesLarios.OOFP.EFCore.WebApi` | Base de integración entre EF Core y Web API | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore.WebApi/README.md) |
 
-### Proyectos de pruebas y verificación
+### Proyectos de pruebas y verificaciÃ³n
 
 La solución incluye distintos proyectos de pruebas e integración que sirven como validación viva del ecosistema:
 
@@ -144,14 +146,14 @@ La solución incluye distintos proyectos de pruebas e integración que sirven como
 
 Aunque toda la solución tiene valor por sí misma, **`MoralesLarios.OOFP` es el fundamento común**.
 
-### Qué resuelve
+### QuÃ© resuelve
 
-- abstrae el patrón `Result`
+- abstrae el patrÃ³n `Result`
 - unifica el tratamiento de errores
-- permite composición funcional sin pérdida de contexto
-- proporciona la base para logging, validación, persistencia y web
+- permite composiciÃ³n funcional sin pÃ©rdida de contexto
+- proporciona la base para logging, validaciÃ³n, persistencia y web
 
-### Qué encontrarás en su documentación técnica
+### QuÃ© encontrarÃ¡s en su documentaciÃ³n tÃ©cnica
 
 - [Introducción general](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
 - [Guía por tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md)
@@ -166,7 +168,7 @@ Aunque toda la solución tiene valor por sí misma, **`MoralesLarios.OOFP` es el f
 - [Cambio de retorno](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultChangeReturnResult.md)
 - [Errores y detalles](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultErrors.md)
 
-### Por qué es importante
+### Por quÃ© es importante
 
 Porque el resto de proyectos reutilizan el mismo estilo y semántica:
 
@@ -175,16 +177,16 @@ Porque el resto de proyectos reutilizan el mismo estilo y semántica:
 - `EFCore` encapsula operaciones de base de datos en resultados.
 - `WebServices` expone la lógica de aplicación en la misma semántica.
 - `WebApi` convierte esos resultados en respuestas HTTP.
-- `HttpClients` consume esas respuestas con la misma filosofía.
+- `HttpClients` consume esas respuestas con la misma filosofÃ­a.
 
 ---
 
-## Capas de la solución
+## Capas de la soluciÃ³n
 
 ### Dominio, semántica y tipos seguros
 
 #### `MoralesLarios.OOFP.ValueObjects`
-Librería de value objects tipados para evitar el uso de primitivos sin semántica.
+LibrerÃ­a de value objects tipados para evitar el uso de primitivos sin semÃ¡ntica.
 
 Aporta, entre otros:
 
@@ -192,12 +194,12 @@ Aporta, entre otros:
 - `Key`
 - `Mail`
 - `IntNotNegative`
-- value objects numéricos y de texto
+- value objects numÃ©ricos y de texto
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects/README.md)
 
 #### `MoralesLarios.OOFP.ValueObjects.IO`
-Especialización de value objects para rutas y filesystem.
+EspecializaciÃ³n de value objects para rutas y filesystem.
 
 Aporta:
 
@@ -209,17 +211,17 @@ Aporta:
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects.IO/README.md)
 
 #### `MoralesLarios.OOFP.Validation`
-Base de validación funcional con `MlValidableFp<T>`.
+Base de validaciÃ³n funcional con `MlValidableFp<T>`.
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation/README.md)
 
 #### `MoralesLarios.OOFP.Validation.Dataannotations`
-Extiende la validación funcional con atributos de `DataAnnotations`.
+Extiende la validaciÃ³n funcional con atributos de `DataAnnotations`.
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)
 
 #### `MoralesLarios.OOFP.Validation.FluentValidations`
-Extiende la validación funcional con `FluentValidation`.
+Extiende la validaciÃ³n funcional con `FluentValidation`.
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.FluentValidations/README.md)
 
@@ -238,7 +240,7 @@ Extensiones para registrar trazas sobre `MlResult<T>` sin romper el flujo funcio
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
 
 #### `MoralesLarios.OOFP.Utilities`
-Lectura segura de configuración y connection strings con `MlResult<T>`.
+Lectura segura de configuraciÃ³n y connection strings con `MlResult<T>`.
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Utilities/README.md)
 
@@ -255,22 +257,22 @@ Wrapper funcional sobre `System.IO` para ficheros y directorios.
 Capa de repositorios EF Core en dos estilos:
 
 - funcional (`*Fp`), devolviendo `MlResult<T>`
-- OOP clásico
+- OOP clÃ¡sico
 
 Soporta:
 
 - CRUD completo
-- búsqueda por PK simple o compuesta
-- paginación
+- bÃºsqueda por PK simple o compuesta
+- paginaciÃ³n
 - consultas posicionales
 - registro masivo por DI
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore/README.md)
 
 #### `MoralesLarios.OOFP.EFCore.WebApi`
-Proyecto de integración entre EF Core y Web API.
+Proyecto de integraciÃ³n entre EF Core y Web API.
 
-Actualmente es una base/skeleton para extender con lógica de aplicación específica.
+Actualmente es una base/skeleton para extender con lÃ³gica de aplicaciÃ³n especÃ­fica.
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
 
@@ -288,7 +290,7 @@ Aporta:
 - `GenServiceFp<TEntity, TDto>`
 - `GenServiceFp<TEntity, TRequest, TResponse>`
 - `MlProblemsDetails`
-- extensiones de registro para ciclo de vida clásico y duplex
+- extensiones de registro para ciclo de vida clÃ¡sico y duplex
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebServices/README.md)
 
@@ -311,7 +313,7 @@ Aporta:
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebApi/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers`
-Controladores genéricos ASP.NET Core para CRUD estándar.
+Controladores genÃ©ricos ASP.NET Core para CRUD estÃ¡ndar.
 
 Aporta:
 
@@ -319,20 +321,20 @@ Aporta:
 - soporte duplex request/response
 - soporte para PK compuesta
 - soporte duplex con PK compuesta
-- atributo para documentar parámetros PK en Swagger/OpenAPI
+- atributo para documentar parÃ¡metros PK en Swagger/OpenAPI
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers.Cache`
-Extensión cacheada de los controladores genéricos.
+ExtensiÃ³n cacheada de los controladores genÃ©ricos.
 
 Aporta:
 
-- caché por controlador
-- invalidación automática en escrituras
+- cachÃ© por controlador
+- invalidaciÃ³n automÃ¡tica en escrituras
 - vaciado manual
-- bypass dinámico
-- soporte clásico y duplex
+- bypass dinÃ¡mico
+- soporte clÃ¡sico y duplex
 - soporte para PK compuesta
 
 ?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers.Cache/README.md)
@@ -365,10 +367,10 @@ Aporta:
 3. Persiste con `EFCore`.
 4. Expón la lógica con `WebServices`.
 5. Publica con `WebControllers` y `WebApi`.
-6. Añade `WebControllers.Cache` si necesitas caché.
+6. AÃ±ade `WebControllers.Cache` si necesitas cachÃ©.
 7. Consume desde otro servicio con `HttpClients`.
 8. Registra trazas con `Extensions.Loggers`.
-9. Lee configuración con `Utilities`.
+9. Lee configuraciÃ³n con `Utilities`.
 10. Usa `IO` y `ValueObjects.IO` para operaciones de sistema de archivos.
 
 ### Ejemplo conceptual
@@ -412,13 +414,13 @@ La solución también incluye proyectos de pruebas unitarias e integración que fun
 - `MoralesLarios.OOFP.EFCore.Integration.Tests`
 - `MoralesLarios.OOFP.Extensions.Loggers.Console.Tests`
 
-Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escenarios de integración entre capas.
+Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escenarios de integraciÃ³n entre capas.
 
 ---
 
-## Documentación adicional
+## DocumentaciÃ³n adicional
 
-### Documentación raíz del núcleo OOFP
+### DocumentaciÃ³n raÃ­z del nÃºcleo OOFP
 
 - [Intro general y filosofía técnica](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
 - [Documentación por tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md)
@@ -456,19 +458,19 @@ Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escena
 
 ## Resumen ejecutivo
 
-Si tuviera que describir la solución en una sola frase, sería esta:
+Si tuviera que describir la soluciÃ³n en una sola frase, serÃ­a esta:
 
-> **MoralesLarios.FOOP es un ecosistema .NET funcional para construir dominios, servicios, APIs y clientes con una semántica común basada en `MlResult<T>`.**
+> **MoralesLarios.FOOP es un ecosistema .NET funcional para construir dominios, servicios, APIs y clientes con una semÃ¡ntica comÃºn basada en `MlResult<T>`.**
 
-Y si tuviera que destacar una sola pieza, esa sería:
+Y si tuviera que destacar una sola pieza, esa serÃ­a:
 
-> **`MoralesLarios.OOFP` es el núcleo fundacional; el resto de proyectos amplían su valor hacia validación, persistencia, web, caché, HTTP, IO y configuración.**
+> **`MoralesLarios.OOFP` es el nÃºcleo fundacional; el resto de proyectos amplÃ­an su valor hacia validaciÃ³n, persistencia, web, cachÃ©, HTTP, IO y configuraciÃ³n.**
 
 ---
 
 ## Compatibilidad
 
-La solución está organizada para proyectos objetivo de:
+La soluciÃ³n estÃ¡ organizada para proyectos objetivo de:
 
 - `.NET 9`
 - `.NET 8`
@@ -479,7 +481,7 @@ La solución está organizada para proyectos objetivo de:
 
 La solución está pensada para crecer por capas, manteniendo una misma forma de trabajo en todo el stack.
 
-Si buscas una entrada rápida para entender la librería, empieza por:
+Si buscas una entrada rÃ¡pida para entender la librerÃ­a, empieza por:
 
 1. [Intro general de `MoralesLarios.OOFP`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
 2. [Documentación por tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md)
@@ -492,6 +494,6 @@ Si buscas una entrada rápida para entender la librería, empieza por:
 
 ## Nota final
 
-Este repositorio no es una única librería aislada, sino una **plataforma modular**. Cada proyecto tiene su propio README y, cuando aplica, su propia documentación técnica enlazada desde `__Doc`.
+Este repositorio no es una Ãºnica librerÃ­a aislada, sino una **plataforma modular**. Cada proyecto tiene su propio README y, cuando aplica, su propia documentaciÃ³n tÃ©cnica enlazada desde `__Doc`.
 
-La documentación raíz pretende ser la puerta de entrada oficial al ecosistema completo.
+La documentaciÃ³n raÃ­z pretende ser la puerta de entrada oficial al ecosistema completo.
