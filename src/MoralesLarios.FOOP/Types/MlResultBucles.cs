@@ -82,7 +82,7 @@ public static class MlResultBucles
 
 
     public static MlResult<IEnumerable<TResult>> Projection<T, TResult>(this IEnumerable<T>             source,
-                                                                               Func<T, MlResult<TResult>> completeFuncTransform)
+                                                                             Func<T, MlResult<TResult>> completeFuncTransform)
     {
         var result = source.ToMlResultValid()
                             .Bind(x =>
@@ -99,19 +99,105 @@ public static class MlResultBucles
     }
 
 
+    public static MlResult<IEnumerable<TResult>> Projection<T, TResult>(this IEnumerable<T>                  source,
+                                                                             Func<T, int, MlResult<TResult>> completeFuncTransform)
+    {
+        var result = source.ToMlResultValid()
+                            .Bind(x =>
+                            {
+                                var partialData = x.Select(completeFuncTransform).ToList();
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData)   :
+                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
+
+
+
+
+
     public static Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this IEnumerable<T>             source,
-                                                                                          Func<T, MlResult<TResult>> completeFuncTransform)
+                                                                                        Func<T, MlResult<TResult>> completeFuncTransform)
+        => source.Projection(completeFuncTransform).ToAsync();
+
+    public static Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this IEnumerable<T>                  source,
+                                                                                        Func<T, int, MlResult<TResult>> completeFuncTransform)
         => source.Projection(completeFuncTransform).ToAsync();
 
 
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
-                                                                                                Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+                                                                                              Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
                             .BindAsync(async x =>
                             {
                                 var colec = await x;
 
+                                var partialData = new List<MlResult<TResult>>();
+                                
+                                foreach (var item in colec)
+                                {
+                                    var funcResult = await completeFuncTransformAsync(item);
+                                    partialData.Add(funcResult);
+                                }
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData)   :
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
+
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this Task<IEnumerable<T>>                  sourceAsync,
+                                                                                              Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
+    {
+        var result = await sourceAsync.ToMlResultValidAsync()
+                            .BindAsync(async x =>
+                            {
+                                var colec = await x;
+
+                                var partialData = new List<MlResult<TResult>>();
+                                
+                                foreach (var item in colec.Select((value, index) => (value, index)))
+                                {
+                                    var funcResult = await completeFuncTransformAsync(item.value, item.index);
+                                    partialData.Add(funcResult);
+                                }
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData)   :
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
+
+
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+                                                                                              Func<T, MlResult<TResult>> completeFuncTransform)
+        => await (await sourceAsync).ProjectionAsync(completeFuncTransform);
+
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+                                                                                              Func<T, int, MlResult<TResult>> completeFuncTransform)
+        => await (await sourceAsync).ProjectionAsync(completeFuncTransform);
+
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this IEnumerable<T>                   source,
+                                                                                              Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+    {
+        var result = await source.ToMlResultValidAsync()
+                            .BindAsync(async colec =>
+                            {
                                 var partialData = new List<MlResult<TResult>>();
 
                                 foreach (var item in colec)
@@ -129,23 +215,21 @@ public static class MlResultBucles
         return result;
     }
 
-    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
-                                                                                                Func<T, MlResult<TResult>> completeFuncTransform)
-        => await (await sourceAsync).ProjectionAsync(completeFuncTransform);
-
 
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionAsync<T, TResult>(this IEnumerable<T>                   source,
-                                                                                                Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+                                                                                              Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
                             .BindAsync(async colec =>
                             {
                                 var partialData = new List<MlResult<TResult>>();
-
+                                
+                                int index = 0;
                                 foreach (var item in colec)
                                 {
-                                    var funcResult = await completeFuncTransformAsync(item);
+                                    var funcResult = await completeFuncTransformAsync(item, index);
                                     partialData.Add(funcResult);
+                                    index++;
                                 }
 
                                 var result = partialData.Any(x => x.IsFail) ?
@@ -238,7 +322,7 @@ public static class MlResultBucles
     //}
 
     public static MlResult<IEnumerable<TResult>> ProjectionWhile<T, TResult>(this IEnumerable<T>             source,
-                                                                                    Func<T, MlResult<TResult>> completeFuncTransform)
+                                                                                  Func<T, MlResult<TResult>> completeFuncTransform)
     {
         var result = source.ToMlResultValid()
                             .Bind(x =>
@@ -261,12 +345,47 @@ public static class MlResultBucles
         return result;
     }
 
+
+    public static MlResult<IEnumerable<TResult>> ProjectionWhile<T, TResult>(this IEnumerable<T>                  source,
+                                                                                  Func<T, int, MlResult<TResult>> completeFuncTransform)
+    {
+        var result = source.ToMlResultValid()
+                            .Bind(x =>
+                            {
+                                List<MlResult<TResult>> partialData = [];
+
+                                int index = 0;
+                                foreach (var item in x)
+                                {
+                                    var funcResult = completeFuncTransform(item, index);
+                                    partialData.Add(funcResult);
+                                    if (funcResult.IsFail) break;
+                                    index++;
+                                }
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData) :
+                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
+
+
     public static Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this IEnumerable<T>             source,
-                                                                                               Func<T, MlResult<TResult>> completeFuncTransform)
+                                                                                             Func<T, MlResult<TResult>> completeFuncTransform)
         => source.ProjectionWhile(completeFuncTransform).ToAsync();
 
+
+    public static Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this IEnumerable<T>             source,
+                                                                                             Func<T, int, MlResult<TResult>> completeFuncTransform)
+        => source.ProjectionWhile(completeFuncTransform).ToAsync();
+
+
+
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
-                                                                                                     Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+                                                                                                   Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
                             .BindAsync(async x =>
@@ -291,12 +410,49 @@ public static class MlResultBucles
         return result;
     }
 
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this Task<IEnumerable<T>>                  sourceAsync,
+                                                                                                   Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
+    {
+        var result = await sourceAsync.ToMlResultValidAsync()
+                            .BindAsync(async x =>
+                            {
+                                var colec = await x;
+
+                                var partialData = new List<MlResult<TResult>>();
+
+                                int index = 0;
+
+                                foreach (var item in colec)
+                                {
+                                    var funcResult = await completeFuncTransformAsync(item, index);
+                                    partialData.Add(funcResult);
+                                    if (funcResult.IsFail) break;
+                                    index++;
+                                }
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData) :
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
+
+
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
-                                                                                                     Func<T, MlResult<TResult>> completeFuncTransform)
+                                                                                                   Func<T, MlResult<TResult>> completeFuncTransform)
         => await (await sourceAsync).ProjectionWhileAsync(completeFuncTransform);
 
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+                                                                                                   Func<T, int, MlResult<TResult>> completeFuncTransform)
+        => await (await sourceAsync).ProjectionWhileAsync(completeFuncTransform);
+
+
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this IEnumerable<T>                   source,
-                                                                                                     Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+                                                                                                   Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
                             .BindAsync(async colec =>
@@ -318,6 +474,35 @@ public static class MlResultBucles
                             });
         return result;
     }
+
+
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionWhileAsync<T, TResult>(this IEnumerable<T>                   source,
+                                                                                                   Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
+    {
+        var result = await source.ToMlResultValidAsync()
+                            .BindAsync(async colec =>
+                            {
+                                var partialData = new List<MlResult<TResult>>();
+                                int index = 0;  
+
+                                foreach (var item in colec)
+                                {
+                                    var funcResult = await completeFuncTransformAsync(item, index);
+                                    partialData.Add(funcResult);
+                                    if (funcResult.IsFail) break;
+                                    index++;
+                                }
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData) :
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
+
+
 
 
     //public static async Task<MlResult<IEnumerable<T>>> ProjectionParallelAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
@@ -365,7 +550,7 @@ public static class MlResultBucles
     //}
 
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
-                                                                                                        Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+                                                                                                      Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await sourceAsync.ToMlResultValidAsync()
                             .BindAsync(async x =>
@@ -387,9 +572,32 @@ public static class MlResultBucles
         return result;
     }
 
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync<T, TResult>(this Task<IEnumerable<T>>                  sourceAsync,
+                                                                                                      Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
+    {
+        var result = await sourceAsync.ToMlResultValidAsync()
+                            .BindAsync(async x =>
+                            {
+                                var colec = await x;
+
+                                List<Task<MlResult<TResult>>> tasks = colec.Select((item, index) => completeFuncTransformAsync(item, index)).ToList();
+
+                                await Task.WhenAll(tasks);
+
+                                List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData) :
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
+
 
     public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync<T, TResult>(this IEnumerable<T>                   source,
-                                                                                                        Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+                                                                                                      Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
         var result = await source.ToMlResultValidAsync()
                             .BindAsync(async colec =>
@@ -411,7 +619,27 @@ public static class MlResultBucles
     }
 
 
+    public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync<T, TResult>(this IEnumerable<T>                        source,
+                                                                                                      Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
+    {
+        var result = await source.ToMlResultValidAsync()
+                            .BindAsync(async colec =>
+                            {
 
+                                List<Task<MlResult<TResult>>> tasks = colec.Select((item, index) => completeFuncTransformAsync(item, index)).ToList();
+
+                                await Task.WhenAll(tasks);
+
+                                List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
+
+                                var result = partialData.Any(x => x.IsFail) ?
+                                             FusionFailErros(partialData) :
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+
+                                return result;
+                            });
+        return result;
+    }
 
 
 
@@ -431,6 +659,7 @@ public static class MlResultBucles
 
         return result;
     }
+
 
     public static Task<MlResult<IEnumerable<T>>> FusionFailErrosAsync<T>(this IEnumerable<MlResult<T>> source)
         => source.FusionFailErros().ToAsync();
