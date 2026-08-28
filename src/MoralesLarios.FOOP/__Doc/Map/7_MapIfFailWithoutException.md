@@ -1,1162 +1,450 @@
-﻿# MlResultActionsMapIfFailWithoutException - Operaciones de Mapeo Condicional Sin Excepciones
+﻿# MapIfFailWithoutException — Recuperarse solo de los fallos de negocio
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de la Clase](#análisis-de-la-clase)
-3. [Métodos MapIfFailWithoutException](#métodos-mapiffailwithoutexception)
-4. [Métodos TryMapIfFailWithoutException](#métodos-trymapiffailwithoutexception)
-5. [Variantes de Transformación](#variantes-de-transformación)
-6. [Variantes Asíncronas](#variantes-asíncronas)
-7. [Ejemplos Prácticos](#ejemplos-prácticos)
-8. [Mejores Prácticas](#mejores-prácticas)
+2. [El problema que resuelve](#el-problema-que-resuelve)
+3. [La regla de oro: si hay excepción, no hay recuperación](#la-regla-de-oro-si-hay-excepción-no-hay-recuperación)
+4. [Espejo exacto de `MapIfFailWithException`](#espejo-exacto-de-mapiffailwithexception)
+5. [Las dos formas de `MapIfFailWithoutException`](#las-dos-formas-de-mapiffailwithoutexception)
+6. [Firmas reales e implementación](#firmas-reales-e-implementación)
+7. [Variantes asíncronas](#variantes-asíncronas)
+8. [`TryMapIfFailWithoutException` — cuando la recuperación puede lanzar](#trymapiffailwithoutexception--cuando-la-recuperación-puede-lanzar)
+9. [⚠️ No existe la subfamilia `...Error`](#️-no-existe-la-subfamilia-error)
+10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+11. [Ejemplos Prácticos](#ejemplos-prácticos)
+12. [Mejores Prácticas](#mejores-prácticas)
+13. [Resumen](#resumen)
+14. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-Los métodos **`MapIfFailWithoutException`** proporcionan capacidades especializadas para el **mapeo condicional** de resultados fallidos que **no contienen excepciones**. Estos métodos permiten aplicar transformaciones de recuperación únicamente cuando el error original no fue causado por una excepción, proporcionando un control granular sobre la estrategia de recuperación.
+`MapIfFailWithoutException` es un `MapIfFail` **selectivo**: solo recupera el resultado cuando el fallo **no** lleva una excepción adjunta en `Details["Ex"]`.
 
-### Propósito Principal
+La idea de fondo es una distinción que aparece constantemente en aplicaciones reales:
 
-- **Recuperación Selectiva**: Aplicar lógica de recuperación solo para errores "controlados" (sin excepciones)
-- **Preservación de Excepciones**: Mantener intactos los errores causados por excepciones para escalamiento apropiado
-- **Transformación de Tipos**: Convertir entre diferentes tipos mientras se respeta la naturaleza del error
-- **Mapeo Condicional**: Ejecutar funciones diferentes según el estado del resultado y la ausencia de excepciones
+| Tipo de fallo | ¿Lleva excepción en `Details["Ex"]`? | ¿Se puede recuperar de forma segura? |
+|---|---|---|
+| **Fallo de negocio / validación** (`"El NIF no es válido"`, `"Saldo insuficiente"`) | ❌ No | ✅ Sí: es una decisión esperada del dominio |
+| **Fallo técnico** (`SqlException`, `TimeoutException`, `IOException`) | ✅ Sí | ⚠️ Normalmente no: hay que propagarlo y que alguien lo vea |
 
-### Diferencia Clave con Map
+`MapIfFailWithoutException` implementa exactamente esa política:
 
-- **`Map`**: Transforma valores válidos únicamente
-- **`MapIfFailWithoutException`**: Transforma errores sin excepción, preserva errores con excepción y opcionalmente transforma valores válidos
+```csharp
+// ❌ MapIfFail recupera TODO: se traga también el timeout de la base de datos
+var resultado = ObtenerDescuento(clienteId)
+                    .MapIfFail(_ => 0m);          // ¿era un descuento inexistente o una BD caída?
+
+// ✅ MapIfFailWithoutException solo recupera lo que es decisión de negocio
+var resultado = ObtenerDescuento(clienteId)
+                    .MapIfFailWithoutException(_ => 0m);   // el SqlException sigue subiendo intacto
+```
+
+> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
 
 ---
 
-## Análisis de la Clase
+## El problema que resuelve
 
-### Estructura y Filosofía
-
-Esta clase implementa cuatro patrones principales:
-
-1. **Mapeo de Recuperación Selectiva**: `MapIfFailWithoutException<T>`
-2. **Mapeo Seguro con Captura de Excepciones**: `TryMapIfFailWithoutException<T>`
-3. **Transformación de Tipos Condicional**: `MapIfFailWithoutException<T, TReturn>`
-4. **Mapeo Dual**: Funciones separadas para casos válidos y fallidos sin excepción
-
-### Características Principales
-
-1. **Detección de Excepciones**: Utiliza `GetDetailException()` para determinar si un error contiene excepciones
-2. **Preservación de Estado**: Los errores con excepciones se mantienen inalterados
-3. **Flexibilidad de Transformación**: Soporte para cambio de tipos con funciones separadas
-4. **Manejo Seguro**: Versiones `Try*` para captura de excepciones en las funciones de mapeo
-
----
-
-## Métodos MapIfFailWithoutException
-
-### `MapIfFailWithoutException<T>()`
-
-**Propósito**: Transforma un resultado fallido sin excepción en un resultado válido, preservando errores con excepción
+Los valores por defecto son útiles, pero **peligrosos si se aplican sin filtro**. Considera este código:
 
 ```csharp
-public static MlResult<T> MapIfFailWithoutException<T>(
-    this MlResult<T> source,
-    Func<MlErrorsDetails, T> func)
+// ❌ El bug silencioso más habitual del patrón railway
+public async Task<decimal> ObtenerLimiteCreditoAsync(int clienteId)
+    => (await _repo.ObtenerLimiteAsync(clienteId))
+            .MapIfFail(_ => 0m)                      // "si no hay límite, cero"
+            .Match(valid: x => x, fail: _ => 0m);
 ```
 
-**Parámetros**:
-- `source`: El resultado fuente a evaluar
-- `func`: Función que convierte detalles de error en un valor válido
+Si la base de datos está caída, `ObtenerLimiteAsync` devuelve un fallo **con** `SqlException` en los detalles… y el método responde `0m` como si el cliente simplemente no tuviera límite. El sistema sigue funcionando, rechaza operaciones legítimas y **nadie se entera**: no hay log de error, no hay alerta, no hay 503.
 
-**Comportamiento**:
-- Si `source` es válido: Retorna `source` sin cambios
-- Si `source` es fallido sin excepción: Ejecuta `func` y retorna el resultado como válido
-- Si `source` es fallido con excepción: Retorna `source` sin cambios (preserva la excepción)
+Con `MapIfFailWithoutException` la política es explícita:
 
-**Ejemplo Básico**:
 ```csharp
-var result = GetUserFromCache(userId)
-    .MapIfFailWithoutException(errors => 
-        new User { Id = userId, Name = "Guest User" }); // Usuario por defecto
-
-// Si el cache falla por timeout (sin excepción): retorna usuario por defecto
-// Si el cache falla por excepción de red: preserva el error original
-// Si hay usuario en cache: retorna el usuario original
-```
-
-### Versiones Asíncronas
-
-#### `MapIfFailWithoutExceptionAsync` - Función Asíncrona
-```csharp
-public static async Task<MlResult<T>> MapIfFailWithoutExceptionAsync<T>(
-    this MlResult<T> source,
-    Func<MlErrorsDetails, Task<T>> funcAsync)
-
-public static async Task<MlResult<T>> MapIfFailWithoutExceptionAsync<T>(
-    this Task<MlResult<T>> sourceAsync,
-    Func<MlErrorsDetails, Task<T>> funcAsync)
-
-public static async Task<MlResult<T>> MapIfFailWithoutExceptionAsync<T>(
-    this Task<MlResult<T>> sourceAsync,
-    Func<MlErrorsDetails, T> func)
-```
-
-**Ejemplo Asíncrono**:
-```csharp
-var result = await GetDataFromPrimarySourceAsync(request)
-    .MapIfFailWithoutExceptionAsync(async errors => 
-        await GetDataFromFallbackSourceAsync(request));
-
-// Solo usa fallback si el error primario no fue una excepción
+// ✅ Solo el "no tiene límite configurado" se convierte en 0
+public async Task<MlResult<decimal>> ObtenerLimiteCreditoAsync(int clienteId)
+    => await _repo.ObtenerLimiteAsync(clienteId)
+                  .MapIfFailWithoutExceptionAsync(_ => 0m.ToAsync());
+    // Si hubo SqlException → el MlResult sigue siendo Fail y el llamante decide (503, retry, etc.)
 ```
 
 ---
 
-## Métodos TryMapIfFailWithoutException
+## La regla de oro: si hay excepción, no hay recuperación
 
-### `TryMapIfFailWithoutException<T>()` - Mapeo Seguro
+Tres escenarios, tres comportamientos:
 
-**Propósito**: Versión segura que captura excepciones durante la transformación
+| Estado de entrada | ¿Se ejecuta el delegado? | Resultado |
+|---|---|---|
+| **Valid** | ❌ No | El valor pasa intacto (o se transforma con `funcValid` en la Forma B) |
+| **Fail sin excepción** en `Details["Ex"]` | ✅ **Sí** | Se recupera: `Valid(func(errorsDetails))` |
+| **Fail con excepción** en `Details["Ex"]` | ❌ No | **El mismo `Fail` sale intacto**, con todos sus errores y detalles |
 
-```csharp
-public static MlResult<T> TryMapIfFailWithoutException<T>(
-    this MlResult<T> source,
-    Func<MlErrorsDetails, T> func,
-    Func<Exception, string> errorMessageBuilder)
-
-public static MlResult<T> TryMapIfFailWithoutException<T>(
-    this MlResult<T> source,
-    Func<MlErrorsDetails, T> func,
-    string errorMessage = null!)
-```
-
-**Parámetros**:
-- `source`: El resultado fuente
-- `func`: Función de transformación que puede lanzar excepciones
-- `errorMessageBuilder`: Constructor de mensaje de error para excepciones capturadas
-- `errorMessage`: Mensaje de error fijo para excepciones
-
-**Comportamiento**:
-- Si `func` lanza una excepción: Captura la excepción y retorna un error con el mensaje construido
-- Caso contrario: Comportamiento idéntico a `MapIfFailWithoutException`
-
-**Ejemplo con Manejo de Excepciones**:
-```csharp
-var result = LoadConfiguration(configPath)
-    .TryMapIfFailWithoutException(
-        errors => ParseDefaultConfiguration(), // Puede lanzar excepción
-        ex => $"Failed to load default configuration: {ex.Message}"
-    );
-
-// Si ParseDefaultConfiguration() falla, se captura y convierte en error
-```
-
-### Versiones Asíncronas de TryMap
+La comprobación se hace con `GetDetailException()`, que devuelve `MlResult<Exception>`:
 
 ```csharp
-public static async Task<MlResult<T>> TryMapIfFailWithoutExceptionAsync<T>(
-    this MlResult<T> source,
-    Func<MlErrorsDetails, Task<T>> funcAsync,
-    Func<Exception, string> errorMessageBuilder)
-
-// Múltiples sobrecargas para diferentes combinaciones de async/sync
+errorsDetails.GetDetailException().Match(
+    fail : _ => /* NO hay excepción → recuperamos */,
+    valid: _ => /* SÍ hay excepción → devolvemos el fallo original */)
 ```
+
+Fíjate en la inversión: aquí la rama **`fail`** de `GetDetailException()` (es decir, "no encontré ninguna excepción") es la que dispara la recuperación. Es lo contrario de `MapIfFailWithException`.
 
 ---
 
-## Variantes de Transformación
+## Espejo exacto de `MapIfFailWithException`
 
-### `MapIfFailWithoutException<T, TReturn>()` - Mapeo con Cambio de Tipo
-
-**Propósito**: Permite transformar tanto valores válidos como errores sin excepción, cambiando el tipo del resultado
+Ambos métodos son complementarios y cubren, juntos, el 100 % de los fallos:
 
 ```csharp
-public static MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(
-    this MlResult<T> source,
-    Func<T, TReturn> funcValid,
-    Func<MlErrorsDetails, TReturn> funcFail)
+// Los dos se pueden apilar para dar respuestas distintas a cada clase de fallo
+var respuesta = await ProcesarPedidoAsync(dto)
+                        .MapIfFailWithoutExceptionAsync(err => Rechazo.PorNegocio(err.ToErrorsMessages()).ToAsync())
+                        .MapIfFailWithExceptionAsync(ex   => Rechazo.PorAveria(ex.GetType().Name).ToAsync());
 ```
 
-**Parámetros**:
-- `source`: El resultado fuente de tipo `T`
-- `funcValid`: Función para transformar valores válidos de `T` a `TReturn`
-- `funcFail`: Función para transformar errores sin excepción a `TReturn`
+| | `MapIfFailWithException` | `MapIfFailWithoutException` |
+|---|---|---|
+| Recupera cuando… | **sí** hay excepción en `Details["Ex"]` | **no** hay excepción en `Details["Ex"]` |
+| Firma del delegado de fallo | `Func<Exception, T>` (recibe la excepción) | `Func<MlErrorsDetails, T>` (recibe los errores) |
+| Si no aplica | devuelve el `Fail` original intacto | devuelve el `Fail` original intacto |
+| Filtrado por tipo (`TException`) | ✅ Sí | ❌ No (no hay excepción que filtrar) |
+| Subfamilia `...Error` | ✅ Sí (`MapIfFailWithExceptionError`) | ❌ No (ya recibe `MlErrorsDetails`) |
+| Uso típico | fallback ante averías técnicas | valores por defecto de negocio |
 
-**Comportamiento**:
-- Si `source` es válido: Ejecuta `funcValid` y retorna el resultado como válido
-- Si `source` es fallido sin excepción: Ejecuta `funcFail` y retorna el resultado como válido
-- Si `source` es fallido con excepción: Retorna el error original (sin cambio de tipo)
-
-**Ejemplo de Transformación de Tipos**:
-```csharp
-// Transformar MlResult<User> a MlResult<UserDto>
-var userDto = GetUser(userId)
-    .MapIfFailWithoutException(
-        validUser => new UserDto 
-        { 
-            Id = validUser.Id, 
-            Name = validUser.FullName 
-        },
-        errorDetails => new UserDto 
-        { 
-            Id = userId, 
-            Name = "Unknown User",
-            IsDefault = true 
-        }
-    );
-
-// Si GetUser es exitoso: convierte User a UserDto
-// Si GetUser falla sin excepción: crea UserDto por defecto
-// Si GetUser falla con excepción: preserva el error original
-```
-
-### Versiones Asíncronas de Transformación
-
-#### Todas las Combinaciones de Async
-```csharp
-// Ambas funciones asíncronas
-public static async Task<MlResult<TReturn>> MapIfFailWithoutExceptionAsync<T, TReturn>(
-    this MlResult<T> source,
-    Func<T, Task<TReturn>> funcValidAsync,
-    Func<MlErrorsDetails, Task<TReturn>> funcFailAsync)
-
-// Fuente asíncrona con funciones asíncronas
-public static async Task<MlResult<TReturn>> MapIfFailWithoutExceptionAsync<T, TReturn>(
-    this Task<MlResult<T>> sourceAsync,
-    Func<T, Task<TReturn>> funcValidAsync,
-    Func<MlErrorsDetails, Task<TReturn>> funcFailAsync)
-
-// Combinaciones mixtas de sync/async para funcValid y funcFail
-// ... (múltiples sobrecargas)
-```
-
-### Versiones TryMap con Transformación
-
-```csharp
-public static MlResult<TReturn> TryMapIfFailWithoutException<T, TReturn>(
-    this MlResult<T> source,
-    Func<T, TReturn> funcValid,
-    Func<MlErrorsDetails, TReturn> funcFail,
-    Func<Exception, string> errorMessageBuilder)
-```
-
-**Comportamiento**: Versión segura de la transformación que captura excepciones en ambas funciones
+📌 Detalle importante: como el delegado de `MapIfFailWithoutException` ya recibe `MlErrorsDetails`, **no necesita** una subfamilia `...Error` como sí ocurría en `MapIfFailWithException` (donde el delegado solo recibía la `Exception` y hacía falta otra variante para acceder a los errores completos).
 
 ---
 
-## Variantes Asíncronas
+## Las dos formas de `MapIfFailWithoutException`
 
-### Matriz Completa de Combinaciones
+### Forma A — recuperar sin cambiar de tipo
 
-| Operación | Fuente | Función | Método |
-|-----------|---------|---------|---------|
-| **MapIfFail** | `MlResult<T>` | `MlErrorsDetails → T` | `MapIfFailWithoutException` |
-| **MapIfFail** | `MlResult<T>` | `MlErrorsDetails → Task<T>` | `MapIfFailWithoutExceptionAsync` |
-| **MapIfFail** | `Task<MlResult<T>>` | `MlErrorsDetails → Task<T>` | `MapIfFailWithoutExceptionAsync` |
-| **MapIfFail** | `Task<MlResult<T>>` | `MlErrorsDetails → T` | `MapIfFailWithoutExceptionAsync` |
-| **MapDual** | `MlResult<T>` | `T → U`, `MlErrorsDetails → U` | `MapIfFailWithoutException<T,U>` |
-| **MapDual** | `MlResult<T>` | `T → Task<U>`, `MlErrorsDetails → Task<U>` | `MapIfFailWithoutExceptionAsync<T,U>` |
+```csharp
+MlResult<T> MapIfFailWithoutException<T>(this MlResult<T> source, Func<MlErrorsDetails, T> func)
+```
 
-Todas las variantes tienen sus correspondientes versiones `Try*` para manejo seguro de excepciones.
+La rama válida **no se toca**. Solo se define qué hacer con el fallo de negocio. Es la forma **apilable**: puedes encadenarla con más operaciones `MlResult<T>` porque el tipo no cambia.
+
+```csharp
+MlResult<Tarifa> tarifa = BuscarTarifaCliente(clienteId)
+                              .MapIfFailWithoutException(_ => Tarifa.General);
+```
+
+### Forma B — transformar ambas ramas a un tipo común
+
+```csharp
+MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(this MlResult<T>               source,
+                                                            Func<T, TReturn>           funcValid,
+                                                            Func<MlErrorsDetails, TReturn> funcFail)
+```
+
+Convergencia de tipos: el éxito se proyecta con `funcValid` y el fallo de negocio con `funcFail`, ambos hacia `TReturn`. Ideal para construir un DTO de respuesta.
+
+```csharp
+MlResult<RespuestaDto> respuesta =
+    ValidarSolicitud(dto)
+        .MapIfFailWithoutException(
+            funcValid: s   => RespuestaDto.Aceptada(s.Id),
+            funcFail : err => RespuestaDto.Rechazada(err.ToErrorsMessages()));
+    // Si el fallo traía excepción, `respuesta` sigue siendo Fail: no se fabrica un DTO falso
+```
+
+⚠️ Ojo con la Forma B: **si el fallo trae excepción, `funcValid` tampoco se ejecuta** (obviamente) y el resultado es el `Fail` original convertido a `MlResult<TReturn>`. Es decir, la conversión de tipo se produce, pero sigue siendo un fallo.
+
+---
+
+## Firmas reales e implementación
+
+### Forma A (código fuente literal)
+
+```csharp
+public static MlResult<T> MapIfFailWithoutException<T>(this MlResult<T>              source,
+                                                            Func<MlErrorsDetails, T> func)
+    => source.Match(
+                fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                                            fail : _ => func(errorsDetails).ToMlResultValid<T>(),
+                                            valid: _ => errorsDetails),
+                valid: x => x);
+```
+
+Tres puntos que explican todo el comportamiento:
+
+1. `valid: x => x` — el valor válido se devuelve sin tocar (conversión implícita `T → MlResult<T>`).
+2. `fail: _ => func(errorsDetails).ToMlResultValid<T>()` — **no hay excepción**: se llama al delegado y su resultado se envuelve como `Valid`. Los errores originales **se descartan** (la recuperación es total).
+3. `valid: _ => errorsDetails` — **sí hay excepción**: se devuelve `errorsDetails` tal cual, que por conversión implícita vuelve a ser un `MlResult<T>` en fallo con **todos** sus errores y detalles intactos.
+
+### Forma B (código fuente literal)
+
+```csharp
+public static MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(this MlResult<T>                    source,
+                                                                           Func<T              , TReturn> funcValid,
+                                                                           Func<MlErrorsDetails, TReturn> funcFail)
+    => source.Match(
+                fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                                            fail : _ => funcFail(errorsDetails).ToMlResultValid(),
+                                            valid: _ => errorsDetails),
+                valid: x => funcValid(x).ToMlResultValid());
+```
+
+Idéntica estructura; la única diferencia es que la rama válida pasa por `funcValid` y el tipo de salida es `TReturn`.
+
+📌 Como los delegados devuelven **valores desnudos** (`T` / `TReturn`, no `MlResult<...>`), esto es `Map` y no `Bind`. Si tu recuperación puede a su vez fallar, necesitas [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md).
+
+---
+
+## Variantes asíncronas
+
+Las sobrecargas asíncronas combinan dos ejes independientes:
+
+| Origen | Delegado(s) | Método |
+|---|---|---|
+| `MlResult<T>` | `Func<MlErrorsDetails, Task<T>>` | `MapIfFailWithoutExceptionAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorsDetails, Task<T>>` | `MapIfFailWithoutExceptionAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorsDetails, T>` (síncrono) | `MapIfFailWithoutExceptionAsync` |
+
+La Forma B replica el mismo esquema con el par `(funcValidAsync, funcFailAsync)`, incluyendo combinaciones mixtas (uno síncrono y otro asíncrono).
+
+```csharp
+// Origen asíncrono + recuperación asíncrona
+var config = await _api.LeerConfigRemotaAsync(entorno)
+                       .MapIfFailWithoutExceptionAsync(async err =>
+                       {
+                           await _auditoria.RegistrarAsync($"Config no definida: {err.ToErrorsMessages()}");
+                           return Configuracion.PorDefecto;
+                       });
+
+// Origen asíncrono + recuperación síncrona (lo más frecuente)
+var config = await _api.LeerConfigRemotaAsync(entorno)
+                       .MapIfFailWithoutExceptionAsync(_ => Configuracion.PorDefecto);
+```
+
+📌 Internamente usan `MatchAsync` y `GetDetailExceptionAsync()`, la versión asíncrona de la comprobación. Si tienes un valor síncrono y la sobrecarga exige `Task<T>`, envuélvelo con `.ToAsync()`.
+
+---
+
+## `TryMapIfFailWithoutException` — cuando la recuperación puede lanzar
+
+Si el delegado de recuperación puede lanzar (leer un fichero de respaldo, deserializar, calcular algo frágil), usa la variante protegida:
+
+```csharp
+public static MlResult<T> TryMapIfFailWithoutException<T>(this MlResult<T>              source,
+                                                               Func<MlErrorsDetails, T> func,
+                                                               Func<Exception, string>  errorMessageBuilder)
+    => source.Match(
+                fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                                            fail : _ => func.TryToMlResult(errorsDetails, errorMessageBuilder),
+                                            valid: _ => errorsDetails),
+                valid: x => x);
+
+public static MlResult<T> TryMapIfFailWithoutException<T>(this MlResult<T>              source,
+                                                               Func<MlErrorsDetails, T> func,
+                                                               string                   errorMessage = null!)
+    => source.TryMapIfFailWithoutException(func, _ => errorMessage!);
+```
+
+Dos formas de expresar el mensaje de error: un `string` fijo o un `Func<Exception, string>` que puede inspeccionar la excepción capturada.
+
+```csharp
+var plantilla = ObtenerPlantillaBD(codigo)
+                    .TryMapIfFailWithoutException(
+                        _  => File.ReadAllText(RutaPlantillaLocal(codigo)),
+                        ex => $"La plantilla '{codigo}' no está en BD y el respaldo local falló: {ex.Message}");
+```
+
+Si `func` lanza, `TryToMlResult` captura la excepción, la guarda en `Details["Ex"]` y devuelve un `Fail` nuevo con el mensaje construido.
+
+> ⚠️ **Diferencia con `TryMapIfFailWithException`**: aquella variante llama a `MergeErrorsDetailsIfFail(source)` para **fusionar** los errores originales con el nuevo. `TryMapIfFailWithoutException` **no lo hace**: si la recuperación lanza, el fallo resultante contiene únicamente el error de la excepción capturada y **se pierde el mensaje de negocio original**. Si necesitas conservar ambos, añade el merge tú mismo:
+>
+> ```csharp
+> var r = origen.TryMapIfFailWithoutException(func, "Respaldo fallido")
+>               .MergeErrorsDetailsIfFail(origen);   // conserva el error de negocio inicial
+> ```
+
+Existen también las variantes `TryMapIfFailWithoutExceptionAsync` para todas las combinaciones de origen y delegado, en ambas formas (A y B).
+
+---
+
+## ⚠️ No existe la subfamilia `...Error`
+
+En `MapIfFailWithException` hay una subfamilia `MapIfFailWithExceptionError` cuyo delegado recibe `MlErrorsDetails` en vez de la `Exception`. **Aquí no existe ningún `MapIfFailWithoutExceptionError`** (verificado en el código fuente) y es lógico: el delegado de `MapIfFailWithoutException` **ya recibe** `MlErrorsDetails`, así que no hace falta otra variante para acceder a los errores.
+
+Tampoco existen sobrecargas con `TException`: no tiene sentido filtrar por tipo de excepción en un método que precisamente solo actúa **cuando no hay excepción**.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Método |
+|---|---|
+| Un valor por defecto para **cualquier** fallo | [`MapIfFail`](4_MapIfFail.md) |
+| Un valor por defecto **solo para fallos de negocio** (sin excepción) | **`MapIfFailWithoutException`** |
+| Un fallback **solo ante averías técnicas** (con excepción) | [`MapIfFailWithException`](6_MapIfFailWithException.md) |
+| Recuperación que **también puede fallar** (devuelve `MlResult`) | [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md) |
+| Recuperación que puede **lanzar** una excepción | `TryMapIfFailWithoutException` |
+| Convertir éxito y fallo de negocio a un **tipo común** | Forma B (`funcValid` + `funcFail`) |
+| Ejecutar algo **siempre**, ignorando el estado | [`MapAlways`](8_MapAlways.md) |
+| Solo **registrar** el fallo sin alterar el resultado | [`ExecSelfIfFailWithoutException`](../ExecSelf/6_ExecSelfIfFailWithoutException.md) |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Cache con Fallback Selectivo
+### Ejemplo 1: Preferencias de usuario con valores por defecto seguros
+
+El caso canónico. "Si el usuario no ha configurado sus preferencias, usa las predeterminadas" — pero **no** si la base de datos está caída, porque entonces sobrescribiríamos las preferencias reales del usuario en la siguiente escritura.
 
 ```csharp
-public class SmartCacheService
-{
-    private readonly IPrimaryCache _primaryCache;
-    private readonly ISecondaryCache _secondaryCache;
-    private readonly IDataSource _dataSource;
-    private readonly ILogger _logger;
-    
-    public SmartCacheService(
-        IPrimaryCache primaryCache,
-        ISecondaryCache secondaryCache,
-        IDataSource dataSource,
-        ILogger logger)
-    {
-        _primaryCache = primaryCache;
-        _secondaryCache = secondaryCache;
-        _dataSource = dataSource;
-        _logger = logger;
-    }
-    
-    public async Task<MlResult<CachedData>> GetDataWithIntelligentFallbackAsync(string key)
-    {
-        return await GetFromPrimaryCacheAsync(key)
-            .MapIfFailWithoutExceptionAsync(async primaryErrors => 
-            {
-                // Solo intentar cache secundario si el primario falló sin excepción
-                _logger.LogInformation($"Primary cache miss for key {key}, trying secondary cache");
-                
-                var secondaryResult = await GetFromSecondaryCacheAsync(key);
-                if (secondaryResult.IsValid)
-                {
-                    // Actualizar cache primario en background
-                    _ = Task.Run(async () => 
-                    {
-                        try 
-                        { 
-                            await _primaryCache.SetAsync(key, secondaryResult.Value); 
-                        }
-                        catch (Exception ex) 
-                        { 
-                            _logger.LogWarning($"Failed to update primary cache: {ex.Message}"); 
-                        }
-                    });
-                    
-                    return secondaryResult.Value;
-                }
-                
-                // Si cache secundario también falla, cargar desde fuente de datos
-                _logger.LogInformation($"Secondary cache also failed for key {key}, loading from data source");
-                var sourceData = await LoadFromDataSourceAsync(key);
-                
-                // Actualizar ambos caches en background
-                _ = Task.Run(async () => await UpdateCachesAsync(key, sourceData));
-                
-                return sourceData;
-            });
-    }
-    
-    private async Task<MlResult<CachedData>> GetFromPrimaryCacheAsync(string key)
-    {
-        try
-        {
-            var data = await _primaryCache.GetAsync<CachedData>(key);
-            
-            if (data == null)
-            {
-                // Cache miss sin excepción - candidato para fallback
-                return MlResult<CachedData>.Fail($"Data not found in primary cache for key: {key}");
-            }
-            
-            if (data.IsExpired)
-            {
-                // Datos expirados sin excepción - candidato para fallback
-                return MlResult<CachedData>.Fail($"Data expired in primary cache for key: {key}");
-            }
-            
-            return MlResult<CachedData>.Valid(data);
-        }
-        catch (CacheConnectionException ex)
-        {
-            // Excepción de conexión - NO debe usar fallback, escalar el error
-            return MlResult<CachedData>.FailWithException(
-                $"Primary cache connection failed for key {key}", ex);
-        }
-        catch (CacheTimeoutException ex)
-        {
-            // Timeout - NO debe usar fallback, puede indicar problema sistémico
-            return MlResult<CachedData>.FailWithException(
-                $"Primary cache timeout for key {key}", ex);
-        }
-    }
-    
-    private async Task<MlResult<CachedData>> GetFromSecondaryCacheAsync(string key)
-    {
-        try
-        {
-            var data = await _secondaryCache.GetAsync<CachedData>(key);
-            
-            return data != null && !data.IsExpired
-                ? MlResult<CachedData>.Valid(data)
-                : MlResult<CachedData>.Fail($"Data not found or expired in secondary cache for key: {key}");
-        }
-        catch (Exception ex)
-        {
-            return MlResult<CachedData>.FailWithException(
-                $"Secondary cache error for key {key}", ex);
-        }
-    }
-    
-    private async Task<CachedData> LoadFromDataSourceAsync(string key)
-    {
-        var data = await _dataSource.LoadAsync(key);
-        return new CachedData
-        {
-            Key = key,
-            Data = data,
-            CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
-    }
-    
-    private async Task UpdateCachesAsync(string key, CachedData data)
-    {
-        try
-        {
-            await Task.WhenAll(
-                _primaryCache.SetAsync(key, data),
-                _secondaryCache.SetAsync(key, data)
-            );
-            
-            _logger.LogInformation($"Updated both caches for key {key}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning($"Failed to update caches for key {key}: {ex.Message}");
-        }
-    }
-}
+public async Task<MlResult<Preferencias>> ObtenerPreferenciasAsync(int usuarioId)
+    => await _repo.BuscarPreferenciasAsync(usuarioId)
+                  .MapIfFailWithoutExceptionAsync(err =>
+                  {
+                      // Solo llegamos aquí si el fallo fue "no existen preferencias" (negocio)
+                      _log.LogInformation("Usuario {Id} sin preferencias: aplico predeterminadas. {D}",
+                                          usuarioId, err.ToErrorsDescription());
+                      return Preferencias.PorDefecto(usuarioId).ToAsync();
+                  });
+```
 
-// Clases de apoyo
-public class CachedData
-{
-    public string Key { get; set; }
-    public object Data { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime ExpiresAt { get; set; }
-    
-    public bool IsExpired => DateTime.UtcNow > ExpiresAt;
-}
+Comportamiento resultante:
 
-public class CacheConnectionException : Exception
-{
-    public CacheConnectionException(string message) : base(message) { }
-    public CacheConnectionException(string message, Exception innerException) : base(message, innerException) { }
-}
+| Situación en el repositorio | Resultado |
+|---|---|
+| Registro encontrado | `Valid(preferenciasDelUsuario)` |
+| `Fail("No existen preferencias para el usuario 42")` | `Valid(Preferencias.PorDefecto(42))` |
+| `Fail` con `SqlException` en `Details["Ex"]` | `Fail` intacto → el controlador puede devolver 503 |
 
-public class CacheTimeoutException : Exception
-{
-    public CacheTimeoutException(string message) : base(message) { }
-    public CacheTimeoutException(string message, Exception innerException) : base(message, innerException) { }
-}
+### Ejemplo 2: Controlador que distingue 404 de 503
 
-public interface IPrimaryCache
+```csharp
+[HttpGet("{id:int}")]
+public async Task<IActionResult> Obtener(int id)
 {
-    Task<T> GetAsync<T>(string key) where T : class;
-    Task SetAsync<T>(string key, T value) where T : class;
-}
+    var resultado = await _servicio.ObtenerFichaAsync(id)
+                                   .MapIfFailWithoutExceptionAsync(_ => FichaDto.Vacia(id).ToAsync());
 
-public interface ISecondaryCache
-{
-    Task<T> GetAsync<T>(string key) where T : class;
-    Task SetAsync<T>(string key, T value) where T : class;
-}
-
-public interface IDataSource
-{
-    Task<object> LoadAsync(string key);
+    return resultado.Match(
+        valid: ficha  => Ok(ficha),
+        fail : errores =>
+        {
+            // Si llegamos aquí, el fallo SÍ traía excepción: es técnico
+            _log.LogError("Fallo técnico al obtener ficha {Id}: {D}", id, errores.ToErrorsDescription());
+            return StatusCode(503, new { mensaje = "Servicio temporalmente no disponible" });
+        });
 }
 ```
 
-### Ejemplo 2: Sistema de Configuración con Degradación Elegante
+Toda la lógica de "esto es negocio / esto es avería" queda encapsulada en una única llamada, sin `try/catch` ni comprobaciones manuales del diccionario de detalles.
+
+### Ejemplo 3: Respuesta unificada con la Forma B
 
 ```csharp
-public class ConfigurationService
+public async Task<ResultadoAltaDto> AltaAsync(AltaClienteDto dto)
 {
-    private readonly IRemoteConfigService _remoteConfig;
-    private readonly ILocalConfigService _localConfig;
-    private readonly IDefaultConfigProvider _defaultConfig;
-    private readonly ILogger _logger;
-    
-    public ConfigurationService(
-        IRemoteConfigService remoteConfig,
-        ILocalConfigService localConfig,
-        IDefaultConfigProvider defaultConfig,
-        ILogger logger)
-    {
-        _remoteConfig = remoteConfig;
-        _localConfig = localConfig;
-        _defaultConfig = defaultConfig;
-        _logger = logger;
-    }
-    
-    public async Task<MlResult<ApplicationConfig>> LoadConfigurationAsync(string environment)
-    {
-        return await LoadRemoteConfigurationAsync(environment)
-            .TryMapIfFailWithoutExceptionAsync(
-                async remoteErrors => 
-                {
-                    _logger.LogWarning($"Remote config failed for {environment}: {remoteErrors.FirstErrorMessage}");
-                    
-                    // Intentar configuración local solo si remota falló sin excepción
-                    var localResult = await LoadLocalConfigurationAsync(environment);
-                    if (localResult.IsValid)
-                    {
-                        _logger.LogInformation($"Using local configuration for {environment}");
-                        return localResult.Value;
-                    }
-                    
-                    // Si local también falla, usar configuración por defecto
-                    _logger.LogWarning($"Local config also failed for {environment}, using defaults");
-                    var defaultConfig = await LoadDefaultConfigurationAsync(environment);
-                    
-                    return defaultConfig;
-                },
-                ex => $"Failed to load fallback configuration: {ex.Message}"
-            );
-    }
-    
-    public async Task<MlResult<FeatureFlags>> GetFeatureFlagsAsync(string userId)
-    {
-        return await GetUserSpecificFlagsAsync(userId)
-            .MapIfFailWithoutExceptionAsync(
-                userErrors => GetDefaultFeatureFlagsAsync(),
-                validFlags => validFlags, // Mantener flags específicos si existen
-                ex => $"Failed to get feature flags: {ex.Message}"
-            );
-    }
-    
-    private async Task<MlResult<ApplicationConfig>> LoadRemoteConfigurationAsync(string environment)
-    {
-        try
-        {
-            var config = await _remoteConfig.GetConfigurationAsync(environment);
-            
-            if (config == null)
-            {
-                // No hay configuración para este entorno - fallback permitido
-                return MlResult<ApplicationConfig>.Fail(
-                    $"No remote configuration found for environment: {environment}");
-            }
-            
-            if (!IsValidConfiguration(config))
-            {
-                // Configuración inválida - fallback permitido
-                return MlResult<ApplicationConfig>.Fail(
-                    $"Remote configuration is invalid for environment: {environment}");
-            }
-            
-            return MlResult<ApplicationConfig>.Valid(config);
-        }
-        catch (RemoteConfigTimeoutException ex)
-        {
-            // Timeout - NO permitir fallback, puede indicar problema de red
-            return MlResult<ApplicationConfig>.FailWithException(
-                $"Remote configuration timeout for environment {environment}", ex);
-        }
-        catch (RemoteConfigAuthenticationException ex)
-        {
-            // Error de autenticación - NO permitir fallback, requiere intervención
-            return MlResult<ApplicationConfig>.FailWithException(
-                $"Remote configuration authentication failed for environment {environment}", ex);
-        }
-        catch (Exception ex)
-        {
-            // Otros errores - NO permitir fallback por seguridad
-            return MlResult<ApplicationConfig>.FailWithException(
-                $"Unexpected error loading remote configuration for environment {environment}", ex);
-        }
-    }
-    
-    private async Task<MlResult<ApplicationConfig>> LoadLocalConfigurationAsync(string environment)
-    {
-        try
-        {
-            var config = await _localConfig.GetConfigurationAsync(environment);
-            
-            return config != null && IsValidConfiguration(config)
-                ? MlResult<ApplicationConfig>.Valid(config)
-                : MlResult<ApplicationConfig>.Fail($"Local configuration not found or invalid for environment: {environment}");
-        }
-        catch (Exception ex)
-        {
-            return MlResult<ApplicationConfig>.FailWithException(
-                $"Error loading local configuration for environment {environment}", ex);
-        }
-    }
-    
-    private async Task<ApplicationConfig> LoadDefaultConfigurationAsync(string environment)
-    {
-        var defaultConfig = await _defaultConfig.GetDefaultConfigurationAsync(environment);
-        
-        // Marcar como configuración degradada
-        defaultConfig.IsDegradedMode = true;
-        defaultConfig.DegradedReason = "Using default configuration due to remote and local failures";
-        
-        return defaultConfig;
-    }
-    
-    private async Task<MlResult<FeatureFlags>> GetUserSpecificFlagsAsync(string userId)
-    {
-        try
-        {
-            var flags = await _remoteConfig.GetFeatureFlagsAsync(userId);
-            
-            return flags != null
-                ? MlResult<FeatureFlags>.Valid(flags)
-                : MlResult<FeatureFlags>.Fail($"No specific feature flags found for user: {userId}");
-        }
-        catch (Exception ex)
-        {
-            return MlResult<FeatureFlags>.FailWithException(
-                $"Error getting user-specific feature flags for user {userId}", ex);
-        }
-    }
-    
-    private async Task<FeatureFlags> GetDefaultFeatureFlagsAsync()
-    {
-        return await _defaultConfig.GetDefaultFeatureFlagsAsync();
-    }
-    
-    private bool IsValidConfiguration(ApplicationConfig config)
-    {
-        return config.DatabaseConnectionString != null &&
-               config.ApiEndpoints?.Any() == true &&
-               config.TimeoutSettings != null;
-    }
-}
+    var resultado = await ValidarAlta(dto)
+                            .BindAsync(d => _repo.InsertarAsync(d))
+                            .MapIfFailWithoutExceptionAsync(
+                                funcValidAsync: cliente => ResultadoAltaDto.Ok(cliente.Id).ToAsync(),
+                                funcFailAsync : err     => ResultadoAltaDto
+                                                               .Rechazada(err.ToErrorsMessages())
+                                                               .ToAsync());
 
-// Clases de apoyo y excepciones
-public class ApplicationConfig
-{
-    public string DatabaseConnectionString { get; set; }
-    public Dictionary<string, string> ApiEndpoints { get; set; }
-    public TimeoutSettings TimeoutSettings { get; set; }
-    public bool IsDegradedMode { get; set; }
-    public string DegradedReason { get; set; }
-}
-
-public class FeatureFlags
-{
-    public Dictionary<string, bool> Flags { get; set; }
-    public DateTime LoadedAt { get; set; }
-    public string Source { get; set; } // "user-specific", "default", etc.
-}
-
-public class TimeoutSettings
-{
-    public int DatabaseTimeoutSeconds { get; set; }
-    public int ApiTimeoutSeconds { get; set; }
-    public int CacheTimeoutSeconds { get; set; }
-}
-
-public class RemoteConfigTimeoutException : Exception
-{
-    public RemoteConfigTimeoutException(string message) : base(message) { }
-    public RemoteConfigTimeoutException(string message, Exception innerException) : base(message, innerException) { }
-}
-
-public class RemoteConfigAuthenticationException : Exception
-{
-    public RemoteConfigAuthenticationException(string message) : base(message) { }
-    public RemoteConfigAuthenticationException(string message, Exception innerException) : base(message, innerException) { }
-}
-
-public interface IRemoteConfigService
-{
-    Task<ApplicationConfig> GetConfigurationAsync(string environment);
-    Task<FeatureFlags> GetFeatureFlagsAsync(string userId);
-}
-
-public interface ILocalConfigService
-{
-    Task<ApplicationConfig> GetConfigurationAsync(string environment);
-}
-
-public interface IDefaultConfigProvider
-{
-    Task<ApplicationConfig> GetDefaultConfigurationAsync(string environment);
-    Task<FeatureFlags> GetDefaultFeatureFlagsAsync();
+    // Los fallos de validación ya vienen convertidos en DTO de rechazo.
+    // Solo los fallos técnicos siguen siendo Fail y hay que traducirlos aquí.
+    return resultado.Match(
+        valid: dtoRespuesta => dtoRespuesta,
+        fail : errores      => ResultadoAltaDto.ErrorInterno(errores.ToErrorsDescription()));
 }
 ```
 
-### Ejemplo 3: Sistema de Procesamiento de Datos con Recuperación de Errores
+### Ejemplo 4: Cadena de políticas por clase de fallo
+
+Apilar los dos métodos complementarios permite escribir la política completa de forma declarativa:
 
 ```csharp
-public class DataProcessingPipeline
-{
-    private readonly IDataValidator _validator;
-    private readonly IDataProcessor _processor;
-    private readonly IDataRepository _repository;
-    private readonly IDataSanitizer _sanitizer;
-    private readonly ILogger _logger;
-    
-    public DataProcessingPipeline(
-        IDataValidator validator,
-        IDataProcessor processor,
-        IDataRepository repository,
-        IDataSanitizer sanitizer,
-        ILogger logger)
-    {
-        _validator = validator;
-        _processor = processor;
-        _repository = repository;
-        _sanitizer = sanitizer;
-        _logger = logger;
-    }
-    
-    public async Task<MlResult<ProcessedData>> ProcessDataWithRecoveryAsync(RawData inputData)
-    {
-        var processingId = Guid.NewGuid().ToString();
-        
-        return await ValidateDataAsync(inputData)
-            .TryMapIfFailWithoutExceptionAsync(
-                async validationErrors => 
-                {
-                    _logger.LogWarning($"Data validation failed for {processingId}, attempting sanitization");
-                    
-                    // Solo intentar sanitización si la validación falló sin excepción
-                    var sanitizedData = await _sanitizer.SanitizeDataAsync(inputData);
-                    var revalidationResult = await ValidateDataAsync(sanitizedData);
-                    
-                    if (revalidationResult.IsValid)
-                    {
-                        _logger.LogInformation($"Data sanitization successful for {processingId}");
-                        return revalidationResult.Value;
-                    }
-                    
-                    // Si la sanitización no ayuda, crear datos por defecto
-                    _logger.LogWarning($"Sanitization failed for {processingId}, using default values");
-                    return CreateDefaultValidData(inputData);
-                },
-                ex => $"Data recovery failed for processing {processingId}: {ex.Message}"
-            )
-            .BindAsync(async validData => await ProcessValidDataAsync(validData, processingId))
-            .TryMapIfFailWithoutExceptionAsync(
-                async processingErrors => 
-                {
-                    _logger.LogWarning($"Data processing failed for {processingId}, attempting simplified processing");
-                    
-                    // Solo intentar procesamiento simplificado si falló sin excepción
-                    var simplifiedResult = await ProcessWithSimplifiedRulesAsync(validData, processingId);
-                    return simplifiedResult;
-                },
-                ex => $"Simplified processing failed for {processingId}: {ex.Message}"
-            )
-            .BindAsync(async processedData => await SaveProcessedDataAsync(processedData, processingId));
-    }
-    
-    public async Task<MlResult<DataReport>> GenerateReportWithFallbackAsync(ReportRequest request)
-    {
-        return await GenerateDetailedReportAsync(request)
-            .MapIfFailWithoutException(
-                successReport => successReport,
-                async detailedErrors => 
-                {
-                    _logger.LogInformation($"Detailed report generation failed, creating summary report");
-                    
-                    // Solo generar reporte resumido si el detallado falló sin excepción
-                    var summaryReport = await GenerateSummaryReportAsync(request);
-                    return summaryReport;
-                },
-                ex => $"Report generation fallback failed: {ex.Message}"
-            );
-    }
-    
-    private async Task<MlResult<RawData>> ValidateDataAsync(RawData data)
-    {
-        try
-        {
-            var validationResult = await _validator.ValidateAsync(data);
-            
-            if (!validationResult.IsValid)
-            {
-                // Errores de validación - candidatos para recuperación
-                return MlResult<RawData>.Fail(validationResult.Errors.ToArray());
-            }
-            
-            return MlResult<RawData>.Valid(data);
-        }
-        catch (ValidationServiceException ex)
-        {
-            // Error del servicio de validación - NO recuperable
-            return MlResult<RawData>.FailWithException(
-                "Validation service error", ex);
-        }
-        catch (Exception ex)
-        {
-            // Errores inesperados - NO recuperables
-            return MlResult<RawData>.FailWithException(
-                "Unexpected validation error", ex);
-        }
-    }
-    
-    private async Task<MlResult<ProcessedData>> ProcessValidDataAsync(RawData validData, string processingId)
-    {
-        try
-        {
-            var processedData = await _processor.ProcessAsync(validData);
-            
-            if (processedData.HasErrors)
-            {
-                // Errores de procesamiento - pueden ser recuperables
-                return MlResult<ProcessedData>.Fail(
-                    $"Processing completed with errors for {processingId}",
-                    processedData.Errors.ToArray());
-            }
-            
-            return MlResult<ProcessedData>.Valid(processedData);
-        }
-        catch (ProcessingCapacityException ex)
-        {
-            // Sistema sobrecargado - NO recuperable inmediatamente
-            return MlResult<ProcessedData>.FailWithException(
-                $"Processing system overloaded for {processingId}", ex);
-        }
-        catch (ProcessingTimeoutException ex)
-        {
-            // Timeout - NO recuperable, puede indicar datos muy complejos
-            return MlResult<ProcessedData>.FailWithException(
-                $"Processing timeout for {processingId}", ex);
-        }
-        catch (Exception ex)
-        {
-            // Errores inesperados - NO recuperables
-            return MlResult<ProcessedData>.FailWithException(
-                $"Unexpected processing error for {processingId}", ex);
-        }
-    }
-    
-    private async Task<ProcessedData> ProcessWithSimplifiedRulesAsync(RawData validData, string processingId)
-    {
-        // Procesamiento con reglas simplificadas para datos problemáticos
-        var simplifiedProcessor = _processor.CreateSimplifiedProcessor();
-        var result = await simplifiedProcessor.ProcessAsync(validData);
-        
-        result.IsSimplified = true;
-        result.SimplificationReason = "Used simplified processing due to standard processing failures";
-        
-        _logger.LogInformation($"Applied simplified processing for {processingId}");
-        
-        return result;
-    }
-    
-    private RawData CreateDefaultValidData(RawData originalData)
-    {
-        // Crear datos válidos mínimos basados en los originales
-        return new RawData
-        {
-            Id = originalData.Id,
-            Timestamp = originalData.Timestamp,
-            Data = _sanitizer.CreateMinimalValidData(originalData.Data),
-            Source = originalData.Source,
-            IsDefault = true,
-            DefaultReason = "Created default data due to validation failures"
-        };
-    }
-    
-    private async Task<MlResult<ProcessedData>> SaveProcessedDataAsync(ProcessedData data, string processingId)
-    {
-        try
-        {
-            await _repository.SaveAsync(data);
-            _logger.LogInformation($"Successfully saved processed data for {processingId}");
-            return MlResult<ProcessedData>.Valid(data);
-        }
-        catch (Exception ex)
-        {
-            return MlResult<ProcessedData>.FailWithException(
-                $"Failed to save processed data for {processingId}", ex);
-        }
-    }
-    
-    private async Task<MlResult<DataReport>> GenerateDetailedReportAsync(ReportRequest request)
-    {
-        try
-        {
-            var report = await _processor.GenerateDetailedReportAsync(request);
-            
-            return report.IsComplete
-                ? MlResult<DataReport>.Valid(report)
-                : MlResult<DataReport>.Fail("Detailed report is incomplete");
-        }
-        catch (Exception ex)
-        {
-            return MlResult<DataReport>.FailWithException(
-                "Detailed report generation failed", ex);
-        }
-    }
-    
-    private async Task<DataReport> GenerateSummaryReportAsync(ReportRequest request)
-    {
-        var summaryData = await _processor.GenerateSummaryDataAsync(request);
-        
-        return new DataReport
-        {
-            Id = Guid.NewGuid().ToString(),
-            Title = $"Summary Report - {request.Title}",
-            Data = summaryData,
-            IsSummary = true,
-            GeneratedAt = DateTime.UtcNow,
-            SummaryReason = "Generated summary due to detailed report failure"
-        };
-    }
-}
+public async Task<MlResult<Precio>> CalcularPrecioAsync(string sku, int cantidad)
+    => await _tarifas.ObtenerPrecioAsync(sku, cantidad)
+                     // 1) Sin tarifa específica (negocio) → tarifa general
+                     .MapIfFailWithoutExceptionAsync(_ => _tarifas.PrecioGeneral(sku).ToAsync())
+                     // 2) Avería del servicio de tarifas → último precio cacheado, marcado como no fiable
+                     .MapIfFailWithExceptionAsync(ex =>
+                     {
+                         _log.LogWarning(ex, "Servicio de tarifas caído para {Sku}", sku);
+                         return (_cache.UltimoPrecio(sku) with { EsFiable = false }).ToAsync();
+                     })
+                     .ExecSelfIfValidAsync(p => _metricas.RegistrarPrecioAsync(sku, p));
+```
 
-// Clases de apoyo y excepciones
-public class RawData
-{
-    public string Id { get; set; }
-    public DateTime Timestamp { get; set; }
-    public object Data { get; set; }
-    public string Source { get; set; }
-    public bool IsDefault { get; set; }
-    public string DefaultReason { get; set; }
-}
+Se lee como una tabla de políticas: primero el negocio, luego la degradación técnica, y al final la instrumentación.
 
-public class ProcessedData
-{
-    public string Id { get; set; }
-    public object ProcessedResult { get; set; }
-    public bool HasErrors { get; set; }
-    public List<string> Errors { get; set; } = new();
-    public bool IsSimplified { get; set; }
-    public string SimplificationReason { get; set; }
-    public DateTime ProcessedAt { get; set; }
-}
+### Ejemplo 5: Qué **no** hacer
 
-public class DataReport
-{
-    public string Id { get; set; }
-    public string Title { get; set; }
-    public object Data { get; set; }
-    public bool IsComplete { get; set; }
-    public bool IsSummary { get; set; }
-    public string SummaryReason { get; set; }
-    public DateTime GeneratedAt { get; set; }
-}
+```csharp
+// ❌ MAL: MapIfFail se traga las averías junto con las reglas de negocio
+var stock = await _almacen.ConsultarStockAsync(sku)
+                          .MapIfFailAsync(_ => 0.ToAsync());
+// Un timeout de red se convierte en "no hay stock" → se rechazan ventas de producto disponible
 
-public class ReportRequest
-{
-    public string Title { get; set; }
-    public DateTime FromDate { get; set; }
-    public DateTime ToDate { get; set; }
-    public List<string> DataSources { get; set; }
-}
+// ❌ MAL: inspeccionar los detalles a mano reimplementa el método y es frágil
+var stock2 = (await _almacen.ConsultarStockAsync(sku)).Match(
+    valid: x => x,
+    fail : err => err.Details.ContainsKey("Ex") ? throw new Exception("boom") : 0);
 
-public class ValidationResult
-{
-    public bool IsValid { get; set; }
-    public List<string> Errors { get; set; } = new();
-}
+// ❌ MAL: usar .Value directamente rompe el carril
+// var s = resultado.Value;
 
-public class ValidationServiceException : Exception
-{
-    public ValidationServiceException(string message) : base(message) { }
-    public ValidationServiceException(string message, Exception innerException) : base(message, innerException) { }
-}
-
-public class ProcessingCapacityException : Exception
-{
-    public ProcessingCapacityException(string message) : base(message) { }
-    public ProcessingCapacityException(string message, Exception innerException) : base(message, innerException) { }
-}
-
-public class ProcessingTimeoutException : Exception
-{
-    public ProcessingTimeoutException(string message) : base(message) { }
-    public ProcessingTimeoutException(string message, Exception innerException) : base(message, innerException) { }
-}
-
-// Interfaces de servicios
-public interface IDataValidator
-{
-    Task<ValidationResult> ValidateAsync(RawData data);
-}
-
-public interface IDataProcessor
-{
-    Task<ProcessedData> ProcessAsync(RawData data);
-    IDataProcessor CreateSimplifiedProcessor();
-    Task<DataReport> GenerateDetailedReportAsync(ReportRequest request);
-    Task<object> GenerateSummaryDataAsync(ReportRequest request);
-}
-
-public interface IDataRepository
-{
-    Task SaveAsync(ProcessedData data);
-}
-
-public interface IDataSanitizer
-{
-    Task<RawData> SanitizeDataAsync(RawData data);
-    object CreateMinimalValidData(object originalData);
-}
+// ✅ BIEN: la política queda explícita y los fallos técnicos se propagan
+var stock3 = await _almacen.ConsultarStockAsync(sku)
+                           .MapIfFailWithoutExceptionAsync(_ => 0.ToAsync());
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar MapIfFailWithoutException
+1. **Usa `MapIfFailWithoutException` en lugar de `MapIfFail` siempre que apliques un valor por defecto.** Es la versión segura: te obliga a decidir por separado qué hacer con las averías, en vez de enmascararlas.
 
-```csharp
-// ✅ Correcto: Usar para errores recuperables que no indican problemas sistémicos
-var result = LoadFromPrimarySource(request)
-    .MapIfFailWithoutException(errors => LoadFromBackupSource(request));
+2. **Recuerda que el fallo con excepción sale intacto.** Eso significa que la tubería sigue en fallo: hay que darle salida más adelante (`MapIfFailWithException`, `Match`, o dejar que el llamante lo traduzca a 5xx).
 
-// Los errores sin excepción (cache miss, data not found) permiten fallback
-// Los errores con excepción (connection timeout, auth failure) se escalán
+3. **La distinción depende de que las excepciones se guarden en `Details["Ex"]`.** Eso solo ocurre si usas `Try*` (`TryMap`, `TryBind`, `TryMapIfFail`…) o creas el fallo con `MlErrorsDetails.FromErrorMessageWithException`. Si capturas una excepción con `try/catch` y creas el fallo con `"mensaje".ToMlResultFail<T>()`, ese fallo pasará por "negocio" y **sí** se recuperará.
 
-// ✅ Correcto: Degradación elegante de funcionalidad
-var userProfile = GetFullUserProfile(userId)
-    .MapIfFailWithoutException(errors => CreateBasicUserProfile(userId));
+4. **No pierdas el error de negocio original en las variantes `Try`.** A diferencia de `TryMapIfFailWithException`, aquí no hay merge automático; añade `.MergeErrorsDetailsIfFail(origen)` si necesitas conservarlo.
 
-// Si la carga completa falla sin excepción, usar perfil básico
-// Si falla por excepción (DB down), escalar el error
+5. **Registra antes de recuperar.** Una recuperación silenciosa dificulta el diagnóstico. Un `ExecSelfIfFail` previo, o un log dentro del propio delegado, deja rastro de que se aplicó el valor por defecto.
 
-// ❌ Incorrecto: Usar para todos los errores sin discriminar
-var result = CriticalDatabaseOperation()
-    .MapIfFailWithoutException(errors => IgnoreAndContinue()); // Peligroso!
-```
+6. **Marca los valores degradados.** Si el valor por defecto no es tan bueno como el real, señálalo en el propio modelo (`EsFiable = false`, `Origen = "PorDefecto"`) para que las capas superiores puedan decidir.
 
-### 2. Diferenciación Entre Errores Recuperables y No Recuperables
+7. **Si la recuperación puede fallar, usa `Bind` y no `Map`.** El delegado de `MapIfFailWithoutException` devuelve un valor desnudo; devolver un `MlResult` desde él produce el anidamiento `MlResult<MlResult<T>>`.
 
-```csharp
-// ✅ Correcto: Clasificar apropiadamente los errores
-public async Task<MlResult<Data>> LoadDataWithFallback(string key)
-{
-    try
-    {
-        var data = await _primaryService.LoadAsync(key);
-        return data != null 
-            ? MlResult<Data>.Valid(data)
-            : MlResult<Data>.Fail("Data not found"); // SIN excepción - recuperable
-    }
-    catch (ServiceTimeoutException ex)
-    {
-        // CON excepción - NO recuperable
-        return MlResult<Data>.FailWithException("Service timeout", ex);
-    }
-    catch (AuthenticationException ex)
-    {
-        // CON excepción - NO recuperable
-        return MlResult<Data>.FailWithException("Authentication failed", ex);
-    }
-}
+8. **Prefiere la Forma A cuando quieras seguir encadenando** (mantiene el tipo y es apilable) y la Forma B cuando estés cerrando la tubería hacia un DTO de respuesta.
 
-// Uso correcto del método
-var result = LoadDataWithFallback(key)
-    .MapIfFailWithoutException(errors => LoadFromCache(key)); // Solo para "data not found"
-```
-
-### 3. Patrones de Recuperación Gradual
-
-```csharp
-// ✅ Correcto: Múltiples niveles de fallback
-public async Task<MlResult<ServiceResponse>> CallServiceWithFallback(ServiceRequest request)
-{
-    return await CallPrimaryService(request)
-        .MapIfFailWithoutExceptionAsync(async primaryErrors => 
-            await CallSecondaryService(request))
-        .MapIfFailWithoutExceptionAsync(async secondaryErrors => 
-            await CallLocalService(request))
-        .MapIfFailWithoutExceptionAsync(async localErrors => 
-            CreateDefaultResponse(request));
-}
-
-// Cada nivel solo se ejecuta si el anterior falló sin excepción
-```
-
-### 4. Uso de TryMap para Operaciones de Recuperación Riesgosas
-
-```csharp
-// ✅ Correcto: Usar TryMap cuando la recuperación puede fallar
-var result = LoadConfiguration()
-    .TryMapIfFailWithoutException(
-        errors => ParseAlternativeConfigFormat(), // Puede lanzar excepción
-        ex => $"Failed to parse alternative config: {ex.Message}"
-    );
-
-// ✅ Correcto: Logging en recuperación
-var result = ProcessData(input)
-    .TryMapIfFailWithoutException(
-        errors => 
-        {
-            _logger.LogWarning($"Processing failed, attempting recovery: {errors.FirstErrorMessage}");
-            return RecoverFromFailure(input); // Puede fallar
-        },
-        ex => $"Recovery attempt failed: {ex.Message}"
-    );
-```
-
-### 5. Transformación de Tipos con Recuperación
-
-```csharp
-// ✅ Correcto: Mapeo con diferentes estrategias para éxito y fallo
-var dto = GetCompleteUserData(userId)
-    .MapIfFailWithoutException(
-        validUser => new UserDto 
-        { 
-            Id = validUser.Id,
-            FullName = validUser.FullName,
-            IsComplete = true 
-        },
-        errors => new UserDto 
-        { 
-            Id = userId,
-            FullName = "Unknown User",
-            IsComplete = false,
-            LoadError = errors.FirstErrorMessage 
-        }
-    );
-
-// Siempre retorna UserDto, pero con información diferente según el resultado
-```
-
-### 6. Gestión de Recursos en Recuperación
-
-```csharp
-// ✅ Correcto: Limpieza apropiada en recuperación
-public async Task<MlResult<ProcessResult>> ProcessWithRecovery(ProcessInput input)
-{
-    var primaryResources = new ResourcePool();
-    
-    return await ProcessWithPrimaryResources(input, primaryResources)
-        .TryMapIfFailWithoutExceptionAsync(
-            async errors => 
-            {
-                // Liberar recursos primarios antes de usar alternativos
-                await primaryResources.DisposeAsync();
-                
-                var alternativeResources = new AlternativeResourcePool();
-                return await ProcessWithAlternativeResources(input, alternativeResources);
-            },
-            ex => $"Recovery processing failed: {ex.Message}"
-        );
-}
-```
-
----
-
-## Consideraciones de Rendimiento
-
-### Evaluación de Excepciones
-
-- `GetDetailException()` tiene overhead mínimo pero se ejecuta en cada evaluación
-- Considerar cache de evaluación de excepciones para pipelines muy frecuentes
-- Las versiones asíncronas mantienen el contexto apropiadamente
-
-### Estrategias de Fallback
-
-- Los fallbacks pueden introducir latencia adicional significativa
-- Considerar timeouts apropiados para operaciones de recuperación
-- Implementar circuit breakers para servicios de fallback
-
-### Transformaciones de Tipos
-
-- Las transformaciones que cambian tipos pueden tener overhead de serialización
-- Considerar reutilización de objetos en transformaciones frecuentes
-- Las versiones `Try*` tienen overhead adicional de manejo de excepciones
+9. **Documenta la política en el nombre del método de servicio.** `ObtenerLimiteOCero` comunica mejor que `ObtenerLimite` que hay una recuperación de negocio aplicada.
 
 ---
 
 ## Resumen
 
-Los métodos **`MapIfFailWithoutException`** proporcionan capacidades especializadas para:
+- `MapIfFailWithoutException` recupera **solo** los fallos que **no** llevan excepción en `Details["Ex"]`: los fallos de negocio y validación.
+- Si el fallo **sí** trae excepción, el delegado no se ejecuta y **el `Fail` original se devuelve intacto**, con todos sus errores y detalles.
+- Es el **espejo exacto** de [`MapIfFailWithException`](6_MapIfFailWithException.md); juntos cubren todos los fallos y permiten políticas distintas para cada clase.
+- Tiene **dos formas**: A `<T>(Func<MlErrorsDetails, T>)` que preserva el tipo y es apilable, y B `<T, TReturn>(funcValid, funcFail)` que hace converger ambas ramas a un tipo común.
+- **No existe** ninguna subfamilia `...Error` ni sobrecargas con `TException`: el delegado ya recibe `MlErrorsDetails` y no hay excepción que filtrar.
+- Las variantes `TryMapIfFailWithoutException` protegen el delegado con `TryToMlResult`, pero **no fusionan** los errores originales (a diferencia de su hermana `WithException`).
+- El delegado devuelve un **valor desnudo**; si tu recuperación puede fallar, usa [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md).
 
-- **Recuperación Selectiva**: Solo aplicar fallbacks para errores sin excepciones
-- **Preservación de Errores Críticos**: Mantener intactos los errores con excepciones
-- **Transformación Condicional**: Convertir tipos con estrategias diferentes para éxito y fallo
-- **Degradación Elegante**: Implementar niveles de funcionalidad según disponibilidad de recursos
+---
 
-### Métodos Principales
+## Ver también
 
-- **`MapIfFailWithoutException<T>`**: Recuperación simple sin cambio de tipo
-- **`MapIfFailWithoutException<T, TReturn>`**: Transformación con funciones separadas para éxito y fallo
-- **`TryMapIfFailWithoutException`**: Versiones seguras con captura de excepciones
-- **Variantes Asíncronas**: Soporte completo para operaciones asíncronas
-
-### Casos de Uso Ideales
-
-- **Sistemas de Cache** con múltiples niveles de fallback
-- **Servicios de Configuración** con degradación elegante
-- **Pipelines de Datos** con estrategias de recuperación
-- **APIs Resilientes** con respuestas alternativas
-
-La clave está en distinguir apropiadamente entre errores recuperables (sin excepción) y errores que requieren escalamiento (con excepción), aplicando estrategias de recuperación únicamente cuando es seguro hacerlo.
+- [`6_MapIfFailWithException.md`](6_MapIfFailWithException.md) — el método complementario: recupera solo ante excepciones.
+- [`4_MapIfFail.md`](4_MapIfFail.md) — recuperación sin filtro, para cualquier fallo.
+- [`8_MapAlways.md`](8_MapAlways.md) — ejecutar algo con independencia del estado.
+- [`1_Map.md`](1_Map.md) — la operación base de transformación.
+- [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) — la versión `Bind`, cuando la recuperación devuelve `MlResult`.
+- [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) — su complementaria en la familia `Bind`.
+- [`../ExecSelf/6_ExecSelfIfFailWithoutException.md`](../ExecSelf/6_ExecSelfIfFailWithoutException.md) — efectos secundarios sin alterar el resultado.
+- [`../Types/MlResultActionsErrorsDetails.md`](../Types/MlResultActionsErrorsDetails.md) — `GetDetailException()`, `MergeErrorsDetailsIfFail` y el resto de utilidades de detalles.
+- [`../Types/MlResultErrors.md`](../Types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorsDetails`.
+- [`../Types/MlResultActionsMap.md`](../Types/MlResultActionsMap.md) — inventario completo de la familia `Map`.

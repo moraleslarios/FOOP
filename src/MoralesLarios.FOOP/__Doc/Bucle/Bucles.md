@@ -1,1073 +1,727 @@
-# MlResult Bucles - Completado y Fusión de Datos en Colecciones
+# Bucles y proyecciones — Recorrer colecciones dentro del carril
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de los Métodos](#análisis-de-los-métodos)
-3. [Métodos Bucles](#métodos-Bucles)
-4. [Métodos de Fusión de Errores](#métodos-de-fusión-de-errores)
-5. [Variantes Asíncronas](#variantes-asíncronas)
-6. [Ejemplos Prácticos](#ejemplos-prácticos)
-7. [Mejores Prácticas](#mejores-prácticas)
-8. [Comparación con Métodos Similares](#comparación-con-métodos-similares)
+2. [El problema: `IEnumerable<MlResult<T>>` no sirve de nada](#el-problema-ienumerablemlresultt-no-sirve-de-nada)
+3. [Las cuatro estrategias de proyección](#las-cuatro-estrategias-de-proyección)
+4. [`Projection` — procesar todo y acumular errores](#projection--procesar-todo-y-acumular-errores)
+5. [`ProjectionWhile` — parar en el primer fallo](#projectionwhile--parar-en-el-primer-fallo)
+6. [`ProjectionParallelAsync` — concurrencia real](#projectionparallelasync--concurrencia-real)
+7. [`ProjectionSplit` — separar aciertos de fallos](#projectionsplit--separar-aciertos-de-fallos)
+8. [Los agregadores: `FusionFailErros`, `FusionErrosIfExists`, `VerifiedEnumerableResultData`](#los-agregadores-fusionfailerros-fusionerrosifexists-verifiedenumerableresultdata)
+9. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+11. [Ejemplos Prácticos](#ejemplos-prácticos)
+12. [Mejores Prácticas](#mejores-prácticas)
+13. [Resumen](#resumen)
+14. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-Los métodos `CompleteData` y las funciones de fusión de errores proporcionan un sistema robusto para **procesar colecciones de datos** donde cada elemento puede requerir transformación o validación que puede fallar. Estos métodos implementan el patrón "**todo o nada**" donde una colección completa es válida solo si todos sus elementos son procesados exitosamente.
+`MlResultBucles` resuelve un problema que aparece en cuanto trabajas con colecciones: **qué
+hacer cuando la operación que aplicas a cada elemento puede fallar**.
 
-> Nota de actualización: la API actual de `Types/MlResultBucles.cs` expone estas operaciones con la familia de métodos `Projection`, `ProjectionAsync`, `ProjectionWhile`, `ProjectionWhileAsync` y `ProjectionParallelAsync`. Las sobrecargas nuevas aceptan también `Func<T, int, ...>` para recibir el índice del elemento procesado. La documentación de referencia actualizada está en [`../Types/MlResultBucles.md`](../Types/MlResultBucles.md).
+Es la única familia de la librería que **sí acumula errores** de verdad (recuerda que
+[`Combine`](../Several/4_Combine.md) **no** lo hace: cortocircuita).
 
-### Propósito Principal
+```csharp
+// Validar 500 líneas de un fichero importado y saber TODAS las que están mal
+MlResult<IEnumerable<Linea>> r = lineasCrudas.Projection(ValidarLinea);
 
-- **Completado de Datos**: Transformar/enriquecer elementos de una colección
-- **Validación Colectiva**: Asegurar que todos los elementos cumplan criterios
-- **Fusión de Errores**: Combinar errores de múltiples operaciones fallidas
-- **Procesamiento Seguro**: Manejar fallos individuales sin interrumpir el proceso completo
+if (r.IsFail)
+    // Contiene los errores de todas las líneas defectuosas, no solo de la primera
+    _log.LogWarning(r.ErrorsDetails.ToErrorsDescription());
+```
+
+> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
 
 ---
 
-## Análisis de los Métodos
+## El problema: `IEnumerable<MlResult<T>>` no sirve de nada
 
-### Filosofía de CompleteData
-
-```
-IEnumerable<T> + Transform → CompleteData → MlResult<IEnumerable<T/TResult>>
-       ↓              ↓           ↓                ↓
-   [item1, item2] + func → [func(item1), func(item2)]
-       ↓              ↓           ↓                ↓
-   Si todos válidos → Valid([result1, result2])
-       ↓              ↓           ↓                ↓
-   Si alguno falla → Fail(fusioned_errors)
-```
-
-### Características Principales
-
-1. **Aplicación de Función**: Aplica una función de transformación a cada elemento
-2. **Validación Todo-o-Nada**: Falla si cualquier elemento falla
-3. **Fusión de Errores**: Combina todos los errores en un solo resultado
-4. **Preservación de Tipos**: Mantiene tipado fuerte en transformaciones
-5. **Soporte Asíncrono**: Versiones completas async/await
-
----
-
-## Métodos CompleteData
-
-### 1. CompleteData - Transformación del Mismo Tipo
-
-**Propósito**: Procesar elementos manteniendo el tipo original
+Si aplicas `Select` con una función que devuelve `MlResult<T>`, obtienes una colección de
+resultados. Eso **no** es útil: no puedes seguir la tubería con ella.
 
 ```csharp
-public static MlResult<IEnumerable<T>> CompleteData<T>(
-    this IEnumerable<T> source,
-    Func<T, MlResult<T>> completeFuncTransform)
+// ❌ Tipo inmanejable: ¿está bien? ¿está mal? ¿cuáles fallaron?
+IEnumerable<MlResult<Linea>> inutil = crudas.Select(ValidarLinea);
+
+// ✅ Lo que quieres es esto: UN resultado que contiene TODA la colección
+MlResult<IEnumerable<Linea>> util = crudas.Projection(ValidarLinea);
 ```
 
-**Funcionamiento Interno**:
-```csharp
-var result = source.ToMlResultValid()
-    .Bind(x =>
-    {
-        var partialData = x.Select(completeFuncTransform).ToList();
-        
-        var result = partialData.Any(x => x.IsFail) ?
-                     FusionFailErros(partialData) :
-                     MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.Value));
-        
-        return result;
-    });
+🔑 La operación clave se llama **"invertir el envoltorio"**: pasar de
+`IEnumerable<MlResult<T>>` a `MlResult<IEnumerable<T>>`. Esta familia lo hace de cuatro
+maneras distintas según lo que necesites.
+
 ```
-
-### 2. CompleteData - Transformación a Tipo Diferente
-
-**Propósito**: Transformar elementos a un tipo diferente
-
-```csharp
-public static MlResult<IEnumerable<TResult>> CompleteData<T, TResult>(
-    this IEnumerable<T> source,
-    Func<T, MlResult<TResult>> completeFuncTransform)
-```
-
-### 3. CompleteDataAsync - Variantes Asíncronas
-
-**Múltiples sobrecargas para diferentes escenarios async**:
-
-```csharp
-// Función síncrona con resultado async
-public static Task<MlResult<IEnumerable<T>>> CompleteDataAsync<T>(
-    this IEnumerable<T> source,
-    Func<T, MlResult<T>> completeFuncTransform)
-
-// Colección async con función async
-public static async Task<MlResult<IEnumerable<T>>> CompleteDataAsync<T>(
-    this Task<IEnumerable<T>> sourceAsync,
-    Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
-
-// Colección síncrona con función async
-public static async Task<MlResult<IEnumerable<T>>> CompleteDataAsync<T>(
-    this IEnumerable<T> source,
-    Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
+IEnumerable<T>  ──[ Func<T, MlResult<TResult>> ]──►  MlResult<IEnumerable<TResult>>
 ```
 
 ---
 
-## Métodos de Fusión de Errores
+## Las cuatro estrategias de proyección
 
-### 1. FusionFailErros
+| Método | Recorre | Ante un fallo | Errores del resultado |
+|--------|---------|---------------|----------------------|
+| `Projection` | **Todos** los elementos | Sigue procesando | **Todos** los errores fusionados |
+| `ProjectionWhile` | Hasta el primer fallo | **Para** (`break`) | Solo el del elemento que falló |
+| `ProjectionParallelAsync` | Todos, **en paralelo** | Sigue (ya lanzados) | Todos los errores fusionados |
+| `ProjectionSplit` | **Todos** | Sigue | **Nunca falla**: devuelve dos diccionarios |
 
-**Propósito**: Fusionar errores de elementos fallidos (requiere al menos un error)
+🔑 **Criterio de elección:**
 
-```csharp
-public static MlResult<IEnumerable<T>> FusionFailErros<T>(
-    this IEnumerable<MlResult<T>> source)
-```
+- **Validar entrada de usuario / importar ficheros** → `Projection` o `ProjectionSplit`
+  (quieres informar de todos los problemas de una vez).
+- **Pasos dependientes o costosos** → `ProjectionWhile` (no gastes recursos si ya falló).
+- **Llamadas a servicios externos independientes** → `ProjectionParallelAsync`.
+- **Procesamiento parcial aceptable** (procesa lo bueno, informa de lo malo) →
+  `ProjectionSplit`.
 
-**Comportamiento**:
-- **Si no hay errores**: Retorna error (requiere elementos fallidos)
-- **Si hay errores**: Fusiona todos los errores en un `MlErrorsDetails`
-
-### 2. FusionErrosIfExists
-
-**Propósito**: Fusionar errores si existen, sino retornar valores válidos
-
-```csharp
-public static MlResult<IEnumerable<T>> FusionErrosIfExists<T>(
-    this IEnumerable<MlResult<T>> source)
-```
-
-**Comportamiento**:
-- **Si no hay errores**: Retorna `Valid` con todos los valores
-- **Si hay errores**: Fusiona errores e ignora valores válidos
+Todas las variantes tienen sobrecarga **con índice** (`Func<T, int, MlResult<TResult>>`), muy
+útil para mensajes tipo *"error en la línea 42"*.
 
 ---
 
-## Variantes Asíncronas
-
-### Soporte Completo Async/Await
+## `Projection` — procesar todo y acumular errores
 
 ```csharp
-// Para FusionFailErros
-public static Task<MlResult<IEnumerable<T>>> FusionFailErrosAsync<T>(
-    this IEnumerable<MlResult<T>> source)
+public static MlResult<IEnumerable<TResult>> Projection<T, TResult>(this IEnumerable<T>             source,
+                                                                         Func<T, MlResult<TResult>> completeFuncTransform)
+{
+    var result = source.ToMlResultValid()
+                        .Bind(x =>
+                        {
+                            var partialData = x.Select(completeFuncTransform).ToList();
 
-public static async Task<MlResult<IEnumerable<T>>> FusionFailErrosAsync<T>(
-    this Task<IEnumerable<MlResult<T>>> sourceAsync)
+                            var result = partialData.Any(x => x.IsFail) ?
+                                         FusionFailErros(partialData)   :
+                                         MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
 
-// Para FusionErrosIfExists
-public static Task<MlResult<IEnumerable<T>>> FusionErrosIfExistsAsync<T>(
-    this IEnumerable<MlResult<T>> source)
-
-public static async Task<MlResult<IEnumerable<T>>> FusionErrosIfExistsAsync<T>(
-    this Task<IEnumerable<MlResult<T>>> sourceAsync)
+                            return result;
+                        });
+    return result;
+}
 ```
+
+🔑 **Comportamiento:** ejecuta la transformación sobre **todos** los elementos (nótese el
+`.ToList()`, que fuerza la evaluación), y solo después decide:
+
+- Si **algún** elemento falló → `FusionFailErros` fusiona **todos** los errores.
+- Si todos son válidos → resultado válido con la colección transformada.
+
+```csharp
+var lineas = new[] { "10;ABC", "xx;DEF", "30;GHI", "yy;JKL" };
+
+var r = lineas.Projection((linea, i) => ParsearLinea(linea, i));
+
+// r.IsFail == true, y ErrorsDetails contiene los errores de las líneas 2 Y 4
+Console.WriteLine(r.ErrorsDetails.ToErrorsDescription());
+// → "Línea 2: cantidad ilegible 'xx'" + "Línea 4: cantidad ilegible 'yy'"
+```
+
+⚠️ **Coste:** procesa todos los elementos aunque el primero ya haya fallado. Si la
+transformación es costosa (consultas, E/S), usa `ProjectionWhile`.
+
+### Sobrecargas
+
+| Firma | Notas |
+|-------|-------|
+| `Projection(Func<T, MlResult<TResult>>)` | Base |
+| `Projection(Func<T, int, MlResult<TResult>>)` | Con índice |
+| `ProjectionAsync(...)` desde `IEnumerable<T>` con delegado **síncrono** | Envoltura `.ToAsync()` |
+| `ProjectionAsync(...)` desde `Task<IEnumerable<T>>` | Con `await` real |
+| `ProjectionAsync(...)` con delegado **asíncrono** | Recorre **en secuencia** con `await` por elemento |
+
+⚠️ **Importante:** `ProjectionAsync` con delegado asíncrono es **secuencial**, no paralelo.
+Espera cada elemento antes de pasar al siguiente. Para paralelismo real necesitas
+`ProjectionParallelAsync`.
+
+---
+
+## `ProjectionWhile` — parar en el primer fallo
+
+```csharp
+public static MlResult<IEnumerable<TResult>> ProjectionWhile<T, TResult>(this IEnumerable<T>             source,
+                                                                              Func<T, MlResult<TResult>> completeFuncTransform)
+{
+    var result = source.ToMlResultValid()
+                        .Bind(x =>
+                        {
+                            List<MlResult<TResult>> partialData = [];
+
+                            foreach (var item in x)
+                            {
+                                var funcResult = completeFuncTransform(item);
+                                partialData.Add(funcResult);
+                                if (funcResult.IsFail) break;      // ← corta aquí
+                            }
+
+                            var result = partialData.Any(x => x.IsFail) ?
+                                         FusionFailErros(partialData) :
+                                         MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
+
+                            return result;
+                        });
+    return result;
+}
+```
+
+🔑 **Cortocircuita**: en cuanto un elemento falla, deja de procesar el resto. El resultado
+contiene **solo ese error** (porque es el único fallo de la lista).
+
+```csharp
+// Procesar pagos: si uno falla, no sigas cobrando
+var r = pagos.ProjectionWhile(ProcesarPago);
+
+// Si el pago 3 de 100 falla, los pagos 4..100 NO se intentan
+```
+
+⚠️ **Detalle sutil de la sobrecarga con índice:** el `index++` está **después** del `break`:
+
+```csharp
+int index = 0;
+foreach (var item in x)
+{
+    var funcResult = completeFuncTransform(item, index);
+    partialData.Add(funcResult);
+    if (funcResult.IsFail) break;
+    index++;                          // ← solo se incrementa si NO falló
+}
+```
+
+Esto funciona correctamente (el índice es válido en cada llamada), pero significa que el
+índice **cuenta elementos procesados con éxito**. En este bucle coincide con la posición real
+porque se corta al primer fallo.
+
+💡 **`ProjectionWhile` es el equivalente de colección de `Bind`**: cortocircuita.
+**`Projection` es el que acumula**, algo que ningún otro operador de la librería hace.
+
+---
+
+## `ProjectionParallelAsync` — concurrencia real
+
+Este es el único lugar de la librería con **paralelismo auténtico**:
+
+```csharp
+public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync<T, TResult>(
+        this IEnumerable<T>                   source,
+             Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+{
+    var result = await source.ToMlResultValidAsync()
+                        .BindAsync(async colec =>
+                        {
+                            List<Task<MlResult<TResult>>> tasks =
+                                colec.Select(item => completeFuncTransformAsync(item)).ToList();
+
+                            await Task.WhenAll(tasks);
+
+                            List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
+
+                            var result = partialData.Any(x => x.IsFail) ?
+                                         FusionFailErros(partialData) :
+                                         await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+
+                            return result;
+                        });
+    return result;
+}
+```
+
+🔑 Lanza **todas** las tareas a la vez y espera con `Task.WhenAll`. Acumula todos los errores,
+como `Projection`.
+
+```csharp
+// Consultar el stock de 50 artículos en un servicio externo, en paralelo
+var r = await articulos.ProjectionParallelAsync(a => _stockApi.ConsultarAsync(a.Sku));
+```
+
+⚠️ **No hay límite de concurrencia.** Si la colección tiene 10 000 elementos, se lanzan
+10 000 tareas simultáneas. Puedes agotar el pool de conexiones o provocar un
+*rate limit* en la API. **Trocea tú la colección** si es grande:
+
+```csharp
+// ✅ Lotes de 20
+var resultados = new List<MlResult<Stock>>();
+foreach (var lote in articulos.Chunk(20))
+{
+    var r = await lote.ProjectionParallelAsync(a => _stockApi.ConsultarAsync(a.Sku));
+    // …acumula
+}
+```
+
+⚠️ **Usa `t.Result` después de `Task.WhenAll`**, no `await t`. Es correcto (las tareas ya
+están completadas), pero significa que si alguna tarea **lanza una excepción**, se propaga
+envuelta en `AggregateException` en lugar de la excepción original. **Envuelve tus delegados
+con `TryToMlResultAsync`** para que las excepciones se conviertan en fallos del carril:
+
+```csharp
+// ✅ El delegado no lanza nunca: devuelve MlResult
+var r = await articulos.ProjectionParallelAsync(async a =>
+{
+    Func<string, Task<Stock>> consulta = _stockApi.ConsultarAsync;
+    return await consulta.TryToMlResultAsync(a.Sku, ex => $"Error al consultar {a.Sku}");
+});
+```
+
+⚠️ **Solo existe en versión asíncrona** (obviamente) y **solo con delegado asíncrono**.
+
+---
+
+## `ProjectionSplit` — separar aciertos de fallos
+
+```csharp
+public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>
+    ProjectionSplit<T, TResult>(this IEnumerable<T> source, Func<T, MlResult<TResult>> completeFuncTransform)
+    where T : notnull
+{
+    var result = EnsureFp.NotNull(completeFuncTransform, "completeFuncTransform cannot be null")
+                        .Map(x =>
+                        {
+                            var partialData = source.Where(z => z is not null)
+                                                    .Select(z => (z, completeFuncTransform(z))).ToList();
+
+                            var partialResult = (
+                                valids: partialData.Where(x => x.Item2.IsValid).ToDictionary(x => x.Item1, x => x.Item2.SecureValidValue()),
+                                fails : partialData.Where(x => x.Item2.IsFail ).ToDictionary(x => x.Item1, x => x.Item2.SecureFailErrorsDetails()));
+                            return partialResult;
+                        });
+    return result;
+}
+```
+
+🔑 **Es el más útil de los cuatro para procesamiento por lotes**, y el que suele pasar
+desapercibido. Devuelve **dos diccionarios**, indexados por el elemento original:
+
+- `valids`: elemento original → resultado transformado.
+- `fails`: elemento original → errores.
+
+```csharp
+var r = await pedidos.ProjectionSplitAsync(p => ProcesarAsync(p));
+
+var (procesados, rechazados) = r.SecureValidValue();
+
+_log.LogInformation("{Ok} procesados, {Ko} rechazados", procesados.Count, rechazados.Count);
+
+foreach (var (pedido, errores) in rechazados)
+    _log.LogWarning("Pedido {Id}: {Errores}", pedido.Id, errores.ToErrorsDescription());
+
+await GuardarAsync(procesados.Values);   // ← guarda solo los buenos
+```
+
+### Particularidades clave
+
+⚠️ **Prácticamente nunca falla.** El único `Fail` posible es que el propio delegado sea
+`null` (lo comprueba con `EnsureFp.NotNull`). Los fallos de los elementos **no** hacen fallar
+el resultado: van al diccionario `fails`.
+
+⚠️ **Descarta silenciosamente los elementos `null`** (`Where(z => z is not null)`). Si tu
+colección tiene nulos, desaparecen sin aviso: no están ni en `valids` ni en `fails`.
+
+```csharp
+var items = new[] { "a", null, "b" };
+var r = items.ProjectionSplit(Procesar);
+// valids + fails suman 2, no 3. El null se descartó en silencio.
+```
+
+⚠️ **Exige `where T : notnull`** y usa el elemento como **clave de diccionario**. Dos
+consecuencias importantes:
+
+1. **Si hay elementos duplicados, `ToDictionary` lanza `ArgumentException`.**
+2. La igualdad depende de `Equals`/`GetHashCode` de `T`. Con `record`, la igualdad es
+   estructural: **dos elementos con los mismos valores cuentan como duplicados**.
+
+```csharp
+// ❌ Con records de igualdad estructural, esto LANZA si hay dos líneas idénticas
+public record Linea(string Sku, int Cantidad);
+var r = lineas.ProjectionSplit(Validar);   // ⚠️ ArgumentException si hay duplicados
+
+// ✅ Usa una clave única, o desduplica antes
+var r = lineas.Select((l, i) => (Indice: i, Linea: l))
+              .ProjectionSplit(t => Validar(t.Linea));
+```
+
+⚠️ La variante con delegado asíncrono (`ProjectionSplitAsync` con
+`Func<T, Task<MlResult<TResult>>>`) recorre **en secuencia** con `foreach` + `await`. No hay
+versión paralela de `ProjectionSplit`.
+
+---
+
+## Los agregadores: `FusionFailErros`, `FusionErrosIfExists`, `VerifiedEnumerableResultData`
+
+Estos tres métodos operan directamente sobre `IEnumerable<MlResult<T>>` y son la maquinaria
+interna de las proyecciones. También puedes usarlos tú.
+
+### `VerifiedEnumerableResultData` — el más recomendable
+
+```csharp
+public static MlResult<IEnumerable<T>> VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>> source)
+    => source.Any(x => x.IsFail) ?
+       FusionFailErros(source)   :
+       MlResult<IEnumerable<T>>.Valid(source.Select(x => x.Value));
+```
+
+Convierte una colección de resultados en un resultado de colección. **Es el que debes usar**
+si ya tienes un `IEnumerable<MlResult<T>>` en la mano:
+
+```csharp
+IEnumerable<MlResult<Linea>> resultados = ObtenerDeAlgunSitio();
+
+MlResult<IEnumerable<Linea>> r = resultados.VerifiedEnumerableResultData();
+```
+
+⚠️ Enumera `source` **dos veces** (`Any` y `Select`). Materializa con `.ToList()` si es una
+consulta diferida.
+
+### `FusionErrosIfExists` — equivalente seguro
+
+```csharp
+public static MlResult<IEnumerable<T>> FusionErrosIfExists<T>(this IEnumerable<MlResult<T>> source)
+{
+    var partialResult = source.Where(x => x.IsFail).ToList();
+
+    if (!partialResult.Any())
+        return MlResult<IEnumerable<T>>.Valid(source.Select(x => x.SecureValidValue()));
+
+    MlErrorsDetails result = partialResult.First().ErrorsDetails;
+    foreach (var item in partialResult.Skip(1))
+        result = result.Merge(item.ErrorsDetails);
+
+    return result;
+}
+```
+
+Hace lo mismo que `VerifiedEnumerableResultData` pero usando `SecureValidValue()` en lugar de
+`.Value`, y **maneja correctamente el caso "ninguno falló"**. Es la opción más robusta de las
+tres.
+
+### `FusionFailErros` — ⚠️ tiene un bug: exige que haya fallos
+
+```csharp
+public static MlResult<IEnumerable<T>> FusionFailErros<T>(this IEnumerable<MlResult<T>> source)
+{
+    var partialResult = source.Where(x => x.IsFail).ToList();
+
+    if (!partialResult.Any()) MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
+    //                        ↑ ⚠️ FALTA EL 'return': el resultado se descarta
+
+    MlErrorsDetails result = partialResult.First().ErrorsDetails;   // ⚠️ lanza si está vacío
+    // …
+}
+```
+
+⚠️⚠️ **Aviso importante:** en la comprobación de "no hay fallos" **falta el `return`**. El
+`MlResult.Fail(...)` se construye y se descarta, y la ejecución continúa hasta
+`partialResult.First()`, que **lanza `InvalidOperationException`** sobre una lista vacía.
+
+🔑 **Consecuencia práctica:** **nunca llames a `FusionFailErros` directamente** salvo que
+estés seguro de que hay al menos un fallo. Las proyecciones internas lo hacen bien (siempre
+comprueban `Any(x => x.IsFail)` antes), pero tú no tienes por qué acordarte.
+
+```csharp
+// ❌ Si todos los resultados son válidos, LANZA InvalidOperationException
+var r = resultados.FusionFailErros();
+
+// ✅ Usa cualquiera de estos dos, que sí manejan el caso vacío
+var r = resultados.VerifiedEnumerableResultData();
+var r = resultados.FusionErrosIfExists();
+```
+
+Los tres tienen variantes `*Async` (envolturas `.ToAsync()` y sobrecargas desde
+`Task<IEnumerable<MlResult<T>>>`.
+
+💡 Nótese la errata en el nombre: **`FusionFailErros`**, sin la `e` de "Errors". Está así en
+la API pública.
+
+---
+
+## ⚠️ Particularidades reales del código fuente
+
+**1. `Projection` es el único operador de la librería que ACUMULA errores.** `Combine`,
+`Bind` y `Map` cortocircuitan.
+
+**2. `ProjectionAsync` con delegado asíncrono es SECUENCIAL**, no paralelo. Solo
+`ProjectionParallelAsync` paraleliza.
+
+**3. `ProjectionParallelAsync` no limita la concurrencia**: lanza tantas tareas como
+elementos. Trocea tú las colecciones grandes.
+
+**4. `ProjectionParallelAsync` usa `t.Result` tras `Task.WhenAll`**: las excepciones llegan
+como `AggregateException`. Envuelve los delegados con `TryToMlResultAsync`.
+
+**5. `ProjectionSplit` casi nunca falla**: solo si el delegado es `null`. Los fallos de
+elementos van al diccionario `fails`.
+
+**6. `ProjectionSplit` descarta los elementos `null` en silencio** (`Where(z => z is not null)`).
+
+**7. `ProjectionSplit` usa el elemento como clave de diccionario**: ⚠️ **lanza
+`ArgumentException` con elementos duplicados** (ojo con los `record`, cuya igualdad es
+estructural).
+
+**8. ⚠️ `FusionFailErros` tiene un bug**: falta el `return` en el caso "no hay fallos", así
+que **lanza `InvalidOperationException`** si se lo llamas con una colección sin fallos. Usa
+`VerifiedEnumerableResultData` o `FusionErrosIfExists`.
+
+**9. `VerifiedEnumerableResultData` enumera la colección dos veces** (`Any` + `Select`).
+Materializa las consultas diferidas.
+
+**10. Erratas en los nombres públicos:** `FusionFailErros` y `FusionErrosIfExists` (falta
+una `e` en "Errors" en ambos). Están así en la API.
+
+**11. Hay mucho código comentado** en el archivo (versiones antiguas con
+`Func<T, MlResult<T>>` en lugar de `Func<T, MlResult<TResult>>`). Todas las versiones activas
+son las genéricas de dos tipos.
+
+**12. Todas las variantes tienen sobrecarga con índice** (`Func<T, int, ...>`), incluida la
+paralela.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Uso |
+|-----------|-----|
+| Validar toda una colección e informar de **todos** los errores | `Projection` |
+| Parar en el primer fallo (pasos costosos o dependientes) | `ProjectionWhile` |
+| Llamadas independientes a servicios externos, en paralelo | `ProjectionParallelAsync` |
+| Procesar lo bueno e informar de lo malo | `ProjectionSplit` |
+| Mensajes con el número de línea | Sobrecarga con `Func<T, int, ...>` |
+| Ya tengo un `IEnumerable<MlResult<T>>` | `VerifiedEnumerableResultData` |
+| Lo mismo, con manejo robusto del caso vacío | `FusionErrosIfExists` |
+| Fusionar errores de una colección con fallos garantizados | `FusionFailErros` (⚠️ lanza si no hay fallos) |
+| Rechazar una colección vacía | [`EmptyToFailed`](../Several/1_EmptyToFailed.md) |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Validación de Usuarios en Lote
+### Ejemplo 1: importar un CSV informando de todas las líneas malas
 
 ```csharp
-public class UserBatchValidationService
+public class ImportadorCsv
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IEmailService _emailService;
-    private readonly IValidationService _validationService;
-    
-    public async Task<MlResult<IEnumerable<ValidatedUser>>> ValidateUserBatchAsync(
-        IEnumerable<UserRegistrationRequest> requests)
+    public MlResult<IEnumerable<Movimiento>> Importar(IEnumerable<string> lineas)
+        => lineas.EmptyToFailed("El fichero no contiene líneas")!
+                 // Projection: quiero saber TODAS las líneas defectuosas de una vez
+                 .Bind(ls => ls.Projection((linea, i) => ParsearLinea(linea, i + 1)));
+
+    private MlResult<Movimiento> ParsearLinea(string linea, int numeroLinea)
     {
-        // Completar datos de usuarios aplicando validaciones completas
-        var validationResult = await requests.CompleteDataAsync(async request =>
+        var campos = linea.Split(';');
+
+        return EnsureFp.That(campos, campos.Length == 4,
+                             $"Línea {numeroLinea}: se esperaban 4 campos y hay {campos.Length}")
+                       .Bind(c => decimal.TryParse(c[2], out var importe)
+                                      ? importe.ToMlResultValid()
+                                      : ($"Línea {numeroLinea}: importe ilegible '{c[2]}'",
+                                         new Dictionary<string, object> { ["Linea"] = numeroLinea })
+                                            .ToMlResultFail<decimal>())
+                       .Map(importe => new Movimiento(campos[0], campos[1], importe, campos[3]));
+    }
+}
+
+// El resultado fallido contiene TODOS los errores:
+// "Línea 12: importe ilegible 'x'", "Línea 47: se esperaban 4 campos y hay 3", …
+```
+
+### Ejemplo 2: `ProjectionWhile` para una migración transaccional
+
+```csharp
+public async Task<MlResult<IEnumerable<Script>>> AplicarMigracionesAsync(IEnumerable<Script> scripts)
+    // Los scripts son dependientes: si el 3 falla, aplicar el 4 corrompería la BD
+    => await scripts.ProjectionWhileAsync(async s =>
+       {
+           Func<Script, Task> ejecutar = _db.EjecutarAsync;
+
+           return await ejecutar.TryToMlResultAsync(s,
+                      ex => $"Falló la migración '{s.Nombre}': {ex.Message}");
+       });
+```
+
+### Ejemplo 3: `ProjectionParallelAsync` con troceado y captura de excepciones
+
+```csharp
+public class SincronizadorStock
+{
+    public async Task<MlResult<IEnumerable<Stock>>> SincronizarAsync(IEnumerable<Articulo> articulos)
+    {
+        var todos = new List<MlResult<Stock>>();
+
+        // Lotes de 20 para no saturar la API externa
+        foreach (var lote in articulos.Chunk(20))
         {
-            // Validar formato de datos
-            var formatValidation = await ValidateUserFormatAsync(request);
-            if (formatValidation.IsFailed)
-                return formatValidation.ToMlResultFail<ValidatedUser>();
-            
-            // Verificar duplicados
-            var duplicateValidation = await CheckDuplicateUserAsync(request.Email);
-            if (duplicateValidation.IsFailed)
-                return duplicateValidation.ToMlResultFail<ValidatedUser>();
-            
-            // Validar dominio de email
-            var emailDomainValidation = await ValidateEmailDomainAsync(request.Email);
-            if (emailDomainValidation.IsFailed)
-                return emailDomainValidation.ToMlResultFail<ValidatedUser>();
-            
-            // Crear usuario validado
-            return MlResult<ValidatedUser>.Valid(new ValidatedUser
+            var r = await lote.ProjectionParallelAsync(async a =>
             {
-                Email = request.Email,
-                Name = request.Name,
-                Phone = request.Phone,
-                ValidationId = Guid.NewGuid(),
-                ValidatedAt = DateTime.UtcNow,
-                Status = "Validated"
+                Func<string, Task<Stock>> consulta = _api.ConsultarStockAsync;
+
+                // Envolvemos para que el delegado NUNCA lance dentro de Task.WhenAll
+                return await consulta.TryToMlResultAsync(a.Sku,
+                           ex => $"No se pudo consultar el stock de {a.Sku}: {ex.Message}");
             });
-        });
-        
-        return validationResult;
-    }
-    
-    public async Task<MlResult<IEnumerable<EnrichedUserProfile>>> EnrichUserProfilesAsync(
-        IEnumerable<int> userIds)
-    {
-        // Enriquecer perfiles de usuario con datos adicionales
-        return await userIds.CompleteDataAsync(async userId =>
-        {
-            try
-            {
-                // Obtener datos básicos del usuario
-                var basicUser = await _userRepository.GetByIdAsync(userId);
-                if (basicUser == null)
-                    return MlResult<EnrichedUserProfile>.Fail($"User {userId} not found");
-                
-                // Enriquecer con datos de perfil
-                var profileData = await GetUserProfileDataAsync(userId);
-                var preferences = await GetUserPreferencesAsync(userId);
-                var activitySummary = await GetUserActivitySummaryAsync(userId);
-                var socialConnections = await GetUserSocialConnectionsAsync(userId);
-                
-                // Combinar todos los datos
-                var enrichedProfile = new EnrichedUserProfile
-                {
-                    UserId = userId,
-                    BasicInfo = basicUser,
-                    ProfileData = profileData,
-                    Preferences = preferences,
-                    ActivitySummary = activitySummary,
-                    SocialConnections = socialConnections,
-                    EnrichmentTimestamp = DateTime.UtcNow,
-                    DataSources = new[] { "UserRepo", "ProfileService", "PreferencesService", "ActivityService", "SocialService" }
-                };
-                
-                return MlResult<EnrichedUserProfile>.Valid(enrichedProfile);
-            }
-            catch (Exception ex)
-            {
-                return MlResult<EnrichedUserProfile>.Fail($"Failed to enrich profile for user {userId}: {ex.Message}");
-            }
-        });
-    }
-    
-    public async Task<MlResult<IEnumerable<ProcessedDocument>>> ProcessDocumentsAsync(
-        IEnumerable<DocumentUploadRequest> documents)
-    {
-        // Procesar documentos con validación y transformación
-        var processingResult = await documents.CompleteDataAsync(async doc =>
-        {
-            // Validar tamaño del archivo
-            if (doc.FileSize > 10 * 1024 * 1024) // 10MB
-                return MlResult<ProcessedDocument>.Fail($"File {doc.FileName} exceeds size limit");
-            
-            // Validar tipo de archivo
-            var allowedTypes = new[] { ".pdf", ".docx", ".txt", ".jpg", ".png" };
-            var extension = Path.GetExtension(doc.FileName);
-            if (!allowedTypes.Contains(extension.ToLower()))
-                return MlResult<ProcessedDocument>.Fail($"File type {extension} not allowed");
-            
-            // Escanear virus
-            var virusScanResult = await ScanForVirusAsync(doc.FileContent);
-            if (!virusScanResult.IsClean)
-                return MlResult<ProcessedDocument>.Fail($"Virus detected in {doc.FileName}");
-            
-            // Procesar contenido
-            var contentAnalysis = await AnalyzeDocumentContentAsync(doc.FileContent);
-            var metadata = await ExtractMetadataAsync(doc.FileContent);
-            var thumbnails = await GenerateThumbnailsAsync(doc.FileContent);
-            
-            // Almacenar en sistema de archivos seguro
-            var storageLocation = await StoreDocumentSecurelyAsync(doc);
-            
-            return MlResult<ProcessedDocument>.Valid(new ProcessedDocument
-            {
-                OriginalFileName = doc.FileName,
-                StorageLocation = storageLocation,
-                ContentAnalysis = contentAnalysis,
-                Metadata = metadata,
-                Thumbnails = thumbnails,
-                ProcessedAt = DateTime.UtcNow,
-                FileSize = doc.FileSize,
-                FileType = extension,
-                ProcessingId = Guid.NewGuid()
-            });
-        });
-        
-        return processingResult;
-    }
-    
-    public async Task<MlResult<BatchProcessingReport>> ProcessUserDataBatchWithReportAsync(
-        IEnumerable<UserDataRequest> requests)
-    {
-        var batchId = Guid.NewGuid();
-        var startTime = DateTime.UtcNow;
-        
-        // Procesar datos y capturar tanto éxitos como fallos
-        var individualResults = new List<MlResult<ProcessedUserData>>();
-        
-        foreach (var request in requests)
-        {
-            var result = await ProcessSingleUserDataAsync(request);
-            individualResults.Add(result);
+
+            todos.Add(r.Map(items => items));   // acumulamos el resultado del lote
         }
-        
-        // Separar éxitos y fallos
-        var successes = individualResults.Where(r => r.IsValid).ToList();
-        var failures = individualResults.Where(r => r.IsFailed).ToList();
-        
-        // Crear reporte detallado
-        var processingTime = DateTime.UtcNow - startTime;
-        
-        var report = new BatchProcessingReport
-        {
-            BatchId = batchId,
-            TotalRequests = requests.Count(),
-            SuccessfulProcessed = successes.Count,
-            FailedProcessed = failures.Count,
-            SuccessfulData = successes.Select(s => s.Value).ToArray(),
-            FailureDetails = failures.Select(f => new FailureDetail
-            {
-                ErrorMessage = string.Join("; ", f.ErrorsDetails.AllErrors),
-                Timestamp = DateTime.UtcNow
-            }).ToArray(),
-            ProcessingDuration = processingTime,
-            ProcessedAt = DateTime.UtcNow
-        };
-        
-        // Si hay fallos, fusionar errores pero incluir reporte parcial
-        if (failures.Any())
-        {
-            var fusionedErrors = await failures.FusionFailErrosAsync();
-            return MlResult<BatchProcessingReport>.Fail(
-                $"Batch processing partially failed. Report: {JsonSerializer.Serialize(report)}. " +
-                $"Errors: {string.Join("; ", fusionedErrors.ErrorsDetails.AllErrors)}");
-        }
-        
-        return MlResult<BatchProcessingReport>.Valid(report);
+
+        return todos.SelectMany(r => r.IsValid ? r.SecureValidValue() : [])
+                    .ToMlResultValid();
     }
-    
-    // Métodos auxiliares
-    private async Task<MlResult<UserFormatValidation>> ValidateUserFormatAsync(UserRegistrationRequest request)
-    {
-        var errors = new List<string>();
-        
-        if (string.IsNullOrWhiteSpace(request.Email) || !IsValidEmail(request.Email))
-            errors.Add("Invalid email format");
-        
-        if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length < 2)
-            errors.Add("Name must be at least 2 characters");
-        
-        if (!string.IsNullOrWhiteSpace(request.Phone) && !IsValidPhone(request.Phone))
-            errors.Add("Invalid phone format");
-        
-        return errors.Any()
-            ? MlResult<UserFormatValidation>.Fail(string.Join("; ", errors))
-            : MlResult<UserFormatValidation>.Valid(new UserFormatValidation { IsValid = true });
-    }
-    
-    private async Task<MlResult<DuplicateValidation>> CheckDuplicateUserAsync(string email)
-    {
-        var existingUser = await _userRepository.GetByEmailAsync(email);
-        return existingUser != null
-            ? MlResult<DuplicateValidation>.Fail($"User with email {email} already exists")
-            : MlResult<DuplicateValidation>.Valid(new DuplicateValidation { IsUnique = true });
-    }
-    
-    private async Task<MlResult<EmailDomainValidation>> ValidateEmailDomainAsync(string email)
-    {
-        var domain = email.Split('@').LastOrDefault();
-        var blockedDomains = new[] { "tempmail.com", "10minutemail.com", "throwaway.email" };
-        
-        return blockedDomains.Contains(domain)
-            ? MlResult<EmailDomainValidation>.Fail($"Email domain {domain} is not allowed")
-            : MlResult<EmailDomainValidation>.Valid(new EmailDomainValidation { IsValid = true });
-    }
-    
-    private async Task<MlResult<ProcessedUserData>> ProcessSingleUserDataAsync(UserDataRequest request)
-    {
-        try
-        {
-            // Simulación de procesamiento complejo
-            await Task.Delay(100); // Simular trabajo async
-            
-            if (request.UserId <= 0)
-                return MlResult<ProcessedUserData>.Fail("Invalid user ID");
-            
-            return MlResult<ProcessedUserData>.Valid(new ProcessedUserData
-            {
-                UserId = request.UserId,
-                ProcessedData = $"Processed data for user {request.UserId}",
-                ProcessedAt = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            return MlResult<ProcessedUserData>.Fail($"Processing failed: {ex.Message}");
-        }
-    }
-    
-    private bool IsValidEmail(string email) => email.Contains("@") && email.Contains(".");
-    private bool IsValidPhone(string phone) => phone.All(char.IsDigit) && phone.Length >= 10;
-}
-
-// Clases de apoyo
-public class UserRegistrationRequest
-{
-    public string Email { get; set; }
-    public string Name { get; set; }
-    public string Phone { get; set; }
-}
-
-public class ValidatedUser
-{
-    public string Email { get; set; }
-    public string Name { get; set; }
-    public string Phone { get; set; }
-    public Guid ValidationId { get; set; }
-    public DateTime ValidatedAt { get; set; }
-    public string Status { get; set; }
-}
-
-public class EnrichedUserProfile
-{
-    public int UserId { get; set; }
-    public object BasicInfo { get; set; }
-    public object ProfileData { get; set; }
-    public object Preferences { get; set; }
-    public object ActivitySummary { get; set; }
-    public object SocialConnections { get; set; }
-    public DateTime EnrichmentTimestamp { get; set; }
-    public string[] DataSources { get; set; }
-}
-
-public class DocumentUploadRequest
-{
-    public string FileName { get; set; }
-    public byte[] FileContent { get; set; }
-    public long FileSize { get; set; }
-}
-
-public class ProcessedDocument
-{
-    public string OriginalFileName { get; set; }
-    public string StorageLocation { get; set; }
-    public object ContentAnalysis { get; set; }
-    public object Metadata { get; set; }
-    public object Thumbnails { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    public long FileSize { get; set; }
-    public string FileType { get; set; }
-    public Guid ProcessingId { get; set; }
-}
-
-public class BatchProcessingReport
-{
-    public Guid BatchId { get; set; }
-    public int TotalRequests { get; set; }
-    public int SuccessfulProcessed { get; set; }
-    public int FailedProcessed { get; set; }
-    public ProcessedUserData[] SuccessfulData { get; set; }
-    public FailureDetail[] FailureDetails { get; set; }
-    public TimeSpan ProcessingDuration { get; set; }
-    public DateTime ProcessedAt { get; set; }
-}
-
-public class ProcessedUserData
-{
-    public int UserId { get; set; }
-    public string ProcessedData { get; set; }
-    public DateTime ProcessedAt { get; set; }
-}
-
-public class FailureDetail
-{
-    public string ErrorMessage { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-
-public class UserDataRequest
-{
-    public int UserId { get; set; }
-    public object Data { get; set; }
-}
-
-public class UserFormatValidation
-{
-    public bool IsValid { get; set; }
-}
-
-public class DuplicateValidation
-{
-    public bool IsUnique { get; set; }
-}
-
-public class EmailDomainValidation
-{
-    public bool IsValid { get; set; }
 }
 ```
 
-### Ejemplo 2: Sistema de Procesamiento de Transacciones Financieras
+### Ejemplo 4: `ProjectionSplit` para procesamiento parcial
 
 ```csharp
-public class FinancialTransactionProcessor
+public class ProcesadorNominas
 {
-    private readonly IBankingService _bankingService;
-    private readonly IFraudDetectionService _fraudDetection;
-    private readonly IAuditService _auditService;
-    private readonly INotificationService _notificationService;
-    
-    public async Task<MlResult<IEnumerable<ProcessedTransaction>>> ProcessTransactionBatchAsync(
-        IEnumerable<TransactionRequest> transactions)
+    public async Task<MlResult<InformeNomina>> ProcesarMesAsync(IEnumerable<Empleado> empleados)
     {
-        var batchId = Guid.NewGuid();
-        var processingStartTime = DateTime.UtcNow;
-        
-        // Procesar transacciones aplicando validaciones y verificaciones
-        var processingResult = await transactions.CompleteDataAsync(async transaction =>
+        // Clave única explícita para evitar el problema de duplicados
+        var indexados = empleados.Select((e, i) => (Id: $"{e.Nif}#{i}", Empleado: e)).ToList();
+
+        var r = await indexados.ProjectionSplitAsync(t => CalcularNominaAsync(t.Empleado));
+
+        return r.Map(split =>
         {
-            try
-            {
-                // 1. Validación básica de la transacción
-                var basicValidation = ValidateTransactionBasics(transaction);
-                if (basicValidation.IsFailed)
-                    return basicValidation.ToMlResultFail<ProcessedTransaction>();
-                
-                // 2. Verificación de fondos
-                var fundsValidation = await VerifyAccountFundsAsync(
-                    transaction.FromAccountId, transaction.Amount);
-                if (fundsValidation.IsFailed)
-                    return fundsValidation.ToMlResultFail<ProcessedTransaction>();
-                
-                // 3. Detección de fraude
-                var fraudCheck = await _fraudDetection.AnalyzeTransactionAsync(transaction);
-                if (fraudCheck.IsSuspicious)
-                    return MlResult<ProcessedTransaction>.Fail(
-                        $"Transaction flagged as suspicious: {fraudCheck.Reason}");
-                
-                // 4. Verificación de límites
-                var limitsCheck = await CheckTransactionLimitsAsync(transaction);
-                if (limitsCheck.IsFailed)
-                    return limitsCheck.ToMlResultFail<ProcessedTransaction>();
-                
-                // 5. Procesamiento de la transacción
-                var transactionResult = await _bankingService.ProcessTransactionAsync(transaction);
-                if (!transactionResult.IsSuccessful)
-                    return MlResult<ProcessedTransaction>.Fail(
-                        $"Transaction processing failed: {transactionResult.ErrorMessage}");
-                
-                // 6. Auditoría
-                await _auditService.LogTransactionAsync(transaction, transactionResult);
-                
-                // 7. Crear resultado procesado
-                return MlResult<ProcessedTransaction>.Valid(new ProcessedTransaction
-                {
-                    TransactionId = transactionResult.TransactionId,
-                    OriginalRequest = transaction,
-                    ProcessedAt = DateTime.UtcNow,
-                    BatchId = batchId,
-                    Status = "Completed",
-                    ProcessingDuration = DateTime.UtcNow - processingStartTime,
-                    FraudScore = fraudCheck.Score,
-                    BankTransactionId = transactionResult.BankTransactionId
-                });
-            }
-            catch (Exception ex)
-            {
-                return MlResult<ProcessedTransaction>.Fail(
-                    $"Transaction processing exception: {ex.Message}");
-            }
-        });
-        
-        // Si el procesamiento del lote falla, enviar notificaciones
-        if (processingResult.IsFailed)
-        {
-            await _notificationService.NotifyBatchProcessingFailedAsync(
-                batchId, processingResult.ErrorsDetails);
-        }
-        else
-        {
-            await _notificationService.NotifyBatchProcessingCompletedAsync(
-                batchId, processingResult.Value.Count());
-        }
-        
-        return processingResult;
-    }
-    
-    public async Task<MlResult<IEnumerable<ValidatedAccount>>> ValidateAccountsForTransferAsync(
-        IEnumerable<string> accountNumbers)
-    {
-        return await accountNumbers.CompleteDataAsync(async accountNumber =>
-        {
-            // Validar formato de número de cuenta
-            if (!IsValidAccountNumberFormat(accountNumber))
-                return MlResult<ValidatedAccount>.Fail($"Invalid account number format: {accountNumber}");
-            
-            // Verificar existencia de la cuenta
-            var accountExists = await _bankingService.AccountExistsAsync(accountNumber);
-            if (!accountExists)
-                return MlResult<ValidatedAccount>.Fail($"Account not found: {accountNumber}");
-            
-            // Verificar estado de la cuenta
-            var accountStatus = await _bankingService.GetAccountStatusAsync(accountNumber);
-            if (!accountStatus.IsActive)
-                return MlResult<ValidatedAccount>.Fail($"Account is not active: {accountNumber}");
-            
-            if (accountStatus.IsFrozen)
-                return MlResult<ValidatedAccount>.Fail($"Account is frozen: {accountNumber}");
-            
-            // Obtener información adicional de la cuenta
-            var accountInfo = await _bankingService.GetAccountInfoAsync(accountNumber);
-            
-            return MlResult<ValidatedAccount>.Valid(new ValidatedAccount
-            {
-                AccountNumber = accountNumber,
-                AccountType = accountInfo.AccountType,
-                Currency = accountInfo.Currency,
-                CurrentBalance = accountInfo.CurrentBalance,
-                ValidatedAt = DateTime.UtcNow,
-                Status = "Valid"
-            });
+            var (correctas, fallidas) = split;
+
+            foreach (var (clave, errores) in fallidas)
+                _log.LogWarning("Nómina de {Clave} no calculada: {Errores}",
+                                clave.Id, errores.ToErrorsDescription());
+
+            return new InformeNomina(
+                Calculadas: correctas.Values.ToList(),
+                Incidencias: fallidas.Select(f => new Incidencia(f.Key.Empleado.Nif,
+                                                                f.Value.ToErrorsMessages())).ToList());
         });
     }
-    
-    public async Task<MlResult<IEnumerable<RecurringPaymentSetup>>> SetupRecurringPaymentsAsync(
-        IEnumerable<RecurringPaymentRequest> requests)
-    {
-        return await requests.CompleteDataAsync(async request =>
-        {
-            // Validar configuración de pago recurrente
-            var configValidation = ValidateRecurringPaymentConfig(request);
-            if (configValidation.IsFailed)
-                return configValidation.ToMlResultFail<RecurringPaymentSetup>();
-            
-            // Verificar autorización
-            var authorizationResult = await VerifyPaymentAuthorizationAsync(request);
-            if (authorizationResult.IsFailed)
-                return authorizationResult.ToMlResultFail<RecurringPaymentSetup>();
-            
-            // Configurar pago recurrente
-            var setupResult = await _bankingService.SetupRecurringPaymentAsync(request);
-            if (!setupResult.IsSuccessful)
-                return MlResult<RecurringPaymentSetup>.Fail(
-                    $"Failed to setup recurring payment: {setupResult.ErrorMessage}");
-            
-            // Programar próximo pago
-            var nextPaymentDate = CalculateNextPaymentDate(request.Schedule);
-            await _bankingService.ScheduleNextPaymentAsync(setupResult.PaymentId, nextPaymentDate);
-            
-            return MlResult<RecurringPaymentSetup>.Valid(new RecurringPaymentSetup
-            {
-                PaymentId = setupResult.PaymentId,
-                OriginalRequest = request,
-                NextPaymentDate = nextPaymentDate,
-                SetupAt = DateTime.UtcNow,
-                Status = "Active"
-            });
-        });
-    }
-    
-    // Ejemplo de manejo de errores fusionados
-    public async Task<MlResult<BatchValidationReport>> ValidateTransactionBatchAsync(
-        IEnumerable<TransactionRequest> transactions)
-    {
-        var batchId = Guid.NewGuid();
-        var validationResults = new List<MlResult<TransactionValidation>>();
-        
-        // Validar cada transacción individualmente
-        foreach (var transaction in transactions)
-        {
-            var validation = await ValidateSingleTransactionAsync(transaction);
-            validationResults.Add(validation);
-        }
-        
-        // Usar FusionErrosIfExists para obtener tanto éxitos como fallos
-        var fusionResult = validationResults.FusionErrosIfExists();
-        
-        var report = new BatchValidationReport
-        {
-            BatchId = batchId,
-            TotalTransactions = transactions.Count(),
-            ValidatedAt = DateTime.UtcNow
-        };
-        
-        if (fusionResult.IsValid)
-        {
-            // Todas las validaciones pasaron
-            report.SuccessfulValidations = fusionResult.Value.Count();
-            report.FailedValidations = 0;
-            report.Status = "AllValid";
-            report.ValidTransactions = fusionResult.Value.ToArray();
-        }
-        else
-        {
-            // Algunas validaciones fallaron
-            var successfulValidations = validationResults.Where(r => r.IsValid).ToList();
-            report.SuccessfulValidations = successfulValidations.Count;
-            report.FailedValidations = validationResults.Count - successfulValidations.Count;
-            report.Status = "PartiallyValid";
-            report.ValidTransactions = successfulValidations.Select(r => r.Value).ToArray();
-            report.ValidationErrors = fusionResult.ErrorsDetails.AllErrors.ToArray();
-        }
-        
-        return MlResult<BatchValidationReport>.Valid(report);
-    }
-    
-    // Métodos auxiliares
-    private MlResult<TransactionBasicValidation> ValidateTransactionBasics(TransactionRequest transaction)
-    {
-        var errors = new List<string>();
-        
-        if (transaction.Amount <= 0)
-            errors.Add("Transaction amount must be positive");
-        
-        if (string.IsNullOrEmpty(transaction.FromAccountId))
-            errors.Add("Source account ID is required");
-        
-        if (string.IsNullOrEmpty(transaction.ToAccountId))
-            errors.Add("Destination account ID is required");
-        
-        if (transaction.FromAccountId == transaction.ToAccountId)
-            errors.Add("Source and destination accounts cannot be the same");
-        
-        return errors.Any()
-            ? MlResult<TransactionBasicValidation>.Fail(string.Join("; ", errors))
-            : MlResult<TransactionBasicValidation>.Valid(new TransactionBasicValidation { IsValid = true });
-    }
-    
-    private async Task<MlResult<FundsValidation>> VerifyAccountFundsAsync(string accountId, decimal amount)
-    {
-        var balance = await _bankingService.GetAccountBalanceAsync(accountId);
-        
-        return balance >= amount
-            ? MlResult<FundsValidation>.Valid(new FundsValidation { HasSufficientFunds = true })
-            : MlResult<FundsValidation>.Fail($"Insufficient funds. Required: {amount}, Available: {balance}");
-    }
-    
-    private bool IsValidAccountNumberFormat(string accountNumber) =>
-        !string.IsNullOrEmpty(accountNumber) && accountNumber.Length >= 10 && accountNumber.All(char.IsDigit);
-    
-    private DateTime CalculateNextPaymentDate(PaymentSchedule schedule) =>
-        schedule.Frequency switch
-        {
-            "Daily" => DateTime.Today.AddDays(1),
-            "Weekly" => DateTime.Today.AddDays(7),
-            "Monthly" => DateTime.Today.AddMonths(1),
-            _ => DateTime.Today.AddMonths(1)
-        };
 }
+```
 
-// Clases adicionales para el ejemplo
-public class TransactionRequest
-{
-    public string FromAccountId { get; set; }
-    public string ToAccountId { get; set; }
-    public decimal Amount { get; set; }
-    public string Currency { get; set; }
-    public string Description { get; set; }
-}
+Fíjate en que el resultado global **es válido**: el proceso terminó correctamente, aunque
+algunos elementos individuales tuvieran incidencias. Esa es la gran ventaja de
+`ProjectionSplit`.
 
-public class ProcessedTransaction
-{
-    public string TransactionId { get; set; }
-    public TransactionRequest OriginalRequest { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    public Guid BatchId { get; set; }
-    public string Status { get; set; }
-    public TimeSpan ProcessingDuration { get; set; }
-    public double FraudScore { get; set; }
-    public string BankTransactionId { get; set; }
-}
+### Ejemplo 5: qué no hacer
 
-public class ValidatedAccount
-{
-    public string AccountNumber { get; set; }
-    public string AccountType { get; set; }
-    public string Currency { get; set; }
-    public decimal CurrentBalance { get; set; }
-    public DateTime ValidatedAt { get; set; }
-    public string Status { get; set; }
-}
+```csharp
+// ❌ Select con función que devuelve MlResult: tipo inmanejable
+IEnumerable<MlResult<Linea>> inutil = crudas.Select(Validar);
 
-public class RecurringPaymentRequest
-{
-    public string FromAccountId { get; set; }
-    public string ToAccountId { get; set; }
-    public decimal Amount { get; set; }
-    public PaymentSchedule Schedule { get; set; }
-}
+// ✅
+MlResult<IEnumerable<Linea>> util = crudas.Projection(Validar);
 
-public class RecurringPaymentSetup
-{
-    public string PaymentId { get; set; }
-    public RecurringPaymentRequest OriginalRequest { get; set; }
-    public DateTime NextPaymentDate { get; set; }
-    public DateTime SetupAt { get; set; }
-    public string Status { get; set; }
-}
 
-public class BatchValidationReport
-{
-    public Guid BatchId { get; set; }
-    public int TotalTransactions { get; set; }
-    public int SuccessfulValidations { get; set; }
-    public int FailedValidations { get; set; }
-    public string Status { get; set; }
-    public TransactionValidation[] ValidTransactions { get; set; }
-    public string[] ValidationErrors { get; set; }
-    public DateTime ValidatedAt { get; set; }
-}
+// ❌ FusionFailErros sin garantía de fallos: LANZA InvalidOperationException
+var r = resultados.FusionFailErros();
 
-public class TransactionValidation
-{
-    public string TransactionId { get; set; }
-    public bool IsValid { get; set; }
-    public DateTime ValidatedAt { get; set; }
-}
+// ✅ Manejan bien el caso "todos válidos"
+var r = resultados.VerifiedEnumerableResultData();
+var r = resultados.FusionErrosIfExists();
 
-public class PaymentSchedule
-{
-    public string Frequency { get; set; } // Daily, Weekly, Monthly
-    public DateTime StartDate { get; set; }
-}
 
-public class TransactionBasicValidation
-{
-    public bool IsValid { get; set; }
-}
+// ❌ ProjectionSplit con records duplicados: ArgumentException en ToDictionary
+public record Linea(string Sku, int Cantidad);
+var r = lineasConDuplicados.ProjectionSplit(Validar);
 
-public class FundsValidation
+// ✅ Clave única
+var r = lineas.Select((l, i) => (i, l)).ProjectionSplit(t => Validar(t.l));
+
+
+// ❌ Esperar paralelismo de ProjectionAsync
+var r = await items.ProjectionAsync(i => LlamadaLentaAsync(i));   // ⚠️ SECUENCIAL
+
+// ✅
+var r = await items.ProjectionParallelAsync(i => LlamadaLentaAsync(i));
+
+
+// ❌ ProjectionParallelAsync sobre 10.000 elementos: 10.000 tareas simultáneas
+var r = await todosLosArticulos.ProjectionParallelAsync(Consultar);
+
+// ✅ Trocea
+foreach (var lote in todosLosArticulos.Chunk(25)) { /* … */ }
+
+
+// ❌ Delegado que lanza dentro de ProjectionParallelAsync: AggregateException
+var r = await items.ProjectionParallelAsync(i => _api.ConsultarAsync(i));  // puede lanzar
+
+// ✅ Envuelve con TryToMlResultAsync
+var r = await items.ProjectionParallelAsync(async i =>
 {
-    public bool HasSufficientFunds { get; set; }
-}
+    Func<Item, Task<Dato>> f = _api.ConsultarAsync;
+    return await f.TryToMlResultAsync(i, ex => $"Error en {i.Id}");
+});
+
+
+// ❌ Projection sobre una consulta diferida costosa (se enumera varias veces)
+var r = _db.Pedidos.Where(p => p.Abierto).Projection(Validar);
+
+// ✅ Materializa
+var r = _db.Pedidos.Where(p => p.Abierto).ToList().Projection(Validar);
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar CompleteData
-
-```csharp
-// ✅ Correcto: Validar y transformar cada elemento
-var validatedUsers = await userRequests.CompleteDataAsync(async request =>
-{
-    var validation = await ValidateUserAsync(request);
-    return validation.Map(user => EnrichUserData(user));
-});
-
-// ✅ Correcto: Procesar documentos con validación
-var processedDocs = await documents.CompleteDataAsync(async doc =>
-{
-    var scanResult = await ScanDocumentAsync(doc);
-    return scanResult.Bind(result => ProcessDocument(doc, result));
-});
-
-// ✅ Correcto: Transformar tipos manteniendo validación
-var dtoResults = await entities.CompleteDataAsync(async entity =>
-{
-    var validEntity = await ValidateEntityAsync(entity);
-    return validEntity.Map(e => e.ToDto());
-});
-
-// ❌ Incorrecto: Para transformaciones simples sin validación
-var simpleMapped = await items.CompleteDataAsync(async item =>
-    MlResult<string>.Valid(item.ToString())); // Mejor usar Select o Map directo
-```
-
-### 2. Manejo de Fusión de Errores
-
-```csharp
-// ✅ Correcto: Usar FusionErrosIfExists para reportes
-var validationResults = GetValidationResults();
-var fusionResult = validationResults.FusionErrosIfExists();
-
-if (fusionResult.IsValid)
-{
-    ProcessSuccessfulResults(fusionResult.Value);
-}
-else
-{
-    var errors = fusionResult.ErrorsDetails.AllErrors;
-    LogValidationErrors(errors);
-    NotifyAdministrators(errors);
-}
-
-// ✅ Correcto: Usar FusionFailErros cuando solo interesan errores
-var failedResults = GetOnlyFailedResults();
-if (failedResults.Any())
-{
-    var fusionedErrors = failedResults.FusionFailErros();
-    SendErrorReport(fusionedErrors.ErrorsDetails);
-}
-
-// ❌ Incorrecto: No manejar el caso donde no hay errores en FusionFailErros
-var results = GetMixedResults();
-var errorFusion = results.FusionFailErros(); // Puede fallar si no hay errores
-```
-
-### 3. Gestión de Recursos en Operaciones Async
-
-```csharp
-// ✅ Correcto: Usar using para recursos
-public async Task<MlResult<IEnumerable<ProcessedFile>>> ProcessFilesAsync(IEnumerable<string> filePaths)
-{
-    return await filePaths.CompleteDataAsync(async filePath =>
-    {
-        try
-        {
-            using var fileStream = File.OpenRead(filePath);
-            using var reader = new StreamReader(fileStream);
-            
-            var content = await reader.ReadToEndAsync();
-            var processed = await ProcessFileContentAsync(content);
-            
-            return MlResult<ProcessedFile>.Valid(processed);
-        }
-        catch (Exception ex)
-        {
-            return MlResult<ProcessedFile>.Fail($"Failed to process {filePath}: {ex.Message}");
-        }
-    });
-}
-
-// ✅ Correcto: Manejar timeouts en operaciones largas
-public async Task<MlResult<IEnumerable<ApiResponse>>> CallApisAsync(IEnumerable<ApiRequest> requests)
-{
-    return await requests.CompleteDataAsync(async request =>
-    {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        
-        try
-        {
-            var response = await _httpClient.SendAsync(request.ToHttpRequest(), cts.Token);
-            var apiResponse = await ParseResponseAsync(response);
-            return MlResult<ApiResponse>.Valid(apiResponse);
-        }
-        catch (OperationCanceledException)
-        {
-            return MlResult<ApiResponse>.Fail($"API call timeout for {request.Endpoint}");
-        }
-        catch (Exception ex)
-        {
-            return MlResult<ApiResponse>.Fail($"API call failed for {request.Endpoint}: {ex.Message}");
-        }
-    });
-}
-```
-
-### 4. Optimización de Rendimiento
-
-```csharp
-// ✅ Correcto: Usar ConfigureAwait(false) en bibliotecas
-public async Task<MlResult<IEnumerable<T>>> OptimizedCompleteDataAsync<T>(
-    IEnumerable<T> source,
-    Func<T, Task<MlResult<T>>> transform)
-{
-    return await source.CompleteDataAsync(async item =>
-    {
-        var result = await transform(item).ConfigureAwait(false);
-        return result;
-    }).ConfigureAwait(false);
-}
-
-// ✅ Correcto: Procesar en lotes para grandes volúmenes
-public async Task<MlResult<IEnumerable<T>>> ProcessLargeBatchAsync<T>(
-    IEnumerable<T> largeCollection,
-    Func<T, Task<MlResult<T>>> processor)
-{
-    const int batchSize = 100;
-    var results = new List<T>();
-    var errors = new List<string>();
-    
-    var batches = largeCollection.Batch(batchSize);
-    
-    foreach (var batch in batches)
-    {
-        var batchResult = await batch.CompleteDataAsync(processor);
-        
-        if (batchResult.IsValid)
-        {
-            results.AddRange(batchResult.Value);
-        }
-        else
-        {
-            errors.AddRange(batchResult.ErrorsDetails.AllErrors);
-        }
-    }
-    
-    return errors.Any()
-        ? MlResult<IEnumerable<T>>.Fail(string.Join("; ", errors))
-        : MlResult<IEnumerable<T>>.Valid(results);
-}
-
-// ❌ Incorrecto: No considerar el rendimiento con grandes volúmenes
-var result = await millionItems.CompleteDataAsync(async item =>
-    await ExpensiveOperationAsync(item)); // Puede causar problemas de memoria
-```
-
----
-
-## Comparación con Métodos Similares
-
-### Tabla Comparativa
-
-| Método | Propósito | Comportamiento ante Errores | Resultado | Cuándo Usar |
-|--------|-----------|----------------------------|-----------|-------------|
-| `CompleteData` | Transformar colección completa | Falla si cualquier elemento falla | Todo o nada | Validaciones críticas |
-| `Select` + `Where` | Filtrar y transformar | Ignora elementos problemáticos | Solo éxitos | Procesamiento permisivo |
-| `Map` en colección | Transformar cada elemento | Depende de implementación | Transformación simple | Cambios de tipo simples |
-| `Bind` secuencial | Encadenar operaciones | Falla en primer error | Operación secuencial | Dependencias entre elementos |
-
-### Ejemplo Comparativo
-
-```csharp
-var numbers = new[] { "1", "2", "invalid", "4", "5" };
-
-// CompleteData: Falla completamente si hay un error
-var completeResult = numbers.CompleteData(str =>
-    int.TryParse(str, out var num) 
-        ? MlResult<int>.Valid(num)
-        : MlResult<int>.Fail($"Invalid number: {str}"));
-// Resultado: Fail("Invalid number: invalid")
-
-// Select + Where: Solo procesa elementos válidos
-var selectResult = numbers
-    .Select(str => int.TryParse(str, out var num) ? (int?)num : null)
-    .Where(x => x.HasValue)
-    .Select(x => x.Value);
-// Resultado: [1, 2, 4, 5] (ignora "invalid")
-
-// FusionErrosIfExists: Combina errores pero permite resultados parciales
-var mixedResults = numbers.Select(str =>
-    int.TryParse(str, out var num) 
-        ? MlResult<int>.Valid(num)
-        : MlResult<int>.Fail($"Invalid: {str}"));
-
-var fusionResult = mixedResults.FusionErrosIfExists();
-// Resultado: Fail("Invalid: invalid") - pero se pueden extraer los válidos por separado
-```
+1. **Elige la estrategia según la intención**: `Projection` para informar de todo,
+   `ProjectionWhile` para cortar, `ProjectionParallelAsync` para concurrencia,
+   `ProjectionSplit` para procesamiento parcial.
+2. **Usa `ProjectionSplit` en procesos por lotes**: es lo que quieres el 90 % de las veces y
+   suele pasarse por alto.
+3. **Da una clave única explícita a `ProjectionSplit`** (por ejemplo con el índice) para
+   evitar `ArgumentException` por duplicados.
+4. **Nunca llames a `FusionFailErros` directamente**: usa `VerifiedEnumerableResultData` o
+   `FusionErrosIfExists`, que manejan el caso vacío.
+5. **Trocea las colecciones antes de `ProjectionParallelAsync`** (`Chunk(20)`, `Chunk(50)`):
+   no hay límite de concurrencia interno.
+6. **Envuelve los delegados asíncronos con `TryToMlResultAsync`** dentro de las proyecciones
+   paralelas, para no lidiar con `AggregateException`.
+7. **Aprovecha las sobrecargas con índice** para mensajes con número de línea: es lo que
+   convierte un error genérico en un error accionable.
+8. **Materializa las consultas diferidas** con `.ToList()` antes de proyectar.
+9. **Recuerda que `ProjectionAsync` con delegado asíncrono es secuencial**: si esperabas
+   paralelismo, usa la variante `Parallel`.
+10. **Cuidado con los `null` en `ProjectionSplit`**: se descartan sin aviso. Fíltralos tú si
+    su presencia es un error.
+11. **Combina con `EmptyToFailed`** al principio, para distinguir "colección vacía" de
+    "colección procesada sin incidencias".
 
 ---
 
 ## Resumen
 
-Los métodos `CompleteData` y las funciones de fusión proporcionan **procesamiento seguro de colecciones**:
+- `MlResultBucles` convierte `IEnumerable<MlResult<T>>` en `MlResult<IEnumerable<T>>`, y es
+  **la única familia que acumula errores** de verdad.
+- **`Projection`** procesa **todos** los elementos y fusiona **todos** los errores. Ideal para
+  validación de entrada e importaciones.
+- **`ProjectionWhile`** **corta** en el primer fallo (`break`). Ideal para pasos dependientes
+  o costosos.
+- **`ProjectionParallelAsync`** es el **único paralelismo real** de la librería
+  (`Task.WhenAll`). ⚠️ **Sin límite de concurrencia**; usa `t.Result`, así que envuelve los
+  delegados con `TryToMlResultAsync`.
+- **`ProjectionSplit`** devuelve **dos diccionarios** (`valids`, `fails`) y **casi nunca
+  falla**. Es la mejor opción para procesamiento por lotes.
+  ⚠️ Descarta los `null` en silencio y **lanza con elementos duplicados** (usa una clave
+  única).
+- ⚠️ **`ProjectionAsync` con delegado asíncrono es SECUENCIAL**, no paralelo.
+- **`VerifiedEnumerableResultData`** y **`FusionErrosIfExists`** son los agregadores seguros.
+- ⚠️⚠️ **`FusionFailErros` tiene un bug** (falta un `return`): **lanza
+  `InvalidOperationException`** si la colección no tiene fallos. No lo llames directamente.
+- Todas las variantes tienen **sobrecarga con índice**, muy útil para mensajes con número de
+  línea.
 
-- **`CompleteData`**: Aplica transformaciones con política "todo o nada"
-- **`CompleteDataAsync`**: Soporte completo para operaciones asíncronas
-- **`FusionFailErros`**: Combina errores de elementos fallidos
-- **`FusionErrosIfExists`**: Fusiona errores o retorna valores válidos
+---
 
-**Casos de uso ideales**:
-- **Validación de lotes** donde todos los elementos deben ser válidos
-- **Procesamiento crítico** donde un fallo debe detener toda la operación  
-- **Transformaciones complejas** que pueden fallar individualmente
-- **Fusión de errores** para reportes detallados de fallos
+## Ver también
 
-**Ventajas principales**:
-- **Seguridad de tipos** en transformaciones
-- **Manejo robusto de errores** con fusión automática
-- **Flexibilidad async** para operaciones I/O intensivas
-- **Política todo-o-nada** para operaciones críticas
+- [`EmptyToFailed`](../Several/1_EmptyToFailed.md) — rechazar colecciones vacías antes de proyectar
+- [`Combine`](../Several/4_Combine.md) — ⚠️ **no** acumula errores, a diferencia de `Projection`
+- [`MlResultErrors`](../Types/MlResultErrors.md) — `Merge`, `ToErrorsDescription`, `ToErrorsMessages`
+- [`Transformations`](../Transformations/Transformations.md) — `TryToMlResultAsync`, `SecureValidValue`
+- [`Bind`](../Bind/3_Bind.md) — el cortocircuito de un solo valor
+- [`Map`](../Map/1_Map.md) — transformación de un solo valor
+- [`EnsureFp`](../EnsureFp/EnsureFp.md) — validar cada elemento
+- [`Match`](../Match/1_Match.md) — construir la respuesta final

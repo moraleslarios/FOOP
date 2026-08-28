@@ -1,1340 +1,382 @@
-﻿# MlResultActionsBindAlways - Operaciones de Ejecución Incondicional
+﻿# BindAlways — Ejecutar siempre, sea válido o fallido
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de la Clase](#análisis-de-la-clase)
-3. [Métodos BindAlways Simples](#métodos-bindalways-simples)
-4. [Métodos BindAlways Condicionales](#métodos-bindalways-condicionales)
-5. [Métodos TryBindAlways - Captura de Excepciones](#métodos-trybindalways---captura-de-excepciones)
-6. [Variantes Asíncronas](#variantes-asíncronas)
-7. [Ejemplos Prácticos](#ejemplos-prácticos)
-8. [Mejores Prácticas](#mejores-prácticas)
+2. [Las dos formas de `BindAlways`](#las-dos-formas-de-bindalways)
+3. [Firmas reales](#firmas-reales)
+4. [Forma A: el punto de convergencia](#forma-a-el-punto-de-convergencia)
+5. [Forma B: la bifurcación final](#forma-b-la-bifurcación-final)
+6. [`BindAlways` no es un `finally`](#bindalways-no-es-un-finally)
+7. [Variantes asíncronas](#variantes-asíncronas)
+8. [`TryBindAlways` — cuando la operación final puede lanzar](#trybindalways--cuando-la-operación-final-puede-lanzar)
+9. [Relación con `Match`, `MapAlways` y `ExecSelf`](#relación-con-match-mapalways-y-execself)
+10. [Ejemplos Prácticos](#ejemplos-prácticos)
+11. [Mejores Prácticas](#mejores-prácticas)
+12. [Resumen](#resumen)
+13. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-La clase `MlResultActionsBindAlways` contiene las operaciones de **binding incondicional** para `MlResult<T>`. A diferencia de las operaciones `Bind` tradicionales que solo se ejecutan cuando el resultado es exitoso, los métodos `BindAlways` se ejecutan **independientemente del estado** del `MlResult`, lo que los hace ideales para operaciones de limpieza, logging, auditoría y transformaciones que deben ocurrir sin importar el estado del resultado.
+Todos los métodos que hemos visto hasta ahora son *condicionales*: `Bind` solo actúa si el resultado es válido, `BindIfFail` solo si ha fallado. `BindAlways` rompe esa regla: **se ejecuta siempre**, con independencia del estado del resultado.
 
-### Propósito Principal
+Su utilidad es la de un punto de convergencia: el momento del *pipeline* en el que dejas de propagar el estado anterior y produces un resultado nuevo, ya sea porque los dos caminos deben acabar en lo mismo o porque quieres decidir explícitamente qué devolver en cada caso.
 
-- **Ejecución Incondicional**: Las funciones se ejecutan siempre, sin importar el estado del `MlResult`
-- **Logging y Auditoría**: Operaciones que deben registrarse independientemente del éxito o fallo
-- **Limpieza de Recursos**: Operaciones de cleanup que deben ejecutarse siempre
-- **Transformaciones Finales**: Conversiones o procesamientos que no dependen del estado previo
-- **Manejo Diferenciado**: Ejecutar diferentes lógicas según el estado (válido/fallido)
+```csharp
+// ❌ Con un if sobre el estado: verboso y expone el estado interno
+var respuesta = resultado.IsValid
+                    ? ConstruirRespuestaOk(resultado)
+                    : ConstruirRespuestaError(resultado);
+
+// ✅ Con BindAlways: las dos ramas quedan a la vista, sin tocar IsValid
+var respuesta = resultado.BindAlways(
+                    funcValidAlways: pedido  => ConstruirRespuestaOk(pedido),
+                    funcFailAlways : errores => ConstruirRespuestaError(errores));
+```
+
+> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`; para llegar al valor original, `GetDetailValue<T>()`.
 
 ---
 
-## Análisis de la Clase
+## Las dos formas de `BindAlways`
 
-### Estructura y Filosofía
+| Forma | Firma resumida | Qué recibe | Para qué sirve |
+|---|---|---|---|
+| **A — Descartar y sustituir** | `BindAlways<T, TReturn>(funcAlways)` | **nada** | Producir un resultado nuevo ignorando por completo lo anterior. |
+| **B — Bifurcar y converger** | `BindAlways<T, TResult>(funcValidAlways, funcFailAlways)` | el valor o los errores | Tratar los dos caminos por separado y unificar el tipo de salida. |
 
-Los métodos `BindAlways` rompen el patrón tradicional de Railway-Oriented Programming donde los errores se propagan automáticamente. En su lugar, implementan un patrón de **ejecución garantizada**:
+```csharp
+// Forma A — el delegado no recibe ningún parámetro
+MlResult<Estado> estado = resultado.BindAlways(() => LeerEstadoActual());
 
+// Forma B — un delegado por rama
+MlResult<Informe> informe = resultado.BindAlways(
+                                funcValidAlways: datos   => ConstruirInforme(datos),
+                                funcFailAlways : errores => ConstruirInformeDeFallo(errores));
 ```
-Resultado Exitoso → Función Always → Nuevo Resultado
-      ↓                    ↓              ↓
-Resultado Fallido  → Función Always → Nuevo Resultado
-```
 
-### Características Principales
-
-1. **Ejecución Garantizada**: Las funciones siempre se ejecutan
-2. **Dos Variantes**: Simple (misma función) y Condicional (funciones diferentes según estado)
-3. **Ignorancia del Estado Original**: El resultado de la función reemplaza completamente al original
-4. **Soporte Completo Asíncrono**: Todas las combinaciones de operaciones síncronas y asíncronas
+> 📌 La forma A **descarta el resultado anterior por completo**, incluidos los errores. No es un `finally`: es un «olvida lo anterior y devuelve esto».
 
 ---
 
-## Métodos BindAlways Simples
-
-### `BindAlways<T, TReturn>()`
-
-**Propósito**: Ejecuta una función que devuelve `MlResult<TReturn>` independientemente del estado del resultado origen
+## Firmas reales
 
 ```csharp
-public static MlResult<TReturn> BindAlways<T, TReturn>(this MlResult<T> source, 
-                                                       Func<MlResult<TReturn>> funcAlways)
+// FORMA A
+public static MlResult<TReturn> BindAlways<T, TReturn>(this MlResult<T>              source,
+                                                            Func<MlResult<TReturn>> funcAlways)
+    => funcAlways();
+
+// FORMA B
+public static MlResult<TResult> BindAlways<T, TResult>(this MlResult<T>                              source,
+                                                            Func<T              , MlResult<TResult>> funcValidAlways,
+                                                            Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways)
+    => source.Match(
+            valid: funcValidAlways,
+            fail : funcFailAlways);
 ```
 
-**Parámetros**:
-- `source`: El resultado origen (su estado es ignorado)
-- `funcAlways`: Función que se ejecuta siempre y devuelve el nuevo resultado
+Merece la pena detenerse en la forma A: **el cuerpo es literalmente `funcAlways()`**. El parámetro `source` no se usa para nada más que para permitir la sintaxis de extensión. Eso explica todo su comportamiento:
 
-**Comportamiento**:
-- Ignora completamente el estado y valor de `source`
-- Ejecuta `funcAlways()` y retorna su resultado
-- El resultado final depende únicamente de `funcAlways`
+- No comprueba el estado.
+- No propaga errores.
+- No accede al valor.
+- Si `funcAlways()` falla, ese es el único fallo que verás.
 
-**Ejemplo Básico**:
-```csharp
-var successResult = MlResult<int>.Valid(42);
-var failResult = MlResult<int>.Fail("Error original");
-
-// Ambos casos ejecutan la misma función
-var finalSuccess = successResult.BindAlways(() => MlResult<string>.Valid("Siempre ejecutado"));
-var finalFail = failResult.BindAlways(() => MlResult<string>.Valid("Siempre ejecutado"));
-
-// Ambos finalSuccess y finalFail contienen "Siempre ejecutado"
-```
-
-### Versiones Asíncronas del BindAlways Simple
-
-#### `BindAlwaysAsync<T, TReturn>()` - Conversión a Asíncrono
-```csharp
-public static Task<MlResult<TReturn>> BindAlwaysAsync<T, TReturn>(this MlResult<T> source, 
-                                                                  Func<MlResult<TReturn>> funcAlways)
-```
-
-**Comportamiento**: Ejecuta `BindAlways` y envuelve el resultado en una `Task`
-
-#### `BindAlwaysAsync<T, TReturn>()` - Función Asíncrona
-```csharp
-public static async Task<MlResult<TReturn>> BindAlwaysAsync<T, TReturn>(this MlResult<T> source, 
-                                                                        Func<Task<MlResult<TReturn>>> funcAlwaysAsync)
-```
-
-**Comportamiento**: Ejecuta `await funcAlwaysAsync()` independientemente del estado de `source`
-
-#### `BindAlwaysAsync<T, TReturn>()` - Fuente Asíncrona
-```csharp
-public static async Task<MlResult<TReturn>> BindAlwaysAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync, 
-                                                                        Func<Task<MlResult<TReturn>>> funcAlwaysAsync)
-```
-
-**Comportamiento**: Espera `sourceAsync` (pero ignora su resultado) y ejecuta `funcAlwaysAsync`
+La forma B, en cambio, es **exactamente `Match` con las dos ramas devolviendo `MlResult<TResult>`**.
 
 ---
 
-## Métodos BindAlways Condicionales
+## Forma A: el punto de convergencia
 
-### `BindAlways<T, TResult>()` - Ejecución Condicional
-
-**Propósito**: Ejecuta diferentes funciones según el estado del `MlResult`, pero siempre ejecuta una de ellas
+Úsala cuando lo que venga después **no dependa en absoluto** de lo anterior. El caso típico es un paso de recarga o de recuento tras una operación cuyo éxito ya se ha registrado en otro sitio:
 
 ```csharp
-public static MlResult<TResult> BindAlways<T, TResult>(this MlResult<T> source,
-                                                       Func<T, MlResult<TResult>> funcValidAlways,
-                                                       Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways)
+// Se intenta refrescar la caché; el resultado final es siempre el recuento actual,
+// tanto si el refresco funcionó como si no.
+MlResult<int> elementosEnCache = RefrescarCache()
+                                    .ExecSelfIfFail(e => _log.LogWarning("Refresco fallido: {E}",
+                                                                        e.ToErrorsMessages()))
+                                    .BindAlways(() => ContarElementosEnCache());
 ```
 
-**Parámetros**:
-- `source`: El resultado a evaluar
-- `funcValidAlways`: Función que se ejecuta si `source` es válido (recibe el valor)
-- `funcFailAlways`: Función que se ejecuta si `source` es fallido (recibe los errores)
+⚠️ El peligro es evidente: **si no registras el fallo antes, desaparece sin dejar rastro**. Combina siempre la forma A con un `ExecSelfIfFail` previo, o usa la forma B para tener el control.
 
-**Comportamiento**:
-- Si `source` es válido: Ejecuta `funcValidAlways(value)` 
-- Si `source` es fallido: Ejecuta `funcFailAlways(errorDetails)`
-- Siempre ejecuta exactamente una de las dos funciones
+---
 
-**Ejemplo Básico**:
+## Forma B: la bifurcación final
+
+Es la forma que usarás casi siempre. Su valor es que **unifica el tipo**: partes de un `MlResult<T>` y llegas a un `MlResult<TResult>` decidiendo en ambas ramas.
+
 ```csharp
-var validResult = MlResult<int>.Valid(42);
-var failedResult = MlResult<int>.Fail("Error original");
+public MlResult<RespuestaApi> Procesar(SolicitudDto dto)
+    => ValidarSolicitud(dto)
+         .Bind(s => EjecutarSolicitud(s))
+         .BindAlways(
+             funcValidAlways: r       => RespuestaApi.Ok(r.Identificador,
+                                                        r.FechaProceso).ToMlResultValid(),
+             funcFailAlways : errores => RespuestaApi.Error(
+                                                codigo  : ClasificarCodigo(errores),
+                                                mensajes: errores.ToErrorsMessages())
+                                            .ToMlResultValid());
 
-var processedValid = validResult.BindAlways(
-    validValue => MlResult<string>.Valid($"Procesado valor: {validValue}"),
-    errorDetails => MlResult<string>.Valid($"Manejado error: {errorDetails.FirstErrorMessage}")
-);
-// processedValid contiene "Procesado valor: 42"
-
-var processedFailed = failedResult.BindAlways(
-    validValue => MlResult<string>.Valid($"Procesado valor: {validValue}"),
-    errorDetails => MlResult<string>.Valid($"Manejado error: {errorDetails.FirstErrorMessage}")
-);
-// processedFailed contiene "Manejado error: Error original"
+private static string ClasificarCodigo(MlErrorsDetails errores)
+    => errores.GetDetailException()
+              .Match(valid: _ => "ERROR_TECNICO",
+                     fail : _ => "ERROR_NEGOCIO");
 ```
 
-### Versiones Asíncronas del BindAlways Condicional
+Fíjate en que las dos ramas devuelven `ToMlResultValid()`: hemos convertido un fallo del dominio en un **resultado válido** que contiene la descripción del error. Eso es habitual en la frontera de la aplicación (controladores, adaptadores de mensajería), donde el fallo de negocio deja de ser un fallo y pasa a ser un dato de la respuesta.
 
-#### Todas las Combinaciones de Funciones Asíncronas
+Nada te obliga a hacerlo así: `funcFailAlways` puede perfectamente devolver otro fallo, enriquecido con más contexto.
+
 ```csharp
-// Ambas funciones asíncronas
-public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(
-    this MlResult<T> source,
-    Func<T, Task<MlResult<TResult>>> funcValidAlwaysAsync,
-    Func<MlErrorsDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync)
-
-// Solo función de éxito asíncrona
-public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(
-    this Task<MlResult<T>> sourceAsync, 
-    Func<T, Task<MlResult<TResult>>> funcValidAlwaysAsync,
-    Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways)
-
-// Solo función de fallo asíncrona
-public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(
-    this Task<MlResult<T>> sourceAsync, 
-    Func<T, MlResult<TResult>> funcValidAlways,
-    Func<MlErrorsDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync)
-
-// Ambas funciones síncronas desde fuente asíncrona
-public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(
-    this Task<MlResult<T>> sourceAsync, 
-    Func<T, MlResult<TResult>> funcValidAlways,
-    Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways)
+.BindAlways(
+    funcValidAlways: pedido  => pedido.ToMlResultValid(),
+    funcFailAlways : errores => errores.AddErrorMessage($"Fallo procesando el lote {loteId}")
+                                       .ToMlResultFail<Pedido>())
 ```
 
 ---
 
-## Métodos TryBindAlways - Captura de Excepciones
+## `BindAlways` no es un `finally`
 
-### TryBindAlways Simple
+Es la confusión más frecuente, y conviene desmontarla:
 
-#### `TryBindAlways<T, TReturn>()` - Versión Segura Simple
+| | `try/finally` | `BindAlways` |
+|---|---|---|
+| ¿Se ejecuta ante una excepción no capturada? | Sí | **No**: la excepción sube y el *pipeline* se rompe |
+| ¿Conserva el resultado anterior? | Sí, `finally` no altera el retorno | Forma A: **no**. Forma B: solo si tú lo devuelves |
+| ¿Sirve para liberar recursos? | Sí | No: usa `using` / `try-finally` de C# |
+
+Si lo que quieres es **observar sin alterar** el resultado, no uses `BindAlways`: usa [`ExecSelf`](../ExecSelf/1_ExecSelf.md), que devuelve el resultado intacto.
+
 ```csharp
-public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T> source,
-                                                          Func<MlResult<TReturn>> funcAlways,
-                                                          Func<Exception, string> errorMessageBuilder)
+// ❌ BindAlways forma A para "solo registrar": destruye el resultado
+var r = Procesar(dto).BindAlways(() => { _log.LogInformation("Fin"); return Unit().ToMlResultValid(); });
 
-public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T> source,
-                                                          Func<MlResult<TReturn>> funcAlways,
-                                                          string errorMessage = null!)
+// ✅ ExecSelf conserva el resultado
+var r = Procesar(dto).ExecSelf(
+            actionValid: p => _log.LogInformation("Procesado {Id}", p.Id),
+            actionFail : e => _log.LogWarning("Fallo: {E}", e.ToErrorsMessages()));
 ```
-
-**Comportamiento**: 
-- Ejecuta `funcAlways` independientemente del estado de `source`
-- Si `funcAlways` lanza una excepción, la captura y retorna un `MlResult` fallido
-- Convierte excepciones en errores controlados
-
-**Ejemplo**:
-```csharp
-var result = MlResult<int>.Valid(42);
-var safeResult = result.TryBindAlways(
-    () => throw new InvalidOperationException("Error simulado"),
-    ex => $"Error capturado en always: {ex.Message}"
-);
-// safeResult será un MlResult fallido con el mensaje personalizado
-```
-
-### TryBindAlways Condicional
-
-#### `TryBindAlways<T, TResult>()` - Versión Segura Condicional
-```csharp
-public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T> source, 
-                                                          Func<T, MlResult<TResult>> funcValidAlways,
-                                                          Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways,
-                                                          Func<Exception, string> errorMessageBuilder)
-```
-
-**Comportamiento**:
-- Ejecuta la función apropiada según el estado de `source`
-- Captura excepciones de ambas funciones (`funcValidAlways` y `funcFailAlways`)
-- Convierte cualquier excepción en un `MlResult` fallido
-
-**Ejemplo**:
-```csharp
-var validResult = MlResult<int>.Valid(42);
-var safeResult = validResult.TryBindAlways(
-    validValue => throw new ArgumentException("Error en función válida"),
-    errorDetails => MlResult<string>.Valid("Manejado correctamente"),
-    ex => $"Excepción en función válida: {ex.Message}"
-);
-// safeResult será un MlResult fallido con mensaje de la excepción
-```
-
-### Versiones Asíncronas de TryBindAlways
-
-Cada variante de `TryBindAlways` tiene sus correspondientes versiones asíncronas con todas las combinaciones posibles:
-
-- `TryBindAlwaysAsync` para funciones simples
-- `TryBindAlwaysAsync` para funciones condicionales
-- Soporte para fuentes asíncronas (`Task<MlResult<T>>`)
-- Soporte para funciones asíncronas (`Func<Task<MlResult<T>>>`)
 
 ---
 
-## Variantes Asíncronas
+## Variantes asíncronas
 
-### Matriz Completa de Combinaciones
+Ambas formas tienen su familia asíncrona completa, combinando origen síncrono/asíncrono y delegados síncronos/asíncronos.
 
-| Fuente | Función(es) | Método |
-|--------|-------------|---------|
-| `MlResult<T>` | `() → MlResult<U>` | `BindAlways` |
-| `MlResult<T>` | `() → MlResult<U>` | `BindAlwaysAsync` (conversión) |
-| `MlResult<T>` | `() → Task<MlResult<U>>` | `BindAlwaysAsync` |
-| `Task<MlResult<T>>` | `() → Task<MlResult<U>>` | `BindAlwaysAsync` |
-| `Task<MlResult<T>>` | `() → MlResult<U>` | `BindAlwaysAsync` |
+| Forma | Método | Sobrecargas asíncronas |
+|---|---|---|
+| A | `BindAlwaysAsync<T, TReturn>(Func<Task<MlResult<TReturn>>>)` | 4 |
+| B | `BindAlwaysAsync<T, TResult>(funcValidAlwaysAsync, funcFailAlwaysAsync)` | 4 |
+| A | `TryBindAlwaysAsync` | 8 |
+| B | `TryBindAlwaysAsync` | 8 |
 
-Para BindAlways condicional, cada combinación se multiplica por 4 (2 funciones × 2 posibles estados síncronos/asíncronos).
+```csharp
+public Task<MlResult<RespuestaApi>> ProcesarAsync(SolicitudDto dto)
+    => ValidarSolicitudAsync(dto)
+         .BindAsync(s => EjecutarAsync(s))
+         .BindAlwaysAsync(
+             funcValidAlwaysAsync: async r       => await ConstruirOkAsync(r),
+             funcFailAlwaysAsync : async errores => await RegistrarYConstruirErrorAsync(errores));
+```
+
+> 💡 `funcFailAlwaysAsync` es un buen sitio para tareas de cierre que sí deben esperarse (auditar, publicar un evento de fallo), porque a diferencia de `ExecSelfIfFailAsync` aquí el resultado de esa tarea **sí** forma parte del flujo.
+
+---
+
+## `TryBindAlways` — cuando la operación final puede lanzar
+
+Los pasos de convergencia suelen tocar infraestructura (recargar, contar, publicar un evento), así que también pueden lanzar. Las variantes `Try*` lo capturan:
+
+```csharp
+public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T>              source,
+                                                               Func<MlResult<TReturn>> funcAlways,
+                                                               Func<Exception, string> errorMessageBuilder);
+
+public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T>              source,
+                                                               Func<MlResult<TReturn>> funcAlways,
+                                                               string                  errorMessage = null!);
+```
+
+Internamente usan `funcAlways.TryToMlResult(errorMessageBuilder)`, así que la excepción capturada queda en `Details["Ex"]` y podrás clasificarla después con `GetDetailException()`.
+
+```csharp
+var resumen = ProcesarLote(lineas)
+                .TryBindAlways(() => _repo.LeerResumenDelLote(loteId),
+                               ex => $"No se pudo leer el resumen del lote {loteId}: {ex.Message}");
+```
+
+---
+
+## Relación con `Match`, `MapAlways` y `ExecSelf`
+
+Este es el punto donde más se confunden las herramientas, así que aquí está la tabla completa:
+
+| Necesito… | Herramienta | Devuelve |
+|---|---|---|
+| Salir del mundo `MlResult` con un valor crudo | `Match(valid, fail)` | `TReturn` (crudo) |
+| Decidir en ambas ramas y **seguir** en `MlResult`, con función que **puede fallar** | `BindAlways(funcValid, funcFail)` | `MlResult<TResult>` |
+| Decidir en ambas ramas y seguir en `MlResult`, con función que **no puede fallar** | `MapAlways(funcValid, funcFail)` | `MlResult<TResult>` |
+| Producir un resultado nuevo ignorando el anterior | `BindAlways(funcAlways)` | `MlResult<TReturn>` |
+| Observar ambas ramas sin alterar nada | `ExecSelf(actionValid, actionFail)` | el `MlResult<T>` original |
+| Continuar solo si es válido | `Bind` / `Map` | `MlResult<TReturn>` |
+| Continuar solo si ha fallado | `BindIfFail` / `MapIfFail` | `MlResult<T>` |
+
+> 📌 Curiosidad reveladora: en el código fuente, `BindAlways(funcAlways)`, `MapAlways(funcAlways)` y `Match(funcAll)` (el de la región `MatchAll`) están implementados **exactamente igual**: invocan el delegado y devuelven su resultado. Elige el nombre que mejor exprese tu intención.
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Auditoría y Logging
+### Ejemplo 1: Frontera de la API — todo acaba en una respuesta
 
 ```csharp
-public class AuditableUserService
-{
-    private readonly IUserRepository _userRepository;
-    private readonly IAuditLogger _auditLogger;
-    private readonly IMetricsCollector _metricsCollector;
-    
-    public AuditableUserService(
-        IUserRepository userRepository,
-        IAuditLogger auditLogger,
-        IMetricsCollector metricsCollector)
-    {
-        _userRepository = userRepository;
-        _auditLogger = auditLogger;
-        _metricsCollector = metricsCollector;
-    }
-    
-    public async Task<MlResult<User>> GetUserWithAuditAsync(int userId, string requestedBy)
-    {
-        var startTime = DateTime.UtcNow;
-        
-        return await _userRepository.GetUserAsync(userId)
-            .BindAlwaysAsync(async result => await LogUserAccessAttemptAsync(userId, requestedBy, result))
-            .BindAlwaysAsync(async result => await RecordPerformanceMetricsAsync(startTime, "GetUser", result))
-            .BindAlways(
-                validUser => 
-                {
-                    _auditLogger.LogSuccess($"User {userId} successfully retrieved by {requestedBy}");
-                    return MlResult<User>.Valid(validUser);
-                },
-                errorDetails => 
-                {
-                    _auditLogger.LogFailure($"Failed to retrieve user {userId} for {requestedBy}: {errorDetails.FirstErrorMessage}");
-                    return MlResult<User>.Fail(errorDetails.AllErrors);
-                }
-            );
-    }
-    
-    public async Task<MlResult<User>> UpdateUserWithAuditAsync(int userId, UserUpdateRequest updateRequest, string updatedBy)
-    {
-        var startTime = DateTime.UtcNow;
-        var originalUserResult = await _userRepository.GetUserAsync(userId);
-        
-        return await originalUserResult
-            .Bind(originalUser => ValidateUpdateRequest(updateRequest, originalUser))
-            .BindAsync(async validatedRequest => await _userRepository.UpdateUserAsync(userId, validatedRequest))
-            .BindAlwaysAsync(async updateResult => await LogUpdateAttemptAsync(userId, updateRequest, updatedBy, updateResult))
-            .BindAlwaysAsync(async updateResult => await RecordPerformanceMetricsAsync(startTime, "UpdateUser", updateResult))
-            .TryBindAlwaysAsync(async updateResult => await NotifyUserChangeAsync(userId, updateResult), 
-                               "Notification failed but update was processed")
-            .BindAlways(
-                updatedUser => 
-                {
-                    _auditLogger.LogSuccess($"User {userId} successfully updated by {updatedBy}");
-                    return MlResult<User>.Valid(updatedUser);
-                },
-                errorDetails => 
-                {
-                    _auditLogger.LogFailure($"Failed to update user {userId} by {updatedBy}: {errorDetails.FirstErrorMessage}");
-                    return MlResult<User>.Fail(errorDetails.AllErrors);
-                }
-            );
-    }
-    
-    private async Task<MlResult<MlResult<User>>> LogUserAccessAttemptAsync(int userId, string requestedBy, MlResult<User> result)
-    {
-        try
-        {
-            var logEntry = new AuditLogEntry
+[HttpPost("pedidos")]
+public async Task<IActionResult> Crear([FromBody] PedidoDto dto)
+    => await _servicio.CrearAsync(dto)
+        .BindAlwaysAsync(
+            funcValidAlwaysAsync: async pedido =>
             {
-                UserId = userId,
-                Action = "GetUser",
-                RequestedBy = requestedBy,
-                Timestamp = DateTime.UtcNow,
-                Success = result.IsValid,
-                ErrorMessage = result.IsValid ? null : result.ErrorsDetails.FirstErrorMessage
-            };
-            
-            await _auditLogger.LogAsync(logEntry);
-            return MlResult<MlResult<User>>.Valid(result);
-        }
-        catch (Exception ex)
-        {
-            // El logging falló, pero no queremos que esto afecte el resultado principal
-            _auditLogger.LogError($"Failed to log user access attempt: {ex.Message}");
-            return MlResult<MlResult<User>>.Valid(result);
-        }
-    }
-    
-    private async Task<MlResult<MlResult<User>>> RecordPerformanceMetricsAsync(DateTime startTime, string operation, MlResult<User> result)
-    {
-        try
-        {
-            var duration = DateTime.UtcNow - startTime;
-            var metrics = new PerformanceMetrics
-            {
-                Operation = operation,
-                Duration = duration,
-                Success = result.IsValid,
-                Timestamp = DateTime.UtcNow
-            };
-            
-            await _metricsCollector.RecordAsync(metrics);
-            return MlResult<MlResult<User>>.Valid(result);
-        }
-        catch (Exception ex)
-        {
-            // Las métricas fallaron, pero no afectan el resultado principal
-            _auditLogger.LogError($"Failed to record performance metrics: {ex.Message}");
-            return MlResult<MlResult<User>>.Valid(result);
-        }
-    }
-    
-    private async Task<MlResult<MlResult<User>>> LogUpdateAttemptAsync(int userId, UserUpdateRequest request, string updatedBy, MlResult<User> result)
-    {
-        try
-        {
-            var logEntry = new AuditLogEntry
-            {
-                UserId = userId,
-                Action = "UpdateUser",
-                RequestedBy = updatedBy,
-                Timestamp = DateTime.UtcNow,
-                Success = result.IsValid,
-                Details = JsonSerializer.Serialize(request),
-                ErrorMessage = result.IsValid ? null : result.ErrorsDetails.FirstErrorMessage
-            };
-            
-            await _auditLogger.LogAsync(logEntry);
-            return MlResult<MlResult<User>>.Valid(result);
-        }
-        catch (Exception ex)
-        {
-            _auditLogger.LogError($"Failed to log update attempt: {ex.Message}");
-            return MlResult<MlResult<User>>.Valid(result);
-        }
-    }
-    
-    private async Task<MlResult<MlResult<User>>> NotifyUserChangeAsync(int userId, MlResult<User> updateResult)
-    {
-        if (!updateResult.IsValid)
-        {
-            // No notificar si la actualización falló
-            return MlResult<MlResult<User>>.Valid(updateResult);
-        }
-        
-        try
-        {
-            await _notificationService.NotifyUserUpdatedAsync(userId, updateResult.Value);
-            return MlResult<MlResult<User>>.Valid(updateResult);
-        }
-        catch (Exception ex)
-        {
-            // La notificación falló, pero la actualización fue exitosa
-            _auditLogger.LogWarning($"User {userId} updated successfully but notification failed: {ex.Message}");
-            return MlResult<MlResult<User>>.Valid(updateResult);
-        }
-    }
-    
-    private MlResult<UserUpdateRequest> ValidateUpdateRequest(UserUpdateRequest request, User originalUser)
-    {
-        if (request == null)
-            return MlResult<UserUpdateRequest>.Fail("Update request cannot be null");
-            
-        if (string.IsNullOrWhiteSpace(request.Email) && string.IsNullOrWhiteSpace(request.Name))
-            return MlResult<UserUpdateRequest>.Fail("At least one field must be updated");
-            
-        if (!string.IsNullOrWhiteSpace(request.Email) && !IsValidEmail(request.Email))
-            return MlResult<UserUpdateRequest>.Fail("Invalid email format");
-            
-        return MlResult<UserUpdateRequest>.Valid(request);
-    }
-    
-    private bool IsValidEmail(string email)
-    {
-        try
-        {
-            var addr = new MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-}
-
-// Clases de apoyo
-public class User
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
-
-public class UserUpdateRequest
-{
-    public string Name { get; set; }
-    public string Email { get; set; }
-}
-
-public class AuditLogEntry
-{
-    public int UserId { get; set; }
-    public string Action { get; set; }
-    public string RequestedBy { get; set; }
-    public DateTime Timestamp { get; set; }
-    public bool Success { get; set; }
-    public string Details { get; set; }
-    public string ErrorMessage { get; set; }
-}
-
-public class PerformanceMetrics
-{
-    public string Operation { get; set; }
-    public TimeSpan Duration { get; set; }
-    public bool Success { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-
-// Interfaces
-public interface IUserRepository
-{
-    Task<MlResult<User>> GetUserAsync(int userId);
-    Task<MlResult<User>> UpdateUserAsync(int userId, UserUpdateRequest updateRequest);
-}
-
-public interface IAuditLogger
-{
-    Task LogAsync(AuditLogEntry entry);
-    void LogSuccess(string message);
-    void LogFailure(string message);
-    void LogError(string message);
-    void LogWarning(string message);
-}
-
-public interface IMetricsCollector
-{
-    Task RecordAsync(PerformanceMetrics metrics);
-}
-
-public interface INotificationService
-{
-    Task NotifyUserUpdatedAsync(int userId, User updatedUser);
-}
-```
-
-### Ejemplo 2: Sistema de Limpieza de Recursos
-
-```csharp
-public class ResourceManagementService
-{
-    private readonly IFileService _fileService;
-    private readonly IDatabaseService _databaseService;
-    private readonly ICacheService _cacheService;
-    private readonly ILogger _logger;
-    
-    public ResourceManagementService(
-        IFileService fileService,
-        IDatabaseService databaseService,
-        ICacheService cacheService,
-        ILogger logger)
-    {
-        _fileService = fileService;
-        _databaseService = databaseService;
-        _cacheService = cacheService;
-        _logger = logger;
-    }
-    
-    public async Task<MlResult<ProcessingResult>> ProcessDocumentWithCleanupAsync(DocumentRequest request)
-    {
-        var tempFiles = new List<string>();
-        var databaseTransactions = new List<string>();
-        var cacheKeys = new List<string>();
-        
-        return await ValidateDocumentRequest(request)
-            .BindAsync(async validRequest => await CreateTemporaryFilesAsync(validRequest, tempFiles))
-            .BindAsync(async tempResult => await ProcessDocumentAsync(tempResult, databaseTransactions, cacheKeys))
-            .BindAsync(async processedResult => await FinalizeProcessingAsync(processedResult))
-            .BindAlwaysAsync(async finalResult => await CleanupResourcesAsync(tempFiles, databaseTransactions, cacheKeys, finalResult))
-            .BindAlways(
-                cleanupResult => 
-                {
-                    _logger.LogInformation($"Document processing completed successfully with cleanup");
-                    return cleanupResult;
-                },
-                errorDetails => 
-                {
-                    _logger.LogError($"Document processing failed but cleanup was attempted: {errorDetails.FirstErrorMessage}");
-                    return MlResult<ProcessingResult>.Fail(errorDetails.AllErrors);
-                }
-            );
-    }
-    
-    public async Task<MlResult<BackupResult>> CreateBackupWithCleanupAsync(BackupRequest request)
-    {
-        var tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        var lockAcquired = false;
-        var connectionOpened = false;
-        
-        return await ValidateBackupRequest(request)
-            .TryBindAsync(async validRequest => await AcquireBackupLockAsync(validRequest), 
-                         "Failed to acquire backup lock")
-            .DoIf(result => result.IsValid, _ => { lockAcquired = true; return _; })
-            .TryBindAsync(async lockResult => await OpenDatabaseConnectionAsync(lockResult),
-                         "Failed to open database connection")
-            .DoIf(result => result.IsValid, _ => { connectionOpened = true; return _; })
-            .TryBindAsync(async dbResult => await CreateTemporaryDirectoryAsync(dbResult, tempDirectory),
-                         "Failed to create temporary directory")
-            .TryBindAsync(async tempDirResult => await PerformBackupAsync(tempDirResult, tempDirectory),
-                         "Backup operation failed")
-            .TryBindAsync(async backupResult => await CompressBackupAsync(backupResult, tempDirectory),
-                         "Backup compression failed")
-            .BindAlwaysAsync(async finalResult => await CleanupBackupResourcesAsync(
-                tempDirectory, lockAcquired, connectionOpened, finalResult))
-            .BindAlways(
-                successfulCleanup => 
-                {
-                    _logger.LogInformation("Backup completed successfully with full cleanup");
-                    return successfulCleanup;
-                },
-                cleanupErrors => 
-                {
-                    _logger.LogWarning($"Backup process completed but cleanup had issues: {cleanupErrors.FirstErrorMessage}");
-                    return MlResult<BackupResult>.Fail(cleanupErrors.AllErrors);
-                }
-            );
-    }
-    
-    private async Task<MlResult<ProcessingResult>> CleanupResourcesAsync(
-        List<string> tempFiles, 
-        List<string> transactions, 
-        List<string> cacheKeys, 
-        MlResult<ProcessingResult> result)
-    {
-        var cleanupErrors = new List<string>();
-        
-        // Limpiar archivos temporales
-        foreach (var tempFile in tempFiles)
-        {
-            try
-            {
-                if (File.Exists(tempFile))
-                {
-                    await _fileService.DeleteFileAsync(tempFile);
-                    _logger.LogDebug($"Deleted temporary file: {tempFile}");
-                }
-            }
-            catch (Exception ex)
-            {
-                var error = $"Failed to delete temporary file {tempFile}: {ex.Message}";
-                cleanupErrors.Add(error);
-                _logger.LogWarning(error);
-            }
-        }
-        
-        // Limpiar transacciones de base de datos si el procesamiento falló
-        if (!result.IsValid)
-        {
-            foreach (var transactionId in transactions)
-            {
-                try
-                {
-                    await _databaseService.RollbackTransactionAsync(transactionId);
-                    _logger.LogDebug($"Rolled back transaction: {transactionId}");
-                }
-                catch (Exception ex)
-                {
-                    var error = $"Failed to rollback transaction {transactionId}: {ex.Message}";
-                    cleanupErrors.Add(error);
-                    _logger.LogWarning(error);
-                }
-            }
-        }
-        
-        // Limpiar cache
-        foreach (var cacheKey in cacheKeys)
-        {
-            try
-            {
-                await _cacheService.RemoveAsync(cacheKey);
-                _logger.LogDebug($"Removed cache key: {cacheKey}");
-            }
-            catch (Exception ex)
-            {
-                var error = $"Failed to remove cache key {cacheKey}: {ex.Message}";
-                cleanupErrors.Add(error);
-                _logger.LogWarning(error);
-            }
-        }
-        
-        // Si el resultado original era exitoso pero hubo errores de limpieza
-        if (result.IsValid && cleanupErrors.Any())
-        {
-            _logger.LogWarning($"Processing succeeded but cleanup had {cleanupErrors.Count} errors");
-            // Retornar el resultado original exitoso con advertencia
-            return result;
-        }
-        
-        // Si el resultado original era fallido
-        if (!result.IsValid)
-        {
-            if (cleanupErrors.Any())
-            {
-                var allErrors = result.ErrorsDetails.AllErrors.Concat(cleanupErrors).ToArray();
-                return MlResult<ProcessingResult>.Fail(allErrors);
-            }
-            return result;
-        }
-        
-        // Todo exitoso
-        return result;
-    }
-    
-    private async Task<MlResult<BackupResult>> CleanupBackupResourcesAsync(
-        string tempDirectory, 
-        bool lockAcquired, 
-        bool connectionOpened, 
-        MlResult<BackupResult> result)
-    {
-        var cleanupErrors = new List<string>();
-        
-        // Limpiar directorio temporal
-        try
-        {
-            if (Directory.Exists(tempDirectory))
-            {
-                Directory.Delete(tempDirectory, recursive: true);
-                _logger.LogDebug($"Deleted temporary directory: {tempDirectory}");
-            }
-        }
-        catch (Exception ex)
-        {
-            var error = $"Failed to delete temporary directory {tempDirectory}: {ex.Message}";
-            cleanupErrors.Add(error);
-            _logger.LogWarning(error);
-        }
-        
-        // Cerrar conexión de base de datos
-        if (connectionOpened)
-        {
-            try
-            {
-                await _databaseService.CloseConnectionAsync();
-                _logger.LogDebug("Database connection closed");
-            }
-            catch (Exception ex)
-            {
-                var error = $"Failed to close database connection: {ex.Message}";
-                cleanupErrors.Add(error);
-                _logger.LogWarning(error);
-            }
-        }
-        
-        // Liberar lock
-        if (lockAcquired)
-        {
-            try
-            {
-                await _databaseService.ReleaseLockAsync();
-                _logger.LogDebug("Backup lock released");
-            }
-            catch (Exception ex)
-            {
-                var error = $"Failed to release backup lock: {ex.Message}";
-                cleanupErrors.Add(error);
-                _logger.LogError(error); // Lock es crítico
-            }
-        }
-        
-        // Manejar errores de limpieza similar al método anterior
-        if (result.IsValid && cleanupErrors.Any())
-        {
-            _logger.LogWarning($"Backup succeeded but cleanup had {cleanupErrors.Count} errors");
-            return result;
-        }
-        
-        if (!result.IsValid)
-        {
-            if (cleanupErrors.Any())
-            {
-                var allErrors = result.ErrorsDetails.AllErrors.Concat(cleanupErrors).ToArray();
-                return MlResult<BackupResult>.Fail(allErrors);
-            }
-            return result;
-        }
-        
-        return result;
-    }
-    
-    // Métodos auxiliares de implementación...
-    private MlResult<DocumentRequest> ValidateDocumentRequest(DocumentRequest request)
-    {
-        if (request == null)
-            return MlResult<DocumentRequest>.Fail("Document request cannot be null");
-        if (string.IsNullOrWhiteSpace(request.FilePath))
-            return MlResult<DocumentRequest>.Fail("File path is required");
-        if (!File.Exists(request.FilePath))
-            return MlResult<DocumentRequest>.Fail($"File not found: {request.FilePath}");
-        
-        return MlResult<DocumentRequest>.Valid(request);
-    }
-    
-    private async Task<MlResult<TempFileResult>> CreateTemporaryFilesAsync(DocumentRequest request, List<string> tempFiles)
-    {
-        try
-        {
-            var tempFile1 = Path.GetTempFileName();
-            var tempFile2 = Path.GetTempFileName();
-            
-            tempFiles.Add(tempFile1);
-            tempFiles.Add(tempFile2);
-            
-            var result = new TempFileResult
-            {
-                OriginalRequest = request,
-                TempFile1 = tempFile1,
-                TempFile2 = tempFile2
-            };
-            
-            return MlResult<TempFileResult>.Valid(result);
-        }
-        catch (Exception ex)
-        {
-            return MlResult<TempFileResult>.Fail($"Failed to create temporary files: {ex.Message}");
-        }
-    }
-    
-    // Más métodos auxiliares...
-}
-
-// Clases de apoyo
-public class DocumentRequest
-{
-    public string FilePath { get; set; }
-    public string OutputFormat { get; set; }
-    public Dictionary<string, object> Options { get; set; }
-}
-
-public class ProcessingResult
-{
-    public string OutputPath { get; set; }
-    public TimeSpan ProcessingTime { get; set; }
-    public int PagesProcessed { get; set; }
-    public DateTime CompletedAt { get; set; }
-}
-
-public class BackupRequest
-{
-    public string DatabaseName { get; set; }
-    public string OutputPath { get; set; }
-    public bool CompressBackup { get; set; }
-    public BackupType Type { get; set; }
-}
-
-public class BackupResult
-{
-    public string BackupPath { get; set; }
-    public long BackupSize { get; set; }
-    public TimeSpan Duration { get; set; }
-    public BackupType Type { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public class TempFileResult
-{
-    public DocumentRequest OriginalRequest { get; set; }
-    public string TempFile1 { get; set; }
-    public string TempFile2 { get; set; }
-}
-
-public enum BackupType
-{
-    Full,
-    Incremental,
-    Differential
-}
-
-// Interfaces de servicios
-public interface IFileService
-{
-    Task DeleteFileAsync(string filePath);
-}
-
-public interface IDatabaseService
-{
-    Task RollbackTransactionAsync(string transactionId);
-    Task<MlResult<object>> AcquireBackupLockAsync(BackupRequest request);
-    Task<MlResult<object>> OpenDatabaseConnectionAsync(object lockResult);
-    Task CloseConnectionAsync();
-    Task ReleaseLockAsync();
-}
-
-public interface ICacheService
-{
-    Task RemoveAsync(string key);
-}
-
-public interface ILogger
-{
-    void LogInformation(string message);
-    void LogWarning(string message);
-    void LogError(string message);
-    void LogDebug(string message);
-}
-```
-
-### Ejemplo 3: Transformaciones de Resultado con Logging
-
-```csharp
-public class ResultTransformationService
-{
-    private readonly ILogger _logger;
-    private readonly IMetricsService _metricsService;
-    
-    public ResultTransformationService(ILogger logger, IMetricsService metricsService)
-    {
-        _logger = logger;
-        _metricsService = metricsService;
-    }
-    
-    public async Task<MlResult<ApiResponse<T>>> TransformToApiResponseAsync<T>(
-        MlResult<T> serviceResult, 
-        string operationName, 
-        string correlationId)
-    {
-        var startTime = DateTime.UtcNow;
-        
-        return await serviceResult
-            .ToAsync()
-            .BindAlwaysAsync(async result => await LogOperationResultAsync(operationName, correlationId, result))
-            .BindAlwaysAsync(async result => await RecordMetricsAsync(operationName, startTime, result))
-            .BindAlways(
-                successValue => CreateSuccessApiResponse(successValue, correlationId),
-                errorDetails => CreateErrorApiResponse<T>(errorDetails, correlationId)
-            );
-    }
-    
-    public MlResult<UserViewModel> TransformUserWithAudit(MlResult<User> userResult, string requestedBy)
-    {
-        return userResult.BindAlways(
-            validUser => 
-            {
-                _logger.LogInformation($"User {validUser.Id} accessed by {requestedBy}");
-                var viewModel = new UserViewModel
-                {
-                    Id = validUser.Id,
-                    Name = validUser.Name,
-                    Email = MaskEmail(validUser.Email),
-                    LastAccessed = DateTime.UtcNow,
-                    AccessedBy = requestedBy
-                };
-                return MlResult<UserViewModel>.Valid(viewModel);
+                await _eventos.PublicarAsync(new PedidoCreado(pedido.Id));
+                return ((IActionResult)CreatedAtAction(nameof(Obtener),
+                                                       new { id = pedido.Id },
+                                                       PedidoDto.Desde(pedido)))
+                        .ToMlResultValid();
             },
-            errorDetails => 
+            funcFailAlwaysAsync: async errores =>
             {
-                _logger.LogWarning($"Failed user access attempt by {requestedBy}: {errorDetails.FirstErrorMessage}");
-                var anonymousViewModel = new UserViewModel
-                {
-                    Id = 0,
-                    Name = "Anonymous",
-                    Email = "***@***.***",
-                    LastAccessed = DateTime.UtcNow,
-                    AccessedBy = requestedBy,
-                    AccessDenied = true,
-                    DenialReason = errorDetails.FirstErrorMessage
-                };
-                return MlResult<UserViewModel>.Valid(anonymousViewModel);
-            }
-        );
-    }
-    
-    public MlResult<ResultSummary> SummarizeResults<T>(IEnumerable<MlResult<T>> results, string batchId)
-    {
-        var resultsList = results.ToList();
-        var successCount = 0;
-        var failureCount = 0;
-        var allErrors = new List<string>();
-        
-        return resultsList
-            .Aggregate(
-                MlResult<object>.Valid(new object()),
-                (acc, current) => acc.BindAlways(() => 
-                {
-                    if (current.IsValid)
-                    {
-                        successCount++;
-                        _logger.LogDebug($"Batch {batchId}: Item {successCount + failureCount} succeeded");
-                    }
-                    else
-                    {
-                        failureCount++;
-                        allErrors.AddRange(current.ErrorsDetails.AllErrors);
-                        _logger.LogDebug($"Batch {batchId}: Item {successCount + failureCount} failed: {current.ErrorsDetails.FirstErrorMessage}");
-                    }
-                    return MlResult<object>.Valid(new object());
-                })
-            )
-            .BindAlways(() => 
-            {
-                var summary = new ResultSummary
-                {
-                    BatchId = batchId,
-                    TotalItems = resultsList.Count,
-                    SuccessCount = successCount,
-                    FailureCount = failureCount,
-                    SuccessRate = resultsList.Count > 0 ? (double)successCount / resultsList.Count : 0,
-                    AllErrors = allErrors,
-                    ProcessedAt = DateTime.UtcNow
-                };
-                
-                _logger.LogInformation($"Batch {batchId} summary: {successCount}/{resultsList.Count} succeeded ({summary.SuccessRate:P})");
-                return MlResult<ResultSummary>.Valid(summary);
-            });
-    }
-    
-    private async Task<MlResult<MlResult<T>>> LogOperationResultAsync<T>(
-        string operationName, 
-        string correlationId, 
-        MlResult<T> result)
-    {
-        try
-        {
-            var logMessage = result.IsValid 
-                ? $"Operation '{operationName}' succeeded [CorrelationId: {correlationId}]"
-                : $"Operation '{operationName}' failed [CorrelationId: {correlationId}]: {result.ErrorsDetails.FirstErrorMessage}";
-                
-            if (result.IsValid)
-                _logger.LogInformation(logMessage);
-            else
-                _logger.LogWarning(logMessage);
-                
-            return MlResult<MlResult<T>>.Valid(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Failed to log operation result: {ex.Message}");
-            return MlResult<MlResult<T>>.Valid(result);
-        }
-    }
-    
-    private async Task<MlResult<MlResult<T>>> RecordMetricsAsync<T>(
-        string operationName, 
-        DateTime startTime, 
-        MlResult<T> result)
-    {
-        try
-        {
-            var duration = DateTime.UtcNow - startTime;
-            var metrics = new OperationMetrics
-            {
-                OperationName = operationName,
-                Duration = duration,
-                Success = result.IsValid,
-                Timestamp = DateTime.UtcNow
-            };
-            
-            await _metricsService.RecordAsync(metrics);
-            return MlResult<MlResult<T>>.Valid(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Failed to record metrics: {ex.Message}");
-            return MlResult<MlResult<T>>.Valid(result);
-        }
-    }
-    
-    private MlResult<ApiResponse<T>> CreateSuccessApiResponse<T>(T value, string correlationId)
-    {
-        var response = new ApiResponse<T>
-        {
-            Success = true,
-            Data = value,
-            CorrelationId = correlationId,
-            Timestamp = DateTime.UtcNow,
-            Errors = null
-        };
-        
-        return MlResult<ApiResponse<T>>.Valid(response);
-    }
-    
-    private MlResult<ApiResponse<T>> CreateErrorApiResponse<T>(MlErrorsDetails errorDetails, string correlationId)
-    {
-        var response = new ApiResponse<T>
-        {
-            Success = false,
-            Data = default(T),
-            CorrelationId = correlationId,
-            Timestamp = DateTime.UtcNow,
-            Errors = errorDetails.AllErrors
-        };
-        
-        return MlResult<ApiResponse<T>>.Valid(response);
-    }
-    
-    private string MaskEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email) || !email.Contains("@"))
-            return "***@***.***";
-            
-        var parts = email.Split('@');
-        var localPart = parts[0].Length > 2 ? $"{parts[0][0]}***{parts[0][^1]}" : "***";
-        var domainPart = parts[1].Length > 4 ? $"***{parts[1].Substring(parts[1].Length - 4)}" : "***";
-        
-        return $"{localPart}@{domainPart}";
-    }
-}
+                await _auditoria.RegistrarAsync(errores.ToDetailsDescription());
 
-// Clases de apoyo
-public class ApiResponse<T>
-{
-    public bool Success { get; set; }
-    public T Data { get; set; }
-    public string CorrelationId { get; set; }
-    public DateTime Timestamp { get; set; }
-    public string[] Errors { get; set; }
-}
+                IActionResult respuesta = errores.GetDetailException()
+                    .Match(valid: _ => StatusCode(500, "Error interno"),
+                           fail : _ => BadRequest(errores.ToErrorsMessages()));
 
-public class UserViewModel
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public DateTime LastAccessed { get; set; }
-    public string AccessedBy { get; set; }
-    public bool AccessDenied { get; set; }
-    public string DenialReason { get; set; }
-}
+                return respuesta.ToMlResultValid();
+            })
+        .MatchAsync(
+            valid: respuesta => respuesta,
+            fail : errores   => StatusCode(500, errores.ToErrorsDescription()));
+```
 
-public class ResultSummary
-{
-    public string BatchId { get; set; }
-    public int TotalItems { get; set; }
-    public int SuccessCount { get; set; }
-    public int FailureCount { get; set; }
-    public double SuccessRate { get; set; }
-    public List<string> AllErrors { get; set; }
-    public DateTime ProcessedAt { get; set; }
-}
+El `MatchAsync` final solo se dispara si alguna de las dos ramas de convergencia falló a su vez (por ejemplo, si el publicador de eventos devolvió un fallo).
 
-public class OperationMetrics
-{
-    public string OperationName { get; set; }
-    public TimeSpan Duration { get; set; }
-    public bool Success { get; set; }
-    public DateTime Timestamp { get; set; }
-}
+### Ejemplo 2: Informe de ejecución de un proceso por lotes
 
-public interface IMetricsService
-{
-    Task RecordAsync(OperationMetrics metrics);
-}
+```csharp
+public record ResumenLote(int LoteId, int Procesadas, int Rechazadas,
+                          bool Completado, IEnumerable<string> Incidencias);
+
+public MlResult<ResumenLote> Ejecutar(int loteId)
+    => _repo.LeerLineas(loteId)
+            .Bind(lineas => ValidarLote(lineas))
+            .Bind(lineas => lineas.Projection(ProcesarLinea))   // procesa todas
+            .BindAlways(
+                funcValidAlways: procesadas => new ResumenLote(
+                                                    LoteId     : loteId,
+                                                    Procesadas : procesadas.Count(),
+                                                    Rechazadas : 0,
+                                                    Completado : true,
+                                                    Incidencias: Enumerable.Empty<string>())
+                                                .ToMlResultValid(),
+
+                funcFailAlways : errores    => new ResumenLote(
+                                                    LoteId     : loteId,
+                                                    Procesadas : 0,
+                                                    Rechazadas : errores.Errors.Count(),
+                                                    Completado : false,
+                                                    Incidencias: errores.ToErrorsMessages())
+                                                .ToMlResultValid());
+```
+
+El proceso por lotes **nunca falla**: siempre produce un resumen. Los fallos individuales se convierten en filas de incidencias, que es exactamente lo que necesita el operador que revisa la ejecución.
+
+### Ejemplo 3: Cierre garantizado con registro previo (forma A bien usada)
+
+```csharp
+public MlResult<EstadoSincronizacion> Sincronizar()
+    => DescargarCambios()
+         .Bind(cambios => AplicarCambios(cambios))
+
+         // 1) Primero se registra lo que ha pasado, gane o pierda
+         .ExecSelf(
+            actionValid: aplicados => _log.LogInformation("Aplicados {N} cambios", aplicados.Count),
+            actionFail : errores   => _log.LogError("Sincronización fallida: {E}",
+                                                   errores.ToDetailsDescription()))
+
+         // 2) Y solo entonces se descarta el resultado anterior a favor del estado real
+         .TryBindAlways(() => _repo.LeerEstadoSincronizacion(),
+                        ex => $"No se pudo leer el estado de sincronización: {ex.Message}");
+```
+
+El orden es la clave: **registrar y luego descartar**. Al revés, el fallo se perdería en silencio.
+
+### Ejemplo 4: Elegir mal la herramienta
+
+```csharp
+// ❌ Forma A sin registro previo: el fallo de GuardarPedido desaparece
+var r = GuardarPedido(pedido)
+            .BindAlways(() => _repo.ContarPedidos());
+// Si el guardado falló, r es válido y nadie lo sabrá.
+
+// ❌ BindAlways donde solo querías observar: destruye el tipo y el resultado
+var r = GuardarPedido(pedido)
+            .BindAlways(() => { _metricas.Incrementar("pedidos"); return 0.ToMlResultValid(); });
+
+// ✅ Observar sin alterar
+var r = GuardarPedido(pedido)
+            .ExecSelf(actionValid: _ => _metricas.Incrementar("pedidos.ok"),
+                      actionFail : _ => _metricas.Incrementar("pedidos.error"));
+
+// ✅ Convergir de forma explícita
+var r = GuardarPedido(pedido)
+            .BindAlways(funcValidAlways: p       => p.Id.ToMlResultValid(),
+                        funcFailAlways : errores => errores.ToMlResultFail<int>());
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar BindAlways vs Bind
+1. **Prefiere la forma B.** Tener `funcValidAlways` y `funcFailAlways` a la vista documenta la decisión y hace imposible perder el fallo por descuido.
 
-```csharp
-// ✅ Correcto: Usar BindAlways para operaciones que siempre deben ejecutarse
-var result = ProcessData(input)
-    .BindAlways(() => LogProcessingAttempt())  // Logging siempre
-    .BindAlways(() => CleanupTempFiles())      // Limpieza siempre
-    .Bind(data => ValidateResult(data));       // Validación solo si hay datos
+2. **Si usas la forma A, registra antes.** Un `ExecSelfIfFail` justo delante es prácticamente obligatorio: la forma A descarta los errores sin dejar rastro.
 
-// ✅ Correcto: Usar BindAlways condicional para manejar éxito y fallo
-var result = CallExternalService()
-    .BindAlways(
-        success => CreateSuccessNotification(success),
-        failure => CreateFailureNotification(failure)
-    );
+3. **No lo confundas con `finally`.** No se ejecuta ante excepciones no capturadas y no sirve para liberar recursos. Para eso, `using` y `try/finally` de C#.
 
-// ❌ Incorrecto: Usar BindAlways cuando se necesita propagación de errores
-var result = ValidateInput(input)
-    .BindAlways(() => ProcessInput())  // Se ejecutará incluso con input inválido
-    .Bind(processed => SaveResult(processed));
-```
+4. **Úsalo en las fronteras, no en el medio.** Su sitio natural es el final del *pipeline*: controladores, adaptadores, generadores de informes. En medio de la lógica de dominio, `Bind` y `BindIfFail` expresan mejor la intención.
 
-### 2. Gestión de Recursos con BindAlways
+5. **Si la función no puede fallar, usa `MapAlways`.** Envolver un valor seguro en `ToMlResultValid()` solo para satisfacer la firma de `BindAlways` es ruido innecesario.
 
-```csharp
-// ✅ Correcto: Cleanup garantizado con BindAlways
-public async Task<MlResult<ProcessResult>> ProcessWithResourcesAsync(string filePath)
-{
-    var resources = new DisposableResourceCollection();
-    
-    return await ValidateFile(filePath)
-        .BindAsync(async validPath => await ProcessFileAsync(validPath, resources))
-        .BindAlwaysAsync(async result => await CleanupResourcesAsync(resources, result))
-        .BindAlways(
-            cleanedResult => 
-            {
-                LogSuccess("Processing completed with cleanup");
-                return cleanedResult;
-            },
-            errorDetails => 
-            {
-                LogError($"Processing failed but cleanup attempted: {errorDetails.FirstErrorMessage}");
-                return MlResult<ProcessResult>.Fail(errorDetails.AllErrors);
-            }
-        );
-}
+6. **Si solo quieres observar, usa `ExecSelf`.** Conserva el resultado y el tipo.
 
-// ✅ Correcto: Usar TryBindAlways para cleanup que puede fallar
-private async Task<MlResult<T>> CleanupResourcesAsync<T>(DisposableResourceCollection resources, MlResult<T> result)
-{
-    return await result
-        .ToAsync()
-        .TryBindAlwaysAsync(async () => 
-        {
-            await resources.DisposeAllAsync();
-            return result;
-        }, "Resource cleanup failed");
-}
-```
-
-### 3. Logging y Auditoría
-
-```csharp
-// ✅ Correcto: Logging estructurado con BindAlways
-public async Task<MlResult<Order>> ProcessOrderAsync(OrderRequest request)
-{
-    var correlationId = Guid.NewGuid().ToString();
-    var startTime = DateTime.UtcNow;
-    
-    return await ValidateOrder(request)
-        .BindAsync(async validOrder => await ProcessPaymentAsync(validOrder))
-        .BindAsync(async paidOrder => await CreateOrderAsync(paidOrder))
-        .BindAlwaysAsync(async orderResult => await LogOrderProcessingAsync(correlationId, startTime, orderResult))
-        .BindAlways(
-            successOrder => 
-            {
-                LogAuditEvent("OrderProcessed", correlationId, true, successOrder.Id);
-                return MlResult<Order>.Valid(successOrder);
-            },
-            errorDetails => 
-            {
-                LogAuditEvent("OrderProcessingFailed", correlationId, false, errorDetails.FirstErrorMessage);
-                return MlResult<Order>.Fail(errorDetails.AllErrors);
-            }
-        );
-}
-
-// ✅ Correcto: Logging que no afecta el resultado principal
-private async Task<MlResult<MlResult<Order>>> LogOrderProcessingAsync(
-    string correlationId, 
-    DateTime startTime, 
-    MlResult<Order> result)
-{
-    try
-    {
-        var duration = DateTime.UtcNow - startTime;
-        var logEntry = new ProcessingLogEntry
-        {
-            CorrelationId = correlationId,
-            Duration = duration,
-            Success = result.IsValid,
-            Message = result.IsValid ? "Order processed successfully" : result.ErrorsDetails.FirstErrorMessage
-        };
-        
-        await _logger.LogAsync(logEntry);
-        return MlResult<MlResult<Order>>.Valid(result);
-    }
-    catch (Exception ex)
-    {
-        // Logging falló, pero no afectar el resultado principal
-        _fallbackLogger.LogError($"Failed to log order processing: {ex.Message}");
-        return MlResult<MlResult<Order>>.Valid(result);
-    }
-}
-```
-
-### 4. Transformaciones de Resultado
-
-```csharp
-// ✅ Correcto: Transformar siempre a formato de API
-public MlResult<ApiResponse<T>> ToApiResponse<T>(MlResult<T> serviceResult, string correlationId)
-{
-    return serviceResult.BindAlways(
-        successValue => CreateApiSuccessResponse(successValue, correlationId),
-        errorDetails => CreateApiErrorResponse<T>(errorDetails, correlationId)
-    );
-}
-
-// ✅ Correcto: Enriquecimiento de datos independiente del estado
-public async Task<MlResult<EnrichedUser>> EnrichUserDataAsync(MlResult<User> userResult)
-{
-    return await userResult
-        .BindAlwaysAsync(async result => await AddTimestampAsync(result))
-        .BindAlwaysAsync(async timestampedResult => await AddCorrelationIdAsync(timestampedResult))
-        .BindAlways(
-            validUser => CreateEnrichedUser(validUser, true),
-            errorDetails => CreateEnrichedUser(null, false, errorDetails.FirstErrorMessage)
-        );
-}
-
-// ❌ Incorrecto: No usar BindAlways para operaciones dependientes del estado
-var result = GetUser(id)
-    .BindAlways(() => UpdateLastAccess(id))  // Se ejecuta incluso si GetUser falló
-    .Bind(user => ProcessUser(user));
-```
-
-### 5. Manejo de Excepciones
-
-```csharp
-// ✅ Correcto: TryBindAlways para operaciones que pueden fallar
-public MlResult<CleanupResult> ProcessWithSafeCleanup<T>(MlResult<T> result)
-{
-    return result.TryBindAlways(
-        () => PerformCleanupOperations(),
-        ex => $"Cleanup failed: {ex.Message}"
-    );
-}
-
-// ✅ Correcto: TryBindAlways condicional con manejo diferenciado
-public MlResult<AuditResult> AuditOperationSafely<T>(MlResult<T> operationResult)
-{
-    return operationResult.TryBindAlways(
-        successValue => AuditSuccess(successValue),
-        errorDetails => AuditFailure(errorDetails),
-        ex => $"Audit operation failed: {ex.GetType().Name} - {ex.Message}"
-    );
-}
-
-// ❌ Incorrecto: No capturar excepciones en operaciones críticas
-var result = ProcessData()
-    .BindAlways(() => CriticalCleanup());  // Si CriticalCleanup lanza excepción, se pierde
-```
-
----
-
-## Consideraciones de Rendimiento
-
-### Ejecución Incondicional
-
-- Los métodos `BindAlways` **siempre** ejecutan la función, incluso con resultados fallidos
-- No hay optimizaciones de cortocircuito como en `Bind`
-- Considerar el costo de ejecución en operaciones costosas
-
-### Captura de Excepciones
-
-- `TryBindAlways` tiene overhead adicional por manejo de excepciones
-- Usar solo cuando las funciones pueden lanzar excepciones
-- El costo de conversión de excepción a `MlResult` es mínimo
-
-### Operaciones de Limpieza
-
-- Las operaciones de cleanup son típicamente I/O intensivas
-- Considerar el uso de `ConfigureAwait(false)` en contextos de librería
-- Evaluar si el cleanup debe ser síncrono o asíncrono
+7. **Usa `Try*` si el paso de convergencia toca infraestructura.** Es el último eslabón del *pipeline*: una excepción ahí tira por la borda todo el trabajo anterior.
 
 ---
 
 ## Resumen
 
-La clase `MlResultActionsBindAlways` proporciona operaciones de **ejecución incondicional**:
+- `BindAlways` **se ejecuta siempre**, sea el resultado válido o fallido.
+- Tiene **dos formas**: la **A** (`funcAlways` sin parámetros) descarta por completo el resultado anterior —su implementación es literalmente `funcAlways()`—; la **B** (`funcValidAlways` + `funcFailAlways`) es `Match` con `MlResult` en ambas ramas.
+- La forma B es la recomendable: unifica el tipo de salida y hace explícita la decisión en cada rama.
+- **No es un `finally`**: no reacciona a excepciones no capturadas y no conserva el resultado anterior por sí solo.
+- Si solo quieres observar, usa `ExecSelf`; si la función no puede fallar, `MapAlways`; si quieres salir del mundo `MlResult`, `Match`.
+- Las variantes `Try*` capturan las excepciones del paso de convergencia y las dejan en `Details["Ex"]`.
+- Su sitio natural es la **frontera** de la aplicación, donde un fallo de dominio se convierte en un dato de la respuesta.
 
-- **`BindAlways` Simple**: Ejecuta la misma función independientemente del estado
-- **`BindAlways` Condicional**: Ejecuta diferentes funciones según el estado, pero siempre ejecuta una
-- **`BindAlwaysAsync`**: Soporte completo para operaciones asíncronas
-- **`TryBindAlways`**: Versiones seguras que capturan excepciones
+---
 
-Estas operaciones son esenciales para:
-- **Logging y auditoría** que debe ocurrir siempre
-- **Limpieza de recursos** que debe ejecutarse independientemente del estado
-- **Transformaciones finales** que no dependen del éxito de operaciones previas
-- **Manejo diferenciado** de resultados válidos y fallidos
+## Ver también
 
-La clave está en usar `BindAlways` cuando necesites **garantizar la ejecución** de una operación, y `Bind` cuando necesites **propagar errores** automáticamente.
+- [`3_Bind.md`](3_Bind.md) — el encadenamiento condicional básico.
+- [`6_BindIfFail.md`](6_BindIfFail.md) — actuar solo cuando ha fallado.
+- [`11_BindSaveValueInDetailsIfFaildFuncResultAsync.md`](11_BindSaveValueInDetailsIfFaildFuncResultAsync.md) — conservar el valor de entrada al fallar.
+- [`../Match/1_Match.md`](../Match/1_Match.md) — salir del mundo `MlResult` con un valor crudo.
+- [`../Match/2_MatchAll.md`](../Match/2_MatchAll.md) — el `Match` sin parámetros, hermano gemelo de la forma A.
+- [`../Map/8_MapAlways.md`](../Map/8_MapAlways.md) — la versión para funciones que no pueden fallar.
+- [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — observar ambas ramas sin alterar el resultado.
+- [`../Types/MlResultActionsBind.md`](../Types/MlResultActionsBind.md) — mapa completo de la clase.

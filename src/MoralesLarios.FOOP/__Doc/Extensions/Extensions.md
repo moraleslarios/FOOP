@@ -1,1271 +1,593 @@
-# MlResult Extensions - Utilidades y Extensiones Auxiliares
+# Extensions — Utilidades transversales
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de los Métodos](#análisis-de-los-métodos)
-3. [Extensiones de Validación](#extensiones-de-validación)
-4. [Utilidades de Tipos](#utilidades-de-tipos)
-5. [Extensiones de Flujo](#extensiones-de-flujo)
-6. [Conversiones de Funciones](#conversiones-de-funciones)
-7. [Ejemplos Prácticos](#ejemplos-prácticos)
-8. [Mejores Prácticas](#mejores-prácticas)
-9. [Integración con MlResult](#integración-con-mlresult)
+2. [`ToAsync` — la extensión más usada de la librería](#toasync--la-extensión-más-usada-de-la-librería)
+3. [`With` / `WithAsync` — mutación fluida](#with--withasync--mutación-fluida)
+4. [`ToFuncTask` — adaptar delegados síncronos a asíncronos](#tofunctask--adaptar-delegados-síncronos-a-asíncronos)
+5. [`AppendExDetails` — acumular excepciones sin sobrescribir](#appendexdetails--acumular-excepciones-sin-sobrescribir)
+6. [`ValidateObject` — DataAnnotations en bruto](#validateobject--dataannotations-en-bruto)
+7. [`ToNullable` y `VoidToAsync`](#tonullable-y-voidtoasync)
+8. [Las constantes: `Constants`](#las-constantes-constants)
+9. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+11. [Ejemplos Prácticos](#ejemplos-prácticos)
+12. [Mejores Prácticas](#mejores-prácticas)
+13. [Resumen](#resumen)
+14. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-La clase `Extensions` proporciona un conjunto de **utilidades y extensiones auxiliares** que complementan el ecosistema MlResult con funcionalidades adicionales para validación, manipulación de objetos, gestión de errores y conversiones de tipos. Estas extensiones facilitan la integración con .NET estándar y proporcionan herramientas útiles para el desarrollo cotidiano.
+Esta página documenta las utilidades transversales de la librería, repartidas en tres
+archivos del namespace `MoralesLarios.OOFP.Helpers`:
 
-### Propósito Principal
+| Archivo | Contenido |
+|---------|-----------|
+| `Helpers/Extensions/ParallelExtensions.cs` | `ToAsync<T>` |
+| `Helpers/Extensions/Extensions.cs` | `With`, `ToFuncTask`, `AppendExDetails`, `ValidateObject`, `ToNullable`, `VoidToAsync` |
+| `Helpers/Constants.cs` | `EX_DESC_KEY`, `VALUE_KEY`, mensajes por defecto |
 
-- **Validación de Objetos**: Integración con Data Annotations
-- **Manipulación Fluida**: Modificación de objetos de forma funcional
-- **Gestión de Errores**: Manejo de excepciones y contexto de error
-- **Conversiones de Tipos**: Utilidades para transformaciones comunes
-- **Interoperabilidad**: Puentes entre paradigmas síncronos y asíncronos
+Son piezas pequeñas, pero conocerlas evita mucho código repetitivo: `ToAsync` aparece en casi
+todas las tuberías asíncronas y `ToFuncTask` resuelve los problemas de inferencia de tipos
+más frecuentes.
 
----
-
-## Análisis de los Métodos
-
-### Filosofía de Extensions
-
-```
-Objeto + Extensión → Funcionalidad Mejorada
-  ↓         ↓              ↓
-value + ValidateObject → ValidationResults
-  ↓         ↓              ↓
-value + With(actions) → Modified Object
-  ↓         ↓              ↓
-func + ToFuncTask → Async Function
-```
-
-### Características Principales
-
-1. **Extensiones No-Invasivas**: Métodos que no modifican la API base
-2. **Integración Estándar**: Compatibilidad con .NET System
-3. **Flujo Funcional**: Métodos que preservan el estilo funcional
-4. **Utilidades Comunes**: Soluciones para problemas frecuentes
-5. **Soporte Async**: Conversiones y adaptadores async/await
+> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
 
 ---
 
-## Extensiones de Validación
+## `ToAsync` — la extensión más usada de la librería
 
-### 1. ValidateObject - Validación con Data Annotations
+El archivo `ParallelExtensions.cs` contiene **un único método**, y es probablemente el más
+invocado de todo el proyecto:
 
-**Propósito**: Validar objetos usando atributos de validación de .NET
+```csharp
+public static class ParallelExtensions
+{
+    public static Task<T> ToAsync<T>(this T value) => Task.FromResult(value);
+}
+```
+
+Envuelve cualquier valor en un `Task<T>` ya completado. Su razón de ser es **encajar valores
+síncronos en cadenas asíncronas** sin escribir `Task.FromResult` a mano:
+
+```csharp
+// Dentro de una cadena async, MapAsync espera un Func<T, Task<TResult>>
+var r = await ObtenerClienteAsync(id)
+                  .MapAsync(c => c.ToDto().ToAsync());     // ← ToAsync ajusta la firma
+
+// Devolver un valor constante desde un método asíncrono sin async/await
+public Task<MlResult<int>> Cero() => 0.ToMlResultValid().ToAsync();
+```
+
+⚠️ **`ToAsync` no crea concurrencia.** `Task.FromResult` devuelve una tarea **ya
+completada**: no hay hilo, ni E/S, ni paralelismo. El nombre del archivo
+(`ParallelExtensions`) es engañoso.
+
+```csharp
+// ⚠️ Esto NO ejecuta nada en paralelo
+var t = CalculoLento().ToAsync();     // CalculoLento() se ejecuta ANTES, de forma síncrona
+
+// ✅ Para paralelismo real necesitas Task.Run o E/S asíncrona de verdad
+var t = Task.Run(() => CalculoLento());
+```
+
+🔑 **Regla mnemotécnica:** `ToAsync` es un **adaptador de firmas**, no un acelerador.
+
+---
+
+## `With` / `WithAsync` — mutación fluida
+
+```csharp
+public static T With<T>(this T source, params Action<T>[] changes)
+    where T : class
+{
+    foreach (var change in changes)
+        change(source);
+
+    return source;
+}
+```
+
+Aplica una lista de acciones al objeto y lo devuelve, permitiendo encadenar modificaciones:
+
+```csharp
+var pedido = new Pedido()
+                 .With(p => p.ClienteId = 42,
+                       p => p.Fecha     = DateTime.UtcNow,
+                       p => p.Estado    = EstadoPedido.Borrador);
+```
+
+⚠️ **Muy importante: `With` MUTA el objeto original.** No hace ninguna copia. Es lo contrario
+de la expresión `with` de C# para `record`, que sí crea un objeto nuevo:
+
+```csharp
+var original = new Pedido { Estado = EstadoPedido.Borrador };
+
+var otro = original.With(p => p.Estado = EstadoPedido.Confirmado);
+
+// ⚠️ original y otro son EL MISMO objeto; original.Estado ya es Confirmado
+Console.WriteLine(ReferenceEquals(original, otro));   // true
+```
+
+💡 **Recomendación:** en un proyecto que apuesta por el estilo funcional, prefiere
+`record` + expresión `with` de C#, que preserva la inmutabilidad:
+
+```csharp
+// ✅ Inmutable: crea un objeto nuevo
+var confirmado = pedido with { Estado = EstadoPedido.Confirmado };
+
+// ⚠️ Mutable: modifica el existente
+var confirmado = pedido.With(p => p.Estado = EstadoPedido.Confirmado);
+```
+
+`With` es útil sobre todo para **inicializar objetos legados** con setters públicos y muchas
+propiedades, o para configurar objetos de infraestructura.
+
+Las variantes asíncronas (`WithAsync`) existen para encadenar sobre un `Task<T>`:
+
+```csharp
+var pedido = await ObtenerPedidoAsync(id)
+                       .WithAsync(p => p.UltimoAcceso = DateTime.UtcNow);
+```
+
+---
+
+## `ToFuncTask` — adaptar delegados síncronos a asíncronos
+
+Cinco sobrecargas que convierten delegados síncronos en su equivalente asíncrono. Resuelven
+los errores de inferencia de tipos más molestos de la librería:
+
+```csharp
+public static Func<T, Task<TResult>> ToFuncTask<T, TResult>(this Func<T, TResult> func)
+    => x => func(x).ToAsync();
+
+public static Func<MlErrorsDetails, Task<TResult>> ToFuncTask<TResult>(this Func<MlErrorsDetails, TResult> func)
+    => errorsDetails => func(errorsDetails).ToAsync();
+
+public static Func<T, Task> ToFuncTask<T>(this Action<T> action)
+    => x => { action(x); return Task.CompletedTask; };
+
+public static Func<MlErrorsDetails, Task> ToFuncTask(this Action<MlErrorsDetails> action)
+    => errorsDetails => { action(errorsDetails); return Task.CompletedTask; };
+
+public static Func<Task> ToFuncTask(this Action action)
+    => () => { action(); return Task.CompletedTask; };
+```
+
+🔑 **Cuándo lo necesitas:** cuando tienes un método síncrono ya escrito y quieres pasarlo a
+un operador `*Async` que espera un delegado asíncrono.
+
+```csharp
+// Un logger síncrono ya existente
+void Registrar(MlErrorsDetails err) => _log.LogWarning(err.ToErrorsDescription());
+
+// ❌ No encaja: ExecSelfIfFailAsync espera Func<MlErrorsDetails, Task>
+// await resultado.ExecSelfIfFailAsync(Registrar);
+
+// ✅ Con ToFuncTask
+Action<MlErrorsDetails> accion = Registrar;
+await resultado.ExecSelfIfFailAsync(accion.ToFuncTask());
+
+// ✅ Alternativa sin ToFuncTask: lambda con ToAsync
+await resultado.ExecSelfIfFailAsync(err => { Registrar(err); return Task.CompletedTask; });
+```
+
+⚠️ Las dos sobrecargas específicas de `MlErrorsDetails` existen porque el compilador **no
+puede inferir** `T = MlErrorsDetails` cuando la sobrecarga genérica también encaja. Es un
+apaño necesario, no un capricho.
+
+---
+
+## `AppendExDetails` — acumular excepciones sin sobrescribir
+
+```csharp
+public static Dictionary<string, object> AppendExDetails(this Dictionary<string, object> source, Exception ex)
+{
+    var exKeys = source.Keys.Where(x => x.StartsWith(EX_DESC_KEY)).ToList();
+
+    var exKey = exKeys.Any() ? $"{EX_DESC_KEY}{exKeys.Count + 1}" : EX_DESC_KEY;
+
+    var result = source.ToDictionary(x => x.Key, x => x.Value);
+
+    result.Add(exKey, ex);
+
+    return result;
+}
+```
+
+Añade una excepción al diccionario de `Details` **generando una clave nueva** si ya había
+otra. Como `EX_DESC_KEY` vale `"Ex"`, las claves resultantes son:
+
+| Excepción | Clave |
+|-----------|-------|
+| 1.ª | `"Ex"` |
+| 2.ª | `"Ex2"` |
+| 3.ª | `"Ex3"` |
+
+🔑 **Por qué importa:** es lo que permite que un resultado fallido acumule **varias**
+excepciones (la del negocio y la del logger que también falló) sin que una tape a la otra.
+Es la base de `AppendExErrorDetail` en `MlErrorsDetails`.
+
+```csharp
+// Devuelve un diccionario NUEVO: el original no se modifica
+var detalles = new Dictionary<string, object> { ["PedidoId"] = 42 };
+
+var conUna = detalles.AppendExDetails(exNegocio);    // { PedidoId, Ex }
+var conDos = conUna.AppendExDetails(exLogger);       // { PedidoId, Ex, Ex2 }
+```
+
+⚠️ **Cuidado con la numeración.** El cálculo `$"{EX_DESC_KEY}{exKeys.Count + 1}"` usa el
+número de claves existentes, así que si alguien añade manualmente una clave que empiece por
+`"Ex"` (por ejemplo `"ExtraInfo"`), la numeración se descuadra. **No uses claves propias que
+empiecen por `Ex`.**
+
+```csharp
+// ❌ "ExtraInfo" empieza por "Ex": rompe la numeración de excepciones
+var detalles = new Dictionary<string, object> { ["ExtraInfo"] = "..." };
+
+// ✅ Usa nombres que no colisionen
+var detalles = new Dictionary<string, object> { ["InfoAdicional"] = "..." };
+```
+
+---
+
+## `ValidateObject` — DataAnnotations en bruto
 
 ```csharp
 public static IEnumerable<ValidationResult> ValidateObject(this object source)
-```
-
-**Funcionamiento Interno**:
-```csharp
-var valContext = new ValidationContext(source, null, null);
-var resultado = new List<ValidationResult>();
-Validator.TryValidateObject(source, valContext, resultado, true);
-return resultado;
-```
-
-**Ejemplo Básico**:
-```csharp
-public class UserModel
 {
-    [Required(ErrorMessage = "Name is required")]
-    [StringLength(100, ErrorMessage = "Name too long")]
-    public string Name { get; set; }
-    
-    [EmailAddress(ErrorMessage = "Invalid email format")]
-    public string Email { get; set; }
-    
-    [Range(18, 120, ErrorMessage = "Age must be between 18 and 120")]
-    public int Age { get; set; }
-}
+    var valContext = new ValidationContext(source, null, null);
+    var resultado  = new List<ValidationResult>();
 
-var user = new UserModel { Name = "", Email = "invalid-email", Age = 15 };
-var validationResults = user.ValidateObject();
+    Validator.TryValidateObject(source, valContext, resultado, true);
 
-foreach (var error in validationResults)
-{
-    Console.WriteLine(error.ErrorMessage);
+    return resultado;
 }
-// Output:
-// Name is required
-// Invalid email format  
-// Age must be between 18 and 120
 ```
+
+Ejecuta la validación de **DataAnnotations** sobre un objeto y devuelve la lista de
+resultados. Devuelve una **colección vacía si todo es válido**.
+
+⚠️ **No devuelve un `MlResult`.** Es una utilidad de bajo nivel; tienes que convertirla tú:
+
+```csharp
+// Puente manual hacia el carril
+public static MlResult<T> ValidarAnotaciones<T>(T objeto)
+{
+    var errores = objeto!.ValidateObject().ToList();
+
+    return errores.Any()
+               ? errores.Select(e => e.ErrorMessage ?? "Error de validación").ToMlResultFail<T>()
+               : objeto.ToMlResultValid();
+}
+```
+
+💡 Para uso real, mejor el paquete
+**`MoralesLarios.OOFP.Validation.Dataannotations`**, que ya integra DataAnnotations con
+`MlResult` de forma completa (incluida la información de los miembros afectados).
+
+⚠️ El último parámetro de `TryValidateObject` es `true`, es decir **validación recursiva de
+todas las propiedades**. Puede ser costoso en grafos de objetos grandes.
 
 ---
 
-## Utilidades de Tipos
+## `ToNullable` y `VoidToAsync`
 
-### 1. ToNullable - Conversión a Nullable
-
-**Propósito**: Convertir tipos valor a sus equivalentes nullable
+### `ToNullable<T>`
 
 ```csharp
-public static T? ToNullable<T>(this T source) where T : struct
+public static T? ToNullable<T>(this T source) where T : struct => source;
 ```
 
-**Ejemplo**:
-```csharp
-int age = 25;
-int? nullableAge = age.ToNullable();
-
-DateTime date = DateTime.Now;
-DateTime? nullableDate = date.ToNullable();
-
-// Útil en expresiones LINQ y asignaciones condicionales
-var result = someCondition ? value.ToNullable() : null;
-```
-
-### 2. AppendExDetails - Extensión de Detalles de Excepción
-
-**Propósito**: Agregar excepciones a diccionarios de detalles sin sobrescribir
+Convierte un value type en su equivalente `Nullable<T>`. Es puramente sintáctico
+(el compilador ya hace esta conversión de forma implícita), pero ayuda en expresiones donde
+necesitas forzar el tipo:
 
 ```csharp
-public static Dictionary<string, object> AppendExDetails(
-    this Dictionary<string, object> source, 
-    Exception ex)
+int  edad     = 30;
+int? nullable = edad.ToNullable();
+
+// Uso típico: unificar tipos en un operador ternario o en un Map
+var r = resultado.Map(x => x.Activo ? x.Edad.ToNullable() : null);
 ```
 
-**Funcionamiento**:
-```csharp
-var exKeys = source.Keys.Where(x => x.StartsWith(EX_DESC_KEY)).ToList();
-var exKey = exKeys.Any() ? $"{EX_DESC_KEY}{exKeys.Count + 1}" : EX_DESC_KEY;
-var result = source.ToDictionary(x => x.Key, x => x.Value);
-result.Add(exKey, ex);
-return result;
-```
-
-**Ejemplo**:
-```csharp
-var errorDetails = new Dictionary<string, object>
-{
-    { "UserId", 123 },
-    { "Operation", "CreateOrder" }
-};
-
-try
-{
-    // Primera operación que falla
-    throw new ArgumentException("Invalid argument");
-}
-catch (Exception ex1)
-{
-    errorDetails = errorDetails.AppendExDetails(ex1);
-    // errorDetails ahora contiene "Ex" -> ArgumentException
-}
-
-try
-{
-    // Segunda operación que falla
-    throw new InvalidOperationException("Invalid state");
-}
-catch (Exception ex2)
-{
-    errorDetails = errorDetails.AppendExDetails(ex2);
-    // errorDetails ahora contiene "Ex" y "Ex2"
-}
-```
-
----
-
-## Extensiones de Flujo
-
-### 1. With - Modificación Fluida de Objetos
-
-**Propósito**: Aplicar múltiples modificaciones a un objeto de forma fluida
-
-```csharp
-public static T With<T>(this T source, params Action<T>[] changes) where T : class
-```
-
-**Ejemplo Básico**:
-```csharp
-var user = new User()
-    .With(
-        u => u.Name = "John Doe",
-        u => u.Email = "john@example.com",
-        u => u.Age = 30,
-        u => u.IsActive = true
-    );
-
-// Equivalente a:
-// var user = new User();
-// user.Name = "John Doe";
-// user.Email = "john@example.com";
-// user.Age = 30;
-// user.IsActive = true;
-```
-
-### 2. WithAsync - Versión Asíncrona de With
-
-**Múltiples sobrecargas para diferentes escenarios async**:
-
-```csharp
-public static Task<T> WithAsync<T>(this T source, params Action<T>[] changes) where T : class
-public static async Task<T> WithAsync<T>(this Task<T> sourceAsync, params Action<T>[] changes) where T : class
-```
-
-**Ejemplo**:
-```csharp
-var user = await GetUserAsync(userId)
-    .WithAsync(
-        u => u.LastLoginDate = DateTime.Now,
-        u => u.LoginCount++,
-        u => u.IsOnline = true
-    );
-```
-
-### 3. VoidToAsync - Conversión de Acciones a Task
-
-**Propósito**: Convertir operaciones void en operaciones async
+### `VoidToAsync<T>`
 
 ```csharp
 public static Task VoidToAsync<T>(this T source, Action<T> voidAction)
+{
+    voidAction(source);
+    return Task.CompletedTask;
+}
 ```
 
-**Ejemplo**:
+Ejecuta una acción sobre el valor y devuelve `Task.CompletedTask`.
+
+⚠️ **La acción se ejecuta de forma síncrona, antes de devolver la tarea.** No hay
+asincronía real, igual que en `ToAsync`.
+
 ```csharp
-var user = new User();
-await user.VoidToAsync(u => u.UpdateLastActivity());
-
-// Útil para integrar código síncrono en flujos async
-await ProcessUserAsync(user)
-    .ContinueWith(async result => await result.Result.VoidToAsync(u => LogUserAction(u)));
+// Encajar un efecto lateral síncrono en una firma que pide Task
+await pedido.VoidToAsync(p => _log.LogInformation("Procesando {Id}", p.Id));
 ```
+
+💡 En la práctica se usa poco: `ToFuncTask` cubre los mismos casos con mejor encaje en los
+operadores de la librería.
 
 ---
 
-## Conversiones de Funciones
-
-### 1. ToFuncTask - Conversión de Funciones a Async
-
-**Múltiples sobrecargas para diferentes tipos de funciones**:
+## Las constantes: `Constants`
 
 ```csharp
-// Func<T, TResult> -> Func<T, Task<TResult>>
-public static Func<T, Task<TResult>> ToFuncTask<T, TResult>(this Func<T, TResult> func)
+public static class Constants
+{
+    public static string DEFAULT_ERROR_MESSAGE { get; }
+        = "Without custom error message. For more info, view 'Ex(s) details exceptions.";
 
-// Func<MlErrorsDetails, TResult> -> Func<MlErrorsDetails, Task<TResult>>
-public static Func<MlErrorsDetails, Task<TResult>> ToFuncTask<TResult>(this Func<MlErrorsDetails, TResult> func)
+    public static string EX_DESC_KEY { get; } = "Ex";
+    public static string VALUE_KEY   { get; } = "Value";
 
-// Action<T> -> Func<T, Task>
-public static Func<T, Task> ToFuncTask<T>(this Action<T> action)
-
-// Action<MlErrorsDetails> -> Func<MlErrorsDetails, Task>
-public static Func<MlErrorsDetails, Task> ToFuncTask(this Action<MlErrorsDetails> action)
+    public static string DEFAULT_EX_ERROR_MESSAGE(Exception ex)
+        => $"An error occurred while executing the function. Error: {ex.Message}.More info in Ex Details.";
+}
 ```
 
-**Ejemplo de Uso**:
+| Constante | Valor | Para qué sirve |
+|-----------|-------|----------------|
+| `EX_DESC_KEY` | `"Ex"` | Clave de `Details` donde se guardan las excepciones |
+| `VALUE_KEY` | `"Value"` | Clave donde `*WithValue` guarda el valor original |
+| `DEFAULT_ERROR_MESSAGE` | (texto) | Mensaje cuando no se indica ninguno |
+| `DEFAULT_EX_ERROR_MESSAGE(ex)` | (texto + `ex.Message`) | Mensaje por defecto de los `Try*` |
+
+🔑 **Consecuencias prácticas de conocer estas claves:**
+
+1. **No uses `"Ex"`, `"Ex2"`, `"Value"` ni nada que empiece por `Ex`** como claves propias en
+   tus `Details`: colisionan con la maquinaria interna.
+2. Los mensajes por defecto están **en inglés** y exponen `ex.Message`. Nunca los muestres a
+   un usuario final: pasa siempre un mensaje de dominio a los `Try*`.
+3. Para leer estos valores usa los accesores oficiales (`GetDetailException()`,
+   `GetDetailValue<T>()`), no las claves literales.
+
 ```csharp
-// Función síncrona original
-Func<User, string> getUserName = user => user.Name;
+// ❌ Depender de la constante literal
+var ex = resultado.ErrorsDetails.Details["Ex"];
 
-// Convertir a async
-Func<User, Task<string>> getUserNameAsync = getUserName.ToFuncTask();
-
-// Usar en contexto async
-var name = await getUserNameAsync(user);
-
-// Acción síncrona original
-Action<User> logUser = user => Console.WriteLine($"User: {user.Name}");
-
-// Convertir a async
-Func<User, Task> logUserAsync = logUser.ToFuncTask();
-
-// Usar en contexto async
-await logUserAsync(user);
+// ✅ Accesor oficial
+resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
 ```
+
+⚠️ Nótese que `DEFAULT_EX_ERROR_MESSAGE` tiene una **errata en el texto original**
+(`"Error: {ex.Message}.More info"`, sin espacio tras el punto). Está así en el código fuente.
+
+---
+
+## ⚠️ Particularidades reales del código fuente
+
+**1. `ParallelExtensions` no paraleliza nada.** Contiene solo `ToAsync`, que es
+`Task.FromResult`. El nombre del archivo induce a error.
+
+**2. `With` MUTA el objeto original** y devuelve la misma referencia. No confundir con la
+expresión `with` de C# para `record`.
+
+**3. `With` exige `where T : class`.** No funciona con `struct`.
+
+**4. `AppendExDetails` numera contando las claves que empiezan por `"Ex"`.** Cualquier clave
+propia con ese prefijo descuadra la numeración.
+
+**5. `AppendExDetails` devuelve un diccionario nuevo** (hace `ToDictionary`): el original no
+se modifica. Es el único método de este grupo que respeta la inmutabilidad.
+
+**6. `ValidateObject` ignora el `bool` que devuelve `TryValidateObject`** y se basa solo en
+la lista. Funciona, pero significa que no distingue "válido" de "no se pudo validar".
+
+**7. `ValidateObject` valida recursivamente** (último parámetro `true`).
+
+**8. `VoidToAsync` ejecuta la acción de forma síncrona** antes de devolver
+`Task.CompletedTask`.
+
+**9. Las dos sobrecargas de `ToFuncTask` para `MlErrorsDetails` son necesarias** por
+limitaciones de inferencia del compilador, no redundancia.
+
+**10. Las constantes son propiedades `static get`, no `const`.** Da igual en la práctica,
+pero significa que no se pueden usar en atributos ni en `switch` de constantes.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Uso |
+|-----------|-----|
+| Encajar un valor en una cadena asíncrona | `valor.ToAsync()` |
+| Pasar un método síncrono a un operador `*Async` | `accion.ToFuncTask()` |
+| Inicializar un objeto legado con muchos setters | `objeto.With(...)` |
+| Copia inmutable de un `record` | Expresión `with` de C# (**no** `With`) |
+| Añadir una excepción a `Details` sin perder la anterior | `detalles.AppendExDetails(ex)` |
+| Validar DataAnnotations | `MoralesLarios.OOFP.Validation.Dataannotations` (mejor que `ValidateObject`) |
+| Convertir un value type a nullable | `valor.ToNullable()` |
+| Paralelismo real | `Task.Run` / E/S asíncrona (**no** `ToAsync`) |
+| Leer la excepción de un fallo | `GetDetailException()` |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Validación y Procesamiento de Formularios
+### Ejemplo 1: `ToAsync` para cerrar cadenas asíncronas
 
 ```csharp
-public class FormProcessingService
+public class TarifaService
 {
-    private readonly IUserService _userService;
-    private readonly INotificationService _notificationService;
-    private readonly ILoggerService _loggerService;
-    
-    public async Task<MlResult<ProcessedForm>> ProcessUserRegistrationFormAsync(UserRegistrationForm form)
-    {
-        // 1. Validar formulario usando Data Annotations
-        var validationResult = await ValidateFormWithDataAnnotationsAsync(form);
-        if (validationResult.IsFailed)
-            return validationResult.ToMlResultFail<ValidationSummary, ProcessedForm>();
-        
-        // 2. Procesar y enriquecer datos del formulario
-        var enrichedForm = await EnrichFormDataAsync(form);
-        if (enrichedForm.IsFailed)
-            return enrichedForm.ToMlResultFail<EnrichedForm, ProcessedForm>();
-        
-        // 3. Crear usuario con modificaciones fluidas
-        var userCreationResult = await CreateUserWithFluentModificationsAsync(enrichedForm.Value);
-        if (userCreationResult.IsFailed)
-            return userCreationResult.ToMlResultFail<User, ProcessedForm>();
-        
-        // 4. Procesar notificaciones asíncronas
-        var notificationResult = await ProcessNotificationsAsync(userCreationResult.Value);
-        
-        return notificationResult.Match(
-            valid: _ => MlResult<ProcessedForm>.Valid(new ProcessedForm
-            {
-                FormId = form.Id,
-                UserId = userCreationResult.Value.Id,
-                ProcessedAt = DateTime.UtcNow,
-                ValidationSummary = validationResult.Value,
-                CreatedUser = userCreationResult.Value,
-                NotificationsSent = notificationResult.Value
-            }),
-            fail: errors => MlResult<ProcessedForm>.Fail(errors.AllErrors)
-        );
-    }
-    
-    private async Task<MlResult<ValidationSummary>> ValidateFormWithDataAnnotationsAsync(UserRegistrationForm form)
-    {
-        return await Task.Run(() =>
-        {
-            // Usar extensión ValidateObject para validación estándar
-            var validationResults = form.ValidateObject().ToList();
-            
-            // Validaciones personalizadas adicionales
-            var customValidations = PerformCustomValidations(form);
-            validationResults.AddRange(customValidations);
-            
-            var summary = new ValidationSummary
-            {
-                IsValid = !validationResults.Any(),
-                ErrorCount = validationResults.Count,
-                Errors = validationResults.Select(vr => new ValidationError
-                {
-                    Field = string.Join(",", vr.MemberNames),
-                    Message = vr.ErrorMessage,
-                    Severity = DetermineErrorSeverity(vr)
-                }).ToArray(),
-                ValidatedAt = DateTime.UtcNow
-            };
-            
-            return summary.IsValid
-                ? MlResult<ValidationSummary>.Valid(summary)
-                : MlResult<ValidationSummary>.Fail($"Form validation failed with {summary.ErrorCount} errors");
-        });
-    }
-    
-    private async Task<MlResult<EnrichedForm>> EnrichFormDataAsync(UserRegistrationForm form)
-    {
-        try
-        {
-            // Enriquecer datos usando modificaciones fluidas
-            var enrichedForm = new EnrichedForm
-            {
-                OriginalForm = form,
-                ProcessingId = Guid.NewGuid(),
-                ReceivedAt = DateTime.UtcNow
-            }.With(
-                ef => ef.NormalizedEmail = form.Email?.ToLowerInvariant()?.Trim(),
-                ef => ef.FormattedPhone = FormatPhoneNumber(form.Phone),
-                ef => ef.GeolocationData = await GetGeolocationDataAsync(form.IpAddress),
-                ef => ef.UserAgent = form.UserAgent,
-                ef => ef.ReferralSource = DetermineReferralSource(form.ReferralCode)
-            );
-            
-            // Validaciones adicionales en datos enriquecidos
-            return EnsureFp.NotNull(enrichedForm.NormalizedEmail, "Email normalization failed")
-                .Bind(_ => EnsureFp.NotNullEmptyOrWhitespace(enrichedForm.FormattedPhone, "Phone formatting failed"))
-                .Map(_ => enrichedForm);
-        }
-        catch (Exception ex)
-        {
-            var errorDetails = new Dictionary<string, object>
-            {
-                { "FormId", form.Id },
-                { "EnrichmentStep", "DataEnrichment" },
-                { "ProcessedAt", DateTime.UtcNow }
-            }.AppendExDetails(ex);
-            
-            return MlResult<EnrichedForm>.Fail(
-                new MlErrorsDetails(
-                    new List<MlError> { new MlError("Form enrichment failed") },
-                    errorDetails));
-        }
-    }
-    
-    private async Task<MlResult<User>> CreateUserWithFluentModificationsAsync(EnrichedForm enrichedForm)
-    {
-        try
-        {
-            // Crear usuario base
-            var baseUser = new User
-            {
-                Id = 0, // Will be set by database
-                Email = enrichedForm.NormalizedEmail,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            // Aplicar modificaciones fluidas basadas en datos del formulario
-            var configuredUser = baseUser.With(
-                u => u.Name = $"{enrichedForm.OriginalForm.FirstName} {enrichedForm.OriginalForm.LastName}",
-                u => u.Phone = enrichedForm.FormattedPhone,
-                u => u.DateOfBirth = enrichedForm.OriginalForm.DateOfBirth?.ToNullable(),
-                u => u.Country = enrichedForm.OriginalForm.Country,
-                u => u.IsEmailVerified = false,
-                u => u.IsActive = true,
-                u => u.UserType = DetermineUserType(enrichedForm),
-                u => u.Preferences = CreateDefaultPreferences(enrichedForm),
-                u => u.Metadata = CreateUserMetadata(enrichedForm)
-            );
-            
-            // Guardar usuario en base de datos
-            var savedUser = await _userService.CreateAsync(configuredUser);
-            
-            return EnsureFp.NotNull(savedUser, "User creation failed - database returned null")
-                .Bind(user => EnsureFp.That(user.Id, user.Id > 0, "User creation failed - invalid ID assigned"));
-        }
-        catch (Exception ex)
-        {
-            var errorDetails = new Dictionary<string, object>
-            {
-                { "FormId", enrichedForm.OriginalForm.Id },
-                { "ProcessingId", enrichedForm.ProcessingId },
-                { "Email", enrichedForm.NormalizedEmail }
-            }.AppendExDetails(ex);
-            
-            return MlResult<User>.Fail(
-                new MlErrorsDetails(
-                    new List<MlError> { new MlError("User creation failed") },
-                    errorDetails));
-        }
-    }
-    
-    private async Task<MlResult<NotificationResults>> ProcessNotificationsAsync(User user)
-    {
-        var results = new List<NotificationResult>();
-        var errors = new List<string>();
-        
-        // Convertir acciones síncronas a async usando ToFuncTask
-        var emailNotificationFunc = ((Action<User>)(u => 
-            results.Add(SendWelcomeEmail(u)))).ToFuncTask();
-        
-        var smsNotificationFunc = ((Action<User>)(u => 
-            results.Add(SendWelcomeSms(u)))).ToFuncTask();
-        
-        var auditLogFunc = ((Action<User>)(u => 
-            _loggerService.LogUserCreation(u))).ToFuncTask();
-        
-        try
-        {
-            // Ejecutar notificaciones en paralelo
-            await Task.WhenAll(
-                emailNotificationFunc(user),
-                smsNotificationFunc(user),
-                auditLogFunc(user)
-            );
-            
-            // Agregar notificación de sistema usando VoidToAsync
-            await user.VoidToAsync(u => 
-                results.Add(new NotificationResult 
-                { 
-                    Type = "System", 
-                    Success = true, 
-                    Message = "User registered in system" 
-                }));
-            
-            var notificationResults = new NotificationResults
-            {
-                Results = results.ToArray(),
-                TotalSent = results.Count(r => r.Success),
-                TotalFailed = results.Count(r => !r.Success),
-                ProcessedAt = DateTime.UtcNow
-            };
-            
-            return MlResult<NotificationResults>.Valid(notificationResults);
-        }
-        catch (Exception ex)
-        {
-            var errorDetails = new Dictionary<string, object>
-            {
-                { "UserId", user.Id },
-                { "NotificationStep", "ParallelNotifications" }
-            }.AppendExDetails(ex);
-            
-            return MlResult<NotificationResults>.Fail(
-                new MlErrorsDetails(
-                    new List<MlError> { new MlError("Notification processing failed") },
-                    errorDetails));
-        }
-    }
-    
-    // Métodos auxiliares que usan las extensiones
-    private IEnumerable<ValidationResult> PerformCustomValidations(UserRegistrationForm form)
-    {
-        var customErrors = new List<ValidationResult>();
-        
-        // Validación personalizada de edad
-        if (form.DateOfBirth.HasValue)
-        {
-            var age = CalculateAge(form.DateOfBirth.Value);
-            if (age < 13)
-            {
-                customErrors.Add(new ValidationResult(
-                    "User must be at least 13 years old",
-                    new[] { nameof(form.DateOfBirth) }));
-            }
-        }
-        
-        // Validación de unicidad de email (simulada)
-        if (!string.IsNullOrEmpty(form.Email) && IsEmailTaken(form.Email))
-        {
-            customErrors.Add(new ValidationResult(
-                "Email address is already registered",
-                new[] { nameof(form.Email) }));
-        }
-        
-        return customErrors;
-    }
-    
-    private async Task<GeolocationData> GetGeolocationDataAsync(string ipAddress)
-    {
-        // Simulación de servicio de geolocalización
-        await Task.Delay(100);
-        return new GeolocationData 
-        { 
-            Country = "US", 
-            City = "New York", 
-            Timezone = "America/New_York" 
-        };
-    }
-    
-    private string FormatPhoneNumber(string phone)
-    {
-        if (string.IsNullOrEmpty(phone))
-            return phone;
-        
-        // Formateo básico de teléfono
-        var digits = new string(phone.Where(char.IsDigit).ToArray());
-        return digits.Length == 10 ? $"({digits.Substring(0, 3)}) {digits.Substring(3, 3)}-{digits.Substring(6)}" : phone;
-    }
-    
-    private NotificationResult SendWelcomeEmail(User user)
-    {
-        try
-        {
-            // Simulación de envío de email
-            _notificationService.SendEmail(user.Email, "Welcome!", "Welcome to our platform!");
-            return new NotificationResult { Type = "Email", Success = true, Message = "Welcome email sent" };
-        }
-        catch (Exception ex)
-        {
-            return new NotificationResult { Type = "Email", Success = false, Message = ex.Message };
-        }
-    }
-    
-    private NotificationResult SendWelcomeSms(User user)
-    {
-        try
-        {
-            // Simulación de envío de SMS
-            if (!string.IsNullOrEmpty(user.Phone))
-            {
-                _notificationService.SendSms(user.Phone, "Welcome to our platform!");
-                return new NotificationResult { Type = "SMS", Success = true, Message = "Welcome SMS sent" };
-            }
-            return new NotificationResult { Type = "SMS", Success = false, Message = "No phone number provided" };
-        }
-        catch (Exception ex)
-        {
-            return new NotificationResult { Type = "SMS", Success = false, Message = ex.Message };
-        }
-    }
-    
-    private string DetermineUserType(EnrichedForm form) => "Standard";
-    private UserPreferences CreateDefaultPreferences(EnrichedForm form) => new UserPreferences();
-    private Dictionary<string, object> CreateUserMetadata(EnrichedForm form) => new Dictionary<string, object>();
-    private string DetermineReferralSource(string referralCode) => string.IsNullOrEmpty(referralCode) ? "Direct" : "Referral";
-    private ErrorSeverity DetermineErrorSeverity(ValidationResult vr) => ErrorSeverity.High;
-    private int CalculateAge(DateTime birthDate) => DateTime.Now.Year - birthDate.Year;
-    private bool IsEmailTaken(string email) => false; // Simulación
-}
-
-// Clases de apoyo para el ejemplo
-public class UserRegistrationForm
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-    
-    [Required(ErrorMessage = "First name is required")]
-    [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
-    public string FirstName { get; set; }
-    
-    [Required(ErrorMessage = "Last name is required")]
-    [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
-    public string LastName { get; set; }
-    
-    [Required(ErrorMessage = "Email is required")]
-    [EmailAddress(ErrorMessage = "Invalid email format")]
-    public string Email { get; set; }
-    
-    [Phone(ErrorMessage = "Invalid phone number format")]
-    public string Phone { get; set; }
-    
-    [Required(ErrorMessage = "Country is required")]
-    public string Country { get; set; }
-    
-    public DateTime? DateOfBirth { get; set; }
-    
-    public string ReferralCode { get; set; }
-    
-    public string IpAddress { get; set; }
-    
-    public string UserAgent { get; set; }
-}
-
-public class EnrichedForm
-{
-    public UserRegistrationForm OriginalForm { get; set; }
-    public Guid ProcessingId { get; set; }
-    public DateTime ReceivedAt { get; set; }
-    public string NormalizedEmail { get; set; }
-    public string FormattedPhone { get; set; }
-    public GeolocationData GeolocationData { get; set; }
-    public string UserAgent { get; set; }
-    public string ReferralSource { get; set; }
-}
-
-public class User
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public string Phone { get; set; }
-    public DateTime? DateOfBirth { get; set; }
-    public string Country { get; set; }
-    public bool IsEmailVerified { get; set; }
-    public bool IsActive { get; set; }
-    public string UserType { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public UserPreferences Preferences { get; set; }
-    public Dictionary<string, object> Metadata { get; set; }
-}
-
-public class ValidationSummary
-{
-    public bool IsValid { get; set; }
-    public int ErrorCount { get; set; }
-    public ValidationError[] Errors { get; set; }
-    public DateTime ValidatedAt { get; set; }
-}
-
-public class ValidationError
-{
-    public string Field { get; set; }
-    public string Message { get; set; }
-    public ErrorSeverity Severity { get; set; }
-}
-
-public class ProcessedForm
-{
-    public Guid FormId { get; set; }
-    public int UserId { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    public ValidationSummary ValidationSummary { get; set; }
-    public User CreatedUser { get; set; }
-    public NotificationResults NotificationsSent { get; set; }
-}
-
-public class NotificationResults
-{
-    public NotificationResult[] Results { get; set; }
-    public int TotalSent { get; set; }
-    public int TotalFailed { get; set; }
-    public DateTime ProcessedAt { get; set; }
-}
-
-public class NotificationResult
-{
-    public string Type { get; set; }
-    public bool Success { get; set; }
-    public string Message { get; set; }
-}
-
-public class GeolocationData
-{
-    public string Country { get; set; }
-    public string City { get; set; }
-    public string Timezone { get; set; }
-}
-
-public class UserPreferences
-{
-    public bool EmailNotifications { get; set; } = true;
-    public bool SmsNotifications { get; set; } = false;
-    public string Language { get; set; } = "en";
-    public string Theme { get; set; } = "light";
-}
-
-public enum ErrorSeverity
-{
-    Low,
-    Medium,
-    High,
-    Critical
+    public Task<MlResult<TarifaDto>> ObtenerAsync(int id)
+        => EnsureFp.ThatAsync(id, id > 0, "El identificador debe ser positivo")
+                   .BindAsync(i => _repo.BuscarAsync(i)
+                                        .NullToFailedAsync($"No existe la tarifa {i}"))
+                   // MapAsync espera Func<T, Task<TResult>>: ToAsync ajusta la firma
+                   .MapAsync(t => t.ToDto().ToAsync())
+                   .BindAsync(dto => dto.Vigente
+                                         ? dto.ToMlResultValidAsync()
+                                         : "La tarifa no está vigente".ToMlResultFailAsync<TarifaDto>());
 }
 ```
 
-### Ejemplo 2: Sistema de Configuración y Ajustes
+### Ejemplo 2: `ToFuncTask` para reutilizar métodos síncronos
 
 ```csharp
-public class ConfigurationManagementService
+public class AuditoriaService
 {
-    private readonly IConfigRepository _configRepository;
-    private readonly ICacheService _cacheService;
-    
-    public async Task<MlResult<SystemConfiguration>> LoadAndValidateSystemConfigAsync()
+    // Métodos síncronos ya existentes, usados en muchos sitios
+    private void RegistrarExito(Pedido p)          => _log.LogInformation("Pedido {Id} OK", p.Id);
+    private void RegistrarFallo(MlErrorsDetails e) => _log.LogWarning("Fallo: {D}", e.ToErrorsDescription());
+
+    public async Task<MlResult<PedidoDto>> ProcesarAsync(int id)
     {
-        // Cargar configuración base
-        var baseConfig = await LoadBaseConfigurationAsync();
-        if (baseConfig.IsFailed)
-            return baseConfig;
-        
-        // Aplicar configuraciones específicas del entorno usando With
-        var environmentConfig = await ApplyEnvironmentSpecificConfigAsync(baseConfig.Value);
-        if (environmentConfig.IsFailed)
-            return environmentConfig;
-        
-        // Validar configuración completa
-        var validationResult = await ValidateCompleteConfigurationAsync(environmentConfig.Value);
-        if (validationResult.IsFailed)
-            return validationResult;
-        
-        // Aplicar configuraciones dinámicas
-        var finalConfig = await ApplyDynamicConfigurationsAsync(validationResult.Value);
-        
-        return finalConfig;
+        Action<Pedido>          onOk = RegistrarExito;
+        Action<MlErrorsDetails> onKo = RegistrarFallo;
+
+        return await ObtenerPedidoAsync(id)
+                         .ExecSelfAsync(onOk.ToFuncTask(), onKo.ToFuncTask())
+                         .MapAsync(p => p.ToDto().ToAsync());
     }
-    
-    private async Task<MlResult<SystemConfiguration>> ApplyEnvironmentSpecificConfigAsync(
-        SystemConfiguration baseConfig)
+}
+```
+
+### Ejemplo 3: `AppendExDetails` para acumular fallos en cascada
+
+```csharp
+public class NotificadorResiliente
+{
+    public MlResult<Pedido> NotificarConReintento(Pedido pedido)
     {
-        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-        
-        try
+        var detalles = new Dictionary<string, object> { ["PedidoId"] = pedido.Id };
+        var errores  = new List<MlError>();
+
+        foreach (var canal in _canales)
         {
-            var configuredSystem = environment switch
+            try
             {
-                "Development" => await baseConfig.WithAsync(
-                    config => config.DatabaseSettings.ConnectionTimeout = 30,
-                    config => config.LoggingSettings.LogLevel = "Debug",
-                    config => config.CacheSettings.EnableCache = false,
-                    config => config.SecuritySettings.RequireHttps = false,
-                    config => config.PerformanceSettings.EnableCompression = false
-                ),
-                
-                "Testing" => await baseConfig.WithAsync(
-                    config => config.DatabaseSettings.ConnectionTimeout = 60,
-                    config => config.LoggingSettings.LogLevel = "Information",
-                    config => config.CacheSettings.EnableCache = true,
-                    config => config.CacheSettings.CacheDurationMinutes = 5,
-                    config => config.SecuritySettings.RequireHttps = false,
-                    config => config.TestingSettings = new TestingSettings 
-                    { 
-                        MockExternalServices = true,
-                        UseInMemoryDatabase = true 
-                    }
-                ),
-                
-                "Staging" => await baseConfig.WithAsync(
-                    config => config.DatabaseSettings.ConnectionTimeout = 120,
-                    config => config.LoggingSettings.LogLevel = "Information",
-                    config => config.CacheSettings.EnableCache = true,
-                    config => config.CacheSettings.CacheDurationMinutes = 30,
-                    config => config.SecuritySettings.RequireHttps = true,
-                    config => config.PerformanceSettings.EnableCompression = true,
-                    config => config.MonitoringSettings.EnableDetailedMetrics = true
-                ),
-                
-                "Production" => await baseConfig.WithAsync(
-                    config => config.DatabaseSettings.ConnectionTimeout = 180,
-                    config => config.LoggingSettings.LogLevel = "Warning",
-                    config => config.CacheSettings.EnableCache = true,
-                    config => config.CacheSettings.CacheDurationMinutes = 60,
-                    config => config.SecuritySettings.RequireHttps = true,
-                    config => config.SecuritySettings.EnableRateLimiting = true,
-                    config => config.PerformanceSettings.EnableCompression = true,
-                    config => config.PerformanceSettings.MaxConcurrentRequests = 1000,
-                    config => config.MonitoringSettings.EnableDetailedMetrics = true,
-                    config => config.MonitoringSettings.EnableAlerts = true
-                ),
-                
-                _ => throw new InvalidOperationException($"Unknown environment: {environment}")
-            };
-            
-            return MlResult<SystemConfiguration>.Valid(configuredSystem);
-        }
-        catch (Exception ex)
-        {
-            var errorDetails = new Dictionary<string, object>
-            {
-                { "Environment", environment },
-                { "ConfigurationStep", "EnvironmentSpecific" }
-            }.AppendExDetails(ex);
-            
-            return MlResult<SystemConfiguration>.Fail(
-                new MlErrorsDetails(
-                    new List<MlError> { new MlError("Environment configuration failed") },
-                    errorDetails));
-        }
-    }
-    
-    private async Task<MlResult<SystemConfiguration>> ValidateCompleteConfigurationAsync(
-        SystemConfiguration config)
-    {
-        try
-        {
-            // Usar ValidateObject para validación con Data Annotations
-            var validationResults = config.ValidateObject().ToList();
-            
-            // Agregar validaciones personalizadas
-            var customValidations = await PerformCustomConfigValidationsAsync(config);
-            validationResults.AddRange(customValidations);
-            
-            if (validationResults.Any())
-            {
-                var errorMessages = validationResults.Select(vr => vr.ErrorMessage);
-                return MlResult<SystemConfiguration>.Fail(
-                    $"Configuration validation failed: {string.Join("; ", errorMessages)}");
+                canal.Enviar(pedido);
+                return pedido.ToMlResultValid();          // primer canal que funciona
             }
-            
-            return MlResult<SystemConfiguration>.Valid(config);
-        }
-        catch (Exception ex)
-        {
-            var errorDetails = new Dictionary<string, object>
+            catch (Exception ex)
             {
-                { "ConfigurationStep", "Validation" },
-                { "ValidatedAt", DateTime.UtcNow }
-            }.AppendExDetails(ex);
-            
-            return MlResult<SystemConfiguration>.Fail(
-                new MlErrorsDetails(
-                    new List<MlError> { new MlError("Configuration validation error") },
-                    errorDetails));
-        }
-    }
-    
-    private async Task<MlResult<SystemConfiguration>> ApplyDynamicConfigurationsAsync(
-        SystemConfiguration config)
-    {
-        try
-        {
-            // Convertir funciones síncronas a async usando ToFuncTask
-            var updateCacheSettingsFunc = ((Func<SystemConfiguration, SystemConfiguration>)(cfg =>
-                cfg.With(c => c.CacheSettings.MaxMemoryMB = GetOptimalCacheSize())))
-                .ToFuncTask();
-            
-            var updateConnectionPoolFunc = ((Func<SystemConfiguration, SystemConfiguration>)(cfg =>
-                cfg.With(c => c.DatabaseSettings.MaxPoolSize = GetOptimalPoolSize())))
-                .ToFuncTask();
-            
-            var updatePerformanceSettingsFunc = ((Func<SystemConfiguration, SystemConfiguration>)(cfg =>
-                cfg.With(
-                    c => c.PerformanceSettings.MaxConcurrentRequests = GetMaxConcurrentRequests(),
-                    c => c.PerformanceSettings.RequestTimeoutSeconds = GetOptimalTimeout())))
-                .ToFuncTask();
-            
-            // Aplicar configuraciones dinámicas en secuencia
-            var updatedConfig = await updateCacheSettingsFunc(config);
-            updatedConfig = await updateConnectionPoolFunc(updatedConfig);
-            updatedConfig = await updatePerformanceSettingsFunc(updatedConfig);
-            
-            // Aplicar configuraciones finales usando VoidToAsync
-            await updatedConfig.VoidToAsync(cfg =>
-            {
-                cfg.RuntimeSettings = new RuntimeSettings
-                {
-                    StartupTime = DateTime.UtcNow,
-                    ConfigurationVersion = GenerateConfigVersion(),
-                    OptimizationApplied = true
-                };
-            });
-            
-            return MlResult<SystemConfiguration>.Valid(updatedConfig);
-        }
-        catch (Exception ex)
-        {
-            var errorDetails = new Dictionary<string, object>
-            {
-                { "ConfigurationStep", "DynamicConfiguration" }
-            }.AppendExDetails(ex);
-            
-            return MlResult<SystemConfiguration>.Fail(
-                new MlErrorsDetails(
-                    new List<MlError> { new MlError("Dynamic configuration failed") },
-                    errorDetails));
-        }
-    }
-    
-    // Métodos auxiliares que demuestran el uso de extensiones
-    private async Task<List<ValidationResult>> PerformCustomConfigValidationsAsync(SystemConfiguration config)
-    {
-        var errors = new List<ValidationResult>();
-        
-        // Validación de rangos de configuración
-        if (config.DatabaseSettings?.MaxPoolSize <= 0)
-        {
-            errors.Add(new ValidationResult(
-                "Database max pool size must be positive",
-                new[] { nameof(config.DatabaseSettings.MaxPoolSize) }));
-        }
-        
-        // Validación de consistencia entre configuraciones
-        if (config.CacheSettings?.EnableCache == true && config.CacheSettings.MaxMemoryMB <= 0)
-        {
-            errors.Add(new ValidationResult(
-                "Cache memory must be positive when cache is enabled",
-                new[] { nameof(config.CacheSettings.MaxMemoryMB) }));
-        }
-        
-        // Validación asíncrona de conectividad
-        if (!string.IsNullOrEmpty(config.DatabaseSettings?.ConnectionString))
-        {
-            var connectionValid = await TestDatabaseConnectionAsync(config.DatabaseSettings.ConnectionString);
-            if (!connectionValid)
-            {
-                errors.Add(new ValidationResult(
-                    "Database connection string is invalid or unreachable",
-                    new[] { nameof(config.DatabaseSettings.ConnectionString) }));
+                errores.Add(new MlError($"El canal '{canal.Nombre}' falló"));
+                detalles = detalles.AppendExDetails(ex);   // Ex, Ex2, Ex3…
             }
         }
-        
-        return errors;
-    }
-    
-    private int GetOptimalCacheSize()
-    {
-        var totalMemory = GC.GetTotalMemory(false);
-        return (int)(totalMemory / 1024 / 1024 * 0.1); // 10% of current memory
-    }
-    
-    private int GetOptimalPoolSize()
-    {
-        var processorCount = Environment.ProcessorCount;
-        return Math.Max(10, processorCount * 2);
-    }
-    
-    private int GetMaxConcurrentRequests()
-    {
-        var processorCount = Environment.ProcessorCount;
-        return processorCount * 100;
-    }
-    
-    private int GetOptimalTimeout()
-    {
-        return Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" ? 30 : 60;
-    }
-    
-    private string GenerateConfigVersion() => $"v{DateTime.UtcNow:yyyyMMdd.HHmmss}";
-    
-    private async Task<bool> TestDatabaseConnectionAsync(string connectionString)
-    {
-        // Simulación de prueba de conexión
-        await Task.Delay(100);
-        return !connectionString.Contains("invalid");
+
+        return (errores.AsEnumerable(), detalles).ToMlResultFail<Pedido>();
     }
 }
+```
 
-// Clases de configuración para el ejemplo
-public class SystemConfiguration
-{
-    [Required]
-    public DatabaseSettings DatabaseSettings { get; set; }
-    
-    [Required]
-    public CacheSettings CacheSettings { get; set; }
-    
-    [Required]
-    public SecuritySettings SecuritySettings { get; set; }
-    
-    [Required]
-    public LoggingSettings LoggingSettings { get; set; }
-    
-    public PerformanceSettings PerformanceSettings { get; set; }
-    public MonitoringSettings MonitoringSettings { get; set; }
-    public TestingSettings TestingSettings { get; set; }
-    public RuntimeSettings RuntimeSettings { get; set; }
-}
+Nótese cómo la tupla `(IEnumerable<MlError>, Dictionary<string,object>)` encaja directamente
+con una de las sobrecargas de
+[`ToMlResultFail`](../Transformations/Transformations.md#grupo-2-tomlresultfail--14-formas-de-fallar).
 
-public class DatabaseSettings
-{
-    [Required]
-    public string ConnectionString { get; set; }
-    
-    [Range(1, 300)]
-    public int ConnectionTimeout { get; set; } = 30;
-    
-    [Range(1, 1000)]
-    public int MaxPoolSize { get; set; } = 100;
-}
+### Ejemplo 4: `With` en su terreno legítimo
 
-public class CacheSettings
-{
-    public bool EnableCache { get; set; } = true;
-    
-    [Range(1, 10000)]
-    public int MaxMemoryMB { get; set; } = 512;
-    
-    [Range(1, 1440)]
-    public int CacheDurationMinutes { get; set; } = 60;
-}
+```csharp
+// Configuración de un objeto de infraestructura con muchos setters
+var cliente = new HttpClient()
+                  .With(c => c.BaseAddress = new Uri(_config.BaseUrl),
+                        c => c.Timeout     = TimeSpan.FromSeconds(30),
+                        c => c.DefaultRequestHeaders.Add("X-Api-Key", _config.ApiKey));
+```
 
-public class SecuritySettings
-{
-    public bool RequireHttps { get; set; } = true;
-    public bool EnableRateLimiting { get; set; } = false;
-    
-    [StringLength(256)]
-    public string JwtSecret { get; set; }
-}
+### Ejemplo 5: qué no hacer
 
-public class LoggingSettings
-{
-    [Required]
-    public string LogLevel { get; set; } = "Information";
-    
-    public string LogPath { get; set; }
-}
+```csharp
+// ❌ Esperar concurrencia de ToAsync
+var t1 = ConsultaLenta1().ToAsync();
+var t2 = ConsultaLenta2().ToAsync();
+await Task.WhenAll(t1, t2);          // ⚠️ ¡Las consultas ya se ejecutaron en secuencia!
 
-public class PerformanceSettings
-{
-    public bool EnableCompression { get; set; } = true;
-    
-    [Range(1, 10000)]
-    public int MaxConcurrentRequests { get; set; } = 100;
-    
-    [Range(5, 300)]
-    public int RequestTimeoutSeconds { get; set; } = 30;
-}
+// ✅ Métodos realmente asíncronos
+var t1 = ConsultaLenta1Async();
+var t2 = ConsultaLenta2Async();
+await Task.WhenAll(t1, t2);
 
-public class MonitoringSettings
-{
-    public bool EnableDetailedMetrics { get; set; } = false;
-    public bool EnableAlerts { get; set; } = false;
-}
 
-public class TestingSettings
-{
-    public bool MockExternalServices { get; set; } = false;
-    public bool UseInMemoryDatabase { get; set; } = false;
-}
+// ❌ Usar With esperando inmutabilidad
+var confirmado = pedidoOriginal.With(p => p.Estado = Confirmado);
+// ⚠️ pedidoOriginal.Estado TAMBIÉN cambió
 
-public class RuntimeSettings
-{
-    public DateTime StartupTime { get; set; }
-    public string ConfigurationVersion { get; set; }
-    public bool OptimizationApplied { get; set; }
-}
+// ✅ Expresión with de C# sobre un record
+var confirmado = pedidoOriginal with { Estado = Confirmado };
+
+
+// ❌ Claves propias que empiecen por "Ex": rompen la numeración
+var detalles = new Dictionary<string, object> { ["ExportadoPor"] = usuario };
+
+// ✅
+var detalles = new Dictionary<string, object> { ["UsuarioExportacion"] = usuario };
+
+
+// ❌ Leer Details con la clave literal
+var ex = (Exception)resultado.ErrorsDetails.Details["Ex"];
+
+// ✅ Accesor oficial
+resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
+
+
+// ❌ ValidateObject a pelo para validar entidades de dominio
+var errores = dto.ValidateObject();
+
+// ✅ El paquete de integración devuelve MlResult directamente
+// (MoralesLarios.OOFP.Validation.Dataannotations)
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Uso Apropiado de With
-
-```csharp
-// ✅ Correcto: Para configuración de objetos con múltiples propiedades
-var user = new User()
-    .With(
-        u => u.Name = "John Doe",
-        u => u.Email = "john@example.com",
-        u => u.IsActive = true,
-        u => u.CreatedAt = DateTime.UtcNow
-    );
-
-// ✅ Correcto: Para modificaciones condicionales
-var product = baseProduct.With(
-    p => p.Price = calculatedPrice,
-    p => p.IsOnSale = price < originalPrice,
-    p => p.UpdatedAt = DateTime.UtcNow
-);
-
-// ❌ Incorrecto: Para una sola propiedad
-var user = new User().With(u => u.Name = "John"); // Mejor: user.Name = "John";
-```
-
-### 2. Gestión de Errores con AppendExDetails
-
-```csharp
-// ✅ Correcto: Acumular errores en operaciones complejas
-var errorContext = new Dictionary<string, object>
-{
-    { "UserId", userId },
-    { "Operation", "UserProcessing" }
-};
-
-try
-{
-    await ProcessStep1();
-}
-catch (Exception ex1)
-{
-    errorContext = errorContext.AppendExDetails(ex1);
-    
-    try
-    {
-        await ProcessStep2();
-    }
-    catch (Exception ex2)
-    {
-        errorContext = errorContext.AppendExDetails(ex2);
-        // errorContext ahora tiene "Ex" y "Ex2"
-        
-        return MlResult<T>.Fail(
-            new MlErrorsDetails(
-                new List<MlError> { new MlError("Multiple failures occurred") },
-                errorContext));
-    }
-}
-
-// ❌ Incorrecto: Sobrescribir excepciones anteriores
-var errorContext = new Dictionary<string, object>();
-// errorContext["Ex"] = ex1; // Se pierde cuando llega ex2
-// errorContext["Ex"] = ex2; // Sobrescribe ex1
-```
-
-### 3. Conversiones de Funciones Apropiadas
-
-```csharp
-// ✅ Correcto: Convertir funciones para uso en contextos async
-Func<User, string> syncFormatter = user => $"{user.Name} ({user.Email})";
-Func<User, Task<string>> asyncFormatter = syncFormatter.ToFuncTask();
-
-await users.SelectAsync(asyncFormatter); // Usar en contexto async
-
-// ✅ Correcto: Convertir acciones para integración async
-Action<User> syncLogger = user => Console.WriteLine($"User: {user.Name}");
-Func<User, Task> asyncLogger = syncLogger.ToFuncTask();
-
-await ProcessUsersAsync(users, asyncLogger);
-
-// ❌ Incorrecto: Convertir funciones ya async
-Func<User, Task<string>> alreadyAsync = async user => await FormatUserAsync(user);
-var redundant = alreadyAsync.ToFuncTask(); // Innecesario
-```
-
-### 4. Validación con ValidateObject
-
-```csharp
-// ✅ Correcto: Combinar Data Annotations con validaciones personalizadas
-public MlResult<User> ValidateUser(User user)
-{
-    // Validaciones estándar
-    var standardValidations = user.ValidateObject().ToList();
-    
-    // Validaciones personalizadas
-    var customValidations = new List<ValidationResult>();
-    
-    if (user.Age.HasValue && user.Age < 13)
-    {
-        customValidations.Add(new ValidationResult(
-            "Users must be at least 13 years old",
-            new[] { nameof(user.Age) }));
-    }
-    
-    var allValidations = standardValidations.Concat(customValidations).ToList();
-    
-    return allValidations.Any()
-        ? MlResult<User>.Fail($"Validation failed: {string.Join("; ", allValidations.Select(v => v.ErrorMessage))}")
-        : MlResult<User>.Valid(user);
-}
-
-// ❌ Incorrecto: Solo usar validaciones manuales cuando Data Annotations está disponible
-public MlResult<User> ValidateUserManually(User user)
-{
-    if (string.IsNullOrEmpty(user.Name)) // Mejor usar [Required] attribute
-        return MlResult<User>.Fail("Name required");
-    
-    if (string.IsNullOrEmpty(user.Email)) // Mejor usar [Required] attribute
-        return MlResult<User>.Fail("Email required");
-    
-    // ... más validaciones manuales que podrían ser attributes
-}
-```
-
----
-
-## Integración con MlResult
-
-### Combinación con Otros Métodos MlResult
-
-```csharp
-// Ejemplo de integración completa
-public async Task<MlResult<ProcessedUser>> ProcessUserWithExtensionsAsync(UserInput input)
-{
-    return await EnsureFp.NotNull(input, "User input is required")
-        .BindAsync(async validInput =>
-        {
-            // Validar con Data Annotations
-            var validationErrors = validInput.ValidateObject().ToList();
-            if (validationErrors.Any())
-            {
-                return MlResult<User>.Fail(
-                    $"Validation failed: {string.Join("; ", validationErrors.Select(v => v.ErrorMessage))}");
-            }
-            
-            // Crear usuario usando With
-            var user = new User().With(
-                u => u.Name = validInput.Name,
-                u => u.Email = validInput.Email.ToLowerInvariant(),
-                u => u.Age = validInput.BirthDate?.ToNullable() != null 
-                    ? CalculateAge(validInput.BirthDate.Value) 
-                    : (int?)null,
-                u => u.CreatedAt = DateTime.UtcNow
-            );
-            
-            return MlResult<User>.Valid(user);
-        })
-        .BindAsync(async user =>
-        {
-            // Procesar usando funciones convertidas a async
-            var processFunc = ((Func<User, ProcessedUser>)ProcessUserSync).ToFuncTask();
-            var processed = await processFunc(user);
-            
-            return MlResult<ProcessedUser>.Valid(processed);
-        })
-        .BindAsync(async processed =>
-        {
-            // Finalizar usando VoidToAsync
-            await processed.VoidToAsync(p => LogProcessedUser(p));
-            
-            return MlResult<ProcessedUser>.Valid(processed);
-        });
-}
-```
+1. **Usa `ToAsync` solo como adaptador de firmas.** Para concurrencia real, métodos
+   asíncronos de verdad o `Task.Run`.
+2. **Prefiere `record` + expresión `with` de C#** a `With`. Reserva `With` para objetos
+   legados o de infraestructura.
+3. **Recuerda que `With` muta**: no lo uses sobre objetos compartidos ni cacheados.
+4. **`ToFuncTask` para reutilizar métodos síncronos** en operadores `*Async`, en lugar de
+   duplicarlos con `async`.
+5. **Nunca uses claves de `Details` que empiecen por `Ex`** ni la clave `Value`: colisionan
+   con `EX_DESC_KEY` y `VALUE_KEY`.
+6. **Accede a los detalles con los accesores oficiales** (`GetDetailException`,
+   `GetDetailValue<T>`), no con claves literales.
+7. **Pasa siempre un mensaje de dominio a los `Try*`**: los mensajes por defecto están en
+   inglés y exponen `ex.Message`.
+8. **Para DataAnnotations, usa el paquete de integración**, no `ValidateObject` directamente.
+9. **Cuidado con el coste de `ValidateObject`**: valida recursivamente todo el grafo.
+10. **`ToNullable` y `VoidToAsync` son marginales**: si te apoyas mucho en ellos, revisa si
+    hay un operador de la librería que exprese mejor tu intención.
 
 ---
 
 ## Resumen
 
-La clase `Extensions` proporciona **utilidades auxiliares** que enriquecen el ecosistema MlResult:
+- **`ToAsync<T>`** (`ParallelExtensions`) es la extensión más usada: `Task.FromResult`.
+  ⚠️ **No aporta concurrencia**, solo adapta firmas. El nombre del archivo engaña.
+- **`With` / `WithAsync`** aplican acciones en cadena y devuelven el objeto.
+  ⚠️ **MUTAN el original** y exigen `where T : class`. No es la expresión `with` de C#.
+- **`ToFuncTask`** (5 sobrecargas) convierte `Func`/`Action` síncronos en asíncronos; dos de
+  ellas existen específicamente para `MlErrorsDetails` por límites de inferencia.
+- **`AppendExDetails`** añade excepciones al diccionario generando claves `Ex`, `Ex2`, `Ex3`…
+  Devuelve un diccionario **nuevo**. ⚠️ No uses claves propias que empiecen por `Ex`.
+- **`ValidateObject`** ejecuta DataAnnotations recursivamente y devuelve
+  `IEnumerable<ValidationResult>`; **no** devuelve `MlResult`. Prefiere el paquete
+  `Validation.Dataannotations`.
+- **`ToNullable`** y **`VoidToAsync`** son azúcar sintáctico de uso marginal.
+- **`Constants`**: `EX_DESC_KEY = "Ex"`, `VALUE_KEY = "Value"`, más los mensajes por defecto
+  en inglés que exponen `ex.Message`. **No colisiones con esas claves.**
 
-- **`ValidateObject`**: Integración con Data Annotations para validación estándar
-- **`With/WithAsync`**: Modificación fluida de objetos con múltiples cambios
-- **`ToFuncTask`**: Conversión de funciones síncronas a asíncronas
-- **`AppendExDetails`**: Acumulación segura de excepciones en contexto de error
+---
 
-**Casos de uso ideales**:
-- **Validación de modelos** con atributos estándar de .NET
-- **Configuración de objetos** con múltiples propiedades
-- **Integración legacy** convirtiendo código síncrono a asíncrono
-- **Gestión de errores** acumulando contexto de múltiples fallos
+## Ver también
 
-**Ventajas principales**:
-- **Interoperabilidad** con el ecosistema .NET estándar
-- **Flujo funcional** manteniendo inmutabilidad conceptual
-- **Flexibilidad async** para adaptar código existente
-- **Gestión robusta de errores** con preservación de contexto
+- [`Transformations`](../Transformations/Transformations.md) — `ToMlResultValid`, `ToMlResultFail`, los `Try*`
+- [`MlResultErrors`](../Types/MlResultErrors.md) — `AppendExErrorDetail`, `GetDetailException`, `GetDetailValue`
+- [`MlResult`](../Types/MlResult.md) — el tipo central
+- [`EnsureFp`](../EnsureFp/EnsureFp.md) — guardas de entrada al carril
+- [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — efectos laterales, donde `ToFuncTask` es más útil
+- [`MapIfFailWithValue`](../Map/5_MapIfFailWithValue.md) — uso de `VALUE_KEY`
+- [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) — uso de `EX_DESC_KEY`
+- [`Bucles y proyecciones`](../Bucle/Bucles.md) — recorrido de colecciones

@@ -12,12 +12,13 @@
 8. [Extensiones y Utilidades](#extensiones-y-utilidades)
 9. [Patrones de Uso](#patrones-de-uso)
 10. [Ejemplos Prácticos](#ejemplos-prácticos)
+11. [Índice completo de la documentación](#índice-completo-de-la-documentación)
 
 ---
 
 ## Introducción
 
-**MoralesLarios.OOFP** (Object-Oriented Functional Programming) es una librería .NET 8.0 diseñada para implementar patrones de programación funcional en C#, con un enfoque especial en el manejo robusto de resultados y errores. La librería proporciona una abstracción tipo `Result<T>` llamada `MlResult<T>` que encapsula tanto valores exitosos como estados de error, permitiendo la composición funcional de operaciones complejas.
+**MoralesLarios.OOFP** (Object-Oriented Functional Programming) es una librería .NET 8 / .NET 9 diseñada para implementar patrones de programación funcional en C#, con un enfoque especial en el manejo robusto de resultados y errores. La librería proporciona una abstracción tipo `Result<T>` llamada `MlResult<T>` que encapsula tanto valores exitosos como estados de error, permitiendo la composición funcional de operaciones complejas.
 
 ### Objetivos Principales
 
@@ -66,21 +67,33 @@ MoralesLarios.OOFP/
 │       └── ParallelExtensions.cs     # Extensiones paralelas
 ├── Types/                            # Tipos principales
 │   ├── MlResult.cs                   # Tipo resultado principal
-│   ├── MlResultActions.cs            # Acciones base
-│   ├── MlResultActionsBind.cs        # Operaciones Bind
-│   ├── MlResultActionsExecSelf.cs    # Operaciones ExecSelf
+│   ├── MlResultActions.cs            # Extensiones transversales (enriquecer, completar, acceso seguro)
+│   ├── MlResultActionsBind.cs        # Operaciones Bind (+ TryBindBuild)
+│   ├── MlResultActionsErrorsDetails.cs # Lectura/escritura/fusión de los Details del error
+│   ├── MlResultActionsExecSelf.cs    # Operaciones ExecSelf (efectos secundarios)
 │   ├── MlResultActionsMap.cs         # Operaciones Map
-│   ├── MlResultActionsMatch.cs       # Operaciones Match
-│   ├── MlResultActionsSeveral.cs     # Operaciones múltiples
-│   ├── MlResultBucles.cs             # Operaciones de bucle
-│   ├── MlResultChangeReturnResult.cs # Cambio de tipo resultado
-│   ├── MlResultTransformations.cs    # Transformaciones
+│   ├── MlResultActionsMatch.cs       # Operaciones Match (salida del MlResult)
+│   ├── MlResultActionsSeveral.cs     # Combine, NullToFailed, BoolToResult, EmptyToFailed, Do
+│   ├── MlResultBucles.cs             # Proyecciones sobre colecciones
+│   ├── MlResultChangeReturnResult.cs # Cambio del tipo de retorno
+│   ├── MlResultTransformations.cs    # Frontera con el código imperativo (ToMlResult*, TryToMlResult*)
 │   └── Errors/                       # Gestión de errores
-│       ├── ErrorMessage.cs           # Mensajes de error
+│       ├── ErrorMessage.cs           # record ErrorMessage(string Message)
 │       ├── MlError.cs                # Error base
 │       ├── MlErrorsDetails.cs        # Detalles de error
 │       └── MlErrorsDetailsActions.cs # Acciones sobre errores
 └── __Doc/                            # Documentación
+    ├── 1_Intro.md                    # Este documento
+    ├── Types/                        # Referencia por archivo fuente
+    ├── Bind/                         # Detalle de la familia Bind
+    ├── Map/                          # Detalle de la familia Map
+    ├── Match/                        # Detalle de la familia Match
+    ├── ExecSelf/                     # Detalle de la familia ExecSelf
+    ├── Several/                      # Combine, NullToFailed, BoolToResult, EmptyToFailed
+    ├── Bucle/                        # Proyecciones sobre colecciones
+    ├── EnsureFp/                     # Validaciones funcionales
+    ├── Extensions/                   # Extensiones auxiliares
+    ├── Transformations/              # Conversiones desde/hacia MlResult
     └── PendingTasks.txt              # Tareas pendientes
 ```
 
@@ -100,635 +113,725 @@ Cada archivo tiene una responsabilidad específica:
 ### MlResult<T>
 
 El tipo principal que encapsula un resultado que puede ser:
-- **Exitoso**: Contiene un valor de tipo `T`
+- **Válido**: Contiene un valor de tipo `T`
 - **Fallido**: Contiene información detallada del error
 
 ```csharp
-public class MlResult<T>
+public partial record MlResult<T>
 {
-    public bool IsSuccess { get; }
-    public bool IsFailure { get; }
-    public T Value { get; }
-    public MlErrorsDetails ErrorsDetails { get; }
+    internal protected T               Value         { get; init; }
+    internal protected MlErrorsDetails ErrorsDetails { get; init; }
+
+    public bool IsValid { get; init; }
+    public bool IsFail  => ! IsValid;
 }
 ```
+
+Tres detalles importantes:
+
+1. **Es un `record`, no una `class`**: inmutable y con igualdad por valor.
+2. **Las propiedades de estado son `IsValid` e `IsFail`** (no `IsSuccess` / `IsFailure`).
+3. **`Value` y `ErrorsDetails` son `internal protected`**: no son accesibles desde tu código. Es
+   deliberado y es la clave de la librería: te obliga a pasar por
+   [`Match`](./Types/MlResultActionsMatch.md), `Map` o `Bind`, de modo que nunca puedas leer un valor
+   que no existe.
+
+```csharp
+MlResult<Cliente> resultado = ObtenerCliente(id);
+
+// ❌ No compila: Value es internal protected.
+// var c = resultado.Value;
+
+// ✅ La forma correcta de salir del MlResult.
+IActionResult respuesta = resultado.Match(
+    valid: cliente => Ok(cliente),
+    fail : errores => NotFound(errores.ToErrorsMessages()));
+```
+
+`MlResult` (sin genérico) aporta las fábricas **estáticas** (`MlResult.Valid<T>`, `MlResult.Fail<T>`,
+`MlResult.Empty()`), y `MlResult<T>` añade `Valid` / `Fail` / `*Async` y numerosos **operadores de
+conversión implícita** desde `T`, `string`, `MlError`, `MlError[]` y `MlErrorsDetails`.
+
+Detalle completo en [`Types/MlResult.md`](./Types/MlResult.md).
 
 ### MlErrorsDetails
 
-Encapsula información completa sobre errores:
+Encapsula la información completa de un fallo. Su diseño es minimalista a propósito: **solo dos
+propiedades**.
 
 ```csharp
-public class MlErrorsDetails
+public class MlErrorsDetails(IEnumerable<MlError>       Errors  = null!,
+                             Dictionary<string, object> Details = null!)
 {
-    public List<MlError> Errors { get; }
-    public Exception Exception { get; }
-    public object Value { get; }
-    public bool HasException { get; }
-    public bool HasValue { get; }
+    public IEnumerable<MlError>       Errors  { get; }
+    public Dictionary<string, object> Details { get; }
 }
 ```
+
+- `Errors`: la lista de mensajes de error (puede haber varios: validaciones acumuladas).
+- `Details`: diccionario abierto donde la librería y tu código guardan **contexto adicional**.
+
+No existen `Exception`, `Value`, `HasException` ni `HasValue`: esa información vive en `Details` bajo
+**claves convencionales** definidas en `Helpers/Constants.cs`:
+
+| Clave | Constante | Contenido |
+| --- | --- | --- |
+| `"Ex"` | `EX_DESC_KEY` | Excepción capturada por cualquier método `Try*`. Si ya había una, se numeran `Ex2`, `Ex3`… |
+| `"Value"` | `VALUE_KEY` | Valor de entrada que provocó el fallo. |
+
+Se leen de forma **tipada y segura** con
+[`MlResultActionsErrorsDetails`](./Types/MlResultActionsErrorsDetails.md):
+
+```csharp
+MlResult<Exception> ex     = errores.GetDetailException();          // clave "Ex"
+MlResult<PedidoDto> origen = errores.GetDetailValue<PedidoDto>();   // clave "Value"
+MlResult<string>    divisa = errores.GetDetail<string>("Divisa");   // clave propia
+```
+
+Devuelven `MlResult<T>`, **no el valor crudo**: si la clave no existe o el tipo no coincide obtienes un
+`Fail` descriptivo en lugar de una excepción.
+
+Detalle completo en [`Types/MlResultErrors.md`](./Types/MlResultErrors.md).
 
 ### MlError
 
-Representa un error individual:
+Representa un error individual. También es mínimo: **un mensaje y nada más**.
 
 ```csharp
-public class MlError
+public record MlError
 {
-    public string Code { get; }
-    public string Message { get; }
-    public Dictionary<string, object> Metadata { get; }
+    public string Message { get; init; }
+
+    public static MlError FromErrorMessage(string message);
+
+    public static implicit operator MlError(string message);
 }
 ```
+
+No hay `Code` ni `Metadata`: la categorización se resuelve con el **tipo de la excepción** guardada en
+`Details["Ex"]`, y los metadatos con el resto de claves de `Details`. Gracias a la conversión implícita,
+casi nunca escribirás `MlError` a mano:
+
+```csharp
+MlError   error  = "El nombre es obligatorio";
+MlError[] varios = ["Falta el nombre", "Falta el email"];
+
+MlResult<Cliente> r = "El cliente no existe".ToMlResultFail<Cliente>();
+```
+
+Si el mensaje llega vacío, el constructor lo sustituye por `DEFAULT_ERROR_MESSAGE`, de modo que un
+error nunca queda sin descripción.
 
 ---
 
 ## Sistema de Convención de Nombres
 
-La librería utiliza un sistema estructurado de **prefijos** y **sufijos** que definen claramente el comportamiento de cada método.
+La librería tiene **miles de sobrecargas**, pero no hay que memorizarlas: todos los nombres se
+construyen con la misma fórmula.
 
 ### Estructura General
 
 ```
-[Try][Prefijo][Contexto][Sufijo]
+[Try] + Prefijo + [Contexto] + [Async]
 ```
+
+| Pieza | Obligatoria | Significado |
+| --- | :---: | --- |
+| `Try` | No | Envuelve el delegado en un `try/catch`. La excepción se guarda en `Details["Ex"]`. |
+| **Prefijo** | Sí | La operación: `Bind`, `Map`, `ExecSelf`, `Match`, `Projection`, `ChangeReturnResult`… |
+| **Contexto** | No | Cuándo/cómo se ejecuta: `If`, `IfFail`, `IfValid`, `IfFailWithValue`, `IfFailWithException`, `IfFailWithoutException`, `Always`, `Ensure`, `While`, `Multi`… |
+| `Async` | No | Existe una variante asíncrona (fuente `Task<...>` y/o delegado asíncrono). |
+
+Ejemplos leídos con la fórmula:
+
+| Método | Lectura |
+| --- | --- |
+| `Bind` | Encadena una operación que devuelve `MlResult`. |
+| `TryBind` | Igual, capturando excepciones. |
+| `BindIfFailAsync` | Encadena **solo si el resultado venía fallido**, de forma asíncrona. |
+| `TryMapIfFailWithExceptionAsync` | Transforma en caso de fallo, recibiendo la excepción original, con `try/catch` y `await`. |
+| `ExecSelfIfValid` | Efecto secundario solo si el resultado es válido; **no cambia el resultado**. |
 
 ### Prefijos Principales
 
-#### **Bind** - Composición y Encadenamiento
-- **Propósito**: Encadena operaciones que devuelven `MlResult<TOutput>`
-- **Comportamiento**: Si el resultado actual es exitoso, ejecuta la función; si es fallido, propaga el error
-- **Signatura**: `MlResult<T> → (T → MlResult<U>) → MlResult<U>`
+#### **Bind** — Composición y encadenamiento
 
-#### **Map** - Transformación de Valores
-- **Propósito**: Transforma el valor contenido sin cambiar la estructura del resultado
-- **Comportamiento**: Solo actúa sobre valores exitosos, preserva errores
-- **Signatura**: `MlResult<T> → (T → U) → MlResult<U>`
+El delegado **devuelve `MlResult<TReturn>`**. Se usa cuando el siguiente paso puede fallar.
 
-#### **ExecSelf** - Efectos Secundarios
-- **Propósito**: Ejecuta acciones que no modifican el resultado (logging, auditoría, etc.)
-- **Comportamiento**: Retorna el mismo resultado después de ejecutar la acción
-- **Signatura**: `MlResult<T> → Action → MlResult<T>`
+```csharp
+MlResult<Factura> resultado = ValidarPedido(pedido)      // MlResult<Pedido>
+                                  .Bind(CalcularTotales)  // MlResult<PedidoValorado>
+                                  .Bind(EmitirFactura);   // MlResult<Factura>
+```
 
-#### **Match** - Coincidencia de Patrones
-- **Propósito**: Ejecuta diferentes acciones según el estado del resultado
-- **Comportamiento**: Rama la ejecución entre éxito y fallo
-- **Signatura**: `MlResult<T> → (T → U) → (Error → U) → U`
+Detalle: [`Types/MlResultActionsBind.md`](./Types/MlResultActionsBind.md).
 
-### Modificador Try
+#### **Map** — Transformación de valores
+
+El delegado **devuelve un valor normal**, no un `MlResult`. Se usa para conversiones que no pueden
+fallar (o que, si fallan, lo hacen lanzando y entonces usarás `TryMap`).
+
+```csharp
+MlResult<ClienteDto> dto = ObtenerCliente(id).Map(c => c.ToDto());
+```
+
+| ¿El delegado puede fallar? | Usa |
+| --- | --- |
+| Sí, y devuelve `MlResult<T>` | `Bind` |
+| No, es una conversión pura | `Map` |
+| Puede lanzar una excepción | `TryMap` / `TryBind` |
+
+Detalle: [`Types/MlResultActionsMap.md`](./Types/MlResultActionsMap.md).
+
+#### **ExecSelf** — Efectos secundarios
+
+Ejecuta una acción (log, métrica, auditoría, evento) y **devuelve el resultado original intacto**. Es
+la forma de instrumentar una tubería sin romperla.
+
+```csharp
+await ConfirmarPedidoAsync(pedido)
+          .ExecSelfIfValidAsync(p  => _log.LogInformation("Pedido {Id} confirmado", p.Id))
+          .ExecSelfIfFailAsync (er => _log.LogWarning("Fallo: {E}", er.ToErrorsDescription()));
+```
+
+Detalle: [`Types/MlResultActionsExecSelf.md`](./Types/MlResultActionsExecSelf.md).
+
+#### **Match** — Salida del `MlResult`
+
+Es el **único punto de salida**: obliga a tratar los dos estados y devuelve un valor normal.
+
+```csharp
+return resultado.Match(
+    valid: dto     => Ok(dto),
+    fail : errores => BadRequest(errores.ToErrorsMessages()));
+```
+
+Detalle: [`Types/MlResultActionsMatch.md`](./Types/MlResultActionsMatch.md).
+
+### Modificador `Try`
 
 #### **Try[Operación]**
-- **Propósito**: Versión segura que captura excepciones
-- **Comportamiento**: Convierte excepciones en resultados fallidos
-- **Aplicable a**: Bind, Map, ExecSelf
+
+Cualquier operación con prefijo `Try` ejecuta el delegado dentro de un `try/catch`. Si se lanza una
+excepción, el resultado pasa a `Fail` y la excepción queda **guardada** en `Details["Ex"]`, disponible
+después con `GetDetailException()`.
+
+Todas las variantes `Try*` aceptan el mensaje de error de dos formas:
+
+```csharp
+// a) Mensaje fijo
+.TryBind(GuardarEnDisco, "No se pudo guardar el fichero")
+
+// b) Mensaje construido a partir de la excepción
+.TryBind(GuardarEnDisco, ex => $"No se pudo guardar: {ex.Message}")
+```
+
+Si no indicas mensaje, se usa `DEFAULT_EX_ERROR_MESSAGE(ex)`.
+
+```csharp
+MlResult<Configuracion> config = rutaFichero
+        .ToMlResultValid()
+        .TryMap(File.ReadAllText,                  ex => $"No se pudo leer: {ex.Message}")
+        .TryMap(JsonSerializer.Deserialize<Configuracion>!, ex => $"JSON inválido: {ex.Message}");
+```
 
 ### Contextos de Ejecución
 
-#### **[Operación]IfFail**
-- **Cuándo se ejecuta**: Solo cuando el resultado es fallido
-- **Propósito**: Recuperación de errores, logging de fallos
+| Contexto | Se ejecuta cuando… | Qué recibe el delegado |
+| --- | --- | --- |
+| *(ninguno)* | El resultado es **válido** | El valor `T` |
+| `IfValid` | El resultado es válido | El valor `T` |
+| `If` | Se cumple un **predicado** sobre el valor | El valor `T` |
+| `IfFail` | El resultado es **fallido** | `MlErrorsDetails` |
+| `IfFailWithValue` | Es fallido **y** hay un valor en `Details["Value"]` | El valor original |
+| `IfFailWithException` | Es fallido **y** hay una excepción en `Details["Ex"]` | La `Exception` |
+| `IfFailWithoutException` | Es fallido **y no** hay excepción (fallo de negocio/validación) | `MlErrorsDetails` |
+| `Always` | **Siempre**, sea válido o fallido | Nada, o los dos delegados |
+| `Ensure` | Solo en `Map`: valida el valor con un predicado | El valor `T` |
 
-#### **[Operación]IfFailWithException**
-- **Cuándo se ejecuta**: Solo cuando el resultado es fallido Y contiene una excepción
-- **Propósito**: Manejo específico de excepciones capturadas
+Los contextos `IfFailWith*` son la razón por la que merece la pena guardar contexto en `Details`:
+permiten **distinguir la causa del fallo** sin `if` anidados.
 
-#### **[Operación]IfFailWithoutException**
-- **Cuándo se ejecuta**: Solo cuando el resultado es fallido Y NO contiene excepción
-- **Propósito**: Manejo de errores lógicos (no excepciones técnicas)
-
-#### **[Operación]IfFailWithValue**
-- **Cuándo se ejecuta**: Solo cuando el resultado es fallido Y contiene un valor asociado
-- **Propósito**: Recuperación basada en valores parciales
-
-#### **[Operación]Always**
-- **Cuándo se ejecuta**: Siempre, independientemente del estado
-- **Propósito**: Acciones transversales (logging, cleanup)
+```csharp
+await ProcesarPagoAsync(pago)
+          // Reintento solo si falló por un problema técnico.
+          .BindIfFailWithExceptionAsync(ex => ex is TimeoutException or HttpRequestException
+                                                  ? ReintentarAsync(pago)
+                                                  : ex.ToMlResultFailAsync<Recibo>())
+          // Los fallos de validación NO se reintentan: se devuelven al usuario.
+          .MapIfFailWithoutExceptionAsync(er => Recibo.Rechazado(er));
+```
 
 ### Sufijos de Asincronía
 
 #### **[Operación]Async**
-- **Propósito**: Versión asíncrona de la operación
-- **Retorno**: `Task<MlResult<T>>`
 
-### Análisis Detallado de Combinaciones
+El sufijo `Async` cubre **tres ejes independientes**, y de ahí sale el número de sobrecargas:
 
-#### Familia Bind
+| Eje | Variantes |
+| --- | --- |
+| Origen | `MlResult<T>` o `Task<MlResult<T>>` |
+| Delegado | síncrono (`Func<T, MlResult<R>>`) o asíncrono (`Func<T, Task<MlResult<R>>>`) |
+| Mensaje de error (`Try*`) | ninguno, `string`, o `Func<Exception, string>` |
 
-| Método | Descripción | Cuándo se ejecuta | Captura excepciones |
-|--------|-------------|-------------------|-------------------|
-| `Bind` | Encadena operación básica | Si es exitoso | No |
-| `BindAsync` | Encadena operación asíncrona | Si es exitoso | No |
-| `TryBind` | Encadena con captura de excepciones | Si es exitoso | Sí |
-| `TryBindAsync` | Versión asíncrona segura | Si es exitoso | Sí |
-| `BindIfFail` | Recuperación en caso de fallo | Si es fallido | No |
-| `BindIfFailAsync` | Recuperación asíncrona | Si es fallido | No |
-| `TryBindIfFail` | Recuperación segura | Si es fallido | Sí |
-| `TryBindIfFailAsync` | Recuperación asíncrona segura | Si es fallido | Sí |
-| `BindIfFailWithException` | Recuperación solo con excepción | Si falla con excepción | No |
-| `BindIfFailWithExceptionAsync` | Versión asíncrona | Si falla con excepción | No |
-| `BindIfFailWithoutException` | Recuperación sin excepción | Si falla sin excepción | No |
-| `BindIfFailWithoutExceptionAsync` | Versión asíncrona | Si falla sin excepción | No |
-| `TryBindIfFailWithException` | Recuperación segura con excepción | Si falla con excepción | Sí |
-| `TryBindIfFailWithExceptionAsync` | Versión asíncrona segura | Si falla con excepción | Sí |
-| `TryBindIfFailWithoutException` | Recuperación segura sin excepción | Si falla sin excepción | Sí |
-| `TryBindIfFailWithoutExceptionAsync` | Versión asíncrona segura | Si falla sin excepción | Sí |
+Esto permite escribir tuberías mixtas sin `await` intermedios ni variables temporales:
 
-#### Familia Map
+```csharp
+public Task<MlResult<PedidoDto>> ConfirmarAsync(Guid id) =>
+    _repo.ObtenerAsync(id)                          // Task<MlResult<Pedido>>
+         .BindAsync(ValidarEstado)                  // delegado SÍNCRONO
+         .BindAsync(_stock.ReservarAsync)           // delegado ASÍNCRONO
+         .TryBindAsync(_pagos.CobrarAsync, ex => $"Cobro fallido: {ex.Message}")
+         .MapAsync(p => p.ToDto());
+```
 
-| Método | Descripción | Cuándo se ejecuta | Captura excepciones |
-|--------|-------------|-------------------|-------------------|
-| `Map` | Transforma valor básico | Si es exitoso | No |
-| `MapAsync` | Transforma valor asíncrono | Si es exitoso | No |
-| `TryMap` | Transforma con captura | Si es exitoso | Sí |
-| `TryMapAsync` | Transforma asíncrono seguro | Si es exitoso | Sí |
-| `MapIfFail` | Transforma en caso de fallo | Si es fallido | No |
-| `MapIfFailAsync` | Transforma fallo asíncrono | Si es fallido | No |
-| `MapIfFailWithException` | Transforma solo con excepción | Si falla con excepción | No |
-| `MapIfFailWithoutException` | Transforma sin excepción | Si falla sin excepción | No |
-| `TryMapIfFailWithException` | Transforma seguro con excepción | Si falla con excepción | Sí |
-| `TryMapIfFailWithoutException` | Transforma seguro sin excepción | Si falla sin excepción | Sí |
-
-#### Familia ExecSelf
-
-| Método | Descripción | Cuándo se ejecuta | Captura excepciones |
-|--------|-------------|-------------------|-------------------|
-| `ExecSelf` | Ejecuta acción básica | Si es exitoso | No |
-| `ExecSelfAsync` | Ejecuta acción asíncrona | Si es exitoso | No |
-| `TryExecSelf` | Ejecuta acción segura | Si es exitoso | Sí |
-| `TryExecSelfAsync` | Ejecuta acción asíncrona segura | Si es exitoso | Sí |
-| `ExecSelfIfFail` | Ejecuta si falla | Si es fallido | No |
-| `ExecSelfIfFailAsync` | Ejecuta asíncrono si falla | Si es fallido | No |
-| `ExecSelfIfFailWithException` | Ejecuta solo con excepción | Si falla con excepción | No |
-| `ExecSelfIfFailWithoutException` | Ejecuta sin excepción | Si falla sin excepción | No |
-| `ExecSelfAlways` | Ejecuta siempre | Siempre | No |
-| `ExecSelfAlwaysAsync` | Ejecuta siempre asíncrono | Siempre | No |
+> 💡 **Regla práctica**: si *algo* en la tubería es asíncrono, usa la variante `Async` en todos los
+> pasos siguientes; el compilador elegirá la sobrecarga correcta según tu delegado.
 
 ---
 
 ## Análisis Detallado de Métodos
 
-### Operaciones Bind
+Esta sección es un **mapa de navegación**. El detalle exhaustivo de cada familia (con el número real de
+sobrecargas de cada método) está en [`__Doc/Types/`](./Types/README.md).
 
-Las operaciones `Bind` son el corazón de la composición funcional. Permiten encadenar operaciones que pueden fallar:
+| Archivo fuente | Contenido | Referencia |
+| --- | --- | --- |
+| `Types/MlResult.cs` | El tipo, fábricas y conversiones implícitas | [`MlResult.md`](./Types/MlResult.md) |
+| `Types/MlResultActionsBind.cs` | `Bind`, `BindMulti`, `BindIf`, `BindIfFail*`, `BindAlways`, `TryBindBuild*` | [`MlResultActionsBind.md`](./Types/MlResultActionsBind.md) |
+| `Types/MlResultActionsMap.cs` | `Map`, `MapEnsure`, `MapIf`, `MapIfFail*`, `MapAlways` | [`MlResultActionsMap.md`](./Types/MlResultActionsMap.md) |
+| `Types/MlResultActionsMatch.cs` | `Match`, `TryMatch` y las sobrecargas «todo en uno» | [`MlResultActionsMatch.md`](./Types/MlResultActionsMatch.md) |
+| `Types/MlResultActionsExecSelf.cs` | `ExecSelf*`: efectos secundarios sin alterar el resultado | [`MlResultActionsExecSelf.md`](./Types/MlResultActionsExecSelf.md) |
+| `Types/MlResultActionsSeveral.cs` | `Combine`, `NullToFailed`, `EmptyToFailed`, `BoolToResult`, `Do` | [`MlResultActionsSeveral.md`](./Types/MlResultActionsSeveral.md) |
+| `Types/MlResultBucles.cs` | `Projection*`, `ProjectionSplit*`, `Fusion*` | [`MlResultBucles.md`](./Types/MlResultBucles.md) |
+| `Types/MlResultTransformations.cs` | `ToMlResult*`, `TryToMlResult*`, boxing | [`MlResultTransformations.md`](./Types/MlResultTransformations.md) |
+| `Types/MlResultChangeReturnResult.cs` | Cambiar el tipo de retorno conservando el estado | [`MlResultChangeReturnResult.md`](./Types/MlResultChangeReturnResult.md) |
+| `Types/MlResultActions.cs` | Enriquecer errores, transportar datos, acceso seguro | [`MlResultActions.md`](./Types/MlResultActions.md) |
+| `Types/MlResultActionsErrorsDetails.cs` | Leer, escribir y fusionar los `Details` del error | [`MlResultActionsErrorsDetails.md`](./Types/MlResultActionsErrorsDetails.md) |
+| `Types/Errors/*.cs` | `MlError`, `MlErrorsDetails` y sus acciones | [`MlResultErrors.md`](./Types/MlResultErrors.md) |
 
-```csharp
-// Ejemplo conceptual de implementación
-public static MlResult<TOutput> Bind<T, TOutput>(
-    this MlResult<T> result, 
-    Func<T, MlResult<TOutput>> func)
-{
-    if (result.IsFailure)
-        return MlResult<TOutput>.Failure(result.ErrorsDetails);
-    
-    return func(result.Value);
-}
-```
+### Cómo elegir la operación adecuada
 
-#### Casos de Uso Específicos
-
-**BindIfFail**: Permite recuperación automática cuando una operación falla:
-
-```csharp
-var result = await GetUserAsync(userId)
-    .BindIfFailAsync(async errors => 
-        await CreateDefaultUserAsync(userId));
-```
-
-**BindIfFailWithException**: Manejo específico de excepciones técnicas:
-
-```csharp
-var result = await DatabaseOperation()
-    .BindIfFailWithExceptionAsync(async ex => 
-        await FallbackToCache());
-```
-
-**BindIfFailWithoutException**: Manejo de errores lógicos:
-
-```csharp
-var result = ValidateUser(user)
-    .BindIfFailWithoutException(errors => 
-        ApplyDefaultValidation(user));
-```
-
-### Operaciones Map
-
-Las operaciones `Map` transforman valores sin cambiar la estructura del resultado:
-
-```csharp
-// Transformación simple
-var result = GetUser(id)
-    .Map(user => user.FullName)
-    .Map(name => name.ToUpper());
-
-// Transformación condicional
-var result = GetUser(id)
-    .MapIfFail(errors => "Usuario no encontrado");
-```
-
-### Operaciones ExecSelf
-
-Permiten ejecutar efectos secundarios sin modificar el resultado:
-
-```csharp
-var result = await ProcessOrderAsync(order)
-    .ExecSelfAsync(async order => await LogSuccessAsync(order))
-    .ExecSelfIfFailAsync(async errors => await LogErrorsAsync(errors))
-    .ExecSelfAlwaysAsync(async _ => await UpdateMetricsAsync());
-```
-
-### Operaciones Match
-
-Proporcionan coincidencia de patrones para manejar ambos casos:
-
-```csharp
-var message = result.Match(
-    onSuccess: user => $"Bienvenido {user.Name}",
-    onFailure: errors => $"Error: {errors.GetMessage()}"
-);
-```
+| Lo que quieres hacer | Operación |
+| --- | --- |
+| Encadenar un paso que **puede fallar** | `Bind` |
+| Transformar el valor con una función **que no falla** | `Map` |
+| Validar el valor con un predicado | `MapEnsure` |
+| Ejecutar un `if` dentro de la tubería | `BindIf` / `MapIf` |
+| Recuperarte de un fallo con un valor por defecto | `MapIfFail` |
+| Recuperarte de un fallo con otra operación que puede fallar | `BindIfFail` |
+| Reaccionar distinto según **la excepción** | `BindIfFailWithException` |
+| Reaccionar solo a fallos **de negocio** (sin excepción) | `BindIfFailWithoutException` |
+| Registrar/auditar sin alterar el flujo | `ExecSelf*` |
+| Ejecutar código **siempre** (limpieza, caché) | `BindAlways` / `MapAlways` |
+| Combinar resultados de **tipos distintos** | `Combine` |
+| Construir un objeto acumulando **todos** los errores | `TryBindBuild` |
+| Detenerte en el primer error al construir | `TryBindBuildWhile` |
+| Recorrer una colección (todo o nada) | `Projection` |
+| Recorrer una colección tolerando fallos | `ProjectionSplit` |
+| Salir del `MlResult` | `Match` |
 
 ---
 
 ## Gestión de Errores
 
-### Jerarquía de Errores
+### Un error no es solo un texto
 
-La librería implementa un sistema robusto de gestión de errores con múltiples niveles de información:
+En esta librería un fallo transporta tres cosas:
 
-#### MlError - Error Individual
+1. **Uno o varios mensajes** (`Errors`), porque las validaciones se acumulan.
+2. **La excepción original**, si la hubo, en `Details["Ex"]`.
+3. **El contexto que tú decidas añadir**, en el resto de claves de `Details`.
+
 ```csharp
-public class MlError
+MlResult<Recibo> resultado = await ProcesarPagoAsync(pago);
+
+// El error incluye: mensaje + excepción + el DTO que lo provocó.
+```
+
+### Enriquecer el error con contexto
+
+```csharp
+MlResult<Pedido> resultado = ValidarPedido(dto)
+        .AddValueDetailIfFail(dto)                       // guarda el DTO en Details["Value"]
+        .AddMlErrorDetailIfFail("Validación de alta");   // añade un mensaje extra
+```
+
+Con esto, más adelante puedes recuperar el DTO y, por ejemplo, encolarlo para reintento:
+
+```csharp
+resultado.Match(
+    valid: p       => Ok(p),
+    fail : errores => errores.GetDetailValue<PedidoDto>()
+                             .Match(valid: origen => { _cola.Encolar(origen); return Accepted(); },
+                                    fail : _      => BadRequest(errores.ToErrorsMessages())));
+```
+
+### Acumular errores en lugar de cortocircuitar
+
+`Bind` **cortocircuita**: en cuanto algo falla, el resto no se ejecuta. Cuando quieras mostrar al
+usuario *todos* los problemas de una vez, tienes tres herramientas:
+
+| Herramienta | Cuándo |
+| --- | --- |
+| `Combine` | Varios `MlResult` de **tipos distintos** ya calculados. |
+| `FusionErrosIfExists` | Una **colección** de `MlResult<T>` ya calculada. |
+| `TryBindBuild` | Construir un objeto ejecutando **todas** las funciones de sus campos. |
+
+```csharp
+// El usuario ve los tres errores a la vez, no solo el primero.
+MlResult<Alta> alta = dto.ToMlResultValid()
+                         .TryBindBuild<AltaDto, Alta>(
+                              d => ValidarNombre(d.Nombre).ToMlResultObject(),
+                              d => ValidarEmail (d.Email ).ToMlResultObject(),
+                              d => ValidarEdad  (d.Edad  ).ToMlResultObject());
+```
+
+### Traducir errores a la frontera HTTP
+
+```csharp
+public async Task<IActionResult> Post(PedidoDto dto)
 {
-    public string Code { get; }          // Código identificador
-    public string Message { get; }       // Mensaje descriptivo
-    public string Category { get; }      // Categoría del error
-    public object Value { get; }         // Valor asociado (opcional)
-    public Dictionary<string, object> Metadata { get; } // Metadatos adicionales
+    var resultado = await _servicio.CrearAsync(dto);
+
+    return await resultado.MatchAsync(
+        validAsync: async p => { await _bus.PublicarAsync(p); return Created($"/pedidos/{p.Id}", p); },
+        failAsync : er => Task.FromResult(Traducir(er)));
 }
+
+private IActionResult Traducir(MlErrorsDetails errores) =>
+    errores.GetDetailException()
+           .Match(
+               valid: ex => ex switch
+                            {
+                                TimeoutException        => StatusCode(504, errores.ToErrorsMessages()),
+                                HttpRequestException    => StatusCode(502, errores.ToErrorsMessages()),
+                                UnauthorizedAccessException => Forbid(),
+                                _                       => StatusCode(500, errores.ToErrorsMessages())
+                            },
+               // Sin excepción ⇒ es un fallo de negocio ⇒ 400.
+               fail : _  => BadRequest(errores.ToErrorsMessages()));
 ```
 
-#### MlErrorsDetails - Colección de Errores
-```csharp
-public class MlErrorsDetails
-{
-    public List<MlError> Errors { get; }           // Lista de errores
-    public Exception Exception { get; }            // Excepción original (si existe)
-    public object Value { get; }                   // Valor parcial (si existe)
-    public bool HasException { get; }              // Indica si hay excepción
-    public bool HasValue { get; }                  // Indica si hay valor
-    public string CorrelationId { get; }           // ID de correlación
-    public DateTime Timestamp { get; }             // Timestamp del error
-}
-```
-
-### Categorías de Errores
-
-1. **Errores de Validación**: Datos inválidos, campos requeridos
-2. **Errores de Negocio**: Reglas de negocio violadas
-3. **Errores Técnicos**: Problemas de infraestructura, base de datos
-4. **Errores de Autorización**: Permisos insuficientes
-5. **Errores de Recursos**: Recursos no encontrados
-
-### Estrategias de Recuperación
-
-#### Recuperación Automática
-```csharp
-var result = await PrimaryServiceAsync()
-    .BindIfFailAsync(async _ => await SecondaryServiceAsync())
-    .BindIfFailAsync(async _ => await CacheServiceAsync());
-```
-
-#### Recuperación Condicional
-```csharp
-var result = await DatabaseQueryAsync()
-    .BindIfFailWithExceptionAsync(async ex => 
-        ex is TimeoutException 
-            ? await RetryWithBackoffAsync()
-            : MlResult<Data>.Failure("Error irrecuperable"));
-```
-
-#### Enriquecimiento de Errores
-```csharp
-var result = ValidateInput(input)
-    .MapIfFail(errors => errors.AddContext("UserId", userId))
-    .MapIfFail(errors => errors.AddCategory("Validation"));
-```
+Detalle completo en [`Types/MlResultErrors.md`](./Types/MlResultErrors.md) y
+[`Types/MlResultActionsErrorsDetails.md`](./Types/MlResultActionsErrorsDetails.md).
 
 ---
 
 ## Extensiones y Utilidades
 
-### EnsureFp - Validaciones Funcionales
+### `EnsureFp` — validaciones funcionales
 
-Proporciona validaciones que retornan `MlResult<T>`:
-
-```csharp
-public static class EnsureFp
-{
-    public static MlResult<T> NotNull<T>(T value, string message = null)
-    public static MlResult<string> NotEmpty(string value, string message = null)
-    public static MlResult<T> That<T>(T value, Func<T, bool> predicate, string message = null)
-    public static MlResult<T> Valid<T>(T value, params Func<T, MlResult<T>>[] validators)
-}
-```
-
-### Extensiones Paralelas
-
-Operaciones para procesar colecciones en paralelo:
+Métodos **estáticos** (no de extensión) que devuelven `MlResult<T>`. Sustituyen a las guard clauses con
+`throw`. La primitiva es `That`; las demás son atajos de uso frecuente.
 
 ```csharp
-public static class ParallelExtensions
-{
-    public static async Task<MlResult<IEnumerable<TOutput>>> MapParallelAsync<T, TOutput>(
-        this IEnumerable<T> source,
-        Func<T, Task<MlResult<TOutput>>> func,
-        int maxDegreeOfParallelism = -1)
-
-    public static async Task<MlResult<IEnumerable<TOutput>>> BindParallelAsync<T, TOutput>(
-        this MlResult<IEnumerable<T>> result,
-        Func<T, Task<MlResult<TOutput>>> func,
-        int maxDegreeOfParallelism = -1)
-}
+public MlResult<Pedido> Validar(Pedido pedido) =>
+    EnsureFp.NotNull(pedido, "El pedido es obligatorio")
+            .Bind(p => EnsureFp.NotNullEmptyOrWhitespace(p.Referencia, "Falta la referencia")
+                                .Map(_ => p))
+            .Bind(p => EnsureFp.NotEmpty(p.Lineas, "El pedido no tiene líneas").Map(_ => p))
+            .Bind(p => EnsureFp.That(p, p.Total > 0, "El total debe ser positivo"));
 ```
 
-### Constants
+| Método | Comprueba |
+| --- | --- |
+| `NotNull<T>(valor, error)` | Que no sea `null`. |
+| `NotEmpty<T>(coleccion, error)` | Que la colección tenga elementos. |
+| `NotNullEmptyOrWhitespace(texto, error)` | Que la cadena tenga contenido real. |
+| `That<T>(valor, condicion, error)` | **Cualquier** condición. |
 
-Define constantes utilizadas en toda la librería:
+Cada uno admite el error como `string` o como `MlErrorsDetails`, y todos tienen su variante `*Async`
+(8 + 8 métodos). Detalle en [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md).
+
+### `Helpers/Extensions` — utilidades transversales
+
+| Extensión | Para qué |
+| --- | --- |
+| `ToAsync<T>()` | Convierte cualquier valor en `Task<T>`. Imprescindible al mezclar mundos. |
+| `With<T>(params Action<T>[])` | Configura un objeto en una expresión (útil dentro de `Map`). |
+| `WithAsync<T>(...)` | Igual, para `Task<T>` o con acciones asíncronas. |
+| `VoidToAsync<T>(Action<T>)` | Adapta una `Action<T>` a una firma asíncrona. |
+| `ToFuncTask(...)` | Convierte funciones síncronas en funciones que devuelven `Task` (5 sobrecargas). |
+| `ValidateObject()` | Ejecuta las DataAnnotations y devuelve los `ValidationResult`. |
+| `ToNullable<T>()` | `T` → `T?` para tipos valor. |
+| `AppendExDetails(Exception)` | Añade una excepción al diccionario de detalles, numerándola (`Ex`, `Ex2`, …). |
 
 ```csharp
-public static class Constants
-{
-    public const string DefaultErrorCode = "GENERAL_ERROR";
-    public const string ValidationErrorCode = "VALIDATION_ERROR";
-    public const string BusinessErrorCode = "BUSINESS_ERROR";
-    public const string TechnicalErrorCode = "TECHNICAL_ERROR";
-    
-    public static class Categories
-    {
-        public const string Validation = "Validation";
-        public const string Business = "Business";
-        public const string Technical = "Technical";
-        public const string Authorization = "Authorization";
-    }
-}
+MlResult<Pedido> pedido = nuevo.ToMlResultValid()
+                               .Map(p => p.With(x => x.Fecha  = _reloj.Ahora,
+                                                x => x.Estado = Estado.Borrador));
 ```
+
+Detalle en [`Extensions/Extensions.md`](./Extensions/Extensions.md).
+
+### `Constants` — valores por defecto
+
+| Constante | Valor / uso |
+| --- | --- |
+| `DEFAULT_ERROR_MESSAGE` | Mensaje usado cuando un `MlError` se crea sin texto. |
+| `EX_DESC_KEY` | `"Ex"`: clave de la excepción en `Details`. |
+| `VALUE_KEY` | `"Value"`: clave del valor de entrada en `Details`. |
+| `DEFAULT_EX_ERROR_MESSAGE(ex)` | Mensaje por defecto de las operaciones `Try*`. |
 
 ---
 
 ## Patrones de Uso
 
-### Patrón Pipeline
-
-Encadenamiento secuencial de operaciones:
+### 1. Entrar en la tubería
 
 ```csharp
-var result = await GetUserInputAsync()
-    .BindAsync(input => ValidateInputAsync(input))
-    .BindAsync(validInput => ProcessInputAsync(validInput))
-    .BindAsync(processedData => SaveToDataBaseAsync(processedData))
-    .BindAsync(savedData => NotifyUsersAsync(savedData))
-    .ExecSelfIfFailAsync(errors => LogErrorsAsync(errors));
+MlResult<string> a = texto.ToMlResultValid();               // valor válido
+MlResult<Cliente> b = "No encontrado".ToMlResultFail<Cliente>();  // fallo
+MlResult<Cliente> c = cliente.NullToFailed("Cliente nulo"); // null ⇒ Fail
+MlResult<Config>  d = ((Func<Config>)Cargar).TryToMlResult("No se pudo cargar"); // código que lanza
 ```
 
-### Patrón Fallback
-
-Múltiples fuentes con recuperación automática:
+### 2. Validar antes de actuar
 
 ```csharp
-var userData = await GetUserFromCacheAsync(userId)
-    .BindIfFailAsync(_ => GetUserFromDatabaseAsync(userId))
-    .BindIfFailAsync(_ => GetUserFromBackupAsync(userId))
-    .BindIfFailAsync(_ => CreateGuestUserAsync(userId));
+MlResult<Pedido> resultado = EnsureFp.NotNull(dto, "Datos obligatorios")
+                                     .Bind(Validar)
+                                     .Bind(Normalizar);
 ```
 
-### Patrón Accumulator
-
-Acumulación de errores en validaciones:
+### 3. Instrumentar sin ensuciar
 
 ```csharp
-var validationResult = MlResult<User>.Success(user)
-    .Bind(u => ValidateName(u.Name).Map(_ => u))
-    .Bind(u => ValidateEmail(u.Email).Map(_ => u))
-    .Bind(u => ValidateAge(u.Age).Map(_ => u))
-    .Bind(u => ValidateAddress(u.Address).Map(_ => u));
+await resultado.ExecSelfIfValidAsync(p  => _metricas.Incr("pedido.ok"))
+               .ExecSelfIfFailAsync (er => _log.LogWarning("{E}", er.ToErrorsDescription()));
 ```
 
-### Patrón Circuit Breaker
-
-Prevención de cascadas de fallos:
+### 4. Recuperación por capas
 
 ```csharp
-var result = await circuitBreaker.ExecuteAsync(async () =>
-    await ExternalServiceCallAsync()
-        .BindIfFailWithExceptionAsync(async ex => 
-            await HandleCircuitBreakerAsync(ex)));
+MlResult<Tarifa> tarifa = await _api.ObtenerAsync(zona)
+        .BindIfFailWithExceptionAsync(ex => ex is TimeoutException
+                                                ? _cache.ObtenerAsync(zona)
+                                                : ex.ToMlResultFailAsync<Tarifa>())
+        .MapIfFailWithoutExceptionAsync(_ => Tarifa.PorDefecto);
 ```
+
+### 5. Salir una sola vez, al final
+
+```csharp
+return tarifa.Match(valid: t => Ok(t), fail: er => BadRequest(er.ToErrorsMessages()));
+```
+
+### Antipatrones a evitar
+
+| ❌ Antipatrón | ✅ Alternativa |
+| --- | --- |
+| Comprobar `IsFail` con `if` en cada paso | Encadenar con `Bind` / `Map` |
+| Intentar leer el valor directamente | `Match`, o `SecureValidValue()` en infraestructura |
+| Lanzar excepciones para el flujo de negocio | Devolver `Fail` con un mensaje claro |
+| Envolver toda la tubería en un `try/catch` | Usar las variantes `Try*` en el paso concreto que puede lanzar |
+| Devolver `null` | Devolver `MlResult<T>` o usar `NullToFailed` |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Procesamiento de Pedido
+### Ejemplo completo: alta de un cliente
 
 ```csharp
-public async Task<MlResult<OrderConfirmation>> ProcessOrderAsync(OrderRequest request)
-{
-    return await ValidateOrderRequest(request)
-        .BindAsync(validRequest => CheckInventoryAsync(validRequest))
-        .BindAsync(checkedOrder => CalculatePricingAsync(checkedOrder))
-        .BindAsync(pricedOrder => ProcessPaymentAsync(pricedOrder))
-        .BindAsync(paidOrder => CreateOrderAsync(paidOrder))
-        .BindAsync(createdOrder => SendConfirmationAsync(createdOrder))
-        .ExecSelfAsync(confirmation => LogSuccessAsync(confirmation))
-        .ExecSelfIfFailAsync(errors => LogErrorsAsync(errors))
-        .ExecSelfAlwaysAsync(_ => UpdateMetricsAsync());
-}
+public Task<MlResult<ClienteDto>> AltaAsync(AltaClienteDto dto) =>
+    EnsureFp.NotNullAsync(dto, "Los datos del cliente son obligatorios")
+        // 1. Validaciones acumuladas: el usuario ve todos los errores a la vez.
+        .BindAsync(d => Validar(d))
+        // 2. Regla de negocio: el email no puede existir ya.
+        .BindAsync(d => _repo.ExisteEmailAsync(d.Email)
+                             .BindAsync(existe => existe
+                                                      ? $"El email {d.Email} ya está registrado"
+                                                            .ToMlResultFailAsync<AltaClienteDto>()
+                                                      : d.ToMlResultValidAsync()))
+        // 3. Construcción del dominio.
+        .MapAsync(d => new Cliente(d.Nombre, d.Email, _reloj.Ahora))
+        // 4. Persistencia: puede lanzar ⇒ TryBindAsync.
+        .TryBindAsync(c => _repo.InsertarAsync(c),
+                      ex => $"No se pudo guardar el cliente: {ex.Message}")
+        // 5. Contexto para diagnóstico si algo salió mal.
+        .AddValueDetailIfFailAsync(dto)
+        // 6. Efectos secundarios, sin alterar el resultado.
+        .ExecSelfIfValidAsync(c  => _log.LogInformation("Cliente {Id} creado", c.Id))
+        .ExecSelfIfFailAsync (er => _log.LogWarning("Alta rechazada: {E}",
+                                                   er.ToErrorsDescription()))
+        // 7. Salida del dominio.
+        .MapAsync(c => c.ToDto());
 
-private MlResult<OrderRequest> ValidateOrderRequest(OrderRequest request)
+private MlResult<AltaClienteDto> Validar(AltaClienteDto d)
 {
-    return EnsureFp.NotNull(request, "Order request cannot be null")
-        .Bind(_ => EnsureFp.NotEmpty(request.CustomerId, "Customer ID is required"))
-        .Bind(_ => EnsureFp.That(request.Items?.Any() == true, "Order must have items"))
-        .Map(_ => request);
-}
-```
+    IEnumerable<MlResult<string>> validaciones =
+    [
+        EnsureFp.NotNullEmptyOrWhitespace(d.Nombre, "El nombre es obligatorio"),
+        EnsureFp.NotNullEmptyOrWhitespace(d.Email,  "El email es obligatorio"),
+        EnsureFp.That(d.Email, d.Email?.Contains('@') == true, "El email no tiene formato válido")
+    ];
 
-### Ejemplo 2: Autenticación y Autorización
-
-```csharp
-public async Task<MlResult<AuthenticatedUser>> AuthenticateUserAsync(LoginRequest login)
-{
-    return await ValidateLoginRequest(login)
-        .BindAsync(validLogin => FindUserAsync(validLogin.Username))
-        .BindAsync(user => ValidatePasswordAsync(user, login.Password))
-        .BindAsync(validUser => CheckUserStatusAsync(validUser))
-        .BindAsync(activeUser => GenerateTokenAsync(activeUser))
-        .BindAsync(tokenizedUser => LoadPermissionsAsync(tokenizedUser))
-        .ExecSelfAsync(user => LogLoginSuccessAsync(user))
-        .ExecSelfIfFailWithoutExceptionAsync(errors => LogLoginFailureAsync(errors))
-        .ExecSelfIfFailWithExceptionAsync(ex => LogSecurityExceptionAsync(ex));
+    return validaciones.FusionErrosIfExists().Map(_ => d);
 }
 ```
 
-### Ejemplo 3: Procesamiento de Archivo
+Y el controlador, que es la **única** capa que sale del `MlResult`:
 
 ```csharp
-public async Task<MlResult<ProcessingResult>> ProcessFileAsync(string filePath)
+[HttpPost]
+public async Task<IActionResult> Post(AltaClienteDto dto)
 {
-    return await ValidateFilePath(filePath)
-        .BindAsync(path => ReadFileAsync(path))
-        .TryBindAsync(content => ParseContentAsync(content))
-        .BindAsync(parsedData => ValidateDataAsync(parsedData))
-        .BindAsync(validData => TransformDataAsync(validData))
-        .BindAsync(transformedData => SaveProcessedDataAsync(transformedData))
-        .BindIfFailWithExceptionAsync(ex => HandleFileExceptionAsync(ex, filePath))
-        .ExecSelfAlwaysAsync(_ => CleanupTempFilesAsync());
+    var resultado = await _servicio.AltaAsync(dto);
+
+    return resultado.Match(
+        valid: cliente => Created($"/clientes/{cliente.Id}", cliente),
+        fail : errores => errores.GetDetailException()
+                                 .Match(valid: _ => StatusCode(500, errores.ToErrorsMessages()),
+                                        fail : _ => BadRequest(errores.ToErrorsMessages())));
 }
 ```
 
-### Ejemplo 4: Integración con Servicios Externos
+### Ejemplo: importación de un fichero tolerante a errores
 
 ```csharp
-public async Task<MlResult<WeatherData>> GetWeatherDataAsync(string location)
+public async Task<InformeImportacion> ImportarAsync(Stream csv)
 {
-    return await ValidateLocation(location)
-        .BindAsync(loc => GetFromCacheAsync(loc))
-        .BindIfFailAsync(_ => CallPrimaryWeatherServiceAsync(location))
-        .BindIfFailAsync(_ => CallSecondaryWeatherServiceAsync(location))
-        .BindIfFailAsync(_ => GetDefaultWeatherDataAsync(location))
-        .TryBindAsync(data => EnrichWeatherDataAsync(data))
-        .ExecSelfAsync(data => CacheWeatherDataAsync(data))
-        .ExecSelfIfFailAsync(errors => LogWeatherServiceErrorsAsync(errors));
-}
-```
+    var lineas = await LeerLineasAsync(csv);
 
----
+    var (importados, rechazados) = await lineas.ProjectionSplitAsync(
+        async linea => await ParsearAsync(linea)
+                                .BindAsync(_repo.InsertarAsync));
 
-## Configuración y Personalización
-
-### Configuración Global
-
-```csharp
-public static class MlResultConfig
-{
-    public static string DefaultErrorMessage { get; set; } = "An error occurred";
-    public static bool IncludeStackTrace { get; set; } = false;
-    public static bool LogErrors { get; set; } = true;
-    public static ILogger Logger { get; set; }
-    
-    public static Func<Exception, string> ExceptionMessageFormatter { get; set; } 
-        = ex => ex.Message;
-}
-```
-
-### Extensiones Personalizadas
-
-```csharp
-public static class CustomMlResultExtensions
-{
-    public static MlResult<T> LogAndReturn<T>(this MlResult<T> result, ILogger logger)
-    {
-        return result.ExecSelfIfFail(errors => 
-            logger.LogError("Operation failed: {Errors}", errors.GetMessage()));
-    }
-    
-    public static async Task<MlResult<T>> WithTimeoutAsync<T>(
-        this Task<MlResult<T>> resultTask, 
-        TimeSpan timeout)
-    {
-        try
-        {
-            return await resultTask.ConfigureAwait(false)
-                .WaitAsync(timeout);
-        }
-        catch (TimeoutException)
-        {
-            return MlResult<T>.Failure("Operation timed out");
-        }
-    }
+    return new InformeImportacion(
+        Correctos : importados.Count(),
+        Rechazados: rechazados.Select(e => e.ToErrorsDescription()).ToList());
 }
 ```
 
 ---
 
-## Mejores Prácticas
+## Índice completo de la documentación
 
-### 1. Manejo de Excepciones
+Toda la documentación de `MoralesLarios.OOFP` vive en `__Doc/`. Este es el mapa completo.
 
-- Usa `Try*` variants para operaciones que pueden lanzar excepciones
-- Captura excepciones específicas cuando sea posible
-- Proporciona mensajes de error meaningful
+### Referencia por archivo de código (`__Doc/Types/`)
 
-### 2. Composición de Operaciones
+Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 
-- Prefiere `Bind` para operaciones que pueden fallar
-- Usa `Map` para transformaciones simples
-- Utiliza `ExecSelf` para efectos secundarios
+| Documento | Archivo fuente | Contenido |
+|-----------|----------------|-----------|
+| [Índice de tipos](./Types/README.md) | — | Portada de la referencia por tipos |
+| [`MlResult.md`](./Types/MlResult.md) | `Types/MlResult.cs` | El tipo raíz, fábricas y conversiones implícitas |
+| [`MlResultErrors.md`](./Types/MlResultErrors.md) | `Types/Errors/*.cs` | `MlError`, `MlErrorsDetails`, `ErrorMessage` |
+| [`MlResultActions.md`](./Types/MlResultActions.md) | `Types/MlResultActions.cs` | Enriquecer errores, transportar datos, acceso seguro |
+| [`MlResultActionsBind.md`](./Types/MlResultActionsBind.md) | `Types/MlResultActionsBind.cs` | `Bind`, `BindMulti`, `BindIf`, `BindIfFail*`, `BindAlways`, `TryBindBuild*` |
+| [`MlResultActionsMap.md`](./Types/MlResultActionsMap.md) | `Types/MlResultActionsMap.cs` | `Map`, `MapEnsure`, `MapIf`, `MapIfFail*`, `MapAlways` |
+| [`MlResultActionsMatch.md`](./Types/MlResultActionsMatch.md) | `Types/MlResultActionsMatch.cs` | `Match`, `TryMatch` y las sobrecargas «todo en uno» |
+| [`MlResultActionsExecSelf.md`](./Types/MlResultActionsExecSelf.md) | `Types/MlResultActionsExecSelf.cs` | `ExecSelf*`: efectos laterales sin alterar el resultado |
+| [`MlResultActionsSeveral.md`](./Types/MlResultActionsSeveral.md) | `Types/MlResultActionsSeveral.cs` | `EmptyToFailed`, `NullToFailed`, `BoolToResult`, `Combine`, `Do` |
+| [`MlResultActionsErrorsDetails.md`](./Types/MlResultActionsErrorsDetails.md) | `Types/MlResultActionsErrorsDetails.cs` | Leer, escribir y fusionar los `Details` del error |
+| [`MlResultBucles.md`](./Types/MlResultBucles.md) | `Types/MlResultBucles.cs` | `Projection*`, `ProjectionSplit*`, `Fusion*` |
+| [`MlResultTransformations.md`](./Types/MlResultTransformations.md) | `Types/MlResultTransformations.cs` | `ToMlResult*`, `TryToMlResult*`, boxing |
+| [`MlResultChangeReturnResult.md`](./Types/MlResultChangeReturnResult.md) | `Types/MlResultChangeReturnResult.cs` | Cambiar el tipo de retorno conservando el estado |
 
-### 3. Gestión de Errores
+### Guías por familia de operadores
 
-- Proporciona códigos de error consistentes
-- Incluye contexto relevante en los errores
-- Usa categorías para clasificar errores
+#### `Bind` — encadenar operaciones que devuelven `MlResult`
 
-### 4. Asincronía
+| # | Documento | Tema |
+|---|-----------|------|
+| 2 | [`2_MlResultActions.md`](./Bind/2_MlResultActions.md) | Utilidades base y acceso seguro al valor |
+| 3 | [`3_Bind.md`](./Bind/3_Bind.md) | ⭐ `Bind` y `TryBind`: el operador fundamental |
+| 4 | [`4_BindMulti.md`](./Bind/4_BindMulti.md) | `BindMulti`: elegir rama según condiciones |
+| 5 | [`5_BindIf.md`](./Bind/5_BindIf.md) | `BindIf`: ejecutar solo si se cumple un predicado |
+| 6 | [`6_BindIfFail.md`](./Bind/6_BindIfFail.md) | `BindIfFail`: recuperación desde el fallo |
+| 7 | [`7_BindIfFailWithValue.md`](./Bind/7_BindIfFailWithValue.md) | Recuperar usando el valor original guardado en `Details` |
+| 8 | [`8_BindIfFailWithException.md`](./Bind/8_BindIfFailWithException.md) | Recuperar en función de la excepción capturada |
+| 9 | [`9_BindIfFailWithoutException.md`](./Bind/9_BindIfFailWithoutException.md) | Distinguir fallos de negocio de fallos técnicos |
+| 10 | [`10_BindAlways.md`](./Bind/10_BindAlways.md) | `BindAlways`: ejecutar en ambas ramas |
+| 11 | [`11_BindSaveValueInDetailsIfFaildFuncResultAsync.md`](./Bind/11_BindSaveValueInDetailsIfFaildFuncResultAsync.md) | Guardar el valor de entrada en `Details` al fallar |
 
-- Prefiere versiones `Async` para operaciones I/O
-- Usa `ConfigureAwait(false)` en bibliotecas
-- Considera el uso de `CancellationToken`
+#### `Map` — transformar el valor sin salir del carril
 
-### 5. Testing
+| # | Documento | Tema |
+|---|-----------|------|
+| 1 | [`1_Map.md`](./Map/1_Map.md) | ⭐ `Map` y `TryMap`: transformación pura |
+| 2 | [`2_MapEnsure.md`](./Map/2_MapEnsure.md) | `MapEnsure`: validar y transformar |
+| 3 | [`3_MapIf.md`](./Map/3_MapIf.md) | `MapIf`: transformación condicional |
+| 4 | [`4_MapIfFail.md`](./Map/4_MapIfFail.md) | `MapIfFail`: valor de reserva ante fallo |
+| 5 | [`5_MapIfFailWithValue.md`](./Map/5_MapIfFailWithValue.md) | Reserva usando el valor original (`VALUE_KEY`) |
+| 6 | [`6_MapIfFailWithException.md`](./Map/6_MapIfFailWithException.md) | Reserva según la excepción (`EX_DESC_KEY`) |
+| 7 | [`7_MapIfFailWithoutException.md`](./Map/7_MapIfFailWithoutException.md) | Reserva solo para fallos sin excepción |
+| 8 | [`8_MapAlways.md`](./Map/8_MapAlways.md) | `MapAlways`: transformar ambas ramas a un tipo común |
 
-```csharp
-[Test]
-public async Task ProcessOrder_ValidOrder_ReturnsSuccess()
-{
-    // Arrange
-    var order = CreateValidOrder();
-    
-    // Act
-    var result = await ProcessOrderAsync(order);
-    
-    // Assert
-    result.Should().BeSuccess();
-    result.Value.Should().NotBeNull();
-}
+#### `Match` — salir del carril
 
-[Test]
-public async Task ProcessOrder_InvalidOrder_ReturnsFailure()
-{
-    // Arrange
-    var order = CreateInvalidOrder();
-    
-    // Act
-    var result = await ProcessOrderAsync(order);
-    
-    // Assert
-    result.Should().BeFailure();
-    result.ErrorsDetails.Errors.Should().NotBeEmpty();
-}
-```
+| # | Documento | Tema |
+|---|-----------|------|
+| 1 | [`1_Match.md`](./Match/1_Match.md) | ⭐ `Match` y `TryMatch`: materializar el resultado final |
+| 2 | [`2_MatchAll.md`](./Match/2_MatchAll.md) | Sobrecargas «todo en uno» y patrones de salida |
+
+#### `ExecSelf` — efectos laterales sin alterar el resultado
+
+| # | Documento | Tema |
+|---|-----------|------|
+| 1 | [`1_ExecSelf.md`](./ExecSelf/1_ExecSelf.md) | ⭐ `ExecSelf` y `TryExecSelf`: instrumentar la tubería |
+| 2 | [`2_ExecSelfIfValid.md`](./ExecSelf/2_ExecSelfIfValid.md) | Solo en la rama válida |
+| 3 | [`3_ExecSelfIfFail.md`](./ExecSelf/3_ExecSelfIfFail.md) | Solo en la rama de fallo |
+| 4 | [`4_ExecSelfIfFailWithValue.md`](./ExecSelf/4_ExecSelfIfFailWithValue.md) | Al fallar, usando el valor original |
+| 5 | [`5_ExecSelfIfFailWithException.md`](./ExecSelf/5_ExecSelfIfFailWithException.md) | Al fallar, con la excepción capturada |
+| 6 | [`6_ExecSelfIfFailWithoutException.md`](./ExecSelf/6_ExecSelfIfFailWithoutException.md) | Al fallar sin excepción (error de negocio) |
+
+#### `Several` — puentes desde el mundo imperativo
+
+| # | Documento | Tema |
+|---|-----------|------|
+| 1 | [`1_EmptyToFailed.md`](./Several/1_EmptyToFailed.md) | Rechazar colecciones vacías |
+| 2 | [`2_NullToFailed.md`](./Several/2_NullToFailed.md) | Convertir `null` en fallo explícito |
+| 3 | [`3_BoolToResult.md`](./Several/3_BoolToResult.md) | Convertir un `bool` en `MlResult` |
+| 4 | [`4_Combine.md`](./Several/4_Combine.md) | `Combine` y `Do` ⚠️ (**no** acumula errores) |
+
+### Utilidades y transformaciones
+
+| Documento | Tema |
+|-----------|------|
+| [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md) | Precondiciones: `That`, `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace` |
+| [`Transformations/Transformations.md`](./Transformations/Transformations.md) | `ToMlResultValid`, `ToMlResultFail`, `TryToMlResult*`, boxing |
+| [`Extensions/Extensions.md`](./Extensions/Extensions.md) | `ToAsync`, `With`, `ToFuncTask`, `AppendExDetails`, `Constants` |
+| [`Bucle/Bucles.md`](./Bucle/Bucles.md) | `Projection`, `ProjectionWhile`, `ProjectionParallelAsync`, `ProjectionSplit` |
+
+### Rutas de lectura recomendadas
+
+**Si es tu primer contacto con la librería:**
+
+1. Este documento (sobre todo [Tipos Fundamentales](#tipos-fundamentales) y
+   [Convención de Nombres](#sistema-de-convención-de-nombres))
+2. [`Types/MlResult.md`](./Types/MlResult.md) — el tipo central
+3. [`Types/MlResultErrors.md`](./Types/MlResultErrors.md) — cómo se transporta el error
+4. [`Bind/3_Bind.md`](./Bind/3_Bind.md) y [`Map/1_Map.md`](./Map/1_Map.md) — los dos operadores básicos
+5. [`Match/1_Match.md`](./Match/1_Match.md) — cómo salir del carril
+
+**Si ya sabes ROP y quieres empezar a escribir código:**
+
+1. [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md) — entrar al carril validando
+2. [`Transformations/Transformations.md`](./Transformations/Transformations.md) — envolver código que lanza
+3. [`Bind/3_Bind.md`](./Bind/3_Bind.md) → [`Map/1_Map.md`](./Map/1_Map.md) → [`Match/1_Match.md`](./Match/1_Match.md)
+4. [`ExecSelf/1_ExecSelf.md`](./ExecSelf/1_ExecSelf.md) — logging sin romper la cadena
+
+**Si necesitas manejar colecciones:**
+
+1. [`Bucle/Bucles.md`](./Bucle/Bucles.md) — las cuatro estrategias de proyección
+2. [`Several/1_EmptyToFailed.md`](./Several/1_EmptyToFailed.md) — rechazar lo vacío
+3. [`Several/4_Combine.md`](./Several/4_Combine.md) — ⚠️ ojo: `Combine` **no** acumula errores
+
+**Si estás depurando un fallo y quieres recuperarte:**
+
+1. [`Types/MlResultErrors.md`](./Types/MlResultErrors.md) — leer `Errors` y `Details`
+2. [`Bind/6_BindIfFail.md`](./Bind/6_BindIfFail.md) — recuperación con lógica
+3. [`Map/4_MapIfFail.md`](./Map/4_MapIfFail.md) — valor de reserva
+4. [`Bind/8_BindIfFailWithException.md`](./Bind/8_BindIfFailWithException.md) — según la excepción
+5. [`Bind/9_BindIfFailWithoutException.md`](./Bind/9_BindIfFailWithoutException.md) — negocio vs. técnico
 
 ---
 
-## Conclusión
+## Volver arriba
 
-**MoralesLarios.OOFP** proporciona una implementación robusta y completa de patrones funcionales para C#, con un enfoque especial en el manejo explícito de errores y la composición segura de operaciones. 
-
-### Ventajas Principales
-
-1. **Seguridad de Tipos**: El compilador garantiza que los errores se manejen
-2. **Composición Fluida**: Encadenamiento natural de operaciones
-3. **Flexibilidad**: Múltiples estrategias de manejo de errores
-4. **Claridad**: La convención de nombres hace explícito el comportamiento
-5. **Robustez**: Manejo consistente de excepciones y errores
-
-### Casos de Uso Ideales
-
-- **APIs y Servicios Web**: Manejo robusto de errores sin excepciones
-- **Procesamiento de Datos**: Pipelines de transformación seguros
-- **Integraciones**: Manejo de fallos en servicios externos
-- **Validaciones Complejas**: Acumulación y manejo de errores de validación
-- **Operaciones Críticas**: Donde la robustez es fundamental
-
-La librería representa una evolución natural hacia patrones más funcionales en C#, manteniendo la familiaridad del lenguaje mientras introduce conceptos poderosos de programación
+- [README del proyecto `MoralesLarios.OOFP`](../README.md)
+- [README general de la solución](../../README.md)

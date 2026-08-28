@@ -1,1225 +1,660 @@
-# MlResult Transformations - Conversiones y Transformaciones Seguras
+# Transformations — Fábricas, conversiones y captura de excepciones
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de los Métodos](#análisis-de-los-métodos)
-3. [Métodos de Conversión Basic](#métodos-de-conversión-basic)
-4. [Métodos Try - Manejo Seguro de Excepciones](#métodos-try---manejo-seguro-de-excepciones)
-5. [Conversiones de Estado](#conversiones-de-estado)
-6. [Variantes Asíncronas](#variantes-asíncronas)
-7. [Ejemplos Prácticos](#ejemplos-prácticos)
-8. [Mejores Prácticas](#mejores-prácticas)
-9. [Comparación con Otros Métodos](#comparación-con-otros-métodos)
+2. [Grupo 1: `ToMlResultValid` — entrar al carril](#grupo-1-tomlresultvalid--entrar-al-carril)
+3. [Grupo 2: `ToMlResultFail` — 14 formas de fallar](#grupo-2-tomlresultfail--14-formas-de-fallar)
+4. [Grupo 3: `TryToMlResult` — envolver código que lanza](#grupo-3-trytomlresult--envolver-código-que-lanza)
+5. [Grupo 4: `TryToMlResultErrors` — ejecutar en la rama de fallo](#grupo-4-trytomlresulterrors--ejecutar-en-la-rama-de-fallo)
+6. [Grupo 5: cambio de tipo del carril](#grupo-5-cambio-de-tipo-del-carril)
+7. [Grupo 6: `object` y reflexión](#grupo-6-object-y-reflexión)
+8. [`BuildErrorMessage` y el mensaje por defecto](#builderrormessage-y-el-mensaje-por-defecto)
+9. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+11. [Ejemplos Prácticos](#ejemplos-prácticos)
+12. [Mejores Prácticas](#mejores-prácticas)
+13. [Resumen](#resumen)
+14. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-Los métodos de **Transformations** proporcionan un conjunto completo de herramientas para **convertir funciones, valores y operaciones regulares en el ecosistema MlResult**. Estos métodos son fundamentales para integrar código legacy, manejar excepciones de forma controlada y crear puentes entre el mundo imperativo y el funcional.
+`MlResultTransformations` es la clase de **fábricas y conversiones** de la librería. Es la
+menos vistosa y la más usada: todos los demás operadores (`Map`, `Bind`, `ExecSelf`…)
+dependen de ella internamente. Cubre cuatro necesidades:
 
-### Propósito Principal
+1. **Entrar al carril**: convertir un valor o un error en `MlResult<T>`.
+2. **Capturar excepciones**: envolver código que lanza y convertir la excepción en un fallo.
+3. **Cambiar el tipo** del carril conservando los errores.
+4. **Trabajar con `object`** cuando el tipo concreto no se conoce en compilación.
 
-- **Integración Legacy**: Convertir funciones existentes en MlResult
-- **Manejo Seguro de Excepciones**: Capturar y convertir excepciones en errores tipados
-- **Conversiones de Estado**: Transformar entre diferentes estados de MlResult
-- **Puentes Funcionales**: Conectar paradigmas imperativos y funcionales
+```csharp
+// Entrar al carril
+MlResult<Cliente> ok   = cliente.ToMlResultValid();
+MlResult<Cliente> mal  = "El cliente no existe".ToMlResultFail<Cliente>();
+
+// Capturar una excepción de código legado
+Func<string, Cliente> parsear = Legacy.ParsearCliente;
+MlResult<Cliente> r = parsear.TryToMlResult(linea, ex => $"Línea ilegible: {ex.Message}");
+```
+
+> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
 
 ---
 
-## Análisis de los Métodos
+## Grupo 1: `ToMlResultValid` — entrar al carril
 
-### Filosofía de Transformations
+```csharp
+public static MlResult<T> ToMlResultValid<T>(this T source) => source;
 
-```
-Función Regular + Try → ToMlResult → MlResult<T>
-       ↓             ↓      ↓           ↓
-   func(input) → Success → Valid(result)
-       ↓             ↓      ↓           ↓
-   func(input) → Exception → Fail(error)
+public static Task<MlResult<T>> ToMlResultValidAsync<T>(this T source)
+    => source.ToMlResultValid().ToAsync();
 ```
 
-### Características Principales
+Es la conversión más simple de toda la librería: se apoya en la **conversión implícita** de
+`T` a `MlResult<T>` que declara el propio tipo. Funciona con cualquier `T`, incluidos value
+types y `null`.
 
-1. **Conversión Automática**: Transformar funciones regulares en MlResult
-2. **Captura de Excepciones**: Manejo seguro y tipado de errores
-3. **Flexibilidad de Tipos**: Soporte para múltiples tipos de entrada y salida
-4. **Mensajes Personalizados**: Constructores de mensajes de error flexibles
-5. **Soporte Async Completo**: Versiones asíncronas para todas las operaciones
+```csharp
+var r1 = cliente.ToMlResultValid();          // MlResult<Cliente>
+var r2 = 42.ToMlResultValid();               // MlResult<int>
+var r3 = await cliente.ToMlResultValidAsync();
+
+// ⚠️ No comprueba null: esto es un resultado VÁLIDO que contiene null
+Cliente? c = null;
+var r4 = c.ToMlResultValid();                // Valid(null)
+
+// ✅ Si quieres rechazar el null, usa NullToFailed
+var r5 = c.NullToFailed("El cliente es obligatorio");
+```
+
+💡 Como existe la conversión implícita, muchas veces `ToMlResultValid()` es opcional: puedes
+devolver el valor directamente si el tipo de retorno es `MlResult<T>`. Aun así, escribirlo
+hace el código más explícito y es imprescindible en expresiones lambda donde el compilador
+necesita ayuda para inferir el tipo.
 
 ---
 
-## Métodos de Conversión Basic
+## Grupo 2: `ToMlResultFail` — 14 formas de fallar
 
-### 1. ToMlResult - Conversión Simple
-
-**Propósito**: Convertir una función regular en MlResult sin manejo de excepciones
-
-```csharp
-public static MlResult<TReturn> ToMlResult<T, TReturn>(
-    this Func<T, TReturn> source, 
-    T value)
-```
-
-**Ejemplo Básico**:
-```csharp
-Func<string, int> parseLength = s => s.Length;
-var result = parseLength.ToMlResult("Hello World");
-// Resultado: MlResult<int>.Valid(11)
-```
-
-### 2. ToMlResultAsync - Conversión Asíncrona Simple
-
-**Propósito**: Convertir funciones async en MlResult
+Esta es la familia más numerosa. Todas las sobrecargas construyen un `MlResult<T>` fallido a
+partir de distintas representaciones del error:
 
 ```csharp
-public static async Task<MlResult<TReturn>> ToMlResultAsync<T, TReturn>(
-    this Func<T, Task<TReturn>> sourceAsync, 
-    T value)
+public static MlResult<T> ToMlResultFail<T>(this MlErrorsDetails      source) => source;
+public static MlResult<T> ToMlResultFail<T>(this MlError              source) => source;
+public static MlResult<T> ToMlResultFail<T>(this string               source) => MlError.FromErrorMessage(source).ToMlResultFail<T>();
+public static MlResult<T> ToMlResultFail<T>(this List<MlError>        source) => source;
+public static MlResult<T> ToMlResultFail<T>(this List<string>         source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
+public static MlResult<T> ToMlResultFail<T>(this MlError[]            source) => source;
+public static MlResult<T> ToMlResultFail<T>(this string[]             source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
+public static MlResult<T> ToMlResultFail<T>(this IEnumerable<MlError> source) => new MlErrorsDetails(source);
+public static MlResult<T> ToMlResultFail<T>(this IEnumerable<string>  source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
+// … más las cuatro sobrecargas de TUPLA (error + Details)
 ```
 
-### 3. Conversiones de Estado
+### Resumen de las 14 sobrecargas
 
-**Múltiples métodos para crear MlResult desde diferentes tipos**:
+| Origen | Uso típico |
+|--------|-----------|
+| `MlErrorsDetails` | Propagar errores ya construidos |
+| `MlError` | Error de catálogo |
+| `string` | El caso más habitual |
+| `List<MlError>` / `MlError[]` / `IEnumerable<MlError>` | Varios errores de catálogo |
+| `List<string>` / `string[]` / `IEnumerable<string>` | Varios mensajes |
+| `(IEnumerable<MlError>, Dictionary<string,object>)` | Errores + diagnóstico |
+| `(IEnumerable<string>, Dictionary<string,object>)` | Mensajes + diagnóstico |
+| `(MlError, Dictionary<string,object>)` | Un error + diagnóstico |
+| `(string, Dictionary<string,object>)` | Un mensaje + diagnóstico |
+
+🔑 **Las sobrecargas de tupla son muy cómodas** y suelen pasar desapercibidas: permiten
+adjuntar `Details` sin llamar explícitamente a `MlErrorsDetails.FromErrorMessageDetails`:
 
 ```csharp
-// Crear Valid
-public static MlResult<T> ToMlResultValid<T>(this T source)
+// Con tupla: conciso
+return ("El pedido no existe", new Dictionary<string, object> { ["PedidoId"] = id, ["NoEncontrado"] = true })
+           .ToMlResultFail<Pedido>();
 
-// Crear Fail desde diferentes fuentes
-public static MlResult<T> ToMlResultFail<T>(this string source)
-public static MlResult<T> ToMlResultFail<T>(this MlError source)
-public static MlResult<T> ToMlResultFail<T>(this MlErrorsDetails source)
-public static MlResult<T> ToMlResultFail<T>(this List<string> source)
-public static MlResult<T> ToMlResultFail<T>(this IEnumerable<MlError> source)
+// Equivalente explícito
+return MlErrorsDetails.FromErrorMessageDetails("El pedido no existe",
+           new Dictionary<string, object> { ["PedidoId"] = id, ["NoEncontrado"] = true })
+       .ToMlResultFail<Pedido>();
 ```
+
+⚠️ **Siempre hay que indicar el tipo genérico** `<T>`, porque no se puede inferir del
+receptor:
+
+```csharp
+// ❌ No compila: falta el tipo del resultado
+// return "Error".ToMlResultFail();
+
+// ✅
+return "Error".ToMlResultFail<Cliente>();
+```
+
+Las 14 sobrecargas tienen su gemela `ToMlResultFailAsync<T>`, que simplemente añade
+`.ToAsync()`.
 
 ---
 
-## Métodos Try - Manejo Seguro de Excepciones
+## Grupo 3: `TryToMlResult` — envolver código que lanza
 
-### 1. TryToMlResult - Funciones con Parámetros
+Aquí está el valor real de esta clase: **convertir excepciones en fallos del carril**. Es la
+maquinaria que usan por debajo todos los operadores `Try*` (`TryMap`, `TryBind`,
+`TryExecSelf`…).
 
-**Propósito**: Ejecutar funciones con manejo automático de excepciones
-
-```csharp
-// Con mensaje de error simple
-public static MlResult<TReturn> TryToMlResult<T, TReturn>(
-    this Func<T, TReturn> source, 
-    T value,
-    string exceptionAditionalMessage = null)
-
-// Con constructor de mensaje personalizado
-public static MlResult<TReturn> TryToMlResult<T, TReturn>(
-    this Func<T, TReturn> source, 
-    T value,
-    Func<Exception, string> errorMessageBuilder)
-```
-
-**Ejemplo**:
-```csharp
-Func<string, int> parseNumber = s => int.Parse(s);
-
-var result1 = parseNumber.TryToMlResult("123", "Failed to parse number");
-// Resultado: MlResult<int>.Valid(123)
-
-var result2 = parseNumber.TryToMlResult("abc", ex => $"Parse error: {ex.Message}");
-// Resultado: MlResult<int>.Fail("Parse error: Input string was not in a correct format.")
-```
-
-### 2. TryToMlResult - Funciones sin Parámetros
-
-**Propósito**: Ejecutar funciones sin parámetros con protección
+### Firmas principales
 
 ```csharp
-public static MlResult<T> TryToMlResult<T>(
-    this Func<T> source, 
-    Func<Exception, string> errorMessageBuilder = null)
+// Delegado con argumento
+public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn> source,
+                                                               T                value,
+                                                               string           exceptionAditionalMessage = null!)
 
-public static MlResult<T> TryToMlResult<T>(
-    this Func<MlResult<T>> source, 
-    Func<Exception, string> errorMessageBuilder = null)
+public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn>        source,
+                                                               T                       value,
+                                                               Func<Exception, string> errorMessageBuilder)
+
+// El delegado ya devuelve MlResult
+public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, MlResult<TReturn>> source,
+                                                               T                          value, /* … */)
+
+// Sin argumentos
+public static MlResult<T> TryToMlResult<T>(this Func<T>           source, Func<Exception, string> b = null!)
+public static MlResult<T> TryToMlResult<T>(this Func<MlResult<T>> source, Func<Exception, string> b = null!)
+
+// Acciones (efectos laterales): devuelven el valor de entrada
+public static MlResult<T> TryToMlResult<T>(this Action<T> source, T value, Func<Exception, string> b = null!)
+public static MlResult<T> TryToMlResult<T>(this Action    source, T value, Func<Exception, string> b = null!)
 ```
 
-### 3. TryToMlResult - Acciones
+### Qué contiene el fallo
 
-**Propósito**: Ejecutar acciones y retornar el valor si es exitoso
+Cuando se captura una excepción, el resultado se construye así:
 
 ```csharp
-public static MlResult<T> TryToMlResult<T>(
-    this Action<T> source, 
-    T value,
-    Func<Exception, string> messageBuilder = null)
+string message = BuildErrorMessage(errorMessageBuilder, ex);
+
+var errorDetails = new MlErrorsDetails(
+        Errors : new List<MlError> { new MlError(message) },
+        Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+
+return errorDetails.ToMlResultFail<T>();
 ```
 
-**Ejemplo**:
+🔑 **La excepción se guarda en `Details`** bajo la clave `EX_DESC_KEY`. Por eso puedes
+recuperarla después con `GetDetailException()`, y por eso funcionan
+[`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) y
+[`BindIfFailWithException`](../Bind/8_BindIfFailWithException.md).
+
 ```csharp
-Action<List<int>> sortList = list => list.Sort();
-var numbers = new List<int> { 3, 1, 4, 1, 5 };
+Func<string, Pedido> deserializar = json => JsonSerializer.Deserialize<Pedido>(json)!;
 
-var result = sortList.TryToMlResult(numbers, ex => $"Sort failed: {ex.Message}");
-// Resultado: MlResult<List<int>>.Valid([1, 1, 3, 4, 5])
+var r = deserializar.TryToMlResult(json, ex => $"JSON inválido: {ex.Message}");
+
+// La excepción original sigue disponible
+r.ExecSelfIfFailWithException(ex => _log.LogError(ex, "Fallo al deserializar"));
 ```
+
+### Uso con `Action`: efectos laterales seguros
+
+Las sobrecargas de `Action` devuelven el **valor de entrada**, no el resultado de la acción
+(que no existe). Sirven para envolver operaciones de E/S:
+
+```csharp
+Action<Pedido> guardar = p => _archivo.Escribir(p);
+
+var r = guardar.TryToMlResult(pedido, ex => $"No se pudo guardar el pedido: {ex.Message}");
+// Si no lanza → Valid(pedido). Si lanza → Fail con la excepción en Details.
+```
+
+### Variantes asíncronas
+
+Cada firma tiene su `TryToMlResultAsync` correspondiente: `Func<T, Task<TReturn>>`,
+`Func<Task<T>>`, `Func<Task<MlResult<T>>>`, `Func<T, Task>`, `Func<Task>`. Todas capturan la
+excepción **después del `await`**, que es lo correcto.
 
 ---
 
-## Conversiones de Estado
+## Grupo 4: `TryToMlResultErrors` — ejecutar en la rama de fallo
 
-### 1. ToMlResultFail - Conversión de Error de Tipo
+Estas sobrecargas son especiales: **el resultado es siempre fallido**. Están pensadas para
+ejecutar un efecto lateral cuando el carril ya viene roto, sin perder los errores
+originales.
 
-**Propósito**: Convertir errores de un tipo MlResult a otro
+```csharp
+public static MlResult<T> TryToMlResultErrors<T>(this Action<MlErrorsDetails> source,
+                                                      MlErrorsDetails         errorsDetails,
+                                                      Func<Exception, string> errorMessageBuilder = null!)
+{
+    try
+    {
+        source(errorsDetails);
+        result = errorsDetails.ToMlResultFail<T>();     // ← devuelve los errores ORIGINALES
+    }
+    catch (Exception ex)
+    {
+        result = errorsDetails.AppendExErrorDetail(ex, errorMessageBuilder);  // ← los AMPLÍA
+    }
+    return result;
+}
+```
+
+| Situación | Resultado |
+|-----------|-----------|
+| La acción se ejecuta sin lanzar | `Fail` con los **errores originales** intactos |
+| La acción lanza | `Fail` con los originales **más** la excepción añadida (`AppendExErrorDetail`) |
+
+🔑 Este es el mecanismo que hace que `TryExecSelfIfFail` y compañía **nunca pierdan el error
+original**, ni siquiera cuando el propio logger falla. Es un detalle de diseño excelente:
+un fallo en la telemetría no puede ocultar el fallo de negocio.
+
+```csharp
+// Uso interno típico (lo verás en ExecSelf/Bind/Map con Try*)
+Action<MlErrorsDetails> notificar = err => _alertas.Enviar(err.ToErrorsDescription());
+
+var resultado = notificar.TryToMlResultErrors<Pedido>(erroresOriginales,
+                            ex => $"Además, falló la notificación: {ex.Message}");
+```
+
+También existen `TryToMlResultErrors<T>(this Action source, …)` y las versiones asíncronas
+`TryToMlResultErrorsAsync` con `Func<MlErrorsDetails, Task>` y `Func<Task>`.
+
+---
+
+## Grupo 5: cambio de tipo del carril
+
+### `ToMlResultFail<T, TReturn>` — cambiar el tipo conservando los errores
 
 ```csharp
 public static MlResult<TReturn> ToMlResultFail<T, TReturn>(this MlResult<T> source)
+    => source.Match(
+           fail : errorDetails => errorDetails,
+           valid: _           => MlResult<TReturn>.Fail("Don't change MlResult Fail of valid source.")
+       );
 ```
 
-**Funcionamiento**:
+⚠️ **Atención al comportamiento con un resultado válido:** si `source` es válido, **no
+lanza ni lo convierte**: devuelve un fallo con el mensaje literal
+`"Don't change MlResult Fail of valid source."`. Es un error de programación disfrazado de
+fallo de negocio.
+
 ```csharp
-var userResult = MlResult<User>.Fail("User not found");
-var orderResult = userResult.ToMlResultFail<User, Order>();
-// Resultado: MlResult<Order>.Fail("User not found")
+// ✅ Uso correcto: propagar errores cambiando el tipo del carril
+if (!validacion.IsValid)
+    return validacion.ToMlResultFail<Cliente, PedidoDto>();
+
+// ❌ Si validacion es válido, obtienes un fallo con un mensaje en inglés que no dice nada
+//    al usuario. Comprueba SIEMPRE antes.
 ```
 
-### 2. Conversiones con Contexto de Error
+💡 En la práctica, dentro de una tubería es más idiomático usar `Match` o
+`ErrorsDetails.ToMlResultFail<TReturn>()`, que no tienen esta trampa.
 
-**Soporte para errores con contexto adicional**:
+---
+
+## Grupo 6: `object` y reflexión
+
+Este grupo existe para escenarios de infraestructura (serialización, middleware genérico) en
+los que el tipo concreto no se conoce en compilación.
+
+### `ToMlResultObject` / `FromMlResultObject`
 
 ```csharp
-// Con tuplas para contexto adicional
-public static MlResult<T> ToMlResultFail<T>(
-    this (string, Dictionary<string, object>) source)
+// MlResult<T> → MlResult<object>, conservando los errores
+public static MlResult<object> ToMlResultObject<T>(this MlResult<T> source)
 
-public static MlResult<T> ToMlResultFail<T>(
-    this (MlError, Dictionary<string, object>) source)
+// T → MlResult<object> (siempre válido)
+public static MlResult<object> ToMlResultObject<T>(this T source) => ((object)source!).ToMlResultValid();
+
+// MlResult<object> → MlResult<T>, con comprobación de tipo
+public static MlResult<T> FromMlResultObject<T>(this MlResult<object> source)
+    => source.Match(
+           fail : errorDetails => errorDetails.ToMlResultFail<T>(),
+           valid: value        => (value is T tValue)
+                                     ? tValue.ToMlResultValid()
+                                     : MlResult<T>.Fail($"The value '{value}' of type '{value?.GetType()}' cannot be cast to the requested type '{typeof(T)}'.")
+       );
+```
+
+🔑 `FromMlResultObject` es **seguro**: si el tipo no coincide, devuelve un fallo con un
+mensaje descriptivo en lugar de lanzar `InvalidCastException`. Es la forma correcta de
+volver del mundo `object` al mundo tipado.
+
+```csharp
+MlResult<object> generico = ObtenerDesdeCache(clave);
+
+MlResult<Pedido> tipado = generico.FromMlResultObject<Pedido>();
+// Si en la caché había otra cosa → Fail describiendo el tipo real y el esperado
+```
+
+⚠️ Las dos sobrecargas de `ToMlResultObject` (una desde `MlResult<T>`, otra desde `T`)
+pueden generar ambigüedad si el receptor es un `MlResult<T>` tratado como `T`. En caso de
+duda, tipa explícitamente la variable.
+
+### `SecureGetValueFromMlResultBoxed`
+
+```csharp
+public static object SecureGetValueFromMlResultBoxed(this object source)
+```
+
+Extrae por **reflexión** la propiedad `Value` de un `MlResult<T>` metido en una variable
+`object`. Comprueba paso a paso que exista `IsValid` de tipo `bool`, que sea `true` y que
+exista `Value`.
+
+⚠️ **Lanza `ArgumentException`** si algo falla. Es el único método de la librería que rompe
+la promesa de no lanzar:
+
+```csharp
+var result = partialResult.IsValid
+                 ? partialResult.Value
+                 : throw new ArgumentException(partialResult.ErrorsDetails.ToString());
+```
+
+💡 **Uso muy restringido**: solo para infraestructura genérica (por ejemplo, un filtro de
+ASP.NET Core que recibe el resultado de una acción como `object`). En código de aplicación no
+debería aparecer nunca.
+
+---
+
+## `BuildErrorMessage` y el mensaje por defecto
+
+```csharp
+public static string BuildErrorMessage(string errorMessage, Exception ex)
+    => string.IsNullOrWhiteSpace(errorMessage) ? DEFAULT_EX_ERROR_MESSAGE(ex) : errorMessage;
+
+public static string BuildErrorMessage(Func<Exception, string> messageBuilder, Exception ex)
+    => messageBuilder != null ? messageBuilder(ex) : DEFAULT_EX_ERROR_MESSAGE(ex);
+```
+
+Ambos son **públicos** y determinan el mensaje de todos los métodos `Try*`:
+
+- Si pasas un mensaje o un constructor → se usa el tuyo.
+- Si pasas `null` o cadena vacía → se usa `DEFAULT_EX_ERROR_MESSAGE(ex)`.
+
+🔑 **Consecuencia práctica:** si no indicas mensaje, el error que verá el usuario final será
+el mensaje técnico de la excepción. **Pasa siempre un `errorMessageBuilder`** en código de
+producción.
+
+```csharp
+// ⚠️ Sin mensaje: el usuario ve el texto de la excepción (posible fuga de información)
+var r = parsear.TryToMlResult(entrada);
+
+// ✅ Con mensaje de dominio: la excepción sigue en Details para el log
+var r = parsear.TryToMlResult(entrada, ex => "El formato del archivo no es válido");
 ```
 
 ---
 
-## Variantes Asíncronas
+## ⚠️ Particularidades reales del código fuente
 
-### Soporte Completo Async/Await
+**1. `ToMlResultValid` no comprueba `null`.** Un `null` produce un resultado **válido** que
+contiene `null`. Usa [`NullToFailed`](../Several/2_NullToFailed.md) si quieres rechazarlo.
+
+**2. Los genéricos de `ToMlResultFail<T>` son obligatorios**: no se pueden inferir.
+
+**3. Las 4 sobrecargas de tupla de `ToMlResultFail` pasan desapercibidas** y son la forma
+más concisa de adjuntar `Details`.
+
+**4. `ToMlResultFail<T, TReturn>` devuelve un fallo con mensaje en inglés
+(`"Don't change MlResult Fail of valid source."`) si el origen es válido.** Comprueba
+`IsValid` antes de llamarlo.
+
+**5. La excepción capturada se guarda en `Details[EX_DESC_KEY]`.** Recupérala con
+`GetDetailException()`, nunca accediendo a `Details` a mano.
+
+**6. `TryToMlResultErrors` siempre devuelve `Fail`** y **nunca pierde los errores
+originales**, incluso si la acción lanza (los amplía con `AppendExErrorDetail`).
+
+**7. Los despachos internos usan `switch` sobre `object` con reflexión de tipos de
+delegado.** Si el tipo no encaja en ninguna rama, se lanza
+`ArgumentException($"The type {source.GetType()} is not a valid type")`. Con las sobrecargas
+públicas esto no puede ocurrir, pero explica los mensajes si algún día lo ves.
+
+**8. `SecureGetValueFromMlResultBoxed` lanza `ArgumentException`.** Es la única excepción
+que la librería propaga a propósito.
+
+**9. Hay código comentado y duplicidades cosméticas** (`ToMlTaskResult` es idéntico a
+`ToMlResultAsync`; varios métodos tienen cuerpo con bloque en lugar de expresión). No afecta
+al comportamiento.
+
+**10. `ToMlTaskResult` existe pero es redundante:**
 
 ```csharp
-// TryToMlResultAsync para funciones async
-public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(
-    this Func<T, Task<TReturn>> sourceAsync, 
-    T value,
-    string exceptionAditionalMessage = null)
-
-// Para funciones que retornan Task<MlResult<T>>
-public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(
-    this Func<T, Task<MlResult<TReturn>>> sourceAsync, 
-    T value,
-    Func<Exception, string> errorMessageBuilder)
-
-// Para acciones async
-public static async Task<MlResult<T>> TryToMlResultAsync<T>(
-    this Func<T, Task> sourceAsync,
-    T returnValue,
-    Func<Exception, string> messageBuilder = null)
+public static async Task<MlResult<TReturn>> ToMlTaskResult<T, TReturn>(this Func<T, Task<TReturn>> sourceAsync, T value)
 ```
+Hace exactamente lo mismo que `ToMlResultAsync`. Prefiere el segundo por coherencia de
+nombres.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Uso |
+|-----------|-----|
+| Meter un valor en el carril | `valor.ToMlResultValid()` |
+| Crear un fallo desde un texto | `"...".ToMlResultFail<T>()` |
+| Crear un fallo con varios mensajes | `new[] { "...", "..." }.ToMlResultFail<T>()` |
+| Crear un fallo con diagnóstico | `("...", detalles).ToMlResultFail<T>()` |
+| Envolver código que lanza | `func.TryToMlResult(valor, ex => "...")` |
+| Envolver un efecto lateral que lanza | `accion.TryToMlResult(valor, ex => "...")` |
+| Ejecutar algo en la rama de fallo sin perder errores | `accion.TryToMlResultErrors<T>(errores, ...)` |
+| Propagar errores cambiando el tipo | `errorsDetails.ToMlResultFail<TReturn>()` |
+| Pasar al mundo `object` | `.ToMlResultObject()` |
+| Volver del mundo `object` con seguridad | `.FromMlResultObject<T>()` |
+| Rechazar un `null` | [`NullToFailed`](../Several/2_NullToFailed.md) |
+| Recuperar la excepción de un fallo | `GetDetailException()` |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Integración con APIs Legacy
+### Ejemplo 1: envolver una biblioteca legada que lanza
 
 ```csharp
-public class LegacyApiIntegrationService
+public class ImportadorService
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILegacyDatabaseService _legacyDb;
-    private readonly IFileSystemService _fileSystem;
-    
-    public async Task<MlResult<CustomerIntegrationResult>> IntegrateCustomerDataAsync(
-        CustomerIntegrationRequest request)
+    public MlResult<IEnumerable<Pedido>> Importar(string ruta)
     {
-        // 1. Convertir función legacy de validación
-        Func<string, bool> validateCustomerId = id => 
-            !string.IsNullOrEmpty(id) && id.Length == 10 && id.All(char.IsDigit);
-        
-        var validationResult = validateCustomerId.TryToMlResult(
-            request.CustomerId, 
-            ex => $"Customer ID validation failed: {ex.Message}");
-        
-        if (validationResult.IsFailed)
-            return validationResult.ToMlResultFail<bool, CustomerIntegrationResult>();
-        
-        // 2. Integrar con base de datos legacy usando Try
-        var customerDataResult = await TryGetLegacyCustomerDataAsync(request.CustomerId);
-        if (customerDataResult.IsFailed)
-            return customerDataResult.ToMlResultFail<LegacyCustomerData, CustomerIntegrationResult>();
-        
-        // 3. Procesar datos con transformaciones seguras
-        var processedResult = await ProcessCustomerDataSafelyAsync(customerDataResult.Value);
-        if (processedResult.IsFailed)
-            return processedResult.ToMlResultFail<ProcessedCustomerData, CustomerIntegrationResult>();
-        
-        // 4. Integrar con API externa
-        var externalApiResult = await IntegrateWithExternalApiAsync(processedResult.Value);
-        if (externalApiResult.IsFailed)
-            return externalApiResult.ToMlResultFail<ExternalApiResponse, CustomerIntegrationResult>();
-        
-        // 5. Generar archivos de salida
-        var fileGenerationResult = await GenerateOutputFilesAsync(
-            processedResult.Value, externalApiResult.Value);
-        
-        return fileGenerationResult.Match(
-            valid: files => MlResult<CustomerIntegrationResult>.Valid(new CustomerIntegrationResult
-            {
-                CustomerId = request.CustomerId,
-                LegacyData = customerDataResult.Value,
-                ProcessedData = processedResult.Value,
-                ExternalApiResponse = externalApiResult.Value,
-                GeneratedFiles = files,
-                IntegratedAt = DateTime.UtcNow
-            }),
-            fail: errors => MlResult<CustomerIntegrationResult>.Fail(errors.AllErrors)
-        );
+        Func<string, string> leer = File.ReadAllText;
+
+        return leer.TryToMlResult(ruta, ex => ex switch
+                   {
+                       FileNotFoundException     => $"El archivo '{ruta}' no existe",
+                       UnauthorizedAccessException => $"Sin permisos para leer '{ruta}'",
+                       _                         => $"No se pudo leer el archivo '{ruta}'"
+                   })
+                   .Bind(contenido =>
+                   {
+                       Func<string, List<Pedido>> deserializar =
+                           txt => JsonSerializer.Deserialize<List<Pedido>>(txt)!;
+
+                       return deserializar.TryToMlResult(contenido,
+                                  ex => "El contenido del archivo no tiene el formato esperado");
+                   })
+                   .Bind(lista => lista.EmptyToFailed("El archivo no contiene pedidos")!)
+                   .ExecSelfIfFailWithException(ex => _log.LogError(ex, "Importación fallida"));
     }
-    
-    private async Task<MlResult<LegacyCustomerData>> TryGetLegacyCustomerDataAsync(string customerId)
-    {
-        Func<string, Task<LegacyCustomerData>> legacyCall = async id =>
-        {
-            // Simulación de llamada a sistema legacy que puede fallar
-            await Task.Delay(100);
-            
-            var data = await _legacyDb.GetCustomerByIdAsync(id);
-            if (data == null)
-                throw new CustomerNotFoundException($"Customer {id} not found in legacy system");
-            
-            return data;
-        };
-        
-        return await legacyCall.TryToMlResultAsync(
-            customerId, 
-            ex => $"Legacy database access failed for customer {customerId}: {ex.Message}");
-    }
-    
-    private async Task<MlResult<ProcessedCustomerData>> ProcessCustomerDataSafelyAsync(
-        LegacyCustomerData legacyData)
-    {
-        Func<LegacyCustomerData, Task<ProcessedCustomerData>> processor = async data =>
-        {
-            // Procesamiento complejo que puede fallar
-            await Task.Delay(50);
-            
-            if (string.IsNullOrEmpty(data.Email))
-                throw new ValidationException("Customer email is required");
-            
-            if (data.AccountBalance < 0)
-                throw new BusinessRuleException("Negative account balance not allowed");
-            
-            return new ProcessedCustomerData
-            {
-                CustomerId = data.Id,
-                NormalizedEmail = data.Email.ToLowerInvariant(),
-                AccountStatus = DetermineAccountStatus(data.AccountBalance),
-                ProcessedAt = DateTime.UtcNow,
-                ValidationFlags = ValidateCustomerData(data)
-            };
-        };
-        
-        return await processor.TryToMlResultAsync(
-            legacyData,
-            ex => $"Customer data processing failed: {ex.Message}");
-    }
-    
-    private async Task<MlResult<ExternalApiResponse>> IntegrateWithExternalApiAsync(
-        ProcessedCustomerData customerData)
-    {
-        Func<ProcessedCustomerData, Task<ExternalApiResponse>> apiCall = async data =>
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, "/api/customers")
-            {
-                Content = JsonContent.Create(data)
-            };
-            
-            var response = await _httpClient.SendAsync(request);
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                throw new ExternalApiException($"API call failed: {response.StatusCode} - {errorContent}");
-            }
-            
-            var responseContent = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<ExternalApiResponse>(responseContent);
-        };
-        
-        return await apiCall.TryToMlResultAsync(
-            customerData,
-            ex => $"External API integration failed: {ex.Message}");
-    }
-    
-    private async Task<MlResult<GeneratedFiles>> GenerateOutputFilesAsync(
-        ProcessedCustomerData customerData, ExternalApiResponse apiResponse)
-    {
-        Func<Task<GeneratedFiles>> fileGenerator = async () =>
-        {
-            var files = new List<GeneratedFile>();
-            
-            // Generar reporte JSON
-            var jsonReport = new
-            {
-                CustomerData = customerData,
-                ApiResponse = apiResponse,
-                GeneratedAt = DateTime.UtcNow
-            };
-            
-            var jsonPath = await _fileSystem.WriteJsonFileAsync(
-                $"customer_{customerData.CustomerId}_report.json", 
-                jsonReport);
-            
-            files.Add(new GeneratedFile 
-            { 
-                Path = jsonPath, 
-                Type = "JSON", 
-                Size = new FileInfo(jsonPath).Length 
-            });
-            
-            // Generar reporte CSV
-            var csvData = GenerateCsvReport(customerData, apiResponse);
-            var csvPath = await _fileSystem.WriteCsvFileAsync(
-                $"customer_{customerData.CustomerId}_summary.csv", 
-                csvData);
-            
-            files.Add(new GeneratedFile 
-            { 
-                Path = csvPath, 
-                Type = "CSV", 
-                Size = new FileInfo(csvPath).Length 
-            });
-            
-            return new GeneratedFiles { Files = files.ToArray() };
-        };
-        
-        return await fileGenerator.TryToMlResultAsync(
-            ex => $"File generation failed: {ex.Message}");
-    }
-    
-    // Métodos auxiliares con conversiones seguras
-    public MlResult<ConfigurationSettings> LoadConfigurationSafely(string configPath)
-    {
-        Func<string, ConfigurationSettings> configLoader = path =>
-        {
-            if (!File.Exists(path))
-                throw new FileNotFoundException($"Configuration file not found: {path}");
-            
-            var json = File.ReadAllText(path);
-            var config = JsonSerializer.Deserialize<ConfigurationSettings>(json);
-            
-            if (config == null)
-                throw new InvalidOperationException("Configuration is null after deserialization");
-            
-            return config;
-        };
-        
-        return configLoader.TryToMlResult(
-            configPath, 
-            ex => $"Configuration loading failed from {configPath}: {ex.Message}");
-    }
-    
-    public MlResult<ValidationReport> ValidateIntegrationInputSafely(CustomerIntegrationRequest request)
-    {
-        Action<CustomerIntegrationRequest> validator = req =>
-        {
-            if (string.IsNullOrEmpty(req.CustomerId))
-                throw new ArgumentException("Customer ID is required");
-            
-            if (req.IntegrationOptions == null)
-                throw new ArgumentException("Integration options are required");
-            
-            if (req.IntegrationOptions.IncludeHistory && req.DateRange == null)
-                throw new ArgumentException("Date range is required when including history");
-        };
-        
-        var validationResult = validator.TryToMlResult(
-            request, 
-            ex => $"Input validation failed: {ex.Message}");
-        
-        return validationResult.Map(validRequest => new ValidationReport
-        {
-            IsValid = true,
-            ValidatedAt = DateTime.UtcNow,
-            InputHash = CalculateHash(validRequest)
-        });
-    }
-    
-    // Conversiones de estado para diferentes contextos
-    public MlResult<T> ConvertLegacyErrorToMlResult<T>(LegacySystemError legacyError)
-    {
-        var errorDetails = new Dictionary<string, object>
-        {
-            { "LegacyErrorCode", legacyError.Code },
-            { "LegacySystem", legacyError.SystemName },
-            { "LegacyTimestamp", legacyError.Timestamp }
-        };
-        
-        return (legacyError.Message, errorDetails).ToMlResultFail<T>();
-    }
-    
-    public async Task<MlResult<T>> ConvertLegacyErrorWithContextAsync<T>(
-        LegacySystemError legacyError, 
-        string additionalContext)
-    {
-        var errorMessage = $"{additionalContext}: {legacyError.Message}";
-        var errorDetails = new Dictionary<string, object>
-        {
-            { "LegacyErrorCode", legacyError.Code },
-            { "LegacySystem", legacyError.SystemName },
-            { "AdditionalContext", additionalContext },
-            { "ConvertedAt", DateTime.UtcNow }
-        };
-        
-        return await (errorMessage, errorDetails).ToMlResultFailAsync<T>();
-    }
-    
-    // Métodos auxiliares
-    private string DetermineAccountStatus(decimal balance) =>
-        balance switch
-        {
-            >= 1000 => "Premium",
-            >= 100 => "Standard",
-            >= 0 => "Basic",
-            _ => "Suspended"
-        };
-    
-    private string[] ValidateCustomerData(LegacyCustomerData data) =>
-        new[]
-        {
-            !string.IsNullOrEmpty(data.Email) ? "EmailValid" : "EmailInvalid",
-            data.AccountBalance >= 0 ? "BalanceValid" : "BalanceInvalid",
-            data.LastActivityDate > DateTime.Now.AddYears(-1) ? "RecentActivity" : "InactiveAccount"
-        };
-    
-    private string GenerateCsvReport(ProcessedCustomerData customerData, ExternalApiResponse apiResponse) =>
-        $"CustomerId,Email,Status,Balance,ProcessedAt\n" +
-        $"{customerData.CustomerId},{customerData.NormalizedEmail},{customerData.AccountStatus},{apiResponse.Balance},{customerData.ProcessedAt:yyyy-MM-dd}";
-    
-    private string CalculateHash(object obj) => 
-        obj.GetHashCode().ToString("X");
-}
-
-// Clases de apoyo
-public class CustomerIntegrationRequest
-{
-    public string CustomerId { get; set; }
-    public IntegrationOptions IntegrationOptions { get; set; }
-    public DateRange DateRange { get; set; }
-}
-
-public class IntegrationOptions
-{
-    public bool IncludeHistory { get; set; }
-    public bool GenerateReports { get; set; }
-    public bool ValidateExternally { get; set; }
-}
-
-public class DateRange
-{
-    public DateTime From { get; set; }
-    public DateTime To { get; set; }
-}
-
-public class CustomerIntegrationResult
-{
-    public string CustomerId { get; set; }
-    public LegacyCustomerData LegacyData { get; set; }
-    public ProcessedCustomerData ProcessedData { get; set; }
-    public ExternalApiResponse ExternalApiResponse { get; set; }
-    public GeneratedFiles GeneratedFiles { get; set; }
-    public DateTime IntegratedAt { get; set; }
-}
-
-public class LegacyCustomerData
-{
-    public string Id { get; set; }
-    public string Email { get; set; }
-    public decimal AccountBalance { get; set; }
-    public DateTime LastActivityDate { get; set; }
-}
-
-public class ProcessedCustomerData
-{
-    public string CustomerId { get; set; }
-    public string NormalizedEmail { get; set; }
-    public string AccountStatus { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    public string[] ValidationFlags { get; set; }
-}
-
-public class ExternalApiResponse
-{
-    public string Status { get; set; }
-    public decimal Balance { get; set; }
-    public string ExternalId { get; set; }
-}
-
-public class GeneratedFiles
-{
-    public GeneratedFile[] Files { get; set; }
-}
-
-public class GeneratedFile
-{
-    public string Path { get; set; }
-    public string Type { get; set; }
-    public long Size { get; set; }
-}
-
-public class ConfigurationSettings
-{
-    public string DatabaseConnection { get; set; }
-    public string ApiEndpoint { get; set; }
-    public int TimeoutSeconds { get; set; }
-}
-
-public class ValidationReport
-{
-    public bool IsValid { get; set; }
-    public DateTime ValidatedAt { get; set; }
-    public string InputHash { get; set; }
-}
-
-public class LegacySystemError
-{
-    public string Code { get; set; }
-    public string Message { get; set; }
-    public string SystemName { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-
-// Excepciones personalizadas
-public class CustomerNotFoundException : Exception
-{
-    public CustomerNotFoundException(string message) : base(message) { }
-}
-
-public class ValidationException : Exception
-{
-    public ValidationException(string message) : base(message) { }
-}
-
-public class BusinessRuleException : Exception
-{
-    public BusinessRuleException(string message) : base(message) { }
-}
-
-public class ExternalApiException : Exception
-{
-    public ExternalApiException(string message) : base(message) { }
 }
 ```
 
-### Ejemplo 2: Sistema de Migración de Datos
+Fíjate en el patrón: cada `TryToMlResult` aporta un mensaje **de dominio**, mientras la
+excepción técnica queda en `Details` para el log.
+
+### Ejemplo 2: fábricas de error con detalles
 
 ```csharp
-public class DataMigrationService
+public static class ErroresPedido
 {
-    private readonly ISourceDatabase _sourceDb;
-    private readonly ITargetDatabase _targetDb;
-    private readonly IValidationService _validator;
-    private readonly ITransformationEngine _transformer;
-    
-    public async Task<MlResult<MigrationResult>> MigrateDataBatchAsync(MigrationBatch batch)
-    {
-        var migrationId = Guid.NewGuid();
-        var startTime = DateTime.UtcNow;
-        
-        // 1. Validar configuración de migración
-        var configValidation = ValidateMigrationConfigSafely(batch.Configuration);
-        if (configValidation.IsFailed)
-            return configValidation.ToMlResultFail<MigrationConfiguration, MigrationResult>();
-        
-        // 2. Extraer datos origen con manejo seguro
-        var extractionResult = await ExtractSourceDataSafelyAsync(batch.SourceQuery);
-        if (extractionResult.IsFailed)
-            return extractionResult.ToMlResultFail<SourceDataSet, MigrationResult>();
-        
-        // 3. Transformar datos usando conversiones seguras
-        var transformationResult = await TransformDataSafelyAsync(
-            extractionResult.Value, batch.TransformationRules);
-        if (transformationResult.IsFailed)
-            return transformationResult.ToMlResultFail<TransformedDataSet, MigrationResult>();
-        
-        // 4. Validar datos transformados
-        var validationResult = await ValidateTransformedDataAsync(transformationResult.Value);
-        if (validationResult.IsFailed)
-            return validationResult.ToMlResultFail<ValidationResult, MigrationResult>();
-        
-        // 5. Cargar datos en destino
-        var loadResult = await LoadDataToTargetSafelyAsync(transformationResult.Value);
-        if (loadResult.IsFailed)
-            return loadResult.ToMlResultFail<LoadResult, MigrationResult>();
-        
-        var endTime = DateTime.UtcNow;
-        
-        return MlResult<MigrationResult>.Valid(new MigrationResult
-        {
-            MigrationId = migrationId,
-            SourceRecords = extractionResult.Value.Records.Count(),
-            TransformedRecords = transformationResult.Value.Records.Count(),
-            LoadedRecords = loadResult.Value.ProcessedRecords,
-            Duration = endTime - startTime,
-            StartTime = startTime,
-            EndTime = endTime,
-            Status = "Completed"
-        });
-    }
-    
-    private MlResult<MigrationConfiguration> ValidateMigrationConfigSafely(MigrationConfiguration config)
-    {
-        Func<MigrationConfiguration, MigrationConfiguration> validator = cfg =>
-        {
-            if (string.IsNullOrEmpty(cfg.SourceConnectionString))
-                throw new ConfigurationException("Source connection string is required");
-            
-            if (string.IsNullOrEmpty(cfg.TargetConnectionString))
-                throw new ConfigurationException("Target connection string is required");
-            
-            if (cfg.BatchSize <= 0 || cfg.BatchSize > 10000)
-                throw new ConfigurationException("Batch size must be between 1 and 10000");
-            
-            if (cfg.TransformationRules == null || !cfg.TransformationRules.Any())
-                throw new ConfigurationException("At least one transformation rule is required");
-            
-            return cfg;
-        };
-        
-        return validator.TryToMlResult(
-            config, 
-            ex => $"Migration configuration validation failed: {ex.Message}");
-    }
-    
-    private async Task<MlResult<SourceDataSet>> ExtractSourceDataSafelyAsync(string sourceQuery)
-    {
-        Func<string, Task<SourceDataSet>> extractor = async query =>
-        {
-            if (string.IsNullOrWhiteSpace(query))
-                throw new ArgumentException("Source query cannot be empty");
-            
-            // Validar sintaxis SQL básica
-            if (!IsValidSqlQuery(query))
-                throw new SqlSyntaxException("Invalid SQL syntax in source query");
-            
-            var records = await _sourceDb.ExecuteQueryAsync(query);
-            
-            if (records == null)
-                throw new DataExtractionException("Query returned null result");
-            
-            return new SourceDataSet
+    public static MlResult<T> NoEncontrado<T>(int id)
+        => ($"El pedido {id} no existe", new Dictionary<string, object>
+           {
+               ["PedidoId"]     = id,
+               ["NoEncontrado"] = true,
+               ["Regla"]        = "PED-404"
+           }).ToMlResultFail<T>();
+
+    public static MlResult<T> EstadoInvalido<T>(int id, string estadoActual, string esperado)
+        => ($"El pedido {id} está en estado '{estadoActual}' y se esperaba '{esperado}'",
+            new Dictionary<string, object>
             {
-                Query = query,
-                Records = records.ToArray(),
-                ExtractedAt = DateTime.UtcNow,
-                RecordCount = records.Count()
-            };
-        };
-        
-        return await extractor.TryToMlResultAsync(
-            sourceQuery,
-            ex => $"Data extraction failed: {ex.Message}");
-    }
-    
-    private async Task<MlResult<TransformedDataSet>> TransformDataSafelyAsync(
-        SourceDataSet sourceData, 
-        TransformationRule[] rules)
+                ["PedidoId"]     = id,
+                ["EstadoActual"] = estadoActual,
+                ["Regla"]        = "PED-409"
+            }).ToMlResultFail<T>();
+
+    public static MlResult<T> ValidacionMultiple<T>(IEnumerable<string> mensajes)
+        => mensajes.ToMlResultFail<T>();
+}
+
+// Uso
+public MlResult<Pedido> Obtener(int id)
+    => _repo.Buscar(id) is { } p
+           ? p.ToMlResultValid()
+           : ErroresPedido.NoEncontrado<Pedido>(id);
+```
+
+### Ejemplo 3: efecto lateral seguro con `Action`
+
+```csharp
+public MlResult<Documento> Publicar(Documento doc)
+{
+    Action<Documento> subir = d => _almacen.Subir(d.Ruta, d.Contenido);
+
+    return subir.TryToMlResult(doc, ex => ex is IOException
+                                              ? "Error de red al subir el documento"
+                                              : "No se pudo publicar el documento")
+                .Map(d => d with { Publicado = true, FechaPublicacion = DateTime.UtcNow })
+                .ExecSelfIfFailWithException(ex => _log.LogWarning(ex, "Publicación fallida de {Id}", doc.Id));
+}
+```
+
+### Ejemplo 4: middleware genérico con `object`
+
+```csharp
+// Un filtro de ASP.NET Core que no conoce el tipo concreto del resultado
+public class MlResultFilter : IActionFilter
+{
+    public void OnActionExecuted(ActionExecutedContext context)
     {
-        Func<SourceDataSet, Task<TransformedDataSet>> transformer = async data =>
+        if (context.Result is not ObjectResult { Value: { } valor }) return;
+
+        // Solo si de verdad es un MlResult<T>; si no, se deja pasar
+        try
         {
-            var transformedRecords = new List<TransformedRecord>();
-            var errorSummary = new List<string>();
-            
-            foreach (var record in data.Records)
-            {
-                try
-                {
-                    var transformedRecord = await ApplyTransformationRules(record, rules);
-                    transformedRecords.Add(transformedRecord);
-                }
-                catch (Exception ex)
-                {
-                    errorSummary.Add($"Record {record.Id}: {ex.Message}");
-                    
-                    // Si hay demasiados errores, fallar la transformación completa
-                    if (errorSummary.Count > data.Records.Length * 0.1) // Más del 10% de errores
-                    {
-                        throw new TransformationException(
-                            $"Too many transformation errors. Sample errors: {string.Join("; ", errorSummary.Take(5))}");
-                    }
-                }
-            }
-            
-            return new TransformedDataSet
-            {
-                Records = transformedRecords.ToArray(),
-                TransformedAt = DateTime.UtcNow,
-                SourceRecordCount = data.Records.Length,
-                TransformedRecordCount = transformedRecords.Count,
-                ErrorSummary = errorSummary.ToArray()
-            };
-        };
-        
-        return await transformer.TryToMlResultAsync(
-            sourceData,
-            ex => $"Data transformation failed: {ex.Message}");
-    }
-    
-    private async Task<MlResult<ValidationResult>> ValidateTransformedDataAsync(TransformedDataSet transformedData)
-    {
-        Func<TransformedDataSet, Task<ValidationResult>> validator = async data =>
-        {
-            var validationErrors = new List<string>();
-            var validRecords = 0;
-            
-            foreach (var record in data.Records)
-            {
-                var recordValidation = await _validator.ValidateRecordAsync(record);
-                
-                if (recordValidation.IsValid)
-                {
-                    validRecords++;
-                }
-                else
-                {
-                    validationErrors.AddRange(recordValidation.Errors.Select(e => 
-                        $"Record {record.Id}: {e}"));
-                }
-            }
-            
-            // Permitir hasta 5% de registros inválidos
-            var errorThreshold = data.Records.Length * 0.05;
-            if (validationErrors.Count > errorThreshold)
-            {
-                throw new ValidationException(
-                    $"Too many validation errors ({validationErrors.Count}). " +
-                    $"Threshold: {errorThreshold}. Sample errors: {string.Join("; ", validationErrors.Take(3))}");
-            }
-            
-            return new ValidationResult
-            {
-                TotalRecords = data.Records.Length,
-                ValidRecords = validRecords,
-                InvalidRecords = validationErrors.Count,
-                ValidationErrors = validationErrors.ToArray(),
-                ValidationSuccessRate = (double)validRecords / data.Records.Length,
-                ValidatedAt = DateTime.UtcNow
-            };
-        };
-        
-        return await validator.TryToMlResultAsync(
-            transformedData,
-            ex => $"Data validation failed: {ex.Message}");
-    }
-    
-    private async Task<MlResult<LoadResult>> LoadDataToTargetSafelyAsync(TransformedDataSet transformedData)
-    {
-        Func<TransformedDataSet, Task<LoadResult>> loader = async data =>
-        {
-            var batchSize = 1000;
-            var processedRecords = 0;
-            var errorCount = 0;
-            var loadErrors = new List<string>();
-            
-            var batches = data.Records.Batch(batchSize);
-            
-            foreach (var batch in batches)
-            {
-                try
-                {
-                    var batchResult = await _targetDb.InsertBatchAsync(batch);
-                    processedRecords += batchResult.ProcessedCount;
-                    
-                    if (batchResult.Errors.Any())
-                    {
-                        errorCount += batchResult.Errors.Count();
-                        loadErrors.AddRange(batchResult.Errors);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    errorCount += batch.Count();
-                    loadErrors.Add($"Batch error: {ex.Message}");
-                    
-                    // Si hay demasiados errores de carga, fallar
-                    if (errorCount > data.Records.Length * 0.05) // Más del 5% de errores
-                    {
-                        throw new DataLoadException(
-                            $"Too many load errors ({errorCount}). Sample errors: {string.Join("; ", loadErrors.Take(3))}");
-                    }
-                }
-            }
-            
-            return new LoadResult
-            {
-                ProcessedRecords = processedRecords,
-                ErrorCount = errorCount,
-                LoadErrors = loadErrors.ToArray(),
-                LoadSuccessRate = (double)processedRecords / data.Records.Length,
-                LoadedAt = DateTime.UtcNow
-            };
-        };
-        
-        return await loader.TryToMlResultAsync(
-            transformedData,
-            ex => $"Data loading failed: {ex.Message}");
-    }
-    
-    // Métodos de conversión para errores específicos del dominio
-    public MlResult<T> ConvertDatabaseErrorToMlResult<T>(DatabaseException dbEx)
-    {
-        var errorContext = new Dictionary<string, object>
-        {
-            { "DatabaseErrorCode", dbEx.ErrorCode },
-            { "SqlState", dbEx.SqlState },
-            { "Severity", dbEx.Severity },
-            { "DatabaseName", dbEx.DatabaseName }
-        };
-        
-        var errorMessage = $"Database error: {dbEx.Message}";
-        
-        return (errorMessage, errorContext).ToMlResultFail<T>();
-    }
-    
-    public async Task<MlResult<T>> HandleAsyncDatabaseOperationSafely<T>(
-        Func<Task<T>> databaseOperation,
-        string operationContext)
-    {
-        return await databaseOperation.TryToMlResultAsync(ex => ex switch
-        {
-            TimeoutException timeout => $"Database timeout in {operationContext}: {timeout.Message}",
-            SqlException sql => $"SQL error in {operationContext}: {sql.Message}",
-            ConnectionException conn => $"Connection error in {operationContext}: {conn.Message}",
-            _ => $"Database operation failed in {operationContext}: {ex.Message}"
-        });
-    }
-    
-    // Métodos auxiliares
-    private bool IsValidSqlQuery(string query) =>
-        !string.IsNullOrWhiteSpace(query) && 
-        query.TrimStart().StartsWith("SELECT", StringComparison.OrdinalIgnoreCase) &&
-        !query.Contains(";DROP", StringComparison.OrdinalIgnoreCase) &&
-        !query.Contains(";DELETE", StringComparison.OrdinalIgnoreCase);
-    
-    private async Task<TransformedRecord> ApplyTransformationRules(SourceRecord record, TransformationRule[] rules)
-    {
-        var transformedRecord = new TransformedRecord { Id = record.Id };
-        
-        foreach (var rule in rules)
-        {
-            await _transformer.ApplyRuleAsync(record, transformedRecord, rule);
+            var interno = valor.SecureGetValueFromMlResultBoxed();
+            context.Result = new OkObjectResult(interno);
         }
-        
-        return transformedRecord;
+        catch (ArgumentException)
+        {
+            // No era un MlResult válido: no tocamos la respuesta
+        }
     }
 }
+```
 
-// Clases adicionales para el ejemplo
-public class MigrationBatch
-{
-    public MigrationConfiguration Configuration { get; set; }
-    public string SourceQuery { get; set; }
-    public TransformationRule[] TransformationRules { get; set; }
-}
+⚠️ Este es el único escenario legítimo de `SecureGetValueFromMlResultBoxed`, y obsérvese que
+requiere `try/catch` porque **sí lanza**.
 
-public class MigrationConfiguration
-{
-    public string SourceConnectionString { get; set; }
-    public string TargetConnectionString { get; set; }
-    public int BatchSize { get; set; }
-    public TransformationRule[] TransformationRules { get; set; }
-}
+### Ejemplo 5: qué no hacer
 
-public class MigrationResult
-{
-    public Guid MigrationId { get; set; }
-    public int SourceRecords { get; set; }
-    public int TransformedRecords { get; set; }
-    public int LoadedRecords { get; set; }
-    public TimeSpan Duration { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
-    public string Status { get; set; }
-}
+```csharp
+// ❌ Sin mensaje: el usuario final ve el texto técnico de la excepción
+var r = parsear.TryToMlResult(entrada);
 
-public class SourceDataSet
-{
-    public string Query { get; set; }
-    public SourceRecord[] Records { get; set; }
-    public DateTime ExtractedAt { get; set; }
-    public int RecordCount { get; set; }
-}
+// ✅ Mensaje de dominio; la excepción sigue en Details
+var r = parsear.TryToMlResult(entrada, ex => "El formato de la entrada no es válido");
 
-public class TransformedDataSet
-{
-    public TransformedRecord[] Records { get; set; }
-    public DateTime TransformedAt { get; set; }
-    public int SourceRecordCount { get; set; }
-    public int TransformedRecordCount { get; set; }
-    public string[] ErrorSummary { get; set; }
-}
 
-public class SourceRecord
-{
-    public string Id { get; set; }
-    public Dictionary<string, object> Data { get; set; }
-}
+// ❌ Suponer que ToMlResultValid rechaza el null
+var r = clienteNulo.ToMlResultValid();      // Valid(null)
 
-public class TransformedRecord
-{
-    public string Id { get; set; }
-    public Dictionary<string, object> Data { get; set; }
-}
+// ✅
+var r = clienteNulo.NullToFailed("El cliente es obligatorio");
 
-public class TransformationRule
-{
-    public string SourceField { get; set; }
-    public string TargetField { get; set; }
-    public string Transformation { get; set; }
-}
 
-public class ValidationResult
-{
-    public int TotalRecords { get; set; }
-    public int ValidRecords { get; set; }
-    public int InvalidRecords { get; set; }
-    public string[] ValidationErrors { get; set; }
-    public double ValidationSuccessRate { get; set; }
-    public DateTime ValidatedAt { get; set; }
-}
+// ❌ ToMlResultFail<T, TReturn> sobre un resultado válido
+var r = validacionValida.ToMlResultFail<Cliente, PedidoDto>();
+//      → Fail("Don't change MlResult Fail of valid source.")  ¡mensaje inútil!
 
-public class LoadResult
-{
-    public int ProcessedRecords { get; set; }
-    public int ErrorCount { get; set; }
-    public string[] LoadErrors { get; set; }
-    public double LoadSuccessRate { get; set; }
-    public DateTime LoadedAt { get; set; }
-}
+// ✅ Comprueba antes, o usa Match
+var r = validacion.Match(valid: c   => Procesar(c),
+                         fail : err => err.ToMlResultFail<PedidoDto>());
 
-// Excepciones específicas
-public class ConfigurationException : Exception
-{
-    public ConfigurationException(string message) : base(message) { }
-}
 
-public class SqlSyntaxException : Exception
-{
-    public SqlSyntaxException(string message) : base(message) { }
-}
+// ❌ Leer la excepción accediendo a Details a mano
+var ex = (Exception)resultado.ErrorsDetails.Details["Ex"];   // la clave real es EX_DESC_KEY = "Ex"
 
-public class DataExtractionException : Exception
-{
-    public DataExtractionException(string message) : base(message) { }
-}
+// ✅ Usa el accesor oficial
+resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
 
-public class TransformationException : Exception
-{
-    public TransformationException(string message) : base(message) { }
-}
 
-public class DataLoadException : Exception
-{
-    public DataLoadException(string message) : base(message) { }
-}
+// ❌ SecureGetValueFromMlResultBoxed en código de aplicación
+var valor = (Pedido)resultado.SecureGetValueFromMlResultBoxed();
 
-public class DatabaseException : Exception
-{
-    public string ErrorCode { get; set; }
-    public string SqlState { get; set; }
-    public string Severity { get; set; }
-    public string DatabaseName { get; set; }
-    
-    public DatabaseException(string message) : base(message) { }
-}
-
-public class SqlException : DatabaseException
-{
-    public SqlException(string message) : base(message) { }
-}
-
-public class ConnectionException : DatabaseException
-{
-    public ConnectionException(string message) : base(message) { }
-}
+// ✅ Usa Match, que es tipado y no lanza
+var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar ToMlResult vs TryToMlResult
-
-```csharp
-// ✅ Correcto: Usar ToMlResult para conversiones simples sin riesgo
-Func<string, int> getLength = s => s.Length;
-var result1 = getLength.ToMlResult("Hello"); // Seguro
-
-// ✅ Correcto: Usar TryToMlResult para operaciones que pueden fallar
-Func<string, int> parseNumber = s => int.Parse(s);
-var result2 = parseNumber.TryToMlResult("123", "Parse failed");
-
-// ❌ Incorrecto: Usar ToMlResult para operaciones riesgosas
-var result3 = parseNumber.ToMlResult("abc"); // Lanzará excepción no controlada
-```
-
-### 2. Constructores de Mensajes de Error Eficaces
-
-```csharp
-// ✅ Correcto: Mensajes contextuales específicos
-var result = operation.TryToMlResult(input, ex => 
-    $"Failed to process customer {input.Id} during {operationName}: {ex.Message}");
-
-// ✅ Correcto: Incluir información relevante del contexto
-var result = apiCall.TryToMlResultAsync(request, ex => ex switch
-{
-    TimeoutException timeout => $"API timeout after {timeout.Data["Duration"]}ms",
-    HttpRequestException http => $"HTTP error {http.Data["StatusCode"]}: {http.Message}",
-    _ => $"Unexpected API error: {ex.Message}"
-});
-
-// ❌ Incorrecto: Mensajes genéricos sin contexto
-var result = operation.TryToMlResult(input, ex => "Something went wrong");
-```
-
-### 3. Manejo de Recursos y Disposables
-
-```csharp
-// ✅ Correcto: Usar using para recursos disposables
-public MlResult<FileContent> ReadFileSafely(string filePath)
-{
-    Func<string, FileContent> reader = path =>
-    {
-        using var stream = File.OpenRead(path);
-        using var reader = new StreamReader(stream);
-        
-        return new FileContent 
-        { 
-            Path = path, 
-            Content = reader.ReadToEnd() 
-        };
-    };
-    
-    return reader.TryToMlResult(filePath, ex => $"Failed to read file {filePath}: {ex.Message}");
-}
-
-// ✅ Correcto: Manejar disposables en async
-public async Task<MlResult<DatabaseResult>> QueryDatabaseSafelyAsync(string query)
-{
-    Func<string, Task<DatabaseResult>> dbQuery = async q =>
-    {
-        using var connection = new SqlConnection(_connectionString);
-        using var command = new SqlCommand(q, connection);
-        
-        await connection.OpenAsync();
-        var result = await command.ExecuteScalarAsync();
-        
-        return new DatabaseResult { Value = result };
-    };
-    
-    return await dbQuery.TryToMlResultAsync(query, ex => $"Database query failed: {ex.Message}");
-}
-```
-
-### 4. Composición de Transformaciones
-
-```csharp
-// ✅ Correcto: Componer transformaciones de forma legible
-public async Task<MlResult<ProcessedOrder>> ProcessOrderSafelyAsync(OrderRequest request)
-{
-    return await ValidateOrderRequest(request)
-        .BindAsync(async validRequest => await EnrichOrderData(validRequest))
-        .BindAsync(async enrichedOrder => await CalculatePricing(enrichedOrder))
-        .BindAsync(async pricedOrder => await ApplyDiscounts(pricedOrder))
-        .BindAsync(async finalOrder => await SaveOrder(finalOrder));
-}
-
-private MlResult<ValidatedOrderRequest> ValidateOrderRequest(OrderRequest request)
-{
-    Func<OrderRequest, ValidatedOrderRequest> validator = req =>
-    {
-        if (req.CustomerId <= 0)
-            throw new ValidationException("Invalid customer ID");
-        
-        if (!req.Items.Any())
-            throw new ValidationException("Order must have items");
-        
-        return new ValidatedOrderRequest(req);
-    };
-    
-    return validator.TryToMlResult(request, ex => $"Order validation failed: {ex.Message}");
-}
-
-// ❌ Incorrecto: Anidamiento excesivo sin composición
-public async Task<MlResult<ProcessedOrder>> ProcessOrderBadAsync(OrderRequest request)
-{
-    var validationResult = ValidateOrderRequest(request);
-    if (validationResult.IsFailed)
-    {
-        var enrichResult = await EnrichOrderData(validationResult.Value);
-        if (enrichResult.IsFailed)
-        {
-            // ... anidamiento profundo
-        }
-    }
-}
-```
-
----
-
-## Comparación con Otros Métodos
-
-### Tabla Comparativa
-
-| Método | Propósito | Manejo de Excepciones | Cuándo Usar |
-|--------|-----------|----------------------|-------------|
-| `ToMlResult` | Conversión simple | No (lanza excepciones) | Operaciones seguras |
-| `TryToMlResult` | Conversión segura | Sí (convierte a Fail) | Operaciones riesgosas |
-| `Map` | Transformación | Depende de función | Transformaciones simples |
-| `Bind` | Encadenamiento | Preserva errores MlResult | Operaciones encadenadas |
-
-### Ejemplo Comparativo
-
-```csharp
-var input = "123";
-
-// ToMlResult: Conversión directa (sin protección)
-Func<string, int> parse = s => int.Parse(s);
-var result1 = parse.ToMlResult(input); // Valid(123)
-
-// TryToMlResult: Conversión protegida
-var result2 = parse.TryToMlResult(input, "Parse failed"); // Valid(123)
-var result3 = parse.TryToMlResult("abc", "Parse failed"); // Fail("Parse failed")
-
-// Map: Para transformaciones en MlResult existente
-var mlInput = MlResult<string>.Valid("123");
-var result4 = mlInput.Map(s => int.Parse(s)); // Lanza excepción si falla
-
-// Bind: Para operaciones que retornan MlResult
-var result5 = mlInput.Bind(s => parse.TryToMlResult(s, "Parse error")); // Seguro
-```
+1. **Pasa siempre un `errorMessageBuilder`** a los métodos `Try*`: si no, el usuario verá el
+   mensaje técnico de la excepción.
+2. **Aprovecha las sobrecargas de tupla** de `ToMlResultFail` para adjuntar `Details` sin
+   ceremonia.
+3. **Centraliza las fábricas de error** en una clase estática por agregado
+   (`ErroresPedido.NoEncontrado<T>(id)`): mensajes consistentes y códigos de regla en un
+   único sitio.
+4. **Recuerda que `ToMlResultValid` no filtra `null`.**
+5. **Comprueba `IsValid` antes de usar `ToMlResultFail<T, TReturn>`**, o prefiere `Match`.
+6. **Recupera las excepciones con los operadores `*WithException`**, no accediendo a
+   `Details` directamente.
+7. **`FromMlResultObject<T>` en lugar de castear**: devuelve un fallo descriptivo si el tipo
+   no coincide, en vez de lanzar.
+8. **Restringe `SecureGetValueFromMlResultBoxed` a infraestructura** y envuélvelo en
+   `try/catch`: es el único método de la librería que lanza.
+9. **Prefiere `ToMlResultAsync` a `ToMlTaskResult`**: son equivalentes, pero el primero sigue
+   la convención de nombres.
+10. **No dupliques la maquinaria `Try*`**: si necesitas capturar excepciones dentro del
+    carril, usa directamente `TryMap`, `TryBind` o `TryExecSelf`, que ya la usan por dentro.
 
 ---
 
 ## Resumen
 
-Los métodos **Transformations** proporcionan **conversión segura entre paradigmas**:
+- `MlResultTransformations` reúne las **fábricas y conversiones** del `MlResult`: es la base
+  sobre la que se construyen todos los demás operadores.
+- **`ToMlResultValid<T>`** mete un valor en el carril aprovechando la conversión implícita.
+  ⚠️ **No comprueba `null`.**
+- **`ToMlResultFail<T>`** tiene **14 sobrecargas** (`MlErrorsDetails`, `MlError`, `string`,
+  listas, arrays, `IEnumerable` y **4 formas de tupla con `Details`**), todas con gemela
+  `*Async`. El genérico `<T>` es obligatorio.
+- **`TryToMlResult`** envuelve delegados y acciones que lanzan; guarda la excepción en
+  `Details[EX_DESC_KEY]` y construye el mensaje con `BuildErrorMessage`.
+- **`TryToMlResultErrors`** siempre devuelve `Fail` y **nunca pierde los errores
+  originales**: si la acción lanza, los amplía con `AppendExErrorDetail`.
+- ⚠️ **`ToMlResultFail<T, TReturn>`** devuelve un fallo con el mensaje
+  `"Don't change MlResult Fail of valid source."` si el origen es válido.
+- **`ToMlResultObject` / `FromMlResultObject`** permiten ir y volver del mundo `object`; el
+  segundo comprueba el tipo y falla de forma descriptiva en lugar de lanzar.
+- ⚠️ **`SecureGetValueFromMlResultBoxed` lanza `ArgumentException`**: es el único método de
+  la librería que lo hace. Solo para infraestructura.
+- **`BuildErrorMessage` es público** y decide el mensaje de todos los `Try*`; sin
+  `errorMessageBuilder` se usa el texto de la excepción.
 
-- **`ToMlResult`**: Conversión directa sin protección de excepciones
-- **`TryToMlResult`**: Conversión segura con captura automática de excepciones
-- **`ToMlResultValid/Fail`**: Creación directa de estados MlResult
-- **Variantes Async**: Soporte completo para operaciones asíncronas
+---
 
-**Casos de uso ideales**:
-- **Integración con código legacy** que lanza excepciones
-- **Conversión de APIs externas** en el ecosistema MlResult
-- **Manejo seguro de operaciones** de I/O y parsing
-- **Puentes entre paradigmas** imperativos y funcionales
+## Ver también
 
-**Ventajas principales**:
-- **Captura automática de excepciones** sin bloques try-catch explícitos
-- **Mensajes de error personalizables** con contexto específico
-- **Integración transparente** con el ecosistema MlResult
-- **Soporte async completo** para operaciones modernas
+- [`MlResult`](../Types/MlResult.md) — el tipo central y sus conversiones implícitas
+- [`MlResultErrors`](../Types/MlResultErrors.md) — `MlError`, `MlErrorsDetails`, `AppendExErrorDetail`
+- [`Extensions`](../Extensions/Extensions.md) — `ToAsync` y otras utilidades transversales
+- [`NullToFailed`](../Several/2_NullToFailed.md) — rechazar valores nulos al entrar
+- [`TryMap`](../Map/1_Map.md) y [`TryBind`](../Bind/3_Bind.md) — captura de excepciones dentro del carril
+- [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) — recuperar la excepción de `Details`
+- [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — efectos laterales seguros
+- [`Match`](../Match/1_Match.md) — salir del carril de forma tipada

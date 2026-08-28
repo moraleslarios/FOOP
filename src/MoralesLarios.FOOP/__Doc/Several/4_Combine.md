@@ -1,877 +1,571 @@
-# MlResult Combine - Combinación de Múltiples Valores en Tuplas
+# Combine — Acumular valores en una tupla a lo largo del carril
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de los Métodos](#análisis-de-los-métodos)
-3. [Tipos de Métodos Combine](#tipos-de-métodos-combine)
-4. [Variantes Asíncronas](#variantes-asíncronas)
-5. [Ejemplos Prácticos](#ejemplos-prácticos)
-6. [Mejores Prácticas](#mejores-prácticas)
-7. [Comparación con Bind y Map](#comparación-con-bind-y-map)
+2. [⚠️ Lo primero: `Combine` NO acumula errores](#️-lo-primero-combine-no-acumula-errores)
+3. [El problema que resuelve: el infierno de los `Bind` anidados](#el-problema-que-resuelve-el-infierno-de-los-bind-anidados)
+4. [Las tres familias de `Combine`](#las-tres-familias-de-combine)
+5. [Familia A: `MlResult<T>` + valor(es) sueltos](#familia-a-mlresultt--valores-sueltos)
+6. [Familia B: valor/tupla + `MlResult<T>`](#familia-b-valortupla--mlresultt)
+7. [Familia C: valor/tupla + valor (sin `MlResult`)](#familia-c-valortupla--valor-sin-mlresult)
+8. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+9. [Variantes asíncronas](#variantes-asíncronas)
+10. [Apéndice: `Do`, el operador de escape](#apéndice-do-el-operador-de-escape)
+11. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+12. [Ejemplos Prácticos](#ejemplos-prácticos)
+13. [Mejores Prácticas](#mejores-prácticas)
+14. [Resumen](#resumen)
+15. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-Los métodos `Combine` proporcionan una forma de **combinar múltiples valores en tuplas**, permitiendo agrupar tanto valores `MlResult<T>` como valores directos en estructuras de datos cohesivas. Estos métodos son fundamentales para operaciones que requieren múltiples datos de entrada y deben preservar el estado de error si alguno de los `MlResult` es fallido.
-
-### Propósito Principal
-
-- **Agregación de Datos**: Combinar múltiples valores relacionados en una estructura
-- **Preservación de Errores**: Mantener errores si algún `MlResult` es fallido
-- **Construcción de Tuplas**: Crear tuplas tipadas con valores heterogéneos
-- **Composición de Resultados**: Unir resultados de operaciones independientes
-
----
-
-## Análisis de los Métodos
-
-### Filosofía de Combine
-
-```
-MlResult<T1> + T2 → Combine → MlResult<(T1, T2)>
-     ↓           ↓      ↓           ↓
-  Valid(v1) + v2 → Valid((v1, v2))
-     ↓           ↓      ↓           ↓
-  Fail(err) + v2 → Fail(err)
-```
-
-### Características Principales
-
-1. **Combinación Heterogénea**: Mezcla `MlResult<T>` con valores directos
-2. **Propagación de Errores**: Si algún `MlResult` falla, el resultado final falla
-3. **Tuplas Tipadas**: Retorna tuplas fuertemente tipadas
-4. **Escalabilidad**: Soporte hasta 8 elementos en la tupla
-5. **Flexibilidad**: Múltiples patrones de combinación
-
----
-
-## Tipos de Métodos Combine
-
-### 1. MlResult + Valor Directo
-
-**Propósito**: Combinar un `MlResult<T>` con un valor directo
+`Combine` sirve para **arrastrar varios valores a la vez por el carril**, agrupándolos en
+una tupla de C#. Es la respuesta al problema clásico de la programación funcional: cuando
+el paso 5 de una tubería necesita el resultado del paso 1, del 2 y del 4.
 
 ```csharp
+// ❌ Bind anidados para conservar valores anteriores: ilegible
+return ObtenerCliente(id)
+        .Bind(cliente => ObtenerTarifa(cliente.TarifaId)
+            .Bind(tarifa => ObtenerDescuento(cliente.Id)
+                .Bind(descuento => ObtenerImpuestos(cliente.Pais)
+                    .Map(impuestos => Calcular(cliente, tarifa, descuento, impuestos)))));
+```
+
+> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+
+---
+
+## ⚠️ Lo primero: `Combine` NO acumula errores
+
+Es el malentendido más frecuente con este método. En otras librerías funcionales, un
+`Combine`/`Apply`/`Zip` recoge **todos** los errores de todos los operandos. **Aquí no.**
+
+```csharp
+// Implementación real, sin adornos
 public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(
-    this MlResult<TResult1> source, 
-    TResult2 otherValue)
+        this MlResult<TResult1> source, TResult2 otherValue)
+    => source.Match(
+           valid: x            => MlResult<(TResult1, TResult2)>.Valid((x, otherValue)),
+           fail : errorDetails => errorDetails.ToMlResultFail<(TResult1, TResult2)>()
+       );
 ```
 
-**Ejemplo Básico**:
-```csharp
-var user = GetUser(userId);  // MlResult<User>
-var timestamp = DateTime.UtcNow;  // DateTime
+Lo que hace es **exactamente**:
 
-var result = user.Combine(timestamp);
-// Si user es válido: MlResult<(User, DateTime)>.Valid((user, timestamp))
-// Si user es fallido: MlResult<(User, DateTime)>.Fail(errors)
+| Situación | Resultado |
+|-----------|-----------|
+| El `MlResult` operando es válido | `Valid` con la tupla ampliada |
+| El `MlResult` operando es fallido | `Fail` con **los errores de ese operando y nada más** |
+
+🔑 **`Combine` es un cortocircuito, como `Bind`.** Solo hay un `MlResult` en juego en cada
+llamada; el otro operando es un valor normal. Por tanto no hay nada que "acumular".
+
+```csharp
+// ❌ Expectativa equivocada: esperar los dos errores
+var a = MlResult<int>.Fail("Error A");
+var r = a.Combine(otroValor);            // solo contiene "Error A" — correcto, solo hay uno
+
+// ⚠️ Y aquí, aunque haya dos MlResult, tampoco se acumulan:
+var b = MlResult<string>.Fail("Error B");
+var r2 = a.Combine(b);                   // ⚠️ NO compila como esperas: 'b' entra como TResult2
+                                         //    → MlResult<(int, MlResult<string>)>
 ```
 
-### 2. Valor Directo + MlResult
+**Si necesitas acumular errores de varias validaciones independientes**, la librería ofrece
+otras herramientas:
 
-**Propósito**: Combinar un valor directo con un `MlResult<T>`
+- Recoger los errores de cada validación y fusionarlos con `MlErrorsDetails.FromErrorsDetails(...)`
+- Los métodos de la carpeta [`Bucle`](../Bucle/Bucles.md), que acumulan errores por elemento
+- `MergeErrorsDetailsIfFail(...)` para arrastrar los errores previos al añadir uno nuevo
 
-```csharp
-public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(
-    this TResult1 source, 
-    MlResult<TResult2> mlResultValue)
-```
+---
 
-**Ejemplo**:
-```csharp
-var operationId = Guid.NewGuid();  // Guid
-var userData = GetUserData(userId);  // MlResult<UserData>
+## El problema que resuelve: el infierno de los `Bind` anidados
 
-var result = operationId.Combine(userData);
-// Si userData es válido: MlResult<(Guid, UserData)>.Valid((operationId, userData))
-// Si userData es fallido: MlResult<(Guid, UserData)>.Fail(errors)
-```
+En una tubería lineal, cada paso solo ve el resultado del paso anterior. Cuando un paso
+tardío necesita datos de varios pasos previos, tienes tres opciones:
 
-### 3. Tuplas + Valores Directos
+1. **Anidar `Bind`** — el "callback hell" funcional: la indentación crece sin control.
+2. **Crear un DTO intermedio** por cada combinación de datos — mucho código ceremonial.
+3. **Usar `Combine`** — arrastrar una tupla que crece paso a paso.
 
-**Propósito**: Extender tuplas existentes con valores directos
+`Combine` es la opción pragmática: no necesitas declarar tipos y la tubería se mantiene
+plana.
 
 ```csharp
-public static MlResult<(TResult1, TResult2, TResult3)> Combine<TResult1, TResult2, TResult3>(
-    this (TResult1 value1, TResult2 value2) source,
-    TResult3 newValue)
-```
-
-**Ejemplo**:
-```csharp
-var userInfo = (userId: 123, userName: "john_doe");
-var sessionId = "session_abc123";
-
-var result = userInfo.Combine(sessionId);
-// Resultado: MlResult<(int, string, string)>.Valid((123, "john_doe", "session_abc123"))
-```
-
-### 4. Tuplas + MlResult
-
-**Propósito**: Extender tuplas con `MlResult<T>`
-
-```csharp
-public static MlResult<(TResult1, TResult2, TResult3)> Combine<TResult1, TResult2, TResult3>(
-    this (TResult1 value1, TResult2 value2) source, 
-    MlResult<TResult3> mlResultValue)
-```
-
-**Ejemplo**:
-```csharp
-var orderInfo = (orderId: 456, customerId: 789);
-var paymentResult = ProcessPayment(paymentData);  // MlResult<PaymentInfo>
-
-var result = orderInfo.Combine(paymentResult);
-// Si payment es válido: MlResult<(int, int, PaymentInfo)>.Valid((456, 789, paymentInfo))
-// Si payment es fallido: MlResult<(int, int, PaymentInfo)>.Fail(errors)
+// La tupla crece: 1 → 2 → 3 → 4 elementos
+MlResult<Cliente>                                    paso1 = ObtenerCliente(id);
+MlResult<(Cliente, Tarifa)>                          paso2 = paso1.Combine(tarifa);
+MlResult<(Cliente, Tarifa, Descuento)>               paso3 = paso2.Combine(descuento);
+MlResult<(Cliente, Tarifa, Descuento, Impuestos)>    paso4 = paso3.Combine(impuestos);
 ```
 
 ---
 
-## Variantes Asíncronas
+## Las tres familias de `Combine`
 
-### `CombineAsync<T>()` - Todas las variantes
+El código fuente define tres grupos distintos, según **qué lado lleva el `MlResult`**:
+
+| Familia | Firma característica | Qué hace | Puede fallar |
+|---------|---------------------|----------|--------------|
+| **A** | `MlResult<T1>.Combine(valorOTupla)` | Añade 1 a 7 valores sueltos al resultado | Sí, si `source` falla |
+| **B** | `valorOTupla.Combine(MlResult<Tn>)` | Añade el valor de un `MlResult` a una tupla existente | Sí, si el `MlResult` falla |
+| **C** | `valorOTupla.Combine(valor)` | Construye la tupla y la marca válida | **Nunca falla** |
+
+Las tres llegan hasta **8 elementos** en la tupla.
 
 ```csharp
-// MlResult síncrono + valor
-public static Task<MlResult<(TResult1, TResult2)>> CombineAsync<TResult1, TResult2>(
-    this MlResult<TResult1> source, 
-    TResult2 otherValue)
+// A: parto de un MlResult y añado valores ya disponibles
+MlResult<(Cliente, Tarifa)> a = clienteResult.Combine(tarifaYaObtenida);
 
-// MlResult asíncrono + valor
-public static async Task<MlResult<(TResult1, TResult2)>> CombineAsync<TResult1, TResult2>(
-    this Task<MlResult<TResult1>> sourceAsync, 
-    TResult2 otherValue)
+// B: parto de una tupla de valores y añado un MlResult
+MlResult<(Cliente, Tarifa)> b = cliente.Combine(tarifaResult);
 
-// Valor + MlResult asíncrono
-public static async Task<MlResult<(TResult1, TResult2)>> CombineAsync<TResult1, TResult2>(
-    this TResult1 source,
-    Task<MlResult<TResult2>> mlResultValueAsync)
+// C: solo agrupo valores, sin ningún MlResult implicado
+MlResult<(Cliente, Tarifa)> c = cliente.Combine(tarifa);   // siempre Valid
 ```
+
+---
+
+## Familia A: `MlResult<T>` + valor(es) sueltos
+
+Es la más usada. El primer operando es el `MlResult` que viaja por el carril; el segundo es
+un valor (o una tupla de valores) que ya tienes a mano.
+
+```csharp
+// 2 elementos: el segundo operando es un valor suelto
+public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(
+        this MlResult<TResult1> source, TResult2 otherValue)
+
+// 3 a 8 elementos: el segundo operando es una TUPLA de valores
+public static MlResult<(TResult1, TResult2, TResult3)> Combine<TResult1, TResult2, TResult3>(
+        this MlResult<TResult1> source, (TResult2 value1, TResult3 value2) values)
+```
+
+🔑 **Detalle crucial:** a partir de 3 elementos, el segundo argumento es **una tupla**, no
+una lista de argumentos. Se añaden **todos de golpe** al valor del `MlResult`:
+
+```csharp
+// ✅ Añade DOS valores de una vez → tupla de 3
+MlResult<(Cliente, Tarifa, Descuento)> r = clienteResult.Combine((tarifa, descuento));
+
+// ✅ Equivalente encadenando (nótese: aquí entra en juego la familia B/C)
+MlResult<(Cliente, Tarifa, Descuento)> r2 = clienteResult
+        .Combine(tarifa)                      // familia A, 2 elementos
+        .Bind(t => t.Combine(descuento));     // familia C sobre la tupla
+```
+
+**Nombres de los campos:** solo la sobrecarga de 2 elementos declara nombres
+(`value1`, `value2`). De 3 a 8, el tipo de retorno es una tupla **sin nombres**, así que
+accedes con `Item1`, `Item2`, `Item3`…
+
+```csharp
+// 2 elementos: nombres disponibles
+clienteResult.Combine(tarifa).Map(t => $"{t.value1.Nombre} — {t.value2.Codigo}");
+
+// 3+ elementos: solo Item1, Item2, Item3…
+clienteResult.Combine((tarifa, descuento))
+             .Map(t => $"{t.Item1.Nombre} — {t.Item2.Codigo} — {t.Item3.Porcentaje}");
+
+// 💡 Truco: deconstruye para dar nombres legibles
+clienteResult.Combine((tarifa, descuento))
+             .Map(t =>
+             {
+                 var (cliente, tar, desc) = t;
+                 return $"{cliente.Nombre} — {tar.Codigo} — {desc.Porcentaje}";
+             });
+```
+
+---
+
+## Familia B: valor/tupla + `MlResult<T>`
+
+Aquí el `MlResult` es el **segundo** operando. Sirve para el caso inverso: ya tienes una
+tupla de valores válidos y quieres añadirle el resultado de una operación que puede fallar.
+
+```csharp
+// valor + MlResult → tupla de 2
+public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(
+        this TResult1 source, MlResult<TResult2> mlResultValue)
+    => mlResultValue.Match(
+           valid: x            => MlResult<(TResult1, TResult2)>.Valid((source, x)),
+           fail : errorDetails => errorDetails.ToMlResultFail<(TResult1, TResult2)>()
+       );
+
+// tupla de 2 + MlResult → tupla de 3  (y así hasta 8)
+public static MlResult<(TResult1 value1, TResult2 value2, TResult3 value3)> Combine<TResult1, TResult2, TResult3>(
+        this (TResult1 value1, TResult2 value2) source, MlResult<TResult3> mlResultValue)
+```
+
+Uso típico dentro de un `Bind`, cuando el valor que falta viene de una consulta:
+
+```csharp
+var resultado = clienteResult
+        .Bind(cliente => cliente.Combine(ObtenerTarifa(cliente.TarifaId)))       // (Cliente, Tarifa)
+        .Bind(t       => t.Combine(ObtenerDescuento(t.value1.Id)))               // (Cliente, Tarifa, Descuento)
+        .Map(t => Calcular(t.Item1, t.Item2, t.Item3));
+```
+
+🔑 En esta familia **los campos sí llevan nombres** (`value1`, `value2`, `value3`…) en todas
+las aridades, a diferencia de la familia A. Es una asimetría real del código fuente.
+
+---
+
+## Familia C: valor/tupla + valor (sin `MlResult`)
+
+Estas sobrecargas **nunca fallan**: se limitan a construir la tupla y envolverla en un
+resultado válido.
+
+```csharp
+public static MlResult<(TResult1, TResult2)> Combine<TResult1, TResult2>(
+        this TResult1 source, TResult2 value)
+    => (source, value).ToMlResultValid();
+
+public static MlResult<(TResult1, TResult2, TResult3)> Combine<TResult1, TResult2, TResult3>(
+        this (TResult1 value1, TResult2 value2) source, TResult3 newValue)
+    => (source.value1, source.value2, newValue).ToMlResultValid();
+// … hasta 8 elementos
+```
+
+Sirven para **ampliar una tupla dentro de un `Bind`** sin ceremonia:
+
+```csharp
+// Dentro del carril: la tupla crece de 2 a 3 elementos
+var r = paresResult.Bind(t => t.Combine(nuevoValor));   // familia C, siempre Valid
+```
+
+⚠️ Estas sobrecargas devuelven tuplas **sin nombres** (`Item1`, `Item2`…), igual que la
+familia A de 3+ elementos.
+
+---
+
+## ⚠️ Particularidades reales del código fuente
+
+**1. `Combine` cortocircuita, no acumula.** Ya explicado arriba: es el punto más
+importante.
+
+**2. Los nombres de los campos de la tupla son inconsistentes entre familias.**
+
+| Familia | Aridad | ¿Campos con nombre? |
+|---------|--------|--------------------|
+| A | 2 | ✅ `value1`, `value2` |
+| A | 3–8 | ❌ solo `Item1`, `Item2`, … |
+| B | 2–8 | ✅ `value1`, `value2`, … |
+| C | 2–8 | ❌ solo `Item1`, `Item2`, … |
+
+Recomendación: **deconstruye siempre** (`var (a, b, c) = t;`) para no depender de esta
+asimetría y ganar legibilidad.
+
+**3. Algunas sobrecargas asíncronas de la familia B devuelven tipos nullable.**
+Concretamente las que parten de una tupla:
+`Task<MlResult<(...)>?>`. Igual que en `EmptyToFailed`, **nunca devuelven `null`**; es una
+anotación heredada. La propia librería usa `.ToAsync()!` internamente.
+
+**4. No existe `TryCombine`.** `Combine` no invoca delegados de usuario, así que no hay
+excepciones que capturar.
+
+**5. Los valores del segundo operando se evalúan siempre.**
+Como son valores y no delegados, se calculan **antes** de la llamada, incluso si el
+`MlResult` ya venía fallido:
+
+```csharp
+// ⚠️ ConsultaCostosa() se ejecuta aunque clienteResult sea Fail
+var r = clienteResult.Combine(ConsultaCostosa());
+
+// ✅ Si el valor es costoso, obtenlo dentro de un Bind (que sí cortocircuita)
+var r = clienteResult.Bind(c => c.Combine(ConsultaCostosa()));
+```
+
+Esta es la razón principal para preferir el patrón `Bind(x => x.Combine(...))` (familias B
+y C) frente a la familia A cuando el segundo operando implique trabajo real.
+
+**6. El límite es 8 elementos.** Si necesitas más, es señal de que deberías introducir un
+tipo propio (`record`) en lugar de seguir ampliando la tupla.
+
+---
+
+## Variantes asíncronas
+
+Cada sobrecarga síncrona tiene dos hermanas asíncronas:
+
+| Patrón | Naturaleza |
+|--------|-----------|
+| `CombineAsync(this MlResult<T> source, valor)` | Envoltura: `source.Combine(valor).ToAsync()` |
+| `CombineAsync(this Task<MlResult<T>> sourceAsync, valor)` | **Espera el origen** |
+| `CombineAsync(this T source, MlResult<Tn>)` | Envoltura |
+| `CombineAsync(this T source, Task<MlResult<Tn>>)` | **Espera el `MlResult`** |
+
+```csharp
+// Encadenamiento asíncrono completo
+var resultado = await ObtenerClienteAsync(id)
+                      .CombineAsync(tarifaYaObtenida)                 // Task<MlResult<...>> + valor
+                      .BindAsync(async t => await t.CombineAsync(ObtenerDescuentoAsync(t.value1.Id)))
+                      .MapAsync(t => Calcular(t.Item1, t.Item2, t.Item3).ToAsync());
+```
+
+⚠️ La familia C **no tiene variantes asíncronas**: al no poder fallar ni esperar nada, no
+tendría sentido.
+
+---
+
+## Apéndice: `Do`, el operador de escape
+
+En el mismo archivo del código fuente, junto a `Combine`, vive un método pequeño pero
+llamativo:
+
+```csharp
+public static MlResult<TResult> Do<T, TResult>(this MlResult<T> source,
+                                                    Func<MlResult<T>, MlResult<TResult>> action)
+    => action(source);
+
+public static async Task<MlResult<TResult>> DoAsync<T, TResult>(this MlResult<T> source,
+                                                    Func<MlResult<T>, Task<MlResult<TResult>>> actionAsync)
+    => await actionAsync(source);
+
+public static async Task<MlResult<TResult>> DoAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                    Func<Task<MlResult<T>>, Task<MlResult<TResult>>> actionAsync)
+    => await actionAsync(sourceAsync);
+```
+
+`Do` **invoca tu delegado pasándole el `MlResult` completo**, sin comprobar si es válido o
+fallido. No usa `Match`, no cortocircuita, no envuelve nada:
+
+| Método | Recibe el delegado | ¿Cortocircuita? |
+|--------|-------------------|-----------------|
+| `Map` | El **valor** `T` | ✅ Sí |
+| `Bind` | El **valor** `T` | ✅ Sí |
+| `Match` | Valor **o** errores, según la rama | ✅ Sí (elige rama) |
+| **`Do`** | El **`MlResult<T>` entero** | ❌ **No** |
+
+Es un **operador de escape** para insertar en la tubería una función que necesita ver el
+resultado completo, típicamente porque va a decidir por sí misma cómo tratar el fallo:
+
+```csharp
+// Insertar una política propia en medio de la tubería
+var r = ObtenerCliente(id)
+            .Do(res => _politicaReintentos.Aplicar(res))     // ve el MlResult completo
+            .Map(c => c.ToDto());
+
+// ⚠️ La tercera sobrecarga pasa el Task SIN esperar: tu delegado decide cuándo hacer await
+var r = await ObtenerClienteAsync(id)
+                  .DoAsync(async tarea => await _politica.AplicarAsync(tarea));
+```
+
+💡 **Cuándo usarlo:** casi nunca. Si tu intención es reaccionar al fallo, usa
+[`MapIfFail`](../Map/4_MapIfFail.md) o [`BindIfFail`](../Bind/6_BindIfFail.md); si es
+observar sin alterar, [`ExecSelf`](../ExecSelf/1_ExecSelf.md). `Do` solo se justifica para
+integrar funciones externas cuya firma ya trabaja con `MlResult<T>`.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Uso |
+|-----------|-----|
+| Arrastrar 2–8 valores por el carril | `Combine` |
+| Añadir un valor ya disponible a un `MlResult` | Familia A: `resultado.Combine(valor)` |
+| Añadir el resultado de una consulta a una tupla | Familia B: `.Bind(t => t.Combine(consulta()))` |
+| Ampliar una tupla con un valor seguro | Familia C: `.Bind(t => t.Combine(valor))` |
+| Evitar que el segundo operando se evalúe si hay fallo | Envuelve en `Bind` (familias B/C) |
+| **Acumular** los errores de varias validaciones | [`Bucles`](../Bucle/Bucles.md), `MlErrorsDetails.FromErrorsDetails` |
+| Más de 8 valores | Define un `record` propio |
+| Transformar el valor | [`Map`](../Map/1_Map.md) |
+| Encadenar una operación que puede fallar | [`Bind`](../Bind/3_Bind.md) |
+| Ver el `MlResult` completo dentro de la tubería | `Do` (raramente necesario) |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Procesamiento de Pedidos
+### Ejemplo 1: cálculo de precio con cuatro dependencias
 
 ```csharp
-public class OrderProcessingService
+public class CalculadoraPrecio
 {
-    private readonly IUserService _userService;
-    private readonly IInventoryService _inventoryService;
-    private readonly IPaymentService _paymentService;
-    private readonly IShippingService _shippingService;
-    
-    public async Task<MlResult<CompleteOrderInfo>> ProcessCompleteOrderAsync(OrderRequest request)
-    {
-        var processingId = Guid.NewGuid();
-        var timestamp = DateTime.UtcNow;
-        
-        // Combinar ID de procesamiento con validación de usuario
-        var userValidation = await GetValidatedUserAsync(request.UserId)
-            .CombineAsync(processingId);
-        
-        if (userValidation.IsFailed)
-            return userValidation.Errors.ToMlResultFail<CompleteOrderInfo>();
-        
-        // Combinar información del usuario con validación de inventario
-        var inventoryValidation = await userValidation.Value
-            .Combine(await ValidateInventoryAsync(request.Items));
-        
-        if (inventoryValidation.IsFailed)
-            return inventoryValidation.Errors.ToMlResultFail<CompleteOrderInfo>();
-        
-        // Combinar con información de pago
-        var paymentValidation = await inventoryValidation.Value
-            .Combine(await ProcessPaymentAsync(request.PaymentInfo));
-        
-        if (paymentValidation.IsFailed)
-            return paymentValidation.Errors.ToMlResultFail<CompleteOrderInfo>();
-        
-        // Combinar con información de envío y timestamp
-        var shippingInfo = await CalculateShippingAsync(request.ShippingAddress);
-        var finalResult = paymentValidation.Value
-            .Combine(shippingInfo)
-            .Map(combined => combined.Item1.Combine(timestamp));
-        
-        return finalResult.Match(
-            valid: data => MlResult<CompleteOrderInfo>.Valid(new CompleteOrderInfo
-            {
-                ProcessingId = data.Item1.Item1.Item2, // processingId
-                User = data.Item1.Item1.Item1.Item1,   // user
-                InventoryReservation = data.Item1.Item1.Item1.Item2, // inventory
-                PaymentResult = data.Item1.Item2,      // payment
-                ShippingDetails = data.Item2,          // shipping
-                ProcessedAt = data.Item1.Item3         // timestamp
-            }),
-            fail: errors => MlResult<CompleteOrderInfo>.Fail(errors.AllErrors)
-        );
-    }
-    
-    public async Task<MlResult<OrderSummary>> CreateOrderSummaryAsync(int orderId)
-    {
-        var order = await GetOrderAsync(orderId);
-        var auditId = Guid.NewGuid();
-        var reportGeneratedAt = DateTime.UtcNow;
-        
-        return await order
-            .Combine(auditId)
-            .CombineAsync(await GetOrderItemsAsync(orderId))
-            .CombineAsync(await GetCustomerInfoAsync(order?.CustomerId ?? 0))
-            .CombineAsync(await GetPaymentHistoryAsync(orderId))
-            .CombineAsync(reportGeneratedAt)
-            .MapAsync(async combined =>
-            {
-                var (((((orderData, auditIdValue), orderItems), customer), paymentHistory), timestamp) = combined;
-                
-                return new OrderSummary
-                {
-                    AuditId = auditIdValue,
-                    Order = orderData,
-                    Items = orderItems.ToArray(),
-                    Customer = customer,
-                    PaymentHistory = paymentHistory.ToArray(),
-                    TotalAmount = orderItems.Sum(i => i.Price * i.Quantity),
-                    GeneratedAt = timestamp
-                };
-            });
-    }
-    
-    public async Task<MlResult<ValidationReport>> ValidateOrderDataAsync(OrderRequest request)
-    {
-        var validationId = Guid.NewGuid();
-        var validationStartTime = DateTime.UtcNow;
-        
-        // Validaciones paralelas combinadas
-        var userValidation = await GetUserAsync(request.UserId)
-            .NullToFailedAsync("User not found");
-        
-        var itemsValidation = request.Items
-            .EmptyToFailed("Order must contain items");
-        
-        var addressValidation = await ValidateShippingAddressAsync(request.ShippingAddress);
-        
-        // Combinar todas las validaciones
-        return validationId
-            .Combine(userValidation)
-            .Bind(combined => combined.Item2.BoolToResult(
-                condition: combined.Item2.IsActive && !combined.Item2.IsSuspended,
-                errorMessage: "User account is not active"))
-            .Bind(combined => combined.Combine(itemsValidation))
-            .Bind(combined => combined.Combine(addressValidation))
-            .Combine(validationStartTime)
-            .Map(finalCombined =>
-            {
-                var validationEndTime = DateTime.UtcNow;
-                var (((validationIdValue, validUser), validItems), validAddress), startTime) = finalCombined;
-                
-                return new ValidationReport
-                {
-                    ValidationId = validationIdValue,
-                    UserId = validUser.Id,
-                    UserName = validUser.Name,
-                    ItemCount = validItems.Count(),
-                    ShippingAddress = validAddress,
-                    ValidationDuration = validationEndTime - startTime,
-                    ValidatedAt = validationEndTime,
-                    Status = "Valid"
-                };
-            });
-    }
-    
-    // Métodos auxiliares
-    private async Task<MlResult<User>> GetValidatedUserAsync(int userId)
-    {
-        var user = await _userService.GetByIdAsync(userId);
-        return user
-            .NullToFailed($"User {userId} not found")
-            .Bind(u => u.BoolToResult(u.IsActive, "User account is inactive"));
-    }
-    
-    private async Task<MlResult<InventoryReservation>> ValidateInventoryAsync(IEnumerable<OrderItem> items)
-    {
-        try
-        {
-            var reservation = await _inventoryService.ReserveItemsAsync(items);
-            return MlResult<InventoryReservation>.Valid(reservation);
-        }
-        catch (Exception ex)
-        {
-            return MlResult<InventoryReservation>.Fail($"Inventory validation failed: {ex.Message}");
-        }
-    }
-    
-    private async Task<MlResult<PaymentResult>> ProcessPaymentAsync(PaymentInfo paymentInfo)
-    {
-        try
-        {
-            var result = await _paymentService.ProcessAsync(paymentInfo);
-            return result.Success 
-                ? MlResult<PaymentResult>.Valid(result)
-                : MlResult<PaymentResult>.Fail("Payment processing failed");
-        }
-        catch (Exception ex)
-        {
-            return MlResult<PaymentResult>.Fail($"Payment error: {ex.Message}");
-        }
-    }
-    
-    private async Task<MlResult<ShippingDetails>> CalculateShippingAsync(Address address)
-    {
-        try
-        {
-            var details = await _shippingService.CalculateShippingAsync(address);
-            return MlResult<ShippingDetails>.Valid(details);
-        }
-        catch (Exception ex)
-        {
-            return MlResult<ShippingDetails>.Fail($"Shipping calculation failed: {ex.Message}");
-        }
-    }
-}
-
-// Clases de apoyo
-public class CompleteOrderInfo
-{
-    public Guid ProcessingId { get; set; }
-    public User User { get; set; }
-    public InventoryReservation InventoryReservation { get; set; }
-    public PaymentResult PaymentResult { get; set; }
-    public ShippingDetails ShippingDetails { get; set; }
-    public DateTime ProcessedAt { get; set; }
-}
-
-public class OrderSummary
-{
-    public Guid AuditId { get; set; }
-    public Order Order { get; set; }
-    public OrderItem[] Items { get; set; }
-    public Customer Customer { get; set; }
-    public PaymentHistory[] PaymentHistory { get; set; }
-    public decimal TotalAmount { get; set; }
-    public DateTime GeneratedAt { get; set; }
-}
-
-public class ValidationReport
-{
-    public Guid ValidationId { get; set; }
-    public int UserId { get; set; }
-    public string UserName { get; set; }
-    public int ItemCount { get; set; }
-    public Address ShippingAddress { get; set; }
-    public TimeSpan ValidationDuration { get; set; }
-    public DateTime ValidatedAt { get; set; }
-    public string Status { get; set; }
-}
-
-public class OrderRequest
-{
-    public int UserId { get; set; }
-    public IEnumerable<OrderItem> Items { get; set; }
-    public PaymentInfo PaymentInfo { get; set; }
-    public Address ShippingAddress { get; set; }
-}
-
-public class User
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public bool IsActive { get; set; }
-    public bool IsSuspended { get; set; }
-}
-
-public class OrderItem
-{
-    public int ProductId { get; set; }
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
-    public bool IsAvailable { get; set; }
-}
-
-public class InventoryReservation
-{
-    public string ReservationId { get; set; }
-    public DateTime ExpiresAt { get; set; }
-}
-
-public class PaymentResult
-{
-    public bool Success { get; set; }
-    public string TransactionId { get; set; }
-    public decimal Amount { get; set; }
-}
-
-public class ShippingDetails
-{
-    public string Method { get; set; }
-    public decimal Cost { get; set; }
-    public DateTime EstimatedDelivery { get; set; }
-}
-
-public class Order
-{
-    public int Id { get; set; }
-    public int CustomerId { get; set; }
-    public string Status { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public class Customer
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-}
-
-public class PaymentHistory
-{
-    public DateTime Date { get; set; }
-    public decimal Amount { get; set; }
-    public string Status { get; set; }
-}
-
-public class PaymentInfo
-{
-    public string PaymentMethodId { get; set; }
-    public decimal Amount { get; set; }
-}
-
-public class Address
-{
-    public string Street { get; set; }
-    public string City { get; set; }
-    public string PostalCode { get; set; }
-    public string Country { get; set; }
+    public async Task<MlResult<PrecioFinal>> CalcularAsync(int clienteId, int articuloId, int cantidad)
+        => await EnsureFp.That(cantidad, cantidad > 0, "La cantidad debe ser positiva")
+                         .BindAsync(_ => _clientes.ObtenerAsync(clienteId)
+                                                  .NullToFailedAsync($"Cliente {clienteId} no encontrado"))
+                         // (Cliente, Articulo)
+                         .BindAsync(async cliente => cliente.Combine(
+                                        await _articulos.ObtenerAsync(articuloId)
+                                                        .NullToFailedAsync($"Artículo {articuloId} no encontrado")))
+                         // (Cliente, Articulo, Tarifa)
+                         .BindAsync(async t => await t.CombineAsync(_tarifas.VigenteAsync(t.value1.TarifaId)))
+                         // (Cliente, Articulo, Tarifa, Impuesto)
+                         .BindAsync(async t => await t.CombineAsync(_impuestos.ParaPaisAsync(t.value1.Pais)))
+                         .MapAsync(t =>
+                         {
+                             var (cliente, articulo, tarifa, impuesto) = t;
+                             var baseImponible = tarifa.PrecioDe(articulo) * cantidad;
+                             var conDescuento  = baseImponible * (1 - cliente.Descuento);
+                             return new PrecioFinal(conDescuento, conDescuento * impuesto.Tipo).ToAsync();
+                         });
 }
 ```
 
-### Ejemplo 2: Sistema de Reportes Combinados
+Fíjate en el patrón: cada paso usa `Bind(... Combine ...)` para que las consultas **no se
+ejecuten si algo ya falló**, y se deconstruye la tupla al final para dar nombres legibles.
+
+### Ejemplo 2: informe con datos de varias fuentes
 
 ```csharp
-public class ReportGenerationService
+public async Task<MlResult<Informe>> GenerarAsync(int ejercicio, string departamento)
 {
-    private readonly IDataService _dataService;
-    private readonly IAnalyticsService _analyticsService;
-    private readonly IFormattingService _formattingService;
-    
-    public async Task<MlResult<ComprehensiveReport>> GenerateComprehensiveReportAsync(ReportRequest request)
-    {
-        var reportId = Guid.NewGuid();
-        var generationStartTime = DateTime.UtcNow;
-        
-        // Combinar ID del reporte con datos básicos
-        var basicData = await GetBasicReportDataAsync(request)
-            .CombineAsync(reportId);
-        
-        if (basicData.IsFailed)
-            return basicData.Errors.ToMlResultFail<ComprehensiveReport>();
-        
-        // Combinar con datos analíticos
-        var analyticsData = await basicData.Value
-            .Combine(await GetAnalyticsDataAsync(request));
-        
-        if (analyticsData.IsFailed)
-            return analyticsData.Errors.ToMlResultFail<ComprehensiveReport>();
-        
-        // Combinar con métricas de rendimiento
-        var performanceData = await analyticsData.Value
-            .Combine(await GetPerformanceMetricsAsync(request));
-        
-        if (performanceData.IsFailed)
-            return performanceData.Errors.ToMlResultFail<ComprehensiveReport>();
-        
-        // Combinar con datos de comparación y timestamp
-        var comparisonData = await GetComparisonDataAsync(request);
-        var finalData = performanceData.Value
-            .Combine(comparisonData)
-            .Combine(generationStartTime);
-        
-        return finalData.Match(
-            valid: data =>
-            {
-                var generationEndTime = DateTime.UtcNow;
-                var ((((basicInfo, reportIdValue), analytics), performance), comparison), startTime) = data;
-                
-                return MlResult<ComprehensiveReport>.Valid(new ComprehensiveReport
+    // Lanzamos las consultas en paralelo y las esperamos antes de combinar
+    var tVentas    = _ventas.DelEjercicioAsync(ejercicio, departamento);
+    var tGastos    = _gastos.DelEjercicioAsync(ejercicio, departamento);
+    var tPlantilla = _rrhh.PlantillaMediaAsync(ejercicio, departamento);
+
+    await Task.WhenAll(tVentas, tGastos, tPlantilla);
+
+    // Familia A con tupla: los tres valores ya están resueltos
+    return (await tVentas)
+                .Combine((await tGastos, await tPlantilla))          // (Ventas, Gastos, Plantilla)
+                .MapEnsure(t => t.Item1.Any(), "No hay ventas registradas en el ejercicio")
+                .Map(t =>
                 {
-                    ReportId = reportIdValue,
-                    BasicData = basicInfo,
-                    Analytics = analytics,
-                    Performance = performance,
-                    Comparison = comparison,
-                    GenerationDuration = generationEndTime - startTime,
-                    GeneratedAt = generationEndTime
-                });
-            },
-            fail: errors => MlResult<ComprehensiveReport>.Fail(errors.AllErrors)
-        );
-    }
-    
-    public async Task<MlResult<DashboardData>> CreateDashboardDataAsync(int userId)
-    {
-        var sessionId = Guid.NewGuid();
-        var cacheKey = $"dashboard_{userId}_{sessionId}";
-        
-        // Operaciones paralelas que se combinan
-        var userStatsTask = GetUserStatisticsAsync(userId);
-        var recentActivityTask = GetRecentActivityAsync(userId);
-        var notificationsTask = GetUserNotificationsAsync(userId);
-        var preferencesTask = GetUserPreferencesAsync(userId);
-        
-        // Combinar resultados progresivamente
-        return await sessionId
-            .Combine(await userStatsTask)
-            .CombineAsync(await recentActivityTask)
-            .CombineAsync(await notificationsTask)
-            .CombineAsync(await preferencesTask)
-            .CombineAsync(cacheKey)
-            .MapAsync(async combined =>
-            {
-                var (((((sessionIdValue, stats), activity), notifications), preferences), cacheKeyValue) = combined;
-                
-                // Procesar datos combinados
-                var processedStats = await _analyticsService.ProcessStatisticsAsync(stats);
-                var formattedActivity = await _formattingService.FormatActivityAsync(activity);
-                
-                return new DashboardData
-                {
-                    SessionId = sessionIdValue,
-                    CacheKey = cacheKeyValue,
-                    UserStatistics = processedStats,
-                    RecentActivity = formattedActivity,
-                    Notifications = notifications.ToArray(),
-                    UserPreferences = preferences,
-                    LastUpdated = DateTime.UtcNow
-                };
-            });
-    }
-    
-    public MlResult<AuditTrailEntry> CreateAuditEntryAsync(string action, object data, int userId)
-    {
-        var auditId = Guid.NewGuid();
-        var timestamp = DateTime.UtcNow;
-        var ipAddress = GetCurrentIpAddress();
-        var userAgent = GetCurrentUserAgent();
-        
-        // Combinar información de auditoría
-        return auditId
-            .Combine(action)
-            .Combine(JsonSerializer.Serialize(data))
-            .Combine(userId)
-            .Combine(timestamp)
-            .Combine(ipAddress)
-            .Combine(userAgent)
-            .Map(combined =>
-            {
-                var (((((((auditIdValue, actionValue), dataJson), userIdValue), timestampValue), ipAddressValue), userAgentValue) = combined;
-                
-                return new AuditTrailEntry
-                {
-                    Id = auditIdValue,
-                    Action = actionValue,
-                    Data = dataJson,
-                    UserId = userIdValue,
-                    Timestamp = timestampValue,
-                    IpAddress = ipAddressValue,
-                    UserAgent = userAgentValue,
-                    Hash = CalculateHash(auditIdValue, actionValue, dataJson, userIdValue, timestampValue)
-                };
-            });
-    }
-    
-    // Métodos auxiliares
-    private async Task<MlResult<BasicReportData>> GetBasicReportDataAsync(ReportRequest request)
-    {
-        try
-        {
-            var data = await _dataService.GetBasicDataAsync(request);
-            return data?.Any() == true 
-                ? MlResult<BasicReportData>.Valid(new BasicReportData { Data = data })
-                : MlResult<BasicReportData>.Fail("No basic data available for report");
-        }
-        catch (Exception ex)
-        {
-            return MlResult<BasicReportData>.Fail($"Failed to get basic data: {ex.Message}");
-        }
-    }
-    
-    private async Task<MlResult<AnalyticsData>> GetAnalyticsDataAsync(ReportRequest request)
-    {
-        try
-        {
-            var data = await _analyticsService.GetAnalyticsAsync(request);
-            return MlResult<AnalyticsData>.Valid(data);
-        }
-        catch (Exception ex)
-        {
-            return MlResult<AnalyticsData>.Fail($"Analytics data unavailable: {ex.Message}");
-        }
-    }
-    
-    private string GetCurrentIpAddress() => "127.0.0.1"; // Implementación simplificada
-    private string GetCurrentUserAgent() => "UserAgent"; // Implementación simplificada
-    private string CalculateHash(params object[] values) => "hash"; // Implementación simplificada
+                    var (ventas, gastos, plantilla) = t;
+                    return new Informe(ejercicio, departamento,
+                                       ventas.Sum(v => v.Importe),
+                                       gastos.Sum(g => g.Importe),
+                                       plantilla);
+                })
+                .ExecSelfIfFail(err => _log.LogWarning("Informe no generado: {Desc}",
+                                                       err.ToErrorsDescription()));
 }
+```
 
-// Clases adicionales para el ejemplo
-public class ComprehensiveReport
-{
-    public Guid ReportId { get; set; }
-    public BasicReportData BasicData { get; set; }
-    public AnalyticsData Analytics { get; set; }
-    public PerformanceMetrics Performance { get; set; }
-    public ComparisonData Comparison { get; set; }
-    public TimeSpan GenerationDuration { get; set; }
-    public DateTime GeneratedAt { get; set; }
-}
+Aquí sí conviene la familia A: las tres consultas se han lanzado en paralelo a propósito,
+así que su evaluación anticipada es deseada.
 
-public class DashboardData
-{
-    public Guid SessionId { get; set; }
-    public string CacheKey { get; set; }
-    public UserStatistics UserStatistics { get; set; }
-    public RecentActivity RecentActivity { get; set; }
-    public Notification[] Notifications { get; set; }
-    public UserPreferences UserPreferences { get; set; }
-    public DateTime LastUpdated { get; set; }
-}
+### Ejemplo 3: validación de un formulario complejo
 
-public class AuditTrailEntry
-{
-    public Guid Id { get; set; }
-    public string Action { get; set; }
-    public string Data { get; set; }
-    public int UserId { get; set; }
-    public DateTime Timestamp { get; set; }
-    public string IpAddress { get; set; }
-    public string UserAgent { get; set; }
-    public string Hash { get; set; }
-}
+```csharp
+public MlResult<AltaCliente> Validar(AltaClienteDto dto)
+    => dto.NullToFailed("Los datos de alta son obligatorios")
+          .Bind(d => ValidarNif(d.Nif)
+                        .Combine(d))                                 // (Nif, AltaClienteDto)
+          .Bind(t => ValidarEmail(t.value2.Email)
+                        .Map(email => (t.value1, email, t.value2)))  // (Nif, Email, Dto)
+          .Bind(t => t.Item3.Direccion.NullToFailed("La dirección es obligatoria")
+                        .Map(dir => (t.Item1, t.Item2, dir)))        // (Nif, Email, Direccion)
+          .Map(t =>
+          {
+              var (nif, email, direccion) = t;
+              return new AltaCliente(nif, email, direccion);
+          });
+```
 
-public class ReportRequest
-{
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public string[] Metrics { get; set; }
-}
+Nota: al mezclar familias, los nombres de campo cambian (`value2` en un paso, `Item3` en el
+siguiente). Es un buen recordatorio de por qué conviene deconstruir.
 
-public class BasicReportData
-{
-    public IEnumerable<object> Data { get; set; }
-}
+### Ejemplo 4: `Do` para integrar una política externa
 
-public class AnalyticsData
-{
-    public Dictionary<string, object> Metrics { get; set; }
-}
+```csharp
+// Una función legada que ya trabaja con MlResult y decide su propia estrategia
+private MlResult<Pedido> AplicarPoliticaLegada(MlResult<Pedido> resultado)
+    => resultado.Match(
+           valid: p   => p.Total > 10_000 ? MarcarParaRevision(p) : p.ToMlResultValid(),
+           fail : err => err.HasKeyDetails("Transitorio")
+                             ? ReintentarUnaVez()
+                             : err.ToMlResultFail<Pedido>());
 
-public class PerformanceMetrics
-{
-    public double ResponseTime { get; set; }
-    public int ThroughputPerSecond { get; set; }
-}
+// Do la inserta en la tubería sin adaptadores
+public MlResult<PedidoDto> Procesar(int id)
+    => ObtenerPedido(id)
+            .Do(AplicarPoliticaLegada)
+            .Map(p => p.ToDto());
+```
 
-public class ComparisonData
-{
-    public Dictionary<string, double> PreviousPeriod { get; set; }
-}
+### Ejemplo 5: qué no hacer
 
-public class UserStatistics
-{
-    public int LoginCount { get; set; }
-    public DateTime LastLogin { get; set; }
-}
+```csharp
+// ❌ Esperar que Combine acumule errores de dos validaciones
+var r = ValidarNif(nif).Combine(ValidarEmail(email));
+//      ⚠️ El segundo operando entra como VALOR: MlResult<(Nif, MlResult<Email>)>
 
-public class RecentActivity
-{
-    public ActivityItem[] Items { get; set; }
-}
+// ✅ Encadena y decide, o acumula explícitamente
+var r = ValidarNif(nif).Bind(n => ValidarEmail(email).Map(e => (Nif: n, Email: e)));
 
-public class ActivityItem
-{
-    public string Action { get; set; }
-    public DateTime Timestamp { get; set; }
-}
+// ❌ Consulta costosa evaluada aunque el carril ya haya fallado
+var r = clienteResult.Combine(ConsultaCostosa());
 
-public class Notification
-{
-    public string Message { get; set; }
-    public string Type { get; set; }
-    public bool IsRead { get; set; }
-}
+// ✅ Dentro de Bind: solo se ejecuta si el carril sigue válido
+var r = clienteResult.Bind(c => c.Combine(ConsultaCostosa()));
 
-public class UserPreferences
-{
-    public string Theme { get; set; }
-    public string Language { get; set; }
-}
+// ❌ Tuplas de 8 elementos con acceso por Item7, Item8…
+var r = a.Combine((b, c, d, e, f, g, h)).Map(t => Calcular(t.Item1, t.Item2, /* … */ t.Item8));
+
+// ✅ Define un tipo con nombres
+record ContextoCalculo(Cliente Cliente, Tarifa Tarifa, /* … */);
+var r = a.Bind(cliente => ConstruirContexto(cliente)).Map(Calcular);
+
+// ❌ Usar Do para observar el resultado
+var r = resultado.Do(res => { _log.LogInformation("{R}", res); return res; });
+
+// ✅ ExecSelf está hecho para eso
+var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
+                           e => _log.LogWarning("KO {E}", e.ToErrorsDescription()));
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar Combine
-
-```csharp
-// ✅ Correcto: Agrupar datos relacionados
-var orderInfo = GetOrder(orderId)
-    .Combine(DateTime.UtcNow)
-    .Combine(Guid.NewGuid());
-
-// ✅ Correcto: Combinar validaciones independientes
-var userValidation = GetUser(userId);
-var inventoryValidation = ValidateInventory(items);
-var combined = userValidation.Combine(inventoryValidation);
-
-// ✅ Correcto: Construir contexto de procesamiento
-var processingContext = operationId
-    .Combine(GetUserData(userId))
-    .Combine(GetConfiguration())
-    .Combine(DateTime.UtcNow);
-
-// ❌ Incorrecto: Para transformaciones simples
-var result = GetUser(userId)
-    .Combine("processed"); // Mejor usar Map para agregar información
-```
-
-### 2. Manejo de Tuplas Complejas
-
-```csharp
-// ✅ Correcto: Usar deconstrucción para claridad
-var result = GetUserData(userId)
-    .Combine(GetOrderData(orderId))
-    .Combine(GetPaymentData(paymentId))
-    .Map(combined =>
-    {
-        var (((userData, orderData), paymentData)) = combined;
-        return new ProcessingContext
-        {
-            User = userData,
-            Order = orderData,
-            Payment = paymentData
-        };
-    });
-
-// ✅ Correcto: Crear objetos específicos en lugar de tuplas grandes
-var complexResult = basicData
-    .Combine(analyticsData)
-    .Combine(metricsData)
-    .Map(combined => new ReportData
-    {
-        Basic = combined.Item1.Item1,
-        Analytics = combined.Item1.Item2,
-        Metrics = combined.Item2
-    });
-
-// ❌ Incorrecto: Tuplas excesivamente complejas sin deconstrucción
-var badResult = data1.Combine(data2).Combine(data3).Combine(data4)
-    .Map(x => ProcessData(x.Item1.Item1.Item1, x.Item1.Item1.Item2)); // Difícil de leer
-```
-
-### 3. Propagación de Errores
-
-```csharp
-// ✅ Correcto: Verificar errores en cada paso
-var step1 = GetUserAsync(userId);
-if (step1.Result.IsFailed)
-    return step1.Result.Errors.ToMlResultFail<FinalResult>();
-
-var step2 = await step1.CombineAsync(GetOrderAsync(orderId));
-if (step2.IsFailed)
-    return step2.Errors.ToMlResultFail<FinalResult>();
-
-// ✅ Correcto: Usar Bind para validación continua
-var result = GetUserAsync(userId)
-    .BindAsync(async user => await user
-        .Combine(await GetOrderAsync(orderId))
-        .BindAsync(async combined => await ValidateCombinedData(combined)));
-
-// ❌ Incorrecto: No verificar errores intermedios
-var badResult = await GetUserAsync(userId)
-    .CombineAsync(GetOrderAsync(orderId)) // Puede fallar pero no se verifica
-    .CombineAsync(GetPaymentAsync(paymentId)); // Error se propaga sin control
-```
-
-### 4. Uso con Validaciones
-
-```csharp
-// ✅ Correcto: Combinar después de validaciones individuales
-var validatedUser = GetUser(userId)
-    .NullToFailed("User not found")
-    .Bind(u => u.BoolToResult(u.IsActive, "User inactive"));
-
-var validatedOrder = GetOrder(orderId)
-    .NullToFailed("Order not found")
-    .Bind(o => o.BoolToResult(o.Status == "Pending", "Order not pending"));
-
-var combinedValidation = validatedUser.Combine(validatedOrder);
-
-// ✅ Correcto: Validación después de combinación
-var result = GetUserData(userId)
-    .Combine(GetOrderData(orderId))
-    .Bind(combined => combined.BoolToResult(
-        condition: combined.Item1.UserId == combined.Item2.CustomerId,
-        errorMessage: "User and order mismatch"));
-```
-
----
-
-## Comparación con Bind y Map
-
-### Tabla Comparativa
-
-| Método | Propósito | Entrada | Salida | Cuándo Usar |
-|--------|-----------|---------|--------|-------------|
-| `Combine` | Agrupar valores | `MlResult<T>` + otros | `MlResult<Tupla>` | Combinar datos relacionados |
-| `Bind` | Encadenar operaciones | `MlResult<T>` | `MlResult<TResult>` | Operaciones secuenciales |
-| `Map` | Transformar valores | `MlResult<T>` | `MlResult<TResult>` | Transformaciones simples |
-
-### Ejemplo Comparativo
-
-```csharp
-// Combine: Agrupa múltiples valores
-var combined = GetUser(userId)
-    .Combine(GetOrder(orderId))
-    .Combine(DateTime.UtcNow);
-
-// Bind: Encadena operaciones dependientes
-var processed = GetUser(userId)
-    .Bind(user => GetUserOrders(user.Id))
-    .Bind(orders => ProcessOrders(orders));
-
-// Map: Transforma un valor
-var transformed = GetUser(userId)
-    .Map(user => user.ToDto());
-
-// Uso combinado típico
-var result = GetUser(userId)
-    .Bind(user => ValidateUser(user))        // Validar
-    .Combine(GetSystemInfo())                // Combinar con contexto
-    .Map(combined => CreateUserSession(      // Transformar resultado
-        combined.Item1, combined.Item2));
-```
+1. **No esperes acumulación de errores.** `Combine` cortocircuita como `Bind`. Para
+   acumular, usa los métodos de [`Bucle`](../Bucle/Bucles.md) o fusiona
+   `MlErrorsDetails` a mano.
+2. **Prefiere el patrón `Bind(t => t.Combine(...))`** cuando el valor añadido implique una
+   consulta o un cálculo: así se respeta el cortocircuito.
+3. **Deconstruye siempre la tupla** (`var (a, b, c) = t;`) al consumirla: evita depender de
+   `Item1`/`value1` y documenta el código.
+4. **Limita la tupla a 3 o 4 elementos.** A partir de ahí, un `record` propio es más
+   legible y más fácil de mantener.
+5. **Nunca superes los 8 elementos**: es el límite físico de las sobrecargas.
+6. **Usa la familia A con valores ya resueltos** (por ejemplo, tras un `Task.WhenAll`),
+   donde la evaluación anticipada es intencionada.
+7. **Añade `!` en las sobrecargas asíncronas de la familia B** si trabajas con *nullable
+   reference types* activados.
+8. **Reserva `Do` para integrar código legado** que ya opera con `MlResult<T>`. Para
+   observar usa `ExecSelf`; para recuperar, `MapIfFail`/`BindIfFail`.
+9. **Nombra las variables intermedias** cuando la tubería sea larga: `MlResult<(Cliente,
+   Tarifa)> conTarifa = ...` es más claro que una cadena de veinte líneas.
 
 ---
 
 ## Resumen
 
-Los métodos `Combine` proporcionan **combinación de múltiples valores en tuplas**:
+- `Combine` agrupa de **2 a 8 valores en una tupla** que viaja por el carril, evitando
+  anidar `Bind`.
+- ⚠️ **No acumula errores**: cortocircuita como `Bind`. En cada llamada solo interviene un
+  `MlResult`.
+- Hay **tres familias**: A (`MlResult` + valores), B (valor/tupla + `MlResult`) y
+  C (valor/tupla + valor, que **nunca falla**).
+- ⚠️ Los **nombres de los campos son inconsistentes**: `value1/value2…` en la familia B y en
+  la A de 2 elementos; solo `Item1/Item2…` en la A de 3+ y en toda la C. **Deconstruye.**
+- ⚠️ El segundo operando **se evalúa siempre**, incluso con el carril fallido: envuelve en
+  `Bind` si es costoso.
+- ⚠️ Algunas sobrecargas asíncronas de la familia B están anotadas como nullable sin
+  devolver nunca `null`.
+- **No existe `TryCombine`**: no hay delegados de usuario.
+- **Apéndice `Do`**: invoca tu delegado con el `MlResult` **completo**, sin `Match` y sin
+  cortocircuito. Operador de escape para integrar código externo; raramente necesario.
 
-- **`Combine`**: Agrupa `MlResult<T>` y valores directos en tuplas tipadas
-- **`CombineAsync`**: Soporte completo para operaciones asíncronas
-- **Múltiples patrones**: MlResult+valor, valor+MlResult, tuplas+valores
+---
 
-**Casos de uso ideales**:
-- **Agregación de datos** relacionados de múltiples fuentes
-- **Construcción de contextos** de procesamiento complejos
-- **Combinación de validaciones** independientes
-- **Construcción de estructuras** de datos cohesivas
+## Ver también
 
-**Ventajas principales**:
-- **Preservación de tipos** con tuplas fuertemente tipadas
-- **Propagación automática de errores** si algún MlResult falla
-- **Flexibilidad** en patrones de combinación
-- **Escalabilidad** hasta 8 elementos en tuplas
+- [`EmptyToFailed`](1_EmptyToFailed.md) — fallar si una colección viene vacía
+- [`NullToFailed`](2_NullToFailed.md) — fallar si un objeto es `null`
+- [`BoolToResult`](3_BoolToResult.md) — construir un `MlResult` desde una condición
+- [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que pueden fallar
+- [`Map`](../Map/1_Map.md) — transformar el valor del carril
+- [`Bucles y proyecciones`](../Bucle/Bucles.md) — recorrer colecciones acumulando errores
+- [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — observar sin alterar el carril
+- [`MlResultErrors`](../Types/MlResultErrors.md) — `MlErrorsDetails` y la fusión de errores
+- [`Transformations`](../Transformations/Transformations.md) — `ToMlResultValid`, `ToAsync`

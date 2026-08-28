@@ -9,6 +9,8 @@
 6. [Ejemplos Prácticos](#ejemplos-prácticos)
 7. [Mejores Prácticas](#mejores-prácticas)
 8. [Comparación con Bind y Map](#comparación-con-bind-y-map)
+9. [Resumen](#resumen)
+10. [Ver también](#ver-también)
 
 ---
 
@@ -33,7 +35,7 @@ Los métodos `Match` implementan el patrón de **pattern matching funcional** so
 MlResult<T> → Match(validFunc, failFunc) → TReturn
    ↓                     ↓                    ↓
 Éxito → validFunc(value) → TReturn
-Fallo → failFunc(errors) → TReturn
+Fallo → failFunc(errorsDetails) → TReturn
 ```
 
 ### Características Principales
@@ -48,36 +50,87 @@ Fallo → failFunc(errors) → TReturn
 
 ## Métodos Match Básicos
 
+> ⚠️ **Nota sobre `MlErrorsDetails`.** Este tipo expone **solo** dos propiedades: `Errors`
+> (`IEnumerable<MlError>`) y `Details` (`Dictionary<string, object>`). **No existen** `AllErrors`,
+> `FirstErrorMessage`, `Exception` ni `HasValue`. Para obtener los mensajes usa los métodos de
+> extensión reales:
+>
+> | Necesitas | Usa |
+> | --- | --- |
+> | Array/lista de mensajes | `errores.ToErrorsMessages()` |
+> | Un único texto con todos los errores | `errores.ToErrorsDescription()` |
+> | El primer mensaje | `errores.Errors.First().Message` |
+> | La excepción capturada por un `Try*` | `errores.GetDetailException()` → `MlResult<Exception>` |
+> | Un dato adjunto | `errores.GetDetailValue<T>()` / `errores.GetDetail<T>("clave")` |
+
 ### `Match<T, TReturn>()`
 
-**Propósito**: Transformar un `MlResult<T>` en un `TReturn` con lógica específica para éxito y fallo
+**Propósito**: transformar un `MlResult<T>` en un `TReturn` con lógica específica para éxito y fallo.
 
 ```csharp
-public static TReturn Match<T, TReturn>(this MlResult<T> source,
-                                        Func<T, TReturn> valid,
+public static TReturn Match<T, TReturn>(this MlResult<T>               source,
+                                        Func<T, TReturn>               valid,
                                         Func<MlErrorsDetails, TReturn> fail)
 ```
 
 **Comportamiento**:
-- Si `source` es válido: ejecuta `valid(value)` y retorna el resultado
-- Si `source` es fallido: ejecuta `fail(errors)` y retorna el resultado
+- Si `source` es válido: ejecuta `valid(value)` y devuelve su resultado.
+- Si `source` es fallido: ejecuta `fail(errorsDetails)` y devuelve su resultado.
+- El valor devuelto es un `TReturn` **crudo**: aquí *sales* del mundo `MlResult`. Por eso `Match` es la
+  operación natural del **borde** de la aplicación (controladores, handlers, `Main`).
 
 **Ejemplo Básico**:
 ```csharp
-var user = GetUser(userId);
-var response = user.Match(
-    valid: u => new ApiResponse<User> { Success = true, Data = u },
-    fail: errors => new ApiResponse<User> { Success = false, Error = errors.FirstErrorMessage }
-);
+MlResult<Usuario> usuario = ObtenerUsuario(usuarioId);
+
+RespuestaApi<Usuario> respuesta = usuario.Match(
+    valid: u        => new RespuestaApi<Usuario> { Correcto = true,  Datos = u },
+    fail : errores  => new RespuestaApi<Usuario> { Correcto = false,
+                                                  Errores  = errores.ToErrorsMessages() });
 ```
 
-**Ejemplo con Diferentes Tipos de Retorno**:
+**Ejemplo con distinto tipo de retorno** (decidir un código HTTP a partir de los errores):
 ```csharp
-var result = ProcessPayment(paymentData);
-var statusCode = result.Match(
-    valid: payment => 200,
-    fail: errors => errors.AllErrors.Any(e => e.Contains("fraud")) ? 403 : 400
-);
+MlResult<Pago> resultado = ProcesarPago(datosPago);
+
+int codigo = resultado.Match(
+    valid: pago    => StatusCodes.Status200OK,
+    fail : errores => errores.ToErrorsDescription().Contains("fraude", StringComparison.OrdinalIgnoreCase)
+                        ? StatusCodes.Status403Forbidden
+                        : StatusCodes.Status400BadRequest);
+```
+
+**Ejemplo idiomático: extraer el valor con un valor por defecto**
+
+`Match` es también la forma correcta (y única segura) de «sacar» el valor, ya que `MlResult<T>.Value`
+es `internal protected` a propósito:
+
+```csharp
+// ❌ No compila fuera de la librería, y no debe hacerse:
+// var config = resultado.Value;
+
+// ✅ Idiomático: si falla, usamos la configuración por defecto.
+Configuracion config = resultado.Match(
+    valid: c => c,
+    fail : _ => Configuracion.PorDefecto);
+```
+
+**Ejemplo: enrutar según el tipo de excepción capturada**
+
+```csharp
+IActionResult respuesta = resultado.Match(
+    valid: dto     => Ok(dto),
+    fail : errores => errores.GetDetailException().Match(
+                          // Hubo excepción: distinguimos por su tipo.
+                          valid: ex => ex switch
+                          {
+                              TimeoutException      => StatusCode(504, "El proveedor no responde"),
+                              HttpRequestException  => StatusCode(502, "Error del proveedor"),
+                              UnauthorizedAccessException => Forbid(),
+                              _                     => StatusCode(500, ex.Message)
+                          },
+                          // No hubo excepción: es un error de negocio o validación.
+                          fail : _  => BadRequest(errores.ToErrorsMessages())));
 ```
 
 ---
@@ -150,20 +203,35 @@ public static MlResult<TResult> TryMatch<T, TResult>(
     Func<Exception, string> errorMessageBuilder)
 ```
 
-**Comportamiento**: 
-- Ejecuta Match normalmente
-- Si cualquiera de las funciones lanza excepción, retorna `MlResult<TResult>` fallido
-- Convierte excepciones en errores manejables
+**Comportamiento**:
+- Ejecuta el `Match` normalmente.
+- Si **cualquiera** de las dos funciones lanza una excepción, devuelve un `MlResult<TResult>` fallido
+  con la excepción guardada en `Details["Ex"]` (recuperable con `GetDetailException()`).
+- Convierte así las excepciones en errores manejables dentro de la tubería.
+
+> ⚠️ **Diferencia importante**: `Match` devuelve `TResult` **crudo**, mientras que `TryMatch` devuelve
+> `MlResult<TResult>`. Necesita el envoltorio para poder representar el fallo del propio delegado.
 
 **Ejemplo**:
 ```csharp
-var result = ProcessData(data);
-var safeResponse = result.TryMatch(
-    valid: d => TransformToDto(d), // Puede lanzar excepción
-    fail: errors => new ErrorDto { Message = errors.FirstErrorMessage },
-    ex => $"Transform failed: {ex.Message}"
-);
+MlResult<Datos> resultado = ProcesarDatos(datos);
+
+MlResult<RespuestaDto> respuesta = resultado.TryMatch(
+    valid: d       => TransformarADto(d),                            // Puede lanzar excepción
+    fail : errores => new RespuestaDto { Mensaje = errores.Errors.First().Message },
+    ex => $"Falló la transformación a DTO: {ex.Message}");
 ```
+
+**Ejemplo con mensaje fijo** (sobrecarga `string exceptionAditionalMessage`):
+```csharp
+MlResult<byte[]> pdf = informe.TryMatch(
+    valid: inf     => SerializarPdf(inf),                            // Puede lanzar
+    fail : errores => GenerarPdfDeError(errores.ToErrorsDescription()),
+    "No se pudo generar el PDF del informe");
+```
+
+Si omites tanto `errorMessageBuilder` como `exceptionAditionalMessage`, se usa el mensaje por defecto
+`DEFAULT_EX_ERROR_MESSAGE(ex)` definido en `Helpers/Constants.cs`.
 
 ### Versiones Asíncronas de TryMatch
 
@@ -187,419 +255,277 @@ public static async Task<MlResult<TResult>> TryMatchAsync<T, TResult>(
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: API Response Builder
+### Ejemplo 1: Constructor de respuestas de API
+
+Un único punto de traducción entre el mundo `MlResult` y el mundo HTTP. Observa que **todo** el acceso a
+los errores se hace con la API real (`ToErrorsMessages`, `ToErrorsDescription`, `GetDetailException`).
 
 ```csharp
-public class ApiResponseBuilder
+public static class ConstructorRespuestas
 {
-    public static ApiResponse<T> BuildResponse<T>(MlResult<T> result)
-    {
-        return result.Match(
-            valid: data => new ApiResponse<T>
+    /// <summary>
+    /// Envuelve cualquier MlResult en un DTO de respuesta uniforme.
+    /// </summary>
+    public static RespuestaApi<T> Construir<T>(MlResult<T> resultado)
+        => resultado.Match(
+            valid: datos   => new RespuestaApi<T>
             {
-                Success = true,
-                Data = data,
-                Timestamp = DateTime.UtcNow
+                Correcto   = true,
+                Datos      = datos,
+                MomentoUtc = DateTime.UtcNow
             },
-            fail: errors => new ApiResponse<T>
+            fail : errores => new RespuestaApi<T>
             {
-                Success = false,
-                Errors = errors.AllErrors,
-                ErrorCode = DetermineErrorCode(errors),
-                Timestamp = DateTime.UtcNow
-            }
-        );
-    }
-    
-    public static async Task<IActionResult> BuildActionResultAsync<T>(
-        Task<MlResult<T>> resultAsync)
-    {
-        return await resultAsync.MatchAsync(
-            validAsync: async data => 
+                Correcto      = false,
+                Errores       = errores.ToErrorsMessages(),      // string[]
+                CodigoError   = DeterminarCodigo(errores),
+                Diagnostico   = errores.ToErrorsDescription(),   // texto único
+                MomentoUtc    = DateTime.UtcNow
+            });
+
+    /// <summary>
+    /// Variante asíncrona: registra el resultado y devuelve el IActionResult adecuado.
+    /// </summary>
+    public static Task<IActionResult> ConstruirAsync<T>(Task<MlResult<T>> resultadoAsync)
+        => resultadoAsync.MatchAsync(
+            validAsync: async datos =>
             {
-                await LogSuccessAsync(data);
-                return new OkObjectResult(data);
+                await RegistrarExitoAsync(datos);
+                return (IActionResult) new OkObjectResult(datos);
             },
-            failAsync: async errors => 
+            failAsync : async errores =>
             {
-                await LogErrorsAsync(errors);
-                var statusCode = DetermineHttpStatusCode(errors);
-                return new ObjectResult(errors.AllErrors) { StatusCode = statusCode };
-            }
-        );
-    }
-    
-    private static string DetermineErrorCode(MlErrorsDetails errors)
+                await RegistrarErroresAsync(errores);
+                return new ObjectResult(errores.ToErrorsMessages())
+                {
+                    StatusCode = DeterminarCodigoHttp(errores)
+                };
+            });
+
+    private static string DeterminarCodigo(MlErrorsDetails errores)
     {
-        if (errors.AllErrors.Any(e => e.Contains("validation")))
-            return "VALIDATION_ERROR";
-        if (errors.AllErrors.Any(e => e.Contains("not found")))
-            return "NOT_FOUND";
+        // Un único texto en minúsculas evita recorrer la colección varias veces.
+        var texto = errores.ToErrorsDescription().ToLowerInvariant();
+
+        if (texto.Contains("validación") || texto.Contains("validacion")) return "VALIDATION_ERROR";
+        if (texto.Contains("no existe")  || texto.Contains("no encontrado")) return "NOT_FOUND";
         return "GENERAL_ERROR";
     }
-    
-    private static int DetermineHttpStatusCode(MlErrorsDetails errors)
-    {
-        if (errors.AllErrors.Any(e => e.Contains("not found")))
-            return 404;
-        if (errors.AllErrors.Any(e => e.Contains("validation")))
-            return 400;
-        if (errors.AllErrors.Any(e => e.Contains("unauthorized")))
-            return 401;
-        return 500;
-    }
+
+    private static int DeterminarCodigoHttp(MlErrorsDetails errores)
+        // Primero miramos si hubo excepción: es la señal más fiable.
+        => errores.GetDetailException().Match(
+            valid: ex => ex switch
+            {
+                TimeoutException            => StatusCodes.Status504GatewayTimeout,
+                HttpRequestException        => StatusCodes.Status502BadGateway,
+                UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+                _                           => StatusCodes.Status500InternalServerError
+            },
+            // Sin excepción → error de negocio: lo decidimos por el texto.
+            fail : _  => DeterminarCodigo(errores) switch
+            {
+                "NOT_FOUND"        => StatusCodes.Status404NotFound,
+                "VALIDATION_ERROR" => StatusCodes.Status400BadRequest,
+                _                  => StatusCodes.Status400BadRequest
+            });
+
+    private static Task RegistrarExitoAsync<T>(T datos)          => Task.CompletedTask;
+    private static Task RegistrarErroresAsync(MlErrorsDetails e) => Task.CompletedTask;
 }
 
-public class ApiResponse<T>
+public class RespuestaApi<T>
 {
-    public bool Success { get; set; }
-    public T Data { get; set; }
-    public string[] Errors { get; set; }
-    public string ErrorCode { get; set; }
-    public DateTime Timestamp { get; set; }
+    public bool     Correcto    { get; set; }
+    public T?       Datos       { get; set; }
+    public string[] Errores     { get; set; } = [];
+    public string?  CodigoError { get; set; }
+    public string?  Diagnostico { get; set; }
+    public DateTime MomentoUtc  { get; set; }
 }
 ```
 
-### Ejemplo 2: Sistema de Notificaciones Condicionales
+**Uso desde un controlador**, en una sola línea:
 
 ```csharp
-public class NotificationService
-{
-    private readonly IEmailService _emailService;
-    private readonly ISmsService _smsService;
-    private readonly ILogger _logger;
-    
-    public async Task<NotificationResult> ProcessOrderWithNotificationsAsync(
-        OrderRequest request)
-    {
-        return await ValidateOrder(request)
-            .BindAsync(async validOrder => await ProcessPaymentAsync(validOrder))
-            .BindAsync(async paidOrder => await CreateOrderAsync(paidOrder))
-            .TryMatchAsync(
-                validAsync: async order => await HandleSuccessfulOrderAsync(order),
-                failAsync: async errors => await HandleFailedOrderAsync(request, errors),
-                ex => $"Notification processing failed: {ex.Message}"
-            );
-    }
-    
-    private async Task<NotificationResult> HandleSuccessfulOrderAsync(Order order)
-    {
-        var notifications = new List<string>();
-        
-        // Email de confirmación
-        var emailResult = await _emailService.SendOrderConfirmationAsync(
-            order.CustomerId, order);
-        if (emailResult)
-            notifications.Add($"Email sent to customer {order.CustomerId}");
-        
-        // SMS si es pedido urgente
-        if (order.IsUrgent)
-        {
-            var smsResult = await _smsService.SendUrgentOrderSmsAsync(
-                order.CustomerPhone, order.Id);
-            if (smsResult)
-                notifications.Add($"Urgent SMS sent to {order.CustomerPhone}");
-        }
-        
-        // Notificación al vendedor si es pedido grande
-        if (order.TotalAmount > 1000)
-        {
-            await _emailService.SendHighValueOrderNotificationAsync(
-                order.SalesRepEmail, order);
-            notifications.Add($"High-value alert sent to sales rep");
-        }
-        
-        return new NotificationResult
-        {
-            Success = true,
-            OrderId = order.Id,
-            NotificationsSent = notifications.ToArray(),
-            Message = $"Order {order.Id} processed successfully"
-        };
-    }
-    
-    private async Task<NotificationResult> HandleFailedOrderAsync(
-        OrderRequest request, MlErrorsDetails errors)
-    {
-        var notifications = new List<string>();
-        
-        // Email de error al cliente
-        if (!string.IsNullOrEmpty(request.CustomerEmail))
-        {
-            await _emailService.SendOrderErrorNotificationAsync(
-                request.CustomerEmail, errors);
-            notifications.Add($"Error notification sent to {request.CustomerEmail}");
-        }
-        
-        // Alerta al soporte si es error crítico
-        if (IsCriticalError(errors))
-        {
-            await _emailService.SendCriticalErrorAlertAsync(
-                "support@company.com", request, errors);
-            notifications.Add("Critical error alert sent to support");
-        }
-        
-        // Log para análisis
-        await _logger.LogErrorAsync($"Order processing failed", new
-        {
-            CustomerId = request.CustomerId,
-            Errors = errors.AllErrors,
-            RequestData = request
-        });
-        
-        return new NotificationResult
-        {
-            Success = false,
-            ErrorCode = DetermineErrorCode(errors),
-            ErrorMessage = errors.FirstErrorMessage,
-            NotificationsSent = notifications.ToArray(),
-            Message = "Order processing failed, notifications sent"
-        };
-    }
-    
-    private bool IsCriticalError(MlErrorsDetails errors)
-    {
-        return errors.AllErrors.Any(e => 
-            e.Contains("payment gateway") || 
-            e.Contains("database") || 
-            e.Contains("critical"));
-    }
-}
-
-public class NotificationResult
-{
-    public bool Success { get; set; }
-    public Guid? OrderId { get; set; }
-    public string ErrorCode { get; set; }
-    public string ErrorMessage { get; set; }
-    public string[] NotificationsSent { get; set; }
-    public string Message { get; set; }
-}
+[HttpGet("{id:guid}")]
+public Task<IActionResult> Get(Guid id)
+    => ConstructorRespuestas.ConstruirAsync(_servicio.ObtenerAsync(id));
 ```
 
-### Ejemplo 3: Transform Pipeline con Match Final
+### Ejemplo 2: Sistema de notificaciones condicionales
+
+Aquí `TryMatchAsync` cierra una tubería de negocio: la rama válida y la rama de fallo hacen trabajo
+asíncrono (enviar correos, SMS, alertas) y ambas devuelven el **mismo** tipo, `ResultadoNotificacion`.
+Como el envío puede lanzar excepciones, usamos la variante `Try*`, que las convierte en `Fail` en lugar
+de dejarlas escapar.
 
 ```csharp
-public class DataTransformationService
+public class ServicioNotificaciones
 {
-    public async Task<ProcessingReport> ProcessDataFileAsync(string filePath)
-    {
-        var startTime = DateTime.UtcNow;
-        
-        return await ReadFileAsync(filePath)
-            .BindAsync(async content => await ValidateFormatAsync(content))
-            .BindAsync(async validData => await TransformDataAsync(validData))
-            .BindAsync(async transformed => await SaveToDestinationAsync(transformed))
+    private readonly IServicioEmail _email;
+    private readonly IServicioSms   _sms;
+    private readonly ILogger<ServicioNotificaciones> _log;
+
+    public Task<MlResult<ResultadoNotificacion>> ProcesarPedidoAsync(SolicitudPedido solicitud)
+        => ValidarPedido(solicitud)
+            .BindAsync(async valido  => await ProcesarPagoAsync(valido))
+            .BindAsync(async pagado  => await CrearPedidoAsync(pagado))
             .TryMatchAsync(
-                validAsync: async result => await CreateSuccessReportAsync(result, startTime),
-                failAsync: async errors => await CreateFailureReportAsync(errors, startTime, filePath),
-                ex => $"Report generation failed: {ex.Message}"
-            );
-    }
-    
-    private async Task<ProcessingReport> CreateSuccessReportAsync(
-        SaveResult result, DateTime startTime)
+                validAsync: async pedido  => await NotificarExitoAsync(pedido),
+                failAsync : async errores => await NotificarFalloAsync(solicitud, errores),
+                ex => $"Fallo al enviar las notificaciones: {ex.Message}");
+
+    // ── Rama válida ────────────────────────────────────────────────────────────
+    private async Task<ResultadoNotificacion> NotificarExitoAsync(Pedido pedido)
     {
-        var duration = DateTime.UtcNow - startTime;
-        
-        return new ProcessingReport
+        var enviadas = new List<string>();
+
+        if (await _email.EnviarConfirmacionAsync(pedido.ClienteId, pedido))
+            enviadas.Add($"Email de confirmación al cliente {pedido.ClienteId}");
+
+        if (pedido.EsUrgente && await _sms.EnviarUrgenteAsync(pedido.TelefonoCliente, pedido.Id))
+            enviadas.Add($"SMS urgente a {pedido.TelefonoCliente}");
+
+        if (pedido.Importe > 1_000m)
         {
-            Success = true,
-            ProcessingTime = duration,
-            RecordsProcessed = result.RecordCount,
-            RecordsSuccessful = result.RecordCount,
-            RecordsFailed = 0,
-            OutputPath = result.OutputPath,
-            Summary = $"Successfully processed {result.RecordCount} records in {duration.TotalSeconds:F2} seconds",
-            Details = new[]
-            {
-                $"Input validation: OK",
-                $"Data transformation: OK", 
-                $"Output generation: OK",
-                $"Throughput: {result.RecordCount / duration.TotalSeconds:F2} records/sec"
-            }
-        };
-    }
-    
-    private async Task<ProcessingReport> CreateFailureReportAsync(
-        MlErrorsDetails errors, DateTime startTime, string filePath)
-    {
-        var duration = DateTime.UtcNow - startTime;
-        var errorAnalysis = AnalyzeErrors(errors);
-        
-        // Log para troubleshooting
-        await LogProcessingFailureAsync(filePath, errors, duration);
-        
-        return new ProcessingReport
-        {
-            Success = false,
-            ProcessingTime = duration,
-            ErrorStage = errorAnalysis.Stage,
-            ErrorCategory = errorAnalysis.Category,
-            ErrorMessage = errors.FirstErrorMessage,
-            AllErrors = errors.AllErrors,
-            Summary = $"Processing failed at {errorAnalysis.Stage} stage after {duration.TotalSeconds:F2} seconds",
-            Details = new[]
-            {
-                $"File: {Path.GetFileName(filePath)}",
-                $"Stage: {errorAnalysis.Stage}",
-                $"Category: {errorAnalysis.Category}",
-                $"Error count: {errors.AllErrors.Length}"
-            },
-            Recommendations = GenerateRecommendations(errorAnalysis)
-        };
-    }
-    
-    private ErrorAnalysis AnalyzeErrors(MlErrorsDetails errors)
-    {
-        foreach (var error in errors.AllErrors)
-        {
-            if (error.Contains("file") || error.Contains("read"))
-                return new ErrorAnalysis { Stage = "FileReading", Category = "IO" };
-            if (error.Contains("format") || error.Contains("validation"))
-                return new ErrorAnalysis { Stage = "Validation", Category = "Format" };
-            if (error.Contains("transform"))
-                return new ErrorAnalysis { Stage = "Transformation", Category = "Logic" };
-            if (error.Contains("save") || error.Contains("output"))
-                return new ErrorAnalysis { Stage = "Output", Category = "IO" };
+            await _email.EnviarAvisoImporteAltoAsync(pedido.EmailComercial, pedido);
+            enviadas.Add("Aviso de importe alto al comercial");
         }
-        
-        return new ErrorAnalysis { Stage = "Unknown", Category = "General" };
-    }
-    
-    private string[] GenerateRecommendations(ErrorAnalysis analysis)
-    {
-        return analysis.Category switch
+
+        return new ResultadoNotificacion
         {
-            "IO" => new[] 
-            {
-                "Check file permissions and paths",
-                "Verify disk space availability",
-                "Ensure network connectivity if using remote paths"
-            },
-            "Format" => new[]
-            {
-                "Validate input file format",
-                "Check for required headers/fields",
-                "Verify data type compatibility"
-            },
-            "Logic" => new[]
-            {
-                "Review transformation rules",
-                "Check for edge cases in data",
-                "Validate business logic constraints"
-            },
-            _ => new[] { "Review error details and contact support" }
+            Correcto  = true,
+            PedidoId  = pedido.Id,
+            Enviadas  = [.. enviadas],
+            Mensaje   = $"Pedido {pedido.Id} procesado correctamente"
         };
     }
+
+    // ── Rama de fallo ──────────────────────────────────────────────────────────
+    private async Task<ResultadoNotificacion> NotificarFalloAsync(SolicitudPedido solicitud,
+                                                                 MlErrorsDetails  errores)
+    {
+        var enviadas = new List<string>();
+
+        // ToErrorsDescription() da un único texto legible con todos los errores.
+        var diagnostico = errores.ToErrorsDescription();
+
+        if (!string.IsNullOrWhiteSpace(solicitud.EmailCliente))
+        {
+            await _email.EnviarAvisoErrorAsync(solicitud.EmailCliente, diagnostico);
+            enviadas.Add($"Aviso de error a {solicitud.EmailCliente}");
+        }
+
+        if (EsErrorCritico(errores))
+        {
+            await _email.EnviarAlertaCriticaAsync("soporte@empresa.com", solicitud, diagnostico);
+            enviadas.Add("Alerta crítica a soporte");
+        }
+
+        // El log incluye la excepción original si la hubo, gracias a GetDetailException().
+        errores.GetDetailException()
+               .Match(valid: ex => { _log.LogError(ex, "Pedido rechazado: {D}", diagnostico); return 0; },
+                      fail : _  => { _log.LogWarning("Pedido rechazado: {D}", diagnostico);   return 0; });
+
+        return new ResultadoNotificacion
+        {
+            Correcto     = false,
+            CodigoError  = ClasificarError(errores),
+            // El primer mensaje se obtiene de la colección real de errores.
+            MensajeError = errores.Errors.FirstOrDefault()?.Message ?? diagnostico,
+            Enviadas     = [.. enviadas],
+            Mensaje      = "El pedido no se pudo procesar; se han enviado los avisos"
+        };
+    }
+
+    /// <summary>
+    /// Un error es crítico si vino de una excepción de infraestructura
+    /// o si su descripción menciona un componente crítico.
+    /// </summary>
+    private static bool EsErrorCritico(MlErrorsDetails errores)
+        => errores.GetDetailException().Match(
+               valid: ex => ex is TimeoutException or HttpRequestException or InvalidOperationException,
+               fail : _  => new[] { "pasarela de pago", "base de datos", "crítico" }
+                                .Any(clave => errores.ToErrorsDescription()
+                                                     .Contains(clave, StringComparison.OrdinalIgnoreCase)));
+
+    private static string ClasificarError(MlErrorsDetails errores)
+    {
+        var texto = errores.ToErrorsDescription().ToLowerInvariant();
+
+        if (texto.Contains("validación") || texto.Contains("validacion")) return "VALIDACION";
+        if (texto.Contains("pago"))                                        return "PAGO";
+        if (texto.Contains("stock"))                                       return "STOCK";
+        return "GENERAL";
+    }
 }
 
-public class ProcessingReport
+public class ResultadoNotificacion
 {
-    public bool Success { get; set; }
-    public TimeSpan ProcessingTime { get; set; }
-    public int RecordsProcessed { get; set; }
-    public int RecordsSuccessful { get; set; }
-    public int RecordsFailed { get; set; }
-    public string OutputPath { get; set; }
-    public string ErrorStage { get; set; }
-    public string ErrorCategory { get; set; }
-    public string ErrorMessage { get; set; }
-    public string[] AllErrors { get; set; }
-    public string Summary { get; set; }
-    public string[] Details { get; set; }
-    public string[] Recommendations { get; set; }
-}
-
-public class ErrorAnalysis
-{
-    public string Stage { get; set; }
-    public string Category { get; set; }
+    public bool     Correcto     { get; set; }
+    public Guid?    PedidoId     { get; set; }
+    public string?  CodigoError  { get; set; }
+    public string?  MensajeError { get; set; }
+    public string[] Enviadas     { get; set; } = [];
+    public string   Mensaje      { get; set; } = string.Empty;
 }
 ```
+
+> 💡 **Detalle clave**: `TryMatchAsync` devuelve `MlResult<ResultadoNotificacion>`, **no**
+> `ResultadoNotificacion` a secas. La variante `Try*` necesita envolver el resultado para poder
+> representar el fallo del propio delegado. La sobrecarga sin `Try` (`MatchAsync`) sí devuelve el
+> valor crudo.
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar Match vs Bind/Map
+### 1. Cuándo usar `Match` frente a `Bind` / `Map`
 
-```csharp
-// ✅ Correcto: Usar Match para finalizar cadenas y cambiar de tipo
-var response = ProcessOrder(order)
-    .Bind(CalculateShipping)
-    .Bind(ApplyDiscounts)
-    .Match(
-        valid: finalOrder => new ApiResponse { Data = finalOrder, Success = true },
-        fail: errors => new ApiResponse { Errors = errors.AllErrors, Success = false }
-    );
+| Quieres… | Usa | Devuelve |
+| --- | --- | --- |
+| Continuar la tubería con otra operación que puede fallar | `Bind` | `MlResult<TReturn>` |
+| Continuar la tubería transformando el valor (no falla) | `Map` | `MlResult<TReturn>` |
+| Observar sin cambiar nada (log, métrica) | `ExecSelf*` | El mismo `MlResult<T>` |
+| Recuperarte de un fallo con un valor alternativo | `MapIfFail` / `BindIfFail` | `MlResult<T>` |
+| **Salir** del mundo `MlResult` con un valor concreto | `Match` | `TReturn` crudo |
 
-// ✅ Correcto: Usar Match para extraer valores específicos
-var statusCode = ValidateUser(userData)
-    .Match(
-        valid: user => 200,
-        fail: errors => errors.AllErrors.Any(e => e.Contains("not found")) ? 404 : 400
-    );
+Regla práctica: **`Match` va al final**. Si aparece en medio de una tubería, casi siempre lo que
+querías era `Bind`, `Map`, `MapIfFail` o `ExecSelf*`.
 
-// ❌ Incorrecto: Usar Match cuando podrías continuar la cadena
-var result = ProcessData(data)
-    .Match(
-        valid: d => MlResult<TransformedData>.Valid(Transform(d)),
-        fail: errors => MlResult<TransformedData>.Fail(errors.AllErrors)
-    ); // Mejor usar Map o Bind
-```
+### 2. Manejo de excepciones
 
-### 2. Manejo de Excepciones
+Si **cualquiera** de las dos ramas puede lanzar, usa `TryMatch` / `TryMatchAsync`. Ten en cuenta que
+`TryMatch` **cambia el tipo de retorno** a `MlResult<TResult>`, mientras que `Match` devuelve
+`TResult` crudo: esa es la única diferencia estructural entre ambos. La excepción capturada queda en
+`Details["Ex"]` y se recupera después con `GetDetailException()`.
 
-```csharp
-// ✅ Correcto: Usar TryMatch para operaciones que pueden fallar
-var result = GetUserData(userId)
-    .TryMatch(
-        valid: user => JsonSerializer.Serialize(user), // Puede lanzar excepción
-        fail: errors => $"{{\"error\": \"{errors.FirstErrorMessage}\"}}",
-        ex => $"Serialization failed: {ex.Message}"
-    );
+Hay dos formas de indicar el mensaje de error: `Func<Exception, string> errorMessageBuilder` o
+`string exceptionAditionalMessage`. Si no indicas ninguna, se usa el mensaje por defecto
+`DEFAULT_EX_ERROR_MESSAGE(ex)` definido en `Helpers/Constants.cs`.
 
-// ✅ Correcto: Manejo defensivo en funciones complejas
-var response = ProcessComplexData(data)
-    .TryMatch(
-        valid: d => ComplexTransformation(d),
-        fail: errors => CreateErrorResponse(errors),
-        ex => $"Complex transformation failed: {ex.Message}"
-    );
+### 3. Funciones asíncronas
 
-// ❌ Incorrecto: No manejar excepciones en operaciones riesgosas
-var result = GetData(id)
-    .Match(
-        valid: data => RiskyOperation(data), // Puede lanzar excepción no controlada
-        fail: errors => DefaultValue()
-    );
-```
+Existe una sobrecarga para cada combinación, de modo que **nunca necesitas `await` intermedios** ni
+`.Result`:
 
-### 3. Funciones Asíncronas
+| Fuente | `valid` | `fail` | Método |
+| --- | --- | --- | --- |
+| `MlResult<T>` | sync | sync | `Match` |
+| `MlResult<T>` | async | async | `MatchAsync` |
+| `MlResult<T>` | sync | async | `MatchAsync` |
+| `MlResult<T>` | async | sync | `MatchAsync` |
+| `Task<MlResult<T>>` | sync | sync | `MatchAsync` |
+| `Task<MlResult<T>>` | async | async | `MatchAsync` |
+| `Task<MlResult<T>>` | sync | async | `MatchAsync` |
+| `Task<MlResult<T>>` | async | sync | `MatchAsync` |
 
-```csharp
-// ✅ Correcto: Usar versión asíncrona apropiada
-var notification = await ProcessOrderAsync(order)
-    .MatchAsync(
-        validAsync: async o => await SendSuccessEmailAsync(o.CustomerId),
-        failAsync: async errors => await SendErrorEmailAsync(errors)
-    );
+### 4. Ambas ramas deben devolver el mismo tipo
 
-// ✅ Correcto: Combinar sync/async según necesidad
-var result = await GetDataAsync(id)
-    .MatchAsync(
-        validAsync: async data => await ProcessAsync(data),
-        fail: errors => ProcessErrors(errors) // Síncrono, más rápido
-    );
-
-// ❌ Incorrecto: Hacer operaciones síncronas en versiones asíncronas innecesariamente
-var result = await GetDataAsync(id)
-    .MatchAsync(
-        validAsync: async data => await Task.FromResult(SimpleTransform(data)),
-        failAsync: async errors => await Task.FromResult(CreateError(errors))
-    ); // Mejor usar versión síncrona
-```
+Es un requisito del compilador, pero conviene recordarlo: si las ramas devuelven tipos distintos,
+declara explícitamente `TReturn` (por ejemplo `Match<Pedido, IActionResult>`) o convierte ambas a un
+tipo común (`IActionResult`, una interfaz propia, etc.).
 
 ---
 
@@ -607,60 +533,47 @@ var result = await GetDataAsync(id)
 
 ### Tabla Comparativa
 
-| Método | Entrada | Salida | Propósito | Cuándo Usar |
-|--------|---------|--------|-----------|-------------|
-| `Map` | `MlResult<T>` | `MlResult<TResult>` | Transformar valor manteniendo contexto | Transformaciones que continúan la cadena |
-| `Bind` | `MlResult<T>` | `MlResult<TResult>` | Encadenar operaciones que pueden fallar | Operaciones secuenciales con validación |
-| `Match` | `MlResult<T>` | `TReturn` | Extraer/transformar finalizando contexto | Finalizar cadenas, cambiar de tipo |
+| Operación | Recibe | Devuelve | ¿Sigue en la tubería? | ¿Se ejecuta si hay fallo? |
+| --- | --- | --- | :---: | :---: |
+| `Bind` | `T` | `MlResult<TReturn>` | Sí | No |
+| `Map` | `T` | `MlResult<TReturn>` | Sí | No |
+| `MapIfFail` | `MlErrorsDetails` | `MlResult<T>` | Sí | **Solo** si hay fallo |
+| `ExecSelf` | `T` o los errores | El mismo `MlResult<T>` | Sí | Según la variante |
+| `Match(valid, fail)` | `T` **y** los errores | `TReturn` **crudo** | **No** | Sí (rama `fail`) |
+| `TryMatch(valid, fail, …)` | `T` **y** los errores | `MlResult<TResult>` | Sí | Sí (rama `fail`) |
+| `Match(funcAll)` | Nada | `MlResult<TReturn>` | Sí | Sí (ignora el estado) |
 
 ### Ejemplo Comparativo
 
-```csharp
-// Escenario: Procesar usuario y retornar response HTTP
-var userId = 123;
+La misma necesidad, «obtener un pedido y devolver una respuesta HTTP», resuelta con cada operación:
 
-// Con Map + Match (recomendado para transformaciones + finalización)
-var response1 = GetUser(userId)
-    .Map(user => user.ToDto())
-    .Match(
-        valid: dto => Ok(dto),
-        fail: errors => BadRequest(errors.AllErrors)
-    );
-
-// Con Bind + Match (recomendado para validaciones + finalización)
-var response2 = GetUser(userId)
-    .Bind(user => ValidateUserPermissions(user))
-    .Match(
-        valid: validUser => Ok(validUser.ToDto()),
-        fail: errors => Unauthorized(errors.AllErrors)
-    );
-
-// Solo Match (recomendado para casos simples)
-var response3 = GetUser(userId)
-    .Match(
-        valid: user => Ok(user.ToDto()),
-        fail: errors => NotFound(errors.AllErrors)
-    );
-```
+- Con `Bind`: encadenas otra operación que **también puede fallar** y sigues dentro de `MlResult`.
+- Con `Map`: transformas el pedido en un DTO y sigues dentro de `MlResult`.
+- Con `MapIfFail`: sustituyes el fallo por un pedido «vacío» y sigues dentro de `MlResult`.
+- Con `ExecSelfIfFail`: registras el error en el log y el resultado **no cambia**.
+- Con `Match`: decides `Ok(...)` o `BadRequest(...)` y **sales** con un `IActionResult`.
 
 ---
 
 ## Resumen
 
-Los métodos `Match` proporcionan **pattern matching funcional** para `MlResult<T>`:
+- `Match` es el **pattern matching** de la librería: una función para el caso válido y otra para el
+  caso fallido, y devuelve un `TReturn` **crudo**.
+- Es la operación del **borde** de la aplicación: donde se abandona el mundo `MlResult`.
+- Es también la forma correcta de leer el contenido, porque `MlResult<T>.Value` es
+  `internal protected` a propósito.
+- `TryMatch` hace lo mismo pero captura las excepciones de los delegados y devuelve
+  `MlResult<TResult>`, guardando la excepción en `Details["Ex"]`.
+- Existen sobrecargas para las **ocho** combinaciones de fuente y delegados síncronos/asíncronos.
+- `MlErrorsDetails` solo tiene `Errors` y `Details`: usa `ToErrorsMessages()`,
+  `ToErrorsDescription()`, `GetDetailException()` y `GetDetailValue<T>()` para consultarlo.
 
-- **`Match`**: Transforma a cualquier tipo con lógica diferenciada
-- **`MatchAsync`**: Soporte completo para operaciones asíncronas  
-- **`TryMatch`**: Versiones seguras que capturan excepciones
+## Ver también
 
-**Casos de uso ideales**:
-- **Finalizar cadenas de `MlResult`** extrayendo valores
-- **Crear responses HTTP** con lógica diferente para éxito/fallo
-- **Transformar a DTOs o tipos externos** 
-- **Generar reportes o logs** basados en el resultado
-
-**Ventajas principales**:
-- **Finalización limpia** de pipelines funcionales
-- **Bifurcación clara** entre lógica de éxito y fallo
-- **Flexibilidad total** en tipos de retorno
-- **Soporte asíncrono completo** para todas las combinaciones
+- [`2_MatchAll.md`](./2_MatchAll.md) — la sobrecarga incondicional (`Func<TReturn>` sin parámetros).
+- [`../Types/MlResultActionsMatch.md`](../Types/MlResultActionsMatch.md) — referencia completa del archivo fuente.
+- [`../Types/MlResultErrors.md`](../Types/MlResultErrors.md) — el sistema de errores (`MlError`, `MlErrorsDetails`).
+- [`../Types/MlResultActionsErrorsDetails.md`](../Types/MlResultActionsErrorsDetails.md) — `GetDetailException`, `GetDetailValue<T>`, `GetDetail<T>`.
+- [`../Bind/3_Bind.md`](../Bind/3_Bind.md) — encadenar operaciones que pueden fallar.
+- [`../Map/1_Map.md`](../Map/1_Map.md) — transformar el valor sin salir de la tubería.
+- [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios sin alterar el resultado.

@@ -1,5 +1,12 @@
 # MlResult MatchAll - Ejecución Incondicional con Transformación
 
+> ⚠️ **Aviso importante sobre los nombres.** En el código fuente existe una región llamada
+> `#region MatchAll` dentro de `Types/MlResultActionsMatch.cs`, pero **no existe ningún método público
+> llamado `MatchAll`**. Los métodos de esa región se llaman igualmente
+> `Match` / `MatchAsync` / `TryMatch` / `TryMatchAsync`; lo que los distingue es su **firma**: reciben
+> un único delegado **sin parámetros** (`Func<TReturn> funcAll`) y devuelven `MlResult<TReturn>`.
+> A lo largo de este documento hablamos de «la sobrecarga *match-all*» para referirnos a ellos.
+
 ## Índice
 1. [Introducción](#introducción)
 2. [Análisis de los Métodos](#análisis-de-los-métodos)
@@ -14,649 +21,348 @@
 
 ## Introducción
 
-Los métodos `MatchAll` proporcionan un patrón de **ejecución incondicional con transformación**, ejecutando una función independientemente del estado del `MlResult<T>` (éxito o fallo) y transformando el resultado a un nuevo tipo `TReturn` envuelto en `MlResult<TReturn>`.
+La sobrecarga *match-all* de `Match` proporciona un patrón de **ejecución incondicional con
+transformación**: ejecuta una función independientemente del estado del `MlResult<T>` (válido o fallido)
+y devuelve un `MlResult<TReturn>` **nuevo**, desligado del estado anterior.
 
 ### Propósito Principal
 
-- **Ejecución Independiente del Estado**: La función se ejecuta sin importar si el resultado es válido o fallido
-- **Transformación Consistente**: Convierte cualquier entrada en `MlResult<TReturn>`
-- **Operaciones de Finalización**: Ideal para cleanup, logging general, o generación de reportes
-- **Reset de Contexto**: Crear nuevos resultados independientes del estado anterior
+- **Ejecución Independiente del Estado**: la función se ejecuta sin importar si el resultado es válido o fallido.
+- **Transformación Consistente**: convierte cualquier entrada en `MlResult<TReturn>`.
+- **Operaciones de Finalización**: ideal para *cleanup*, cierre de sesión, generación de informes o telemetría de cierre.
+- **Reset de Contexto**: crear un resultado nuevo cuando el estado anterior ya no aporta información útil.
+
+### Cómo distinguirla de la sobrecarga clásica
+
+| Sobrecarga | Firma | Devuelve |
+| --- | --- | --- |
+| Clásica (dos ramas) | `Match<T, TReturn>(Func<T, TReturn> valid, Func<MlErrorsDetails, TReturn> fail)` | `TReturn` **crudo** (sale del `MlResult`) |
+| *match-all* | `Match<T, TReturn>(Func<TReturn> funcAll)` | `MlResult<TReturn>` (**sigue** en la tubería) |
+
+El compilador resuelve una u otra según el número de delegados que le pases, así que no hay ambigüedad
+en el código real.
 
 ---
 
 ## Análisis de los Métodos
 
-### Filosofía de MatchAll
+### Filosofía de la sobrecarga *match-all*
 
 ```
-MlResult<T> (cualquier estado) → MatchAll(func) → MlResult<TReturn>
+MlResult<T> (cualquier estado) → Match(funcAll) → MlResult<TReturn>
                 ↓                      ↓                    ↓
-     Válido/Fallido → func() → MlResult<TReturn>.Valid(result)
+     Válido/Fallido        → funcAll() →       nuevo resultado válido
 ```
+
+Implementación real (simplificada):
+
+```csharp
+public static MlResult<TReturn> Match<T, TReturn>(this MlResult<T> source,
+                                                  Func<TReturn>    funcAll)
+    => funcAll();
+```
+
+Literalmente **ignora `source`**. El valor devuelto se convierte en `MlResult<TReturn>` gracias a la
+conversión implícita del tipo.
 
 ### Características Principales
 
-1. **Ejecución Incondicional**: Se ejecuta siempre, sin importar el estado
-2. **Ignora Entrada**: No recibe el valor ni los errores del `MlResult<T>` original
-3. **Nuevo Contexto**: Genera un `MlResult<TReturn>` completamente nuevo
-4. **Reset de Estado**: El resultado anterior no afecta el nuevo resultado
-5. **Transformación Total**: Cambia tanto el tipo como el contexto de resultado
+1. **Ejecución Incondicional**: se ejecuta siempre, sin importar el estado.
+2. **Ignora la Entrada**: no recibe el valor ni los errores del `MlResult<T>` original.
+3. **Nuevo Contexto**: genera un `MlResult<TReturn>` completamente nuevo.
+4. **Reset de Estado**: los errores previos **se pierden**. Si los necesitas, regístralos antes con
+   `ExecSelfIfFail` o consérvalos con `MergeErrorsDetailsIfFail`.
+5. **Transformación Total**: cambia tanto el tipo como el contexto del resultado.
+
+> ⚠️ El punto 4 es el riesgo principal: si usas esta sobrecarga en medio de una tubería, **enmascaras
+> los fallos anteriores**. Úsala de forma consciente, normalmente al final del flujo.
 
 ---
 
 ## Métodos MatchAll Básicos
 
-### `MatchAll<T, TReturn>()`
+### `Match<T, TReturn>(Func<TReturn> funcAll)`
 
-**Propósito**: Ejecutar una función independientemente del estado del resultado y crear un nuevo `MlResult<TReturn>`
+**Propósito**: ejecutar una función independientemente del estado del resultado y crear un nuevo
+`MlResult<TReturn>`.
 
 ```csharp
-public static MlResult<TReturn> MatchAll<T, TReturn>(this MlResult<T> source, 
-                                                     Func<TReturn> funcAll)
+public static MlResult<TReturn> Match<T, TReturn>(this MlResult<T> source,
+                                                  Func<TReturn>    funcAll)
 ```
 
 **Comportamiento**:
-- Ignora completamente el estado y contenido de `source`
-- Ejecuta `funcAll()` incondicionalmente
-- Retorna `MlResult<TReturn>.Valid(funcAll())`
+- Ignora por completo el estado y el contenido de `source`.
+- Ejecuta `funcAll()` incondicionalmente.
+- Devuelve un `MlResult<TReturn>` válido con el valor obtenido.
 
 **Ejemplo Básico**:
 ```csharp
-var anyResult = ProcessData(data); // Puede ser válido o fallido
-var newResult = anyResult.MatchAll(() => "Proceso completado");
-// Siempre retorna MlResult<string>.Valid("Proceso completado")
+MlResult<Pedido> resultado = ProcesarPedido(dto);   // puede ser válido o fallido
+
+// Cerramos el flujo con un mensaje único, sea cual sea el resultado.
+MlResult<string> cierre = resultado.Match(() => "Proceso finalizado");
+// Siempre válido: "Proceso finalizado"
 ```
 
-**Ejemplo con Generación de Reportes**:
+**Ejemplo más útil: liberar recursos y devolver un acuse**
+
 ```csharp
-var processResult = ExecuteComplexOperation();
-var report = processResult.MatchAll(() => new ProcessReport
-{
-    Timestamp = DateTime.UtcNow,
-    ProcessId = Guid.NewGuid(),
-    Status = "Completed",
-    Message = "Operation finished, check logs for details"
-});
-// Siempre genera un reporte válido
+MlResult<Acuse> acuse = await _importador.ImportarAsync(fichero)
+        // Dejamos rastro del fallo ANTES de perderlo.
+        .ExecSelfIfFailAsync(er => _log.LogWarning("Importación fallida: {E}",
+                                                  er.ToErrorsDescription()))
+        // Y cerramos siempre igual: el cliente recibe un acuse de recepción.
+        .MatchAsync(() => new Acuse(fichero.Nombre, _reloj.Ahora));
 ```
 
 ---
 
 ## Variantes Asíncronas
 
-### `MatchAllAsync<T, TReturn>()` - Función Asíncrona
+### `MatchAsync` con función asíncrona
 
 ```csharp
-public static async Task<MlResult<TReturn>> MatchAllAsync<T, TReturn>(
-    this MlResult<T> source, 
-    Func<Task<TReturn>> funcAllAsync)
+public static Task<MlResult<TReturn>> MatchAsync<T, TReturn>(
+    this MlResult<T>     source,
+    Func<Task<TReturn>>  funcAllAsync)
 ```
 
 **Ejemplo**:
 ```csharp
-var result = await ProcessDataAsync(data);
-var notification = await result.MatchAllAsync(async () => 
-    await _notificationService.SendCompletionNotificationAsync());
+MlResult<Datos> resultado = await ProcesarAsync(datos);
+
+MlResult<Notificacion> aviso = await resultado.MatchAsync(
+    async () => await _notificaciones.EnviarCierreAsync());
 ```
 
-### `MatchAllAsync<T, TReturn>()` - Fuente Asíncrona
+### `MatchAsync` con fuente asíncrona
 
 ```csharp
-// Con función asíncrona
-public static async Task<MlResult<TReturn>> MatchAllAsync<T, TReturn>(
-    this Task<MlResult<T>> sourceAsync, 
-    Func<Task<TReturn>> funcAllAsync)
+// Fuente asíncrona + función asíncrona
+public static Task<MlResult<TReturn>> MatchAsync<T, TReturn>(
+    this Task<MlResult<T>> sourceAsync,
+    Func<Task<TReturn>>    funcAllAsync)
 
-// Con función síncrona
-public static async Task<MlResult<TReturn>> MatchAllAsync<T, TReturn>(
-    this Task<MlResult<T>> sourceAsync, 
-    Func<TReturn> funcAll)
+// Fuente asíncrona + función síncrona
+public static Task<MlResult<TReturn>> MatchAsync<T, TReturn>(
+    this Task<MlResult<T>> sourceAsync,
+    Func<TReturn>          funcAll)
 ```
 
-**Ejemplo**:
+**Ejemplo** (sin `await` intermedios, la tubería no se rompe):
 ```csharp
-var summary = await ProcessLongRunningTaskAsync()
-    .MatchAllAsync(async () => await GenerateCompletionSummaryAsync());
+MlResult<Resumen> resumen = await EjecutarProcesoLargoAsync()
+        .MatchAsync(async () => await GenerarResumenAsync());
 ```
+
+En total hay **cuatro** sobrecargas asíncronas, combinando fuente (síncrona / `Task`) y delegado
+(síncrono / asíncrono).
 
 ---
 
 ## Métodos TryMatchAll - Captura de Excepciones
 
-### `TryMatchAll<T, TReturn>()` - Versión Segura
+### `TryMatch<T, TReturn>(Func<TReturn> funcAll, ...)`
 
 ```csharp
-public static MlResult<TReturn> TryMatchAll<T, TReturn>(
-    this MlResult<T> source, 
-    Func<TReturn> funcAll,
+// Mensaje construido a partir de la excepción
+public static MlResult<TReturn> TryMatch<T, TReturn>(
+    this MlResult<T>        source,
+    Func<TReturn>           funcAll,
     Func<Exception, string> errorMessageBuilder)
+
+// Mensaje fijo
+public static MlResult<TReturn> TryMatch<T, TReturn>(
+    this MlResult<T> source,
+    Func<TReturn>    funcAll,
+    string           exceptionAditionalMessage = null!)
 ```
 
-**Comportamiento**: 
-- Ejecuta `funcAll()` incondicionalmente
-- Si `funcAll()` lanza excepción, captura y retorna `MlResult<TReturn>` fallido
-- Si `funcAll()` ejecuta correctamente, retorna `MlResult<TReturn>` válido
+**Comportamiento**:
+- Ejecuta `funcAll()` incondicionalmente.
+- Si lanza una excepción, devuelve un `MlResult<TReturn>` fallido **con la excepción guardada** en
+  `Details["Ex"]`, recuperable después con `GetDetailException()`.
+- Si termina bien, devuelve un `MlResult<TReturn>` válido.
+
+**Detalle de implementación relevante**: internamente conserva los errores previos cuando `source` venía
+fallido, porque delega en `funcAll.TryToMlResult(errorDetails, errorMessageBuilder)`. Es decir,
+`TryMatch` es **menos destructivo** que `Match` en su variante *match-all*.
 
 **Ejemplo**:
 ```csharp
-var result = ProcessData(data);
-var safeReport = result.TryMatchAll(
-    () => GenerateComplexReport(), // Puede lanzar excepción
-    ex => $"Report generation failed: {ex.Message}"
-);
+MlResult<Datos> resultado = ProcesarDatos(entrada);
+
+MlResult<Informe> informe = resultado.TryMatch(
+    () => GenerarInformeComplejo(),                  // puede lanzar
+    ex => $"No se pudo generar el informe: {ex.Message}");
 ```
 
-### Versiones Asíncronas de TryMatchAll
+### Versiones Asíncronas de `TryMatch`
 
 ```csharp
-// Función asíncrona
-public static Task<MlResult<TReturn>> TryMatchAllAsync<T, TReturn>(
-    this MlResult<T> source, 
-    Func<Task<TReturn>> funcAllAsync,
+// Fuente síncrona + función asíncrona
+public static Task<MlResult<TReturn>> TryMatchAsync<T, TReturn>(
+    this MlResult<T>        source,
+    Func<Task<TReturn>>     funcAllAsync,
     Func<Exception, string> errorMessageBuilder)
 
-// Con Task<MlResult<T>>
-public static async Task<MlResult<TReturn>> TryMatchAllAsync<T, TReturn>(
-    this Task<MlResult<T>> sourceAsync, 
-    Func<Task<TReturn>> funcAllAsync,
+// Fuente asíncrona + función asíncrona
+public static Task<MlResult<TReturn>> TryMatchAsync<T, TReturn>(
+    this Task<MlResult<T>>  sourceAsync,
+    Func<Task<TReturn>>     funcAllAsync,
     Func<Exception, string> errorMessageBuilder)
 ```
+
+Cada una tiene además su gemela con `string exceptionAditionalMessage`, lo que da **cuatro**
+sobrecargas asíncronas de `TryMatch` en esta región.
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Auditoría y Logging
+### Ejemplo 1: Auditoría de cierre de una operación
+
+Queremos que **toda** ejecución deje un registro de auditoría, tanto si salió bien como si falló, y que
+el método devuelva el identificador del registro creado.
 
 ```csharp
-public class AuditService
+public class ServicioPedidos
 {
-    private readonly ILogger _logger;
-    private readonly IAuditRepository _auditRepo;
-    private readonly IMetricsCollector _metrics;
-    
-    public async Task<MlResult<AuditRecord>> ProcessWithAuditAsync<T>(
-        Task<MlResult<T>> operationAsync, 
-        string operationName, 
-        string userId)
-    {
-        var startTime = DateTime.UtcNow;
-        var correlationId = Guid.NewGuid().ToString();
-        
-        return await operationAsync
-            .TryMatchAllAsync(async () =>
-            {
-                var endTime = DateTime.UtcNow;
-                var duration = endTime - startTime;
-                
-                // Crear registro de auditoría independiente del resultado
-                var auditRecord = new AuditRecord
-                {
-                    CorrelationId = correlationId,
-                    OperationName = operationName,
-                    UserId = userId,
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    Duration = duration,
-                    Timestamp = DateTime.UtcNow
-                };
-                
-                // Guardar en base de datos
-                await _auditRepo.SaveAuditRecordAsync(auditRecord);
-                
-                // Registrar métricas
-                await _metrics.RecordOperationDurationAsync(operationName, duration);
-                await _metrics.IncrementOperationCountAsync(operationName);
-                
-                // Log general
-                await _logger.LogInformationAsync(
-                    $"Operation {operationName} completed for user {userId} in {duration.TotalMilliseconds}ms");
-                
-                return auditRecord;
-                
-            }, ex => $"Audit processing failed: {ex.Message}");
-    }
-    
-    // Ejemplo de uso
-    public async Task<ApiResponse<UserData>> GetUserWithAuditAsync(int userId)
-    {
-        var userResult = GetUserDataAsync(userId);
-        
-        var auditResult = await ProcessWithAuditAsync(
-            userResult, 
-            "GetUserData", 
-            userId.ToString());
-        
-        var originalResult = await userResult;
-        
-        return originalResult.Match(
-            valid: userData => new ApiResponse<UserData>
-            {
-                Success = true,
-                Data = userData,
-                AuditId = auditResult.IsValid ? auditResult.Value.CorrelationId : null
-            },
-            fail: errors => new ApiResponse<UserData>
-            {
-                Success = false,
-                Errors = errors.AllErrors,
-                AuditId = auditResult.IsValid ? auditResult.Value.CorrelationId : null
-            }
-        );
-    }
-}
+    private readonly IAuditoria _auditoria;
+    private readonly ILogger<ServicioPedidos> _log;
 
-public class AuditRecord
-{
-    public string CorrelationId { get; set; }
-    public string OperationName { get; set; }
-    public string UserId { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
-    public TimeSpan Duration { get; set; }
-    public DateTime Timestamp { get; set; }
-}
+    public async Task<MlResult<Guid>> ProcesarConAuditoriaAsync(PedidoDto dto)
+        => await ProcesarAsync(dto)
 
-public class ApiResponse<T>
-{
-    public bool Success { get; set; }
-    public T Data { get; set; }
-    public string[] Errors { get; set; }
-    public string AuditId { get; set; }
+            // 1. Antes de perder el contexto, registramos qué pasó realmente.
+            .ExecSelfIfValidAsync(p  => _log.LogInformation("Pedido {Id} procesado", p.Id))
+            .ExecSelfIfFailAsync (er => _log.LogWarning("Pedido rechazado: {E}",
+                                                       er.ToErrorsDescription()))
+
+            // 2. Sea cual sea el estado, creamos SIEMPRE el registro de auditoría
+            //    y devolvemos su Id. TryMatch protege la escritura en base de datos.
+            .TryMatchAsync(
+                async () => await _auditoria.RegistrarAsync("ProcesarPedido", _reloj.Ahora),
+                ex => $"No se pudo escribir la auditoría: {ex.Message}");
 }
 ```
 
-### Ejemplo 2: Generación de Reportes de Finalización
+Puntos a observar:
+
+- `ExecSelf*` **no cambia** el resultado: solo observa. Es el sitio correcto para el log.
+- La sobrecarga *match-all* de `TryMatch` **descarta** el `Pedido` y devuelve un `Guid`.
+- Si la auditoría falla, el resultado final es `Fail` con la excepción en `Details["Ex"]`.
+
+### Ejemplo 2: Informe de finalización de un proceso por lotes
 
 ```csharp
-public class ProcessingReportService
-{
-    private readonly IReportGenerator _reportGenerator;
-    private readonly INotificationService _notificationService;
-    
-    public async Task<MlResult<ProcessingReport>> ProcessBatchWithReportAsync(
-        List<BatchItem> items)
-    {
-        var processingStartTime = DateTime.UtcNow;
-        var batchId = Guid.NewGuid().ToString();
-        
-        return await ProcessBatchItemsAsync(items, batchId)
-            .TryMatchAllAsync(async () =>
-            {
-                var endTime = DateTime.UtcNow;
-                var totalDuration = endTime - processingStartTime;
-                
-                // Generar reporte independientemente del resultado del procesamiento
-                var report = new ProcessingReport
-                {
-                    BatchId = batchId,
-                    StartTime = processingStartTime,
-                    EndTime = endTime,
-                    TotalDuration = totalDuration,
-                    TotalItems = items.Count,
-                    ProcessedAt = DateTime.UtcNow,
-                    Status = "Completed" // Siempre "Completed" porque el proceso terminó
-                };
-                
-                // Analizar resultados individuales para estadísticas
-                var itemResults = await GetIndividualResultsAsync(batchId);
-                report.SuccessfulItems = itemResults.Count(r => r.Success);
-                report.FailedItems = itemResults.Count(r => !r.Success);
-                report.SuccessRate = (double)report.SuccessfulItems / report.TotalItems * 100;
-                
-                // Generar archivo de reporte
-                var reportPath = await _reportGenerator.GenerateReportFileAsync(report, itemResults);
-                report.ReportPath = reportPath;
-                
-                // Enviar notificación de finalización
-                await _notificationService.SendBatchCompletionNotificationAsync(report);
-                
-                // Log de finalización
-                Console.WriteLine($"Batch {batchId} processing completed. " +
-                    $"Success rate: {report.SuccessRate:F1}%. Report saved to: {reportPath}");
-                
-                return report;
-                
-            }, ex => $"Report generation failed: {ex.Message}");
-    }
-    
-    public async Task<MlResult<CleanupReport>> ProcessWithCleanupAsync<T>(
-        Task<MlResult<T>> operationAsync,
-        List<string> tempFiles,
-        string workingDirectory)
-    {
-        return await operationAsync
-            .MatchAllAsync(async () =>
-            {
-                var cleanupStartTime = DateTime.UtcNow;
-                var cleanupResults = new List<CleanupItem>();
-                
-                // Limpiar archivos temporales
-                foreach (var tempFile in tempFiles)
-                {
-                    try
-                    {
-                        if (File.Exists(tempFile))
-                        {
-                            File.Delete(tempFile);
-                            cleanupResults.Add(new CleanupItem
-                            {
-                                Path = tempFile,
-                                Type = "TempFile",
-                                Success = true,
-                                Message = "Deleted successfully"
-                            });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        cleanupResults.Add(new CleanupItem
-                        {
-                            Path = tempFile,
-                            Type = "TempFile",
-                            Success = false,
-                            Message = $"Delete failed: {ex.Message}"
-                        });
-                    }
-                }
-                
-                // Limpiar directorio de trabajo si está vacío
-                try
-                {
-                    if (Directory.Exists(workingDirectory) && !Directory.EnumerateFileSystemEntries(workingDirectory).Any())
-                    {
-                        Directory.Delete(workingDirectory);
-                        cleanupResults.Add(new CleanupItem
-                        {
-                            Path = workingDirectory,
-                            Type = "WorkingDirectory",
-                            Success = true,
-                            Message = "Directory removed"
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    cleanupResults.Add(new CleanupItem
-                    {
-                        Path = workingDirectory,
-                        Type = "WorkingDirectory",
-                        Success = false,
-                        Message = $"Directory cleanup failed: {ex.Message}"
-                    });
-                }
-                
-                var cleanupEndTime = DateTime.UtcNow;
-                
-                return new CleanupReport
-                {
-                    StartTime = cleanupStartTime,
-                    EndTime = cleanupEndTime,
-                    Duration = cleanupEndTime - cleanupStartTime,
-                    CleanupItems = cleanupResults.ToArray(),
-                    TotalItems = cleanupResults.Count,
-                    SuccessfulItems = cleanupResults.Count(r => r.Success),
-                    FailedItems = cleanupResults.Count(r => !r.Success)
-                };
-            });
-    }
-}
+public Task<MlResult<InformeLote>> EjecutarLoteAsync(IEnumerable<Factura> facturas) =>
+    facturas.ProjectionAsync(_emisor.EmitirAsync)      // Task<MlResult<IEnumerable<Emision>>>
 
-public class ProcessingReport
-{
-    public string BatchId { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
-    public TimeSpan TotalDuration { get; set; }
-    public int TotalItems { get; set; }
-    public int SuccessfulItems { get; set; }
-    public int FailedItems { get; set; }
-    public double SuccessRate { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    public string Status { get; set; }
-    public string ReportPath { get; set; }
-}
+        // Guardamos el detalle del fallo por si el informe lo necesita.
+        .ExecSelfIfFailAsync(er => _incidencias.Anotar(er.ToErrorsDescription()))
 
-public class CleanupReport
-{
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
-    public TimeSpan Duration { get; set; }
-    public CleanupItem[] CleanupItems { get; set; }
-    public int TotalItems { get; set; }
-    public int SuccessfulItems { get; set; }
-    public int FailedItems { get; set; }
-}
+        // El informe se genera SIEMPRE: si el lote falló, describe el fallo.
+        .MatchAsync(async () => await _informes.GenerarCierreLoteAsync(_reloj.Ahora));
+```
 
-public class CleanupItem
-{
-    public string Path { get; set; }
-    public string Type { get; set; }
-    public bool Success { get; set; }
-    public string Message { get; set; }
-}
+> 💡 Si necesitas que el informe distinga entre éxito y fallo, **no uses la sobrecarga *match-all***:
+> usa la clásica de dos ramas, que sí recibe el valor y los errores.
+>
+> ```csharp
+> InformeLote informe = resultadoLote.Match(
+>     valid: emisiones => InformeLote.Correcto(emisiones.Count()),
+>     fail : errores   => InformeLote.ConErrores(errores.ToErrorsMessages()));
+> ```
 
-public class BatchItem
+### Ejemplo 3: Reinicio de contexto para una operación independiente
+
+Hay flujos en los que el resultado anterior es irrelevante para el siguiente paso: por ejemplo, un
+proceso de limpieza que debe ejecutarse aunque la operación principal haya fallado.
+
+```csharp
+public async Task<MlResult<int>> SincronizarYLimpiarAsync()
 {
-    public string Id { get; set; }
-    public string Data { get; set; }
+    return await _sincronizador.SincronizarAsync()
+
+        // Nos interesa saberlo, pero no debe impedir la limpieza.
+        .ExecSelfIfFailAsync(er => _log.LogError("Sincronización fallida: {E}",
+                                                er.ToErrorsDescription()))
+
+        // Contexto nuevo: devolvemos el número de ficheros temporales eliminados,
+        // con independencia de cómo terminara la sincronización.
+        .TryMatchAsync(async () => await _limpieza.BorrarTemporalesAsync(),
+                       ex => $"No se pudo limpiar el directorio temporal: {ex.Message}");
 }
 ```
 
-### Ejemplo 3: Reset de Contexto y Nuevas Operaciones
+### Ejemplo 4: Conservar los errores previos
+
+Si quieres reiniciar el contexto **pero sin perder** el diagnóstico anterior, combina la sobrecarga
+*match-all* con `MergeErrorsDetailsIfFail` o guarda los errores explícitamente:
 
 ```csharp
-public class ContextResetService
-{
-    public async Task<MlResult<SessionData>> ProcessUserActionWithNewSessionAsync<T>(
-        Task<MlResult<T>> userActionAsync,
-        string userId)
-    {
-        // Independientemente del resultado de la acción del usuario,
-        // siempre crear una nueva sesión
-        return await userActionAsync
-            .TryMatchAllAsync(async () =>
-            {
-                // Crear nueva sesión completamente independiente
-                var newSession = new SessionData
-                {
-                    SessionId = Guid.NewGuid().ToString(),
-                    UserId = userId,
-                    CreatedAt = DateTime.UtcNow,
-                    LastActivity = DateTime.UtcNow,
-                    IsActive = true,
-                    Properties = new Dictionary<string, object>()
-                };
-                
-                // Guardar en cache/base de datos
-                await SaveSessionAsync(newSession);
-                
-                // Inicializar configuración de usuario
-                var userConfig = await LoadUserConfigurationAsync(userId);
-                newSession.Properties["UserConfig"] = userConfig;
-                
-                // Registrar nuevo inicio de sesión
-                await LogSessionStartAsync(newSession);
-                
-                return newSession;
-                
-            }, ex => $"New session creation failed: {ex.Message}");
-    }
-    
-    public MlResult<DefaultResponse> HandleAnyResultWithDefault<T>(MlResult<T> anyResult)
-    {
-        // Convertir cualquier resultado en una respuesta estándar predeterminada
-        return anyResult.MatchAll(() => new DefaultResponse
-        {
-            Id = Guid.NewGuid().ToString(),
-            Timestamp = DateTime.UtcNow,
-            Status = "Processed",
-            Message = "Request has been processed successfully",
-            Version = "1.0"
-        });
-    }
-    
-    public async Task<MlResult<HealthCheckResult>> PerformHealthCheckAfterOperation<T>(
-        Task<MlResult<T>> operationAsync)
-    {
-        // Realizar health check independientemente del resultado de la operación
-        return await operationAsync
-            .TryMatchAllAsync(async () =>
-            {
-                var healthCheck = new HealthCheckResult
-                {
-                    CheckId = Guid.NewGuid().ToString(),
-                    Timestamp = DateTime.UtcNow,
-                    Checks = new List<ComponentHealth>()
-                };
-                
-                // Verificar base de datos
-                var dbHealth = await CheckDatabaseHealthAsync();
-                healthCheck.Checks.Add(new ComponentHealth
-                {
-                    Component = "Database",
-                    IsHealthy = dbHealth.IsConnected,
-                    ResponseTime = dbHealth.ResponseTime,
-                    Message = dbHealth.Message
-                });
-                
-                // Verificar servicios externos
-                var externalServicesHealth = await CheckExternalServicesAsync();
-                healthCheck.Checks.AddRange(externalServicesHealth);
-                
-                // Verificar memoria y CPU
-                var systemHealth = await CheckSystemResourcesAsync();
-                healthCheck.Checks.Add(systemHealth);
-                
-                // Calcular estado general
-                healthCheck.OverallHealth = healthCheck.Checks.All(c => c.IsHealthy) 
-                    ? "Healthy" 
-                    : "Degraded";
-                    
-                return healthCheck;
-                
-            }, ex => $"Health check failed: {ex.Message}");
-    }
-    
-    // Métodos auxiliares
-    private async Task SaveSessionAsync(SessionData session) { /* Implementación */ }
-    private async Task<UserConfiguration> LoadUserConfigurationAsync(string userId) => new();
-    private async Task LogSessionStartAsync(SessionData session) { /* Implementación */ }
-    private async Task<DatabaseHealth> CheckDatabaseHealthAsync() => new() { IsConnected = true, ResponseTime = TimeSpan.FromMilliseconds(50), Message = "OK" };
-    private async Task<List<ComponentHealth>> CheckExternalServicesAsync() => new();
-    private async Task<ComponentHealth> CheckSystemResourcesAsync() => new() { Component = "System", IsHealthy = true, Message = "OK" };
-}
+MlResult<Acuse> resultado = await _proceso.EjecutarAsync(dto);
 
-public class SessionData
-{
-    public string SessionId { get; set; }
-    public string UserId { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime LastActivity { get; set; }
-    public bool IsActive { get; set; }
-    public Dictionary<string, object> Properties { get; set; }
-}
-
-public class DefaultResponse
-{
-    public string Id { get; set; }
-    public DateTime Timestamp { get; set; }
-    public string Status { get; set; }
-    public string Message { get; set; }
-    public string Version { get; set; }
-}
-
-public class HealthCheckResult
-{
-    public string CheckId { get; set; }
-    public DateTime Timestamp { get; set; }
-    public List<ComponentHealth> Checks { get; set; }
-    public string OverallHealth { get; set; }
-}
-
-public class ComponentHealth
-{
-    public string Component { get; set; }
-    public bool IsHealthy { get; set; }
-    public TimeSpan ResponseTime { get; set; }
-    public string Message { get; set; }
-}
-
-public class DatabaseHealth
-{
-    public bool IsConnected { get; set; }
-    public TimeSpan ResponseTime { get; set; }
-    public string Message { get; set; }
-}
-
-public class UserConfiguration
-{
-    public string Theme { get; set; }
-    public string Language { get; set; }
-    public Dictionary<string, string> Preferences { get; set; }
-}
+MlResult<Acuse> conHistorial = resultado
+        // Guardamos la descripción del fallo en una clave propia...
+        .MapIfFail(er => Acuse.Rechazado(er.ToErrorsDescription()))
+        // ...y ahora el "reset" ya no destruye información.
+        .Match(() => Acuse.Cerrado(_reloj.Ahora));
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar MatchAll
+### 1. Cuándo usar la sobrecarga *match-all*
+
+| Escenario | ¿Es adecuada? | Comentario |
+| --- | :---: | --- |
+| Cerrar un flujo con un acuse o informe único | ✅ | Es su caso natural. |
+| Liberar recursos / limpiar temporales | ✅ | Normalmente con `TryMatch`. |
+| Registrar una métrica de finalización | ✅ | Aunque `ExecSelf*` suele bastar. |
+| Necesitas el valor o los errores | ❌ | Usa la sobrecarga clásica de dos ramas. |
+| En medio de una tubería de negocio | ❌ | Enmascara los fallos anteriores. |
+| Solo quieres un efecto secundario | ❌ | Usa `ExecSelf*`, que no altera el resultado. |
+
+### 2. Diferencia con la sobrecarga clásica de `Match`
 
 ```csharp
-// ✅ Correcto: Operaciones de finalización independientes del resultado
-var auditResult = ProcessPayment(payment)
-    .MatchAll(() => new AuditLog 
-    { 
-        Timestamp = DateTime.UtcNow, 
-        Operation = "Payment" 
-    });
+// Clásica: recibe el estado, DEVUELVE UN VALOR CRUDO (sale del MlResult).
+IActionResult respuesta = resultado.Match(
+    valid: dto     => Ok(dto),
+    fail : errores => BadRequest(errores.ToErrorsMessages()))
 
-// ✅ Correcto: Reset de contexto para nueva operación
-var newSession = HandleUserAction(action)
-    .MatchAll(() => CreateNewUserSession(userId));
-
-// ✅ Correcto: Generación de reportes que siempre deben crearse
-var report = ProcessBatch(items)
-    .TryMatchAll(() => GenerateBatchReport(), 
-                 ex => $"Report generation failed: {ex.Message}");
-
-// ❌ Incorrecto: Usar cuando necesitas acceso al resultado original
-var result = ProcessData(data)
-    .MatchAll(() => Transform(data)); // data no está disponible aquí
+// match-all: ignora el estado, DEVUELVE UN MlResult (sigue en la tubería).
+MlResult<string> cierre = resultado.Match(() => "Finalizado");
 ```
 
-### 2. Diferencia con Match
+| Aspecto | Clásica | *match-all* |
+| --- | --- | --- |
+| Delegados | 2 (`valid`, `fail`) | 1 (`funcAll`, sin parámetros) |
+| Acceso al valor / errores | Sí | No |
+| Tipo de retorno | `TReturn` | `MlResult<TReturn>` |
+| Conserva el estado de fallo | Lo trata explícitamente | **Lo descarta** (`Match`) / lo fusiona (`TryMatch`) |
+
+### 3. Usa `TryMatch` para operaciones con riesgo
+
+Cualquier `funcAll` que toque disco, red o base de datos debe ir con `TryMatch`, nunca con `Match`:
 
 ```csharp
-// Match: Diferentes funciones para éxito/fallo
-var response = GetUser(id).Match(
-    valid: user => $"Welcome {user.Name}",
-    fail: errors => $"Error: {errors.FirstErrorMessage}"
-);
+// ❌ Si GenerarPdf lanza, la excepción se propaga y rompe la tubería.
+var r1 = resultado.Match(() => GenerarPdf(datos));
 
-// MatchAll: Misma función independiente del resultado
-var timestamp = GetUser(id).MatchAll(() => DateTime.UtcNow.ToString());
+// ✅ La excepción se convierte en Fail y queda en Details["Ex"].
+var r2 = resultado.TryMatch(() => GenerarPdf(datos),
+                            ex => $"No se pudo generar el PDF: {ex.Message}");
 ```
 
-### 3. Uso con TryMatchAll para Operaciones Riesgosas
+### 4. Registra antes de reiniciar
 
-```csharp
-// ✅ Correcto: Usar TryMatchAll para operaciones que pueden fallar
-var cleanup = ProcessFiles(files)
-    .TryMatchAll(() => CleanupTempFiles(), 
-                 ex => $"Cleanup failed: {ex.Message}");
-
-// ✅ Correcto: Operaciones de logging seguras
-var logResult = ComplexOperation(data)
-    .TryMatchAll(() => WriteToAuditLog(operationId), 
-                 ex => $"Audit logging failed: {ex.Message}");
-
-// ❌ Incorrecto: No usar Try si la operación es segura
-var timestamp = ProcessData(data)
-    .TryMatchAll(() => DateTime.UtcNow, ex => "Failed"); // DateTime.UtcNow nunca falla
-```
+Como la sobrecarga *match-all* de `Match` descarta los errores, **siempre** encadena antes un
+`ExecSelfIfFail` (o `ExecSelfIfFailAsync`) si el diagnóstico te importa.
 
 ---
 
@@ -664,56 +370,57 @@ var timestamp = ProcessData(data)
 
 ### Tabla Comparativa
 
-| Método | Recibe Entrada | Retorna | Cuándo Ejecuta | Uso Principal |
-|--------|----------------|---------|----------------|---------------|
-| `Match` | Sí (valor o errores) | `TReturn` | Según estado | Transformación condicional |
-| `MatchAll` | No | `MlResult<TReturn>` | Siempre | Operaciones independientes |
-| `ExecSelf` | Sí (valor o errores) | `MlResult<T>` original | Según configuración | Efectos secundarios |
+| Operación | ¿Se ejecuta siempre? | ¿Recibe el valor? | ¿Recibe los errores? | Devuelve | Altera el resultado |
+| --- | :---: | :---: | :---: | --- | :---: |
+| `Match(valid, fail)` | Sí | Sí | Sí | `TReturn` crudo | Sale de la tubería |
+| `Match(funcAll)` | Sí | No | No | `MlResult<TReturn>` | Sí (contexto nuevo) |
+| `TryMatch(funcAll, …)` | Sí | No | No (los fusiona) | `MlResult<TReturn>` | Sí |
+| `MapAlways(funcAlways)` | Sí | No | No | `MlResult<TReturn>` | Sí |
+| `BindAlways(funcAlways)` | Sí | No | No | `MlResult<TReturn>` | Sí |
+| `ExecSelf(...)` | Sí | Sí | Sí | El **mismo** `MlResult<T>` | **No** |
+| `ExecSelfIfValid` | Solo si válido | Sí | — | El mismo | **No** |
+| `ExecSelfIfFail` | Solo si fallido | — | Sí | El mismo | **No** |
+
+> 📌 `Match(funcAll)`, `MapAlways(funcAlways)` y `BindAlways(funcAlways)` tienen implementaciones
+> prácticamente idénticas (`=> funcAlways();`). Elige el nombre que mejor exprese tu intención: `Match`
+> para *cerrar* un flujo, `MapAlways`/`BindAlways` para *continuar* con otro.
 
 ### Ejemplo Comparativo
 
 ```csharp
-var result = ProcessOrder(order);
+MlResult<Pedido> resultado = ProcesarPedido(dto);
 
-// Match: Transformación condicional con acceso al contenido
-var response = result.Match(
-    valid: order => $"Order {order.Id} confirmed",
-    fail: errors => $"Order failed: {errors.FirstErrorMessage}"
-);
+// 1. Quiero devolver una respuesta HTTP → clásica.
+IActionResult http = resultado.Match(
+    valid: p  => Ok(p.ToDto()),
+    fail : er => BadRequest(er.ToErrorsMessages()))
 
-// MatchAll: Operación independiente sin acceso al contenido
-var auditEntry = result.MatchAll(() => new AuditEntry 
-{ 
-    Timestamp = DateTime.UtcNow,
-    Operation = "ProcessOrder" 
-});
+// 2. Quiero registrar sin cambiar nada → ExecSelf.
+MlResult<Pedido> igual = resultado
+        .ExecSelfIfValid(p  => _log.LogInformation("OK {Id}", p.Id))
+        .ExecSelfIfFail (er => _log.LogWarning("KO {E}", er.ToErrorsDescription()))
 
-// ExecSelf: Efecto secundario manteniendo resultado original
-var sameResult = result.ExecSelf(
-    success => LogSuccess(success),
-    failure => LogFailure(failure)
-); // Retorna el mismo result
+// 3. Quiero cerrar con un acuse común → match-all.
+MlResult<Acuse> acuse = resultado.Match(() => new Acuse(_reloj.Ahora));
 ```
 
 ---
 
 ## Resumen
 
-Los métodos `MatchAll` proporcionan **ejecución incondicional con transformación**:
+- **No hay ningún método llamado `MatchAll`**: son sobrecargas de `Match` / `TryMatch` que reciben un
+  `Func<TReturn>` sin parámetros y devuelven `MlResult<TReturn>`.
+- Se ejecutan **siempre**, ignorando el estado y el contenido del resultado de origen.
+- `Match(funcAll)` **descarta** los errores previos; `TryMatch(funcAll, …)` los **fusiona** con el nuevo
+  fallo si lo hubiera.
+- Su uso natural es el **cierre de un flujo**: acuses, informes, limpieza y auditoría.
+- Si necesitas el valor o los errores, usa la sobrecarga clásica de dos ramas.
+- Si solo quieres un efecto secundario, usa `ExecSelf*`.
 
-- **`MatchAll`**: Ejecuta función independientemente del estado del resultado
-- **`MatchAllAsync`**: Soporte completo para operaciones asíncronas
-- **`TryMatchAll`**: Versiones seguras que capturan excepciones
+## Ver también
 
-**Casos de uso ideales**:
-- **Operaciones de finalización** que siempre deben ejecutarse
-- **Generación de reportes** independientes del resultado
-- **Cleanup y auditoría** que no dependen del éxito/fallo
-- **Reset de contexto** para nuevas operaciones
-- **Health checks** posteriores a cualquier operación
-
-**Ventajas principales**:
-- **Independencia total** del resultado anterior
-- **Reset de contexto** para nuevas operaciones
-- **Simplicidad** en operaciones de finalización
-- **Consistencia** en la generación de nuevos resultados
+- [`1_Match.md`](./1_Match.md) — la sobrecarga clásica de dos ramas.
+- [`../Types/MlResultActionsMatch.md`](../Types/MlResultActionsMatch.md) — referencia completa del archivo fuente.
+- [`../Types/MlResultActionsExecSelf.md`](../Types/MlResultActionsExecSelf.md) — efectos secundarios sin alterar el resultado.
+- [`../Map/8_MapAlways.md`](../Map/8_MapAlways.md) y [`../Bind/10_BindAlways.md`](../Bind/10_BindAlways.md) — operaciones incondicionales que continúan la tubería.
+- [`../Types/MlResultActionsErrorsDetails.md`](../Types/MlResultActionsErrorsDetails.md) — recuperar la excepción guardada por `TryMatch`.

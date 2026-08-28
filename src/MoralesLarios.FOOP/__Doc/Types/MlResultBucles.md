@@ -21,6 +21,8 @@ Operaciones funcionales sobre colecciones con semántica `MlResult`. Permiten tr
 | `ProjectionWhile` | Secuencial síncrono | `Func<T, MlResult<TResult>>` o `Func<T, int, MlResult<TResult>>` | Sí/No | Se detiene en el primer error. |
 | `ProjectionWhileAsync` | Secuencial asíncrono | Fuente `IEnumerable<T>` o `Task<IEnumerable<T>>`; transformación síncrona o asíncrona | Sí/No | Se detiene en el primer error. |
 | `ProjectionParallelAsync` | Paralelo asíncrono | `Func<T, Task<MlResult<TResult>>>` o `Func<T, int, Task<MlResult<TResult>>>` | Sí/No | Lanza todas las tareas y fusiona todos los errores. No es *fail-fast*. |
+| `ProjectionSplit` | Secuencial síncrono | `Func<T, MlResult<TResult>>` | No | **No falla nunca**: separa aciertos y fallos en dos colecciones. |
+| `ProjectionSplitAsync` | Secuencial asíncrono | Fuente `IEnumerable<T>` o `Task<IEnumerable<T>>`; transformación síncrona o asíncrona | No | **No falla nunca**: separa aciertos y fallos en dos colecciones. |
 
 ## `Projection`
 
@@ -157,9 +159,67 @@ Aspectos importantes:
 - Conviene usarla solo cuando las operaciones sean independientes y el servicio externo pueda soportar la concurrencia.
 - Si se necesita limitar concurrencia, se recomienda aplicar una estrategia externa de particionado o control antes de llamar a este método.
 
+## `ProjectionSplit` y `ProjectionSplitAsync`
+
+A diferencia del resto de las familias, `ProjectionSplit` **nunca devuelve un `Fail` global**. En lugar
+de aplicar la política *todo o nada*, **separa** la colección en dos: los elementos que se
+transformaron correctamente y los que fallaron.
+
+Es la herramienta adecuada para **procesos por lotes tolerantes a errores**: importaciones,
+migraciones, sincronizaciones nocturnas… donde quieres procesar todo lo que se pueda y generar un
+informe con el resto.
+
+```csharp
+var (correctos, fallidos) = lineasCsv.ProjectionSplit(linea => ParsearCliente(linea));
+
+// `correctos` contiene los ClienteDto que se pudieron construir.
+// `fallidos`  contiene los MlErrorsDetails de los que no.
+
+_repo.InsertarLote(correctos);
+
+foreach (var errores in fallidos)
+    _informe.AñadirLineaRechazada(errores.ToErrorsDescription());
+
+_log.LogInformation("Importación: {Ok} correctas, {Ko} rechazadas",
+                    correctos.Count(), fallidos.Count());
+```
+
+Versión asíncrona, con transformación que llama a un servicio externo:
+
+```csharp
+var (sincronizados, rechazados) = await pedidos.ProjectionSplitAsync(
+    async pedido => await _erp.SincronizarAsync(pedido));
+
+if (rechazados.Any())
+    await _alertas.NotificarAsync($"{rechazados.Count()} pedidos no se sincronizaron");
+```
+
+### `ProjectionSplit` frente a las demás familias
+
+| Situación | Familia |
+| --- | --- |
+| Un solo elemento inválido invalida todo el lote (p. ej. líneas de una factura) | `Projection` |
+| Quieres abortar cuanto antes para no gastar recursos | `ProjectionWhile` |
+| Quieres procesar todo lo posible y **reportar** lo que falló | `ProjectionSplit` |
+
+> 💡 Si dentro de la parte fallida necesitas saber **qué elemento original** produjo cada error,
+> guárdalo en los detalles con `AddValueIfFail` dentro de la propia transformación y recupéralo después
+> con `GetDetailValue<T>`. Consulta
+> [`MlResultActionsErrorsDetails`](./MlResultActionsErrorsDetails.md).
+
 ## Fusión de errores
 
-Cuando una proyección encuentra resultados fallidos, los errores se combinan con `FusionFailErros`.
+Cuando ya tienes una colección de `MlResult<T>` **ya calculada** (por ejemplo, porque los resultados
+vienen de varios servicios distintos), estos métodos la convierten en un único `MlResult<IEnumerable<T>>`.
+Son los mismos que usan internamente las proyecciones para consolidar sus errores.
+
+| Método | Sobrecargas | Comportamiento |
+| --- | --- | --- |
+| `FusionFailErros<T>(this IEnumerable<MlResult<T>>)` | 1 | Fusiona los errores de los elementos fallidos. Asume que **hay** al menos un fallo. |
+| `FusionFailErrosAsync<T>(...)` | 2 | Versiones asíncronas (fuente `Task<...>` y/o resultado asíncrono). |
+| `FusionErrosIfExists<T>(this IEnumerable<MlResult<T>>)` | 1 | Si hay errores, los fusiona; si no, devuelve `Valid` con todos los valores. **Es el que usarás casi siempre.** |
+| `FusionErrosIfExistsAsync<T>(...)` | 2 | Versiones asíncronas. |
+| `VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>>)` | 1 | Comprueba la colección y devuelve todos los valores solo si ninguno falla. |
 
 ```csharp
 IEnumerable<MlResult<int>> partialResults = [
@@ -168,12 +228,47 @@ IEnumerable<MlResult<int>> partialResults = [
 	MlResult<int>.Fail("Valor inválido B")
 ];
 
+// Fail con los dos mensajes de error fusionados.
 MlResult<IEnumerable<int>> result = partialResults.FusionErrosIfExists();
 ```
 
-- `FusionFailErros`: espera que exista al menos un fallo y fusiona los errores de los elementos fallidos.
-- `FusionErrosIfExists`: si hay errores, los fusiona; si no los hay, devuelve `Valid` con los valores seguros.
-- `VerifiedEnumerableResultData`: equivale a validar una colección de `MlResult<T>` y devolver todos los valores solo si ninguno falla.
+Caso de uso realista: consolidar validaciones independientes que ya se han ejecutado.
+
+```csharp
+public MlResult<IEnumerable<Regla>> ValidarReglas(Configuracion config)
+{
+    IEnumerable<MlResult<Regla>> validaciones =
+    [
+        ValidarLimiteCredito(config),
+        ValidarHorarioApertura(config),
+        ValidarMonedaBase(config),
+        ValidarPoliticaDescuentos(config)
+    ];
+
+    // El usuario ve TODOS los problemas de configuración de una sola vez,
+    // no solo el primero.
+    return validaciones.FusionErrosIfExists();
+}
+```
+
+Y su equivalente asíncrono, cuando las validaciones consultan servicios:
+
+```csharp
+IEnumerable<Task<MlResult<Regla>>> tareas = reglas.Select(_validador.ComprobarAsync);
+
+MlResult<IEnumerable<Regla>> resultado = await Task.WhenAll(tareas)
+                                                   .FusionErrosIfExistsAsync();
+```
+
+### `FusionFailErros` frente a `FusionErrosIfExists`
+
+- `FusionErrosIfExists` es **seguro en cualquier caso**: si no hay fallos devuelve `Valid`.
+- `FusionFailErros` está pensado para la rama en la que **ya sabes** que hay fallos (por ejemplo, dentro
+  de un `if (resultados.Any(r => r.IsFail))`). Es lo que usan las proyecciones internamente.
+- `VerifiedEnumerableResultData` expresa la misma idea desde la perspectiva de la **verificación**: "dame
+  los datos solo si la colección entera es correcta".
+
+En código de aplicación, empieza siempre por `FusionErrosIfExists`.
 
 ## Cuándo usar cada método
 
@@ -185,8 +280,16 @@ MlResult<IEnumerable<int>> result = partialResults.FusionErrosIfExists();
 | Detener en el primer error | `ProjectionWhile` |
 | Detener en el primer error con operaciones asíncronas | `ProjectionWhileAsync` |
 | Ejecutar transformaciones asíncronas independientes en paralelo | `ProjectionParallelAsync` |
+| Procesar todo lo posible y reportar los elementos rechazados | `ProjectionSplit` / `ProjectionSplitAsync` |
 | Fusionar una colección ya calculada de `MlResult<T>` | `FusionErrosIfExists` o `VerifiedEnumerableResultData` |
 
 ## Enlace de detalle
 
 - [Guía de bucles](../Bucle/Bucles.md)
+
+## Ver también
+
+- [`MlResult<T>`](./MlResult.md) — el tipo base.
+- [`MlResultActionsSeveral`](./MlResultActionsSeveral.md) — `Combine`, para varios resultados de **tipos distintos**.
+- [`MlResultActionsErrorsDetails`](./MlResultActionsErrorsDetails.md) — recuperar el elemento original que falló.
+- [`MlResultActionsBind`](./MlResultActionsBind.md) — `TryBindBuild`, para construir un objeto acumulando errores.

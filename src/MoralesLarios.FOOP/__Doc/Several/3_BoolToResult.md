@@ -1,835 +1,507 @@
-# MlResult BoolToResult - Conversión de Condiciones Booleanas a Resultados
+# BoolToResult — Convertir una condición en un resultado
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de los Métodos](#análisis-de-los-métodos)
-3. [Métodos BoolToResult para Objetos](#métodos-booltoResult-para-objetos)
-4. [Métodos BoolToResult para Bool](#métodos-booltoResult-para-bool)
-5. [Variantes Asíncronas](#variantes-asíncronas)
-6. [Ejemplos Prácticos](#ejemplos-prácticos)
-7. [Mejores Prácticas](#mejores-prácticas)
-8. [Comparación con Otros Métodos de Validación](#comparación-con-otros-métodos-de-validación)
+2. [El problema que resuelve](#el-problema-que-resuelve)
+3. [Las dos familias: `BoolToResult<T>` y `BoolToResult`](#las-dos-familias-booltoresultt-y-booltoresult)
+4. [Familia 1: `BoolToResult<T>` — validar un valor con una condición](#familia-1-booltoresultt--validar-un-valor-con-una-condición)
+5. [Familia 2: `BoolToResult` — el `bool` como sujeto](#familia-2-booltoresult--el-bool-como-sujeto)
+6. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+7. [Las cuatro formas de expresar el error](#las-cuatro-formas-de-expresar-el-error)
+8. [Variantes asíncronas](#variantes-asíncronas)
+9. [`BoolToResult` frente a `EnsureFp.That` y `MapEnsure`](#booltoresult-frente-a-ensurefpthat-y-mapensure)
+10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+11. [Ejemplos Prácticos](#ejemplos-prácticos)
+12. [Mejores Prácticas](#mejores-prácticas)
+13. [Resumen](#resumen)
+14. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-Los métodos `BoolToResult` proporcionan una forma de **convertir condiciones booleanas en resultados `MlResult<T>`**, permitiendo validar condiciones arbitrarias y transformar valores `false` en errores explícitos. Estos métodos son fundamentales para implementar validaciones personalizadas basadas en lógica de negocio.
+`BoolToResult` es la puerta de entrada al carril más general de la librería: convierte
+**cualquier condición booleana** en un `MlResult`. Si la condición es `true`, el resultado
+es válido; si es `false`, el resultado falla con el error que indiques.
 
-### Propósito Principal
+```csharp
+// ❌ Estilo imperativo: guardas dispersas, mensajes que se pierden
+if (pedido.Estado != EstadoPedido.Borrador)
+    return BadRequest("Solo se pueden modificar pedidos en borrador");
+if (pedido.Lineas.Count > 200)
+    return BadRequest("Un pedido no puede tener más de 200 líneas");
 
-- **Validación Condicional**: Convertir condiciones booleanas en resultados manejables
-- **Lógica de Negocio**: Implementar reglas de validación personalizadas
-- **Control de Flujo**: Permitir o bloquear el procesamiento basado en condiciones
-- **Validación Flexible**: Crear validaciones dinámicas según contexto
+// ✅ Con BoolToResult: cada guarda es un eslabón del carril
+return pedido.BoolToResult(pedido.Estado == EstadoPedido.Borrador,
+                           "Solo se pueden modificar pedidos en borrador")
+             .MapEnsure(p => p.Lineas.Count <= 200,
+                        "Un pedido no puede tener más de 200 líneas")
+             .Match(valid: p   => Ok(p.ToDto()),
+                    fail : err => BadRequest(err.ToErrorsMessages()));
+```
+
+> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
 
 ---
 
-## Análisis de los Métodos
+## El problema que resuelve
 
-### Filosofía de BoolToResult
+`EmptyToFailed` cubre "la colección está vacía" y `NullToFailed` cubre "el objeto es
+`null`". Pero la mayoría de las reglas de negocio no encajan en ninguno de los dos moldes:
+*"el pedido debe estar en borrador"*, *"el usuario debe tener permiso"*, *"la fecha no
+puede ser futura"*, *"el saldo debe cubrir el importe"*.
 
-```
-(T, bool) → BoolToResult(condition, error) → MlResult<T>
-    ↓              ↓                            ↓
-(value, true) → MlResult<T>.Valid(value)
-    ↓              ↓                            ↓
-(value, false) → MlResult<T>.Fail(error)
-```
+`BoolToResult` es la generalización: **tú expresas la condición, la librería construye el
+`MlResult`**.
 
-### Características Principales
-
-1. **Validación Basada en Condiciones**: Usa expresiones booleanas para determinar validez
-2. **Preservación de Valor**: Si la condición es verdadera, mantiene el valor original
-3. **Flexibilidad de Errores**: Acepta diferentes tipos de mensaje de error
-4. **Dos Variantes**: Para objetos con condición externa y para bool directamente
-5. **Soporte Asíncrono**: Variantes para operaciones asíncronas
+| Condición | Salida |
+|-----------|--------|
+| `true` | `MlResult` **Valid** con el valor original |
+| `false` | `MlResult` **Fail** con tu error |
 
 ---
 
-## Métodos BoolToResult para Objetos
+## Las dos familias: `BoolToResult<T>` y `BoolToResult`
 
-### `BoolToResult<T>()` - Con Condición Externa
+Ambas viven en la misma región del código fuente, pero se usan de forma distinta:
 
-**Propósito**: Validar un objeto basado en una condición booleana externa
-
-```csharp
-public static MlResult<T> BoolToResult<T>(this T source,
-                                          bool condition,
-                                          MlErrorsDetails errorsDetails)
-```
-
-**Comportamiento**:
-- Si `condition` es `true`: retorna `MlResult<T>.Valid(source)`
-- Si `condition` es `false`: retorna `MlResult<T>.Fail(errorsDetails)`
-
-**Ejemplo Básico**:
-```csharp
-var user = GetUser(userId);
-var result = user.BoolToResult(
-    condition: user != null && user.IsActive,
-    errorMessage: $"User {userId} is not found or inactive"
-);
-
-// Si user existe y está activo: MlResult válido con el usuario
-// Si user no existe o está inactivo: MlResult fallido con el error
-```
-
-### Variantes con Diferentes Tipos de Error
+| Familia | Firma | Qué lleva el resultado válido | Cuándo usarla |
+|---------|-------|-------------------------------|---------------|
+| **1** | `BoolToResult<T>(this T source, bool condition, error)` | El **valor** `source` | Quieres validar un objeto y seguir trabajando con él |
+| **2** | `BoolToResult(this bool source, error)` | El propio `true` (`MlResult<bool>`) | La condición **es** el sujeto: una comprobación aislada |
 
 ```csharp
-// Con MlError
-public static MlResult<T> BoolToResult<T>(this T source,
-                                          bool condition,
-                                          MlError error)
+// Familia 1: el pedido sigue viajando por el carril
+MlResult<Pedido> r1 = pedido.BoolToResult(pedido.EsEditable, "El pedido no es editable");
+r1.Map(p => p.Total);          // ✅ tengo el pedido
 
-// Con string
-public static MlResult<T> BoolToResult<T>(this T source,
-                                          bool condition,
-                                          string errorMessage)
-
-// Con IEnumerable<string>
-public static MlResult<T> BoolToResult<T>(this T source,
-                                          bool condition,
-                                          IEnumerable<string> errorsMessage)
+// Familia 2: solo me interesa saber si la comprobación pasó
+MlResult<bool> r2 = usuario.TienePermiso("Pedidos.Editar")
+                           .BoolToResult("No tiene permiso para editar pedidos");
+r2.Bind(_ => EditarPedido(pedido));   // el valor es siempre 'true', no aporta información
 ```
 
-**Ejemplo con Múltiples Errores**:
-```csharp
-var order = GetOrder(orderId);
-var result = order.BoolToResult(
-    condition: order != null && order.Status == "Pending" && order.Amount > 0,
-    errorsMessage: new[] {
-        $"Order {orderId} validation failed",
-        "Order must exist, be pending, and have positive amount",
-        "Please verify order details and try again"
-    }
-);
-```
+💡 **Regla práctica:** usa la familia 1 casi siempre. La familia 2 solo cuando la
+comprobación no tenga un "sujeto" natural que quieras conservar (por ejemplo, un chequeo
+de permisos o de configuración global).
 
 ---
 
-## Métodos BoolToResult para Bool
-
-### `BoolToResult()` - Para Valores Bool Directos
-
-**Propósito**: Convertir un valor booleano directamente en `MlResult<bool>`
+## Familia 1: `BoolToResult<T>` — validar un valor con una condición
 
 ```csharp
-public static MlResult<bool> BoolToResult(this bool source,
-                                          MlErrorsDetails errorsDetails)
+// BASE
+public static MlResult<T> BoolToResult<T>(this T               source,
+                                                bool            condition,
+                                                MlErrorsDetails errorsDetails)
+    => condition ? source.ToMlResultValid() : errorsDetails.ToMlResultFail<T>();
+
+public static MlResult<T> BoolToResult<T>(this T source, bool condition, MlError error)
+    => source BoolToResult(condition, MlErrorsDetails.FromError(error));
+
+public static MlResult<T> BoolToResult<T>(this T source, bool condition, string errorMessage)
+    => source BoolToResult(condition, MlError.FromErrorMessage(errorMessage));
+
+public static MlResult<T> BoolToResult<T>(this T                   source,
+                                                bool                condition,
+                                                IEnumerable<string> errorsMessage)
+    => source BoolToResult(condition, MlErrorsDetails.FromEnumerableStrings(errorsMessage));
 ```
 
-**Comportamiento**:
-- Si `source` es `true`: retorna `MlResult<bool>.Valid(true)`
-- Si `source` es `false`: retorna `MlResult<bool>.Fail(errorsDetails)`
+Puntos importantes:
 
-**Ejemplo Básico**:
+| Detalle | Consecuencia práctica |
+|---------|----------------------|
+| `condition` es un **`bool`**, no un `Func<T,bool>` | Se evalúa **antes** de la llamada: no hay evaluación diferida ni cortocircuito |
+| El valor válido es `source` tal cual | No se transforma ni se copia |
+| No comprueba `null` | Un `source` `null` con `condition == true` produce un `MlResult` válido que contiene `null` |
+| Todas las sobrecargas delegan en la de `MlErrorsDetails` | Comportamiento uniforme |
+| No existe `TryBoolToResult` | No hay delegado de usuario que pueda lanzar |
+
+---
+
+## Familia 2: `BoolToResult` — el `bool` como sujeto
+
 ```csharp
-bool isValidPassword = ValidatePassword(password);
-var result = isValidPassword.BoolToResult("Password does not meet security requirements");
+// BASE
+public static MlResult<bool> BoolToResult(this bool            source,
+                                               MlErrorsDetails errorsDetails)
+    => source ? source.ToMlResultValid() : errorsDetails.ToMlResultFail<bool>();
 
-// Si password es válido: MlResult<bool>.Valid(true)
-// Si password es inválido: MlResult<bool>.Fail("Password does not meet...")
-```
-
-### Variantes para Bool
-
-```csharp
-// Con MlError
 public static MlResult<bool> BoolToResult(this bool source, MlError error)
+    => source BoolToResult(MlErrorsDetails.FromError(error));
 
-// Con string
 public static MlResult<bool> BoolToResult(this bool source, string errorMessage)
+    => source BoolToResult(MlError.FromErrorMessage(errorMessage));
 
-// Con IEnumerable<string>
-public static MlResult<bool> BoolToResult(this bool source, IEnumerable<string> errorsMessage)
+public static MlResult<bool> BoolToResult(this bool                source,
+                                               IEnumerable<string> errorsMessage)
+    => source BoolToResult(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+```
+
+Aquí el `bool` cumple **dos papeles a la vez**: es la condición y es el valor. Por eso el
+resultado válido siempre contiene `true` — nunca `false`, porque en ese caso el resultado
+sería `Fail`.
+
+```csharp
+// Uso natural: comprobaciones de guarda al principio de un proceso
+public MlResult<Recibo> Emitir(Factura factura, Usuario usuario)
+    => usuario.TieneRol("Facturacion").BoolToResult("Se requiere el rol 'Facturacion'")
+              .Bind(_ => _config.EmisionHabilitada.BoolToResult("La emisión está deshabilitada"))
+              .Bind(_ => factura.BoolToResult(factura.EstaCerrada, "La factura debe estar cerrada"))
+              .Map(f => new Recibo(f));
+```
+
+🔑 Fíjate en el patrón: la familia 2 se consume con `Bind(_ => ...)`, descartando el valor
+`true` porque no aporta nada.
+
+---
+
+## ⚠️ Particularidades reales del código fuente
+
+**1. La condición **no** es diferida: se evalúa siempre.**
+Al ser un `bool` y no un `Func<T,bool>`, el argumento se calcula antes de entrar al método,
+así que **el cortocircuito del carril no existe** para la condición:
+
+```csharp
+// ⚠️ ConsultaCostosa() se ejecuta AUNQUE el resultado anterior ya haya fallado
+var r = resultadoPrevio.Bind(x => x.BoolToResult(ConsultaCostosa(x), "..."));
+//      ↑ aquí sí hay cortocircuito porque Bind no invoca el lambda si hay fallo
+
+// ⚠️ Pero en una llamada suelta, la condición se evalúa siempre:
+var r = valor.BoolToResult(ConsultaCostosa(valor), "...");
+
+// ✅ Si la condición es costosa y ya estás en el carril, usa MapEnsure (predicado diferido)
+var r = resultadoPrevio.MapEnsure(x => ConsultaCostosa(x), "...");
+```
+
+**2. El mensaje de error también se evalúa siempre.**
+No hay sobrecarga con `Func<string>`, así que una interpolación costosa se paga aunque la
+condición sea `true`. En la práctica es irrelevante con mensajes normales.
+
+**3. No comprueba `null`.**
+`BoolToResult` valida **solo** tu condición:
+
+```csharp
+Cliente? c = null;
+var r = c.BoolToResult(true, "...");   // ✅ Valid… ¡pero contiene null!
+
+// ✅ Combina las dos comprobaciones
+var r = c.NullToFailed("El cliente es obligatorio")
+         .MapEnsure(x => x.Activo, "El cliente debe estar activo");
+```
+
+**4. En la familia 2, el resultado válido nunca es `false`.**
+`MlResult<bool>` es un tipo poco informativo: si es válido, el valor es `true`; si es
+`false`, el resultado es `Fail`. Consúmelo con `Bind(_ => ...)`, no leas el valor.
+
+**5. La mayoría de las sobrecargas `*Async` no son realmente asíncronas.**
+Las que reciben `this T source` / `this bool source` se limitan a envolver el resultado con
+`.ToAsync()` (`Task.FromResult`). Solo las que reciben `Task<T>` / `Task<bool>` esperan el
+origen. Además, ninguna acepta un predicado asíncrono: **la condición nunca puede ser un
+`Task<bool>` sin `await` previo**.
+
+```csharp
+// ❌ No existe una sobrecarga con Func<T, Task<bool>>
+// var r = cliente.BoolToResult(await _repo.EstaBloqueadoAsync(id), "...");   ← el await es tuyo
+
+// ✅ Resuelve la condición antes
+var bloqueado = await _repo.EstaBloqueadoAsync(id);
+var r = cliente.BoolToResult(!bloqueado, "El cliente está bloqueado");
+
+// ✅ O usa Bind con un lambda asíncrono
+var r = await clienteResult.BindAsync(async c => (await _repo.EstaBloqueadoAsync(c.Id))
+                                                    ? "El cliente está bloqueado".ToMlResultFail<Cliente>()
+                                                    : c.ToMlResultValid());
 ```
 
 ---
 
-## Variantes Asíncronas
+## Las cuatro formas de expresar el error
 
-### Para Objetos con Condición
-
-```csharp
-// Valor síncrono
-public static async Task<MlResult<T>> BoolToResultAsync<T>(this T source,
-                                                           bool condition,
-                                                           MlError error)
-
-// Valor asíncrono
-public static async Task<MlResult<T>> BoolToResultAsync<T>(this Task<T> sourceAsync,
-                                                           bool condition,
-                                                           string errorMessage)
-```
-
-### Para Bool Directo
+Idénticas en las dos familias:
 
 ```csharp
-// Bool síncrono
-public static Task<MlResult<bool>> BoolToResultAsync(this bool source,
-                                                     string errorMessage)
+// 1) string
+var r1 = pedido.BoolToResult(pedido.EsEditable, "El pedido no es editable");
 
-// Bool asíncrono
-public static async Task<MlResult<bool>> BoolToResultAsync(this Task<bool> sourceAsync,
-                                                           MlErrorsDetails errorsDetails)
+// 2) MlError (catálogo reutilizable)
+var r2 = pedido.BoolToResult(pedido.EsEditable, ErroresPedido.NoEditable);
+
+// 3) IEnumerable<string> (mensajes para el usuario final)
+var r3 = pedido.BoolToResult(pedido.EsEditable, new[]
+{
+    "El pedido no se puede modificar",
+    $"Estado actual: {pedido.Estado}",
+    "Solo los pedidos en borrador son editables"
+});
+
+// 4) MlErrorsDetails (mensaje + diagnóstico)
+var r4 = pedido.BoolToResult(pedido.EsEditable,
+             MlErrorsDetails.FromErrorMessageDetails(
+                 "El pedido no es editable",
+                 new Dictionary<string, object> { ["PedidoId"] = pedido.Id,
+                                                  ["Estado"]   = pedido.Estado.ToString(),
+                                                  ["Regla"]    = "PED-013" }));
 ```
+
+---
+
+## Variantes asíncronas
+
+### Familia 1 (`BoolToResult<T>`)
+
+| Origen | Error como… | Naturaleza |
+|--------|-------------|-----------|
+| `T` | `MlError` / `MlErrorsDetails` / `string` / `IEnumerable<string>` | Envoltura (`ToAsync()`) |
+| `Task<T>` | `MlError` / `MlErrorsDetails` / `string` / `IEnumerable<string>` | **Espera el origen** |
+
+### Familia 2 (`BoolToResult`)
+
+| Origen | Error como… | Naturaleza |
+|--------|-------------|-----------|
+| `bool` | las cuatro formas | Envoltura |
+| `Task<bool>` | las cuatro formas | **Espera el origen** |
+
+En total **8 sobrecargas síncronas** (4 + 4) y **16 asíncronas** (8 + 8).
+
+La variante más útil es la de `Task<bool>` con familia 2, porque permite encadenar
+comprobaciones asíncronas de forma directa:
+
+```csharp
+// El repositorio devuelve Task<bool>
+var r = await _repo.ExisteAsync(nif)
+                   .BoolToResultAsync($"No existe ningún cliente con NIF {nif}");
+```
+
+---
+
+## `BoolToResult` frente a `EnsureFp.That` y `MapEnsure`
+
+Los tres expresan "esta condición debe cumplirse", pero con papeles distintos:
+
+| Herramienta | Tipo | Condición | Cuándo usarla |
+|-------------|------|-----------|---------------|
+| `BoolToResult` | Extensión de `T` | `bool` (ya evaluado) | El dato viene de fuera del carril |
+| `EnsureFp.That(x, cond, msg)` | Método **estático** | `bool` (ya evaluado) | Validar parámetros al principio de un método |
+| [`MapEnsure`](../Map/2_MapEnsure.md) | Extensión de `MlResult<T>` | `Func<T,bool>` (**diferido**) | Ya estás en el carril |
+
+```csharp
+// Entrada al método → EnsureFp
+public MlResult<Pedido> Cerrar(int pedidoId)
+    => EnsureFp.That(pedidoId, pedidoId > 0, "El identificador debe ser positivo")
+
+// Dato externo con condición → BoolToResult
+       .Bind(id => _repo.Obtener(id).NullToFailed("Pedido no encontrado"))
+
+// Ya en el carril → MapEnsure (predicado diferido, no se evalúa si hay fallo)
+       .MapEnsure(p => p.Estado == EstadoPedido.Borrador, "Solo se cierran pedidos en borrador")
+       .MapEnsure(p => p.Lineas.Any(),                    "El pedido no tiene líneas");
+```
+
+🔑 **La diferencia crucial** es la evaluación: `MapEnsure` recibe un `Func<T,bool>` y **no
+lo ejecuta si el resultado ya venía fallido**; `BoolToResult` recibe un `bool` ya calculado
+y por tanto no puede cortocircuitar nada. Con condiciones costosas, prefiere `MapEnsure`.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Uso |
+|-----------|-----|
+| Validar un objeto externo con una condición y conservarlo | `objeto.BoolToResult(cond, "...")` |
+| Comprobar un permiso o interruptor global | `flag.BoolToResult("...")` (familia 2) |
+| Lo mismo partiendo de un `Task<bool>` | `.BoolToResultAsync("...")` |
+| Validar cuando ya estoy en el carril | [`MapEnsure`](../Map/2_MapEnsure.md) |
+| Validar argumentos al entrar en un método | `EnsureFp.That(x, cond, "...")` |
+| Fallar si algo es `null` | [`NullToFailed`](2_NullToFailed.md) |
+| Fallar si una colección viene vacía | [`EmptyToFailed`](1_EmptyToFailed.md) |
+| Elegir entre dos ramas según la condición | [`MapIf`](../Map/3_MapIf.md) o [`BindIf`](../Bind/5_BindIf.md) |
+| Acumular **todos** los errores, no cortocircuitar | [`Combine`](4_Combine.md) |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Validación de Reglas de Negocio
+### Ejemplo 1: guardas de negocio con la familia 1
 
 ```csharp
-public class BusinessRuleValidator
+public class TransferenciaService
 {
-    private readonly IUserRepository _userRepo;
-    private readonly IOrderRepository _orderRepo;
-    private readonly IPaymentService _paymentService;
-    
-    public async Task<MlResult<Order>> ValidateOrderCreationAsync(OrderRequest request)
-    {
-        var user = await _userRepo.GetByIdAsync(request.UserId);
-        
-        return user
-            .BoolToResult(
-                condition: user != null && user.IsActive && !user.IsSuspended,
-                errorsMessage: new[] {
-                    $"User {request.UserId} cannot create orders",
-                    "User must be active and not suspended",
-                    "Contact support if you believe this is an error"
-                })
-            .Bind(validUser => ValidateOrderLimits(validUser, request))
-            .Bind(limitValidUser => ValidateInventoryAvailability(request))
-            .BindAsync(async _ => await CreateOrderAsync(request));
-    }
-    
-    public MlResult<User> ValidateUserForPremiumFeatures(User user)
-    {
-        return user.BoolToResult(
-            condition: user.SubscriptionType == "Premium" && 
-                      user.SubscriptionExpiryDate > DateTime.UtcNow &&
-                      user.PaymentStatus == "Current",
-            errorMessage: "Premium features require active premium subscription"
-        );
-    }
-    
-    public async Task<MlResult<PaymentResult>> ProcessPaymentAsync(PaymentRequest request)
-    {
-        var user = await _userRepo.GetByIdAsync(request.UserId);
-        
-        return user
-            .BoolToResult(
-                condition: user != null && user.IsVerified,
-                errorMessage: "Payment processing requires verified user account")
-            .Bind(verifiedUser => verifiedUser.BoolToResult(
-                condition: verifiedUser.CreditLimit >= request.Amount,
-                errorMessage: $"Payment amount {request.Amount:C} exceeds credit limit {verifiedUser.CreditLimit:C}"))
-            .BindAsync(async validUser => await _paymentService.ProcessPaymentAsync(request));
-    }
-    
-    public MlResult<Document> ValidateDocumentAccess(Document document, User user)
-    {
-        return document.BoolToResult(
-            condition: document.OwnerId == user.Id || 
-                      document.SharedWith.Contains(user.Id) ||
-                      user.Role == "Admin",
-            errorsMessage: new[] {
-                "Access denied to document",
-                "You can only access documents you own, documents shared with you, or if you're an admin",
-                $"Document ID: {document.Id}, Your ID: {user.Id}"
-            });
-    }
-    
-    public async Task<MlResult<bool>> ValidateBusinessHoursOperationAsync(string operation)
-    {
-        var currentTime = DateTime.Now;
-        var isBusinessHours = currentTime.Hour >= 9 && currentTime.Hour < 17 && 
-                             currentTime.DayOfWeek != DayOfWeek.Saturday && 
-                             currentTime.DayOfWeek != DayOfWeek.Sunday;
-        
-        return await isBusinessHours.BoolToResultAsync(
-            errorsMessage: new[] {
-                $"Operation '{operation}' can only be performed during business hours",
-                "Business hours: Monday-Friday, 9:00 AM - 5:00 PM",
-                $"Current time: {currentTime:yyyy-MM-dd HH:mm}",
-                "Please try again during business hours"
-            });
-    }
-    
-    private MlResult<User> ValidateOrderLimits(User user, OrderRequest request)
-    {
-        var dailyOrderCount = _orderRepo.GetDailyOrderCount(user.Id);
-        var maxDailyOrders = user.SubscriptionType == "Premium" ? 50 : 10;
-        
-        return user.BoolToResult(
-            condition: dailyOrderCount < maxDailyOrders,
-            errorMessage: $"Daily order limit reached ({dailyOrderCount}/{maxDailyOrders}). " +
-                         "Upgrade to Premium for higher limits."
-        );
-    }
-    
-    private MlResult<OrderRequest> ValidateInventoryAvailability(OrderRequest request)
-    {
-        var allItemsAvailable = request.Items.All(item => 
-            _orderRepo.GetAvailableStock(item.ProductId) >= item.Quantity);
-        
-        return request.BoolToResult(
-            condition: allItemsAvailable,
-            errorMessage: "One or more items are not available in requested quantities"
-        );
-    }
-}
-
-public class OrderRequest
-{
-    public int UserId { get; set; }
-    public List<OrderItem> Items { get; set; }
-    public decimal TotalAmount { get; set; }
-}
-
-public class OrderItem
-{
-    public int ProductId { get; set; }
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
-}
-
-public class User
-{
-    public int Id { get; set; }
-    public bool IsActive { get; set; }
-    public bool IsSuspended { get; set; }
-    public bool IsVerified { get; set; }
-    public string SubscriptionType { get; set; }
-    public DateTime SubscriptionExpiryDate { get; set; }
-    public string PaymentStatus { get; set; }
-    public decimal CreditLimit { get; set; }
-    public string Role { get; set; }
-}
-
-public class Order
-{
-    public int Id { get; set; }
-    public int UserId { get; set; }
-    public decimal Amount { get; set; }
-    public string Status { get; set; }
-}
-
-public class Document
-{
-    public int Id { get; set; }
-    public int OwnerId { get; set; }
-    public List<int> SharedWith { get; set; }
-}
-
-public class PaymentRequest
-{
-    public int UserId { get; set; }
-    public decimal Amount { get; set; }
-    public string PaymentMethodId { get; set; }
-}
-
-public class PaymentResult
-{
-    public bool Success { get; set; }
-    public string TransactionId { get; set; }
-    public decimal Amount { get; set; }
+    public MlResult<Transferencia> Preparar(Cuenta origen, Cuenta destino, decimal importe)
+        => origen.NullToFailed("La cuenta de origen es obligatoria")
+                 .Bind(o => o.BoolToResult(o.Activa,
+                                MlErrorsDetails.FromErrorMessageDetails(
+                                    "La cuenta de origen no está activa",
+                                    new Dictionary<string, object> { ["Iban"] = o.Iban, ["Regla"] = "TRF-001" })))
+                 .Bind(o => o.BoolToResult(o.Saldo >= importe, new[]
+                       {
+                           "Saldo insuficiente para realizar la transferencia",
+                           $"Saldo disponible: {o.Saldo:C}",
+                           $"Importe solicitado: {importe:C}"
+                       })
+                       .Map(_ => o))
+                 .Bind(o => destino.NullToFailed("La cuenta de destino es obligatoria")
+                                   .Bind(d => d.BoolToResult(d.Activa, "La cuenta de destino no está activa"))
+                                   .Bind(d => d.BoolToResult(d.Iban != o.Iban,
+                                                             "El origen y el destino no pueden coincidir"))
+                                   .Map(d => new Transferencia(o, d, importe)));
 }
 ```
 
-### Ejemplo 2: Sistema de Validación de Configuraciones
+### Ejemplo 2: comprobaciones de permisos con la familia 2
 
 ```csharp
-public class ConfigurationValidator
+public class DocumentoService
 {
-    private readonly IConfigurationRepository _configRepo;
-    private readonly IEnvironmentService _envService;
-    
-    public async Task<MlResult<DatabaseConfig>> ValidateDatabaseConfigAsync(DatabaseConfig config)
-    {
-        return config
-            .BoolToResult(
-                condition: !string.IsNullOrEmpty(config.ConnectionString),
-                errorMessage: "Database connection string is required")
-            .Bind(validConfig => validConfig.BoolToResult(
-                condition: config.ConnectionTimeout > 0 && config.ConnectionTimeout <= 300,
-                errorMessage: "Connection timeout must be between 1 and 300 seconds"))
-            .Bind(validConfig => validConfig.BoolToResult(
-                condition: config.MaxPoolSize > 0 && config.MaxPoolSize <= 1000,
-                errorMessage: "Max pool size must be between 1 and 1000"))
-            .BindAsync(async validConfig => await TestDatabaseConnectionAsync(validConfig));
-    }
-    
-    public MlResult<ApiConfig> ValidateApiConfiguration(ApiConfig config)
-    {
-        return config
-            .BoolToResult(
-                condition: Uri.IsWellFormedUriString(config.BaseUrl, UriKind.Absolute),
-                errorMessage: $"Invalid API base URL: {config.BaseUrl}")
-            .Bind(validConfig => validConfig.BoolToResult(
-                condition: config.TimeoutSeconds > 0 && config.TimeoutSeconds <= 300,
-                errorMessage: "API timeout must be between 1 and 300 seconds"))
-            .Bind(validConfig => ValidateApiCredentials(validConfig));
-    }
-    
-    public async Task<MlResult<SecurityConfig>> ValidateSecurityConfigAsync(SecurityConfig config)
-    {
-        var isProductionEnvironment = await _envService.IsProductionAsync();
-        
-        return config
-            .BoolToResult(
-                condition: config.JwtExpirationMinutes > 0,
-                errorMessage: "JWT expiration must be positive")
-            .Bind(validConfig => validConfig.BoolToResult(
-                condition: !isProductionEnvironment || config.RequireHttps,
-                errorsMessage: new[] {
-                    "HTTPS is required in production environment",
-                    "Security configuration validation failed",
-                    "Set RequireHttps to true for production deployment"
-                }))
-            .Bind(validConfig => validConfig.BoolToResult(
-                condition: !isProductionEnvironment || !config.AllowInsecureConnections,
-                errorMessage: "Insecure connections are not allowed in production"));
-    }
-    
-    public MlResult<EmailConfig> ValidateEmailConfiguration(EmailConfig config)
-    {
-        return config
-            .BoolToResult(
-                condition: !string.IsNullOrEmpty(config.SmtpServer) && config.Port > 0,
-                errorMessage: "Valid SMTP server and port are required")
-            .Bind(validConfig => validConfig.BoolToResult(
-                condition: IsValidEmail(config.FromAddress),
-                errorMessage: $"Invalid from email address: {config.FromAddress}"))
-            .Bind(validConfig => validConfig.BoolToResult(
-                condition: config.UseAuthentication ? 
-                          !string.IsNullOrEmpty(config.Username) && !string.IsNullOrEmpty(config.Password) :
-                          true,
-                errorsMessage: new[] {
-                    "SMTP authentication is enabled but credentials are missing",
-                    "Provide both username and password for authenticated SMTP",
-                    "Or disable authentication if not required"
-                }));
-    }
-    
-    public async Task<MlResult<FeatureFlags>> ValidateFeatureFlagsAsync(FeatureFlags flags)
-    {
-        var environment = await _envService.GetEnvironmentAsync();
-        
-        return flags
-            .BoolToResult(
-                condition: !(environment == "Production" && flags.DebugMode),
-                errorMessage: "Debug mode cannot be enabled in production environment")
-            .Bind(validFlags => validFlags.BoolToResult(
-                condition: !(flags.EnableBetaFeatures && environment == "Production"),
-                errorMessage: "Beta features cannot be enabled in production environment"))
-            .Bind(validFlags => validFlags.BoolToResult(
-                condition: flags.CacheExpirationMinutes > 0,
-                errorMessage: "Cache expiration must be positive"));
-    }
-    
-    private async Task<MlResult<DatabaseConfig>> TestDatabaseConnectionAsync(DatabaseConfig config)
-    {
-        try
-        {
-            var canConnect = await _configRepo.TestConnectionAsync(config.ConnectionString);
-            return canConnect.BoolToResult(
-                errorsMessage: new[] {
-                    "Database connection test failed",
-                    "Please verify connection string and database availability",
-                    $"Connection string: {MaskConnectionString(config.ConnectionString)}"
-                });
-        }
-        catch (Exception ex)
-        {
-            return MlResult<DatabaseConfig>.Fail($"Database connection error: {ex.Message}");
-        }
-    }
-    
-    private MlResult<ApiConfig> ValidateApiCredentials(ApiConfig config)
-    {
-        return config.BoolToResult(
-            condition: !string.IsNullOrEmpty(config.ApiKey) || 
-                      (!string.IsNullOrEmpty(config.ClientId) && !string.IsNullOrEmpty(config.ClientSecret)),
-            errorsMessage: new[] {
-                "API credentials are required",
-                "Provide either ApiKey or both ClientId and ClientSecret",
-                "Check your API provider documentation for correct credential format"
-            });
-    }
-    
-    private bool IsValidEmail(string email)
-    {
-        try
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-    
-    private string MaskConnectionString(string connectionString)
-    {
-        // Implementación para enmascarar información sensible
-        return connectionString?.Length > 10 ? 
-            connectionString.Substring(0, 10) + "..." : 
-            connectionString;
-    }
-}
-
-public class DatabaseConfig
-{
-    public string ConnectionString { get; set; }
-    public int ConnectionTimeout { get; set; }
-    public int MaxPoolSize { get; set; }
-}
-
-public class ApiConfig
-{
-    public string BaseUrl { get; set; }
-    public int TimeoutSeconds { get; set; }
-    public string ApiKey { get; set; }
-    public string ClientId { get; set; }
-    public string ClientSecret { get; set; }
-}
-
-public class SecurityConfig
-{
-    public int JwtExpirationMinutes { get; set; }
-    public bool RequireHttps { get; set; }
-    public bool AllowInsecureConnections { get; set; }
-}
-
-public class EmailConfig
-{
-    public string SmtpServer { get; set; }
-    public int Port { get; set; }
-    public string FromAddress { get; set; }
-    public bool UseAuthentication { get; set; }
-    public string Username { get; set; }
-    public string Password { get; set; }
-}
-
-public class FeatureFlags
-{
-    public bool DebugMode { get; set; }
-    public bool EnableBetaFeatures { get; set; }
-    public int CacheExpirationMinutes { get; set; }
+    public async Task<MlResult<Documento>> DescargarAsync(int docId, Usuario usuario)
+        => await usuario.EstaAutenticado
+                        .BoolToResult("Debe iniciar sesión para descargar documentos")
+                        .BindAsync(_ => _permisos.PuedeLeerAsync(usuario.Id, docId)
+                                                 .BoolToResultAsync(
+                                                     MlErrorsDetails.FromErrorMessageDetails(
+                                                         "No tiene permiso para acceder a este documento",
+                                                         new Dictionary<string, object> { ["Prohibido"] = true })))
+                        .BindAsync(_ => _repo.ObtenerAsync(docId)
+                                             .NullToFailedAsync("El documento no existe"))
+                        .MapAsync(d => d.ConMarcaDeAgua(usuario.Nombre).ToAsync())
+                        .ExecSelfIfFailAsync(err => _auditoria.RegistrarAsync(usuario.Id, docId,
+                                                                              err.ToErrorsDescription()));
 }
 ```
 
-### Ejemplo 3: Sistema de Validación de Permisos y Seguridad
+El detalle `Prohibido` permite responder 403 en el controlador, distinguiéndolo del 404
+del documento inexistente.
+
+### Ejemplo 3: validación de ventanas temporales
 
 ```csharp
-public class SecurityValidator
+public MlResult<Reserva> Validar(Reserva reserva, ConfiguracionReservas config)
 {
-    private readonly IUserService _userService;
-    private readonly IPermissionService _permissionService;
-    private readonly IAuditService _auditService;
-    
-    public async Task<MlResult<User>> ValidateUserAccessAsync(int userId, string resource, string action)
-    {
-        var user = await _userService.GetByIdAsync(userId);
-        
-        return user
-            .BoolToResult(
-                condition: user != null && user.IsActive,
-                errorMessage: $"User {userId} not found or inactive")
-            .Bind(validUser => validUser.BoolToResult(
-                condition: !validUser.IsLocked,
-                errorsMessage: new[] {
-                    $"User account {userId} is locked",
-                    "Account was locked due to security violations",
-                    "Contact administrator to unlock account"
-                }))
-            .BindAsync(async activeUser => await ValidateUserPermissionsAsync(activeUser, resource, action))
-            .ExecSelfIfValidAsync(async validUser => 
-                await _auditService.LogAccessGrantedAsync(validUser.Id, resource, action))
-            .ExecSelfIfFailAsync(async errors => 
-                await _auditService.LogAccessDeniedAsync(userId, resource, action, errors));
-    }
-    
-    public async Task<MlResult<bool>> ValidatePasswordStrengthAsync(string password, User user)
-    {
-        var hasMinLength = password?.Length >= 8;
-        var hasUpperCase = password?.Any(char.IsUpper) ?? false;
-        var hasLowerCase = password?.Any(char.IsLower) ?? false;
-        var hasDigit = password?.Any(char.IsDigit) ?? false;
-        var hasSpecialChar = password?.Any(c => "!@#$%^&*()_+-=[]{}|;:,.<>?".Contains(c)) ?? false;
-        var notContainsUsername = !password?.ToLower().Contains(user.Username.ToLower()) ?? false;
-        
-        var isStrong = hasMinLength && hasUpperCase && hasLowerCase && 
-                      hasDigit && hasSpecialChar && notContainsUsername;
-        
-        return await isStrong.BoolToResultAsync(new[] {
-            "Password does not meet security requirements",
-            "Password must be at least 8 characters long",
-            "Password must contain uppercase and lowercase letters",
-            "Password must contain at least one digit and one special character",
-            "Password cannot contain your username"
-        });
-    }
-    
-    public MlResult<Session> ValidateSessionAsync(string sessionToken, string ipAddress)
-    {
-        var session = _userService.GetSessionByToken(sessionToken);
-        
-        return session
-            .BoolToResult(
-                condition: session != null && session.IsValid,
-                errorMessage: "Invalid or expired session")
-            .Bind(validSession => validSession.BoolToResult(
-                condition: validSession.ExpiresAt > DateTime.UtcNow,
-                errorMessage: "Session has expired"))
-            .Bind(activeSession => activeSession.BoolToResult(
-                condition: activeSession.IpAddress == ipAddress || !activeSession.RequireIpValidation,
-                errorsMessage: new[] {
-                    "Session IP address mismatch",
-                    $"Session created from: {activeSession.IpAddress}",
-                    $"Current request from: {ipAddress}",
-                    "Session invalidated for security reasons"
-                }));
-    }
-    
-    public async Task<MlResult<bool>> ValidateRateLimitAsync(int userId, string operation)
-    {
-        var rateLimitInfo = await _permissionService.GetRateLimitAsync(userId, operation);
-        var currentCount = await _permissionService.GetCurrentUsageAsync(userId, operation);
-        
-        var withinLimit = currentCount < rateLimitInfo.MaxRequests;
-        
-        return await withinLimit.BoolToResultAsync(new[] {
-            $"Rate limit exceeded for operation '{operation}'",
-            $"Limit: {rateLimitInfo.MaxRequests} requests per {rateLimitInfo.WindowMinutes} minutes",
-            $"Current usage: {currentCount}/{rateLimitInfo.MaxRequests}",
-            $"Try again in {rateLimitInfo.ResetTimeMinutes} minutes"
-        });
-    }
-    
-    public MlResult<FileUpload> ValidateFileUploadAsync(FileUpload upload, User user)
-    {
-        var allowedExtensions = new[] { ".jpg", ".png", ".pdf", ".docx", ".xlsx" };
-        var maxSizeBytes = user.SubscriptionType == "Premium" ? 100_000_000 : 10_000_000; // 100MB vs 10MB
-        
-        return upload
-            .BoolToResult(
-                condition: upload.Size <= maxSizeBytes,
-                errorMessage: $"File size {upload.Size:N0} bytes exceeds limit of {maxSizeBytes:N0} bytes")
-            .Bind(validUpload => validUpload.BoolToResult(
-                condition: allowedExtensions.Contains(Path.GetExtension(validUpload.FileName).ToLower()),
-                errorsMessage: new[] {
-                    $"File type '{Path.GetExtension(upload.FileName)}' not allowed",
-                    $"Allowed types: {string.Join(", ", allowedExtensions)}",
-                    "Please convert your file to a supported format"
-                }))
-            .Bind(validUpload => validUpload.BoolToResult(
-                condition: !IsExecutableFile(validUpload.FileName),
-                errorMessage: "Executable files are not allowed for security reasons"));
-    }
-    
-    private async Task<MlResult<User>> ValidateUserPermissionsAsync(User user, string resource, string action)
-    {
-        var hasPermission = await _permissionService.HasPermissionAsync(user.Id, resource, action);
-        
-        return user.BoolToResult(
-            condition: hasPermission,
-            errorsMessage: new[] {
-                $"User {user.Id} lacks permission for action '{action}' on resource '{resource}'",
-                "Contact administrator if you believe you should have access",
-                $"Current user role: {user.Role}"
-            });
-    }
-    
-    private bool IsExecutableFile(string fileName)
-    {
-        var executableExtensions = new[] { ".exe", ".bat", ".cmd", ".com", ".pif", ".scr", ".vbs", ".js" };
-        return executableExtensions.Contains(Path.GetExtension(fileName).ToLower());
-    }
-}
+    var ahora     = DateTime.UtcNow;
+    var antelacion = reserva.Inicio - ahora;
 
-public class Session
-{
-    public string Token { get; set; }
-    public int UserId { get; set; }
-    public DateTime ExpiresAt { get; set; }
-    public string IpAddress { get; set; }
-    public bool RequireIpValidation { get; set; }
-    public bool IsValid { get; set; }
+    return reserva.BoolToResult(reserva.Inicio > ahora,
+                                "La fecha de inicio debe ser futura")
+                  .Bind(r => r.BoolToResult(antelacion >= config.AntelacionMinima,
+                                            $"Debe reservar con al menos {config.AntelacionMinima.TotalHours:0} horas de antelación"))
+                  .Bind(r => r.BoolToResult(antelacion <= config.AntelacionMaxima,
+                                            $"No se puede reservar con más de {config.AntelacionMaxima.TotalDays:0} días de antelación"))
+                  .Bind(r => r.BoolToResult(r.Fin > r.Inicio,
+                                            "La fecha de fin debe ser posterior a la de inicio"))
+                  .Bind(r => r.BoolToResult((r.Fin - r.Inicio) <= config.DuracionMaxima,
+                                            $"La duración máxima es de {config.DuracionMaxima.TotalHours:0} horas"));
 }
+```
 
-public class RateLimitInfo
-{
-    public int MaxRequests { get; set; }
-    public int WindowMinutes { get; set; }
-    public int ResetTimeMinutes { get; set; }
-}
+Nota: aquí todas las condiciones son cálculos baratos, así que la evaluación no diferida no
+supone problema. Si alguna implicara una consulta, convendría usar `MapEnsure`.
 
-public class FileUpload
-{
-    public string FileName { get; set; }
-    public long Size { get; set; }
-    public string ContentType { get; set; }
-    public byte[] Content { get; set; }
-}
+### Ejemplo 4: comprobar la configuración al arrancar
+
+```csharp
+public static MlResult<AppOpciones> Verificar(AppOpciones opciones)
+    => opciones.NullToFailed("No se ha cargado la configuración")
+               .Bind(o => o.BoolToResult(!string.IsNullOrWhiteSpace(o.CadenaConexion),
+                                         "Falta la cadena de conexión"))
+               .Bind(o => o.BoolToResult(Directory.Exists(o.RutaTemporal),
+                                         $"La ruta temporal '{o.RutaTemporal}' no existe"))
+               .Bind(o => o.BoolToResult(o.TiempoEsperaSegundos is > 0 and <= 300,
+                                         "El tiempo de espera debe estar entre 1 y 300 segundos"))
+               .ExecSelfIfFail(err => Console.Error.WriteLine(err.ToErrorsDescription()));
+```
+
+### Ejemplo 5: qué no hacer
+
+```csharp
+// ❌ Condición costosa evaluada aunque el carril ya haya fallado
+var r = previo.Bind(x => x.BoolToResult(_repo.CuentaRegistros(x.Id) > 0, "Sin registros"));
+//      (aquí Bind sí protege, pero es más claro y directo con MapEnsure)
+
+// ✅ MapEnsure: predicado diferido e idiomático
+var r = previo.MapEnsure(x => _repo.CuentaRegistros(x.Id) > 0, "Sin registros");
+
+
+// ❌ Suponer que BoolToResult comprueba el null
+Cliente? c = null;
+var r = c.BoolToResult(true, "...");   // Valid… ¡conteniendo null!
+
+// ✅ Encadena NullToFailed primero
+var r = c.NullToFailed("El cliente es obligatorio")
+         .MapEnsure(x => x.Activo, "El cliente debe estar activo");
+
+
+// ❌ Leer el valor de un MlResult<bool> de la familia 2
+// var paso = resultado.Value;   // siempre true si es válido: no informa de nada
+
+// ✅ Descarta el valor con Bind
+resultado.Bind(_ => ContinuarProceso());
+
+
+// ❌ Cadena de guardas donde cada Bind repite el valor a mano
+var r = pedido.BoolToResult(c1, "...").Bind(p => p.BoolToResult(c2, "...").Map(_ => p));
+
+
+// ✅ Con MapEnsure el valor se conserva solo
+var r = pedido.ToMlResultValid()
+              .MapEnsure(p => c1(p), "...")
+              .MapEnsure(p => c2(p), "...");
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Cuándo Usar BoolToResult
-
-```csharp
-// ✅ Correcto: Validaciones basadas en lógica de negocio
-var user = GetUser(userId)
-    .BoolToResult(user != null && user.IsActive, "User not found or inactive");
-
-// ✅ Correcto: Validaciones complejas con múltiples condiciones
-var order = GetOrder(orderId)
-    .BoolToResult(
-        condition: order.Status == "Pending" && order.Amount > 0 && order.UserId == currentUserId,
-        errorMessage: "Order cannot be modified");
-
-// ✅ Correcto: Convertir validaciones boolean existentes
-bool isValidPassword = ValidatePassword(password);
-var result = isValidPassword.BoolToResult("Password validation failed");
-
-// ❌ Incorrecto: Para validaciones simples que tienen métodos específicos
-var user = GetUser(userId)
-    .BoolToResult(user != null, "User not found"); // Mejor usar NullToFailed
-```
-
-### 2. Condiciones Claras y Específicas
-
-```csharp
-// ✅ Correcto: Condiciones bien definidas
-var result = document.BoolToResult(
-    condition: document.OwnerId == currentUserId || document.IsPublic,
-    errorMessage: "You don't have permission to access this document");
-
-// ✅ Correcto: Lógica de negocio específica
-var orderResult = order.BoolToResult(
-    condition: order.Status == "Pending" && 
-              order.CreatedAt > DateTime.UtcNow.AddHours(-24) &&
-              order.Items.All(i => i.IsAvailable),
-    errorsMessage: new[] {
-        "Order cannot be processed",
-        "Order must be pending, created within 24 hours, and all items available"
-    });
-
-// ❌ Incorrecto: Condiciones vagas o complejas
-var result = data.BoolToResult(
-    condition: ComplexValidationMethod(data), // Mejor extraer la lógica
-    errorMessage: "Validation failed");
-```
-
-### 3. Mensajes de Error Informativos
-
-```csharp
-// ✅ Correcto: Mensajes específicos que explican el problema
-var user = GetUser(userId)
-    .BoolToResult(
-        condition: user.Age >= 18,
-        errorsMessage: new[] {
-            "User must be at least 18 years old",
-            $"Current age: {user.Age}",
-            "Age verification is required for this operation"
-        });
-
-// ✅ Correcto: Incluir contexto útil para debugging
-var payment = GetPayment(paymentId)
-    .BoolToResult(
-        condition: payment.Amount <= user.CreditLimit,
-        errorMessage: $"Payment amount {payment.Amount:C} exceeds credit limit {user.CreditLimit:C}");
-
-// ❌ Incorrecto: Mensajes genéricos
-var result = data.BoolToResult(
-    condition: data.IsValid,
-    errorMessage: "Invalid"); // Muy poco informativo
-```
-
-### 4. Uso en Pipelines de Validación
-
-```csharp
-// ✅ Correcto: Múltiples validaciones encadenadas
-var result = GetUser(userId)
-    .NullToFailed("User not found")                    // Validar existencia
-    .Bind(user => user.BoolToResult(                   // Validar estado
-        condition: user.IsActive && !user.IsLocked,
-        errorMessage: "User account is not accessible"))
-    .Bind(validUser => validUser.BoolToResult(         // Validar permisos
-        condition: validUser.Role == "Admin" || validUser.Id == currentUserId,
-        errorMessage: "Insufficient permissions"))
-    .Map(authorizedUser => LoadUserData(authorizedUser)); // Procesar
-
-// ✅ Correcto: Validación condicional basada en contexto
-var documentResult = GetDocument(docId)
-    .NullToFailed("Document not found")
-    .Bind(doc => doc.BoolToResult(
-        condition: !doc.IsConfidential || currentUser.HasRole("Manager"),
-        errorMessage: "Access to confidential documents requires manager role"));
-```
-
----
-
-## Comparación con Otros Métodos de Validación
-
-### Tabla Comparativa
-
-| Método | Entrada | Condición de Validación | Uso Principal |
-|--------|---------|------------------------|---------------|
-| `BoolToResult` | `T` + `bool` | Condición booleana personalizada | Validaciones de lógica de negocio |
-| `NullToFailed` | `T` | `value == null` | Validar no-null |
-| `EmptyToFailed` | `IEnumerable<T>` | Colección vacía | Validar no-vacío |
-| `Bind` | `MlResult<T>` | Función retorna Fail | Encadenar validaciones |
-
-### Ejemplo Comparativo
-
-```csharp
-var user = GetUser(userId);
-
-// BoolToResult: Validación con condición personalizada
-var businessRuleResult = user.BoolToResult(
-    condition: user != null && user.IsActive && user.Age >= 18,
-    errorMessage: "User doesn't meet business requirements");
-
-// NullToFailed: Validación de null específica
-var nullCheckResult = user.NullToFailed("User not found");
-
-// Combinación típica en pipeline
-var processedUser = GetUser(userId)
-    .NullToFailed("User not found")                    // Validar existencia
-    .Bind(u => u.BoolToResult(                        // Validar reglas de negocio
-        condition: u.IsActive && u.IsVerified,
-        errorMessage: "User must be active and verified"))
-    .Bind(validUser => LoadUserPermissions(validUser)) // Cargar datos adicionales
-    .Map(enrichedUser => CreateUserDto(enrichedUser)); // Transformar resultado
-```
+1. **Usa la familia 1 (`BoolToResult<T>`) por defecto**: conserva el valor y permite seguir
+   encadenando sin trucos.
+2. **Reserva la familia 2 (`BoolToResult` sobre `bool`)** para comprobaciones sin sujeto
+   natural: permisos, interruptores de configuración, disponibilidad de servicios.
+3. **Si ya estás en el carril, prefiere `MapEnsure`**: su predicado es diferido, conserva
+   el valor y encadena de forma más limpia.
+4. **Recuerda que la condición se evalúa siempre.** No pongas consultas ni cálculos caros
+   directamente en el argumento `condition`.
+5. **Combínalo con `NullToFailed`**: `BoolToResult` no comprueba el `null`.
+6. **Usa la sobrecarga de `MlErrorsDetails`** para incluir el código de regla, los
+   identificadores y marcas como `Prohibido` o `NoEncontrado`, y decidir el código HTTP al
+   final de la tubería.
+7. **Usa la sobrecarga de `IEnumerable<string>`** cuando el usuario necesite ver el valor
+   actual, el límite y la acción correctiva.
+8. **Resuelve las condiciones asíncronas antes** de llamar (no existe sobrecarga con
+   `Task<bool>` como condición) o usa `BindAsync` con un lambda asíncrono.
+9. **Si necesitas acumular todos los errores** en lugar de cortocircuitar en el primero,
+   usa [`Combine`](4_Combine.md).
+10. **Nombra las reglas** (`"PED-013"`, `"TRF-001"`) en los `Details`: facilita el soporte
+    y las pruebas.
 
 ---
 
 ## Resumen
 
-Los métodos `BoolToResult` proporcionan **validación basada en condiciones booleanas**:
+- `BoolToResult` convierte **cualquier condición booleana** en un `MlResult`: **Valid** si
+  es `true`, **Fail** con tu error si es `false`.
+- Hay **dos familias**: `BoolToResult<T>(source, condition, error)` conserva el valor;
+  `BoolToResult(this bool, error)` devuelve `MlResult<bool>` y se consume con `Bind(_ => ...)`.
+- **8 sobrecargas síncronas** (4 por familia: `MlErrorsDetails`, `MlError`, `string`,
+  `IEnumerable<string>`) y **16 asíncronas** (8 por familia, la mitad simples envolturas y
+  la mitad sobre `Task<...>`, que sí esperan el origen).
+- El método base de cada familia es el de `MlErrorsDetails`; el resto delega en él.
+- ⚠️ La condición es un **`bool` ya evaluado**, no un `Func<T,bool>`: **no hay evaluación
+  diferida ni cortocircuito**. Con condiciones costosas, usa
+  [`MapEnsure`](../Map/2_MapEnsure.md).
+- ⚠️ **No comprueba `null`**: combínalo con [`NullToFailed`](2_NullToFailed.md).
+- ⚠️ En la familia 2, el valor válido es siempre `true`: no lo leas.
+- **No existe `TryBoolToResult`**: no hay delegado de usuario que pueda lanzar.
 
-- **`BoolToResult<T>`**: Valida objetos usando condiciones booleanas externas
-- **`BoolToResult`**: Convierte valores bool directamente en `MlResult<bool>`
-- **`BoolToResultAsync`**: Soporte completo para operaciones asíncronas
+---
 
-**Casos de uso ideales**:
-- **Validaciones de reglas de negocio** complejas
-- **Control de acceso y permisos** basado en múltiples condiciones
-- **Validación de configuraciones** con lógica específica
-- **Conversión de validaciones booleanas** existentes a `MlResult`
+## Ver también
 
-**Ventajas principales**:
-- **Flexibilidad total** en condiciones de validación
-- **Integración perfecta** con lógica de negocio existente
-- **Mensajes de error contextuales** y específicos
-- **Reutilización** de validaciones booleanas existentes
+- [`EmptyToFailed`](1_EmptyToFailed.md) — fallar si una colección viene vacía
+- [`NullToFailed`](2_NullToFailed.md) — fallar si un objeto es `null`
+- [`Combine`](4_Combine.md) — acumular los errores de varias validaciones
+- [`MapEnsure`](../Map/2_MapEnsure.md) — validar con predicado diferido dentro del carril
+- [`MapIf`](../Map/3_MapIf.md) y [`BindIf`](../Bind/5_BindIf.md) — bifurcar según una condición
+- [`EnsureFp`](../EnsureFp/EnsureFp.md) — `That`, `NotNull`, `NotEmpty` para validar argumentos
+- [`MlResultErrors`](../Types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y sus fábricas
+- [`ExecSelfIfFail`](../ExecSelf/3_ExecSelfIfFail.md) — registrar el fallo sin alterar el carril

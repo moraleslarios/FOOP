@@ -1,1564 +1,556 @@
-﻿# MlResultActionsMapIfFailWithException - Recuperación de Errores con Excepciones Preservadas
+﻿# MapIfFailWithException — Recuperarse solo cuando el fallo trae una excepción
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de la Clase](#análisis-de-la-clase)
-3. [Diferencias Clave con MapIfFailWithValue](#diferencias-clave-con-mapiffailwithvalue)
-4. [Concepto de "Detail Exception"](#concepto-de-detail-exception)
-5. [Métodos MapIfFailWithException Básicos](#métodos-mapiffailwithexception-básicos)
-6. [Métodos con Cambio de Tipo](#métodos-con-cambio-de-tipo)
-7. [Métodos TryMapIfFailWithException](#métodos-trymapiffailwithexception)
-8. [Variantes Asíncronas](#variantes-asíncronas)
-9. [Ejemplos Prácticos](#ejemplos-prácticos)
-10. [Comparación con Otros Patrones](#comparación-con-otros-patrones)
-11. [Mejores Prácticas](#mejores-prácticas)
+2. [El problema que resuelve](#el-problema-que-resuelve)
+3. [Cómo llega la excepción a los detalles](#cómo-llega-la-excepción-a-los-detalles)
+4. [La regla de oro: sin excepción no hay recuperación](#la-regla-de-oro-sin-excepción-no-hay-recuperación)
+5. [Las cuatro formas de `MapIfFailWithException`](#las-cuatro-formas-de-mapiffailwithexception)
+6. [Firmas reales e implementación](#firmas-reales-e-implementación)
+7. [Filtrar por tipo de excepción con `TException`](#filtrar-por-tipo-de-excepción-con-texception)
+8. [La familia `MapIfFailWithExceptionError`](#la-familia-mapiffailwithexceptionerror)
+9. [Variantes asíncronas](#variantes-asíncronas)
+10. [`TryMapIfFailWithException` — cuando la recuperación puede lanzar](#trymapiffailwithexception--cuando-la-recuperación-puede-lanzar)
+11. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+12. [Ejemplos Prácticos](#ejemplos-prácticos)
+13. [Mejores Prácticas](#mejores-prácticas)
+14. [Resumen](#resumen)
+15. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-La clase `MlResultActionsMapIfFailWithException` implementa **recuperación de errores con acceso a excepciones preservadas**. Estos métodos permiten acceder a la excepción original que causó el fallo, habilitando estrategias de recuperación específicas basadas en el tipo y contenido de la excepción.
+No todos los fallos son iguales. En una tubería `MlResult` conviven dos naturalezas muy
+distintas de error:
 
-### Propósito Principal
+- **Errores de negocio**: «el NIF no es válido», «el stock es insuficiente». Son esperados,
+  los produce tu propio código con `ToMlResultFail` o `EnsureFp`.
+- **Errores técnicos**: una `SqlException`, un `HttpRequestException`, un `TimeoutException`.
+  Los captura un método `Try*` y quedan guardados como excepción dentro del error.
 
-- **Exception-Based Recovery**: Recuperación basada en el tipo específico de excepción
-- **Error Context Preservation**: Preservar el contexto de la excepción original
-- **Type-Specific Handling**: Manejo diferenciado según el tipo de excepción
-- **Exception Information Access**: Acceso completo a la información de la excepción
+`MapIfFailWithException` es la herramienta para **reaccionar solo a los segundos**. Su
+delegado de recuperación recibe la `Exception` real, y si el fallo no lleva excepción, la
+operación **no hace nada**: el fallo sale tal cual entró.
 
-### Filosofía de Diseño
+```csharp
+// ❌ MapIfFail no distingue: recupera igual un NIF inválido que una caída de red
+var r = ConsultarTarifa(sku).MapIfFail(_ => Tarifa.Cacheada(sku));
 
+// ✅ MapIfFailWithException: solo tira de caché si el problema fue técnico
+var r = ConsultarTarifa(sku)
+            .MapIfFailWithException(ex => Tarifa.Cacheada(sku));
+//        un error de negocio ("SKU no catalogado") se propaga intacto
 ```
-Valor Válido              → Valor (sin modificación)
-Error con Excepción       → func(exception) → Valor Recuperado
-Error sin Excepción       → Error (propagación sin modificación)
-```
 
-**Comportamiento Clave**: Si no hay excepción preservada, **no se añade error adicional**, solo se propaga el error original.
+> ⚠️ **Sobre `MlErrorsDetails`**
+> `MlErrorsDetails` solo expone dos propiedades: `Errors` (una colección de `MlError`) y
+> `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`,
+> `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer errores usa
+> `ToErrorsMessages()`, `ToErrorsDescription()` o `Errors.First().Message`; para obtener la
+> excepción usa `GetDetailException()` o `GetDetailException<TException>()`.
 
 ---
 
-## Análisis de la Clase
+## El problema que resuelve
 
-### Patrón de Funcionamiento
+Mezclar la gestión de fallos de negocio y de fallos técnicos es una de las causas más
+frecuentes de bugs sutiles: un `catch` demasiado ancho convierte un error de validación en un
+reintento, o al contrario, una caída de infraestructura se presenta al usuario como si fuera
+culpa de sus datos.
 
-`MapIfFailWithException` funciona cuando:
+`MapIfFailWithException` te da un **filtro semántico** en medio de la tubería:
 
-1. Una operación previa **preservó una excepción** antes de fallar
-2. El error contiene esa excepción como "detail exception"
-3. La función de recuperación puede usar la excepción para decidir la estrategia
-4. Se genera un resultado válido basado en el análisis de la excepción
+| Quiero… | Uso |
+|---|---|
+| Recuperarme de cualquier fallo | `MapIfFail` |
+| Recuperarme **solo de fallos técnicos** | `MapIfFailWithException` |
+| Recuperarme **solo de fallos de negocio** | `MapIfFailWithoutException` |
+| Recuperarme de un tipo concreto de excepción | `MapIfFailWithException<T, TException>` |
 
-### Comportamiento Distintivo
-
-```csharp
-// Si HAY excepción preservada
-var result = source.Match(
-    fail: errorsDetails => errorsDetails.GetDetailException().Match(
-        fail: _ => errorsDetails.ToMlResultFail<T>(),           // Sin excepción: propagar error original
-        valid: ex => funcException(ex).ToMlResultValid()       // Con excepción: recuperar
-    ),
-    valid: value => value
-);
-```
-
-**Importante**: Si no hay excepción detail, se retorna el error original **sin modificaciones**.
+Es, en la práctica, la versión funcional y tipada de un `catch (SqlException)` colocado en el
+punto exacto de la tubería donde tiene sentido.
 
 ---
 
-## Diferencias Clave con MapIfFailWithValue
+## Cómo llega la excepción a los detalles
 
-### Comportamiento Diferenciado
-
-| Aspecto | MapIfFailWithValue | MapIfFailWithException |
-|---------|-------------------|------------------------|
-| **Sin Detail** | Añade nuevo error al existente | Propaga error original sin cambios |
-| **Con Detail** | Usa valor preservado para recuperar | Usa excepción preservada para recuperar |
-| **Estrategia** | Mejora/completa valores parciales | Analiza excepción para decidir recuperación |
-| **Casos de Uso** | Datos parciales utilizables | Errores específicos manejables |
-
-### Ejemplo Comparativo
+La excepción no aparece por arte de magia: alguien la capturó y la guardó en
+`Details["Ex"]` (la constante `EX_DESC_KEY`). Las vías habituales son:
 
 ```csharp
-// MapIfFailWithValue: Siempre intenta recuperar
-var resultValue = source
-    .MapIfFailWithValue(partialData => EnhancePartialData(partialData));
-    // Si no hay valor preservado: AÑADE ERROR sobre el existente
+// 1) Cualquier método Try* de la librería lo hace por ti
+var r = origen.TryMap(x => JsonSerializer.Deserialize<Dto>(x)!,
+                      ex => $"JSON inválido: {ex.Message}");
+//        si Deserialize lanza → fallo con la excepción en Details["Ex"]
 
-// MapIfFailWithException: Solo recupera si hay excepción específica
-var resultException = source
-    .MapIfFailWithException(ex => HandleSpecificException(ex));
-    // Si no hay excepción preservada: PROPAGA ERROR ORIGINAL sin cambios
+// 2) Explícitamente, al construir el error
+return MlErrorsDetails.FromErrorMessageWithException("No se pudo abrir el fichero", ex)
+                      .ToMlResultFail<Contenido>();
+
+// 3) Añadiéndola a un error que ya existe
+errores.AppendExDetails(ex);
 ```
+
+Y así se lee:
+
+```csharp
+// La excepción concreta, sin filtrar por tipo
+MlResult<Exception> exResult = errores.GetDetailException();
+
+// Filtrando por tipo (falla si la guardada no es un TimeoutException)
+MlResult<TimeoutException> toResult = errores.GetDetailException<TimeoutException>();
+
+// Comprobación booleana rápida
+bool esTecnico = errores.GetDetailException().IsValid;
+```
+
+> 📌 `AppendExDetails` numera las excepciones sucesivas como `Ex`, `Ex2`, `Ex3`… si se apilan
+> varias. `GetDetailException()` lee la clave `Ex`.
 
 ---
 
-## Concepto de "Detail Exception"
+## La regla de oro: sin excepción no hay recuperación
 
-### ¿Qué es un Detail Exception?
+El propio autor lo dejó escrito como comentario justo al abrir la región, contrastándolo con
+la familia hermana que trabaja con el valor guardado:
 
-Un **Detail Exception** es una excepción que se preserva en el `MlErrorsDetails` cuando una operación falla debido a una excepción específica.
+```text
+En el caso de MapIfFailWithException es diferente al MapIfFailWithValue.
 
-```csharp
-// Ejemplo conceptual: Una operación que preserva la excepción
-public MlResult<ProcessedData> ProcessRiskyData(RawData data)
-{
-    try 
-    {
-        return PerformRiskyOperation(data);
-    }
-    catch (SpecificException ex)
-    {
-        // Preservar la excepción específica
-        return MlResult<ProcessedData>.FailWithException(
-            ex,  // Excepción preservada
-            $"Processing failed: {ex.Message}"
-        );
-    }
-    catch (Exception ex)
-    {
-        // Error general sin preservar excepción
-        return MlResult<ProcessedData>.Fail($"Unexpected error: {ex.Message}");
-    }
-}
+    1.- MapIfFailWithValue: Si recibe un MlResult Fail sin ValueDetail, añadira un nuevo Error
+        al que le viene de la ejecución anterior
+
+    2.- MapIfFailWithException: Si recibe un MlResult Fail sin ExceptionDetail, Devolvera el
+        MlResult Fail, igual que le vino
 ```
 
-### Acceso al Detail Exception
+Esa diferencia es **la característica más importante de esta familia** y la que la hace
+segura de usar:
 
-Los métodos usan `errorsDetails.GetDetailException()` para extraer la excepción:
+| Estado de entrada | ¿Hay `Details["Ex"]`? | Qué ocurre |
+|---|---|---|
+| Válido | irrelevante | se devuelve el valor; el delegado no se ejecuta |
+| Fallido | **sí** | se ejecuta el delegado con la excepción → resultado **válido** |
+| Fallido | **no** | se devuelve **el mismo fallo, con sus errores originales intactos** |
+
+En otras palabras: puedes intercalar `MapIfFailWithException` en cualquier punto sin miedo a
+degradar los mensajes de error de negocio. Si no aplica, es transparente.
+
+---
+
+## Las cuatro formas de `MapIfFailWithException`
+
+La región publica cuatro variantes que combinan dos ejes: **si el tipo de salida cambia** y
+**si se filtra por tipo de excepción**.
+
+| | Genéricos | Delegados | Salida |
+|---|---|---|---|
+| **Forma A** | `<T>` | `Func<Exception, T> funcException` | `MlResult<T>` |
+| **Forma B** | `<T, TReturn>` | `Func<T, TReturn> funcValid` + `Func<Exception, TReturn> funcFail` | `MlResult<TReturn>` |
+| **Forma C** | `<T, TException>` | `Func<TException, T> funcException` | `MlResult<T>` |
+| **Forma D** | `<T, TReturn, TException>` | `Func<T, TReturn> funcValid` + `Func<TException, TReturn> funcFail` | `MlResult<TReturn>` |
+
+Las formas **C** y **D** llevan la restricción `where TException : Exception`.
+
+---
+
+## Firmas reales e implementación
+
+### Forma A — recuperación en el mismo tipo
 
 ```csharp
-public static MlResult<T> MapIfFailWithException<T>(this MlResult<T> source,
-                                                    Func<Exception, T> funcException)
+/// <summary>
+/// Execute the function if the source is fail, otherwise return the source.
+/// source parameter has a prevous Exception execution or 'ex' ErrorDetail
+/// </summary>
+public static MlResult<T> MapIfFailWithException<T>(this MlResult<T>        source,
+                                                         Func<Exception, T> funcException)
     => source.Match(
-        fail: errorsDetails => errorsDetails.GetDetailException().Match(
-            fail: exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),  // Sin excepción
-            valid: ex => funcException(ex).ToMlResultValid()                // Con excepción
-        ),
-        valid: value => value
-    );
+                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                                                    fail : exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),
+                                                    valid: ex              => funcException(ex).ToMlResultValid()
+                                                ),
+                        valid: value         => value
+                    );
 ```
+
+Fíjate en el `Match` anidado: el interno decide si hay excepción. En la rama `fail` interna se
+devuelve el fallo, y en la `valid` interna se ejecuta la recuperación, que **siempre produce
+un resultado válido** porque `funcException` devuelve un `T` desnudo.
+
+### Forma B — las dos ramas convergen en `TReturn`
+
+```csharp
+public static MlResult<TReturn> MapIfFailWithException<T, TReturn>(this MlResult<T>              source,
+                                                                        Func<T        , TReturn> funcValid,
+                                                                        Func<Exception, TReturn> funcFail)
+    => source.Match(
+                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                                                    fail : _  => errorsDetails.ToMlResultFail<TReturn>(),
+                                                    valid: ex => funcFail(ex).ToMlResultValid()
+                                                ),
+                        valid: x => funcValid(x).ToMlResultValid()
+                    );
+```
+
+Es un `Match` con la rama de fallo **condicionada a que exista excepción**. Muy útil para
+proyectar a un modelo de vista distinguiendo «funcionó», «falló por algo técnico» y «falló por
+negocio» (este último caso sale como fallo y lo tratas fuera).
 
 ---
 
-## Métodos MapIfFailWithException Básicos
+## Filtrar por tipo de excepción con `TException`
 
-### `MapIfFailWithException<T>()` - Recuperación con Mismo Tipo
-
-**Propósito**: Recupera de un error usando la excepción preservada y manteniendo el mismo tipo
-
-```csharp
-public static MlResult<T> MapIfFailWithException<T>(this MlResult<T> source,
-                                                    Func<Exception, T> funcException)
-```
-
-**Comportamiento**:
-- Si `source` es válido: Retorna el valor sin modificación
-- Si `source` es fallido con excepción: Aplica `funcException(exception)`
-- Si `source` es fallido sin excepción: Propaga el error original sin cambios
-
-**Ejemplo Básico**:
-```csharp
-var result = GetDataFromExternalService()
-    .MapIfFailWithException(ex => ex switch
-    {
-        TimeoutException _ => GetCachedData(),
-        UnauthorizedException _ => GetPublicData(),
-        NotFoundException _ => GetDefaultData(),
-        _ => throw new InvalidOperationException($"Unhandled exception type: {ex.GetType()}")
-    });
-```
-
-### `MapIfFailWithExceptionAsync<T>()` - Versión Asíncrona
+Las formas C y D cambian `GetDetailException()` por `GetDetailException<TException>()`, que
+falla si la excepción guardada **no es** del tipo pedido:
 
 ```csharp
-public static async Task<MlResult<T>> MapIfFailWithExceptionAsync<T>(
-    this MlResult<T> source,
-    Func<Exception, Task<T>> funcExceptionAsync)
+public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>         source,
+                                                                     Func<TException, T> funcException)
+    where TException : Exception
+    => source.Match(
+                        fail : errorsDetails => errorsDetails.GetDetailException<TException>().Match(
+                                                    fail : exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),
+                                                    valid: ex              => funcException(ex).ToMlResultValid()
+                                                ),
+                        valid: value         => value
+                    );
 ```
 
-**Ejemplo**:
+Esto te permite escribir el equivalente a varios `catch` tipados, en cadena y sin excepciones
+de control de flujo:
+
 ```csharp
-var result = await CallExternalApiAsync()
-    .MapIfFailWithExceptionAsync(async ex => ex switch
-    {
-        HttpRequestException httpEx when httpEx.Message.Contains("503") => 
-            await GetDataFromFallbackServiceAsync(),
-        
-        TaskCanceledException _ => 
-            await GetDataFromFastCacheAsync(),
-        
-        _ => throw new InvalidOperationException($"Cannot recover from {ex.GetType()}")
-    });
+var resultado = LeerConfiguracion(ruta)
+                    .MapIfFailWithException<Config, FileNotFoundException>(_  => Config.PorDefecto)
+                    .MapIfFailWithException<Config, JsonException>        (ex => Config.PorDefecto with
+                                                                                 {
+                                                                                     Aviso = $"Config corrupta: {ex.Message}"
+                                                                                 });
+// Una IOException, o un error de negocio, siguen su camino como fallo.
 ```
+
+> ⚠️ Los genéricos de las formas C y D **casi nunca se infieren**: al indicar `TException`
+> tienes que escribir también `T` (y `TReturn` en la forma D). Es el motivo por el que en los
+> ejemplos aparecen siempre explícitos.
 
 ---
 
-## Métodos con Cambio de Tipo
+## La familia `MapIfFailWithExceptionError`
 
-### `MapIfFailWithException<T, TReturn>()` - Recuperación con Transformación
-
-**Propósito**: Permite diferentes tipos para la entrada y salida, con manejo específico de excepciones
+Junto a las cuatro formas anteriores, la región publica una **subfamilia paralela** con el
+sufijo `Error`. La condición de activación es la misma (que haya excepción), pero el delegado
+de fallo recibe **el `MlErrorsDetails` completo** en lugar de la excepción suelta:
 
 ```csharp
-public static MlResult<TReturn> MapIfFailWithException<T, TReturn>(
-    this MlResult<T> source,
-    Func<T, TReturn> funcValid,           // Para valores válidos
-    Func<Exception, TReturn> funcFail)    // Para excepciones preservadas
+public static MlResult<T> MapIfFailWithExceptionError<T>(this MlResult<T>              source,
+                                                              Func<MlErrorsDetails, T> funcFail)
+    => source.Match(
+                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                                                    fail : exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),
+                                                    valid: ex              => funcFail(errorsDetails).ToMlResultValid()
+                                                ),
+                        valid: value         => value
+                    );
 ```
 
-**Ejemplo**:
-```csharp
-var displayMessage = GetUserProfile(userId)
-    .MapIfFailWithException<UserProfile, string>(
-        funcValid: profile => $"Welcome, {profile.Name}!",
-        funcFail: ex => ex switch
-        {
-            UnauthorizedException _ => "Please log in to view your profile",
-            NotFoundException _ => "Profile not found",
-            TimeoutException _ => "Profile temporarily unavailable",
-            _ => "Unable to load profile"
-        }
-    );
-```
+🔑 Observa que la variable `ex` de la rama válida **se descarta**: solo sirve como *guarda*.
+El delegado trabaja con `errorsDetails`, de donde puede sacar tanto los mensajes como la
+excepción, si la necesita.
 
-### Casos de Uso Avanzados
+Úsala cuando la recuperación necesite **mensajes y excepción a la vez**:
 
 ```csharp
-// Ejemplo: Conversión de datos con manejo específico de errores de parsing
-public class DataConverter
-{
-    public MlResult<ConvertedData> ConvertToFormat(RawData data, string format)
-    {
-        return ParseRawData(data)
-            .MapIfFailWithException<ParsedData, ConvertedData>(
-                funcValid: parsed => ConvertToSpecificFormat(parsed, format),
-                funcFail: ex => ex switch
-                {
-                    // Errores de formato específicos
-                    JsonException jsonEx => CreatePartialConvertedData(data, jsonEx),
-                    XmlException xmlEx => CreateBasicConvertedData(data),
-                    FormatException formatEx => CreateFallbackData(format),
-                    
-                    // Errores de encoding
-                    DecoderFallbackException _ => ConvertWithBasicEncoding(data),
-                    
-                    // Otros errores
-                    _ => throw new InvalidOperationException($"Cannot handle {ex.GetType()}")
-                }
-            );
-    }
-}
-```
-
----
-
-## Métodos TryMapIfFailWithException
-
-### `TryMapIfFailWithException<T>()` - Versión Segura
-
-**Propósito**: Versión que captura excepciones en la función de recuperación
-
-```csharp
-public static MlResult<T> TryMapIfFailWithException<T>(
-    this MlResult<T> source,
-    Func<Exception, T> funcException,
-    Func<Exception, string> errorMessageBuilder)
-```
-
-**Comportamiento Especial**: Si la función de recuperación falla, **fusiona** el nuevo error con el original usando `MergeErrorsDetailsIfFail`.
-
-**Ejemplo**:
-```csharp
-var result = ProcessDocument(document)
-    .TryMapIfFailWithException(
-        funcException: ex => ex switch
-        {
-            FileNotFoundException _ => LoadBackupDocument(),     // Puede fallar también
-            IOException _ => CreateEmptyDocument(),              // Puede fallar también
-            UnauthorizedException _ => LoadPublicDocument(),     // Puede fallar también
-            _ => throw new NotSupportedException($"Cannot recover from {ex.GetType()}")
-        },
-        errorMessageBuilder: recoveryEx => 
-            $"Recovery failed for {recoveryEx.GetType().Name}: {recoveryEx.Message}"
-    );
-```
-
-### `TryMapIfFailWithException<T, TReturn>()` - Versión Segura con Tipos
-
-```csharp
-public static MlResult<TReturn> TryMapIfFailWithException<T, TReturn>(
-    this MlResult<T> source,
-    Func<T, TReturn> funcValid,
-    Func<Exception, TReturn> funcFail,
-    Func<Exception, string> errorMessageBuilder)
-```
-
-**Ejemplo**:
-```csharp
-var result = GetConfiguration(configKey)
-    .TryMapIfFailWithException<ConfigData, AppConfig>(
-        funcValid: config => CreateAppConfig(config),           // Puede fallar
-        funcFail: ex => ex switch
-        {
-            FileNotFoundException _ => CreateDefaultConfig(),    // Puede fallar
-            JsonException _ => CreateMinimalConfig(),           // Puede fallar
-            _ => throw new ConfigurationException($"Cannot create config from {ex.GetType()}")
-        },
-        errorMessageBuilder: ex => $"Configuration creation failed: {ex.Message}"
-    );
-```
-
----
-
-## Variantes Asíncronas
-
-### Matriz Completa de Combinaciones Asíncronas
-
-| Fuente | funcValid | funcFail | Método |
-|--------|-----------|----------|---------|
-| `MlResult<T>` | - | `Exception → U` | `MapIfFailWithException` |
-| `MlResult<T>` | - | `Exception → Task<U>` | `MapIfFailWithExceptionAsync` |
-| `MlResult<T>` | `T → U` | `Exception → U` | `MapIfFailWithException` |
-| `MlResult<T>` | `T → Task<U>` | `Exception → Task<U>` | `MapIfFailWithExceptionAsync` |
-| `Task<MlResult<T>>` | `T → U` | `Exception → U` | `MapIfFailWithExceptionAsync` |
-| `Task<MlResult<T>>` | `T → Task<U>` | `Exception → U` | `MapIfFailWithExceptionAsync` |
-| `Task<MlResult<T>>` | `T → U` | `Exception → Task<U>` | `MapIfFailWithExceptionAsync` |
-| `Task<MlResult<T>>` | `T → Task<U>` | `Exception → Task<U>` | `MapIfFailWithExceptionAsync` |
-
-### Manejo de Excepciones Específicas
-
-```csharp
-public class AsyncExceptionHandler
-{
-    public async Task<MlResult<ProcessedResult>> ProcessWithFallbackAsync(InputData input)
-    {
-        return await ProcessPrimaryAsync(input)
-            .MapIfFailWithExceptionAsync(async ex => ex switch
+var r = SincronizarAsync(lote)
+            .MapIfFailWithExceptionError(errores => new ResultadoSync
             {
-                // Timeouts: usar cache
-                OperationCanceledException _ => await GetFromCacheAsync(input.Id),
-                TimeoutException _ => await GetFromCacheAsync(input.Id),
-                
-                // Errores de red: usar servicio alternativo
-                HttpRequestException httpEx when httpEx.Message.Contains("503") =>
-                    await ProcessWithAlternativeServiceAsync(input),
-                
-                // Errores de autorización: usar datos públicos
-                UnauthorizedException _ => await GetPublicDataAsync(input.Id),
-                
-                // Errores de formato: procesar con parser básico
-                JsonException _ => await ProcessWithBasicParserAsync(input),
-                
-                _ => throw new NotSupportedException($"Cannot recover from {ex.GetType()}")
+                Estado   = "Reintentable",
+                Mensajes = errores.ToErrorsMessages().ToList(),
+                Detalle  = errores.ToDetailsDescription()
             });
-    }
-}
 ```
+
+La subfamilia replica las mismas cuatro formas: `<T>`, `<T, TReturn>`, `<T, TException>` y
+`<T, TReturn, TException>`, cada una con sus variantes `Async` y `Try`.
+
+---
+
+## Variantes asíncronas
+
+Todas las formas tienen su `…Async`, combinando origen síncrono/asíncrono y delegados
+síncronos/asíncronos:
+
+| Forma | Origen | Delegado(s) |
+|---|---|---|
+| A | `MlResult<T>` | `Func<Exception, Task<T>>` |
+| A | `Task<MlResult<T>>` | `Func<Exception, Task<T>>` |
+| A | `Task<MlResult<T>>` | `Func<Exception, T>` |
+| B | `MlResult<T>` | ambos asíncronos |
+| B | `Task<MlResult<T>>` | ambos asíncronos |
+| C | `MlResult<T>` / `Task<MlResult<T>>` | `Func<TException, Task<T>>` y `Func<TException, T>` |
+| D | `MlResult<T>` / `Task<MlResult<T>>` | mezclas de síncrono y asíncrono |
+
+Internamente usan `MatchAsync` y `GetDetailExceptionAsync()`:
+
+```csharp
+public static async Task<MlResult<T>> MapIfFailWithExceptionAsync<T>(this MlResult<T>              source,
+                                                                          Func<Exception, Task<T>> funcExceptionAsync)
+    => await source.MatchAsync(
+                        failAsync : errorsDetails => errorsDetails.GetDetailExceptionAsync().MatchAsync(
+                                        failAsync :       _  =>              errorsDetails.ToMlResultFailAsync<T>(),
+                                        validAsync: async ex => await (await funcExceptionAsync(ex)).ToMlResultValidAsync<T>()
+                                    ),
+                        validAsync: value         => value.ToMlResultValidAsync()
+                    );
+```
+
+> ⚠️ **Particularidad real del código fuente:** en el fichero hay un bloque de sobrecargas
+> **comentadas** de `TryMapIfFailWithExceptionAsync<T, TReturn>` con origen `Task<MlResult<T>>`.
+> Si el compilador te dice que no encuentra la combinación exacta que buscas para la Forma B
+> asíncrona, no es tu culpa: espera el `Task` con `await` y llama a la versión síncrona.
+>
+> ```csharp
+> // ✅ Alternativa cuando falta la sobrecarga
+> var previo = await ObtenerAsync(id);
+> var r = previo.TryMapIfFailWithException(funcValid, funcFail, ex => $"…{ex.Message}");
+> ```
+
+---
+
+## `TryMapIfFailWithException` — cuando la recuperación puede lanzar
+
+Si tu plan B también puede reventar (leer una caché en disco, llamar a un servicio de
+respaldo…), usa la variante protegida:
+
+```csharp
+public static MlResult<T> TryMapIfFailWithException<T>(this MlResult<T>             source,
+                                                            Func<Exception, T>      funcException,
+                                                            Func<Exception, string> errorMessageBuilder)
+    => source.Match(
+                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                                                    fail : _  => errorsDetails.ToMlResultFail<T>(),
+                                                    valid: ex => funcException.TryToMlResult(ex, errorMessageBuilder)
+                                                                              .MergeErrorsDetailsIfFail(source)
+                                                ),
+                        valid: value         => value
+                    );
+
+public static MlResult<T> TryMapIfFailWithException<T>(this MlResult<T>        source,
+                                                            Func<Exception, T> funcException,
+                                                            string             errorMessage = null!)
+    => source.TryMapIfFailWithException(funcException, _ => errorMessage!);
+```
+
+🔑 **Detalle excelente y exclusivo de esta familia:** la llamada a
+`.MergeErrorsDetailsIfFail(source)` **fusiona los errores originales** con el error de la
+excepción del plan B. Es decir, si la recuperación falla, el resultado conserva **ambas
+historias**: por qué falló el intento principal y por qué falló el respaldo.
+
+```csharp
+var r = ConsultarTarifaRemota(sku)                       // falla: HttpRequestException
+            .TryMapIfFailWithException(_ => LeerTarifaDeDisco(sku),   // falla: IOException
+                                       ex => $"La caché en disco tampoco respondió: {ex.Message}");
+
+// r.Match(fail: e => e.ToErrorsDescription(), valid: …) muestra los DOS problemas.
+```
+
+Compáralo con `TryMapIfFail`, que en la misma situación **pierde el error original**. Si
+necesitas trazabilidad completa de una cadena de respaldos, esta es la familia adecuada.
+
+---
+
+## Tabla de decisión rápida
+
+| Situación | Método |
+|---|---|
+| Recuperarme de cualquier excepción, mismo tipo | `MapIfFailWithException<T>` |
+| Proyectar éxito y excepción a un tipo común | `MapIfFailWithException<T, TReturn>` |
+| Reaccionar solo a `SqlException`, `TimeoutException`… | `MapIfFailWithException<T, TException>` |
+| Igual que la anterior, cambiando de tipo | `MapIfFailWithException<T, TReturn, TException>` |
+| Necesito los mensajes **y** la excepción | `MapIfFailWithExceptionError<…>` |
+| La recuperación puede lanzar | `Try…` (conserva el error original vía `MergeErrorsDetailsIfFail`) |
+| Quiero recuperarme de fallos **de negocio** | `MapIfFailWithoutException` |
+| Solo quiero registrar, no recuperar | `ExecSelfIfFailWithException` |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Manejo de APIs Externas con Recuperación Específica
+### Ejemplo 1: Caché de respaldo solo ante fallos de infraestructura
+
+El catálogo consulta tarifas a un servicio externo. Si el servicio se cae, servimos la última
+tarifa conocida; pero si el SKU simplemente no existe, eso es un error de negocio y debe
+llegar al usuario.
 
 ```csharp
-public class ExternalApiServiceWithExceptionHandling
+public class ServicioTarifas
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<ExternalApiServiceWithExceptionHandling> _logger;
-    private readonly ICacheService _cache;
+    public MlResult<Tarifa> Obtener(string sku)
+        => ValidarSku(sku)                                        // negocio: puede fallar sin excepción
+               .Bind(ConsultarServicioRemoto)                     // técnico: Try* interno
+               .ExecSelfIfFail(e => _log.LogWarning("Tarifa {Sku}: {Detalle}", sku, e.ToErrorsDescription()))
+               .MapIfFailWithException(ex => _cache.UltimaConocida(sku) with
+                                             {
+                                                 EsFiable    = false,
+                                                 MotivoCache = ex.GetType().Name
+                                             });
 
-    public async Task<MlResult<WeatherData>> GetWeatherDataAsync(string city)
-    {
-        return await CallWeatherApiAsync(city)
-            .MapIfFailWithExceptionAsync(async ex =>
-            {
-                _logger.LogWarning("Weather API call failed for {City}: {ExceptionType} - {Message}",
-                                  city, ex.GetType().Name, ex.Message);
+    private MlResult<string> ValidarSku(string sku)
+        => EnsureFp.NotNullEmptyOrWhitespace(sku, "El SKU es obligatorio");
 
-                return ex switch
-                {
-                    // Timeout: datos en cache aunque sean viejos
-                    TimeoutException _ => await GetCachedWeatherDataAsync(city)
-                        ?? CreateTimeoutFallbackData(city),
-
-                    // Rate limiting: esperar y reintentar con datos básicos
-                    HttpRequestException httpEx when httpEx.Message.Contains("429") =>
-                        await HandleRateLimitingAsync(city),
-
-                    // Service unavailable: usar servicio alternativo
-                    HttpRequestException httpEx when httpEx.Message.Contains("503") =>
-                        await GetWeatherFromAlternativeSourceAsync(city),
-
-                    // Unauthorized: usar datos públicos limitados
-                    UnauthorizedException _ => CreatePublicWeatherData(city),
-
-                    // Not found: datos por defecto para esa ciudad
-                    NotFoundException _ => CreateDefaultWeatherData(city),
-
-                    // Network errors: datos offline
-                    SocketException _ => await GetOfflineWeatherDataAsync(city),
-                    HttpRequestException _ when ex.Message.Contains("network") =>
-                        await GetOfflineWeatherDataAsync(city),
-
-                    // JSON parsing errors: intentar parsing básico
-                    JsonException jsonEx => await HandleJsonParsingErrorAsync(city, jsonEx),
-
-                    // Otros errores HTTP específicos
-                    HttpRequestException httpEx => HandleHttpErrorByStatusCode(httpEx, city),
-
-                    // Fallback final
-                    _ => CreateEmergencyWeatherData(city, ex)
-                };
-            });
-    }
-
-    public async Task<MlResult<UserProfile>> GetUserProfileAsync(int userId)
-    {
-        return await FetchUserProfileAsync(userId)
-            .TryMapIfFailWithExceptionAsync(
-                funcException: async ex =>
-                {
-                    _logger.LogError("Profile fetch failed for user {UserId}: {Exception}",
-                                    userId, ex);
-
-                    return ex switch
-                    {
-                        // Database errors: usar cache o datos básicos
-                        SqlException sqlEx when sqlEx.Number == 2 => // Timeout
-                            await GetProfileFromCacheAsync(userId) ??
-                            CreateBasicProfileFromUserId(userId),
-
-                        SqlException sqlEx when sqlEx.Number == 18456 => // Login failed
-                            throw new UnauthorizedException("Database access denied"),
-
-                        // Network database errors
-                        InvalidOperationException _ when ex.Message.Contains("connection") =>
-                            await GetProfileFromLocalCacheAsync(userId),
-
-                        // Serialization errors: reconstruir desde datos básicos
-                        JsonException _ => await ReconstructProfileFromBasicDataAsync(userId),
-                        
-                        // Authorization errors: perfil limitado
-                        UnauthorizedException _ => CreateLimitedProfile(userId),
-
-                        // Not found: crear perfil placeholder
-                        NotFoundException _ => CreatePlaceholderProfile(userId),
-
-                        // Validation errors: perfil con datos mínimos
-                        ValidationException validationEx => 
-                            CreateMinimalProfileFromValidationError(userId, validationEx),
-
-                        _ => throw new ProfileException($"Unrecoverable profile error: {ex.Message}", ex)
-                    };
-                },
-                errorMessageBuilder: ex => 
-                    $"Failed to recover user profile for {userId}: {ex.Message}"
-            );
-    }
-
-    public MlResult<ConfigurationData> LoadConfiguration(string configPath)
-    {
-        return LoadConfigurationFromFile(configPath)
-            .MapIfFailWithException<ConfigurationData>(ex =>
-            {
-                _logger.LogWarning("Configuration loading failed from {ConfigPath}: {Exception}",
-                                  configPath, ex);
-
-                return ex switch
-                {
-                    // File not found: usar configuración por defecto
-                    FileNotFoundException _ => GetDefaultConfiguration(),
-
-                    // Access denied: intentar ubicación alternativa
-                    UnauthorizedAccessException _ => LoadFromAlternativeLocation(configPath),
-
-                    // JSON parsing errors: intentar parsing tolerante
-                    JsonException jsonEx => ParseConfigWithFallback(configPath, jsonEx),
-
-                    // XML parsing errors: convertir a formato simple
-                    XmlException xmlEx => ConvertXmlErrorToSimpleConfig(configPath, xmlEx),
-
-                    // IO errors: configuración mínima
-                    IOException ioEx when ioEx.Message.Contains("sharing") =>
-                        WaitAndRetryOrUseDefault(configPath),
-
-                    IOException _ => GetMinimalConfiguration(),
-
-                    // Format errors: configuración básica
-                    FormatException _ => GetBasicConfiguration(),
-
-                    // Encoding errors: reintento con encoding diferente
-                    DecoderFallbackException _ => LoadWithAlternativeEncoding(configPath),
-
-                    _ => throw new ConfigurationException(
-                        $"Cannot recover from configuration error: {ex.Message}", ex)
-                };
-            });
-    }
-
-    public async Task<MlResult<ProcessedDocument>> ProcessDocumentAsync(DocumentUpload upload)
-    {
-        return await ProcessDocumentWithAdvancedFeaturesAsync(upload)
-            .TryMapIfFailWithExceptionAsync<ProcessedDocument>(
-                funcException: async ex =>
-                {
-                    _logger.LogInformation("Advanced document processing failed, trying fallback: {Exception}",
-                                          ex.GetType().Name);
-
-                    return ex switch
-                    {
-                        // OCR errors: procesar sin OCR
-                        OcrException _ => await ProcessDocumentWithoutOcrAsync(upload),
-
-                        // Image processing errors: usar procesamiento básico
-                        ImageProcessingException _ => await ProcessWithBasicImageHandlingAsync(upload),
-
-                        // PDF errors: extraer texto básico
-                        PdfException pdfEx when pdfEx.Message.Contains("corrupted") =>
-                            await ExtractBasicTextFromPdfAsync(upload),
-
-                        // Memory errors: procesar en chunks
-                        OutOfMemoryException _ => await ProcessDocumentInChunksAsync(upload),
-
-                        // Format not supported: conversión básica
-                        NotSupportedException _ => await ConvertToBasicFormatAsync(upload),
-
-                        // Virus scan errors: procesar sin escaneado
-                        SecurityException _ => await ProcessWithoutVirusScanAsync(upload),
-
-                        // Timeout en procesamiento: versión rápida
-                        TimeoutException _ => await ProcessDocumentQuicklyAsync(upload),
-
-                        _ => throw new DocumentProcessingException(
-                            $"Document processing cannot recover from: {ex.Message}", ex)
-                    };
-                },
-                errorMessage: "Document processing fallback failed"
-            );
-    }
-
-    // Métodos auxiliares específicos para cada tipo de excepción
-    private async Task<WeatherData> HandleRateLimitingAsync(string city)
-    {
-        await Task.Delay(1000); // Breve espera
-        
-        return new WeatherData
-        {
-            City = city,
-            Temperature = 20, // Temperatura promedio
-            Description = "Data limited due to rate limiting",
-            IsLimited = true,
-            Source = "rate-limited-fallback",
-            LastUpdated = DateTime.UtcNow
-        };
-    }
-
-    private async Task<WeatherData> HandleJsonParsingErrorAsync(string city, JsonException jsonEx)
-    {
-        // Intentar extraer datos básicos del JSON malformado
-        _logger.LogDebug("Attempting basic JSON parsing for {City}", city);
-        
-        try
-        {
-            // Lógica de parsing básico aquí
-            return await TryBasicJsonParsingAsync(city);
-        }
-        catch
-        {
-            return CreateDefaultWeatherData(city);
-        }
-    }
-
-    private WeatherData HandleHttpErrorByStatusCode(HttpRequestException httpEx, string city)
-    {
-        return httpEx.Message switch
-        {
-            var msg when msg.Contains("404") => CreateNotFoundWeatherData(city),
-            var msg when msg.Contains("500") => CreateServerErrorWeatherData(city),
-            var msg when msg.Contains("502") || msg.Contains("503") => CreateServiceUnavailableWeatherData(city),
-            _ => CreateGeneralErrorWeatherData(city, httpEx)
-        };
-    }
-
-    private UserProfile CreateMinimalProfileFromValidationError(int userId, ValidationException validationEx)
-    {
-        return new UserProfile
-        {
-            UserId = userId,
-            Name = $"User{userId}",
-            Email = null, // No incluir email si hay errores de validación
-            IsComplete = false,
-            ValidationErrors = new List<string> { validationEx.Message },
-            Source = "validation-error-fallback"
-        };
-    }
-
-    private ConfigurationData ParseConfigWithFallback(string configPath, JsonException jsonEx)
-    {
-        try
-        {
-            // Intentar parsing línea por línea, saltando líneas problemáticas
-            return ParseConfigLineByLine(configPath);
-        }
-        catch
-        {
-            _logger.LogWarning("Fallback config parsing also failed for {ConfigPath}", configPath);
-            return GetDefaultConfiguration();
-        }
-    }
-
-    private async Task<ProcessedDocument> ProcessDocumentInChunksAsync(DocumentUpload upload)
-    {
-        _logger.LogInformation("Processing document in chunks due to memory constraints");
-        
-        var chunks = SplitDocumentIntoChunks(upload);
-        var processedChunks = new List<ProcessedChunk>();
-
-        foreach (var chunk in chunks)
-        {
-            try
-            {
-                var processedChunk = await ProcessChunkAsync(chunk);
-                processedChunks.Add(processedChunk);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning("Chunk processing failed, skipping: {Exception}", ex.Message);
-                // Continuar con otros chunks
-            }
-        }
-
-        return CombineProcessedChunks(processedChunks, upload);
-    }
-
-    private WeatherData CreateEmergencyWeatherData(string city, Exception originalException)
-    {
-        return new WeatherData
-        {
-            City = city,
-            Temperature = 15, // Temperatura muy conservadora
-            Description = "Weather data unavailable",
-            IsEmergencyData = true,
-            ErrorInfo = $"Original error: {originalException.GetType().Name}",
-            Source = "emergency-fallback",
-            LastUpdated = DateTime.UtcNow,
-            Reliability = 0.1 // Muy baja confiabilidad
-        };
-    }
-}
-
-// Clases de apoyo específicas para el manejo de excepciones
-public class WeatherData
-{
-    public string City { get; set; }
-    public double Temperature { get; set; }
-    public string Description { get; set; }
-    public bool IsLimited { get; set; }
-    public bool IsEmergencyData { get; set; }
-    public string ErrorInfo { get; set; }
-    public string Source { get; set; }
-    public DateTime LastUpdated { get; set; }
-    public double Reliability { get; set; } = 1.0;
-}
-
-public class UserProfile
-{
-    public int UserId { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public bool IsComplete { get; set; }
-    public List<string> ValidationErrors { get; set; }
-    public string Source { get; set; }
-}
-
-public class ProcessedDocument
-{
-    public string DocumentId { get; set; }
-    public string Content { get; set; }
-    public List<ProcessedChunk> Chunks { get; set; }
-    public bool IsPartiallyProcessed { get; set; }
-    public List<string> ProcessingWarnings { get; set; }
-    public string ProcessingMethod { get; set; }
-}
-
-// Excepciones específicas
-public class OcrException : Exception
-{
-    public OcrException(string message, Exception innerException = null) 
-        : base(message, innerException) { }
-}
-
-public class ImageProcessingException : Exception
-{
-    public ImageProcessingException(string message, Exception innerException = null) 
-        : base(message, innerException) { }
-}
-
-public class PdfException : Exception
-{
-    public PdfException(string message, Exception innerException = null) 
-        : base(message, innerException) { }
-}
-
-public class DocumentProcessingException : Exception
-{
-    public DocumentProcessingException(string message, Exception innerException = null) 
-        : base(message, innerException) { }
-}
-
-public class ProfileException : Exception
-{
-    public ProfileException(string message, Exception innerException = null) 
-        : base(message, innerException) { }
-}
-
-public class ConfigurationException : Exception
-{
-    public ConfigurationException(string message, Exception innerException = null) 
-        : base(message, innerException) { }
+    private MlResult<Tarifa> ConsultarServicioRemoto(string sku)
+        => EnsureFp.That(sku, _catalogo.Existe(sku), $"El SKU '{sku}' no está catalogado")
+                   .TryMap(s => _http.GetTarifa(s),               // aquí nace la excepción
+                           ex => $"El servicio de tarifas no respondió: {ex.Message}");
 }
 ```
 
-### Ejemplo 2: Sistema de Archivos con Manejo Granular de Excepciones
+Comportamiento resultante:
+
+| Entrada | Camino | Salida |
+|---|---|---|
+| SKU vacío | error de negocio, sin excepción | **fallo**: «El SKU es obligatorio» |
+| SKU no catalogado | error de negocio, sin excepción | **fallo**: «El SKU 'X' no está catalogado» |
+| Servicio caído | `HttpRequestException` en `Details["Ex"]` | **válido**: tarifa de caché, `EsFiable = false` |
+
+### Ejemplo 2: Distinguir 400 de 503 en un controlador con la Forma B
 
 ```csharp
-public class FileSystemService
+[HttpGet("{pedidoId:int}")]
+public async Task<IActionResult> Obtener(int pedidoId)
 {
-    private readonly ILogger<FileSystemService> _logger;
+    var respuesta = await _pedidos.ObtenerAsync(pedidoId)
+        .MapIfFailWithExceptionAsync<Pedido, IActionResult>(
+            funcValidAsync: p  => Task.FromResult<IActionResult>(Ok(PedidoVm.De(p))),
+            funcFailAsync : ex => Task.FromResult<IActionResult>(
+                                      StatusCode(503, new
+                                      {
+                                          mensaje = "Servicio temporalmente no disponible",
+                                          tipo    = ex.GetType().Name
+                                      })));
 
-    public MlResult<FileContent> ReadFileWithRecovery(string filePath)
-    {
-        return ReadFileContent(filePath)
-            .MapIfFailWithException(ex =>
-            {
-                _logger.LogWarning("File read failed for {FilePath}: {ExceptionType}",
-                                  filePath, ex.GetType().Name);
-
-                return ex switch
-                {
-                    // File not found: buscar en ubicaciones alternativas
-                    FileNotFoundException _ => SearchInAlternativeLocations(filePath),
-
-                    // Access denied: intentar con permisos elevados o lectura parcial
-                    UnauthorizedAccessException _ => AttemptElevatedReadOrPartial(filePath),
-
-                    // File in use: esperar e intentar de nuevo
-                    IOException ioEx when ioEx.Message.Contains("being used") =>
-                        WaitAndRetryFileRead(filePath),
-
-                    // Path too long: usar nombre corto
-                    PathTooLongException _ => ReadFileWithShortPath(filePath),
-
-                    // Directory not found: crear directorios y buscar archivo
-                    DirectoryNotFoundException _ => CreateDirectoriesAndSearchFile(filePath),
-
-                    // Drive not ready: intentar en drives alternativos
-                    DriveNotFoundException _ => SearchFileInAvailableDrives(filePath),
-
-                    // Disk full durante lectura: lectura parcial
-                    IOException ioEx when ioEx.Message.Contains("disk full") =>
-                        ReadFilePartially(filePath),
-
-                    // Encoding errors: intentar diferentes encodings
-                    DecoderFallbackException _ => ReadFileWithAlternativeEncoding(filePath),
-
-                    // Network path errors: usar cache local
-                    IOException ioEx when ioEx.Message.Contains("network") =>
-                        GetFileFromLocalCache(filePath),
-
-                    _ => throw new FileOperationException(
-                        $"Cannot recover from file read error: {ex.Message}", ex)
-                };
-            });
-    }
-
-    public async Task<MlResult<SaveResult>> SaveFileWithRecoveryAsync(string filePath, byte[] content)
-    {
-        return await SaveFileContentAsync(filePath, content)
-            .TryMapIfFailWithExceptionAsync(
-                funcException: async ex =>
-                {
-                    _logger.LogError("File save failed for {FilePath}: {Exception}",
-                                    filePath, ex);
-
-                    return ex switch
-                    {
-                        // Disk full: comprimir o guardar en ubicación alternativa
-                        IOException ioEx when ioEx.Message.Contains("disk full") =>
-                            await SaveFileWithCompressionOrAlternativeLocationAsync(filePath, content),
-
-                        // Access denied: cambiar permisos o ubicación
-                        UnauthorizedException _ => 
-                            await SaveFileWithPermissionHandlingAsync(filePath, content),
-
-                        // Path too long: usar nombres más cortos
-                        PathTooLongException _ => 
-                            await SaveFileWithShortenedPathAsync(filePath, content),
-
-                        // Directory not found: crear directorios
-                        DirectoryNotFoundException _ => 
-                            await CreateDirectoriesAndSaveAsync(filePath, content),
-
-                        // File in use: esperar o usar nombre temporal
-                        IOException ioEx when ioEx.Message.Contains("being used") =>
-                            await SaveFileWithTemporaryNameAsync(filePath, content),
-
-                        // Network errors: guardar localmente y sincronizar después
-                        IOException ioEx when ioEx.Message.Contains("network") =>
-                            await SaveFileLocallyForLaterSyncAsync(filePath, content),
-
-                        // Security errors: guardar en zona segura
-                        SecurityException _ => 
-                            await SaveFileInSecureLocationAsync(filePath, content),
-
-                        _ => throw new FileOperationException(
-                            $"Cannot recover from file save error: {ex.Message}", ex)
-                    };
-                },
-                errorMessageBuilder: ex => 
-                    $"File save recovery failed for {filePath}: {ex.Message}"
-            );
-    }
-
-    public MlResult<DirectoryListing> ListDirectoryWithRecovery(string directoryPath)
-    {
-        return ListDirectoryContent(directoryPath)
-            .MapIfFailWithException(ex =>
-            {
-                _logger.LogInformation("Directory listing failed for {DirectoryPath}: {Exception}",
-                                      directoryPath, ex.GetType().Name);
-
-                return ex switch
-                {
-                    // Directory not found: listar directorios padre o similares
-                    DirectoryNotFoundException _ => ListSimilarDirectories(directoryPath),
-
-                    // Access denied: listar contenido público o accesible
-                    UnauthorizedException _ => ListAccessibleContent(directoryPath),
-
-                    // Path too long: usar rutas cortas
-                    PathTooLongException _ => ListDirectoryWithShortPath(directoryPath),
-
-                    // Network errors: usar cache de directorio
-                    IOException ioEx when ioEx.Message.Contains("network") =>
-                        GetDirectoryListingFromCache(directoryPath),
-
-                    // Drive not ready: listar drives disponibles
-                    DriveNotFoundException _ => ListAvailableDrives(),
-
-                    _ => CreateEmptyDirectoryListing(directoryPath, ex)
-                };
-            });
-    }
-
-    // Métodos auxiliares específicos para cada tipo de recuperación
-    private FileContent SearchInAlternativeLocations(string originalPath)
-    {
-        var alternativeLocations = new[]
-        {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), Path.GetFileName(originalPath)),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Path.GetFileName(originalPath)),
-            Path.Combine(Path.GetTempPath(), Path.GetFileName(originalPath)),
-            Path.Combine(@"C:\Backup", Path.GetFileName(originalPath))
-        };
-
-        foreach (var location in alternativeLocations)
-        {
-            try
-            {
-                if (File.Exists(location))
-                {
-                    _logger.LogInformation("Found file in alternative location: {Location}", location);
-                    return new FileContent
-                    {
-                        OriginalPath = originalPath,
-                        ActualPath = location,
-                        Content = File.ReadAllBytes(location),
-                        IsFromAlternativeLocation = true
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug("Failed to read from alternative location {Location}: {Exception}",
-                               location, ex.Message);
-            }
-        }
-
-        throw new FileNotFoundException($"File not found in any alternative location: {originalPath}");
-    }
-
-    private FileContent WaitAndRetryFileRead(string filePath)
-    {
-        const int maxRetries = 3;
-        const int delayMs = 1000;
-
-        for (int i = 0; i < maxRetries; i++)
-        {
-            try
-            {
-                Thread.Sleep(delayMs * (i + 1)); // Incrementar delay
-                
-                if (File.Exists(filePath))
-                {
-                    return new FileContent
-                    {
-                        OriginalPath = filePath,
-                        ActualPath = filePath,
-                        Content = File.ReadAllBytes(filePath),
-                        WasRetried = true,
-                        RetryCount = i + 1
-                    };
-                }
-            }
-            catch (IOException ex) when (ex.Message.Contains("being used"))
-            {
-                if (i == maxRetries - 1) throw; // Re-throw en último intento
-                
-                _logger.LogDebug("File still in use, retry {Retry}/{MaxRetries} for {FilePath}",
-                               i + 1, maxRetries, filePath);
-            }
-        }
-
-        throw new IOException($"File remains in use after {maxRetries} retries: {filePath}");
-    }
-
-    private FileContent ReadFileWithAlternativeEncoding(string filePath)
-    {
-        var encodings = new[] 
-        { 
-            Encoding.UTF8, 
-            Encoding.ASCII, 
-            Encoding.Unicode, 
-            Encoding.BigEndianUnicode,
-            Encoding.Latin1 
-        };
-
-        foreach (var encoding in encodings)
-        {
-            try
-            {
-                var text = File.ReadAllText(filePath, encoding);
-                var content = encoding.GetBytes(text);
-                
-                return new FileContent
-                {
-                    OriginalPath = filePath,
-                    ActualPath = filePath,
-                    Content = content,
-                    UsedAlternativeEncoding = true,
-                    EncodingUsed = encoding.EncodingName
-                };
-            }
-            catch (DecoderFallbackException)
-            {
-                // Continuar con siguiente encoding
-                continue;
-            }
-        }
-
-        throw new DecoderFallbackException($"Could not decode file with any supported encoding: {filePath}");
-    }
-
-    private async Task<SaveResult> SaveFileWithCompressionOrAlternativeLocationAsync(string filePath, byte[] content)
-    {
-        try
-        {
-            // Intentar comprimir el contenido primero
-            var compressedContent = CompressContent(content);
-            
-            if (compressedContent.Length < content.Length * 0.8) // Si compresión es significativa
-            {
-                await File.WriteAllBytesAsync(filePath + ".compressed", compressedContent);
-                
-                return new SaveResult
-                {
-                    OriginalPath = filePath,
-                    ActualPath = filePath + ".compressed",
-                    WasCompressed = true,
-                    OriginalSize = content.Length,
-                    FinalSize = compressedContent.Length,
-                    CompressionRatio = (double)compressedContent.Length / content.Length
-                };
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("Compression failed, trying alternative location: {Exception}", ex.Message);
-        }
-
-        // Si compresión no funciona, intentar ubicación alternativa
-        var alternativePath = GetAlternativeSaveLocation(filePath);
-        await File.WriteAllBytesAsync(alternativePath, content);
-
-        return new SaveResult
-        {
-            OriginalPath = filePath,
-            ActualPath = alternativePath,
-            WasMovedToAlternativeLocation = true,
-            OriginalSize = content.Length,
-            FinalSize = content.Length
-        };
-    }
-
-    private DirectoryListing ListSimilarDirectories(string originalPath)
-    {
-        try
-        {
-            var parentDirectory = Path.GetDirectoryName(originalPath);
-            if (Directory.Exists(parentDirectory))
-            {
-                var similarDirectories = Directory.GetDirectories(parentDirectory)
-                    .Where(dir => Path.GetFileName(dir).Contains(Path.GetFileName(originalPath), StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                return new DirectoryListing
-                {
-                    RequestedPath = originalPath,
-                    ActualPath = parentDirectory,
-                    Directories = similarDirectories,
-                    Files = new List<string>(),
-                    IsSimilarMatch = true,
-                    Message = $"Found {similarDirectories.Count} similar directories"
-                };
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug("Failed to list similar directories: {Exception}", ex.Message);
-        }
-
-        return CreateEmptyDirectoryListing(originalPath, 
-            new DirectoryNotFoundException($"No similar directories found for: {originalPath}"));
-    }
-
-    private DirectoryListing CreateEmptyDirectoryListing(string path, Exception originalException)
-    {
-        return new DirectoryListing
-        {
-            RequestedPath = path,
-            ActualPath = null,
-            Directories = new List<string>(),
-            Files = new List<string>(),
-            IsEmpty = true,
-            ErrorInfo = $"Original error: {originalException.GetType().Name} - {originalException.Message}"
-        };
-    }
-
-    private byte[] CompressContent(byte[] content)
-    {
-        using var memoryStream = new MemoryStream();
-        using var gzipStream = new System.IO.Compression.GZipStream(memoryStream, System.IO.Compression.CompressionMode.Compress);
-        gzipStream.Write(content, 0, content.Length);
-        gzipStream.Close();
-        return memoryStream.ToArray();
-    }
-
-    private string GetAlternativeSaveLocation(string originalPath)
-    {
-        var fileName = Path.GetFileName(originalPath);
-        var alternativeLocations = new[]
-        {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName),
-            Path.Combine(Path.GetTempPath(), fileName),
-            Path.Combine(@"C:\Backup", fileName)
-        };
-
-        foreach (var location in alternativeLocations)
-        {
-            try
-            {
-                var directory = Path.GetDirectoryName(location);
-                if (!Directory.Exists(directory))
-                    Directory.CreateDirectory(directory);
-                
-                return location;
-            }
-            catch
-            {
-                continue;
-            }
-        }
-
-        return Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + "_" + fileName);
-    }
-}
-
-// Clases de apoyo para el sistema de archivos
-public class FileContent
-{
-    public string OriginalPath { get; set; }
-    public string ActualPath { get; set; }
-    public byte[] Content { get; set; }
-    public bool IsFromAlternativeLocation { get; set; }
-    public bool WasRetried { get; set; }
-    public int RetryCount { get; set; }
-    public bool UsedAlternativeEncoding { get; set; }
-    public string EncodingUsed { get; set; }
-}
-
-public class SaveResult
-{
-    public string OriginalPath { get; set; }
-    public string ActualPath { get; set; }
-    public bool WasCompressed { get; set; }
-    public bool WasMovedToAlternativeLocation { get; set; }
-    public long OriginalSize { get; set; }
-    public long FinalSize { get; set; }
-    public double CompressionRatio { get; set; }
-}
-
-public class DirectoryListing
-{
-    public string RequestedPath { get; set; }
-    public string ActualPath { get; set; }
-    public List<string> Directories { get; set; }
-    public List<string> Files { get; set; }
-    public bool IsSimilarMatch { get; set; }
-    public bool IsEmpty { get; set; }
-    public string Message { get; set; }
-    public string ErrorInfo { get; set; }
-}
-
-public class FileOperationException : Exception
-{
-    public FileOperationException(string message, Exception innerException = null) 
-        : base(message, innerException) { }
+    // Si el fallo NO traía excepción, respuesta sigue siendo un MlResult fallido:
+    return respuesta.Match(valid: accion  => accion,
+                           fail : errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
 }
 ```
 
----
+Este es el patrón canónico de la Forma B: la propia operación resuelve los casos «éxito» y
+«fallo técnico», y el `Match` final recoge lo único que queda, los **fallos de negocio** → 400.
 
-## Comparación con Otros Patrones
+### Ejemplo 3: Cadena de respaldos con trazabilidad completa
 
-### MapIfFailWithException vs MapIfFail
+Un documento se busca primero en el almacenamiento en la nube, luego en el disco local y, si
+todo falla, se quiere el informe completo de lo ocurrido.
 
 ```csharp
-// MapIfFail: Solo información del mensaje de error
-var result = ProcessData(input)
-    .MapIfFail(error => GetDefaultData());  // Solo MlErrorsDetails disponible
-
-// MapIfFailWithException: Acceso a la excepción específica
-var result = ProcessDataWithException(input)
-    .MapIfFailWithException(ex => ex switch
-    {
-        TimeoutException _ => GetCachedData(),
-        FileNotFoundException _ => GetDefaultData(),
-        _ => throw new InvalidOperationException("Unhandled exception")
-    });
+public MlResult<Documento> Recuperar(Guid documentoId)
+    => DescargarDeNube(documentoId)                                   // puede lanzar StorageException
+           .TryMapIfFailWithException<Documento, StorageException>(
+                funcException      : _  => LeerDeDiscoLocal(documentoId),   // puede lanzar IOException
+                errorMessageBuilder: ex => $"El respaldo local falló: {ex.Message}")
+           .ExecSelfIfFail(e => _log.LogError("Documento {Id} irrecuperable. {Detalle}",
+                                              documentoId, e.ToErrorsDescription()));
 ```
 
-### MapIfFailWithException vs MapIfFailWithValue
+Gracias a `MergeErrorsDetailsIfFail`, el log final contiene la `StorageException` original
+**y** la `IOException` del respaldo, no solo la última.
+
+### Ejemplo 4: Qué no hacer
 
 ```csharp
-// MapIfFailWithValue: Usa valores preservados
-var result = ProcessWithPreservation(input)
-    .MapIfFailWithValue(partialData => CompletePartialData(partialData));
+// ❌ 1) Esperar que recupere errores de negocio
+ValidarPedido(dto).MapIfFailWithException(ex => Pedido.Vacio);
+// Un fallo de validación no lleva excepción → el delegado NUNCA se ejecuta.
 
-// MapIfFailWithException: Usa excepciones preservadas
-var result = ProcessWithExceptionCapture(input)
-    .MapIfFailWithException(ex => HandleSpecificException(ex));
+// ❌ 2) Usarlo como catch universal para tapar bugs
+resultado.MapIfFailWithException(ex => default!);
+// Una NullReferenceException es un bug: hay que verla, no enterrarla.
+
+// ❌ 3) Confiar en la inferencia de genéricos con TException
+resultado.MapIfFailWithException<TimeoutException>(ex => …);   // no compila
+
+// ❌ 4) Acceder a .Value para inspeccionar la excepción
+if (resultado.IsFail) { var ex = resultado.ErrorsDetails.Details["Ex"]; }
 ```
 
-### MapIfFailWithException vs Try-Catch Tradicional
+✅ En su lugar:
 
 ```csharp
-// Try-Catch tradicional
-try 
-{
-    var result = RiskyOperation();
-    return ProcessResult(result);
-}
-catch (SpecificException ex)
-{
-    return HandleSpecificException(ex);
-}
-catch (Exception ex)
-{
-    return HandleGeneralException(ex);
-}
+// 1) para errores de negocio, la familia complementaria
+ValidarPedido(dto).MapIfFailWithoutException(errores => Pedido.Vacio);
 
-// MapIfFailWithException: Enfoque funcional
-var result = TryRiskyOperation()
-    .MapIfFailWithException(ex => ex switch
-    {
-        SpecificException specific => HandleSpecificException(specific),
-        _ => HandleGeneralException(ex)
-    });
+// 2) filtra el tipo que de verdad sabes tratar
+resultado.MapIfFailWithException<Pedido, TimeoutException>(_ => Pedido.Reintentable);
+
+// 3) genéricos completos y explícitos
+resultado.MapIfFailWithException<Pedido, TimeoutException>(ex => …);
+
+// 4) lee la excepción con la API prevista
+resultado.ExecSelfIfFail(e => e.GetDetailException()
+                               .Match(valid: ex => _log.LogError(ex, "Fallo técnico"),
+                                      fail : _  => _log.LogWarning("Fallo de negocio: {M}",
+                                                                   e.ToErrorsMessages())));
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Manejo Específico por Tipo de Excepción
-
-```csharp
-// ✅ Correcto: Manejo específico y granular
-var result = ProcessData(input)
-    .MapIfFailWithException(ex => ex switch
-    {
-        TimeoutException timeout => HandleTimeout(timeout.Timeout),
-        FileNotFoundException fileNotFound => HandleMissingFile(fileNotFound.FileName),
-        UnauthorizedException unauthorized => HandleUnauthorized(unauthorized.RequiredPermission),
-        ValidationException validation => HandleValidation(validation.ValidationErrors),
-        _ => throw new UnrecoverableException($"Cannot handle {ex.GetType()}", ex)
-    });
-
-// ✅ Correcto: Usar información específica de la excepción
-var result = ConnectToDatabase(connectionString)
-    .MapIfFailWithException(ex => ex switch
-    {
-        SqlException sqlEx when sqlEx.Number == 2 => // Connection timeout
-            ConnectToBackupDatabase(),
-        
-        SqlException sqlEx when sqlEx.Number == 18456 => // Login failed
-            ConnectWithDifferentCredentials(),
-        
-        SqlException sqlEx when sqlEx.Number == 40613 => // Database unavailable
-            UseOfflineMode(),
-        
-        _ => throw new DatabaseException("Unrecoverable database error", ex)
-    });
-
-// ❌ Incorrecto: Manejo genérico que ignora el tipo específico
-var badResult = ProcessData(input)
-    .MapIfFailWithException(ex => GetGenericDefault());  // Ignora información valiosa
-```
-
-### 2. Preservación Apropiada de Excepciones
-
-```csharp
-// ✅ Correcto: Preservar excepciones que contienen información útil
-public MlResult<ProcessedData> ProcessRiskyData(RawData data)
-{
-    try
-    {
-        return PerformComplexOperation(data);
-    }
-    catch (ValidationException validationEx)
-    {
-        // Preservar excepción con información detallada de validación
-        return MlResult<ProcessedData>.FailWithException(
-            validationEx,
-            $"Data validation failed: {validationEx.Message}"
-        );
-    }
-    catch (TimeoutException timeoutEx)
-    {
-        // Preservar excepción con información de timeout
-        return MlResult<ProcessedData>.FailWithException(
-            timeoutEx,
-            $"Operation timed out after {timeoutEx.Timeout}"
-        );
-    }
-    catch (IOException ioEx)
-    {
-        // Preservar excepción con información de I/O
-        return MlResult<ProcessedData>.FailWithException(
-            ioEx,
-            $"I/O error during processing: {ioEx.Message}"
-        );
-    }
-    catch (Exception ex)
-    {
-        // Error general sin preservar excepción (menos útil para recuperación)
-        return MlResult<ProcessedData>.Fail($"Unexpected error: {ex.Message}");
-    }
-}
-
-// ❌ Incorrecto: Preservar excepciones que no aportan valor para recuperación
-public MlResult<Data> BadExample(Input input)
-{
-    try
-    {
-        return ProcessInput(input);
-    }
-    catch (Exception ex)
-    {
-        // Preservar cualquier excepción sin discriminar
-        return MlResult<Data>.FailWithException(ex, "Something failed");
-    }
-}
-```
-
-### 3. Logging Adecuado de Recuperaciones por Excepción
-
-```csharp
-// ✅ Correcto: Log detallado con contexto de la excepción
-var result = LoadConfiguration(configPath)
-    .MapIfFailWithException(ex =>
-    {
-        _logger.LogWarning("Configuration loading failed, applying recovery strategy. " +
-                          "ExceptionType: {ExceptionType}, Message: {Message}, FilePath: {FilePath}",
-                          ex.GetType().Name, ex.Message, configPath);
-
-        var recoveredConfig = ex switch
-        {
-            FileNotFoundException _ => 
-            {
-                _logger.LogInformation("Creating default configuration due to missing file");
-                _metrics.IncrementCounter("config.file_not_found_recovery");
-                return GetDefaultConfiguration();
-            }
-            
-            JsonException jsonEx => 
-            {
-                _logger.LogWarning("JSON parsing failed at line {Line}, using fallback parser",
-                                  jsonEx.LineNumber);
-                _metrics.IncrementCounter("config.json_parse_recovery");
-                return ParseConfigWithFallback(configPath);
-            }
-            
-            UnauthorizedAccessException _ =>
-            {
-                _logger.LogError("Access denied to config file, using embedded defaults");
-                _metrics.IncrementCounter("config.access_denied_recovery");
-                return GetEmbeddedConfiguration();
-            }
-            
-            _ => throw new ConfigurationException($"Cannot recover from {ex.GetType()}", ex)
-        };
-
-        _logger.LogInformation("Configuration recovery successful using strategy: {Strategy}",
-                              recoveredConfig.Source);
-        
-        return recoveredConfig;
-    });
-
-// ❌ Incorrecto: Recuperación silenciosa sin visibilidad
-var badResult = LoadData(path)
-    .MapIfFailWithException(ex => GetDefaultData());  // Sin logging de la estrategia
-```
-
-### 4. Composición con Otros Operadores
-
-```csharp
-// ✅ Correcto: MapIfFailWithException en pipeline de recuperación
-var result = GetRawData(id)
-    .Map(data => ValidateData(data))                    // Validación normal
-    .MapIfFailWithException(ex => ex switch             // Recuperación específica por excepción
-    {
-        ValidationException validationEx => RepairValidationErrors(validationEx),
-        FormatException formatEx => ConvertToAlternativeFormat(formatEx),
-        _ => throw new UnrecoverableDataException("Cannot repair data", ex)
-    })
-    .MapEnsure(data => data.IsUsable, 
-        "Data must be usable after recovery")          // Validación post-recuperación
-    .Map(data => ProcessRepairedData(data));            // Procesamiento final
-
-// ✅ Correcto: Cadena de recuperaciones específicas
-var result = ProcessLevel1(input)
-    .MapIfFailWithException(ex => ex switch
-    {
-        TimeoutException _ => ProcessLevel1WithTimeout(input),
-        _ => throw ex  // Re-throw si no se puede manejar
-    })
-    .MapIfFailWithException(ex => ex switch
-    {
-        FileNotFoundException _ => ProcessLevel1FromCache(input),
-        _ => throw ex
-    })
-    .MapIfFail(error => GetUltimateDefault());          // Fallback final genérico
-
-// ❌ Incorrecto: Uso cuando no hay excepciones preservadas
-var badResult = GetSimpleValue()
-    .MapIfFailWithException(ex => ProcessException(ex))  // GetSimpleValue no preserva excepciones
-    .MapIfFail(error => GetDefault());                   // Redundante
-```
-
-### 5. Testing de Recuperación por Excepciones
-
-```csharp
-// ✅ Correcto: Tests específicos para cada tipo de excepción
-[Test]
-public void ProcessDocument_WhenTimeoutOccurs_ShouldUseQuickProcessing()
-{
-    // Arrange
-    var document = CreateTestDocument();
-    var mockProcessor = new Mock<IDocumentProcessor>();
-    mockProcessor.Setup(p => p.ProcessAdvanced(It.IsAny<Document>()))
-                 .Throws(new TimeoutException("Processing timeout", TimeSpan.FromSeconds(30)));
-
-    // Act
-    var result = _service.ProcessDocumentWithRecovery(document);
-
-    // Assert
-    Assert.That(result.IsValid, Is.True);
-    Assert.That(result.Value.ProcessingMethod, Is.EqualTo("Quick"));
-    Assert.That(result.Value.Warning, Contains.Substring("timeout"));
-}
-
-[Test]
-public void LoadConfiguration_WhenJsonParsingFails_ShouldUseFallbackParser()
-{
-    // Arrange
-    var configPath = CreateMalformedJsonFile();
-    
-    // Act
-    var result = _configService.LoadConfigurationWithRecovery(configPath);
-
-    // Assert
-    Assert.That(result.IsValid, Is.True);
-    Assert.That(result.Value.Source, Is.EqualTo("fallback-parser"));
-    Assert.That(result.Value.IsComplete, Is.False);
-}
-
-[Test]
-public void ConnectToDatabase_WhenLoginFails_ShouldTryAlternativeCredentials()
-{
-    // Arrange
-    var connectionString = "Server=test;Database=testdb;";
-    var mockConnection = new Mock<IDbConnection>();
-    mockConnection.Setup(c => c.Open())
-                  .Throws(new SqlException("Login failed for user", 18456));
-
-    // Act
-    var result = _databaseService.ConnectWithRecovery(connectionString);
-
-    // Assert
-    Assert.That(result.IsValid, Is.True);
-    Assert.That(result.Value.ConnectionType, Is.EqualTo("Alternative"));
-    Assert.That(result.Value.UserUsed, Is.Not.EqualTo("original-user"));
-}
-```
-
-### 6. Manejo de Excepciones Anidadas
-
-```csharp
-// ✅ Correcto: Consideración de excepciones internas
-var result = ProcessComplexOperation(input)
-    .MapIfFailWithException(ex =>
-    {
-        // Analizar la excepción y sus excepciones internas
-        var rootCause = GetRootCause(ex);
-        
-        return rootCause switch
-        {
-            SqlException sqlEx => HandleDatabaseError(sqlEx),
-            HttpRequestException httpEx => HandleNetworkError(httpEx),
-            JsonException jsonEx => HandleSerializationError(jsonEx),
-            _ => ex switch
-            {
-                AggregateException aggEx => HandleAggregateException(aggEx),
-                TargetInvocationException invokeEx => HandleReflectionException(invokeEx),
-                _ => throw new UnhandledException($"Cannot handle {ex.GetType()}", ex)
-            }
-        };
-    });
-
-// Método auxiliar para encontrar la causa raíz
-private Exception GetRootCause(Exception exception)
-{
-    var current = exception;
-    while (current.InnerException != null)
-    {
-        current = current.InnerException;
-    }
-    return current;
-}
-
-// ✅ Correcto: Manejo específico de AggregateException
-var result = ProcessParallelOperations(inputs)
-    .MapIfFailWithException(ex =>
-    {
-        if (ex is AggregateException aggEx)
-        {
-            var innerExceptions = aggEx.InnerExceptions;
-            
-            // Si todas son del mismo tipo manejable
-            if (innerExceptions.All(e => e is TimeoutException))
-            {
-                return ProcessWithExtendedTimeout(inputs);
-            }
-            
-            // Si la mayoría son exitosas
-            if (innerExceptions.Count <= inputs.Count * 0.3) // Menos del 30% fallaron
-            {
-                return ProcessPartialResults(inputs, innerExceptions);
-            }
-        }
-        
-        throw new UnrecoverableException("Too many failures in parallel processing", ex);
-    });
-```
-
----
-
-## Consideraciones de Rendimiento
-
-### Costo de Preservación de Excepciones
-
-- **Memory Overhead**: Las excepciones contienen stack traces que consumen memoria
-- **Exception Creation Cost**: Crear excepciones tiene costo computacional
-- **GC Impact**: Excepciones pueden impactar el garbage collection
-
-### Optimizaciones Específicas
-
-```csharp
-// ✅ Optimización: Preservar solo excepciones útiles para recuperación
-public MlResult<Data> OptimizedProcessing(Input input)
-{
-    try
-    {
-        return ExpensiveOperation(input);
-    }
-    catch (Exception ex) when (IsRecoverableException(ex))
-    {
-        // Solo preservar si la excepción es útil para recuperación
-        return MlResult<Data>.FailWithException(ex, "Recoverable error occurred");
-    }
-    catch (Exception ex)
-    {
-        // No preservar excepciones no recuperables
-        return MlResult<Data>.Fail($"Non-recoverable error: {ex.Message}");
-    }
-}
-
-private bool IsRecoverableException(Exception ex)
-{
-    return ex is TimeoutException ||
-           ex is FileNotFoundException ||
-           ex is UnauthorizedException ||
-           ex is ValidationException ||
-           ex is HttpRequestException;
-}
-
-// ✅ Optimización: Pattern matching eficiente
-var result = source.MapIfFailWithException(ex => ex switch
-{
-    TimeoutException => GetCachedResult(),          // Rápido
-    FileNotFoundException => GetDefaultResult(),    // Rápido
-    _ when IsNetworkException(ex) => GetOfflineResult(), // Check adicional solo si es necesario
-    _ => throw new UnhandledException("Cannot recover", ex)
-});
-```
+1. **Reserva esta familia para los fallos técnicos.** Es su razón de ser: si el error lo
+   generó tu lógica de negocio, no habrá excepción y la operación será transparente.
+2. **Filtra por `TException` siempre que sepas qué tratar.** Recuperarse de «cualquier
+   excepción» suele esconder un `catch (Exception)` disfrazado.
+3. **Escribe los genéricos completos** en las formas C y D (`<T, TException>`,
+   `<T, TReturn, TException>`); la inferencia no funciona.
+4. **Registra antes de recuperar** con `ExecSelfIfFail`: una vez recuperado, el resultado es
+   válido y nadie sabrá que hubo un incidente.
+5. **Marca el valor degradado** (`EsFiable = false`, `MotivoCache`, un aviso) para que el
+   consumidor pueda distinguir un dato de primera de uno de respaldo.
+6. **Usa `Try…` en cadenas de respaldo** y aprovecha que fusiona los errores: tendrás el
+   histórico completo del fallo en un único `ToErrorsDescription()`.
+7. **Usa la subfamilia `…Error`** cuando la recuperación necesite los mensajes de negocio
+   además de la excepción.
+8. **No la uses para bugs.** `NullReferenceException`, `IndexOutOfRangeException` y
+   compañía deben propagarse y verse, no reciclarse en un valor por defecto.
+9. **Colócala cerca del borde de la tubería**, cuando ya sabes qué respuesta quieres dar; si
+   recuperas demasiado pronto, los pasos siguientes trabajarán con datos de respaldo sin
+   saberlo.
 
 ---
 
 ## Resumen
 
-La clase `MlResultActionsMapIfFailWithException` implementa **recuperación inteligente basada en excepciones**:
+- `MapIfFailWithException` recupera **solo si el fallo trae una excepción** en
+  `Details["Ex"]`; si no la trae, devuelve el fallo **intacto** (a diferencia de otras
+  familias, no añade ni sustituye errores).
+- Hay **cuatro formas**: `<T>`, `<T, TReturn>`, `<T, TException>` y `<T, TReturn, TException>`;
+  las dos últimas filtran por tipo de excepción con `where TException : Exception`.
+- Existe una **subfamilia `MapIfFailWithExceptionError`** con las mismas cuatro formas, cuyo
+  delegado recibe el `MlErrorsDetails` completo en lugar de la excepción; la excepción sigue
+  siendo la condición de activación, pero se descarta como parámetro.
+- Como el delegado devuelve un valor desnudo, si hay excepción **la salida es siempre válida**.
+- `TryMapIfFailWithException` protege la recuperación y, mediante
+  `MergeErrorsDetailsIfFail(source)`, **conserva los errores originales**: ideal para cadenas
+  de respaldo con trazabilidad.
+- Todas las formas tienen variantes asíncronas; algunas sobrecargas de la Forma B asíncrona
+  con origen `Task<MlResult<T>>` están comentadas en el fuente: resuelve el `Task` con `await`.
+- La familia complementaria es `MapIfFailWithoutException`, que actúa exactamente en el caso
+  opuesto.
 
-- **`MapIfFailWithException<T>`**: Recuperación usando excepciones preservadas del mismo tipo
-- **`MapIfFailWithException<T,TReturn>`**: Recuperación con transformación de tipos
-- **`MapIfFailWithExceptionAsync`**: Soporte completo para operaciones asíncronas
-- **`TryMapIfFailWithException`**: Versiones seguras que capturan excepciones en recuperación
+---
 
-**Características clave**:
+## Ver también
 
-- **Comportamiento Conservador**: Si no hay excepción preservada, propaga error sin cambios
-- **Type-Specific Recovery**: Permite estrategias diferentes según el tipo de excepción
-- **Exception Context Access**: Acceso completo a la información de la excepción
-- **Intelligent Fallbacks**: Decisiones de recuperación basadas en análisis de excepciones
-
-Estas operaciones son ideales para:
-
-- **Robust Error Handling**: Manejo robusto de errores con estrategias específicas
-- **Exception-Driven Recovery**: Recuperación basada en análisis de excepciones
-- **Fault Tolerance**: Tolerancia a fallos con degradación inteligente
-- **Context-Aware Fallbacks**: Fallbacks que consideran el contexto específico del error
-
-La diferencia principal con otros patrones de recuperación es el **acceso directo a la excepción original**, permitiendo análisis granular del tipo y contenido del error para implementar estrategias de recuperación altamente
+- [`7_MapIfFailWithoutException.md`](7_MapIfFailWithoutException.md) — la operación espejo: recupera solo si **no** hay excepción.
+- [`4_MapIfFail.md`](4_MapIfFail.md) — recuperación incondicional con los errores en la mano.
+- [`1_Map.md`](1_Map.md) — la operación base de la familia.
+- [`8_MapAlways.md`](8_MapAlways.md) — cuando quieres actuar pase lo que pase.
+- [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) — la versión cuya recuperación sí puede volver a fallar.
+- [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) — su espejo en la familia `Bind`.
+- [`../ExecSelf/5_ExecSelfIfFailWithException.md`](../ExecSelf/5_ExecSelfIfFailWithException.md) — registrar sin recuperar.
+- [`../Types/MlResultActionsErrorsDetails.md`](../Types/MlResultActionsErrorsDetails.md) — `GetDetailException`, `GetDetailException<TException>`, `MergeErrorsDetailsIfFail`.
+- [`../Types/MlResultErrors.md`](../Types/MlResultErrors.md) — estructura real de `MlErrorsDetails` y la clave `Ex`.
+- [`../Types/MlResultActionsMap.md`](../Types/MlResultActionsMap.md) — inventario completo de la familia `Map`.

@@ -1,1076 +1,402 @@
-﻿# MlResultActionsMapEnsure - Operaciones de Validación Condicional
+﻿# MapEnsure — Validar el valor sin cambiarlo
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de la Clase](#análisis-de-la-clase)
-3. [Métodos MapEnsure Básicos](#métodos-mapensure-básicos)
-4. [Constructores de Errores](#constructores-de-errores)
-5. [Variantes Asíncronas](#variantes-asíncronas)
-6. [Ejemplos Prácticos](#ejemplos-prácticos)
-7. [Comparación con Other Patterns](#comparación-con-otros-patrones)
-8. [Mejores Prácticas](#mejores-prácticas)
+2. [La idea: un peaje en la tubería](#la-idea-un-peaje-en-la-tubería)
+3. [Firmas reales e implementación](#firmas-reales-e-implementación)
+4. [Las cuatro formas de expresar el error](#las-cuatro-formas-de-expresar-el-error)
+5. [Encadenar validaciones: cortocircuito](#encadenar-validaciones-cortocircuito)
+6. [`MapEnsure` frente a `EnsureFp` y `BindIf`](#mapensure-frente-a-ensurefp-y-bindif)
+7. [Variantes asíncronas](#variantes-asíncronas)
+8. [⚠️ No existe `TryMapEnsure`](#️-no-existe-trymapensure)
+9. [Ejemplos Prácticos](#ejemplos-prácticos)
+10. [Mejores Prácticas](#mejores-prácticas)
+11. [Resumen](#resumen)
+12. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-MapEnsure es una extensión de `MlResult<T>` que permite realizar validaciones condicionales sobre valores exitosos, transformándolos en errores si no cumplen con ciertas condiciones. A diferencia de `Map` o `Bind`, que transforman o encadenan valores, `MapEnsure` verifica condiciones y mantiene el tipo original.
+`MapEnsure` es la operación de **validación en línea**:
 
-La clase `MlResultActionsMapEnsure` implementa operaciones de **validación condicional** que convierten un `MlResult<T>` exitoso en fallido si no cumple con una condición específica. Es una especialización del patrón de validación que mantiene el valor original si la condición se cumple, o genera un error detallado si no se cumple.
+> **Si el resultado es válido y el valor cumple el predicado, lo deja pasar tal cual. Si no lo cumple, lo convierte en fallo con el error que tú indiques.**
 
-### Propósito Principal
+Es la traducción funcional del típico `if (!condición) throw ...`, pero sin excepciones y sin romper la cadena.
 
-- **Validación Post-Transformación**: Verificar condiciones después de obtener un valor válido
-- **Guard Clauses Funcionales**: Implementar verificaciones de precondiciones de forma funcional
-- **Filtrado con Error**: Similar a `Where` en LINQ, pero generando errores en lugar de filtrar
-- **Preservación de Tipo**: El tipo permanece inalterado, solo cambia el estado de éxito/fallo
+```csharp
+// ❌ Estilo imperativo: rompe el flujo con excepciones
+var pedido = ObtenerPedido(id);
+if (pedido.Lineas.Count == 0) throw new InvalidOperationException("Pedido sin líneas");
+if (pedido.Total <= 0)        throw new InvalidOperationException("Importe no válido");
 
-### Filosofía de Diseño
-
+// ✅ Estilo railway: el fallo es un valor más
+MlResult<Pedido> r = ObtenerPedido(id)
+                        .MapEnsure(p => p.Lineas.Count > 0, "El pedido no tiene líneas")
+                        .MapEnsure(p => p.Total > 0,        "El importe del pedido no es válido");
 ```
-Valor Válido + Condición Verdadera  → Valor Válido (sin cambios)
-Valor Válido + Condición Falsa      → Error (con mensaje personalizado)
-Valor Inválido                      → Error (propagación sin evaluación)
-```
+
+> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`.
 
 ---
 
-## Análisis de la Clase
+## La idea: un peaje en la tubería
 
-### Patrón de Funcionamiento
+A diferencia de `Map`, **`MapEnsure` no transforma nada**: el tipo de entrada y el de salida son el mismo `T`. Solo decide si el valor sigue avanzando o si el carril cambia a fallo.
 
-`MapEnsure` implementa una validación **assertion-style** donde:
-
-1. Si el `MlResult<T>` es fallido, propaga el error sin evaluación
-2. Si el `MlResult<T>` es exitoso, evalúa la condición
-3. Si la condición es verdadera, retorna el valor original
-4. Si la condición es falsa, convierte a error con mensaje personalizado
-
-### Diferencias con Otros Patrones
-
-```csharp
-// MapEnsure: Validación con preservación de tipo
-MlResult<T> → (T → bool) → MlResult<T>
-
-// Map: Transformación de valor
-MlResult<T> → (T → U) → MlResult<U>
-
-// Bind: Encadenamiento de operaciones
-MlResult<T> → (T → MlResult<U>) → MlResult<U>
 ```
+                     ┌── predicado true  ──►  MlResult<T> válido (mismo valor)
+MlResult<T> válido ──┤
+                     └── predicado false ──►  MlResult<T> fallido (tu error)
+
+MlResult<T> fallido ─────────────────────►  el mismo fallo (predicado NO se evalúa)
+```
+
+Esa firma `MlResult<T> → MlResult<T>` es lo que permite apilar tantas validaciones como quieras sin cambiar de tipo.
 
 ---
 
-## Métodos MapEnsure Básicos
+## Firmas reales e implementación
 
-### `MapEnsure<T>()` - Error Details Estático
-
-**Propósito**: Valida una condición con un error predefinido
+El método real, del que dependen todos los demás, es el que recibe un **constructor** de `MlErrorsDetails`:
 
 ```csharp
-public static MlResult<T> MapEnsure<T>(this MlResult<T> source,
-                                       Func<T, bool> ensureFunc,
-                                       MlErrorsDetails errorDetailsResult)
-```
-
-**Parámetros**:
-- `source`: El resultado a validar
-- `ensureFunc`: Función que retorna `true` si la condición se cumple
-- `errorDetailsResult`: Error a retornar si la condición falla
-
-**Comportamiento**:
-- Si `source` es fallido: Propaga el error original
-- Si `source` es exitoso y `ensureFunc(value)` es `true`: Retorna el valor
-- Si `source` es exitoso y `ensureFunc(value)` es `false`: Retorna el error especificado
-
-### `MapEnsure<T>()` - Constructor de Error Dinámico
-
-**Propósito**: Valida con un constructor de error que recibe el valor
-
-```csharp
-public static MlResult<T> MapEnsure<T>(this MlResult<T> source,
-                                       Func<T, bool> ensureFunc,
-                                       Func<T, MlErrorsDetails> errorDetailsResultBuilder)
-```
-
-**Comportamiento**: Permite construir errores dinámicos basados en el valor que falló la validación
-
-### `MapEnsure<T>()` - Mensaje de Error Simple
-
-**Propósito**: Valida con un mensaje de error simple
-
-```csharp
-public static MlResult<T> MapEnsure<T>(this MlResult<T> source,
-                                       Func<T, bool> ensureFunc,
-                                       string errorMessageResult)
-```
-
-**Comportamiento**: Convierte automáticamente el string a `MlErrorsDetails`
-
-### `MapEnsure<T>()` - Constructor de Mensaje Dinámico
-
-**Propósito**: Valida con un constructor de mensaje que recibe el valor
-
-```csharp
-public static MlResult<T> MapEnsure<T>(this MlResult<T> source,
-                                       Func<T, bool> ensureFunc,
-                                       Func<T, string> errorMessageResultBuilder)
-```
-
-**Comportamiento**: Permite crear mensajes de error específicos basados en el valor
-
----
-
-## Constructores de Errores
-
-### Jerarquía de Flexibilidad
-
-1. **Error Details Estático**: Máximo rendimiento, error fijo
-2. **Mensaje Estático**: Balance entre simplicidad y rendimiento  
-3. **Constructor de Mensaje**: Flexibilidad media, mensajes dinámicos
-4. **Constructor de Error Details**: Máxima flexibilidad, control total del error
-
-### Ejemplos de Constructores
-
-```csharp
-// Error estático
-result.MapEnsure(x => x > 0, "Value must be positive");
-
-// Mensaje dinámico
-result.MapEnsure(x => x > 0, x => $"Value {x} must be positive");
-
-// Error details dinámico
-result.MapEnsure(x => x > 0, x => new MlErrorsDetails
+public static MlResult<T> MapEnsure<T>(this MlResult<T>              source,
+                                            Func<T, bool>            ensureFunc,
+                                            Func<T, MlErrorsDetails> errorDetailsResultBuilder)
 {
-    ErrorMessage = $"Invalid value: {x}",
-    ErrorCode = "NEGATIVE_VALUE",
-    AdditionalInfo = new { ActualValue = x, MinimumRequired = 1 }
-});
+    var result = source.Match(
+                                 valid: x      => ensureFunc(x) ? x : errorDetailsResultBuilder(x),
+                                 fail : errors => errors.ToMlResultFail<T>()
+                           );
+
+    return result;
+}
+```
+
+Observa cómo el operador ternario devuelve **dos tipos distintos** (`T` y `MlErrorsDetails`) y ambos acaban siendo un `MlResult<T>` gracias a las conversiones implícitas de la biblioteca. Es un buen ejemplo de lo compacto que resulta el tipo.
+
+Las otras tres sobrecargas son azúcar sintáctico sobre esta:
+
+```csharp
+// 1) Detalles de error fijos
+public static MlResult<T> MapEnsure<T>(this MlResult<T> source, Func<T, bool> ensureFunc,
+                                            MlErrorsDetails errorDetailsResult)
+    => source.MapEnsure(ensureFunc, _ => errorDetailsResult);
+
+// 2) Mensaje de texto fijo — la más usada
+public static MlResult<T> MapEnsure<T>(this MlResult<T> source, Func<T, bool> ensureFunc,
+                                            string errorMessageResult)
+    => source.MapEnsure(ensureFunc, errorMessageResult.ToMlErrorsDetails());
+
+// 3) Mensaje construido a partir del valor
+public static MlResult<T> MapEnsure<T>(this MlResult<T> source, Func<T, bool> ensureFunc,
+                                            Func<T, string> errorMessageResultBuilder)
+    => source.MapEnsure(ensureFunc, x => errorMessageResultBuilder(x).ToMlErrorsDetails());
+```
+
+| Estado de entrada | `ensureFunc(x)` | Resultado |
+|---|---|---|
+| Válido | `true` | El **mismo** valor, válido |
+| Válido | `false` | Fallido con el error que hayas construido |
+| Fallido | **No se evalúa** | El mismo fallo, intacto |
+
+---
+
+## Las cuatro formas de expresar el error
+
+Elegir bien la sobrecarga marca la diferencia entre un mensaje inútil y un mensaje que resuelve la incidencia.
+
+| Sobrecarga | Cuándo usarla | Ejemplo |
+|---|---|---|
+| `string` | Regla fija, sin datos variables | `.MapEnsure(p => p.Total > 0, "El importe debe ser positivo")` |
+| `Func<T, string>` | Quieres incluir el valor real en el mensaje | `.MapEnsure(p => p.Total > 0, p => $"Importe no válido: {p.Total:C}")` |
+| `MlErrorsDetails` | Error compartido y reutilizable en varios sitios | `.MapEnsure(p => p.Total > 0, ErroresPedido.ImporteNoValido)` |
+| `Func<T, MlErrorsDetails>` | Necesitas adjuntar **detalles** además del mensaje | ver abajo |
+
+La cuarta es la más potente, porque te permite dejar el valor conflictivo en los detalles para que lo recojan después `GetDetailValue<T>()` o [`BindIfFailWithValue`](../Bind/7_BindIfFailWithValue.md):
+
+```csharp
+.MapEnsure(p => p.Total > 0,
+           p => MlErrorsDetails.FromErrorMessageWithValue(
+                    $"El importe del pedido {p.Numero} no es válido", p))
+```
+
+Y también permite acumular varios mensajes en un único fallo:
+
+```csharp
+.MapEnsure(p => p.EsCoherente,
+           p => new[] { $"El pedido {p.Numero} es incoherente",
+                        $"Suma de líneas: {p.SumaLineas:C}",
+                        $"Total declarado: {p.Total:C}" }.ToMlErrorsDetails())
 ```
 
 ---
 
-## Variantes Asíncronas
+## Encadenar validaciones: cortocircuito
 
-### Conversión a Asíncrono
+Al apilar `MapEnsure`, el comportamiento es de **cortocircuito**: en cuanto una falla, las siguientes ya no evalúan su predicado.
 
-Todas las variantes de `MapEnsure` tienen su correspondiente `MapEnsureAsync` que:
+```csharp
+var r = solicitud.ToMlResultValid()
+            .MapEnsure(s => s.Nif is not null,        "Falta el NIF")
+            .MapEnsure(s => s.Nif!.Length == 9,       "El NIF debe tener 9 caracteres")   // seguro: el anterior ya garantizó no-null
+            .MapEnsure(s => char.IsDigit(s.Nif![0]),  "El NIF debe empezar por dígito");
+```
 
-1. **Conversión Simple**: Envuelve el resultado sincrónico en `Task`
-2. **Desde Fuente Asíncrona**: Opera sobre `Task<MlResult<T>>`
+Ese orden no es casual: **las validaciones estructurales van primero**, y las que dependen de ellas después. Es lo que permite el `!` de la segunda línea sin riesgo.
 
-### Matriz de Combinaciones Asíncronas
+> 🔎 **¿Y si quiero todos los errores a la vez?** El cortocircuito devuelve solo el primero. Para acumular todos los mensajes en un único fallo, usa [`BindMulti`](../Bind/4_BindMulti.md), que ejecuta todas las validaciones y fusiona sus errores.
 
-| Fuente | Constructor de Error | Método |
-|--------|---------------------|---------|
-| `MlResult<T>` | `MlErrorsDetails` | `MapEnsureAsync` (conversión) |
-| `MlResult<T>` | `Func<T, MlErrorsDetails>` | `MapEnsureAsync` (conversión) |
-| `MlResult<T>` | `string` | `MapEnsureAsync` (conversión) |
-| `MlResult<T>` | `Func<T, string>` | `MapEnsureAsync` (conversión) |
-| `Task<MlResult<T>>` | `MlErrorsDetails` | `MapEnsureAsync` |
-| `Task<MlResult<T>>` | `Func<T, MlErrorsDetails>` | `MapEnsureAsync` |
-| `Task<MlResult<T>>` | `string` | `MapEnsureAsync` |
-| `Task<MlResult<T>>` | `Func<T, string>` | `MapEnsureAsync` |
+```csharp
+// Cortocircuito: devuelve el PRIMER error
+solicitud.ToMlResultValid()
+         .MapEnsure(s => s.Nif    is not null, "Falta el NIF")
+         .MapEnsure(s => s.Nombre is not null, "Falta el nombre");
+
+// Acumulación: devuelve TODOS los errores
+solicitud.ToMlResultValid()
+         .BindMulti(s => s.Nif    is not null ? s.ToMlResultValid() : "Falta el NIF".ToMlResultFail<Solicitud>(),
+                    s => s.Nombre is not null ? s.ToMlResultValid() : "Falta el nombre".ToMlResultFail<Solicitud>())
+         (s => s.ToMlResultValid());
+```
+
+---
+
+## `MapEnsure` frente a `EnsureFp` y `BindIf`
+
+Tres herramientas parecidas con propósitos distintos:
+
+| Herramienta | Punto de partida | Qué hace |
+|---|---|---|
+[`EnsureFp.That`](../EnsureFp/EnsureFp.md) | Un valor **desnudo** | **Entra** en el mundo `MlResult` validando |
+| `MapEnsure` | Un `MlResult<T>` | Valida **dentro** de la tubería, sin cambiar el tipo |
+| [`BindIf`](../Bind/5_BindIf.md) | Un `MlResult<T>` | **Bifurca** hacia una u otra operación según la condición |
+
+```csharp
+// EnsureFp: el punto de entrada de la tubería
+EnsureFp.NotNullEmptyOrWhitespace(nif, "El NIF es obligatorio")   // string → MlResult<string>
+
+    // MapEnsure: validaciones sucesivas dentro de la tubería
+    .MapEnsure(n => n.Length == 9, n => $"NIF con longitud incorrecta: {n.Length}")
+
+    // BindIf: elegir camino, no validar
+    .BindIf(n => n.StartsWith('X'),
+            n => BuscarExtranjero(n),
+            n => BuscarNacional(n));
+```
+
+> 📌 La distinción práctica: **`MapEnsure` responde «¿es válido?»; `BindIf` responde «¿por dónde sigo?»**.
+
+---
+
+## Variantes asíncronas
+
+`MapEnsureAsync` tiene 8 sobrecargas: las 4 formas de error × 2 tipos de origen.
+
+| Origen | Formas de error disponibles |
+|---|---|
+| `MlResult<T>` | `MlErrorsDetails`, `Func<T, MlErrorsDetails>`, `string`, `Func<T, string>` |
+| `Task<MlResult<T>>` | `MlErrorsDetails`, `Func<T, MlErrorsDetails>`, `string`, `Func<T, string>` |
+
+```csharp
+public static async Task<MlResult<T>> MapEnsureAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                             Func<T, bool>     ensureFunc,
+                                                             string            errorMessageResult)
+    => await (await sourceAsync).MapEnsureAsync(ensureFunc, errorMessageResult);
+```
+
+> ⚠️ **El predicado es siempre síncrono.** No hay ninguna sobrecarga con `Func<T, Task<bool>>`. Si tu comprobación necesita ir a la base de datos o a un servicio, `MapEnsure` no es la herramienta: usa [`BindAsync`](../Bind/3_Bind.md) devolviendo el valor o el fallo.
+
+```csharp
+// ❌ No existe: MapEnsureAsync con predicado asíncrono
+.MapEnsureAsync(async n => await _repo.ExisteAsync(n), "No existe")
+
+// ✅ Con Bind, que sí admite operaciones asíncronas
+.BindAsync(async n => await _repo.ExisteAsync(n)
+                          ? n.ToMlResultValid()
+                          : $"El NIF {n} no está registrado".ToMlResultFail<string>());
+```
+
+---
+
+## ⚠️ No existe `TryMapEnsure`
+
+En la clase real **no hay variantes `Try*` de `MapEnsure`**. La razón de diseño es clara: un predicado de validación debe ser una expresión booleana pura y no debe lanzar. Si tu predicado puede lanzar, el problema está en el predicado.
+
+```csharp
+// ❌ Predicado que puede lanzar: la excepción escapa de la tubería
+.MapEnsure(p => int.Parse(p.Codigo) > 100, "Código demasiado bajo")
+
+// ✅ Convierte primero con TryMap, valida después
+.TryMap(p => p with { CodigoNumerico = int.Parse(p.Codigo) },
+        ex => $"El código no es numérico: {ex.Message}")
+.MapEnsure(p => p.CodigoNumerico > 100, "Código demasiado bajo")
+```
+
+> 💡 En el código fuente hay además un método `MapEquals` **comentado** (nunca se publicó). No lo busques: no forma parte de la API.
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Validaciones de Dominio Empresarial
+### Ejemplo 1: Validación completa de un alta de cliente
 
 ```csharp
-public class EmployeeValidationService
-{
-    public MlResult<Employee> ValidateEmployeeForPromotion(int employeeId)
-    {
-        return GetEmployee(employeeId)
-            .MapEnsure(emp => emp.IsActive, "Employee must be active for promotion")
-            .MapEnsure(emp => emp.YearsOfService >= 2, 
-                      emp => $"Employee {emp.Name} needs at least 2 years of service. Current: {emp.YearsOfService} years")
-            .MapEnsure(emp => emp.PerformanceRating >= 3.5m,
-                      emp => new MlErrorsDetails
-                      {
-                          ErrorMessage = $"Performance rating insufficient for promotion",
-                          ErrorCode = "INSUFFICIENT_PERFORMANCE",
-                          AdditionalInfo = new 
-                          { 
-                              EmployeeId = emp.Id,
-                              CurrentRating = emp.PerformanceRating,
-                              RequiredRating = 3.5m,
-                              Gap = 3.5m - emp.PerformanceRating
-                          }
-                      })
-            .MapEnsure(emp => !emp.HasDisciplinaryActions,
-                      "Employee cannot have pending disciplinary actions")
-            .MapEnsure(emp => emp.Department != null,
-                      "Employee must be assigned to a department");
-    }
-    
-    public MlResult<Employee> ValidateEmployeeForRemoteWork(int employeeId)
-    {
-        return GetEmployee(employeeId)
-            .MapEnsure(emp => emp.IsActive, "Only active employees can work remotely")
-            .MapEnsure(emp => emp.JobLevel >= JobLevel.Senior,
-                      emp => $"Remote work requires Senior level or above. Current level: {emp.JobLevel}")
-            .MapEnsure(emp => emp.HasRequiredEquipment,
-                      emp => $"Employee {emp.Name} lacks required equipment for remote work")
-            .MapEnsure(emp => emp.Manager != null,
-                      "Employee must have an assigned manager for remote work approval")
-            .MapEnsure(emp => emp.RemoteWorkCertification != null && emp.RemoteWorkCertification > DateTime.UtcNow.AddMonths(-12),
-                      emp => $"Remote work certification expired or missing. Last certification: {emp.RemoteWorkCertification?.ToString("dd/MM/yyyy") ?? "Never"}");
-    }
-    
-    public MlResult<Employee> ValidateEmployeeForSalaryIncrease(int employeeId, decimal proposedIncrease)
-    {
-        return GetEmployee(employeeId)
-            .MapEnsure(emp => emp.IsActive, "Employee must be active")
-            .MapEnsure(emp => emp.LastSalaryReview.AddMonths(6) <= DateTime.UtcNow,
-                      emp => $"Salary can only be reviewed every 6 months. Last review: {emp.LastSalaryReview:dd/MM/yyyy}")
-            .MapEnsure(emp => proposedIncrease <= emp.CurrentSalary * 0.25m,
-                      emp => new MlErrorsDetails
-                      {
-                          ErrorMessage = "Proposed increase exceeds maximum allowed",
-                          ErrorCode = "EXCESSIVE_INCREASE",
-                          AdditionalInfo = new
-                          {
-                              CurrentSalary = emp.CurrentSalary,
-                              ProposedIncrease = proposedIncrease,
-                              MaxAllowedIncrease = emp.CurrentSalary * 0.25m,
-                              IncreasePercentage = (proposedIncrease / emp.CurrentSalary) * 100
-                          }
-                      })
-            .MapEnsure(emp => emp.BudgetApproval != null,
-                      "Budget approval required for salary increases");
-    }
-    
-    private MlResult<Employee> GetEmployee(int employeeId)
-    {
-        if (employeeId <= 0)
-            return MlResult<Employee>.Fail("Invalid employee ID");
-            
-        var employee = GetMockEmployee(employeeId);
-        return employee != null
-            ? MlResult<Employee>.Valid(employee)
-            : MlResult<Employee>.Fail($"Employee with ID {employeeId} not found");
-    }
-    
-    private Employee GetMockEmployee(int id)
-    {
-        return new Employee
-        {
-            Id = id,
-            Name = "John Doe",
-            IsActive = true,
-            YearsOfService = 3,
-            PerformanceRating = 4.2m,
-            HasDisciplinaryActions = false,
-            Department = new Department { Name = "Engineering", Id = 1 },
-            JobLevel = JobLevel.Senior,
-            HasRequiredEquipment = true,
-            Manager = new Employee { Id = 100, Name = "Jane Manager" },
-            RemoteWorkCertification = DateTime.UtcNow.AddMonths(-6),
-            CurrentSalary = 75000,
-            LastSalaryReview = DateTime.UtcNow.AddMonths(-8),
-            BudgetApproval = new BudgetApproval { Id = 1, IsApproved = true }
-        };
-    }
-}
+public MlResult<Cliente> ValidarAlta(AltaClienteDto dto)
+    => EnsureFp.NotNull(dto, "La solicitud de alta es obligatoria")
 
-// Clases de apoyo
-public class Employee
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public bool IsActive { get; set; }
-    public int YearsOfService { get; set; }
-    public decimal PerformanceRating { get; set; }
-    public bool HasDisciplinaryActions { get; set; }
-    public Department Department { get; set; }
-    public JobLevel JobLevel { get; set; }
-    public bool HasRequiredEquipment { get; set; }
-    public Employee Manager { get; set; }
-    public DateTime? RemoteWorkCertification { get; set; }
-    public decimal CurrentSalary { get; set; }
-    public DateTime LastSalaryReview { get; set; }
-    public BudgetApproval BudgetApproval { get; set; }
-}
+        // Estructurales primero
+        .MapEnsure(d => !string.IsNullOrWhiteSpace(d.RazonSocial),
+                        "La razón social es obligatoria")
+        .MapEnsure(d => !string.IsNullOrWhiteSpace(d.Nif),
+                        "El NIF es obligatorio")
 
-public class Department
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-}
+        // Formato después, ya con la garantía de no-null
+        .MapEnsure(d => d.RazonSocial!.Length <= 120,
+                   d => $"La razón social no puede superar 120 caracteres (tiene {d.RazonSocial!.Length})")
+        .MapEnsure(d => d.Nif!.Length == 9,
+                   d => $"El NIF '{d.Nif}' no tiene 9 caracteres")
 
-public class BudgetApproval
-{
-    public int Id { get; set; }
-    public bool IsApproved { get; set; }
-}
+        // Reglas de negocio al final, con detalles enriquecidos
+        .MapEnsure(d => d.LimiteCredito >= 0,
+                   d => MlErrorsDetails.FromErrorMessageWithValue(
+                            $"El límite de crédito no puede ser negativo ({d.LimiteCredito:C})", d))
+        .MapEnsure(d => d.Email is null || d.Email.Contains('@'),
+                   d => $"El correo '{d.Email}' no tiene un formato válido")
 
-public enum JobLevel
-{
-    Junior = 1,
-    Mid = 2,
-    Senior = 3,
-    Lead = 4,
-    Principal = 5
-}
+        // Y solo entonces se proyecta
+        .Map(d => new Cliente(d.RazonSocial!, d.Nif!, d.LimiteCredito, d.Email));
 ```
 
-### Ejemplo 2: Validaciones de Datos y Rangos
+### Ejemplo 2: Validar el resultado de una operación externa
+
+`MapEnsure` es igual de útil **después** de una llamada, para comprobar que lo que has recibido es usable.
 
 ```csharp
-public class DataValidationService
-{
-    public MlResult<UserRegistration> ValidateUserRegistration(UserRegistrationRequest request)
-    {
-        return ValidateBasicRequest(request)
-            .MapEnsure(req => !string.IsNullOrWhiteSpace(req.Email), "Email is required")
-            .MapEnsure(req => IsValidEmailFormat(req.Email), 
-                      req => $"Invalid email format: '{req.Email}'")
-            .MapEnsure(req => req.Email.Length <= 254, 
-                      req => $"Email too long: {req.Email.Length} characters (max: 254)")
-            .MapEnsure(req => !string.IsNullOrWhiteSpace(req.Password), "Password is required")
-            .MapEnsure(req => req.Password.Length >= 8,
-                      req => $"Password too short: {req.Password.Length} characters (min: 8)")
-            .MapEnsure(req => req.Password.Length <= 128,
-                      req => $"Password too long: {req.Password.Length} characters (max: 128)")
-            .MapEnsure(req => HasUpperCase(req.Password), "Password must contain at least one uppercase letter")
-            .MapEnsure(req => HasLowerCase(req.Password), "Password must contain at least one lowercase letter")
-            .MapEnsure(req => HasDigit(req.Password), "Password must contain at least one digit")
-            .MapEnsure(req => HasSpecialChar(req.Password), "Password must contain at least one special character")
-            .MapEnsure(req => req.Age >= 13,
-                      req => new MlErrorsDetails
-                      {
-                          ErrorMessage = "User must be at least 13 years old",
-                          ErrorCode = "UNDERAGE_USER",
-                          AdditionalInfo = new { ProvidedAge = req.Age, MinimumAge = 13 }
-                      })
-            .MapEnsure(req => req.Age <= 120,
-                      req => $"Invalid age: {req.Age} (maximum: 120)")
-            .Map(req => new UserRegistration
-            {
-                Email = req.Email.ToLower(),
-                HashedPassword = HashPassword(req.Password),
-                Age = req.Age,
-                CreatedAt = DateTime.UtcNow
-            });
-    }
-    
-    public async Task<MlResult<BankTransfer>> ValidateBankTransferAsync(BankTransferRequest request)
-    {
-        return await ValidateTransferRequest(request)
-            .MapEnsureAsync(req => req.Amount > 0,
-                           req => $"Transfer amount must be positive. Provided: {req.Amount:C}")
-            .MapEnsureAsync(req => req.Amount <= 10000,
-                           req => new MlErrorsDetails
-                           {
-                               ErrorMessage = "Transfer amount exceeds daily limit",
-                               ErrorCode = "AMOUNT_LIMIT_EXCEEDED",
-                               AdditionalInfo = new
-                               {
-                                   RequestedAmount = req.Amount,
-                                   DailyLimit = 10000,
-                                   ExcessAmount = req.Amount - 10000
-                               }
-                           })
-            .MapEnsureAsync(async req => await IsAccountActiveAsync(req.FromAccountId),
-                           "Source account is not active")
-            .MapEnsureAsync(async req => await IsAccountActiveAsync(req.ToAccountId),
-                           "Destination account is not active")
-            .MapEnsureAsync(async req => await HasSufficientFundsAsync(req.FromAccountId, req.Amount),
-                           req => $"Insufficient funds. Required: {req.Amount:C}")
-            .MapEnsureAsync(async req => !await IsBlockedAccountAsync(req.FromAccountId),
-                           "Source account is blocked")
-            .MapEnsureAsync(async req => !await IsBlockedAccountAsync(req.ToAccountId),
-                           "Destination account is blocked")
-            .MapEnsureAsync(req => req.FromAccountId != req.ToAccountId,
-                           "Cannot transfer to the same account")
-            .MapAsync(req => new BankTransfer
-            {
-                Id = Guid.NewGuid(),
-                FromAccountId = req.FromAccountId,
-                ToAccountId = req.ToAccountId,
-                Amount = req.Amount,
-                Description = req.Description ?? "Bank transfer",
-                CreatedAt = DateTime.UtcNow,
-                Status = TransferStatus.Pending
-            });
-    }
-    
-    public MlResult<ProductPrice> ValidateProductPricing(ProductPricingRequest request)
-    {
-        return ValidatePricingRequest(request)
-            .MapEnsure(req => req.BasePrice > 0,
-                      req => $"Base price must be positive. Provided: {req.BasePrice:C}")
-            .MapEnsure(req => req.BasePrice <= 1000000,
-                      req => $"Base price too high: {req.BasePrice:C} (max: {1000000:C})")
-            .MapEnsure(req => req.DiscountPercentage >= 0,
-                      req => $"Discount cannot be negative: {req.DiscountPercentage}%")
-            .MapEnsure(req => req.DiscountPercentage <= 90,
-                      req => new MlErrorsDetails
-                      {
-                          ErrorMessage = "Discount percentage too high",
-                          ErrorCode = "EXCESSIVE_DISCOUNT",
-                          AdditionalInfo = new
-                          {
-                              RequestedDiscount = req.DiscountPercentage,
-                              MaxAllowedDiscount = 90,
-                              BasePrice = req.BasePrice,
-                              CalculatedPrice = req.BasePrice * (1 - req.DiscountPercentage / 100)
-                          }
-                      })
-            .MapEnsure(req => req.TaxRate >= 0,
-                      req => $"Tax rate cannot be negative: {req.TaxRate}%")
-            .MapEnsure(req => req.TaxRate <= 50,
-                      req => $"Tax rate too high: {req.TaxRate}% (max: 50%)")
-            .Map(req => new ProductPrice
-            {
-                BasePrice = req.BasePrice,
-                DiscountAmount = req.BasePrice * (req.DiscountPercentage / 100),
-                DiscountedPrice = req.BasePrice * (1 - req.DiscountPercentage / 100),
-                TaxAmount = req.BasePrice * (1 - req.DiscountPercentage / 100) * (req.TaxRate / 100),
-                FinalPrice = req.BasePrice * (1 - req.DiscountPercentage / 100) * (1 + req.TaxRate / 100),
-                Currency = req.Currency ?? "USD",
-                CalculatedAt = DateTime.UtcNow
-            });
-    }
-    
-    // Métodos auxiliares
-    private MlResult<UserRegistrationRequest> ValidateBasicRequest(UserRegistrationRequest request)
-    {
-        return request != null
-            ? MlResult<UserRegistrationRequest>.Valid(request)
-            : MlResult<UserRegistrationRequest>.Fail("Registration request cannot be null");
-    }
-    
-    private MlResult<BankTransferRequest> ValidateTransferRequest(BankTransferRequest request)
-    {
-        return request != null
-            ? MlResult<BankTransferRequest>.Valid(request)
-            : MlResult<BankTransferRequest>.Fail("Transfer request cannot be null");
-    }
-    
-    private MlResult<ProductPricingRequest> ValidatePricingRequest(ProductPricingRequest request)
-    {
-        return request != null
-            ? MlResult<ProductPricingRequest>.Valid(request)
-            : MlResult<ProductPricingRequest>.Fail("Pricing request cannot be null");
-    }
-    
-    private bool IsValidEmailFormat(string email)
-    {
-        try
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-    
-    private bool HasUpperCase(string str) => str.Any(char.IsUpper);
-    private bool HasLowerCase(string str) => str.Any(char.IsLower);
-    private bool HasDigit(string str) => str.Any(char.IsDigit);
-    private bool HasSpecialChar(string str) => str.Any(c => !char.IsLetterOrDigit(c));
-    
-    private string HashPassword(string password)
-    {
-        // Simulación de hash de contraseña
-        return $"hashed_{password.GetHashCode():X}";
-    }
-    
-    private async Task<bool> IsAccountActiveAsync(string accountId)
-    {
-        await Task.Delay(10); // Simulación de consulta asíncrona
-        return !string.IsNullOrEmpty(accountId) && accountId != "INACTIVE_ACCOUNT";
-    }
-    
-    private async Task<bool> HasSufficientFundsAsync(string accountId, decimal amount)
-    {
-        await Task.Delay(10);
-        // Simulación: cuenta tiene $5000
-        return amount <= 5000;
-    }
-    
-    private async Task<bool> IsBlockedAccountAsync(string accountId)
-    {
-        await Task.Delay(10);
-        return accountId == "BLOCKED_ACCOUNT";
-    }
-}
+public async Task<MlResult<Cotizacion>> ObtenerCotizacionAsync(string divisa)
+    => await _mercado.ConsultarAsync(divisa)                                  // Task<MlResult<Cotizacion>>
 
-// Clases de apoyo
-public class UserRegistrationRequest
-{
-    public string Email { get; set; }
-    public string Password { get; set; }
-    public int Age { get; set; }
-}
+        // El servicio respondió, pero ¿la respuesta sirve?
+        .MapEnsureAsync(c => c.Valor > 0,
+                        c => $"Cotización no válida para {divisa}: {c.Valor}")
 
-public class UserRegistration
-{
-    public string Email { get; set; }
-    public string HashedPassword { get; set; }
-    public int Age { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
+        .MapEnsureAsync(c => c.Fecha >= DateTime.UtcNow.AddMinutes(-15),
+                        c => $"Cotización obsoleta para {divisa} (fecha {c.Fecha:HH:mm:ss} UTC)")
 
-public class BankTransferRequest
-{
-    public string FromAccountId { get; set; }
-    public string ToAccountId { get; set; }
-    public decimal Amount { get; set; }
-    public string Description { get; set; }
-}
+        .MapEnsureAsync(c => c.Divisa.Equals(divisa, StringComparison.OrdinalIgnoreCase),
+                        c => $"El mercado devolvió la divisa {c.Divisa} en vez de {divisa}")
 
-public class BankTransfer
-{
-    public Guid Id { get; set; }
-    public string FromAccountId { get; set; }
-    public string ToAccountId { get; set; }
-    public decimal Amount { get; set; }
-    public string Description { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public TransferStatus Status { get; set; }
-}
-
-public class ProductPricingRequest
-{
-    public decimal BasePrice { get; set; }
-    public decimal DiscountPercentage { get; set; }
-    public decimal TaxRate { get; set; }
-    public string Currency { get; set; }
-}
-
-public class ProductPrice
-{
-    public decimal BasePrice { get; set; }
-    public decimal DiscountAmount { get; set; }
-    public decimal DiscountedPrice { get; set; }
-    public decimal TaxAmount { get; set; }
-    public decimal FinalPrice { get; set; }
-    public string Currency { get; set; }
-    public DateTime CalculatedAt { get; set; }
-}
-
-public enum TransferStatus
-{
-    Pending,
-    Approved,
-    Rejected,
-    Completed
-}
+        .AddMlErrorDetailIfFailAsync("[Mercado] La cotización recibida no es utilizable");
 ```
 
-### Ejemplo 3: Validaciones de Configuración y Límites
+Este uso —validar la **salida**, no solo la entrada— es una de las mejores defensas contra integraciones poco fiables.
+
+### Ejemplo 3: Errores reutilizables en un catálogo
+
+Cuando las mismas reglas se validan en varios sitios, centraliza los errores con la sobrecarga de `MlErrorsDetails`.
 
 ```csharp
-public class SystemConfigurationService
+public static class ErroresFactura
 {
-    public MlResult<DatabaseConfig> ValidateDatabaseConfiguration(DatabaseConfigRequest request)
-    {
-        return ValidateConfigRequest(request)
-            .MapEnsure(cfg => !string.IsNullOrWhiteSpace(cfg.ConnectionString),
-                      "Database connection string is required")
-            .MapEnsure(cfg => cfg.ConnectionTimeout > 0,
-                      cfg => $"Connection timeout must be positive: {cfg.ConnectionTimeout} seconds")
-            .MapEnsure(cfg => cfg.ConnectionTimeout <= 300,
-                      cfg => $"Connection timeout too high: {cfg.ConnectionTimeout}s (max: 300s)")
-            .MapEnsure(cfg => cfg.MaxPoolSize > 0,
-                      "Connection pool size must be positive")
-            .MapEnsure(cfg => cfg.MaxPoolSize <= 1000,
-                      cfg => new MlErrorsDetails
-                      {
-                          ErrorMessage = "Connection pool size exceeds recommended maximum",
-                          ErrorCode = "POOL_SIZE_TOO_HIGH",
-                          AdditionalInfo = new
-                          {
-                              RequestedSize = cfg.MaxPoolSize,
-                              RecommendedMax = 1000,
-                              PerformanceImpact = "High pool sizes may impact memory usage"
-                          }
-                      })
-            .MapEnsure(cfg => cfg.CommandTimeout >= cfg.ConnectionTimeout,
-                      cfg => $"Command timeout ({cfg.CommandTimeout}s) should be >= connection timeout ({cfg.ConnectionTimeout}s)")
-            .MapEnsure(cfg => IsValidConnectionString(cfg.ConnectionString),
-                      "Invalid connection string format")
-            .Map(cfg => new DatabaseConfig
-            {
-                ConnectionString = cfg.ConnectionString,
-                ConnectionTimeout = cfg.ConnectionTimeout,
-                CommandTimeout = cfg.CommandTimeout,
-                MaxPoolSize = cfg.MaxPoolSize,
-                EnableRetry = cfg.EnableRetry,
-                CreatedAt = DateTime.UtcNow
-            });
-    }
-    
-    public MlResult<CacheConfig> ValidateCacheConfiguration(CacheConfigRequest request)
-    {
-        return ValidateCacheRequest(request)
-            .MapEnsure(cfg => cfg.MaxMemoryMB > 0,
-                      cfg => $"Cache memory must be positive: {cfg.MaxMemoryMB} MB")
-            .MapEnsure(cfg => cfg.MaxMemoryMB <= 16384,
-                      cfg => $"Cache memory too high: {cfg.MaxMemoryMB} MB (max: 16 GB)")
-            .MapEnsure(cfg => cfg.DefaultExpirationMinutes > 0,
-                      "Default expiration must be positive")
-            .MapEnsure(cfg => cfg.DefaultExpirationMinutes <= 43200,
-                      cfg => $"Default expiration too long: {cfg.DefaultExpirationMinutes} minutes (max: 30 days)")
-            .MapEnsure(cfg => cfg.MaxItemSize > 0,
-                      "Maximum item size must be positive")
-            .MapEnsure(cfg => cfg.MaxItemSize <= cfg.MaxMemoryMB * 1024 * 1024 / 10,
-                      cfg => new MlErrorsDetails
-                      {
-                          ErrorMessage = "Maximum item size too large for cache memory",
-                          ErrorCode = "ITEM_SIZE_TOO_LARGE",
-                          AdditionalInfo = new
-                          {
-                              MaxItemSize = cfg.MaxItemSize,
-                              CacheMemory = cfg.MaxMemoryMB * 1024 * 1024,
-                              RecommendedMaxItemSize = cfg.MaxMemoryMB * 1024 * 1024 / 10,
-                              Reason = "Item size should not exceed 10% of total cache memory"
-                          }
-                      })
-            .MapEnsure(cfg => cfg.CleanupIntervalMinutes > 0,
-                      "Cleanup interval must be positive")
-            .MapEnsure(cfg => cfg.CleanupIntervalMinutes <= cfg.DefaultExpirationMinutes / 2,
-                      cfg => $"Cleanup interval ({cfg.CleanupIntervalMinutes}m) should be <= half of default expiration ({cfg.DefaultExpirationMinutes / 2}m)")
-            .Map(cfg => new CacheConfig
-            {
-                MaxMemoryMB = cfg.MaxMemoryMB,
-                DefaultExpirationMinutes = cfg.DefaultExpirationMinutes,
-                MaxItemSize = cfg.MaxItemSize,
-                CleanupIntervalMinutes = cfg.CleanupIntervalMinutes,
-                EnableCompression = cfg.EnableCompression,
-                EnableStatistics = cfg.EnableStatistics,
-                ConfiguredAt = DateTime.UtcNow
-            });
-    }
-    
-    public MlResult<ApiLimitsConfig> ValidateApiLimitsConfiguration(ApiLimitsConfigRequest request)
-    {
-        return ValidateApiLimitsRequest(request)
-            .MapEnsure(cfg => cfg.RequestsPerMinute > 0,
-                      "Requests per minute must be positive")
-            .MapEnsure(cfg => cfg.RequestsPerMinute <= 10000,
-                      cfg => $"Requests per minute too high: {cfg.RequestsPerMinute} (max: 10,000)")
-            .MapEnsure(cfg => cfg.RequestsPerHour >= cfg.RequestsPerMinute,
-                      cfg => $"Hourly limit ({cfg.RequestsPerHour}) must be >= minute limit ({cfg.RequestsPerMinute})")
-            .MapEnsure(cfg => cfg.RequestsPerDay >= cfg.RequestsPerHour,
-                      cfg => $"Daily limit ({cfg.RequestsPerDay}) must be >= hourly limit ({cfg.RequestsPerHour})")
-            .MapEnsure(cfg => cfg.MaxRequestSizeMB > 0,
-                      "Maximum request size must be positive")
-            .MapEnsure(cfg => cfg.MaxRequestSizeMB <= 100,
-                      cfg => new MlErrorsDetails
-                      {
-                          ErrorMessage = "Maximum request size exceeds recommended limit",
-                          ErrorCode = "REQUEST_SIZE_TOO_LARGE",
-                          AdditionalInfo = new
-                          {
-                              RequestedSize = cfg.MaxRequestSizeMB,
-                              RecommendedMax = 100,
-                              SecurityConcern = "Large request sizes may impact server performance"
-                          }
-                      })
-            .MapEnsure(cfg => cfg.MaxConcurrentRequests > 0,
-                      "Maximum concurrent requests must be positive")
-            .MapEnsure(cfg => cfg.MaxConcurrentRequests <= 1000,
-                      cfg => $"Maximum concurrent requests too high: {cfg.MaxConcurrentRequests} (max: 1,000)")
-            .MapEnsure(cfg => IsValidTimeWindow(cfg.ThrottleWindowMinutes),
-                      cfg => $"Invalid throttle window: {cfg.ThrottleWindowMinutes} minutes")
-            .Map(cfg => new ApiLimitsConfig
-            {
-                RequestsPerMinute = cfg.RequestsPerMinute,
-                RequestsPerHour = cfg.RequestsPerHour,
-                RequestsPerDay = cfg.RequestsPerDay,
-                MaxRequestSizeMB = cfg.MaxRequestSizeMB,
-                MaxConcurrentRequests = cfg.MaxConcurrentRequests,
-                ThrottleWindowMinutes = cfg.ThrottleWindowMinutes,
-                EnableThrottling = cfg.EnableThrottling,
-                ConfiguredAt = DateTime.UtcNow
-            });
-    }
-    
-    // Métodos auxiliares
-    private MlResult<DatabaseConfigRequest> ValidateConfigRequest(DatabaseConfigRequest request)
-    {
-        return request != null
-            ? MlResult<DatabaseConfigRequest>.Valid(request)
-            : MlResult<DatabaseConfigRequest>.Fail("Database configuration request cannot be null");
-    }
-    
-    private MlResult<CacheConfigRequest> ValidateCacheRequest(CacheConfigRequest request)
-    {
-        return request != null
-            ? MlResult<CacheConfigRequest>.Valid(request)
-            : MlResult<CacheConfigRequest>.Fail("Cache configuration request cannot be null");
-    }
-    
-    private MlResult<ApiLimitsConfigRequest> ValidateApiLimitsRequest(ApiLimitsConfigRequest request)
-    {
-        return request != null
-            ? MlResult<ApiLimitsConfigRequest>.Valid(request)
-            : MlResult<ApiLimitsConfigRequest>.Fail("API limits configuration request cannot be null");
-    }
-    
-    private bool IsValidConnectionString(string connectionString)
-    {
-        try
-        {
-            var builder = new System.Data.Common.DbConnectionStringBuilder
-            {
-                ConnectionString = connectionString
-            };
-            return builder.ContainsKey("server") || builder.ContainsKey("data source");
-        }
-        catch
-        {
-            return false;
-        }
-    }
-    
-    private bool IsValidTimeWindow(int windowMinutes)
-    {
-        var validWindows = new[] { 1, 5, 10, 15, 30, 60 };
-        return validWindows.Contains(windowMinutes);
-    }
+    public static readonly MlErrorsDetails SinLineas =
+        MlErrorsDetails.FromErrorMessage("La factura debe tener al menos una línea");
+
+    public static readonly MlErrorsDetails YaContabilizada =
+        MlErrorsDetails.FromErrorMessage("La factura ya está contabilizada y no admite cambios");
+
+    public static MlErrorsDetails DescuadreDe(Factura f)
+        => new[] { $"La factura {f.Numero} está descuadrada",
+                   $"Base + IVA: {f.Base + f.Iva:C}",
+                   $"Total declarado: {f.Total:C}" }.ToMlErrorsDetails();
 }
 
-// Clases de apoyo
-public class DatabaseConfigRequest
-{
-    public string ConnectionString { get; set; }
-    public int ConnectionTimeout { get; set; }
-    public int CommandTimeout { get; set; }
-    public int MaxPoolSize { get; set; }
-    public bool EnableRetry { get; set; }
-}
-
-public class DatabaseConfig
-{
-    public string ConnectionString { get; set; }
-    public int ConnectionTimeout { get; set; }
-    public int CommandTimeout { get; set; }
-    public int MaxPoolSize { get; set; }
-    public bool EnableRetry { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public class CacheConfigRequest
-{
-    public int MaxMemoryMB { get; set; }
-    public int DefaultExpirationMinutes { get; set; }
-    public int MaxItemSize { get; set; }
-    public int CleanupIntervalMinutes { get; set; }
-    public bool EnableCompression { get; set; }
-    public bool EnableStatistics { get; set; }
-}
-
-public class CacheConfig
-{
-    public int MaxMemoryMB { get; set; }
-    public int DefaultExpirationMinutes { get; set; }
-    public int MaxItemSize { get; set; }
-    public int CleanupIntervalMinutes { get; set; }
-    public bool EnableCompression { get; set; }
-    public bool EnableStatistics { get; set; }
-    public DateTime ConfiguredAt { get; set; }
-}
-
-public class ApiLimitsConfigRequest
-{
-    public int RequestsPerMinute { get; set; }
-    public int RequestsPerHour { get; set; }
-    public int RequestsPerDay { get; set; }
-    public int MaxRequestSizeMB { get; set; }
-    public int MaxConcurrentRequests { get; set; }
-    public int ThrottleWindowMinutes { get; set; }
-    public bool EnableThrottling { get; set; }
-}
-
-public class ApiLimitsConfig
-{
-    public int RequestsPerMinute { get; set; }
-    public int RequestsPerHour { get; set; }
-    public int RequestsPerDay { get; set; }
-    public int MaxRequestSizeMB { get; set; }
-    public int MaxConcurrentRequests { get; set; }
-    public int ThrottleWindowMinutes { get; set; }
-    public bool EnableThrottling { get; set; }
-    public DateTime ConfiguredAt { get; set; }
-}
+public MlResult<Factura> ValidarParaContabilizar(Factura f)
+    => f.ToMlResultValid()
+        .MapEnsure(x => x.Lineas.Any(),                    ErroresFactura.SinLineas)
+        .MapEnsure(x => !x.Contabilizada,                  ErroresFactura.YaContabilizada)
+        .MapEnsure(x => x.Base + x.Iva == x.Total,         ErroresFactura.DescuadreDe);
 ```
 
----
-
-## Comparación con Otros Patrones
-
-### MapEnsure vs Map
+### Ejemplo 4: En un controlador, traduciendo el fallo a HTTP
 
 ```csharp
-// Map: Transformación de valor
-var transformed = GetNumber()
-    .Map(n => n * 2);  // Siempre retorna int transformado
+[HttpPost("pedidos/{id:int}/confirmar")]
+public async Task<IActionResult> ConfirmarAsync(int id)
+    => await EnsureFp.That(id, id > 0, "El identificador debe ser positivo")
 
-// MapEnsure: Validación con preservación
-var validated = GetNumber()
-    .MapEnsure(n => n > 0, "Number must be positive");  // Retorna el mismo int o error
-```
+        .BindAsync(pedidoId => _repo.ObtenerAsync(pedidoId))
 
-### MapEnsure vs Bind
+        .MapEnsureAsync(p => p.Estado == EstadoPedido.Borrador,
+                        p => $"Solo se confirman pedidos en borrador (estado actual: {p.Estado})")
+        .MapEnsureAsync(p => p.Lineas.Any(),
+                             "No se puede confirmar un pedido sin líneas")
+        .MapEnsureAsync(p => p.Lineas.All(l => l.Cantidad > 0),
+                        p => $"El pedido tiene {p.Lineas.Count(l => l.Cantidad <= 0)} línea(s) con cantidad no válida")
 
-```csharp
-// Bind: Encadenamiento de operaciones que pueden fallar
-var processed = GetData()
-    .Bind(data => ValidateAndProcess(data));  // ValidateAndProcess retorna MlResult<T>
+        .BindAsync(p => _servicio.ConfirmarAsync(p))
 
-// MapEnsure: Validación simple con error directo
-var validated = GetData()
-    .MapEnsure(data => data.IsValid, "Data is not valid");  // Retorna mismo tipo o error
-```
-
-### MapEnsure vs Match
-
-```csharp
-// Match: Manejo explícito de ambos casos
-var result = GetValue()
-    .Match(
-        fail: errors => HandleError(errors),
-        valid: value => value > 0 ? ProcessValue(value) : HandleInvalidValue(value)
-    );
-
-// MapEnsure: Validación funcional más concisa
-var validated = GetValue()
-    .MapEnsure(value => value > 0, "Value must be positive")
-    .Map(validValue => ProcessValue(validValue));
+        .MatchAsync(
+            valid: confirmado => Ok(new { confirmado.Numero, confirmado.FechaConfirmacion }),
+            fail : errores    => errores.GetDetailException()
+                                        .Match(
+                                            valid: _ => StatusCode(500, new { error = "Error interno" }),
+                                            fail : _ => BadRequest(new { errores = errores.ToErrorsMessages() })));
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Ordenamiento de Validaciones
+1. **Un `MapEnsure` por regla.** Es la clave para que el mensaje de error identifique exactamente qué ha fallado. Evita predicados con `&&` encadenados.
 
 ```csharp
-// ✅ Correcto: Validaciones de más básica a más específica
-var result = GetUser()
-    .MapEnsure(user => user != null, "User cannot be null")  // Existencia
-    .MapEnsure(user => user.IsActive, "User must be active")  // Estado básico
-    .MapEnsure(user => user.Email != null, "Email is required")  // Propiedades requeridas
-    .MapEnsure(user => IsValidEmail(user.Email), "Invalid email format")  // Formato
-    .MapEnsure(user => user.Age >= 18, "User must be 18 or older")  // Reglas de negocio
-    .MapEnsure(user => HasPermission(user), "Insufficient permissions");  // Autorización
+// ❌ Un solo error para tres reglas distintas
+.MapEnsure(p => p.Total > 0 && p.Lineas.Any() && p.Cliente is not null, "Pedido no válido")
 
-// ❌ Incorrecto: Orden aleatorio puede causar errores confusos
-var badResult = GetUser()
-    .MapEnsure(user => HasPermission(user), "Insufficient permissions")  // Puede fallar si user es null
-    .MapEnsure(user => user != null, "User cannot be null");
+// ✅ Cada regla con su mensaje
+.MapEnsure(p => p.Total > 0,        "El importe debe ser positivo")
+.MapEnsure(p => p.Lineas.Any(),     "El pedido no tiene líneas")
+.MapEnsure(p => p.Cliente is not null, "El pedido no tiene cliente")
 ```
 
-### 2. Mensajes de Error Descriptivos
+2. **Ordena de lo estructural a lo semántico.** Comprueba primero que existe, después su formato y por último las reglas de negocio. El cortocircuito hace que las últimas puedan asumir lo anterior.
 
-```csharp
-// ✅ Correcto: Mensajes específicos con contexto
-var result = GetTransaction()
-    .MapEnsure(tx => tx.Amount > 0, 
-              tx => $"Transaction amount must be positive. Provided: {tx.Amount:C}")
-    .MapEnsure(tx => tx.Amount <= GetDailyLimit(tx.AccountId),
-              tx => new MlErrorsDetails
-              {
-                  ErrorMessage = "Transaction exceeds daily limit",
-                  ErrorCode = "DAILY_LIMIT_EXCEEDED",
-                  AdditionalInfo = new
-                  {
-                      RequestedAmount = tx.Amount,
-                      DailyLimit = GetDailyLimit(tx.AccountId),
-                      AccountId = tx.AccountId
-                  }
-              });
+3. **Usa `Func<T, string>` cuando el dato ayude a diagnosticar.** «El NIF no es válido» dice mucho menos que «El NIF 'A1234' tiene 5 caracteres, se esperaban 9».
 
-// ❌ Incorrecto: Mensajes genéricos
-var badResult = GetTransaction()
-    .MapEnsure(tx => tx.Amount > 0, "Invalid amount")
-    .MapEnsure(tx => tx.Amount <= GetDailyLimit(tx.AccountId), "Limit exceeded");
-```
+4. **Mantén el predicado puro, síncrono y sin excepciones.** No hay `TryMapEnsure` ni predicados asíncronos por diseño.
 
-### 3. Agrupación Lógica de Validaciones
+5. **Valida también las respuestas ajenas.** `MapEnsure` después de una llamada externa te protege de datos incoherentes.
 
-```csharp
-// ✅ Correcto: Agrupar validaciones relacionadas
-public MlResult<Order> ValidateOrder(OrderRequest request)
-{
-    return ValidateBasicOrderInfo(request)
-        .Bind(order => ValidateOrderItems(order))
-        .Bind(order => ValidateOrderLimits(order))
-        .Bind(order => ValidateOrderPermissions(order));
-}
+6. **Si necesitas todos los errores, no uses `MapEnsure`.** Cambia a [`BindMulti`](../Bind/4_BindMulti.md), que acumula.
 
-private MlResult<OrderRequest> ValidateBasicOrderInfo(OrderRequest request)
-{
-    return request.ToMlResult()
-        .MapEnsure(req => req != null, "Order request cannot be null")
-        .MapEnsure(req => req.CustomerId > 0, "Valid customer ID required")
-        .MapEnsure(req => !string.IsNullOrWhiteSpace(req.OrderNumber), "Order number required");
-}
+7. **Centraliza los errores repetidos** en un catálogo estático con la sobrecarga de `MlErrorsDetails`.
 
-private MlResult<OrderRequest> ValidateOrderItems(OrderRequest request)
-{
-    return request.ToMlResult()
-        .MapEnsure(req => req.Items?.Any() == true, "Order must contain at least one item")
-        .MapEnsure(req => req.Items.All(i => i.Quantity > 0), "All items must have positive quantity")
-        .MapEnsure(req => req.Items.All(i => i.Price > 0), "All items must have positive price");
-}
-
-// ❌ Incorrecto: Todas las validaciones mezcladas
-public MlResult<Order> ValidateOrderBad(OrderRequest request)
-{
-    return request.ToMlResult()
-        .MapEnsure(req => req != null, "Order request cannot be null")
-        .MapEnsure(req => req.Items?.Any() == true, "Order must contain at least one item")
-        .MapEnsure(req => req.CustomerId > 0, "Valid customer ID required")
-        .MapEnsure(req => req.Items.All(i => i.Quantity > 0), "All items must have positive quantity")
-        .MapEnsure(req => !string.IsNullOrWhiteSpace(req.OrderNumber), "Order number required");
-        // ... mezclando diferentes tipos de validaciones
-}
-```
-
-### 4. Uso de Constructores de Error Dinámicos
-
-```csharp
-// ✅ Correcto: Constructor de error con información útil
-var result = GetFileUpload()
-    .MapEnsure(file => file.Size <= MaxFileSize,
-              file => new MlErrorsDetails
-              {
-                  ErrorMessage = $"File size exceeds maximum allowed",
-                  ErrorCode = "FILE_TOO_LARGE",
-                  AdditionalInfo = new
-                  {
-                      FileName = file.Name,
-                      FileSize = file.Size,
-                      FileSizeFormatted = FormatFileSize(file.Size),
-                      MaxAllowedSize = MaxFileSize,
-                      MaxAllowedFormatted = FormatFileSize(MaxFileSize),
-                      ExcessSize = file.Size - MaxFileSize
-                  }
-              });
-
-// ✅ Correcto: Constructor de mensaje basado en valor
-var priceResult = GetProduct()
-    .MapEnsure(product => product.Price >= MinPrice,
-              product => $"Product '{product.Name}' price ({product.Price:C}) below minimum ({MinPrice:C})");
-
-// ❌ Incorrecto: Error estático cuando se necesita información dinámica
-var badResult = GetFileUpload()
-    .MapEnsure(file => file.Size <= MaxFileSize, "File too large");
-```
-
-### 5. Manejo de Operaciones Asíncronas
-
-```csharp
-// ✅ Correcto: Validaciones asíncronas apropiadas
-public async Task<MlResult<User>> ValidateUserAsync(UserRequest request)
-{
-    return await request.ToMlResult()
-        .MapEnsureAsync(req => req.Email != null, "Email required")
-        .MapEnsureAsync(async req => !await IsEmailTakenAsync(req.Email),
-                       req => $"Email '{req.Email}' is already registered")
-        .MapEnsureAsync(async req => await IsValidDomainAsync(GetEmailDomain(req.Email)),
-                       req => $"Email domain '{GetEmailDomain(req.Email)}' is not allowed")
-        .MapAsync(req => new User { Email = req.Email, CreatedAt = DateTime.UtcNow });
-}
-
-// ✅ Correcto: Combinar validaciones síncronas y asíncronas eficientemente
-public async Task<MlResult<Account>> ValidateAccountAsync(AccountRequest request)
-{
-    // Validaciones síncronas primero
-    var syncValidation = request.ToMlResult()
-        .MapEnsure(req => req != null, "Account request required")
-        .MapEnsure(req => req.Balance >= 0, "Initial balance cannot be negative")
-        .MapEnsure(req => !string.IsNullOrWhiteSpace(req.AccountNumber), "Account number required");
-    
-    // Luego validaciones asíncronas
-    return await syncValidation
-        .MapEnsureAsync(async req => !await AccountExistsAsync(req.AccountNumber),
-                       req => $"Account number '{req.AccountNumber}' already exists")
-        .MapEnsureAsync(async req => await IsValidBankCodeAsync(req.BankCode),
-                       req => $"Invalid bank code: '{req.BankCode}'");
-}
-
-// ❌ Incorrecto: Mezclar innecesariamente validaciones síncronas con asíncronas
-public async Task<MlResult<User>> ValidateUserBadAsync(UserRequest request)
-{
-    return await request.ToMlResult()
-        .MapEnsureAsync(req => req.Email != null, "Email required")  // Innecesariamente async
-        .MapEnsureAsync(async req => !await IsEmailTakenAsync(req.Email), "Email taken")
-        .MapEnsureAsync(req => req.Age >= 18, "Must be 18+");  // Innecesariamente async
-}
-```
-
-### 6. Optimización de Rendimiento
-
-```csharp
-// ✅ Correcto: Validaciones rápidas primero para cortocircuito temprano
-var result = GetData()
-    .MapEnsure(data => data != null, "Data required")  // Validación muy rápida
-    .MapEnsure(data => data.Count > 0, "Data cannot be empty")  // Validación rápida
-    .MapEnsure(data => data.Count <= 1000, "Too many items")  // Validación rápida
-    .MapEnsure(data => data.All(item => item.IsValid), "All items must be valid")  // Validación más costosa
-    .MapEnsure(data => IsComplexValidationPassed(data), "Complex validation failed");  // Validación más costosa
-
-// ✅ Correcto: Cachear valores costosos de calcular
-var expensiveValue = CalculateExpensiveValue(data);
-var result = GetData()
-    .MapEnsure(data => expensiveValue > threshold,
-              data => $"Calculated value {expensiveValue} below threshold {threshold}");
-
-// ❌ Incorrecto: Calcular valores costosos múltiples veces
-var badResult = GetData()
-    .MapEnsure(data => CalculateExpensiveValue(data) > threshold, "Below threshold")
-    .MapEnsure(data => CalculateExpensiveValue(data) < maxValue, "Above maximum");  // Recalcula innecesariamente
-```
-
----
-
-## Consideraciones de Rendimiento
-
-### Cortocircuito de Validaciones
-
-- **Evaluación Lazy**: Si el resultado inicial es fallido, ninguna validación se ejecuta
-- **Orden Estratégico**: Colocar validaciones rápidas y más propensas a fallar primero
-- **Caching**: Cachear resultados de validaciones costosas cuando sea apropiado
-
-### Manejo de Memoria
-
-- **Constructor de Errores**: Los constructores de errores solo se ejecutan cuando la validación falla
-- **Información Adicional**: Incluir información de debug solo cuando sea necesario
-- **String Formatting**: Usar constructores de mensaje para evitar formateo innecesario
-
-### Operaciones Asíncronas
-
-- **Separación de Concerns**: Validaciones síncronas primero, luego asíncronas
-- **Batch Validation**: Para múltiples validaciones asíncronas independientes, considerar `Task.WhenAll`
-- **Timeout Handling**: Considerar timeouts para validaciones que involucran servicios externos
+8. **No confundas validar con bifurcar.** Si el «fallo» es en realidad un camino alternativo legítimo, lo que quieres es [`BindIf`](../Bind/5_BindIf.md).
 
 ---
 
 ## Resumen
 
-La clase `MlResultActionsMapEnsure` proporciona validaciones condicionales funcionales:
+- `MapEnsure` valida el valor **sin transformarlo**: la firma es `MlResult<T> → MlResult<T>`.
+- Si el predicado se cumple, el valor pasa intacto; si no, se convierte en el fallo que tú construyas.
+- Si el resultado **ya venía fallido**, el predicado **no se evalúa**.
+- Hay **4 sobrecargas síncronas** (`MlErrorsDetails`, `Func<T, MlErrorsDetails>`, `string`, `Func<T, string>`) y **8 asíncronas** (las 4 × 2 tipos de origen).
+- El método base es el que recibe `Func<T, MlErrorsDetails>`; los demás delegan en él.
+- El encadenamiento es de **cortocircuito**: devuelve el primer error. Para acumular, usa [`BindMulti`](../Bind/4_BindMulti.md).
+- **No existe `TryMapEnsure`** ni predicados asíncronos: el predicado debe ser puro y síncrono.
+- En el fuente hay un `MapEquals` comentado que **no forma parte de la API**.
 
-- **`MapEnsure`**: Validación que preserva el tipo y convierte a error si la condición falla
-- **`MapEnsureAsync`**: Soporte completo para validaciones asíncronas
-- **Constructores de Error Flexibles**: Desde mensajes simples hasta `MlErrorsDetails` complejos
-- **Preservación de Tipo**: El tipo `T` permanece inalterado, solo cambia el estado de éxito/fallo
+---
 
-Estas operaciones son ideales para:
+## Ver también
 
-- **Validaciones de Dominio**: Reglas de negocio complejas
-- **Guard Clauses Funcionales**: Precondiciones en pipelines funcionales
-- **Filtrado con Error**: Similar a `Where` pero generando errores descriptivos
-- **Validaciones en Cadena**: Múltiples verificaciones ordenadas lógicamente
-
-La diferencia clave con otros patrones es que `MapEnsure` actúa como un **filtro con error**, manteniendo el valor original si pasa la validación o convirtiéndolo en error con información detallada si falla.
+- [`1_Map.md`](1_Map.md) — transformar el valor.
+- [`3_MapIf.md`](3_MapIf.md) — transformar solo si se cumple una condición.
+- [`4_MapIfFail.md`](4_MapIfFail.md) — recuperarse de un fallo.
+- [`../Bind/5_BindIf.md`](../Bind/5_BindIf.md) — bifurcar según una condición.
+- [`../Bind/4_BindMulti.md`](../Bind/4_BindMulti.md) — acumular todos los errores de validación.
+- [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — entrar en el mundo `MlResult` validando.
+- [`../Types/MlResultErrors.md`](../Types/MlResultErrors.md) — construir `MlErrorsDetails` con detalles.
+- [`../Types/MlResultActionsMap.md`](../Types/MlResultActionsMap.md) — inventario completo de la clase.

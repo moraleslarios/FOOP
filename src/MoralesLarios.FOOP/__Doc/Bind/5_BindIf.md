@@ -1,1015 +1,371 @@
-﻿# MlResultActionsBind - Operaciones de Binding Condicional
+﻿# BindIf — Bifurcar el flujo según una condición
 
 ## Índice
 1. [Introducción](#introducción)
-2. [Análisis de la Funcionalidad](#análisis-de-la-funcionalidad)
-3. [Variantes de BindIf](#variantes-de-bindif)
-4. [Variantes de TryBindIf](#variantes-de-trybindif)
-5. [Patrones de Uso](#patrones-de-uso)
-6. [Ejemplos Prácticos](#ejemplos-prácticos)
-7. [Mejores Prácticas](#mejores-prácticas)
+2. [Las dos formas de `BindIf`](#las-dos-formas-de-bindif)
+3. [Firmas reales](#firmas-reales)
+4. [Variantes asíncronas](#variantes-asíncronas)
+5. [`TryBindIf` — cuando la rama puede lanzar](#trybindif--cuando-la-rama-puede-lanzar)
+6. [`BindIf` frente a otras alternativas](#bindif-frente-a-otras-alternativas)
+7. [Ejemplos Prácticos](#ejemplos-prácticos)
+8. [Mejores Prácticas](#mejores-prácticas)
+9. [Resumen](#resumen)
+10. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-La sección **BindIf** de `MlResultActionsBind` proporciona operaciones de binding condicional que permiten ejecutar diferentes funciones basándose en una condición evaluada sobre el valor exitoso. Estas operaciones implementan patrones de **ramificación controlada** en pipelines funcionales, permitiendo crear flujos de procesamiento que se adaptan dinámicamente a las características de los datos.
+En medio de una tubería suele aparecer una bifurcación: *si el cliente es VIP aplica una tarifa, si no,
+otra*. Escribirlo con `Bind` y un `if` dentro rompe la lectura de la cadena:
 
-### Propósito Principal
+```csharp
+// ❌ El if dentro del lambda ensucia la tubería.
+var resultado = ObtenerCliente(id)
+    .Bind(c =>
+    {
+        if (c.EsVip) return AplicarTarifaVip(c);
+        return AplicarTarifaEstandar(c);
+    })
+    .Bind(c => Facturar(c));
 
-- **Ramificación Condicional**: Ejecutar diferentes funciones según una condición
-- **Flujos Adaptativos**: Crear pipelines que se adaptan a las características de los datos
-- **Procesamiento Contextual**: Aplicar lógica diferente según el contexto del valor
-- **Optimización Selectiva**: Ejecutar procesamientos costosos solo cuando sea necesario
+// ✅ BindIf expresa la bifurcación como un eslabón más.
+var resultado = ObtenerCliente(id)
+    .BindIf(c => c.EsVip,
+            funcTrue : c => AplicarTarifaVip(c),
+            funcFalse: c => AplicarTarifaEstandar(c))
+    .Bind(c => Facturar(c));
+```
+
+`BindIf` **no evalúa la condición si el resultado ya venía fallido**: como todos los `Bind`, el fallo
+cortocircuita y se propaga intacto.
+
+> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
+> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
+> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
 
 ---
 
-## Análisis de la Funcionalidad
+## Las dos formas de `BindIf`
 
-### Filosofía de BindIf
+La región `BindIf` del código fuente contiene **dos firmas distintas** que se llaman igual. Distinguirlas
+es la clave para usar la familia bien.
 
-```
-Valor Exitoso → Evaluar Condición → ¿Verdadera?
-                                    ├─ Sí → Función A
-                                    └─ No → Función B
-                                           ↓
-                                    Resultado Final
-```
+| Forma | Firma | Qué hace si la condición es `false` |
+| --- | --- | --- |
+| **A — Bifurcación completa** | `BindIf<T, TReturn>(condition, funcTrue, funcFalse)` | Ejecuta `funcFalse` |
+| **B — Paso opcional** | `BindIf<T>(condition, func)` | **No hace nada**: devuelve el valor tal cual |
 
-### Comportamiento Base
-
-1. **Si el resultado fuente es fallido**: Propaga el error inmediatamente
-2. **Si el resultado fuente es exitoso**: Evalúa la condición sobre el valor
-3. **Si la condición es verdadera**: Ejecuta `funcTrue`
-4. **Si la condición es falsa**: Ejecuta `funcFalse`
-
-### Tipos de Operaciones
-
-1. **BindIf con Dos Funciones**: Ramificación completa con función para cada rama
-2. **BindIf con Una Función**: Procesamiento condicional (solo ejecuta si condición es verdadera)
-3. **TryBindIf**: Versiones seguras que capturan excepciones
-
----
-
-## Variantes de BindIf
-
-### Variante 1: BindIf con Ramificación Completa
-
-**Propósito**: Ejecuta una función u otra dependiendo de la condición
+La forma **B** solo existe cuando el tipo de entrada y de salida coinciden (`MlResult<T>` → `MlResult<T>`),
+porque necesita poder devolver el valor original sin transformarlo.
 
 ```csharp
-public static MlResult<TReturn> BindIf<T, TReturn>(this MlResult<T> source,
-                                                   Func<T, bool> condition,
-                                                   Func<T, MlResult<TReturn>> funcTrue,
-                                                   Func<T, MlResult<TReturn>> funcFalse)
-```
+// Forma A: dos caminos, ambos obligatorios.
+MlResult<Factura> f = pedido.BindIf(p => p.EsInternacional,
+                                    p => FacturarConAduana(p),
+                                    p => FacturarNacional(p));
 
-**Parámetros**:
-- `source`: El resultado a evaluar
-- `condition`: Función que evalúa la condición sobre el valor
-- `funcTrue`: Función a ejecutar si la condición es verdadera
-- `funcFalse`: Función a ejecutar si la condición es falsa
-
-**Comportamiento**:
-- Si `source` es fallido: Propaga el error
-- Si `source` es exitoso: Evalúa `condition(value)` y ejecuta la función correspondiente
-
-### Variante 2: BindIf con Procesamiento Opcional
-
-**Propósito**: Ejecuta una función solo si la condición se cumple, sino retorna el valor sin cambios
-
-```csharp
-public static MlResult<T> BindIf<T>(this MlResult<T> source,
-                                    Func<T, bool> condition,
-                                    Func<T, MlResult<T>> func)
-```
-
-**Comportamiento**:
-- Si la condición es verdadera: Ejecuta `func(value)`
-- Si la condición es falsa: Retorna `MlResult<T>.Valid(value)` (valor sin procesar)
-
-### Soporte Asíncrono Completo
-
-Cada variante soporta todas las combinaciones asíncronas:
-- **Función true asíncrona, función false síncrona**
-- **Función true síncrona, función false asíncrona**
-- **Ambas funciones asíncronas**
-- **Fuente asíncrona con cualquier combinación de funciones**
-
----
-
-## Variantes de TryBindIf
-
-### TryBindIf con Ramificación Completa
-
-**Propósito**: Versión segura de BindIf que captura excepciones en ambas ramas
-
-```csharp
-public static MlResult<TReturn> TryBindIf<T, TReturn>(this MlResult<T> source,
-                                                      Func<T, bool> condition,
-                                                      Func<T, MlResult<TReturn>> funcTrue,
-                                                      Func<T, MlResult<TReturn>> funcFalse,
-                                                      Func<Exception, string> errorMessageBuilder)
-```
-
-**Comportamiento**:
-- Captura excepciones tanto en `funcTrue` como en `funcFalse`
-- Usa `errorMessageBuilder` para crear mensajes de error contextuales
-
-### TryBindIf con Procesamiento Opcional
-
-**Propósito**: Versión segura de BindIf que solo ejecuta función si condición es verdadera
-
-```csharp
-public static MlResult<T> TryBindIf<T>(this MlResult<T> source,
-                                       Func<T, bool> condition,
-                                       Func<T, MlResult<T>> func,
-                                       Func<Exception, string> errorMessageBuilder)
-```
-
-**Comportamiento**:
-- Si la condición es falsa: Retorna el valor sin procesar (sin riesgo de excepción)
-- Si la condición es verdadera: Ejecuta `func` de forma segura
-
-### Soporte para Mensajes Simples
-
-Todas las variantes de `TryBindIf` incluyen sobrecargas que aceptan un `string` simple en lugar de `Func<Exception, string>`:
-
-```csharp
-public static MlResult<T> TryBindIf<T>(this MlResult<T> source,
-                                       Func<T, bool> condition,
-                                       Func<T, MlResult<T>> func,
-                                       string errorMessage = null!)
+// Forma B: un paso que solo se aplica a veces.
+MlResult<Pedido> p2 = pedido.BindIf(p => p.Importe > 1000,
+                                    p => RequerirAutorizacion(p));
+// Si el importe es <= 1000, p2 es exactamente pedido, sin tocar nada.
 ```
 
 ---
 
-## Patrones de Uso
+## Firmas reales
 
-### Patrón 1: Ramificación por Tipo de Datos
-
-```csharp
-// Procesamiento diferente según el tipo de usuario
-var result = userData
-    .BindIf(
-        condition: user => user.IsPremium,
-        funcTrue: user => ProcessPremiumUser(user),
-        funcFalse: user => ProcessStandardUser(user)
-    );
-```
-
-### Patrón 2: Optimización Condicional
+### Forma A
 
 ```csharp
-// Solo ejecutar procesamiento costoso si es necesario
-var result = imageData
-    .BindIf(
-        condition: image => image.Size > LARGE_IMAGE_THRESHOLD,
-        func: image => CompressImage(image) // Solo si es grande
-    );
+public static MlResult<TReturn> BindIf<T, TReturn>(this MlResult<T>                source,
+                                                        Func<T, bool>              condition,
+                                                        Func<T, MlResult<TReturn>> funcTrue,
+                                                        Func<T, MlResult<TReturn>> funcFalse)
+    => source.Match(
+        valid: x => condition(x) ? funcTrue(x) : funcFalse(x),
+        fail :      MlResult<TReturn>.Fail);
 ```
 
-### Patrón 3: Validación Condicional
+### Forma B
 
 ```csharp
-// Validación adicional solo para ciertos casos
-var result = orderData
-    .BindIf(
-        condition: order => order.Amount > HIGH_VALUE_THRESHOLD,
-        funcTrue: order => ValidateHighValueOrder(order),
-        funcFalse: order => ValidateStandardOrder(order)
-    );
+public static MlResult<T> BindIf<T>(this MlResult<T>          source,
+                                         Func<T, bool>        condition,
+                                         Func<T, MlResult<T>> func)
+    => source.Match(
+        valid: x => condition(x) ? func(x) : x,          // ← 'x' se convierte implícitamente en MlResult<T>
+        fail :      MlResult<T>.Fail);
 ```
 
-### Patrón 4: Manejo de Excepciones Contextuales
+Fíjate en el `: x` de la forma B: aprovecha la **conversión implícita** de `T` a `MlResult<T>` para
+devolver el valor sin envolverlo a mano.
+
+| Estado de entrada | `condition` | Forma A | Forma B |
+| --- | --- | --- | --- |
+| Fallido | **no se evalúa** | Propaga el fallo | Propaga el fallo |
+| Válido | `true` | `funcTrue(x)` | `func(x)` |
+| Válido | `false` | `funcFalse(x)` | `x` sin cambios |
+
+📌 La condición es un `Func<T, bool>` **puro y síncrono**: no puede fallar ni devolver `MlResult`. Si tu
+condición necesita consultar un servicio o puede fallar, resuélvela antes con `Bind`/`Map` y guárdala en
+el propio valor (o en una tupla).
+
+---
+
+## Variantes asíncronas
+
+`BindIfAsync` cubre **11 sobrecargas** combinando estos ejes:
+
+| Eje | Opciones |
+| --- | --- |
+| Fuente | `MlResult<T>` · `Task<MlResult<T>>` |
+| `funcTrue` | síncrona · asíncrona |
+| `funcFalse` | síncrona · asíncrona |
 
 ```csharp
-// Procesamiento seguro con mensajes específicos por rama
-var result = paymentData
-    .TryBindIf(
-        condition: payment => payment.IsInternational,
-        funcTrue: payment => ProcessInternationalPayment(payment),
-        funcFalse: payment => ProcessDomesticPayment(payment),
-        errorMessageBuilder: ex => $"Payment processing failed: {ex.Message}"
-    );
+// Fuente asíncrona + ambas ramas asíncronas.
+public Task<MlResult<Envio>> PrepararAsync(Pedido pedido)
+    => ObtenerPedidoAsync(pedido.Id)
+        .BindIfAsync(p => p.EsUrgente,
+                     funcTrueAsync : p => ReservarMensajeriaExpressAsync(p),
+                     funcFalseAsync: p => ReservarMensajeriaEstandarAsync(p));
 ```
+
+💡 En cuanto un solo paso sea asíncrono, usa `BindIfAsync`/`BindAsync` en **todos** los eslabones
+posteriores; mezclar `.Result` o `await` intermedios dentro de los lambdas rompe la composición.
+
+---
+
+## `TryBindIf` — cuando la rama puede lanzar
+
+Si `funcTrue` o `funcFalse` invocan código que puede lanzar excepciones (I/O, deserialización, un ORM),
+usa `TryBindIf`: envuelve la ejecución y convierte la excepción en un fallo, guardándola en
+`Details["Ex"]`.
+
+```csharp
+public static MlResult<TReturn> TryBindIf<T, TReturn>(this MlResult<T>                source,
+                                                           Func<T, bool>              condition,
+                                                           Func<T, MlResult<TReturn>> funcTrue,
+                                                           Func<T, MlResult<TReturn>> funcFalse,
+                                                           Func<Exception, string>    errorMessageBuilder)
+    => source.Match(
+        valid: x => condition(x)
+                        ? funcTrue .TryToMlResult(x, errorMessageBuilder)
+                        : funcFalse.TryToMlResult(x, errorMessageBuilder),
+        fail :      MlResult<TReturn>.Fail);
+```
+
+Existe también la sobrecarga con un `string exceptionAditionalMessage` en lugar del constructor de
+mensaje. En total: **3 `TryBindIf` síncronos** y **24 `TryBindIfAsync`**.
+
+```csharp
+var resultado = documento
+    .TryBindIf(d => d.Formato == Formato.Xml,
+               d => ParsearXml(d.Contenido),          // puede lanzar XmlException
+               d => ParsearJson(d.Contenido),         // puede lanzar JsonException
+               ex => $"No se pudo parsear el documento {documento.Id}: {ex.Message}");
+
+// Recuperar la excepción original más adelante:
+resultado.ExecSelfIfFail(errores =>
+    errores.GetDetailException()
+           .ExecSelfIfValid(ex => _log.LogError(ex, "Fallo de parseo")));
+```
+
+| Método | Excepción en la rama | Cuándo usarlo |
+| --- | --- | --- |
+| `BindIf` | **Se propaga** y rompe la tubería | Las ramas son código propio validado |
+| `TryBindIf` | Se convierte en `MlResult` fallido | Las ramas hacen I/O o usan librerías de terceros |
+
+---
+
+## `BindIf` frente a otras alternativas
+
+| Necesidad | Herramienta |
+| --- | --- |
+| Dos caminos, cada uno produce el resultado | **`BindIf`** (forma A) |
+| Un paso extra que solo se aplica a veces | **`BindIf`** (forma B) |
+| Bifurcar pero las ramas devuelven un valor plano, no `MlResult` | [`MapIf`](../Map/3_MapIf.md) |
+| Convertir una condición en éxito/fallo | [`MapEnsure`](../Map/2_MapEnsure.md) o `EnsureFp.That` |
+| Ejecutar varias comprobaciones y acumular errores | [`BindMulti`](./4_BindMulti.md) |
+| Reaccionar según el estado (válido/fallido), no según el valor | [`Match`](../Match/1_Match.md) |
+| Solo un efecto secundario condicional, sin cambiar el valor | [`ExecSelfIf`](../ExecSelf/1_ExecSelf.md) |
+
+🔑 `BindIf` bifurca por el **contenido** del valor. `Match` bifurca por el **estado** del resultado. No
+son intercambiables.
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Procesamiento de Usuarios
+### Ejemplo 1: Tarifa según el tipo de cliente (forma A)
 
 ```csharp
-public class UserProcessingService
+public class ServicioFacturacion
 {
-    public async Task<MlResult<ProcessedUser>> ProcessUserAsync(UserData userData)
-    {
-        return await userData.ToMlResult()
-            .BindIfAsync(
-                condition: user => user.AccountType == AccountType.Premium,
-                funcTrueAsync: async user => await ProcessPremiumUserAsync(user),
-                funcFalse: user => ProcessStandardUser(user)
-            )
-            .BindIfAsync(
-                condition: processedUser => processedUser.RequiresVerification,
-                funcAsync: async user => await AddVerificationStepAsync(user)
-            )
-            .BindIfAsync(
-                condition: user => user.IsNewUser,
-                funcTrueAsync: async user => await SetupNewUserAsync(user),
-                funcFalseAsync: async user => await UpdateExistingUserAsync(user)
-            );
-    }
-    
-    public async Task<MlResult<ProcessedUser>> ProcessUserSafelyAsync(UserData userData)
-    {
-        return await userData.ToMlResult()
-            .TryBindIfAsync(
-                condition: user => user.AccountType == AccountType.Premium,
-                funcTrueAsync: async user => await ProcessPremiumUserWithExternalAPIAsync(user),
-                funcFalse: user => ProcessStandardUser(user),
-                errorMessageBuilder: ex => $"Failed to process {userData.AccountType} user {userData.Id}: {ex.Message}"
-            )
-            .TryBindIfAsync(
-                condition: user => user.RequiresComplexValidation,
-                funcAsync: async user => await PerformComplexValidationAsync(user),
-                errorMessage: "Complex validation failed"
-            );
-    }
-    
-    private async Task<MlResult<ProcessedUser>> ProcessPremiumUserAsync(UserData user)
-    {
-        await Task.Delay(100); // Simular procesamiento más complejo
-        
-        var processedUser = new ProcessedUser
-        {
-            Id = user.Id,
-            Name = user.Name,
-            AccountType = user.AccountType,
-            PremiumFeatures = new List<string> { "AdvancedAnalytics", "PrioritySupport", "CustomReports" },
-            ProcessingLevel = "Premium",
-            ProcessedAt = DateTime.UtcNow,
-            RequiresVerification = user.Email.EndsWith("@enterprise.com")
-        };
-        
-        return MlResult<ProcessedUser>.Valid(processedUser);
-    }
-    
-    private MlResult<ProcessedUser> ProcessStandardUser(UserData user)
-    {
-        var processedUser = new ProcessedUser
-        {
-            Id = user.Id,
-            Name = user.Name,
-            AccountType = user.AccountType,
-            PremiumFeatures = new List<string>(),
-            ProcessingLevel = "Standard",
-            ProcessedAt = DateTime.UtcNow,
-            RequiresVerification = false
-        };
-        
-        return MlResult<ProcessedUser>.Valid(processedUser);
-    }
-    
-    private async Task<MlResult<ProcessedUser>> ProcessPremiumUserWithExternalAPIAsync(UserData user)
-    {
-        await Task.Delay(150);
-        
-        // Simular posible excepción en API externa
-        if (user.Id % 10 == 0)
-            throw new ExternalApiException($"External API failed for user {user.Id}");
-        
-        var processedUser = new ProcessedUser
-        {
-            Id = user.Id,
-            Name = user.Name,
-            AccountType = user.AccountType,
-            PremiumFeatures = new List<string> { "AdvancedAnalytics", "PrioritySupport", "ExternalIntegration" },
-            ProcessingLevel = "Premium_External",
-            ProcessedAt = DateTime.UtcNow,
-            ExternalData = $"ExternalData_{user.Id}",
-            RequiresVerification = true
-        };
-        
-        return MlResult<ProcessedUser>.Valid(processedUser);
-    }
-    
-    private async Task<MlResult<ProcessedUser>> AddVerificationStepAsync(ProcessedUser user)
-    {
-        await Task.Delay(50);
-        
-        user.VerificationToken = Guid.NewGuid().ToString();
-        user.VerificationRequired = true;
-        user.VerificationAddedAt = DateTime.UtcNow;
-        
-        return MlResult<ProcessedUser>.Valid(user);
-    }
-    
-    private async Task<MlResult<ProcessedUser>> SetupNewUserAsync(ProcessedUser user)
-    {
-        await Task.Delay(75);
-        
-        user.WelcomeEmailSent = true;
-        user.OnboardingStepsCreated = true;
-        user.InitialPreferencesSet = true;
-        user.SetupCompletedAt = DateTime.UtcNow;
-        
-        return MlResult<ProcessedUser>.Valid(user);
-    }
-    
-    private async Task<MlResult<ProcessedUser>> UpdateExistingUserAsync(ProcessedUser user)
-    {
-        await Task.Delay(30);
-        
-        user.LastUpdated = DateTime.UtcNow;
-        user.UpdateCount = (user.UpdateCount ?? 0) + 1;
-        
-        return MlResult<ProcessedUser>.Valid(user);
-    }
-    
-    private async Task<MlResult<ProcessedUser>> PerformComplexValidationAsync(ProcessedUser user)
-    {
-        await Task.Delay(200); // Validación compleja y costosa
-        
-        // Simular posible fallo en validación compleja
-        if (user.Name.Contains("invalid"))
-            throw new ValidationException($"Complex validation failed for user {user.Name}");
-        
-        user.ComplexValidationPassed = true;
-        user.ValidationTimestamp = DateTime.UtcNow;
-        
-        return MlResult<ProcessedUser>.Valid(user);
-    }
-}
+    public MlResult<Factura> Emitir(int clienteId, Carrito carrito)
+        => ObtenerCliente(clienteId)
+            .Bind(c => ValidarCarrito(carrito).Map(_ => c))
 
-// Clases de apoyo
-public enum AccountType
-{
-    Standard,
-    Premium,
-    Enterprise
-}
+            .BindIf(c => c.EsVip,
+                    funcTrue : c => CalcularConDescuentoVip(c, carrito),
+                    funcFalse: c => CalcularTarifaEstandar(c, carrito))
 
-public class UserData
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public AccountType AccountType { get; set; }
-    public bool IsNewUser { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
+            .BindIf(f => f.Total > 3000m,
+                    f => RequerirAprobacionFinanciera(f))     // Forma B: paso opcional
 
-public class ProcessedUser
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public AccountType AccountType { get; set; }
-    public List<string> PremiumFeatures { get; set; } = new();
-    public string ProcessingLevel { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    public bool RequiresVerification { get; set; }
-    public string VerificationToken { get; set; }
-    public bool VerificationRequired { get; set; }
-    public DateTime? VerificationAddedAt { get; set; }
-    public bool WelcomeEmailSent { get; set; }
-    public bool OnboardingStepsCreated { get; set; }
-    public bool InitialPreferencesSet { get; set; }
-    public DateTime? SetupCompletedAt { get; set; }
-    public DateTime? LastUpdated { get; set; }
-    public int? UpdateCount { get; set; }
-    public string ExternalData { get; set; }
-    public bool ComplexValidationPassed { get; set; }
-    public DateTime? ValidationTimestamp { get; set; }
-    public bool IsNewUser => CreatedAt > DateTime.UtcNow.AddDays(-7);
-    public bool RequiresComplexValidation => AccountType == AccountType.Enterprise;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddDays(-30);
-}
+            .AddMlErrorDetailIfFail($"[Facturación] Cliente {clienteId}");
 
-public class ExternalApiException : Exception
-{
-    public ExternalApiException(string message) : base(message) { }
-}
+    private MlResult<Factura> CalcularConDescuentoVip(Cliente c, Carrito carrito)
+        => _tarifas.ObtenerVip(c.Segmento)
+            .Map(tarifa => Factura.Crear(c, carrito, tarifa, descuento: 0.15m));
 
-public class ValidationException : Exception
-{
-    public ValidationException(string message) : base(message) { }
+    private MlResult<Factura> CalcularTarifaEstandar(Cliente c, Carrito carrito)
+        => _tarifas.ObtenerEstandar()
+            .Map(tarifa => Factura.Crear(c, carrito, tarifa, descuento: 0m));
 }
 ```
 
-### Ejemplo 2: Sistema de Procesamiento de Órdenes
+Observa la combinación: primero una bifurcación real (forma A), después un paso que **solo** se aplica a
+importes altos (forma B). La tubería sigue leyéndose de arriba abajo sin un solo `if`.
+
+### Ejemplo 2: Paso opcional idempotente (forma B)
+
+La forma B brilla cuando el paso es *enriquecer si hace falta*:
 
 ```csharp
-public class OrderProcessingService
-{
-    private const decimal HIGH_VALUE_THRESHOLD = 1000m;
-    private const decimal INTERNATIONAL_SHIPPING_THRESHOLD = 500m;
-    
-    public async Task<MlResult<ProcessedOrder>> ProcessOrderAsync(OrderRequest orderRequest)
-    {
-        return await orderRequest.ToMlResult()
-            .BindIfAsync(
-                condition: order => order.TotalAmount >= HIGH_VALUE_THRESHOLD,
-                funcTrueAsync: async order => await ProcessHighValueOrderAsync(order),
-                funcFalse: order => ProcessStandardOrder(order)
-            )
-            .BindIfAsync(
-                condition: order => order.ShippingAddress.Country != "USA",
-                funcTrueAsync: async order => await ProcessInternationalShippingAsync(order),
-                funcFalse: order => ProcessDomesticShipping(order)
-            )
-            .BindIfAsync(
-                condition: order => order.HasPerishableItems,
-                funcAsync: async order => await AddExpeditedProcessingAsync(order)
-            )
-            .BindIfAsync(
-                condition: order => order.CustomerTier == CustomerTier.VIP,
-                funcTrueAsync: async order => await ApplyVIPBenefitsAsync(order),
-                funcFalseAsync: async order => await ApplyStandardProcessingAsync(order)
-            );
-    }
-    
-    public async Task<MlResult<ProcessedOrder>> ProcessOrderSafelyAsync(OrderRequest orderRequest)
-    {
-        return await orderRequest.ToMlResult()
-            .TryBindIfAsync(
-                condition: order => order.PaymentMethod == PaymentMethod.CreditCard,
-                funcTrueAsync: async order => await ProcessCreditCardPaymentAsync(order),
-                funcFalse: order => ProcessCashPayment(order),
-                errorMessageBuilder: ex => $"Payment processing failed for order {orderRequest.Id}: {ex.Message}"
-            )
-            .TryBindIfAsync(
-                condition: order => order.RequiresInventoryCheck,
-                funcAsync: async order => await PerformInventoryCheckAsync(order),
-                errorMessage: "Inventory check failed"
-            )
-            .TryBindIfAsync(
-                condition: order => order.NeedsThirdPartyValidation,
-                funcTrueAsync: async order => await ValidateWithThirdPartyAsync(order),
-                funcFalse: order => SkipThirdPartyValidation(order),
-                errorMessageBuilder: ex => ex switch
-                {
-                    TimeoutException => "Third-party validation timed out",
-                    HttpRequestException => "Third-party service unavailable",
-                    _ => $"Third-party validation error: {ex.Message}"
-                }
-            );
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> ProcessHighValueOrderAsync(OrderRequest order)
-    {
-        await Task.Delay(200); // Procesamiento adicional para pedidos de alto valor
-        
-        var processedOrder = new ProcessedOrder
-        {
-            Id = Guid.NewGuid(),
-            OriginalRequest = order,
-            ProcessingType = "HighValue",
-            RequiresManagerApproval = true,
-            FraudCheckRequired = true,
-            InsuranceRequired = true,
-            ProcessedAt = DateTime.UtcNow
-        };
-        
-        // Verificaciones adicionales para pedidos de alto valor
-        if (order.TotalAmount > 5000m)
-        {
-            processedOrder.RequiresDirectorApproval = true;
-            processedOrder.ExtendedWarrantyIncluded = true;
-        }
-        
-        return MlResult<ProcessedOrder>.Valid(processedOrder);
-    }
-    
-    private MlResult<ProcessedOrder> ProcessStandardOrder(OrderRequest order)
-    {
-        var processedOrder = new ProcessedOrder
-        {
-            Id = Guid.NewGuid(),
-            OriginalRequest = order,
-            ProcessingType = "Standard",
-            RequiresManagerApproval = false,
-            FraudCheckRequired = order.TotalAmount > 100m,
-            InsuranceRequired = false,
-            ProcessedAt = DateTime.UtcNow
-        };
-        
-        return MlResult<ProcessedOrder>.Valid(processedOrder);
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> ProcessInternationalShippingAsync(ProcessedOrder order)
-    {
-        await Task.Delay(150);
-        
-        order.ShippingType = "International";
-        order.CustomsDocumentationRequired = true;
-        order.EstimatedDeliveryDays = 7 + (order.OriginalRequest.TotalAmount > INTERNATIONAL_SHIPPING_THRESHOLD ? 2 : 5);
-        order.TrackingRequired = true;
-        
-        // Cálculo de aranceles estimados
-        order.EstimatedCustomsDuty = order.OriginalRequest.TotalAmount * 0.1m;
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private MlResult<ProcessedOrder> ProcessDomesticShipping(ProcessedOrder order)
-    {
-        order.ShippingType = "Domestic";
-        order.CustomsDocumentationRequired = false;
-        order.EstimatedDeliveryDays = order.OriginalRequest.TotalAmount > 50m ? 2 : 5;
-        order.TrackingRequired = order.OriginalRequest.TotalAmount > 25m;
-        order.EstimatedCustomsDuty = 0m;
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> AddExpeditedProcessingAsync(ProcessedOrder order)
-    {
-        await Task.Delay(75);
-        
-        order.ExpeditedProcessing = true;
-        order.EstimatedDeliveryDays = Math.Max(1, order.EstimatedDeliveryDays - 2);
-        order.SpecialHandlingRequired = true;
-        order.RefrigerationRequired = order.OriginalRequest.Items.Any(i => i.RequiresRefrigeration);
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> ApplyVIPBenefitsAsync(ProcessedOrder order)
-    {
-        await Task.Delay(100);
-        
-        order.VIPProcessing = true;
-        order.FreeShippingApplied = true;
-        order.PriorityQueuePosition = 1;
-        order.DedicatedSupportAssigned = true;
-        order.VIPPackagingIncluded = true;
-        
-        // Descuento VIP
-        order.VIPDiscountApplied = order.OriginalRequest.TotalAmount * 0.05m;
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> ApplyStandardProcessingAsync(ProcessedOrder order)
-    {
-        await Task.Delay(50);
-        
-        order.VIPProcessing = false;
-        order.PriorityQueuePosition = DeterminePriorityPosition(order);
-        order.DedicatedSupportAssigned = false;
-        
-        // Verificar si aplica para envío gratis por monto
-        order.FreeShippingApplied = order.OriginalRequest.TotalAmount >= 75m;
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> ProcessCreditCardPaymentAsync(OrderRequest order)
-    {
-        await Task.Delay(100);
-        
-        // Simular procesamiento de tarjeta de crédito que puede fallar
-        if (order.Id % 15 == 0)
-            throw new PaymentProcessingException($"Credit card processing failed for order {order.Id}");
-        
-        var processedOrder = new ProcessedOrder
-        {
-            Id = Guid.NewGuid(),
-            OriginalRequest = order,
-            PaymentProcessed = true,
-            PaymentMethod = "CreditCard",
-            TransactionId = $"CC_{Guid.NewGuid().ToString("N")[..8]}",
-            PaymentProcessedAt = DateTime.UtcNow
-        };
-        
-        return MlResult<ProcessedOrder>.Valid(processedOrder);
-    }
-    
-    private MlResult<ProcessedOrder> ProcessCashPayment(OrderRequest order)
-    {
-        var processedOrder = new ProcessedOrder
-        {
-            Id = Guid.NewGuid(),
-            OriginalRequest = order,
-            PaymentProcessed = true,
-            PaymentMethod = "Cash",
-            TransactionId = $"CASH_{DateTime.UtcNow:yyyyMMddHHmmss}",
-            PaymentProcessedAt = DateTime.UtcNow,
-            CashHandlingFeeApplied = order.TotalAmount > 1000m ? 10m : 0m
-        };
-        
-        return MlResult<ProcessedOrder>.Valid(processedOrder);
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> PerformInventoryCheckAsync(ProcessedOrder order)
-    {
-        await Task.Delay(120);
-        
-        // Simular verificación de inventario que puede fallar
-        if (order.OriginalRequest.Items.Any(i => i.ProductId.Contains("OUTOFSTOCK")))
-            throw new InventoryException($"Items out of stock in order {order.Id}");
-        
-        order.InventoryChecked = true;
-        order.InventoryCheckTimestamp = DateTime.UtcNow;
-        order.AllItemsAvailable = true;
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private async Task<MlResult<ProcessedOrder>> ValidateWithThirdPartyAsync(ProcessedOrder order)
-    {
-        await Task.Delay(300); // Simulación de llamada externa lenta
-        
-        // Simular diferentes tipos de excepciones
-        var random = new Random(order.Id);
-        var errorType = random.Next(20);
-        
-        if (errorType == 0)
-            throw new TimeoutException("Third-party validation timeout");
-        if (errorType == 1)
-            throw new HttpRequestException("Third-party service unavailable");
-        if (errorType == 2)
-            throw new UnauthorizedAccessException("Third-party authentication failed");
-        
-        order.ThirdPartyValidated = true;
-        order.ThirdPartyValidationTimestamp = DateTime.UtcNow;
-        order.ValidationScore = random.Next(70, 100);
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private MlResult<ProcessedOrder> SkipThirdPartyValidation(ProcessedOrder order)
-    {
-        order.ThirdPartyValidated = false;
-        order.ValidationSkipped = true;
-        order.ValidationSkipReason = "Not required for this order type";
-        
-        return MlResult<ProcessedOrder>.Valid(order);
-    }
-    
-    private int DeterminePriorityPosition(ProcessedOrder order)
-    {
-        var basePosition = 100;
-        
-        // Ajustar posición basada en varios factores
-        if (order.OriginalRequest.TotalAmount > 500m) basePosition -= 20;
-        if (order.ExpeditedProcessing) basePosition -= 30;
-        if (order.OriginalRequest.CustomerTier == CustomerTier.Premium) basePosition -= 15;
-        
-        return Math.Max(1, basePosition);
-    }
-}
+public MlResult<Pedido> Normalizar(Pedido pedido)
+    => pedido.ToMlResultValid()
+        // Solo si falta la dirección de facturación, la copiamos de la de envío.
+        .BindIf(p => p.DireccionFacturacion is null,
+                p => p with { DireccionFacturacion = p.DireccionEnvio })
 
-// Clases de apoyo adicionales
-public enum PaymentMethod
-{
-    CreditCard,
-    DebitCard,
-    Cash,
-    BankTransfer
-}
+        // Solo si no tiene divisa, aplicamos la del país.
+        .BindIf(p => string.IsNullOrWhiteSpace(p.Divisa),
+                p => ObtenerDivisaDelPais(p.DireccionEnvio.Pais)
+                        .Map(divisa => p with { Divisa = divisa }))
 
-public enum CustomerTier
-{
-    Standard,
-    Premium,
-    VIP
-}
-
-public class OrderRequest
-{
-    public int Id { get; set; }
-    public decimal TotalAmount { get; set; }
-    public PaymentMethod PaymentMethod { get; set; }
-    public CustomerTier CustomerTier { get; set; }
-    public Address ShippingAddress { get; set; }
-    public List<OrderItem> Items { get; set; } = new();
-    public bool HasPerishableItems => Items.Any(i => i.IsPerishable);
-    public bool RequiresInventoryCheck => Items.Count > 3 || TotalAmount > 200m;
-    public bool NeedsThirdPartyValidation => TotalAmount > 750m || CustomerTier == CustomerTier.VIP;
-}
-
-public class Address
-{
-    public string Street { get; set; }
-    public string City { get; set; }
-    public string Country { get; set; }
-}
-
-public class OrderItem
-{
-    public string ProductId { get; set; }
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
-    public bool IsPerishable { get; set; }
-    public bool RequiresRefrigeration { get; set; }
-}
-
-public class ProcessedOrder
-{
-    public Guid Id { get; set; }
-    public OrderRequest OriginalRequest { get; set; }
-    public string ProcessingType { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    
-    // High Value Properties
-    public bool RequiresManagerApproval { get; set; }
-    public bool RequiresDirectorApproval { get; set; }
-    public bool FraudCheckRequired { get; set; }
-    public bool InsuranceRequired { get; set; }
-    public bool ExtendedWarrantyIncluded { get; set; }
-    
-    // Shipping Properties
-    public string ShippingType { get; set; }
-    public bool CustomsDocumentationRequired { get; set; }
-    public int EstimatedDeliveryDays { get; set; }
-    public bool TrackingRequired { get; set; }
-    public decimal EstimatedCustomsDuty { get; set; }
-    
-    // Expedited Properties
-    public bool ExpeditedProcessing { get; set; }
-    public bool SpecialHandlingRequired { get; set; }
-    public bool RefrigerationRequired { get; set; }
-    
-    // VIP Properties
-    public bool VIPProcessing { get; set; }
-    public bool FreeShippingApplied { get; set; }
-    public int PriorityQueuePosition { get; set; }
-    public bool DedicatedSupportAssigned { get; set; }
-    public bool VIPPackagingIncluded { get; set; }
-    public decimal VIPDiscountApplied { get; set; }
-    
-    // Payment Properties
-    public bool PaymentProcessed { get; set; }
-    public string PaymentMethod { get; set; }
-    public string TransactionId { get; set; }
-    public DateTime? PaymentProcessedAt { get; set; }
-    public decimal CashHandlingFeeApplied { get; set; }
-    
-    // Inventory Properties
-    public bool InventoryChecked { get; set; }
-    public DateTime? InventoryCheckTimestamp { get; set; }
-    public bool AllItemsAvailable { get; set; }
-    
-    // Third Party Validation Properties
-    public bool ThirdPartyValidated { get; set; }
-    public DateTime? ThirdPartyValidationTimestamp { get; set; }
-    public int ValidationScore { get; set; }
-    public bool ValidationSkipped { get; set; }
-    public string ValidationSkipReason { get; set; }
-}
-
-// Excepciones personalizadas
-public class PaymentProcessingException : Exception
-{
-    public PaymentProcessingException(string message) : base(message) { }
-}
-
-public class InventoryException : Exception
-{
-    public InventoryException(string message) : base(message) { }
-}
+        // Solo si el pedido viene de la web, calculamos gastos de envío.
+        .BindIf(p => p.Canal == Canal.Web,
+                p => CalcularGastosEnvio(p));
 ```
 
-### Ejemplo 3: Sistema de Procesamiento de Imágenes
+Tres pasos condicionales encadenados, todos opcionales, sin ramas anidadas. Fíjate en que el segundo
+`BindIf` **puede fallar** (`ObtenerDivisaDelPais`): si lo hace, los dos siguientes ya no se ejecutan.
+
+### Ejemplo 3: Bifurcación asíncrona con lectura de datos externa
 
 ```csharp
-public class ImageProcessingService
-{
-    private const long LARGE_IMAGE_SIZE = 5_000_000; // 5MB
-    private const int HIGH_RESOLUTION_THRESHOLD = 1920;
-    
-    public async Task<MlResult<ProcessedImage>> ProcessImageAsync(ImageData imageData)
-    {
-        return await imageData.ToMlResult()
-            .BindIfAsync(
-                condition: img => img.SizeInBytes > LARGE_IMAGE_SIZE,
-                funcAsync: async img => await CompressLargeImageAsync(img)
-            )
-            .BindIfAsync(
-                condition: img => img.Width > HIGH_RESOLUTION_THRESHOLD || img.Height > HIGH_RESOLUTION_THRESHOLD,
-                funcTrueAsync: async img => await ProcessHighResolutionImageAsync(img),
-                funcFalse: img => ProcessStandardResolutionImage(img)
-            )
-            .BindIfAsync(
-                condition: img => img.Format == ImageFormat.RAW,
-                funcAsync: async img => await ConvertFromRAWAsync(img)
-            )
-            .BindIfAsync(
-                condition: img => img.RequiresWatermark,
-                funcTrueAsync: async img => await AddWatermarkAsync(img),
-                funcFalse: img => SkipWatermark(img)
-            );
-    }
-    
-    public async Task<MlResult<ProcessedImage>> ProcessImageSafelyAsync(ImageData imageData)
-    {
-        return await imageData.ToMlResult()
-            .TryBindIfAsync(
-                condition: img => img.RequiresColorCorrection,
-                funcAsync: async img => await PerformColorCorrectionAsync(img),
-                errorMessage: "Color correction failed"
-            )
-            .TryBindIfAsync(
-                condition: img => img.IsPortrait,
-                funcTrueAsync: async img => await ProcessPortraitImageAsync(img),
-                funcFalse: img => ProcessLandscapeImage(img),
-                errorMessageBuilder: ex => $"Portrait/Landscape processing failed: {ex.Message}"
-            )
-            .TryBindIfAsync(
-                condition: img => img.RequiresNoiseReduction,
-                funcAsync: async img => await ReduceNoiseAsync(img),
-                errorMessageBuilder: ex => ex switch
-                {
-                    OutOfMemoryException => "Insufficient memory for noise reduction",
-                    InvalidOperationException => "Invalid image format for noise reduction",
-                    _ => $"Noise reduction failed: {ex.Message}"
-                }
-            );
-    }
-    
-    private async Task<MlResult<ProcessedImage>> CompressLargeImageAsync(ImageData imageData)
-    {
-        await Task.Delay(500); // Simulación de compresión que toma tiempo
-        
-        var compressionRatio = CalculateCompressionRatio(imageData.SizeInBytes);
-        
-        var processedImage = new ProcessedImage
-        {
-            OriginalData = imageData,
-            SizeInBytes = (long)(imageData.SizeInBytes * compressionRatio),
-            Width = imageData.Width,
-            Height = imageData.Height,
-            Format = imageData.Format,
-            CompressionApplied = true,
-            CompressionRatio = compressionRatio,
-            ProcessingSteps = new List<string> { "LargeImageCompression" }
-        };
-        
-        return MlResult<ProcessedImage>.Valid(processedImage);
-    }
-    
-    private async Task<MlResult<ProcessedImage>> ProcessHighResolutionImageAsync(ProcessedImage image)
-    {
-        await Task.Delay(300);
-        
-        // Procesamiento especial para imágenes de alta resolución
-        image.HighResolutionProcessing = true;
-        image.OptimizedForWeb = true;
-        image.ThumbnailGenerated = true;
-        image.ProcessingSteps.Add("HighResolutionProcessing");
-        
-        // Generar múltiples tamaños
-        image.GeneratedSizes = new Dictionary<string, (int Width, int Height)>
-        {
-            ["thumbnail"] = (150, 150),
-            ["small"] = (400, 300),
-            ["medium"] = (800, 600),
-            ["large"] = (1200, 900)
-        };
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private MlResult<ProcessedImage> ProcessStandardResolutionImage(ProcessedImage image)
-    {
-        image.HighResolutionProcessing = false;
-        image.OptimizedForWeb = true;
-        image.ThumbnailGenerated = true;
-        image.ProcessingSteps.Add("StandardResolutionProcessing");
-        
-        // Solo generar tamaños básicos
-        image.GeneratedSizes = new Dictionary<string, (int Width, int Height)>
-        {
-            ["thumbnail"] = (150, 150),
-            ["medium"] = (400, 300)
-        };
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private async Task<MlResult<ProcessedImage>> ConvertFromRAWAsync(ProcessedImage image)
-    {
-        await Task.Delay(800); // Conversión RAW es costosa
-        
-        image.Format = ImageFormat.JPEG; // Convertir a JPEG
-        image.RAWProcessingApplied = true;
-        image.ColorSpaceConverted = true;
-        image.ProcessingSteps.Add("RAWConversion");
-        
-        // La conversión RAW puede aumentar el tamaño temporalmente
-        image.SizeInBytes = (long)(image.SizeInBytes * 1.2);
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private async Task<MlResult<ProcessedImage>> AddWatermarkAsync(ProcessedImage image)
-    {
-        await Task.Delay(150);
-        
-        image.WatermarkApplied = true;
-        image.WatermarkPosition = "BottomRight";
-        image.WatermarkOpacity = 0.3f;
-        image.ProcessingSteps.Add("WatermarkApplication");
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private MlResult<ProcessedImage> SkipWatermark(ProcessedImage image)
-    {
-        image.WatermarkApplied = false;
-        image.ProcessingSteps.Add("WatermarkSkipped");
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private async Task<MlResult<ProcessedImage>> PerformColorCorrectionAsync(ProcessedImage image)
-    {
-        await Task.Delay(200);
-        
-        // Simulación de operación que puede fallar
-        if (image.OriginalData.Format == ImageFormat.BMP)
-            throw new InvalidOperationException("Color correction not supported for BMP format");
-        
-        image.ColorCorrectionApplied = true;
-        image.BrightnessAdjusted = true;
-        image.ContrastAdjusted = true;
-        image.ProcessingSteps.Add("ColorCorrection");
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private async Task<MlResult<ProcessedImage>> ProcessPortraitImageAsync(ProcessedImage image)
-    {
-        await Task.Delay(250);
-        
-        // Simulación de procesamiento que puede fallar por memoria
-        if (image.Width * image.Height > 10_000_000) // 10MP
-            throw new OutOfMemoryException("Image too large for portrait processing");
-        
-        image.PortraitProcessingApplied = true;
-        image.FaceDetectionApplied = true;
-        image.BackgroundBlurApplied = true;
-        image.ProcessingSteps.Add("PortraitProcessing");
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private MlResult<ProcessedImage> ProcessLandscapeImage(ProcessedImage image)
-    {
-        image.LandscapeProcessingApplied = true;
-        image.HorizonDetectionApplied = true;
-        image.SkyEnhancementApplied = true;
-        image.ProcessingSteps.Add("LandscapeProcessing");
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private async Task<MlResult<ProcessedImage>> ReduceNoiseAsync(ProcessedImage image)
-    {
-        await Task.Delay(400);
-        
-        // Simulación de operación intensiva que puede fallar
-        if (image.Format == ImageFormat.GIF)
-            throw new InvalidOperationException("Noise reduction not applicable to GIF images");
-        
-        if (image.SizeInBytes > 50_000_000) // 50MB
-            throw new OutOfMemoryException("Image too large for noise reduction");
-        
-        image.NoiseReductionApplied = true;
-        image.SharpeningApplied = true;
-        image.ProcessingSteps.Add("NoiseReduction");
-        
-        return MlResult<ProcessedImage>.Valid(image);
-    }
-    
-    private double CalculateCompressionRatio(long originalSize)
-    {
-        // Más compresión para archivos más grandes
-        if (originalSize > 20_000_000) return 0.3; // 70% reducción
-        if (originalSize > 10_000_000) return 0.5; // 50% reducción
-        if (originalSize > 5_000_000) return 0.7;  // 30% reducción
-        return 0.8; // 20% reducción
-    }
-}
+public async Task<MlResult<Liquidacion>> LiquidarAsync(int contratoId)
+    => await ObtenerContratoAsync(contratoId)
 
-// Clases de apoyo para procesamiento de imágenes
-public enum ImageFormat
-{
-    JPEG,
-    PNG,
-    GIF,
-    BMP,
-    RAW,
-    TIFF
-}
+        // La condición debe ser síncrona: primero traemos el dato que necesitamos
+        // y lo llevamos en una tupla.
+        .BindAsync(c => ObtenerSaldoAsync(c.CuentaId).Map(s => (Contrato: c, Saldo: s)))
 
-public class ImageData
-{
-    public string FileName { get; set; }
-    public long SizeInBytes { get; set; }
-    public int Width { get; set; }
-    public int Height { get; set; }
-    public ImageFormat Format { get;
+        .BindIfAsync(x => x.Saldo >= x.Contrato.ImportePendiente,
+                     funcTrueAsync : x => LiquidarTotalAsync(x.Contrato),
+                     funcFalseAsync: x => GenerarPlanDePagosAsync(x.Contrato, x.Saldo))
+
+        .ExecSelfIfFailAsync(errores =>
+        {
+            _log.LogWarning("Liquidación {Id} fallida: {Detalle}",
+                            contratoId, errores.ToErrorsDescription());
+            return Task.CompletedTask;
+        });
+```
+
+**Patrón clave:** cuando la condición depende de un dato que hay que consultar, tráelo primero con
+`BindAsync` y pásalo en una tupla. Así `condition` sigue siendo un `Func<T, bool>` puro.
+
+### Ejemplo 4: Elegir el parser según el formato (con `TryBindIf`)
+
+```csharp
+public MlResult<IReadOnlyList<Movimiento>> ImportarExtracto(Fichero fichero)
+    => EnsureFp.NotNull(fichero, "El fichero es obligatorio")
+        .Bind(f => EnsureFp.That(f, f.Bytes.Length > 0, "El fichero está vacío"))
+
+        .TryBindIf(f => f.Nombre.EndsWith(".csv", StringComparison.OrdinalIgnoreCase),
+                   funcTrue : f => ParsearCsv(f.Bytes),        // CsvHelper puede lanzar
+                   funcFalse: f => ParsearNorma43(f.Bytes),    // El parser propio puede lanzar
+                   ex => $"Error al leer '{fichero.Nombre}': {ex.Message}")
+
+        .Bind(movs => EnsureFp.NotEmpty(movs, "El extracto no contiene movimientos"))
+        .Map(movs => (IReadOnlyList<Movimiento>)movs.ToList());
+```
+
+Y en el controlador se distingue el fallo técnico del de negocio:
+
+```csharp
+[HttpPost("extractos")]
+public IActionResult Importar(IFormFile fichero)
+    => _servicio.ImportarExtracto(Fichero.Desde(fichero))
+        .Match<IReadOnlyList<Movimiento>, IActionResult>(
+            valid: movs    => Ok(new { importados = movs.Count }),
+            fail : errores => errores.GetDetailException()
+                                     .Match(valid: _ => StatusCode(500, errores.ToErrorsMessages()),
+                                            fail : _ => BadRequest(errores.ToErrorsMessages())));
+```
+
+---
+
+## Mejores Prácticas
+
+### 1. Mantén la condición pura y baratísima
+
+`condition` se ejecuta dentro de la tubería y no puede fallar. Nada de I/O, nada de excepciones. Si
+necesitas un dato remoto, tráelo antes con `Bind`/`Map` y llévalo en una tupla (ver ejemplo 3).
+
+### 2. Elige la forma correcta
+
+Si la rama `false` no tiene nada que hacer, **no escribas `funcFalse: c => c`**: usa la forma B de un
+solo delegado. Es más corta y comunica mejor la intención de «paso opcional».
+
+```csharp
+// ❌ Ruido innecesario.
+.BindIf(p => p.NecesitaRevision, p => Revisar(p), p => MlResult<Pedido>.Valid(p))
+
+// ✅ Forma B.
+.BindIf(p => p.NecesitaRevision, p => Revisar(p))
+```
+
+### 3. Nombra los parámetros en bifurcaciones largas
+
+Con dos lambdas seguidas es fácil invertirlas por accidente. Usar `funcTrue:` y `funcFalse:` de forma
+explícita convierte un error silencioso en código autoexplicativo.
+
+### 4. No anides `BindIf` dentro de `BindIf`
+
+Dos niveles ya son ilegibles. Si tienes más de dos caminos, extrae un método `Selector` que devuelva la
+estrategia, o usa una expresión `switch` sobre un enumerado y aplica `Bind` una sola vez.
+
+### 5. `TryBindIf` solo donde de verdad hay riesgo
+
+Envolver todo en `Try*` oculta bugs propios convirtiéndolos en fallos «de negocio». Resérvalo para
+llamadas a librerías externas, ficheros, red y bases de datos.
+
+---
+
+## Resumen
+
+- `BindIf` bifurca la tubería según una condición **sobre el valor**, sin romper la cadena.
+- Tiene **dos formas**: bifurcación completa (`funcTrue` + `funcFalse`, con cambio de tipo permitido) y
+  paso opcional (`func` único, mismo tipo, devuelve el valor intacto si la condición es `false`).
+- Si el resultado ya venía fallido, **la condición no se evalúa** y el fallo se propaga.
+- `condition` es un `Func<T, bool>` puro y síncrono; los datos externos se traen antes.
+- Sobrecargas: `BindIf` (2), `BindIfAsync` (11), `TryBindIf` (3), `TryBindIfAsync` (24).
+- `TryBindIf` captura las excepciones de las ramas y las guarda en `Details["Ex"]`, recuperables con
+  `GetDetailException()`.
+
+## Ver también
+
+- [`3_Bind.md`](./3_Bind.md) — el encadenamiento base sin condición.
+- [`4_BindMulti.md`](./4_BindMulti.md) — ejecutar varias comprobaciones y acumular sus errores.
+- [`6_BindIfFail.md`](./6_BindIfFail.md) — la bifurcación complementaria: actuar sobre el camino fallido.
+- [`../Map/3_MapIf.md`](../Map/3_MapIf.md) — la versión para ramas que devuelven un valor plano.
+- [`../Map/2_MapEnsure.md`](../Map/2_MapEnsure.md) — convertir una condición en éxito o fallo.
+- [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — `ExecSelfIf`, para efectos condicionales.
+- [`../Match/1_Match.md`](../Match/1_Match.md) — bifurcar por estado en lugar de por valor.
+- [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — construir las guardas previas.
+- [`../Types/MlResultActionsBind.md`](../Types/MlResultActionsBind.md) — referencia con todas las sobrecargas.

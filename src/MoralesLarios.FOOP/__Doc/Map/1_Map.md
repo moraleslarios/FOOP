@@ -1,718 +1,324 @@
-﻿# MlResultActionsMap - Operaciones de Transformación de Valores
+﻿# Map — Transformar el valor sin salir del carril
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de la Clase](#análisis-de-la-clase)
-3. [Métodos Map Básicos](#métodos-map-básicos)
-4. [Métodos TryMap - Captura de Excepciones](#métodos-trymap---captura-de-excepciones)
-5. [Variantes Asíncronas](#variantes-asíncronas)
-6. [Ejemplos Prácticos](#ejemplos-prácticos)
-7. [Diferencias con Bind](#diferencias-con-bind)
-8. [Mejores Prácticas](#mejores-prácticas)
+2. [`Map` frente a `Bind`: la regla de oro](#map-frente-a-bind-la-regla-de-oro)
+3. [Firma real e implementación](#firma-real-e-implementación)
+4. [El error clásico: `MlResult<MlResult<T>>`](#el-error-clásico-mlresultmlresultt)
+5. [`TryMap` — cuando la transformación puede lanzar](#trymap--cuando-la-transformación-puede-lanzar)
+6. [Variantes asíncronas](#variantes-asíncronas)
+7. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+8. [Ejemplos Prácticos](#ejemplos-prácticos)
+9. [Mejores Prácticas](#mejores-prácticas)
+10. [Resumen](#resumen)
+11. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-La clase `MlResultActionsMap` contiene las operaciones fundamentales de **mapping** o transformación de valores para `MlResult<T>`. Estas operaciones permiten transformar el valor contenido en un `MlResult` exitoso manteniendo la estructura monádica, implementando el patrón **Functor** de la programación funcional.
+`Map` es la operación más simple y más usada de toda la biblioteca:
 
-### Propósito Principal
+> **Si el resultado es válido, transforma el valor. Si es fallido, no hace nada y propaga el fallo.**
 
-- **Transformación de Valores**: Aplicar funciones de transformación al valor contenido
-- **Preservación de Estado**: Los errores se propagan sin ejecutar la transformación
-- **Manejo Seguro**: Versiones `Try*` que capturan excepciones durante la transformación
-- **Soporte Asíncrono Completo**: Todas las combinaciones de operaciones síncronas y asíncronas
+La diferencia con [`Bind`](../Bind/3_Bind.md) está en el tipo del delegado, y es la única cosa que hay que aprender:
 
-### Diferencia Clave con Bind
+| | Delegado | Se usa cuando… |
+|---|---|---|
+| `Map` | `Func<T, TReturn>` | La transformación **no puede fallar** |
+| `Bind` | `Func<T, MlResult<TReturn>>` | La transformación **puede fallar** |
 
+```csharp
+// Map: formatear un importe no puede fallar
+MlResult<string> texto = ObtenerFactura(id)
+                            .Map(f => $"{f.Numero} — {f.Total:C}");
+
+// Bind: cobrar sí puede fallar
+MlResult<Recibo> recibo = ObtenerFactura(id)
+                            .Bind(f => Cobrar(f));
 ```
-Map:  MlResult<T> + (T → U) → MlResult<U>     // Función devuelve U
-Bind: MlResult<T> + (T → MlResult<U>) → MlResult<U>  // Función devuelve MlResult<U>
-```
+
+> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`.
 
 ---
 
-## Análisis de la Clase
+## `Map` frente a `Bind`: la regla de oro
 
-### Estructura y Filosofía
-
-Map implementa el patrón **Functor**, permitiendo aplicar transformaciones puras a valores encapsulados:
+Piénsalo así: `Map` transforma **lo que hay dentro de la caja**; `Bind` sustituye **la caja entera**.
 
 ```
-Resultado Exitoso(T) → Función(T → U) → Resultado Exitoso(U)
-      ↓                                        ↓
-  Resultado Fallido ――――――――――――――――――――→ Resultado Fallido
+Map:    MlResult<Pedido> ──[ Pedido → decimal ]──►  MlResult<decimal>
+                             (no falla)
+
+Bind:   MlResult<Pedido> ──[ Pedido → MlResult<Factura> ]──►  MlResult<Factura>
+                             (puede fallar)                    (aplanado, no anidado)
 ```
 
-### Características Principales
+La regla práctica es mecánica:
 
-1. **Transformación Pura**: Las funciones map no cambian la estructura del contenedor
-2. **Preservación de Errores**: Los errores se propagan sin cambios
-3. **Composición Funcional**: Las transformaciones se pueden componer fácilmente
-4. **Simplicidad**: Para transformaciones que no pueden fallar conceptualmente
+> **Si tu lambda ya devuelve un `MlResult<...>`, usa `Bind`. Si devuelve un valor normal, usa `Map`.**
 
 ---
 
-## Métodos Map Básicos
-
-### `Map<T, TReturn>()`
-
-**Propósito**: Transforma el valor contenido aplicando una función de transformación pura
+## Firma real e implementación
 
 ```csharp
-public static MlResult<TReturn> Map<T, TReturn>(this MlResult<T> source, 
-                                                Func<T, TReturn> func)
+public static MlResult<TReturn> Map<T, TReturn>(this MlResult<T>      source,
+                                                     Func<T, TReturn> func)
+    => source.Match
+    (
+        fail : MlResult<TReturn>.Fail,
+        valid: value => func(value)
+    );
 ```
 
-**Parámetros**:
-- `source`: El resultado a transformar
-- `func`: Función de transformación que convierte `T` en `TReturn`
+Dos observaciones sobre este cuerpo:
 
-**Comportamiento**:
-- Si `source` es exitoso: Aplica `func(value)` y retorna `MlResult<TReturn>.Valid(result)`
-- Si `source` es fallido: Retorna el error sin ejecutar `func`
+1. **La rama de fallo cambia el tipo genérico pero conserva los errores intactos.** `MlResult<TReturn>.Fail` se pasa como *grupo de métodos*: recibe los `MlErrorsDetails` originales y los reempaqueta en el nuevo tipo. Ni un mensaje ni un detalle se pierden.
 
-**Signatura Functorial**: `F<T> → (T → U) → F<U>`
+2. **La rama válida se apoya en la conversión implícita.** `func(value)` devuelve un `TReturn` desnudo, que se convierte automáticamente en `MlResult<TReturn>` válido gracias al operador implícito definido en `MlResult<T>`.
 
-### `MapAsync<T, TReturn>()` - Conversión a Asíncrono
-
-**Propósito**: Convierte el resultado de `Map` a `Task<MlResult<TReturn>>`
-
-```csharp
-public static Task<MlResult<TReturn>> MapAsync<T, TReturn>(this MlResult<T> source, 
-                                                           Func<T, TReturn> func)
-```
-
-**Comportamiento**: Ejecuta `Map` y envuelve el resultado en una `Task`
-
-### `MapAsync<T, TReturn>()` - Función Asíncrona
-
-**Propósito**: Aplica una función de transformación asíncrona
-
-```csharp
-public static async Task<MlResult<TReturn>> MapAsync<T, TReturn>(this MlResult<T> source,
-                                                                 Func<T, Task<TReturn>> funcAsync)
-```
-
-**Comportamiento**:
-- Si `source` es exitoso: Ejecuta `await funcAsync(value)`
-- Si `source` es fallido: Retorna el error envuelto en `Task`
-
-### `MapAsync<T, TReturn>()` - Fuente Asíncrona con Función Asíncrona
-
-**Propósito**: Transforma desde un `Task<MlResult<T>>` con función asíncrona
-
-```csharp
-public static async Task<MlResult<TReturn>> MapAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                 Func<T, Task<TReturn>> funcAsync)
-```
-
-### `MapAsync<T, TReturn>()` - Fuente Asíncrona con Función Síncrona
-
-**Propósito**: Transforma desde un `Task<MlResult<T>>` con función síncrona
-
-```csharp
-public static async Task<MlResult<TReturn>> MapAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                 Func<T, TReturn> func)
-```
+| Estado de entrada | `func` | Resultado |
+|---|---|---|
+| Válido | Se ejecuta | Válido con el valor transformado |
+| Fallido | **No se ejecuta** | El mismo fallo, con el tipo genérico cambiado |
 
 ---
 
-## Métodos TryMap - Captura de Excepciones
+## El error clásico: `MlResult<MlResult<T>>`
 
-### `TryMap<T, TReturn>()` - Mensaje Simple
-
-**Propósito**: Versión segura de `Map` que captura excepciones durante la transformación
+Es el tropiezo número uno de quien empieza. Si usas `Map` con una función que devuelve `MlResult`, el compilador no se queja: te devuelve un resultado anidado que no sirve para nada.
 
 ```csharp
-public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T> source, 
-                                                   Func<T, TReturn> func,
-                                                   string exceptionAditionalMessage = null!)
+// ❌ MAL: el tipo resultante es MlResult<MlResult<Factura>>
+MlResult<MlResult<Factura>> mal = ObtenerPedido(id)
+                                     .Map(p => Facturar(p));      // Facturar devuelve MlResult<Factura>
+
+// A partir de aquí todo se vuelve incómodo: el fallo de Facturar queda "escondido"
+// dentro de un resultado VÁLIDO, y las comprobaciones de IsValid mienten.
+
+// ✅ BIEN: Bind aplana
+MlResult<Factura> bien = ObtenerPedido(id)
+                            .Bind(p => Facturar(p));
 ```
 
-**Comportamiento**:
-- Si `source` es exitoso y `func` no lanza excepción: Retorna `MlResult<TReturn>.Valid(result)`
-- Si `source` es exitoso y `func` lanza excepción: Captura la excepción y retorna error
-- Si `source` es fallido: Propaga el error original
-
-### `TryMap<T, TReturn>()` - Constructor de Mensaje
-
-**Propósito**: Versión con función constructora de mensaje de error personalizado
-
-```csharp
-public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T> source, 
-                                                   Func<T, TReturn> func,
-                                                   Func<Exception, string> errorMessageBuilder)
-```
-
-**Comportamiento**: Permite construir mensajes de error específicos basados en la excepción capturada
-
-### Versiones Asíncronas de TryMap
-
-Cada variante de `TryMap` tiene sus correspondientes versiones asíncronas:
-
-- `TryMapAsync` con mensaje simple
-- `TryMapAsync` con constructor de mensaje
-- `TryMapAsync` para funciones asíncronas
-- `TryMapAsync` para fuentes asíncronas
+> 🔎 **Síntoma para detectarlo**: si ves un `IsValid` que dice `true` pero el resultado "no funciona", o si necesitas escribir `.Value.Value`, casi seguro has usado `Map` donde tocaba `Bind`.
 
 ---
 
-## Variantes Asíncronas
+## `TryMap` — cuando la transformación puede lanzar
 
-### Matriz de Combinaciones
+Una transformación puede no devolver `MlResult` y aun así romperse: un `int.Parse`, un acceso a un índice, una división. Para eso está `TryMap`, que envuelve la llamada en un `try/catch` y convierte la excepción en un fallo.
 
-| Fuente | Función | Método |
-|--------|---------|---------|
-| `MlResult<T>` | `T → U` | `Map` |
-| `MlResult<T>` | `T → U` | `MapAsync` (conversión) |
-| `MlResult<T>` | `T → Task<U>` | `MapAsync` |
-| `Task<MlResult<T>>` | `T → Task<U>` | `MapAsync` |
-| `Task<MlResult<T>>` | `T → U` | `MapAsync` |
+```csharp
+public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T>             source,
+                                                        Func<T, TReturn>        func,
+                                                        Func<Exception, string> errorMessageBuilder)
+    => source.Match
+    (
+        fail : MlResult<TReturn>.Fail,
+        valid: value => func.TryToMlResult(source.Value, errorMessageBuilder)
+    );
 
-### Soporte Completo para TryMap
+// Sobrecarga cómoda con mensaje fijo
+public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T>      source,
+                                                        Func<T, TReturn> func,
+                                                        string           exceptionAditionalMessage = null!)
+    => TryMap(source, func, _ => exceptionAditionalMessage!);
+```
 
-Todas las combinaciones anteriores están disponibles también para `TryMap`:
+El trabajo real lo hace `TryToMlResult`, que además de capturar la excepción **la guarda en `Details["Ex"]`**. Eso significa que después puedes distinguir un fallo técnico de un fallo de negocio:
 
-- Con mensaje de excepción simple (`string`)
-- Con constructor de mensaje (`Func<Exception, string>`)
+```csharp
+var r = LeerConfiguracion()
+            .TryMap(texto => int.Parse(texto["Timeout"]),
+                    ex => $"El timeout configurado no es un número válido: {ex.Message}");
+
+// El fallo lleva la excepción dentro y las familias WithException pueden actuar sobre ella
+r.ExecSelfIfFailWithException(ex => _log.LogError(ex, "Configuración inválida"));
+```
+
+Las dos formas de construir el mensaje aparecen en toda la biblioteca:
+
+| Parámetro | Cuándo usarlo |
+|---|---|
+| `string exceptionAditionalMessage` | Mensaje fijo, no dependes del texto de la excepción |
+| `Func<Exception, string> errorMessageBuilder` | Quieres incluir datos de la excepción en el mensaje |
+
+---
+
+## Variantes asíncronas
+
+`MapAsync` tiene 4 sobrecargas que cubren las combinaciones de origen y delegado:
+
+| Origen | Delegado | Método |
+|---|---|---|
+| `MlResult<T>` | `Func<T, TReturn>` | `MapAsync` (envuelve con `ToAsync()`) |
+| `MlResult<T>` | `Func<T, Task<TReturn>>` | `MapAsync` |
+| `Task<MlResult<T>>` | `Func<T, Task<TReturn>>` | `MapAsync` |
+| `Task<MlResult<T>>` | `Func<T, TReturn>` | `MapAsync` |
+
+Y `TryMapAsync` tiene 8, porque cada combinación se duplica según cómo se construya el mensaje de error (`string` o `Func<Exception, string>`).
+
+Gracias a la sobrecarga con origen `Task<MlResult<T>>`, **puedes encadenar sin `await` intermedios**:
+
+```csharp
+public Task<MlResult<ClienteDto>> ObtenerDtoAsync(int id)
+    => ObtenerClienteAsync(id)                          // Task<MlResult<Cliente>>
+        .MapAsync(c => new ClienteDto(c.Id, c.Nombre))   // sin await
+        .MapAsync(async dto => dto with                  // delegado asíncrono
+        {
+            Avatar = await _avatares.ObtenerUrlAsync(dto.Id)
+        });
+```
+
+> 💡 **Regla de nomenclatura**: en cuanto un eslabón de la cadena es asíncrono, todos los siguientes usan el sufijo `Async`, aunque su delegado sea síncrono. El sufijo se refiere al **origen**, no al delegado.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Método |
+|---|---|
+| Transformar el valor; no puede fallar | `Map` |
+| Transformar el valor; puede lanzar excepción | `TryMap` |
+| Transformar el valor; devuelve `MlResult` | [`Bind`](../Bind/3_Bind.md) |
+| Comprobar una condición sobre el valor | [`MapEnsure`](2_MapEnsure.md) |
+| Transformar solo si se cumple una condición | [`MapIf`](3_MapIf.md) |
+| Transformar el fallo en un valor | [`MapIfFail`](4_MapIfFail.md) |
+| Mirar el valor sin transformarlo (log, métrica) | [`ExecSelf`](../ExecSelf/1_ExecSelf.md) |
+| Salir del `MlResult` con un valor final | [`Match`](../Match/1_Match.md) |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Transformaciones de Datos Básicas
+### Ejemplo 1: Proyección a DTO en una capa de aplicación
+
+El caso más habitual: la tubería obtiene entidades y `Map` las convierte en lo que la API expone.
 
 ```csharp
-public class UserProfileService
-{
-    public MlResult<UserProfileView> GetUserProfile(int userId)
-    {
-        return GetUserById(userId)
-            .Map(user => new UserProfileView
-            {
-                Id = user.Id,
-                DisplayName = $"{user.FirstName} {user.LastName}",
-                Email = user.Email,
-                JoinDate = user.CreatedAt.ToString("MMMM yyyy"),
-                IsActive = user.IsActive,
-                ProfileImageUrl = GenerateProfileImageUrl(user)
-            });
-    }
-    
-    public MlResult<UserSummary> GetUserSummary(int userId)
-    {
-        return GetUserById(userId)
-            .Map(user => user.Email.ToLower())  // Normalizar email
-            .Map(email => email.Split('@'))     // Dividir email
-            .Map(emailParts => new UserSummary
-            {
-                Username = emailParts[0],
-                Domain = emailParts[1],
-                AccountType = DetermineAccountType(emailParts[1])
-            });
-    }
-    
-    public MlResult<List<ProductView>> GetUserProducts(int userId)
-    {
-        return GetUserById(userId)
-            .Map(user => user.PurchasedProducts)
-            .Map(products => products.Where(p => p.IsActive).ToList())
-            .Map(activeProducts => activeProducts.Select(p => new ProductView
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                PurchaseDate = p.PurchaseDate.ToString("dd/MM/yyyy"),
-                Category = p.Category.Name
-            }).ToList());
-    }
-    
-    private MlResult<User> GetUserById(int userId)
-    {
-        // Simulación de obtención de usuario
-        if (userId <= 0)
-            return MlResult<User>.Fail("Invalid user ID");
-            
-        var users = GetMockUsers();
-        var user = users.FirstOrDefault(u => u.Id == userId);
-        
-        return user != null 
-            ? MlResult<User>.Valid(user)
-            : MlResult<User>.Fail($"User with ID {userId} not found");
-    }
-    
-    private string GenerateProfileImageUrl(User user)
-    {
-        var initials = $"{user.FirstName[0]}{user.LastName[0]}";
-        return $"https://ui-avatars.com/api/?name={initials}&background=random";
-    }
-    
-    private string DetermineAccountType(string domain)
-    {
-        var corporateDomains = new[] { "company.com", "business.org", "enterprise.net" };
-        return corporateDomains.Contains(domain.ToLower()) ? "Corporate" : "Personal";
-    }
-    
-    private List<User> GetMockUsers()
-    {
-        return new List<User>
-        {
-            new User
-            {
-                Id = 1,
-                FirstName = "John",
-                LastName = "Doe",
-                Email = "john.doe@company.com",
-                CreatedAt = DateTime.UtcNow.AddMonths(-6),
-                IsActive = true,
-                PurchasedProducts = new List<Product>
-                {
-                    new Product { Id = 101, Name = "Laptop Pro", Price = 1299.99m, 
-                                IsActive = true, PurchaseDate = DateTime.UtcNow.AddDays(-30),
-                                Category = new Category { Name = "Electronics" } },
-                    new Product { Id = 102, Name = "Wireless Mouse", Price = 49.99m, 
-                                IsActive = true, PurchaseDate = DateTime.UtcNow.AddDays(-15),
-                                Category = new Category { Name = "Accessories" } }
-                }
-            }
-        };
-    }
-}
+public async Task<MlResult<PedidoResumenDto>> ObtenerResumenAsync(int pedidoId)
+    => await EnsureFp.That(pedidoId, pedidoId > 0, "El identificador de pedido debe ser positivo")
 
-// Clases de apoyo
-public class User
-{
-    public int Id { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public string Email { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public bool IsActive { get; set; }
-    public List<Product> PurchasedProducts { get; set; } = new List<Product>();
-}
+        // Bind: la lectura puede fallar (no existe, sin permisos…)
+        .BindAsync(id => _repo.ObtenerPedidoAsync(id))
 
-public class Product
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-    public bool IsActive { get; set; }
-    public DateTime PurchaseDate { get; set; }
-    public Category Category { get; set; }
-}
+        // Map: proyectar a DTO nunca falla
+        .MapAsync(pedido => new PedidoResumenDto(
+                                Numero   : pedido.Numero,
+                                Cliente  : pedido.Cliente.RazonSocial,
+                                Lineas   : pedido.Lineas.Count,
+                                Total    : pedido.Lineas.Sum(l => l.Cantidad * l.Precio),
+                                Estado   : pedido.Estado.ToString()))
 
-public class Category
-{
-    public string Name { get; set; }
-}
+        // Map: enriquecer el DTO tampoco falla
+        .MapAsync(dto => dto with { TotalFormateado = dto.Total.ToString("C", _cultura) })
 
-public class UserProfileView
-{
-    public int Id { get; set; }
-    public string DisplayName { get; set; }
-    public string Email { get; set; }
-    public string JoinDate { get; set; }
-    public bool IsActive { get; set; }
-    public string ProfileImageUrl { get; set; }
-}
-
-public class UserSummary
-{
-    public string Username { get; set; }
-    public string Domain { get; set; }
-    public string AccountType { get; set; }
-}
-
-public class ProductView
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-    public string PurchaseDate { get; set; }
-    public string Category { get; set; }
-}
+        .AddMlErrorDetailIfFailAsync("[Aplicación] No se pudo construir el resumen del pedido");
 ```
 
-### Ejemplo 2: Transformaciones Asíncronas con Servicios Externos
+### Ejemplo 2: `TryMap` en el borde del sistema (parseo)
+
+Todo lo que entra desde fuera —ficheros, cabeceras HTTP, variables de entorno— es material para `TryMap`.
 
 ```csharp
-public class DocumentProcessingService
-{
-    private readonly IFileService _fileService;
-    private readonly ITranslationService _translationService;
-    private readonly IMetadataService _metadataService;
-    
-    public DocumentProcessingService(
-        IFileService fileService,
-        ITranslationService translationService,
-        IMetadataService metadataService)
-    {
-        _fileService = fileService;
-        _translationService = translationService;
-        _metadataService = metadataService;
-    }
-    
-    public async Task<MlResult<ProcessedDocument>> ProcessDocumentAsync(string documentPath)
-    {
-        return await LoadDocument(documentPath)
-            .MapAsync(async doc => await ExtractTextAsync(doc))
-            .MapAsync(async text => await TranslateTextAsync(text))
-            .MapAsync(async translatedText => await GenerateMetadataAsync(translatedText))
-            .MapAsync(metadata => new ProcessedDocument
-            {
-                OriginalPath = documentPath,
-                ProcessedText = metadata.TranslatedText,
-                Metadata = metadata,
-                ProcessedAt = DateTime.UtcNow,
-                ProcessingDuration = DateTime.UtcNow - metadata.StartTime
-            });
-    }
-    
-    public async Task<MlResult<DocumentSummary>> CreateDocumentSummaryAsync(string documentPath)
-    {
-        return await LoadDocument(documentPath)
-            .MapAsync(doc => doc.Name)  // Extraer nombre
-            .MapAsync(async name => await _fileService.GetFileSizeAsync(documentPath))  // Obtener tamaño
-            .MapAsync(async size => await _metadataService.GetFileTypeAsync(documentPath))  // Obtener tipo
-            .MapAsync(metadata => new DocumentSummary
-            {
-                Name = Path.GetFileNameWithoutExtension(documentPath),
-                Extension = Path.GetExtension(documentPath),
-                SizeInBytes = metadata.Size,
-                SizeFormatted = FormatFileSize(metadata.Size),
-                FileType = metadata.Type,
-                CreatedAt = DateTime.UtcNow
-            });
-    }
-    
-    public async Task<MlResult<List<ProcessedDocument>>> ProcessMultipleDocumentsAsync(string[] documentPaths)
-    {
-        var tasks = documentPaths.Select(async path => await ProcessDocumentAsync(path));
-        var results = await Task.WhenAll(tasks);
-        
-        // Filtrar solo los resultados exitosos y transformar a lista
-        return results
-            .Where(r => r.IsValid)
-            .Select(r => r.Value)
-            .ToList()
-            .ToMlResult()
-            .Map(docs => docs.OrderBy(d => d.ProcessedAt).ToList());
-    }
-    
-    private MlResult<Document> LoadDocument(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-            return MlResult<Document>.Fail("Document path cannot be empty");
-            
-        if (!File.Exists(path))
-            return MlResult<Document>.Fail($"Document not found: {path}");
-            
-        var document = new Document
-        {
-            Path = path,
-            Name = Path.GetFileName(path),
-            LoadedAt = DateTime.UtcNow
-        };
-        
-        return MlResult<Document>.Valid(document);
-    }
-    
-    private async Task<string> ExtractTextAsync(Document document)
-    {
-        // Simulación de extracción de texto
-        await Task.Delay(100);
-        return $"Extracted text from {document.Name}";
-    }
-    
-    private async Task<string> TranslateTextAsync(string text)
-    {
-        return await _translationService.TranslateAsync(text, "en", "es");
-    }
-    
-    private async Task<DocumentMetadata> GenerateMetadataAsync(string translatedText)
-    {
-        var metadata = await _metadataService.GenerateMetadataAsync(translatedText);
-        return new DocumentMetadata
-        {
-            TranslatedText = translatedText,
-            WordCount = translatedText.Split(' ').Length,
-            CharacterCount = translatedText.Length,
-            Language = "es",
-            StartTime = DateTime.UtcNow.AddMinutes(-1),  // Simulado
-            Size = 0,
-            Type = "text"
-        };
-    }
-    
-    private string FormatFileSize(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        double len = bytes;
-        int order = 0;
-        
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len = len / 1024;
-        }
-        
-        return $"{len:0.##} {sizes[order]}";
-    }
-}
+public MlResult<ParametrosLote> LeerParametros(IDictionary<string, string> crudos)
+    => crudos.ToMlResultValid()
 
-// Clases de apoyo e interfaces
-public class Document
-{
-    public string Path { get; set; }
-    public string Name { get; set; }
-    public DateTime LoadedAt { get; set; }
-}
+        .TryMap(d => new ParametrosLote(
+                        FechaProceso : DateTime.ParseExact(d["fecha"], "yyyyMMdd", CultureInfo.InvariantCulture),
+                        TamanoPagina : int.Parse(d["pagina"]),
+                        Reintentos   : int.Parse(d["reintentos"])),
+                ex => $"Los parámetros del lote no son válidos ({ex.GetType().Name}): {ex.Message}")
 
-public class DocumentMetadata
-{
-    public string TranslatedText { get; set; }
-    public int WordCount { get; set; }
-    public int CharacterCount { get; set; }
-    public string Language { get; set; }
-    public DateTime StartTime { get; set; }
-    public long Size { get; set; }
-    public string Type { get; set; }
-}
-
-public class ProcessedDocument
-{
-    public string OriginalPath { get; set; }
-    public string ProcessedText { get; set; }
-    public DocumentMetadata Metadata { get; set; }
-    public DateTime ProcessedAt { get; set; }
-    public TimeSpan ProcessingDuration { get; set; }
-}
-
-public class DocumentSummary
-{
-    public string Name { get; set; }
-    public string Extension { get; set; }
-    public long SizeInBytes { get; set; }
-    public string SizeFormatted { get; set; }
-    public string FileType { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public interface IFileService
-{
-    Task<long> GetFileSizeAsync(string path);
-}
-
-public interface ITranslationService
-{
-    Task<string> TranslateAsync(string text, string fromLanguage, string toLanguage);
-}
-
-public interface IMetadataService
-{
-    Task<DocumentMetadata> GenerateMetadataAsync(string text);
-    Task<FileTypeInfo> GetFileTypeAsync(string path);
-}
-
-public class FileTypeInfo
-{
-    public string Type { get; set; }
-    public long Size { get; set; }
-}
+        // MapEnsure para las reglas de negocio, que no lanzan
+        .MapEnsure(p => p.TamanoPagina is > 0 and <= 1000,
+                        "El tamaño de página debe estar entre 1 y 1000")
+        .MapEnsure(p => p.Reintentos <= 5,
+                        "No se admiten más de 5 reintentos");
 ```
 
-### Ejemplo 3: TryMap para Transformaciones que Pueden Fallar
+### Ejemplo 3: Cadena mixta `Map` / `Bind` bien tipada
 
 ```csharp
-public class DataFormatterService
-{
-    public MlResult<FormattedData> FormatDataSafely(RawInputData rawData)
-    {
-        return ValidateRawData(rawData)
-            .TryMap(data => ParseDateString(data.DateString), "Failed to parse date")
-            .TryMap(date => FormatCurrency(rawData.AmountString), ex => $"Currency formatting failed: {ex.Message}")
-            .TryMap(amount => NormalizeText(rawData.TextContent), "Text normalization failed")
-            .TryMap(text => new FormattedData
-            {
-                FormattedDate = rawData.DateString,  // Ya validado
-                FormattedAmount = rawData.AmountString,  // Ya validado
-                NormalizedText = text,
-                ProcessedAt = DateTime.UtcNow
-            }, ex => $"Failed to create formatted data: {ex.Message}");
-    }
-    
-    public async Task<MlResult<BatchFormattedData>> FormatDataBatchAsync(List<RawInputData> rawDataList)
-    {
-        var formattedResults = new List<FormattedData>();
-        var errors = new List<string>();
-        
-        return await rawDataList.ToMlResult()
-            .TryMapAsync(async dataList =>
-            {
-                foreach (var rawData in dataList)
-                {
-                    var result = FormatDataSafely(rawData);
-                    if (result.IsValid)
-                        formattedResults.Add(result.Value);
-                    else
-                        errors.AddRange(result.ErrorsDetails.Select(e => e.ErrorMessage));
-                }
-                
-                return new BatchFormattedData
-                {
-                    SuccessfulItems = formattedResults,
-                    FailedCount = errors.Count,
-                    Errors = errors,
-                    ProcessedAt = DateTime.UtcNow
-                };
-            }, ex => $"Batch processing failed: {ex.Message}");
-    }
-    
-    public MlResult<JsonFormattedData> FormatToJsonSafely(object data)
-    {
-        return data.ToMlResult()
-            .TryMap(obj => SerializeToJson(obj), "JSON serialization failed")
-            .TryMap(json => CompressJson(json), ex => $"JSON compression failed: {ex.GetType().Name}")
-            .TryMap(compressed => ValidateJsonStructure(compressed), "JSON validation failed")
-            .TryMap(validJson => new JsonFormattedData
-            {
-                OriginalSize = JsonSerializer.Serialize(data).Length,
-                CompressedJson = validJson,
-                CompressedSize = validJson.Length,
-                CompressionRatio = (double)validJson.Length / JsonSerializer.Serialize(data).Length,
-                CreatedAt = DateTime.UtcNow
-            });
-    }
-    
-    private MlResult<RawInputData> ValidateRawData(RawInputData rawData)
-    {
-        if (rawData == null)
-            return MlResult<RawInputData>.Fail("Raw data cannot be null");
-            
-        if (string.IsNullOrWhiteSpace(rawData.DateString))
-            return MlResult<RawInputData>.Fail("Date string is required");
-            
-        if (string.IsNullOrWhiteSpace(rawData.AmountString))
-            return MlResult<RawInputData>.Fail("Amount string is required");
-            
-        return MlResult<RawInputData>.Valid(rawData);
-    }
-    
-    // Método que puede lanzar FormatException
-    private DateTime ParseDateString(string dateString)
-    {
-        // Intentar varios formatos de fecha
-        var formats = new[] { "yyyy-MM-dd", "dd/MM/yyyy", "MM-dd-yyyy", "yyyy/MM/dd" };
-        
-        foreach (var format in formats)
-        {
-            if (DateTime.TryParseExact(dateString, format, CultureInfo.InvariantCulture, 
-                DateTimeStyles.None, out var date))
-            {
-                return date;
-            }
-        }
-        
-        // Si ningún formato funciona, lanzar excepción
-        throw new FormatException($"Unable to parse date string '{dateString}' with any known format");
-    }
-    
-    // Método que puede lanzar ArgumentException
-    private decimal FormatCurrency(string amountString)
-    {
-        // Limpiar el string de caracteres no numéricos excepto punto y coma
-        var cleanAmount = Regex.Replace(amountString, @"[^\d.,\-]", "");
-        
-        if (string.IsNullOrWhiteSpace(cleanAmount))
-            throw new ArgumentException("Amount string contains no numeric characters");
-            
-        // Intentar parsear como decimal
-        if (decimal.TryParse(cleanAmount, NumberStyles.Currency, CultureInfo.InvariantCulture, out var amount))
-        {
-            if (amount < 0)
-                throw new ArgumentException("Amount cannot be negative");
-                
-            return amount;
-        }
-        
-        throw new FormatException($"Unable to parse amount string '{amountString}' as decimal");
-    }
-    
-    // Método que puede lanzar InvalidOperationException
-    private string NormalizeText(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            throw new InvalidOperationException("Text content cannot be empty for normalization");
-            
-        // Normalización que puede fallar
-        try
-        {
-            var normalized = text.Trim()
-                                .ToLowerInvariant()
-                                .Replace("  ", " ");  // Reemplazar espacios dobles
-            
-            if (normalized.Length > 1000)
-                throw new InvalidOperationException("Normalized text exceeds maximum length of 1000 characters");
-                
-            return normalized;
-        }
-        catch (Exception ex) when (!(ex is InvalidOperationException))
-        {
-            throw new InvalidOperationException($"Text normalization failed: {ex.Message}", ex);
-        }
-    }
-    
-    // Método que puede lanzar JsonException
-    private string SerializeToJson(object obj)
-    {
-        try
-        {
-            return JsonSerializer.Serialize(obj, new JsonSerializerOptions
-            {
-                WriteIndented = false,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
-        }
-        catch (Exception ex)
-        {
-            throw new JsonException($"Failed to serialize object to JSON: {ex.Message}", ex);
-        }
-    }
-    
-    // Método que puede lanzar CompressionException
-    private string CompressJson(string json)
-    {
-        if (json.Length < 100)  // No comprimir strings pequeños
-            return json;
-            
-        try
-        {
-            // Simulación de compresión - en realidad solo removemos espacios adicionales
-            var compressed = Regex.Replace(json, @"\s+", " ").Trim();
-            
-            if (compressed.Length >= json.Length)
-                throw new InvalidOperationException("Compression did not reduce size");
-                
-            return compressed;
-        }
-        catch (Exception ex) when (!(ex is InvalidOperationException))
-        {
-            throw new InvalidOperationException($"JSON compression failed: {ex.Message}", ex);
-        }
-    }
-    
-    // Método que puede lanzar ValidationException
-    private string ValidateJsonStructure(string json)
-    {
-        try
-        {
-            // Validar que es JSON válido
-            using var document = JsonDocument.Parse(json);
-            
-            // Validaciones adicionales
-            if (json.Length == 0)
-                throw new ValidationException("JSON cannot be empty");
-                
-            if (!json.StartsWith("{") && !json.StartsWith("["))
-                throw new ValidationException("JSON must start with
+public async Task<MlResult<CertificadoDto>> EmitirCertificadoAsync(SolicitudDto dto)
+    => await ValidarSolicitudAsync(dto)                                  // MlResult<Solicitud>
+
+        .BindAsync(s => _registro.BuscarTitularAsync(s.Nif)              // puede fallar → Bind
+                                 .Map(titular => (Solicitud: s, Titular: titular)))
+
+        .MapAsync(par => new BorradorCertificado(                        // no falla → Map
+                             Titular  : par.Titular.NombreCompleto,
+                             Concepto : par.Solicitud.Concepto,
+                             Fecha    : DateTime.UtcNow))
+
+        .TryMapAsync(async b => await _pdf.RenderizarAsync(b),           // puede lanzar → TryMap
+                     ex => $"Error generando el PDF del certificado: {ex.Message}")
+
+        .MapAsync(pdf => new CertificadoDto(pdf.Id, pdf.Bytes.Length));  // no falla → Map
+```
+
+Fíjate en el patrón `Bind(... .Map(x => (A: …, B: …)))`: es la forma idiomática de **arrastrar dos valores** por la tubería sin variables externas.
+
+### Ejemplo 4: Lo que **no** debes hacer
+
+```csharp
+// ❌ Map con una función que devuelve MlResult → anidamiento
+resultado.Map(p => Facturar(p));
+
+// ❌ Map con una función que puede lanzar → la excepción escapa de la tubería
+resultado.Map(t => int.Parse(t));
+
+// ❌ Map con efectos secundarios y sin transformación real
+resultado.Map(p => { _log.LogInformation("{P}", p); return p; });
+
+// ✅ Cada caso con su herramienta
+resultado.Bind(p => Facturar(p));
+resultado.TryMap(t => int.Parse(t), ex => $"Valor no numérico: {ex.Message}");
+resultado.ExecSelf(p => _log.LogInformation("{P}", p));
+```
+
+---
+
+## Mejores Prácticas
+
+1. **Mantén `Map` puro.** Si la lambda escribe en un log, en disco o en una variable externa, lo que quieres es [`ExecSelf`](../ExecSelf/1_ExecSelf.md).
+
+2. **Ante la duda, mira el tipo de retorno de tu lambda.** ¿Devuelve `MlResult<...>`? → `Bind`. ¿Un valor normal? → `Map`. ¿Puede lanzar? → `TryMap`.
+
+3. **Usa `TryMap` en todas las fronteras.** Parseos, deserializaciones, reflexión, cálculos con división: cualquier cosa que pueda lanzar debe entrar por `TryMap`, no por `Map`.
+
+4. **Un `Map` por concepto.** Es más legible una cadena de tres `Map` con nombres claros que un único `Map` con una lambda de veinte líneas.
+
+5. **No accedas a `.Value`.** `Map` existe precisamente para no tener que hacerlo. Si necesitas salir del `MlResult`, hazlo con `Match` al final.
+
+6. **Elige la sobrecarga `Func<Exception, string>` cuando el mensaje deba incluir el motivo real.** El mensaje fijo es cómodo, pero pierde información diagnóstica útil.
+
+7. **No te preocupes por los `await` intermedios.** Las sobrecargas con origen `Task<MlResult<T>>` permiten cadenas limpias con un solo `await` al principio.
+
+---
+
+## Resumen
+
+- `Map` transforma el valor de un resultado válido y propaga los fallos sin tocarlos.
+- Implementación real: `source.Match(fail: MlResult<TReturn>.Fail, valid: value => func(value))`.
+- La rama de fallo **cambia el tipo genérico pero conserva errores y detalles intactos**.
+- Usa `Map` para funciones que **no fallan**; usa [`Bind`](../Bind/3_Bind.md) para las que devuelven `MlResult`.
+- El anidamiento `MlResult<MlResult<T>>` es la señal inequívoca de haber usado `Map` en lugar de `Bind`.
+- `TryMap` captura la excepción, la convierte en fallo y **la guarda en `Details["Ex"]`**, con 2 sobrecargas síncronas y 8 asíncronas.
+- `MapAsync` tiene 4 sobrecargas que cubren origen y delegado síncrono/asíncrono.
+
+---
+
+## Ver también
+
+- [`2_MapEnsure.md`](2_MapEnsure.md) — validar condiciones sobre el valor.
+- [`3_MapIf.md`](3_MapIf.md) — transformar solo si se cumple una condición.
+- [`4_MapIfFail.md`](4_MapIfFail.md) — transformar el fallo en un valor.
+- [`8_MapAlways.md`](8_MapAlways.md) — transformar siempre, sea válido o fallido.
+- [`../Bind/3_Bind.md`](../Bind/3_Bind.md) — la operación hermana para funciones que fallan.
+- [`../Match/1_Match.md`](../Match/1_Match.md) — salir del `MlResult`.
+- [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios sin transformar.
+- [`../Types/MlResultActionsMap.md`](../Types/MlResultActionsMap.md) — inventario completo de la clase.

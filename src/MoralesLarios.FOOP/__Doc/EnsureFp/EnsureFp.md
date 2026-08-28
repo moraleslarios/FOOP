@@ -1,1136 +1,538 @@
-# MlResult EnsureFp - Validaciones y Precondiciones Funcionales
+# EnsureFp — Guardas de entrada al carril funcional
 
 ## Índice
+
 1. [Introducción](#introducción)
-2. [Análisis de los Métodos](#análisis-de-los-métodos)
-3. [Métodos de Validación Específica](#métodos-de-validación-específica)
-4. [Método Base That](#método-base-that)
-5. [Variantes Asíncronas](#variantes-asíncronas)
-6. [Ejemplos Prácticos](#ejemplos-prácticos)
-7. [Mejores Prácticas](#mejores-prácticas)
-8. [Comparación con Assert y Guard](#comparación-con-assert-y-guard)
+2. [El problema que resuelve](#el-problema-que-resuelve)
+3. [No es una extensión: es una clase estática](#no-es-una-extensión-es-una-clase-estática)
+4. [Inventario completo de la API](#inventario-completo-de-la-api)
+5. [`That` — el método base](#that--el-método-base)
+6. [Los tres atajos: `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace`](#los-tres-atajos-notnull-notempty-notnullemptyorwhitespace)
+7. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+8. [Variantes asíncronas](#variantes-asíncronas)
+9. [`EnsureFp` frente a `NullToFailed`, `EmptyToFailed` y `BoolToResult`](#ensurefp-frente-a-nulltofailed-emptytofailed-y-booltoresult)
+10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+11. [Ejemplos Prácticos](#ejemplos-prácticos)
+12. [Mejores Prácticas](#mejores-prácticas)
+13. [Resumen](#resumen)
+14. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-La clase `EnsureFp` proporciona un conjunto de métodos para **validaciones y precondiciones funcionales** que siguen el patrón de programación funcional. Estos métodos permiten validar condiciones y retornar `MlResult<T>` en lugar de lanzar excepciones, manteniendo la cadena funcional intacta y proporcionando un control de flujo más predecible.
+`EnsureFp` es una clase estática de ayuda que cumple el papel de las **guardas clásicas**
+(`ArgumentNullException.ThrowIfNull`, `Guard.Against...`) pero **sin lanzar excepciones**:
+en lugar de romper el flujo, devuelve un `MlResult<T>`.
 
-### Propósito Principal
+```csharp
+// ❌ Guardas imperativas: excepciones que hay que capturar arriba
+public Factura Emitir(Pedido pedido, string serie)
+{
+    ArgumentNullException.ThrowIfNull(pedido);
+    if (string.IsNullOrWhiteSpace(serie)) throw new ArgumentException(nameof(serie));
+    if (!pedido.Lineas.Any())             throw new InvalidOperationException("Sin líneas");
+    // …
+}
 
-- **Validaciones No-Excepcionales**: Validar condiciones sin lanzar excepciones
-- **Precondiciones Funcionales**: Establecer contratos de entrada de forma funcional
-- **Flujo de Control Predecible**: Mantener el patrón MlResult en validaciones
-- **Composición de Validaciones**: Facilitar la combinación de múltiples validaciones
+// ✅ Con EnsureFp: el error es un valor, la tubería sigue siendo funcional
+public MlResult<Factura> Emitir(Pedido pedido, string serie)
+    => EnsureFp.NotNull(pedido, "El pedido es obligatorio")
+               .Bind(p => EnsureFp.NotNullEmptyOrWhitespace(serie, "La serie es obligatoria")
+                                  .Map(s => (p, s)))
+               .Bind(t => EnsureFp.NotEmpty(t.p.Lineas, "El pedido no tiene líneas")
+                                  .Map(_ => t))
+               .Map(t => Construir(t.p, t.s));
+```
+
+> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
 
 ---
 
-## Análisis de los Métodos
+## El problema que resuelve
 
-### Filosofía de EnsureFp
+Todos los operadores del carril (`Map`, `Bind`, `MapEnsure`, `ExecSelf`…) son extensiones de
+`MlResult<T>`: **necesitan que ya estés dentro del carril**. Pero cuando escribes un método
+público, los argumentos llegan como valores desnudos de C#.
+
+`EnsureFp` resuelve ese primer paso: **valida un argumento y te deja dentro del carril**.
 
 ```
-Valor + Condición → EnsureFp → MlResult<T>
-  ↓        ↓          ↓           ↓
-value + condition → Valid(value) si condition = true
-  ↓        ↓          ↓           ↓
-value + condition → Fail(error) si condition = false
-```
-
-### Características Principales
-
-1. **Validación Funcional**: Sin efectos secundarios ni excepciones
-2. **Preservación de Valor**: El valor original se mantiene si es válido
-3. **Flexibilidad de Errores**: Soporte para mensajes simples y errores complejos
-4. **Composabilidad**: Fácil integración con cadenas funcionales
-5. **Soporte Async**: Versiones asíncronas para todos los métodos
-
----
-
-## Métodos de Validación Específica
-
-### 1. NotNull - Validación de Nulos
-
-**Propósito**: Verificar que un valor no sea null
-
-```csharp
-public static MlResult<T> NotNull<T>(T value, string errorMessage)
-public static MlResult<T> NotNull<T>(T value, MlErrorsDetails errorsDetails)
-```
-
-**Ejemplo Básico**:
-```csharp
-User user = GetUser(userId);
-var validUser = EnsureFp.NotNull(user, "User not found");
-
-// Si user != null: MlResult<User>.Valid(user)
-// Si user == null: MlResult<User>.Fail("User not found")
-```
-
-### 2. NotEmpty - Validación de Colecciones Vacías
-
-**Propósito**: Verificar que una colección no esté vacía ni sea null
-
-```csharp
-public static MlResult<IEnumerable<T>> NotEmpty<T>(IEnumerable<T> value, string message)
-public static MlResult<IEnumerable<T>> NotEmpty<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails)
-```
-
-**Ejemplo**:
-```csharp
-var items = GetOrderItems(orderId);
-var validItems = EnsureFp.NotEmpty(items, "Order must contain at least one item");
-
-// Si items tiene elementos: MlResult<IEnumerable<Item>>.Valid(items)
-// Si items es null o vacío: MlResult<IEnumerable<Item>>.Fail("Order must contain at least one item")
-```
-
-### 3. NotNullEmptyOrWhitespace - Validación de Strings
-
-**Propósito**: Verificar que un string no sea null, vacío o solo espacios en blanco
-
-```csharp
-public static MlResult<string> NotNullEmptyOrWhitespace(string value, string errorMessage)
-public static MlResult<string> NotNullEmptyOrWhitespace(string value, MlErrorsDetails errorsDetails)
-```
-
-**Ejemplo**:
-```csharp
-string customerName = GetCustomerName();
-var validName = EnsureFp.NotNullEmptyOrWhitespace(customerName, "Customer name is required");
-
-// Si customerName tiene contenido: MlResult<string>.Valid(customerName)
-// Si customerName es null/""/espacios: MlResult<string>.Fail("Customer name is required")
+Argumentos de C#  ──[ EnsureFp ]──►  MlResult<T>  ──[ Map / Bind / ... ]──►  MlResult<TResult>
+   (mundo OO)                          (carril funcional)
 ```
 
 ---
 
-## Método Base That
+## No es una extensión: es una clase estática
 
-### Validación Condicional Genérica
+Este es el detalle que más despista al principio. `EnsureFp` **no** contiene métodos de
+extensión, sino métodos estáticos normales:
 
-**Propósito**: Método base para validaciones personalizadas con cualquier condición
+```csharp
+public static class EnsureFp
+{
+    public static MlResult<T> That<T>(T value, bool condition, string errorMessage) => /* … */;
+    public static MlResult<T> NotNull<T>(T value, string errorMessage)              => /* … */;
+    // …
+}
+```
+
+Por tanto siempre se invoca con el nombre de la clase delante:
+
+```csharp
+// ✅ Correcto
+var r = EnsureFp.NotNull(cliente, "El cliente es obligatorio");
+
+// ❌ No compila: no es un método de extensión
+// var r = cliente.NotNull("El cliente es obligatorio");
+
+// ✅ Si quieres sintaxis de extensión, usa los métodos de Several
+var r = cliente.NullToFailed("El cliente es obligatorio");
+```
+
+💡 **Consejo:** añade `using static MoralesLarios.OOFP.Helpers.EnsureFp;` en los archivos con
+muchas validaciones y escribe directamente `NotNull(...)`, `That(...)`.
+
+---
+
+## Inventario completo de la API
+
+La clase tiene exactamente **14 métodos** (7 síncronos + 7 asíncronos), y cada uno viene en
+dos sabores según cómo expreses el error (`string` o `MlErrorsDetails`):
+
+| Método | Condición que comprueba | Devuelve |
+|--------|------------------------|----------|
+| `That<T>(value, condition, error)` | La `condition` que tú indiques | `MlResult<T>` |
+| `NotNull<T>(value, error)` | `value is not null` | `MlResult<T>` |
+| `NotEmpty<T>(value, error)` | `value != null && value.Any()` | `MlResult<IEnumerable<T>>` |
+| `NotNullEmptyOrWhitespace(value, error)` | `!string.IsNullOrWhiteSpace(value)` | `MlResult<string>` |
+
+Más sus cuatro equivalentes asíncronos: `ThatAsync`, `NotNullAsync`, `NotEmptyAsync`,
+`NotNullEmptyOrWhitespaceAsync`.
+
+⚠️ **No hay más.** No existen `NotDefault`, `InRange`, `Positive`, `Matches`, `MinLength`
+ni ninguna otra guarda especializada. Para el resto de comprobaciones se usa `That`.
+
+⚠️ **Solo dos formas de expresar el error**: `string` y `MlErrorsDetails`. A diferencia de
+`BoolToResult` o `NullToFailed`, aquí **no hay sobrecargas para `MlError` ni para
+`IEnumerable<string>`**.
+
+```csharp
+// ✅ Las dos formas disponibles
+EnsureFp.NotNull(cliente, "El cliente es obligatorio");
+EnsureFp.NotNull(cliente, MlErrorsDetails.FromErrorMessageDetails(
+                              "El cliente es obligatorio",
+                              new Dictionary<string, object> { ["Parametro"] = "cliente" }));
+
+// ❌ No existen estas sobrecargas
+// EnsureFp.NotNull(cliente, ErroresCliente.Obligatorio);        // MlError
+// EnsureFp.NotNull(cliente, new[] { "msg1", "msg2" });          // IEnumerable<string>
+
+// ✅ Convierte a MlErrorsDetails si necesitas esas formas
+EnsureFp.NotNull(cliente, MlErrorsDetails.FromError(ErroresCliente.Obligatorio));
+EnsureFp.NotNull(cliente, MlErrorsDetails.FromEnumerableStrings(new[] { "msg1", "msg2" }));
+```
+
+---
+
+## `That` — el método base
+
+Todos los demás métodos delegan en `That`. Es la guarda genérica:
 
 ```csharp
 public static MlResult<T> That<T>(T value, bool condition, string errorMessage)
+    => condition ? MlResult<T>.Valid(value) : MlResult<T>.Fail(errorMessage);
+
 public static MlResult<T> That<T>(T value, bool condition, MlErrorsDetails errorsDetails)
+    => condition ? MlResult<T>.Valid(value) : errorsDetails.ToMlResultFail<T>();
 ```
 
-**Ejemplo de Uso Avanzado**:
+Si la condición se cumple, el valor entra en el carril tal cual; si no, el resultado es
+fallido con tu error.
+
 ```csharp
-// Validación de edad
-var age = 25;
-var validAge = EnsureFp.That(age, age >= 18 && age <= 120, "Age must be between 18 and 120");
+// Cualquier regla que no tenga atajo se expresa con That
+EnsureFp.That(edad,     edad is >= 18 and <= 120,       "La edad debe estar entre 18 y 120");
+EnsureFp.That(importe,  importe > 0,                     "El importe debe ser positivo");
+EnsureFp.That(nif,      RegexNif.IsMatch(nif),           "El NIF no tiene un formato válido");
+EnsureFp.That(fecha,    fecha <= DateTime.UtcNow,        "La fecha no puede ser futura");
+EnsureFp.That(pagina,   pagina >= 1,                     "La página debe ser 1 o mayor");
+```
 
-// Validación de email
-var email = "user@example.com";
-var validEmail = EnsureFp.That(email, IsValidEmailFormat(email), "Invalid email format");
+⚠️ Como en `BoolToResult`, la `condition` es un **`bool` ya evaluado**, no un delegado: se
+calcula antes de entrar al método. Con validaciones de argumentos (siempre baratas) esto no
+supone ningún problema.
 
-// Validación de rango de fechas
-var date = DateTime.Now;
-var validDate = EnsureFp.That(date, date > DateTime.Now.AddDays(-30), "Date cannot be older than 30 days");
+---
+
+## Los tres atajos: `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace`
+
+### `NotNull<T>`
+
+```csharp
+public static MlResult<T> NotNull<T>(T value, string errorMessage)
+    => That(value, value is not null, errorMessage);
+```
+
+🔑 Usa **`value is not null`**, no `value == null`. Esta diferencia importa: el patrón
+`is not null` **ignora cualquier `operator ==` sobrecargado** y comprueba la referencia real.
+Es más seguro que la implementación de [`NullToFailed`](../Several/2_NullToFailed.md), que
+sí usa `== null` y por tanto puede verse afectada por operadores sobrecargados.
+
+⚠️ El parámetro es `T value` sin restricción `where T : class`, así que puedes pasar un
+value type — pero entonces la comprobación es inútil (nunca será `null`) y el compilador
+puede avisarte.
+
+### `NotEmpty<T>`
+
+```csharp
+public static MlResult<IEnumerable<T>> NotEmpty<T>(IEnumerable<T> value, string message)
+    => That(value, value != null && value.Any(), message);
+```
+
+Comprueba **`null` y vacío a la vez** — igual que
+[`EmptyToFailed`](../Several/1_EmptyToFailed.md), del que es el gemelo estático.
+
+⚠️ Invoca `.Any()`, que **enumera el primer elemento**. Con una consulta LINQ diferida o un
+`IEnumerable` de un solo uso, esto puede tener efectos:
+
+```csharp
+// ⚠️ La consulta se ejecuta aquí, y otra vez al recorrerla después
+var r = EnsureFp.NotEmpty(_db.Clientes.Where(c => c.Activo), "Sin clientes activos");
+
+// ✅ Materializa antes
+var activos = _db.Clientes.Where(c => c.Activo).ToList();
+var r = EnsureFp.NotEmpty(activos, "Sin clientes activos");
+```
+
+⚠️ El retorno es `MlResult<IEnumerable<T>>`, no `MlResult<List<T>>`: si le pasas una lista,
+pierdes el tipo concreto.
+
+### `NotNullEmptyOrWhitespace`
+
+```csharp
+public static MlResult<string> NotNullEmptyOrWhitespace(string value, string errorMessage)
+     => That(value, !string.IsNullOrWhiteSpace(value), errorMessage);
+```
+
+La guarda para cadenas: rechaza `null`, `""` y `"   "`. Es el atajo más usado en la práctica,
+porque casi todos los identificadores, códigos y nombres que llegan de fuera son cadenas.
+
+⚠️ **No recorta la cadena.** Si el valor es `"  ABC  "`, pasa la validación y sigue con los
+espacios. Haz el `Trim()` tú:
+
+```csharp
+var r = EnsureFp.NotNullEmptyOrWhitespace(nif, "El NIF es obligatorio")
+                .Map(s => s.Trim().ToUpperInvariant());
 ```
 
 ---
 
-## Variantes Asíncronas
+## ⚠️ Particularidades reales del código fuente
 
-### Soporte Async Completo
+**1. Solo `string` y `MlErrorsDetails` como forma de error.** Ya comentado: no hay
+sobrecargas para `MlError` ni `IEnumerable<string>`.
 
-**Todos los métodos tienen equivalentes asíncronos**:
+**2. Solo 4 validaciones.** `That`, `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace`. Todo
+lo demás se construye con `That`.
+
+**3. `NotNull` usa `is not null` (bueno); `NotEmpty` usa `!= null` (menos estricto).**
+Inconsistencia real del código, sin consecuencias prácticas en el 99 % de los casos.
+
+**4. Las variantes asíncronas no son realmente asíncronas.** Todas se limitan a envolver el
+resultado síncrono con `.ToAsync()` (es decir, `Task.FromResult`). **No aportan
+concurrencia**; su única utilidad es encajar en una cadena que ya es asíncrona.
 
 ```csharp
-// Versiones async de todos los métodos
-public static Task<MlResult<T>> NotNullAsync<T>(T value, string errorMessage)
-public static Task<MlResult<T>> NotNullAsync<T>(T value, MlErrorsDetails errorsDetails)
-
-public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(IEnumerable<T> value, string message)
-public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails)
-
-public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(string value, string errorMessage)
-public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(string value, MlErrorsDetails errorsDetails)
-
-public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, string errorMessage)
+// Implementación real: no hay nada que esperar
 public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, MlErrorsDetails errorsDetails)
+    => condition ? MlResult<T>.Valid(value).ToAsync() : errorsDetails.ToMlResultFail<T>().ToAsync();
 ```
+
+**5. Ninguna sobrecarga acepta un predicado asíncrono.** No existe
+`ThatAsync(value, Func<Task<bool>>, ...)`. Si tu condición requiere una consulta, resuélvela
+antes:
+
+```csharp
+// ✅ El await es tuyo
+var existe = await _repo.ExisteAsync(nif);
+var r = EnsureFp.That(nif, !existe, $"Ya existe un cliente con NIF {nif}");
+```
+
+**6. Dos métodos tienen cuerpo con bloque en lugar de expresión.** `ThatAsync(string)` y
+`NotNullAsync(string)` están escritos con `{ var result = …; return result; }` y hay código
+comentado justo encima. Es puramente cosmético: el comportamiento es idéntico al de sus
+hermanos.
+
+**7. `NotNullAsync(value, MlErrorsDetails)` no es `async`**: devuelve directamente el `Task`
+de `ThatAsync`. Otra asimetría cosmética.
+
+**8. No existe ninguna variante `Try*`.** `EnsureFp` no invoca delegados de usuario, así que
+no hay excepciones que capturar.
+
+---
+
+## Variantes asíncronas
+
+| Método | Naturaleza real |
+|--------|----------------|
+| `ThatAsync(value, condition, string \| MlErrorsDetails)` | Envoltura `ToAsync()` |
+| `NotNullAsync(value, string \| MlErrorsDetails)` | Envoltura |
+| `NotEmptyAsync(value, string \| MlErrorsDetails)` | Envoltura |
+| `NotNullEmptyOrWhitespaceAsync(value, string \| MlErrorsDetails)` | Envoltura |
+
+Su uso natural es **abrir una tubería asíncrona** sin tener que insertar un `.ToAsync()`
+manual:
+
+```csharp
+public Task<MlResult<ClienteDto>> ObtenerAsync(string nif)
+    => EnsureFp.NotNullEmptyOrWhitespaceAsync(nif, "El NIF es obligatorio")
+               .BindAsync(n => _repo.BuscarPorNifAsync(n)
+                                    .NullToFailedAsync($"No existe cliente con NIF {n}"))
+               .MapAsync(c => c.ToDto().ToAsync());
+```
+
+---
+
+## `EnsureFp` frente a `NullToFailed`, `EmptyToFailed` y `BoolToResult`
+
+Las cuatro herramientas hacen prácticamente lo mismo; la diferencia es **la sintaxis y el
+punto de uso**:
+
+| Herramienta | Forma | Formas de error | Comprobación de `null` |
+|-------------|-------|-----------------|------------------------|
+| `EnsureFp.NotNull` | Estático | `string`, `MlErrorsDetails` | `is not null` (estricto) |
+| [`NullToFailed`](../Several/2_NullToFailed.md) | Extensión | 4 formas | `== null` (respeta `operator==`) |
+| `EnsureFp.NotEmpty` | Estático | `string`, `MlErrorsDetails` | `!= null && Any()` |
+| [`EmptyToFailed`](../Several/1_EmptyToFailed.md) | Extensión | 3 formas | `!= null && Any()` |
+| `EnsureFp.That` | Estático | `string`, `MlErrorsDetails` | — |
+| [`BoolToResult`](../Several/3_BoolToResult.md) | Extensión | 4 formas | — |
+| [`MapEnsure`](../Map/2_MapEnsure.md) | Extensión de `MlResult<T>` | varias | Predicado **diferido** |
+
+🔑 **Criterio práctico:**
+
+- **Al entrar en un método público**, con argumentos sueltos → `EnsureFp`. El prefijo
+  `EnsureFp.` deja visualmente claro que es una guarda de precondición.
+- **Ya dentro del carril** → `MapEnsure`, que además tiene predicado diferido.
+- **Si prefieres sintaxis fluida desde el primer momento** → los métodos de
+  [`Several`](../Several/1_EmptyToFailed.md), que son extensiones.
+
+```csharp
+// Estilo A: EnsureFp para la puerta de entrada (guardas explícitas)
+public MlResult<Recibo> Emitir(Pedido pedido, string serie)
+    => EnsureFp.NotNull(pedido, "El pedido es obligatorio")
+               .MapEnsure(p => p.Lineas.Any(), "El pedido no tiene líneas")
+               .Map(p => Construir(p, serie));
+
+// Estilo B: todo fluido con las extensiones de Several
+public MlResult<Recibo> Emitir(Pedido pedido, string serie)
+    => pedido.NullToFailed("El pedido es obligatorio")
+             .MapEnsure(p => p.Lineas.Any(), "El pedido no tiene líneas")
+             .Map(p => Construir(p, serie));
+```
+
+Ambos son correctos. Elige uno **y sé consistente en todo el proyecto**.
+
+---
+
+## Tabla de decisión rápida
+
+| Necesito… | Uso |
+|-----------|-----|
+| Validar un argumento no nulo al entrar en un método | `EnsureFp.NotNull(x, "...")` |
+| Validar una cadena obligatoria | `EnsureFp.NotNullEmptyOrWhitespace(s, "...")` |
+| Validar que una colección trae elementos | `EnsureFp.NotEmpty(items, "...")` |
+| Cualquier otra regla sobre un argumento | `EnsureFp.That(x, condición, "...")` |
+| Lo mismo, abriendo una tubería asíncrona | `EnsureFp.*Async(...)` |
+| Validar con detalles de diagnóstico | Sobrecarga con `MlErrorsDetails` |
+| Usar un `MlError` de catálogo | `MlErrorsDetails.FromError(err)` |
+| Validar **ya dentro** del carril | [`MapEnsure`](../Map/2_MapEnsure.md) |
+| Sintaxis fluida en lugar de estática | [`NullToFailed`](../Several/2_NullToFailed.md), [`BoolToResult`](../Several/3_BoolToResult.md) |
+| Validar con reglas de FluentValidation o DataAnnotations | Paquetes `MoralesLarios.OOFP.Validation.*` |
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Sistema de Validación de Pedidos
+### Ejemplo 1: guardas de un método de servicio
 
 ```csharp
-public class OrderValidationService
+public class PedidoService
 {
-    private readonly ICustomerService _customerService;
-    private readonly IInventoryService _inventoryService;
-    private readonly IPaymentService _paymentService;
-    
-    public async Task<MlResult<ValidatedOrder>> ValidateOrderAsync(OrderRequest request)
-    {
-        // Validación en cadena usando EnsureFp
-        var validationResult = await ValidateOrderRequestAsync(request)
-            .BindAsync(async validRequest => await ValidateCustomerAsync(validRequest))
-            .BindAsync(async orderWithCustomer => await ValidateOrderItemsAsync(orderWithCustomer))
-            .BindAsync(async orderWithItems => await ValidatePaymentInfoAsync(orderWithItems))
-            .BindAsync(async completeOrder => await ValidateBusinessRulesAsync(completeOrder));
-        
-        return validationResult.Match(
-            valid: validOrder => MlResult<ValidatedOrder>.Valid(new ValidatedOrder
-            {
-                OrderId = Guid.NewGuid(),
-                Request = validOrder.Request,
-                Customer = validOrder.Customer,
-                ValidatedItems = validOrder.Items,
-                PaymentInfo = validOrder.PaymentInfo,
-                ValidatedAt = DateTime.UtcNow,
-                ValidationId = Guid.NewGuid()
-            }),
-            fail: errors => MlResult<ValidatedOrder>.Fail(errors.AllErrors)
-        );
-    }
-    
-    private async Task<MlResult<ValidatedOrderRequest>> ValidateOrderRequestAsync(OrderRequest request)
-    {
-        // Usar EnsureFp para validaciones básicas
-        var requestValidation = EnsureFp.NotNull(request, "Order request is required");
-        
-        return await requestValidation.BindAsync(async validRequest =>
-        {
-            // Validar ID del cliente
-            var customerIdValidation = EnsureFp.That(
-                validRequest.CustomerId,
-                validRequest.CustomerId > 0,
-                "Customer ID must be positive");
-            
-            // Validar items del pedido
-            var itemsValidation = EnsureFp.NotEmpty(
-                validRequest.Items,
-                "Order must contain at least one item");
-            
-            // Validar información de envío
-            var shippingValidation = EnsureFp.NotNull(
-                validRequest.ShippingAddress,
-                "Shipping address is required");
-            
-            // Validar dirección de facturación
-            var billingValidation = EnsureFp.NotNull(
-                validRequest.BillingAddress,
-                "Billing address is required");
-            
-            // Combinar todas las validaciones
-            return customerIdValidation
-                .Bind(_ => itemsValidation)
-                .Bind(_ => shippingValidation)
-                .Bind(_ => billingValidation)
-                .Map(_ => new ValidatedOrderRequest { Request = validRequest });
-        });
-    }
-    
-    private async Task<MlResult<OrderWithCustomer>> ValidateCustomerAsync(ValidatedOrderRequest validRequest)
-    {
-        var customer = await _customerService.GetByIdAsync(validRequest.Request.CustomerId);
-        
-        return await EnsureFp.NotNullAsync(customer, "Customer not found")
-            .BindAsync(async validCustomer =>
-            {
-                // Validar estado del cliente
-                var activeValidation = EnsureFp.That(
-                    validCustomer,
-                    validCustomer.IsActive,
-                    "Customer account is not active");
-                
-                // Validar que no esté suspendido
-                var suspensionValidation = EnsureFp.That(
-                    validCustomer,
-                    !validCustomer.IsSuspended,
-                    "Customer account is suspended");
-                
-                // Validar límite de crédito
-                var creditValidation = EnsureFp.That(
-                    validCustomer,
-                    validCustomer.CreditLimit > 0,
-                    "Customer has no available credit");
-                
-                return activeValidation
-                    .Bind(_ => suspensionValidation)
-                    .Bind(_ => creditValidation)
-                    .Map(_ => new OrderWithCustomer
-                    {
-                        Request = validRequest.Request,
-                        Customer = validCustomer
-                    });
-            });
-    }
-    
-    private async Task<MlResult<OrderWithItems>> ValidateOrderItemsAsync(OrderWithCustomer orderWithCustomer)
-    {
-        var validatedItems = new List<ValidatedOrderItem>();
-        var validationErrors = new List<string>();
-        
-        foreach (var item in orderWithCustomer.Request.Items)
-        {
-            // Validar cada item individualmente
-            var itemValidation = await ValidateSingleOrderItemAsync(item);
-            
-            if (itemValidation.IsValid)
-            {
-                validatedItems.Add(itemValidation.Value);
-            }
-            else
-            {
-                validationErrors.AddRange(itemValidation.ErrorsDetails.AllErrors);
-            }
-        }
-        
-        // Verificar que al menos un item sea válido
-        return EnsureFp.NotEmpty(validatedItems, "No valid items found in order")
-            .Bind(items => validationErrors.Any()
-                ? MlResult<OrderWithItems>.Fail($"Some items failed validation: {string.Join("; ", validationErrors)}")
-                : MlResult<OrderWithItems>.Valid(new OrderWithItems
-                {
-                    Request = orderWithCustomer.Request,
-                    Customer = orderWithCustomer.Customer,
-                    Items = items
-                }));
-    }
-    
-    private async Task<MlResult<ValidatedOrderItem>> ValidateSingleOrderItemAsync(OrderItem item)
-    {
-        // Validar ID del producto
-        var productIdValidation = EnsureFp.That(
-            item.ProductId,
-            item.ProductId > 0,
-            $"Invalid product ID: {item.ProductId}");
-        
-        // Validar cantidad
-        var quantityValidation = EnsureFp.That(
-            item.Quantity,
-            item.Quantity > 0,
-            $"Quantity must be positive for product {item.ProductId}");
-        
-        // Validar precio
-        var priceValidation = EnsureFp.That(
-            item.Price,
-            item.Price > 0,
-            $"Price must be positive for product {item.ProductId}");
-        
-        // Combinar validaciones básicas
-        var basicValidation = productIdValidation
-            .Bind(_ => quantityValidation)
-            .Bind(_ => priceValidation);
-        
-        if (basicValidation.IsFailed)
-            return basicValidation.ToMlResultFail<OrderItem, ValidatedOrderItem>();
-        
-        // Verificar disponibilidad en inventario
-        var availability = await _inventoryService.CheckAvailabilityAsync(item.ProductId, item.Quantity);
-        
-        return EnsureFp.That(
-            availability,
-            availability.IsAvailable,
-            $"Product {item.ProductId} not available in requested quantity")
-        .Map(_ => new ValidatedOrderItem
-        {
-            ProductId = item.ProductId,
-            Quantity = item.Quantity,
-            Price = item.Price,
-            AvailabilityInfo = availability,
-            ValidatedAt = DateTime.UtcNow
-        });
-    }
-    
-    private async Task<MlResult<OrderWithPayment>> ValidatePaymentInfoAsync(OrderWithItems orderWithItems)
-    {
-        var paymentInfo = orderWithItems.Request.PaymentInfo;
-        
-        // Validar información de pago
-        var paymentValidation = EnsureFp.NotNull(paymentInfo, "Payment information is required");
-        
-        return await paymentValidation.BindAsync(async validPaymentInfo =>
-        {
-            // Validar método de pago
-            var methodValidation = EnsureFp.NotNullEmptyOrWhitespace(
-                validPaymentInfo.PaymentMethod,
-                "Payment method is required");
-            
-            // Validar que el método sea soportado
-            var supportedMethods = new[] { "CREDIT_CARD", "DEBIT_CARD", "BANK_TRANSFER", "DIGITAL_WALLET" };
-            var methodSupportValidation = EnsureFp.That(
-                validPaymentInfo.PaymentMethod,
-                supportedMethods.Contains(validPaymentInfo.PaymentMethod),
-                $"Payment method '{validPaymentInfo.PaymentMethod}' is not supported");
-            
-            // Para tarjetas, validar información adicional
-            var cardValidation = validPaymentInfo.PaymentMethod.Contains("CARD")
-                ? ValidateCreditCardInfo(validPaymentInfo)
-                : MlResult<PaymentInfo>.Valid(validPaymentInfo);
-            
-            return methodValidation
-                .Bind(_ => methodSupportValidation)
-                .Bind(_ => cardValidation)
-                .Map(_ => new OrderWithPayment
-                {
-                    Request = orderWithItems.Request,
-                    Customer = orderWithItems.Customer,
-                    Items = orderWithItems.Items,
-                    PaymentInfo = validPaymentInfo
-                });
-        });
-    }
-    
-    private MlResult<PaymentInfo> ValidateCreditCardInfo(PaymentInfo paymentInfo)
-    {
-        // Validar número de tarjeta
-        var cardNumberValidation = EnsureFp.NotNullEmptyOrWhitespace(
-            paymentInfo.CardNumber,
-            "Card number is required for card payments");
-        
-        // Validar formato de número de tarjeta
-        var cardFormatValidation = EnsureFp.That(
-            paymentInfo.CardNumber,
-            !string.IsNullOrEmpty(paymentInfo.CardNumber) && paymentInfo.CardNumber.Length >= 13,
-            "Card number format is invalid");
-        
-        // Validar código de seguridad
-        var securityCodeValidation = EnsureFp.NotNullEmptyOrWhitespace(
-            paymentInfo.SecurityCode,
-            "Security code is required for card payments");
-        
-        // Validar fecha de expiración
-        var expirationValidation = EnsureFp.That(
-            paymentInfo.ExpirationDate,
-            paymentInfo.ExpirationDate > DateTime.Now,
-            "Card has expired");
-        
-        return cardNumberValidation
-            .Bind(_ => cardFormatValidation)
-            .Bind(_ => securityCodeValidation)
-            .Bind(_ => expirationValidation)
-            .Map(_ => paymentInfo);
-    }
-    
-    private async Task<MlResult<CompleteValidatedOrder>> ValidateBusinessRulesAsync(OrderWithPayment orderWithPayment)
-    {
-        var totalAmount = orderWithPayment.Items.Sum(i => i.Price * i.Quantity);
-        
-        // Validar límite mínimo de pedido
-        var minimumOrderValidation = EnsureFp.That(
-            totalAmount,
-            totalAmount >= 10.00m, // Mínimo $10
-            "Order total must be at least $10.00");
-        
-        // Validar límite de crédito del cliente
-        var creditLimitValidation = EnsureFp.That(
-            totalAmount,
-            totalAmount <= orderWithPayment.Customer.CreditLimit,
-            $"Order total ({totalAmount:C}) exceeds customer credit limit ({orderWithPayment.Customer.CreditLimit:C})");
-        
-        // Validar límites por tipo de cliente
-        var customerTypeValidation = ValidateCustomerTypeLimits(orderWithPayment.Customer, totalAmount);
-        
-        // Validar restricciones geográficas
-        var geographicValidation = ValidateGeographicRestrictions(
-            orderWithPayment.Customer.Country,
-            orderWithPayment.Request.ShippingAddress.Country);
-        
-        return minimumOrderValidation
-            .Bind(_ => creditLimitValidation)
-            .Bind(_ => customerTypeValidation)
-            .Bind(_ => geographicValidation)
-            .Map(_ => new CompleteValidatedOrder
-            {
-                Request = orderWithPayment.Request,
-                Customer = orderWithPayment.Customer,
-                Items = orderWithPayment.Items,
-                PaymentInfo = orderWithPayment.PaymentInfo,
-                TotalAmount = totalAmount,
-                BusinessRulesValidatedAt = DateTime.UtcNow
-            });
-    }
-    
-    private MlResult<decimal> ValidateCustomerTypeLimits(Customer customer, decimal orderTotal)
-    {
-        var limits = customer.CustomerType switch
-        {
-            "BRONZE" => 1000m,
-            "SILVER" => 5000m,
-            "GOLD" => 25000m,
-            "PLATINUM" => decimal.MaxValue,
-            _ => 500m // Default limit
-        };
-        
-        return EnsureFp.That(
-            orderTotal,
-            orderTotal <= limits,
-            $"Order total ({orderTotal:C}) exceeds limit for {customer.CustomerType} customers ({limits:C})");
-    }
-    
-    private MlResult<bool> ValidateGeographicRestrictions(string customerCountry, string shippingCountry)
-    {
-        // Validar que el país del cliente esté permitido
-        var allowedCountries = new[] { "US", "CA", "MX", "GB", "FR", "DE", "ES", "IT" };
-        var customerCountryValidation = EnsureFp.That(
-            customerCountry,
-            allowedCountries.Contains(customerCountry),
-            $"Orders not allowed from country: {customerCountry}");
-        
-        // Validar que el envío esté permitido
-        var shippingCountryValidation = EnsureFp.That(
-            shippingCountry,
-            allowedCountries.Contains(shippingCountry),
-            $"Shipping not available to country: {shippingCountry}");
-        
-        return customerCountryValidation
-            .Bind(_ => shippingCountryValidation)
-            .Map(_ => true);
-    }
-}
-
-// Clases de apoyo para el ejemplo
-public class OrderRequest
-{
-    public int CustomerId { get; set; }
-    public List<OrderItem> Items { get; set; } = new();
-    public Address ShippingAddress { get; set; }
-    public Address BillingAddress { get; set; }
-    public PaymentInfo PaymentInfo { get; set; }
-}
-
-public class OrderItem
-{
-    public int ProductId { get; set; }
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
-}
-
-public class ValidatedOrderItem
-{
-    public int ProductId { get; set; }
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
-    public object AvailabilityInfo { get; set; }
-    public DateTime ValidatedAt { get; set; }
-}
-
-public class Customer
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public bool IsActive { get; set; }
-    public bool IsSuspended { get; set; }
-    public decimal CreditLimit { get; set; }
-    public string CustomerType { get; set; }
-    public string Country { get; set; }
-}
-
-public class Address
-{
-    public string Street { get; set; }
-    public string City { get; set; }
-    public string Country { get; set; }
-    public string PostalCode { get; set; }
-}
-
-public class PaymentInfo
-{
-    public string PaymentMethod { get; set; }
-    public string CardNumber { get; set; }
-    public string SecurityCode { get; set; }
-    public DateTime ExpirationDate { get; set; }
-}
-
-public class ValidatedOrderRequest
-{
-    public OrderRequest Request { get; set; }
-}
-
-public class OrderWithCustomer
-{
-    public OrderRequest Request { get; set; }
-    public Customer Customer { get; set; }
-}
-
-public class OrderWithItems
-{
-    public OrderRequest Request { get; set; }
-    public Customer Customer { get; set; }
-    public List<ValidatedOrderItem> Items { get; set; }
-}
-
-public class OrderWithPayment
-{
-    public OrderRequest Request { get; set; }
-    public Customer Customer { get; set; }
-    public List<ValidatedOrderItem> Items { get; set; }
-    public PaymentInfo PaymentInfo { get; set; }
-}
-
-public class CompleteValidatedOrder
-{
-    public OrderRequest Request { get; set; }
-    public Customer Customer { get; set; }
-    public List<ValidatedOrderItem> Items { get; set; }
-    public PaymentInfo PaymentInfo { get; set; }
-    public decimal TotalAmount { get; set; }
-    public DateTime BusinessRulesValidatedAt { get; set; }
-}
-
-public class ValidatedOrder
-{
-    public Guid OrderId { get; set; }
-    public OrderRequest Request { get; set; }
-    public Customer Customer { get; set; }
-    public List<ValidatedOrderItem> ValidatedItems { get; set; }
-    public PaymentInfo PaymentInfo { get; set; }
-    public DateTime ValidatedAt { get; set; }
-    public Guid ValidationId { get; set; }
+    public MlResult<Pedido> Crear(int clienteId, string referencia, IEnumerable<LineaDto> lineas)
+        => EnsureFp.That(clienteId, clienteId > 0, "El identificador de cliente debe ser positivo")
+                   .Bind(_ => EnsureFp.NotNullEmptyOrWhitespace(referencia, "La referencia es obligatoria"))
+                   .Map(r => r.Trim().ToUpperInvariant())
+                   .Bind(r => EnsureFp.That(r, r.Length <= 20, "La referencia no puede superar 20 caracteres"))
+                   .Bind(r => EnsureFp.NotEmpty(lineas, "El pedido debe tener al menos una línea")
+                                      .Map(ls => (Referencia: r, Lineas: ls)))
+                   .Bind(t => EnsureFp.That(t, t.Lineas.Count() <= 200,
+                                            "El pedido no puede tener más de 200 líneas"))
+                   .Map(t => new Pedido(clienteId, t.Referencia, t.Lineas.Select(Convertir).ToList()));
 }
 ```
 
-### Ejemplo 2: Sistema de Validación de Configuración
+### Ejemplo 2: `using static` para aligerar la sintaxis
 
 ```csharp
-public class ConfigurationValidationService
+using static MoralesLarios.OOFP.Helpers.EnsureFp;
+
+public class ReservaService
 {
-    public async Task<MlResult<ValidatedApplicationConfig>> ValidateApplicationConfigAsync(
-        ApplicationConfig config)
-    {
-        return await ValidateBasicConfigStructureAsync(config)
-            .BindAsync(async validConfig => await ValidateDatabaseConfigAsync(validConfig))
-            .BindAsync(async configWithDb => await ValidateApiConfigAsync(configWithDb))
-            .BindAsync(async configWithApi => await ValidateSecurityConfigAsync(configWithApi))
-            .BindAsync(async configWithSecurity => await ValidateLoggingConfigAsync(configWithSecurity))
-            .BindAsync(async completeConfig => await ValidateEnvironmentSpecificConfigAsync(completeConfig));
-    }
-    
-    private async Task<MlResult<ApplicationConfig>> ValidateBasicConfigStructureAsync(ApplicationConfig config)
-    {
-        // Validar estructura básica
-        var configValidation = EnsureFp.NotNull(config, "Configuration object is required");
-        
-        return await configValidation.BindAsync(async validConfig =>
+    public MlResult<Reserva> Reservar(string sala, DateTime inicio, TimeSpan duracion, int asistentes)
+        => NotNullEmptyOrWhitespace(sala, "La sala es obligatoria")
+              .Bind(s => That(s, _salas.Existe(s), $"La sala '{s}' no existe"))
+              .Bind(s => That(s, inicio > DateTime.UtcNow, "La fecha de inicio debe ser futura"))
+              .Bind(s => That(s, duracion >= TimeSpan.FromMinutes(15),
+                                 "La duración mínima es de 15 minutos"))
+              .Bind(s => That(s, duracion <= TimeSpan.FromHours(8),
+                                 "La duración máxima es de 8 horas"))
+              .Bind(s => That(s, asistentes is > 0 and <= 50,
+                                 "El número de asistentes debe estar entre 1 y 50"))
+              .Map(s => new Reserva(s, inicio, duracion, asistentes));
+}
+```
+
+### Ejemplo 3: guardas con detalles para el controlador
+
+```csharp
+public class ArticuloService
+{
+    private static MlErrorsDetails ErrorParametro(string parametro, string mensaje, object? valor = null)
+        => MlErrorsDetails.FromErrorMessageDetails(mensaje, new Dictionary<string, object>
         {
-            // Validar nombre de aplicación
-            var appNameValidation = EnsureFp.NotNullEmptyOrWhitespace(
-                validConfig.ApplicationName,
-                "Application name is required");
-            
-            // Validar versión
-            var versionValidation = EnsureFp.NotNullEmptyOrWhitespace(
-                validConfig.Version,
-                "Application version is required");
-            
-            // Validar formato de versión
-            var versionFormatValidation = EnsureFp.That(
-                validConfig.Version,
-                IsValidVersionFormat(validConfig.Version),
-                "Version format must be in semantic versioning format (e.g., 1.2.3)");
-            
-            // Validar entorno
-            var environmentValidation = EnsureFp.NotNullEmptyOrWhitespace(
-                validConfig.Environment,
-                "Environment is required");
-            
-            // Validar que el entorno sea válido
-            var validEnvironments = new[] { "Development", "Testing", "Staging", "Production" };
-            var environmentValueValidation = EnsureFp.That(
-                validConfig.Environment,
-                validEnvironments.Contains(validConfig.Environment),
-                $"Environment must be one of: {string.Join(", ", validEnvironments)}");
-            
-            return appNameValidation
-                .Bind(_ => versionValidation)
-                .Bind(_ => versionFormatValidation)
-                .Bind(_ => environmentValidation)
-                .Bind(_ => environmentValueValidation)
-                .Map(_ => validConfig);
+            ["Parametro"]     = parametro,
+            ["ValorRecibido"] = valor ?? "(null)",
+            ["Categoria"]     = "ValidacionEntrada"
         });
-    }
-    
-    private async Task<MlResult<ApplicationConfig>> ValidateDatabaseConfigAsync(ApplicationConfig config)
-    {
-        var dbConfig = config.DatabaseConfig;
-        
-        // Validar configuración de base de datos
-        var dbConfigValidation = EnsureFp.NotNull(dbConfig, "Database configuration is required");
-        
-        return await dbConfigValidation.BindAsync(async validDbConfig =>
-        {
-            // Validar cadena de conexión
-            var connectionStringValidation = EnsureFp.NotNullEmptyOrWhitespace(
-                validDbConfig.ConnectionString,
-                "Database connection string is required");
-            
-            // Validar timeout
-            var timeoutValidation = EnsureFp.That(
-                validDbConfig.CommandTimeout,
-                validDbConfig.CommandTimeout > 0 && validDbConfig.CommandTimeout <= 300,
-                "Database command timeout must be between 1 and 300 seconds");
-            
-            // Validar pool size
-            var poolSizeValidation = EnsureFp.That(
-                validDbConfig.MaxPoolSize,
-                validDbConfig.MaxPoolSize > 0 && validDbConfig.MaxPoolSize <= 1000,
-                "Database max pool size must be between 1 and 1000");
-            
-            // Validar configuración de retry
-            var retryConfigValidation = ValidateRetryConfig(validDbConfig.RetryConfig);
-            
-            // Validar configuración específica por entorno
-            var environmentSpecificValidation = ValidateDatabaseEnvironmentConfig(config.Environment, validDbConfig);
-            
-            return connectionStringValidation
-                .Bind(_ => timeoutValidation)
-                .Bind(_ => poolSizeValidation)
-                .Bind(_ => retryConfigValidation)
-                .Bind(_ => environmentSpecificValidation)
-                .Map(_ => config);
-        });
-    }
-    
-    private async Task<MlResult<ApplicationConfig>> ValidateApiConfigAsync(ApplicationConfig config)
-    {
-        var apiConfig = config.ApiConfig;
-        
-        var apiConfigValidation = EnsureFp.NotNull(apiConfig, "API configuration is required");
-        
-        return await apiConfigValidation.BindAsync(async validApiConfig =>
-        {
-            // Validar URL base
-            var baseUrlValidation = EnsureFp.NotNullEmptyOrWhitespace(
-                validApiConfig.BaseUrl,
-                "API base URL is required");
-            
-            // Validar formato de URL
-            var urlFormatValidation = EnsureFp.That(
-                validApiConfig.BaseUrl,
-                Uri.TryCreate(validApiConfig.BaseUrl, UriKind.Absolute, out _),
-                "API base URL must be a valid absolute URL");
-            
-            // Validar puerto
-            var portValidation = EnsureFp.That(
-                validApiConfig.Port,
-                validApiConfig.Port > 0 && validApiConfig.Port <= 65535,
-                "API port must be between 1 and 65535");
-            
-            // Validar timeout
-            var timeoutValidation = EnsureFp.That(
-                validApiConfig.TimeoutSeconds,
-                validApiConfig.TimeoutSeconds > 0 && validApiConfig.TimeoutSeconds <= 300,
-                "API timeout must be between 1 and 300 seconds");
-            
-            // Validar configuración de CORS
-            var corsValidation = ValidateCorsConfig(validApiConfig.CorsConfig);
-            
-            // Validar configuración de rate limiting
-            var rateLimitValidation = ValidateRateLimitConfig(validApiConfig.RateLimitConfig);
-            
-            return baseUrlValidation
-                .Bind(_ => urlFormatValidation)
-                .Bind(_ => portValidation)
-                .Bind(_ => timeoutValidation)
-                .Bind(_ => corsValidation)
-                .Bind(_ => rateLimitValidation)
-                .Map(_ => config);
-        });
-    }
-    
-    private MlResult<RetryConfig> ValidateRetryConfig(RetryConfig retryConfig)
-    {
-        var retryValidation = EnsureFp.NotNull(retryConfig, "Retry configuration is required");
-        
-        return retryValidation.Bind(validRetryConfig =>
-        {
-            // Validar número máximo de reintentos
-            var maxRetriesValidation = EnsureFp.That(
-                validRetryConfig.MaxRetries,
-                validRetryConfig.MaxRetries >= 0 && validRetryConfig.MaxRetries <= 10,
-                "Max retries must be between 0 and 10");
-            
-            // Validar delay base
-            var baseDelayValidation = EnsureFp.That(
-                validRetryConfig.BaseDelayMilliseconds,
-                validRetryConfig.BaseDelayMilliseconds > 0 && validRetryConfig.BaseDelayMilliseconds <= 60000,
-                "Base delay must be between 1 and 60000 milliseconds");
-            
-            // Validar multiplicador de backoff
-            var backoffMultiplierValidation = EnsureFp.That(
-                validRetryConfig.BackoffMultiplier,
-                validRetryConfig.BackoffMultiplier >= 1.0 && validRetryConfig.BackoffMultiplier <= 10.0,
-                "Backoff multiplier must be between 1.0 and 10.0");
-            
-            return maxRetriesValidation
-                .Bind(_ => baseDelayValidation)
-                .Bind(_ => backoffMultiplierValidation)
-                .Map(_ => validRetryConfig);
-        });
-    }
-    
-    private MlResult<CorsConfig> ValidateCorsConfig(CorsConfig corsConfig)
-    {
-        var corsValidation = EnsureFp.NotNull(corsConfig, "CORS configuration is required");
-        
-        return corsValidation.Bind(validCorsConfig =>
-        {
-            // Si CORS está habilitado, validar configuración
-            if (!validCorsConfig.Enabled)
-                return MlResult<CorsConfig>.Valid(validCorsConfig);
-            
-            // Validar orígenes permitidos
-            var allowedOriginsValidation = EnsureFp.NotEmpty(
-                validCorsConfig.AllowedOrigins,
-                "Allowed origins must be specified when CORS is enabled");
-            
-            // Validar que los orígenes sean URLs válidas
-            var originsFormatValidation = validCorsConfig.AllowedOrigins.All(origin =>
-                origin == "*" || Uri.TryCreate(origin, UriKind.Absolute, out _))
-                ? MlResult<bool>.Valid(true)
-                : MlResult<bool>.Fail("All allowed origins must be valid URLs or '*'");
-            
-            // Validar métodos permitidos
-            var allowedMethodsValidation = EnsureFp.NotEmpty(
-                validCorsConfig.AllowedMethods,
-                "Allowed methods must be specified when CORS is enabled");
-            
-            return allowedOriginsValidation
-                .Bind(_ => originsFormatValidation)
-                .Bind(_ => allowedMethodsValidation)
-                .Map(_ => validCorsConfig);
-        });
-    }
-    
-    private MlResult<RateLimitConfig> ValidateRateLimitConfig(RateLimitConfig rateLimitConfig)
-    {
-        var rateLimitValidation = EnsureFp.NotNull(rateLimitConfig, "Rate limit configuration is required");
-        
-        return rateLimitValidation.Bind(validRateLimitConfig =>
-        {
-            if (!validRateLimitConfig.Enabled)
-                return MlResult<RateLimitConfig>.Valid(validRateLimitConfig);
-            
-            // Validar límite de requests
-            var requestLimitValidation = EnsureFp.That(
-                validRateLimitConfig.RequestsPerMinute,
-                validRateLimitConfig.RequestsPerMinute > 0 && validRateLimitConfig.RequestsPerMinute <= 10000,
-                "Requests per minute must be between 1 and 10000");
-            
-            // Validar ventana de tiempo
-            var windowSizeValidation = EnsureFp.That(
-                validRateLimitConfig.WindowSizeMinutes,
-                validRateLimitConfig.WindowSizeMinutes > 0 && validRateLimitConfig.WindowSizeMinutes <= 60,
-                "Window size must be between 1 and 60 minutes");
-            
-            return requestLimitValidation
-                .Bind(_ => windowSizeValidation)
-                .Map(_ => validRateLimitConfig);
-        });
-    }
-    
-    private MlResult<DatabaseConfig> ValidateDatabaseEnvironmentConfig(string environment, DatabaseConfig dbConfig)
-    {
-        return environment switch
-        {
-            "Production" => ValidateProductionDatabaseConfig(dbConfig),
-            "Staging" => ValidateStagingDatabaseConfig(dbConfig),
-            _ => MlResult<DatabaseConfig>.Valid(dbConfig) // Development y Testing menos restrictivos
-        };
-    }
-    
-    private MlResult<DatabaseConfig> ValidateProductionDatabaseConfig(DatabaseConfig dbConfig)
-    {
-        // En producción, requerir configuraciones más estrictas
-        var encryptionValidation = EnsureFp.That(
-            dbConfig.ConnectionString,
-            dbConfig.ConnectionString.Contains("Encrypt=True", StringComparison.OrdinalIgnoreCase),
-            "Database encryption must be enabled in production");
-        
-        var poolSizeValidation = EnsureFp.That(
-            dbConfig.MaxPoolSize,
-            dbConfig.MaxPoolSize >= 10,
-            "Production database pool size should be at least 10");
-        
-        var backupValidation = EnsureFp.That(
-            dbConfig.BackupEnabled,
-            dbConfig.BackupEnabled,
-            "Database backups must be enabled in production");
-        
-        return encryptionValidation
-            .Bind(_ => poolSizeValidation)
-            .Bind(_ => backupValidation)
-            .Map(_ => dbConfig);
-    }
-    
-    private MlResult<DatabaseConfig> ValidateStagingDatabaseConfig(DatabaseConfig dbConfig)
-    {
-        // En staging, configuraciones moderadas
-        var poolSizeValidation = EnsureFp.That(
-            dbConfig.MaxPoolSize,
-            dbConfig.MaxPoolSize >= 5,
-            "Staging database pool size should be at least 5");
-        
-        return poolSizeValidation.Map(_ => dbConfig);
-    }
-    
-    // Métodos auxiliares
-    private bool IsValidVersionFormat(string version)
-    {
-        if (string.IsNullOrEmpty(version))
-            return false;
-        
-        var parts = version.Split('.');
-        return parts.Length == 3 && parts.All(part => int.TryParse(part, out _));
-    }
-}
 
-// Clases de configuración para el ejemplo
-public class ApplicationConfig
-{
-    public string ApplicationName { get; set; }
-    public string Version { get; set; }
-    public string Environment { get; set; }
-    public DatabaseConfig DatabaseConfig { get; set; }
-    public ApiConfig ApiConfig { get; set; }
-    public SecurityConfig SecurityConfig { get; set; }
-    public LoggingConfig LoggingConfig { get; set; }
+    public async Task<MlResult<PaginaDto<ArticuloDto>>> BuscarAsync(string? texto, int pagina, int tamano)
+        => await EnsureFp.NotNullEmptyOrWhitespaceAsync(texto!,
+                             ErrorParametro(nameof(texto), "El texto de búsqueda es obligatorio", texto))
+                         .BindAsync(t => EnsureFp.ThatAsync(t, t.Trim().Length >= 3,
+                             ErrorParametro(nameof(texto), "El texto debe tener al menos 3 caracteres", t)))
+                         .BindAsync(t => EnsureFp.ThatAsync(t, pagina >= 1,
+                             ErrorParametro(nameof(pagina), "La página debe ser 1 o mayor", pagina)))
+                         .BindAsync(t => EnsureFp.ThatAsync(t, tamano is > 0 and <= 100,
+                             ErrorParametro(nameof(tamano), "El tamaño debe estar entre 1 y 100", tamano)))
+                         .BindAsync(t => _repo.BuscarAsync(t.Trim(), pagina, tamano))
+                         .MapAsync(p => p.ToDto().ToAsync());
 }
+```
 
-public class DatabaseConfig
-{
-    public string ConnectionString { get; set; }
-    public int CommandTimeout { get; set; }
-    public int MaxPoolSize { get; set; }
-    public RetryConfig RetryConfig { get; set; }
-    public bool BackupEnabled { get; set; }
-}
+El controlador puede leer `GetDetailValue<string>("Categoria")` para devolver un 400 con la
+lista de parámetros problemáticos.
 
-public class ApiConfig
-{
-    public string BaseUrl { get; set; }
-    public int Port { get; set; }
-    public int TimeoutSeconds { get; set; }
-    public CorsConfig CorsConfig { get; set; }
-    public RateLimitConfig RateLimitConfig { get; set; }
-}
+### Ejemplo 4: condición que requiere una consulta
 
-public class RetryConfig
+```csharp
+public async Task<MlResult<Cliente>> AltaAsync(AltaDto dto)
 {
-    public int MaxRetries { get; set; }
-    public int BaseDelayMilliseconds { get; set; }
-    public double BackoffMultiplier { get; set; }
-}
+    // Primero las guardas puramente sintácticas
+    var basico = EnsureFp.NotNull(dto, "Los datos de alta son obligatorios")
+                         .Bind(d => EnsureFp.NotNullEmptyOrWhitespace(d.Nif, "El NIF es obligatorio")
+                                            .Map(_ => d));
 
-public class CorsConfig
-{
-    public bool Enabled { get; set; }
-    public List<string> AllowedOrigins { get; set; } = new();
-    public List<string> AllowedMethods { get; set; } = new();
-}
+    if (!basico.IsValid) return basico.ErrorsDetails.ToMlResultFail<Cliente>();
 
-public class RateLimitConfig
-{
-    public bool Enabled { get; set; }
-    public int RequestsPerMinute { get; set; }
-    public int WindowSizeMinutes { get; set; }
-}
+    // La condición asíncrona se resuelve fuera: EnsureFp no acepta predicados asíncronos
+    var yaExiste = await _repo.ExisteNifAsync(dto.Nif);
 
-public class SecurityConfig
-{
-    public string JwtSecret { get; set; }
-    public int JwtExpirationMinutes { get; set; }
+    return EnsureFp.That(dto, !yaExiste, $"Ya existe un cliente con el NIF {dto.Nif}")
+                   .Map(d => new Cliente(d.Nif, d.Nombre));
 }
+```
 
-public class LoggingConfig
-{
-    public string LogLevel { get; set; }
-    public string LogPath { get; set; }
-}
+💡 Si prefieres no romper la cadena, usa `BindAsync` con un lambda asíncrono y
+`BoolToResult` dentro.
 
-public class ValidatedApplicationConfig
-{
-    public ApplicationConfig Config { get; set; }
-    public DateTime ValidatedAt { get; set; }
-    public Guid ValidationId { get; set; }
-}
+### Ejemplo 5: qué no hacer
+
+```csharp
+// ❌ Llamarlo como método de extensión: no compila
+// var r = cliente.NotNull("El cliente es obligatorio");
+
+// ✅ Prefijo de clase, o usa NullToFailed
+var r = EnsureFp.NotNull(cliente, "El cliente es obligatorio");
+
+
+// ❌ Pasar un MlError: no hay sobrecarga
+// EnsureFp.NotNull(cliente, ErroresCliente.Obligatorio);
+
+// ✅ Conviértelo
+EnsureFp.NotNull(cliente, MlErrorsDetails.FromError(ErroresCliente.Obligatorio));
+
+
+// ❌ Esperar concurrencia de las variantes Async
+await EnsureFp.NotNullAsync(a, "…");    // no hay E/S: es Task.FromResult
+
+// ✅ Úsalas solo para encajar en una cadena ya asíncrona
+
+
+// ❌ NotEmpty sobre una consulta diferida (se enumera dos veces)
+var r = EnsureFp.NotEmpty(_db.Pedidos.Where(p => p.Abierto), "Sin pedidos abiertos");
+
+// ✅ Materializa primero
+var abiertos = _db.Pedidos.Where(p => p.Abierto).ToList();
+var r = EnsureFp.NotEmpty(abiertos, "Sin pedidos abiertos");
+
+
+// ❌ Suponer que NotNullEmptyOrWhitespace recorta la cadena
+var r = EnsureFp.NotNullEmptyOrWhitespace(nif, "…");   // "  X  " pasa tal cual
+
+// ✅ Normaliza después
+var r = EnsureFp.NotNullEmptyOrWhitespace(nif, "…").Map(s => s.Trim().ToUpperInvariant());
+
+
+// ❌ Usar EnsureFp dentro del carril, obligando a un Bind ceremonial
+var r = pedidoResult.Bind(p => EnsureFp.That(p, p.Lineas.Any(), "Sin líneas"));
+
+// ✅ MapEnsure es más directo y su predicado es diferido
+var r = pedidoResult.MapEnsure(p => p.Lineas.Any(), "Sin líneas");
 ```
 
 ---
 
 ## Mejores Prácticas
 
-### 1. Composición de Validaciones
-
-```csharp
-// ✅ Correcto: Componer validaciones de forma legible
-public MlResult<User> ValidateUser(User user)
-{
-    return EnsureFp.NotNull(user, "User is required")
-        .Bind(u => EnsureFp.NotNullEmptyOrWhitespace(u.Email, "Email is required"))
-        .Bind(u => EnsureFp.That(u.Age, u.Age >= 18, "User must be 18 or older"))
-        .Bind(u => EnsureFp.That(u.Country, IsValidCountry(u.Country), "Invalid country"));
-}
-
-// ✅ Correcto: Usar validaciones específicas cuando sea apropiado
-public MlResult<OrderItems> ValidateOrderItems(List<OrderItem> items)
-{
-    return EnsureFp.NotEmpty(items, "Order must contain items")
-        .Bind(validItems => ValidateEachItem(validItems));
-}
-
-// ❌ Incorrecto: Validaciones redundantes o inconsistentes
-public MlResult<User> ValidateUserBad(User user)
-{
-    if (user == null) // Usar EnsureFp.NotNull en su lugar
-        return MlResult<User>.Fail("User is null");
-    
-    return EnsureFp.That(user, user != null, "User is required"); // Redundante
-}
-```
-
-### 2. Mensajes de Error Descriptivos
-
-```csharp
-// ✅ Correcto: Mensajes específicos y accionables
-var validAge = EnsureFp.That(age, age >= 18 && age <= 120, 
-    $"Age {age} is invalid. Must be between 18 and 120.");
-
-var validEmail = EnsureFp.NotNullEmptyOrWhitespace(email, 
-    "Email address is required for account creation.");
-
-var validItems = EnsureFp.NotEmpty(orderItems, 
-    "Order must contain at least one item. Please add items to your cart.");
-
-// ❌ Incorrecto: Mensajes genéricos
-var validAge = EnsureFp.That(age, age >= 18, "Invalid age");
-var validEmail = EnsureFp.NotNull(email, "Error");
-```
-
-### 3. Uso de Errores Complejos
-
-```csharp
-// ✅ Correcto: Usar MlErrorsDetails para errores con contexto
-public MlResult<PaymentInfo> ValidatePaymentWithContext(PaymentInfo payment, string orderId)
-{
-    var errorDetails = new MlErrorsDetails(
-        new List<MlError> { new MlError("Payment validation failed") },
-        new Dictionary<string, object>
-        {
-            { "OrderId", orderId },
-            { "PaymentMethod", payment?.PaymentMethod },
-            { "ValidationTimestamp", DateTime.UtcNow }
-        });
-    
-    return EnsureFp.NotNull(payment, errorDetails);
-}
-
-// ✅ Correcto: Combinar múltiples validaciones con contexto
-public async Task<MlResult<CompleteOrder>> ValidateCompleteOrderAsync(Order order)
-{
-    var validationContext = new Dictionary<string, object>
-    {
-        { "OrderId", order?.Id },
-        { "ValidatedBy", "OrderValidationService" },
-        { "ValidationStartTime", DateTime.UtcNow }
-    };
-    
-    var baseValidation = EnsureFp.NotNull(order, 
-        new MlErrorsDetails(
-            new List<MlError> { new MlError("Order object is required") },
-            validationContext));
-    
-    return await baseValidation.BindAsync(async validOrder => 
-        await ValidateOrderDetailsWithContextAsync(validOrder, validationContext));
-}
-```
-
-### 4. Validaciones Async Apropiadas
-
-```csharp
-// ✅ Correcto: Usar async solo cuando sea necesario
-public async Task<MlResult<User>> ValidateUserAsync(int userId)
-{
-    // Validación síncrona primero
-    var userIdValidation = EnsureFp.That(userId, userId > 0, "User ID must be positive");
-    
-    if (userIdValidation.IsFailed)
-        return userIdValidation.ToMlResultFail<int, User>();
-    
-    // Luego operaciones async si son necesarias
-    var user = await GetUserFromDatabaseAsync(userId);
-    return await EnsureFp.NotNullAsync(user, $"User {userId} not found");
-}
-
-// ❌ Incorrecto: Async innecesario
-public async Task<MlResult<string>> ValidateStringAsync(string input)
-{
-    return await EnsureFp.NotNullEmptyOrWhitespaceAsync(input, "String required");
-    // Mejor usar la versión síncrona: EnsureFp.NotNullEmptyOrWhitespace
-}
-```
-
----
-
-## Comparación con Assert y Guard
-
-### Tabla Comparativa
-
-| Método | Comportamiento ante Falla | Retorno | Uso Típico |
-|--------|-------------------------|---------|------------|
-| `EnsureFp.That` | Retorna `MlResult.Fail` | `MlResult<T>` | Validaciones funcionales |
-| `Assert.That` | Lanza excepción | `void` | Pruebas unitarias |
-| `Guard.Against` | Lanza excepción | `void` | Validación de parámetros |
-| `Contract.Requires` | Lanza excepción | `void` | Contratos de código |
-
-### Ejemplo Comparativo
-
-```csharp
-// EnsureFp: Flujo funcional sin excepciones
-var result = EnsureFp.NotNull(user, "User required")
-    .Bind(u => ProcessUser(u))
-    .Map(processed => processed.ToDto());
-
-// Guard: Validación imperativa con excepciones
-Guard.Against.Null(user, nameof(user));
-var processed = ProcessUser(user); // Puede fallar sin control
-var dto = processed.ToDto();
-
-// Assert: Solo para pruebas
-Assert.That(user, Is.Not.Null); // Solo en tests
-
-// Uso combinado apropiado
-public MlResult<ProcessedUser> ProcessUserSafely(User user)
-{
-    // Usar EnsureFp para validación funcional
-    return EnsureFp.NotNull(user, "User is required")
-        .Bind(validUser => 
-        {
-            // Guard para validaciones internas críticas
-            Guard.Against.NullOrEmpty(validUser.Email, nameof(validUser.Email));
-            return ProcessUserInternal(validUser);
-        });
-}
-```
+1. **Usa `EnsureFp` en la primera línea de los métodos públicos**: es la puerta de entrada
+   natural al carril y el prefijo hace evidente que se trata de precondiciones.
+2. **Dentro del carril, cambia a `MapEnsure`**: evita el `Bind` ceremonial y su predicado sí
+   es diferido.
+3. **Elige un estilo y sé consistente**: o `EnsureFp.*` (estático) o los métodos de
+   `Several` (fluidos). Mezclarlos sin criterio confunde.
+4. **Recuerda que solo hay `string` y `MlErrorsDetails`**: convierte con
+   `MlErrorsDetails.FromError(...)` o `FromEnumerableStrings(...)` si necesitas otras formas.
+5. **Incluye el nombre del parámetro en los `Details`** (`["Parametro"] = nameof(nif)`): es
+   lo que permite construir respuestas 400 con detalle por campo.
+6. **Materializa las colecciones antes de `NotEmpty`** para no enumerar dos veces.
+7. **Normaliza las cadenas después de validarlas** (`Trim`, `ToUpperInvariant`): la guarda no
+   lo hace.
+8. **No esperes concurrencia de las variantes `Async`**: son envolturas. Úsalas solo para
+   abrir una cadena asíncrona.
+9. **Resuelve las condiciones asíncronas fuera** y pásalas como `bool` a `That`.
+10. **Considera `using static ...EnsureFp;`** en las clases con muchas validaciones.
+11. **Para validaciones declarativas complejas** (atributos, reglas encadenadas), usa los
+    paquetes `MoralesLarios.OOFP.Validation.Dataannotations` o
+    `MoralesLarios.OOFP.Validation.FluentValidations`.
 
 ---
 
 ## Resumen
 
-La clase `EnsureFp` proporciona **validaciones funcionales sin excepciones**:
-
-- **`NotNull`**: Validación de valores null con preservación de tipo
-- **`NotEmpty`**: Validación de colecciones vacías
-- **`NotNullEmptyOrWhitespace`**: Validación completa de strings
-- **`That`**: Validación genérica para cualquier condición boolean
-
-**Casos de uso ideales**:
-- **Validaciones de entrada** en métodos públicos
-- **Precondiciones funcionales** que no deben lanzar excepciones
-- **Composición de validaciones** en cadenas funcionales
-- **Validación de configuraciones** y datos estructurados
-
-**Ventajas principales**:
-- **Sin efectos secundarios** (no lanza excepciones)
-- **Preservación de tipos** y valores válidos
-- **Composabilidad** con otros métodos MlResult
-- **Mensajes de error flexibles** con soporte para contexto adicional
+- `EnsureFp` es una **clase estática** (no extensiones) que convierte argumentos de C# en
+  `MlResult<T>` **sin lanzar excepciones**.
+- Tiene exactamente **4 validaciones**: `That` (base), `NotNull`, `NotEmpty`,
+  `NotNullEmptyOrWhitespace`; cada una con variante `*Async` → **14 métodos** en total
+  contando las dos formas de error.
+- ⚠️ Solo acepta **`string` y `MlErrorsDetails`** como error. **No hay** sobrecargas para
+  `MlError` ni `IEnumerable<string>`.
+- `NotNull` usa `is not null` (estricto, ignora `operator==` sobrecargado); `NotEmpty` usa
+  `!= null && Any()`.
+- ⚠️ Las variantes **`*Async` no son realmente asíncronas**: solo envuelven con `.ToAsync()`.
+- ⚠️ **Ninguna acepta un predicado asíncrono**: resuelve la condición antes de llamar.
+- ⚠️ `NotEmpty` **enumera** con `.Any()`; materializa las consultas diferidas primero.
+- ⚠️ `NotNullEmptyOrWhitespace` **no recorta** la cadena.
+- **No existe ninguna variante `Try*`**: no hay delegados de usuario.
+- Dentro del carril, prefiere [`MapEnsure`](../Map/2_MapEnsure.md).

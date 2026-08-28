@@ -1,614 +1,321 @@
-﻿# MlResultActions - Operaciones de Enriquecimiento y Composición
+﻿# MlResultActions — Enriquecimiento, acceso seguro y composición
 
 ## Índice
 1. [Introducción](#introducción)
-2. [Análisis de la Clase](#análisis-de-la-clase)
-3. [Métodos de Enriquecimiento de Errores](#métodos-de-enriquecimiento-de-errores)
-4. [Métodos de Completado con Datos](#métodos-de-completado-con-datos)
-5. [Métodos de Acceso Seguro](#métodos-de-acceso-seguro)
-6. [Métodos de Composición de Resultados](#métodos-de-composición-de-resultados)
+2. [Mapa de la clase](#mapa-de-la-clase)
+3. [Enriquecer errores: `AddMlErrorDetailIfFail` y `AddValueDetailIfFail`](#enriquecer-errores-addmlerrordetailiffail-y-addvaluedetailiffail)
+4. [Completar con datos: la familia `CompleteWithData*`](#completar-con-datos-la-familia-completewithdata)
+5. [Acceso seguro: `SecureValidValue` y `SecureFailErrorsDetails`](#acceso-seguro-securevalidvalue-y-securefailerrorsdetails)
+6. [Composición cruda: `CreateCompleteMlResult`](#composición-cruda-createcompletemlresult)
 7. [Ejemplos Prácticos](#ejemplos-prácticos)
 8. [Mejores Prácticas](#mejores-prácticas)
+9. [Resumen](#resumen)
+10. [Ver también](#ver-también)
 
 ---
 
 ## Introducción
 
-La clase `MlResultActions` proporciona operaciones avanzadas para trabajar con `MlResult<T>`, incluyendo enriquecimiento de errores, completado de datos, acceso seguro a valores y composición de múltiples resultados. Estas operaciones permiten crear pipelines funcionales más robustos y expresivos.
+`MlResultActions` (fichero `Types/MlResultActions.cs`) es la clase «de infraestructura» del tipo
+`MlResult<T>`. No transforma valores como [`Map`](../Map/1_Map.md) ni encadena operaciones como
+[`Bind`](./3_Bind.md): su trabajo es **enriquecer el resultado con contexto**, **acceder a su interior
+de forma segura** y **componer resultados a mano** cuando hace falta.
 
-### Propósito Principal
-
-- **Enriquecimiento de Errores**: Añadir información contextual a errores
-- **Completado de Datos**: Combinar resultados con información adicional
-- **Acceso Seguro**: Extraer valores garantizando el estado del resultado
-- **Composición**: Combinar múltiples resultados en estructuras complejas
-
----
-
-## Análisis de la Clase
-
-### Estructura y Filosofía
+Existe por una razón de diseño muy concreta:
 
 ```csharp
-public static class MlResultActions
+public partial record MlResult<T>
 {
-    // Métodos de extensión para operaciones avanzadas
-    // Soporte completo para operaciones síncronas y asíncronas
-    // Enfoque en composición y enriquecimiento de información
+    internal protected T                Value         { get; init; }
+    internal protected MlErrorsDetails  ErrorsDetails { get; init; }
 }
 ```
 
-### Características Principales
+`Value` y `ErrorsDetails` son **`internal protected` a propósito**: desde fuera de la librería no
+puedes leerlos directamente, y eso es una virtud, no una limitación. Te obliga a pasar por
+[`Match`](../Match/1_Match.md) o por los métodos de esta clase, que nunca lanzan
+`NullReferenceException` ni devuelven un valor «basura».
 
-1. **Métodos de Extensión**: Operaciones fluidas sobre `MlResult<T>`
-2. **Soporte Asíncrono**: Versiones `Async` para todas las operaciones
-3. **Enriquecimiento Contextual**: Añadir información a errores
-4. **Composición Segura**: Combinar resultados preservando errores
-
----
-
-## Métodos de Enriquecimiento de Errores
-
-### `AddMlErrorDetailIfFail<T>()`
-
-**Propósito**: Añade un detalle clave-valor a los errores si el resultado es fallido
-
-```csharp
-public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, 
-                                                    string errorKey, 
-                                                    object errorValue)
-```
-
-**Parámetros**:
-- `source`: El resultado a evaluar
-- `errorKey`: Clave del detalle a añadir
-- `errorValue`: Valor del detalle a añadir
-
-**Comportamiento**:
-- Si el resultado es exitoso: Retorna el resultado sin modificaciones
-- Si el resultado es fallido: Añade el detalle a los errores y retorna el resultado modificado
-
-### `AddValueDetailIfFail<T>()`
-
-**Propósito**: Añade un valor específico bajo la clave `VALUE_KEY` si el resultado es fallido
-
-```csharp
-public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, 
-                                                  object errorValue)
-```
-
-**Comportamiento**:
-- Utiliza internamente `AddMlErrorDetailIfFail` con `VALUE_KEY` como clave
-- Simplifica la adición de valores contextuales sin especificar clave
-
-### Versiones Asíncronas
-
-- `AddMlErrorDetailIfFailAsync<T>()`: Versión asíncrona para `MlResult<T>`
-- `AddMlErrorDetailIfFailAsync<T>()`: Versión asíncrona para `Task<MlResult<T>>`
-- `AddValueDetailIfFailAsync<T>()`: Versiones asíncronas para valor con clave por defecto
+> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
+> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
+> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
 
 ---
 
-## Métodos de Completado con Datos
+## Mapa de la clase
 
-### `CompleteWithDataValueIfValid<T, TReturn>()`
+| Grupo | Métodos | Sobrecargas | Para qué sirve |
+| --- | --- | :---: | --- |
+| **Enriquecer errores** | `AddMlErrorDetailIfFail` | 1 | Añade un mensaje de error extra si ya está fallido |
+| | `AddMlErrorDetailIfFailAsync` | 2 | Idem, en cadenas asíncronas |
+| | `AddValueDetailIfFail` | 1 | Guarda un valor arbitrario en `Details` si está fallido |
+| | `AddValueDetailIfFailAsync` | 2 | Idem, en cadenas asíncronas |
+| **Completar con datos** | `CompleteWithDataValueIfValid` | 1 | Guarda el valor válido en `Details` para usarlo después |
+| | `CompleteWithDataValueIfValidAsync` | 4 | Idem, en cadenas asíncronas |
+| | `CompleteWithDetailsValueIfFail` | 1 | Añade detalles solo a la rama fallida |
+| | `CompleteWithDetailsValueIfFailAsync` | 1 | Idem, asíncrono |
+| | `CompleteWithDataValue` | 1 | Guarda el valor sea válido o fallido |
+| | `CompleteWithDataValueAsync` | 4 | Idem, asíncrono |
+| **Acceso seguro** | `SecureValidValue` | 1 | Devuelve el valor o `default` sin lanzar |
+| | `SecureValidValueAsync` | 1 | Idem, asíncrono |
+| | `SecureFailErrorsDetails` | 1 | Devuelve los errores o unos vacíos, sin lanzar |
+| | `SecureFailErrorsDetailsAsync` | 2 | Idem, asíncrono |
+| **Composición** | `CreateCompleteMlResult` | 3 | Construye un `MlResult<T>` a partir de sus piezas |
+| | `CreateCompleteMlResultAsync` | 8 | Idem, asíncrono |
 
-**Propósito**: Transforma el valor si el resultado es exitoso, usando una función de completado
-
-```csharp
-public static MlResult<TReturn> CompleteWithDataValueIfValid<T, TReturn>(this MlResult<T> source,
-                                                                         Func<T, TReturn> completeFunc)
-```
-
-**Comportamiento**:
-- Si el resultado es exitoso: Aplica `completeFunc` al valor y retorna nuevo resultado
-- Si el resultado es fallido: Propaga los errores con el nuevo tipo
-
-### `CompleteWithDetailsValueIfFail<T, TValue>()`
-
-**Propósito**: Añade un valor a los detalles del error si el resultado es fallido
-
-```csharp
-public static MlResult<T> CompleteWithDetailsValueIfFail<T, TValue>(this MlResult<T> source, 
-                                                                    TValue value)
-```
-
-**Comportamiento**:
-- Si el resultado es exitoso: Retorna el resultado sin modificaciones
-- Si el resultado es fallido: Añade el valor a los detalles del error
-
-### `CompleteWithDataValue<T, TValue, TReturn>()`
-
-**Propósito**: Combina ambas operaciones anteriores - completa si es válido, enriquece si es fallido
-
-```csharp
-public static MlResult<TReturn> CompleteWithDataValue<T, TValue, TReturn>(this MlResult<T> source, 
-                                                                          TValue value,
-                                                                          Func<T, TReturn> completeFunc)
-```
-
-**Comportamiento**:
-- Si el resultado es exitoso: Aplica `completeFunc` y retorna el nuevo resultado
-- Si el resultado es fallido: Añade `value` a los detalles y propaga el error
+📌 Casi todos comparten un patrón: **si el estado no coincide con lo que el método espera, devuelven
+el resultado intacto**. Son seguros de encadenar en cualquier punto de una tubería.
 
 ---
 
-## Métodos de Acceso Seguro
+## Enriquecer errores: `AddMlErrorDetailIfFail` y `AddValueDetailIfFail`
 
-### `SecureValidValue<T>()`
+### `AddMlErrorDetailIfFail`
 
-**Propósito**: Extrae el valor de un resultado exitoso, lanza excepción si es fallido
-
-```csharp
-public static T SecureValidValue<T>(this MlResult<T> source, 
-                                   string exceptionMessage = "Cannot obtain the secure value from MlResult in Fail state")
-```
-
-**Comportamiento**:
-- Si el resultado es exitoso: Retorna el valor
-- Si el resultado es fallido: Lanza `InvalidProgramException`
-
-**⚠️ Advertencia**: Solo usar cuando se esté seguro de que el resultado es exitoso
-
-### `SecureFailErrorsDetails<T>()`
-
-**Propósito**: Extrae los detalles de error de un resultado fallido, lanza excepción si es exitoso
+Añade un mensaje de error adicional **solo si el resultado ya es fallido**. Sirve para aportar
+contexto de la capa en la que estás sin perder el error original.
 
 ```csharp
-public static MlErrorsDetails SecureFailErrorsDetails<T>(this MlResult<T> source, 
-                                                        string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
+public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, string errorDetail)
 ```
 
-**Comportamiento**:
-- Si el resultado es fallido: Retorna los detalles del error
-- Si el resultado es exitoso: Lanza `InvalidProgramException`
+```csharp
+var resultado = _repositorio.ObtenerCliente(id)
+    .AddMlErrorDetailIfFail($"Fallo al recuperar el cliente {id} en el alta de pedido");
 
-### Versiones Asíncronas
+// Si el repositorio falló con "Conexión rechazada", ahora los errores son:
+//   1. "Conexión rechazada"
+//   2. "Fallo al recuperar el cliente 42 en el alta de pedido"
+```
 
-- `SecureValidValueAsync<T>()`: Versiones asíncronas para ambos métodos
-- `SecureFailErrorsDetailsAsync<T>()`: Soporte completo para `Task<MlResult<T>>`
+Esto genera **trazas apilables**: cada capa añade su capa de contexto y al final tienes la historia
+completa del fallo sin haber escrito un solo `try/catch`.
+
+### `AddValueDetailIfFail`
+
+Guarda un valor arbitrario en `Details` **solo si el resultado es fallido**. Es la forma de conservar
+el dato de entrada que provocó el problema.
+
+```csharp
+public static MlResult<T> AddValueDetailIfFail<T, TValue>(this MlResult<T> source, TValue value)
+```
+
+```csharp
+var resultado = ProcesarLinea(linea)
+    .AddValueDetailIfFail(linea);          // Guarda la línea original en Details["Value"]
+
+resultado.ExecSelfIfFailWithValue<Registro, LineaCsv>((errores, lineaMala) =>
+    _log.LogWarning("Línea {N} descartada: {E}", lineaMala.Numero, errores.ToErrorsDescription()));
+```
+
+> 💡 Es el hermano de [`AddValueIfFail`](../Types/MlResultActionsErrorsDetails.md) y el requisito
+> previo de [`ExecSelfIfFailWithValue`](../ExecSelf/4_ExecSelfIfFailWithValue.md),
+> [`BindIfFailWithValue`](./7_BindIfFailWithValue.md) y
+> [`MapIfFailWithValue`](../Map/5_MapIfFailWithValue.md).
+
+### Variantes asíncronas
+
+```csharp
+await _repositorio.ObtenerClienteAsync(id)
+    .AddMlErrorDetailIfFailAsync($"Contexto: alta de pedido para el cliente {id}")
+    .AddValueDetailIfFailAsync(id);
+```
 
 ---
 
-## Métodos de Composición de Resultados
+## Completar con datos: la familia `CompleteWithData*`
 
-### `CreateCompleteMlResult<T1, T2>()` - Dos Resultados
+Estos tres métodos guardan información en `Details` para que esté disponible **más adelante** en la
+tubería. Se diferencian únicamente en *cuándo* actúan:
 
-**Propósito**: Combina dos `MlResult<T>` en un `MlResult<(T1, T2)>`
-
-```csharp
-public static MlResult<(T1, T2)> CreateCompleteMlResult<T1, T2>(this MlResult<T1> source1,
-                                                                MlResult<T2> source2)
-```
-
-**Comportamiento**:
-- Si ambos son exitosos: Retorna tupla con ambos valores
-- Si cualquiera es fallido: Fusiona los errores y retorna resultado fallido
-
-### `CreateCompleteMlResult<T1, T2, T3>()` - Tres Resultados
-
-**Propósito**: Combina tres `MlResult<T>` en un `MlResult<(T1, T2, T3)>`
+| Método | Actúa si el resultado es… | Qué guarda |
+| --- | --- | --- |
+| `CompleteWithDataValueIfValid` | **Válido** | El valor actual, en `Details` |
+| `CompleteWithDetailsValueIfFail` | **Fallido** | Detalles adicionales que tú aportas |
+| `CompleteWithDataValue` | **Cualquiera** | El valor, sin condiciones |
 
 ```csharp
-public static MlResult<(T1, T2, T3)> CreateCompleteMlResult<T1, T2, T3>(this MlResult<T1> source1,
-                                                                        MlResult<T2> source2,
-                                                                        MlResult<T3> source3)
+// Guardamos el pedido original antes de una transformación con pérdida de información,
+// para poder reconstruir el contexto si algo falla más abajo.
+var resultado = ObtenerPedido(id)
+    .CompleteWithDataValueIfValid()
+    .Bind(p => CalcularTotales(p))          // Aquí ya trabajamos con un Totales, no con el Pedido
+    .Bind(t => Facturar(t))
+    .ExecSelfIfFail(errores =>
+        errores.GetDetailValue<Pedido>().Match(
+            valid: pedido => _log.LogError("Falló la facturación del pedido {Id}", pedido.Id),
+            fail:  _      => _log.LogError("Falló la facturación (sin contexto de pedido)")));
 ```
-
-### `CreateCompleteMlResult<T1, T2>()` - Objeto + Resultado
-
-**Propósito**: Combina un valor directo con un `MlResult<T>`
 
 ```csharp
-public static MlResult<(T1, T2)> CreateCompleteMlResult<T1, T2>(this T1 source1,
-                                                                MlResult<T2> source2)
+// Añadimos metadatos de diagnóstico solo cuando hay fallo.
+var resultado = EjecutarConsulta(sql)
+    .CompleteWithDetailsValueIfFail(new Dictionary<string, object>
+    {
+        ["Sql"]        = sql,
+        ["Servidor"]   = _config.Servidor,
+        ["Momento"]    = DateTime.UtcNow
+    });
 ```
 
-**Comportamiento**:
-- Si `source2` es exitoso: Retorna tupla con ambos valores
-- Si `source2` es fallido: Propaga el error
+---
 
-### Versiones Asíncronas Completas
+## Acceso seguro: `SecureValidValue` y `SecureFailErrorsDetails`
 
-Todas las operaciones de composición tienen versiones asíncronas que soportan:
-- `MlResult<T>` + `Task<MlResult<T>>`
-- `Task<MlResult<T>>` + `MlResult<T>`
-- `Task<MlResult<T>>` + `Task<MlResult<T>>`
+Son las **puertas de escape controladas**. Nunca lanzan excepciones, sea cual sea el estado.
+
+```csharp
+public static T               SecureValidValue<T>       (this MlResult<T> source);
+public static MlErrorsDetails SecureFailErrorsDetails<T>(this MlResult<T> source);
+```
+
+| Método | Si el resultado es válido | Si el resultado es fallido |
+| --- | --- | --- |
+| `SecureValidValue` | Devuelve el valor | Devuelve `default(T)` (`null` en referencias, `0` en `int`…) |
+| `SecureFailErrorsDetails` | Devuelve un `MlErrorsDetails` vacío | Devuelve los errores reales |
+
+```csharp
+// Caso legítimo: interoperar con un API que espera el valor pelado y acepta null.
+var cliente = ObtenerCliente(id).SecureValidValue();
+if (cliente is null) return NotFound();
+
+// Caso legítimo: volcar los errores en un log sin ramificar.
+_log.LogDebug("Errores acumulados: {E}",
+              resultado.SecureFailErrorsDetails().ToErrorsDescription());
+```
+
+⚠️ **Cuidado con `SecureValidValue`:** te devuelve `default(T)` en la rama fallida, lo que significa
+que **pierdes por completo el motivo del fallo**. Úsalo solo cuando de verdad no te importe, y prefiere
+`Match` en todo lo demás:
+
+```csharp
+// ❌ Pierde información y te obliga a comprobar null.
+var total = CalcularTotal(pedido).SecureValidValue();
+
+// ✅ Explícito, sin nulos y con valor por defecto intencionado.
+var total = CalcularTotal(pedido).Match(valid: t => t, fail: _ => 0m);
+```
+
+---
+
+## Composición cruda: `CreateCompleteMlResult`
+
+Construye un `MlResult<T>` a partir de sus piezas (valor, errores y detalles) en una sola llamada.
+Es la herramienta de más bajo nivel de la clase y la necesitarás sobre todo al **escribir tus propios
+combinadores** o al **traducir desde otra librería**.
+
+```csharp
+// Adaptador desde un resultado de una librería de terceros.
+public static MlResult<T> DesdeTercero<T>(ResultadoExterno<T> externo)
+    => externo.Ok
+        ? MlResult<T>.Valid(externo.Data)
+        : MlResultActions.CreateCompleteMlResult<T>(
+              value         : default!,
+              errorsDetails : MlErrorsDetails.FromErrorsMessagesDetails(
+                                  externo.Mensajes,
+                                  new Dictionary<string, object>
+                                  {
+                                      ["CodigoExterno"] = externo.Codigo,
+                                      ["Origen"]        = "ApiTercero"
+                                  }));
+```
+
+En el 95 % de los casos no lo necesitas: para crear resultados usa
+`MlResult.Valid`, `MlResult.Fail`, las conversiones implícitas o
+[`ToMlResultFail`](../Transformations/Transformations.md).
 
 ---
 
 ## Ejemplos Prácticos
 
-### Ejemplo 1: Enriquecimiento de Errores
+### Ejemplo 1: Tubería con contexto acumulado por capas
 
 ```csharp
-public class UserService
+public class GestorPedidos
 {
-    public async Task<MlResult<User>> GetUserWithContextAsync(int userId, string requestId)
-    {
-        return await GetUserFromDatabaseAsync(userId)
-            .AddMlErrorDetailIfFailAsync("UserId", userId)
-            .AddMlErrorDetailIfFailAsync("RequestId", requestId)
-            .AddMlErrorDetailIfFailAsync("Timestamp", DateTime.UtcNow)
-            .AddMlErrorDetailIfFailAsync("Source", "UserService.GetUserWithContext");
-    }
-    
-    public async Task<MlResult<UserProfile>> GetUserProfileAsync(int userId)
-    {
-        var user = await GetUserAsync(userId);
-        
-        return user
-            .AddValueDetailIfFail(new { UserId = userId, Context = "ProfileRetrieval" })
-            .BindAsync(async validUser => await BuildUserProfileAsync(validUser));
-    }
-    
-    private async Task<MlResult<User>> GetUserAsync(int userId)
-    {
-        // Simulación de obtención de usuario
-        await Task.Delay(100);
-        
-        return userId > 0 
-            ? MlResult<User>.Valid(new User { Id = userId, Name = $"User{userId}" })
-            : MlResult<User>.Fail("Invalid user ID");
-    }
-    
-    private async Task<MlResult<UserProfile>> BuildUserProfileAsync(User user)
-    {
-        await Task.Delay(50);
-        return MlResult<UserProfile>.Valid(new UserProfile 
-        { 
-            User = user, 
-            LastLoginDate = DateTime.Now.AddDays(-1) 
-        });
-    }
-}
+    public async Task<MlResult<Factura>> AplicarDescuentoAsync(int pedidoId, string cupon)
+        => await ObtenerPedidoAsync(pedidoId)
+                .AddMlErrorDetailIfFailAsync($"[Pedidos] No se pudo recuperar el pedido {pedidoId}")
 
-public class User
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-}
+                // Conservamos el pedido: lo vamos a necesitar si falla el cálculo.
+                .CompleteWithDataValueIfValidAsync()
 
-public class UserProfile
-{
-    public User User { get; set; }
-    public DateTime LastLoginDate { get; set; }
-}
-```
+                .BindAsync(p => ValidarCuponAsync(p, cupon))
+                .AddMlErrorDetailIfFailAsync($"[Descuentos] El cupón '{cupon}' no es aplicable")
 
-### Ejemplo 2: Completado con Datos
+                .BindAsync(p => EmitirFacturaAsync(p))
+                .AddMlErrorDetailIfFailAsync("[Facturación] La emisión de la factura ha fallado")
 
-```csharp
-public class OrderProcessor
-{
-    public async Task<MlResult<OrderSummary>> ProcessOrderAsync(OrderRequest request)
-    {
-        var validationContext = new { RequestId = Guid.NewGuid(), Timestamp = DateTime.UtcNow };
-        
-        return await ValidateOrderRequestAsync(request)
-            .CompleteWithDetailsValueIfFailAsync(validationContext)
-            .CompleteWithDataValueIfValidAsync(validatedRequest => 
-                new OrderSummary 
-                { 
-                    OrderId = Guid.NewGuid(),
-                    Request = validatedRequest,
-                    ProcessedAt = DateTime.UtcNow 
+                // Un único punto de observabilidad, con la historia completa del fallo.
+                .ExecSelfIfFailAsync(errores =>
+                {
+                    var contexto = errores.GetDetailValue<Pedido>()
+                                          .Match(valid: p => $"pedido {p.Id}, total {p.Total:C}",
+                                                 fail:  _ => "sin contexto de pedido");
+
+                    _log.LogError("Descuento no aplicado ({Contexto}). Traza:\n{Traza}",
+                                  contexto, errores.ToErrorsDescription());
+                    return Task.CompletedTask;
                 });
-    }
-    
-    public async Task<MlResult<EnrichedOrder>> EnrichOrderAsync(Order order, Customer customer)
-    {
-        var enrichmentData = new { CustomerId = customer.Id, OrderValue = order.TotalAmount };
-        
-        return await ProcessOrderEnrichmentAsync(order, customer)
-            .CompleteWithDataValueAsync(
-                enrichmentData,
-                async processedOrder => await CreateEnrichedOrderAsync(processedOrder, customer)
-            );
-    }
-    
-    private async Task<MlResult<OrderRequest>> ValidateOrderRequestAsync(OrderRequest request)
-    {
-        await Task.Delay(50);
-        
-        if (request == null)
-            return MlResult<OrderRequest>.Fail("Order request cannot be null");
-            
-        if (request.Items?.Any() != true)
-            return MlResult<OrderRequest>.Fail("Order must contain items");
-            
-        return MlResult<OrderRequest>.Valid(request);
-    }
-    
-    private async Task<MlResult<Order>> ProcessOrderEnrichmentAsync(Order order, Customer customer)
-    {
-        await Task.Delay(100);
-        
-        if (order.TotalAmount > customer.CreditLimit)
-            return MlResult<Order>.Fail("Order exceeds customer credit limit");
-            
-        return MlResult<Order>.Valid(order);
-    }
-    
-    private async Task<EnrichedOrder> CreateEnrichedOrderAsync(Order order, Customer customer)
-    {
-        await Task.Delay(25);
-        return new EnrichedOrder 
-        { 
-            Order = order, 
-            Customer = customer, 
-            EnrichmentDate = DateTime.UtcNow 
-        };
-    }
-}
-
-public class OrderRequest
-{
-    public List<OrderItem> Items { get; set; }
-    public int CustomerId { get; set; }
-}
-
-public class OrderItem
-{
-    public string ProductId { get; set; }
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
-}
-
-public class Order
-{
-    public string Id { get; set; }
-    public decimal TotalAmount { get; set; }
-    public List<OrderItem> Items { get; set; }
-}
-
-public class Customer
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public decimal CreditLimit { get; set; }
-}
-
-public class OrderSummary
-{
-    public Guid OrderId { get; set; }
-    public OrderRequest Request { get; set; }
-    public DateTime ProcessedAt { get; set; }
-}
-
-public class EnrichedOrder
-{
-    public Order Order { get; set; }
-    public Customer Customer { get; set; }
-    public DateTime EnrichmentDate { get; set; }
 }
 ```
 
-### Ejemplo 3: Acceso Seguro a Valores
+El log resultante contiene la cadena entera de causas:
+
+```
+[Pedidos] No se pudo recuperar el pedido 42
+  ← Timeout al conectar con la base de datos
+```
+
+### Ejemplo 2: Importación masiva conservando la fila que falló
 
 ```csharp
-public class ConfigurationService
+public MlResult<ResumenImportacion> Importar(IEnumerable<LineaCsv> lineas)
 {
-    private readonly Dictionary<string, MlResult<string>> _configurations = new();
-    
-    public void InitializeConfigurations()
+    var aceptadas = new List<Registro>();
+    var rechazadas = new List<LineaRechazada>();
+
+    foreach (var linea in lineas)
     {
-        _configurations["DatabaseConnectionString"] = MlResult<string>.Valid("Server=localhost;Database=MyDb");
-        _configurations["ApiKey"] = MlResult<string>.Valid("abc123def456");
-        _configurations["InvalidConfig"] = MlResult<string>.Fail("Configuration not found");
+        ProcesarLinea(linea)
+            .AddValueDetailIfFail(linea)               // Guardamos la línea original
+            .ExecSelfIfValid(r => aceptadas.Add(r))
+            .ExecSelfIfFailWithValue<Registro, LineaCsv>((errores, mala) =>
+                rechazadas.Add(new LineaRechazada(mala.Numero,
+                                                  mala.Contenido,
+                                                  errores.ToErrorsMessages())));
     }
-    
-    // Uso seguro cuando sabemos que la configuración existe
-    public string GetRequiredConfiguration(string key)
-    {
-        var configResult = _configurations.GetValueOrDefault(key, MlResult<string>.Fail("Key not found"));
-        
-        // Solo usar SecureValidValue cuando estemos seguros del resultado
-        return configResult.SecureValidValue($"Required configuration '{key}' is not available");
-    }
-    
-    // Manejo de errores de configuración
-    public void LogConfigurationErrors()
-    {
-        foreach (var config in _configurations.Where(c => c.Value.IsFail))
+
+    return new ResumenImportacion(aceptadas, rechazadas);
+}
+
+public record LineaCsv(int Numero, string Contenido);
+public record LineaRechazada(int Numero, string Contenido, IEnumerable<string> Motivos);
+public record ResumenImportacion(IReadOnlyList<Registro> Aceptadas,
+                                 IReadOnlyList<LineaRechazada> Rechazadas);
+```
+
+### Ejemplo 3: Frontera con ASP.NET Core
+
+```csharp
+[HttpPost("pedidos/{id:int}/confirmar")]
+public async Task<IActionResult> Confirmar(int id)
+{
+    var resultado = await _gestor.ConfirmarAsync(id)
+        .CompleteWithDetailsValueIfFailAsync(new Dictionary<string, object>
         {
-            var errorDetails = config.Value.SecureFailErrorsDetails(
-                $"Expected configuration '{config.Key}' to be in fail state");
-                
-            Console.WriteLine($"Configuration error for '{config.Key}': {errorDetails.GetMessage()}");
-        }
-    }
-    
-    // Uso asíncrono seguro
-    public async Task<string> GetRequiredConfigurationAsync(string key)
-    {
-        var configResult = await LoadConfigurationAsync(key);
-        
-        return await configResult.SecureValidValueAsync(
-            $"Failed to load required configuration '{key}'");
-    }
-    
-    private async Task<MlResult<string>> LoadConfigurationAsync(string key)
-    {
-        await Task.Delay(10); // Simulación de carga
-        return _configurations.GetValueOrDefault(key, MlResult<string>.Fail("Configuration not found"));
-    }
-}
-```
+            ["TraceId"]  = HttpContext.TraceIdentifier,
+            ["Usuario"]  = User.Identity?.Name ?? "anónimo"
+        });
 
-### Ejemplo 4: Composición de Resultados
-
-```csharp
-public class DataAggregationService
-{
-    public async Task<MlResult<AggregatedData>> AggregateUserDataAsync(int userId)
-    {
-        // Cargar datos de diferentes fuentes en paralelo
-        var userTask = GetUserDataAsync(userId);
-        var preferencesTask = GetUserPreferencesAsync(userId);
-        var activityTask = GetUserActivityAsync(userId);
-        
-        // Esperar a que todas las tareas terminen
-        await Task.WhenAll(userTask, preferencesTask, activityTask);
-        
-        // Componer los resultados
-        var userResult = await userTask;
-        var preferencesResult = await preferencesTask;
-        var activityResult = await activityTask;
-        
-        return userResult
-            .CreateCompleteMlResult(preferencesResult, activityResult)
-            .CompleteWithDataValueIfValid(tuple =>
-            {
-                var (user, preferences, activity) = tuple;
-                return new AggregatedData
-                {
-                    User = user,
-                    Preferences = preferences,
-                    Activity = activity,
-                    AggregatedAt = DateTime.UtcNow
-                };
-            });
-    }
-    
-    public async Task<MlResult<UserReport>> GenerateUserReportAsync(int userId, DateTime reportDate)
-    {
-        var userData = await GetUserDataAsync(userId);
-        var reportMetadata = new ReportMetadata { GeneratedAt = DateTime.UtcNow, ReportDate = reportDate };
-        
-        // Combinar valor directo con resultado
-        return await reportMetadata
-            .CreateCompleteMlResultAsync(userData)
-            .CompleteWithDataValueIfValidAsync(tuple =>
-            {
-                var (metadata, user) = tuple;
-                return Task.FromResult(new UserReport
-                {
-                    User = user,
-                    Metadata = metadata,
-                    Summary = $"Report for {user.Name} generated on {metadata.GeneratedAt}"
-                });
-            });
-    }
-    
-    public async Task<MlResult<ValidationResult>> ValidateMultipleInputsAsync(
-        string email, 
-        int age, 
-        string phoneNumber)
-    {
-        var emailValidation = ValidateEmailAsync(email);
-        var ageValidation = ValidateAge(age);
-        var phoneValidation = ValidatePhoneNumberAsync(phoneNumber);
-        
-        // Componer todas las validaciones
-        return await emailValidation
-            .CreateCompleteMlResultAsync(ageValidation, phoneValidation)
-            .CompleteWithDataValueIfValidAsync(tuple =>
-            {
-                var (emailResult, ageResult, phoneResult) = tuple;
-                return Task.FromResult(new ValidationResult
-                {
-                    IsValid = true,
-                    ValidatedAt = DateTime.UtcNow,
-                    Fields = new Dictionary<string, bool>
-                    {
-                        ["Email"] = emailResult,
-                        ["Age"] = ageResult,
-                        ["Phone"] = phoneResult
-                    }
-                });
-            });
-    }
-    
-    private async Task<MlResult<UserData>> GetUserDataAsync(int userId)
-    {
-        await Task.Delay(100);
-        return userId > 0 
-            ? MlResult<UserData>.Valid(new UserData { Id = userId, Name = $"User{userId}" })
-            : MlResult<UserData>.Fail("Invalid user ID");
-    }
-    
-    private async Task<MlResult<UserPreferences>> GetUserPreferencesAsync(int userId)
-    {
-        await Task.Delay(80);
-        return MlResult<UserPreferences>.Valid(new UserPreferences { UserId = userId, Theme = "Dark" });
-    }
-    
-    private async Task<MlResult<UserActivity>> GetUserActivityAsync(int userId)
-    {
-        await Task.Delay(120);
-        return MlResult<UserActivity>.Valid(new UserActivity { UserId = userId, LastLoginDate = DateTime.Now.AddDays(-1) });
-    }
-    
-    private async Task<MlResult<bool>> ValidateEmailAsync(string email)
-    {
-        await Task.Delay(50);
-        return (!string.IsNullOrEmpty(email) && email.Contains("@"))
-            ? MlResult<bool>.Valid(true)
-            : MlResult<bool>.Fail("Invalid email format");
-    }
-    
-    private MlResult<bool> ValidateAge(int age)
-    {
-        return (age >= 18 && age <= 120)
-            ? MlResult<bool>.Valid(true)
-            : MlResult<bool>.Fail("Age must be between 18 and 120");
-    }
-    
-    private async Task<MlResult<bool>> ValidatePhoneNumberAsync(string phoneNumber)
-    {
-        await Task.Delay(30);
-        return (!string.IsNullOrEmpty(phoneNumber) && phoneNumber.Length >= 10)
-            ? MlResult<bool>.Valid(true)
-            : MlResult<bool>.Fail("Phone number must be at least 10 digits");
-    }
-}
-
-// Clases de apoyo para los ejemplos
-public class UserData
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-}
-
-public class UserPreferences
-{
-    public int UserId { get; set; }
-    public string Theme { get; set; }
-}
-
-public class UserActivity
-{
-    public int UserId { get; set; }
-    public DateTime LastLoginDate { get; set; }
-}
-
-public class AggregatedData
-{
-    public UserData User { get; set; }
-    public UserPreferences Preferences { get; set; }
-    public UserActivity Activity { get; set; }
-    public DateTime AggregatedAt { get; set; }
-}
-
-public class ReportMetadata
-{
-    public DateTime GeneratedAt { get; set; }
-    public DateTime ReportDate { get; set; }
-}
-
-public class UserReport
-{
-    public UserData User { get; set; }
-    public ReportMetadata Metadata { get; set; }
-    public string Summary { get; set; }
-}
-
-public class ValidationResult
-{
-    public bool IsValid { get; set; }
-    public DateTime ValidatedAt { get; set; }
-    public Dictionary<string, bool> Fields { get; set; }
+    return resultado.Match<Confirmacion, IActionResult>(
+        valid: c       => Ok(c),
+        fail:  errores => StatusCode(500, new
+        {
+            errores = errores.ToErrorsMessages(),
+            traza   = errores.ToDetailsDescription()      // Incluye TraceId y Usuario
+        }));
 }
 ```
 
@@ -616,130 +323,50 @@ public class ValidationResult
 
 ## Mejores Prácticas
 
-### 1. Enriquecimiento de Errores
+### 1. `AddMlErrorDetailIfFail` una vez por capa, no una por línea
 
-```csharp
-// ✅ Correcto: Añadir contexto relevante a los errores
-var result = await ProcessDataAsync(data)
-    .AddMlErrorDetailIfFailAsync("UserId", userId)
-    .AddMlErrorDetailIfFailAsync("OperationId", operationId)
-    .AddMlErrorDetailIfFailAsync("Timestamp", DateTime.UtcNow);
+Un mensaje de contexto por frontera arquitectónica (repositorio, servicio, controlador) produce trazas
+legibles. Diez mensajes seguidos producen ruido.
 
-// ❌ Incorrecto: Añadir información innecesaria o sensible
-var result = await ProcessDataAsync(data)
-    .AddMlErrorDetailIfFailAsync("Password", user.Password) // ¡Nunca!
-    .AddMlErrorDetailIfFailAsync("RandomData", Guid.NewGuid()); // Innecesario
-```
+### 2. `CompleteWithDataValueIfValid` justo antes de perder el dato
 
-### 2. Uso de Acceso Seguro
+Colócalo inmediatamente antes de la transformación que descarta la información que querrás en el log.
 
-```csharp
-// ✅ Correcto: Usar SecureValidValue solo cuando esté garantizado el éxito
-public string GetConfigurationValue(string key)
-{
-    var result = LoadConfiguration(key);
-    
-    // Solo si sabemos que la configuración debe existir
-    if (IsRequiredConfiguration(key))
-    {
-        return result.SecureValidValue($"Required configuration '{key}' is missing");
-    }
-    
-    // Para configuraciones opcionales, usar Match
-    return result.Match(
-        valid: value => value,
-        fail: _ => GetDefaultValue(key)
-    );
-}
+### 3. `SecureValidValue` solo en las fronteras
 
-// ❌ Incorrecto: Usar SecureValidValue sin estar seguro del resultado
-public string GetUserName(int userId)
-{
-    var userResult = GetUser(userId); // Puede fallar
-    return userResult.SecureValidValue(); // ¡Puede lanzar excepción!
-}
-```
+Dentro del dominio, `Match`. En el borde (interoperar con un API que exige el valor pelado), `Secure*`.
+Y si necesitas un valor por defecto explícito, `Match(valid: x => x, fail: _ => defecto)` es más claro.
 
-### 3. Composición de Resultados
+### 4. `CreateCompleteMlResult` es para adaptadores
 
-```csharp
-// ✅ Correcto: Usar CreateCompleteMlResult para validaciones que deben pasar todas
-var validationResult = emailValidation
-    .CreateCompleteMlResult(ageValidation, phoneValidation);
+Si lo estás usando en lógica de negocio, casi siempre hay un método más expresivo:
+`MlResult.Fail`, `ToMlResultFail`, `EnsureFp.That`…
 
-// ✅ Correcto: Combinar valor directo con resultado cuando sea apropiado
-var reportResult = reportMetadata
-    .CreateCompleteMlResult(userData);
+### 5. Recuerda que estos métodos no cortocircuitan
 
-// ❌ Incorrecto: Usar composición cuando solo necesitas una validación
-var result = validation1.CreateCompleteMlResult(validation2); // Si validation1 es suficiente
-```
-
-### 4. Completado con Datos
-
-```csharp
-// ✅ Correcto: Usar CompleteWithDataValue para enriquecer en ambas ramas
-var result = await ProcessDataAsync(input)
-    .CompleteWithDataValueAsync(
-        value: new { Context = "DataProcessing", UserId = userId },
-        completeFuncAsync: async processedData => await FinalizeDataAsync(processedData)
-    );
-
-// ✅ Correcto: Usar CompleteWithDataValueIfValid solo para transformación en éxito
-var result = ValidateInput(input)
-    .CompleteWithDataValueIfValid(validInput => new ProcessedInput(validInput));
-
-// ❌ Incorrecto: Usar CompleteWithDataValueIfValid cuando necesitas enriquecer errores también
-```
-
-### 5. Manejo de Operaciones Asíncronas
-
-```csharp
-// ✅ Correcto: Usar las versiones async apropiadas
-var result = await GetDataAsync()
-    .AddMlErrorDetailIfFailAsync("Context", context)
-    .CompleteWithDataValueIfValidAsync(data => TransformDataAsync(data));
-
-// ✅ Correcto: Composición asíncrona
-var result = await GetUserAsync(userId)
-    .CreateCompleteMlResultAsync(GetPreferencesAsync(userId));
-
-// ❌ Incorrecto: Mezclar sync y async incorrectamente
-var result = GetDataAsync() // Task<MlResult<T>>
-    .AddMlErrorDetailIfFail("Context", context); // ¡Error! Necesita Async
-```
-
----
-
-## Consideraciones de Rendimiento
-
-### Enriquecimiento de Errores
-
-- Los métodos de enriquecimiento solo ejecutan lógica si el resultado es fallido
-- El costo es mínimo para resultados exitosos
-- Considera el tamaño de los objetos añadidos como valores
-
-### Composición de Resultados
-
-- `CreateCompleteMlResult` evalúa todos los resultados antes de componer
-- Para operaciones costosas, considera evaluar condiciones tempranas
-- Las tuplas se optimizan automáticamente por el compilador
-
-### Acceso Seguro
-
-- `SecureValidValue` y `SecureFailErrorsDetails` son operaciones O(1)
-- El costo de las excepciones es alto, úsalos solo cuando sea seguro
-- Prefiere `Match` para casos donde el estado es incierto
+Son transparentes: devuelven el resultado intacto cuando el estado no les corresponde. Puedes
+encadenarlos con total libertad sin alterar la semántica de la tubería.
 
 ---
 
 ## Resumen
 
-La clase `MlResultActions` proporciona operaciones avanzadas esenciales para:
+- `MlResultActions` aporta **contexto, acceso seguro y composición**, no transformación.
+- `Value` y `ErrorsDetails` son `internal protected` **por diseño**: el acceso pasa por `Match` o por
+  los métodos `Secure*`.
+- `AddMlErrorDetailIfFail` apila mensajes de contexto capa a capa; `AddValueDetailIfFail` conserva el
+  dato culpable en `Details["Value"]`.
+- La familia `CompleteWithData*` guarda información para usarla más abajo en la tubería.
+- `SecureValidValue` devuelve `default(T)` en la rama fallida: cómodo, pero pierde el motivo del error.
+- `CreateCompleteMlResult` es la construcción de bajo nivel, ideal para adaptadores.
 
-- **Enriquecimiento Contextual**: `AddMlErrorDetailIfFail`, `AddValueDetailIfFail`
-- **Completado Inteligente**: `CompleteWithDataValue`, `CompleteWithDataValueIfValid`, `CompleteWithDetailsValueIfFail`
-- **Acceso Garantizado**: `SecureValidValue`, `SecureFailErrorsDetails`
-- **Composición Robusta**: `CreateCompleteMlResult` para 2 y 3 resultados, combinaciones con valores directos
+## Ver también
 
-Estas operaciones permiten crear pipelines funcionales expresivos y robustos, manteniendo la seguridad de tipos y la composabilidad que caracterizan a la
+- [`3_Bind.md`](./3_Bind.md) — encadenar operaciones que devuelven `MlResult`.
+- [`../Types/MlResult.md`](../Types/MlResult.md) — el tipo y sus miembros reales.
+- [`../Types/MlResultActions.md`](../Types/MlResultActions.md) — referencia completa de esta clase.
+- [`../Types/MlResultActionsErrorsDetails.md`](../Types/MlResultActionsErrorsDetails.md) — `GetDetail`, `AddValueIfFail`, `GetDetailException`.
+- [`../Types/MlResultErrors.md`](../Types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y las claves convencionales.
+- [`../Match/1_Match.md`](../Match/1_Match.md) — la forma idiomática de salir de `MlResult<T>`.
+- [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — consumir el valor guardado en el fallo.
+- [`../Transformations/Transformations.md`](../Transformations/Transformations.md) — crear resultados desde valores y mensajes.
