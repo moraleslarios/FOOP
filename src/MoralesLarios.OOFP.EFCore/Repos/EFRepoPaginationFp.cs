@@ -23,14 +23,6 @@ public class EFRepoPaginationFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(
 
     public virtual async Task<MlResult<T>> TryFindAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoReaderPaginatorFp.TryFindAsync(notFoundErrorDetails, token, pk);
 
-    public virtual MlResult<T> TryFirstOrDefault(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryFirstOrDefault(filter);
-
-    public virtual async Task<MlResult<T>> TryFirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryFirstOrDefaultAsync(filter, token);
-
-    public virtual MlResult<T> TryFirstOrDefault(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryFirstOrDefault(filter, notFoundErrorDetails);
-
-    public virtual async Task<MlResult<T>> TryFirstOrDefaultAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryFirstOrDefaultAsync(filter, notFoundErrorDetails, token);
-
     public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryFirst(filter);
 
     public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryFirstAsync(filter, token);
@@ -38,14 +30,6 @@ public class EFRepoPaginationFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(
     public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryFirst(filter, notFoundErrorDetails);
 
     public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryFirstAsync(filter, notFoundErrorDetails, token);
-
-    public virtual MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryLastOrDefault(filter);
-
-    public virtual async Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryLastOrDefaultAsync(filter, token);
-
-    public virtual MlResult<T> TryLastOrDefault(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryLastOrDefault(filter, notFoundErrorDetails);
-
-    public virtual async Task<MlResult<T>> TryLastOrDefaultAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryLastOrDefaultAsync(filter, notFoundErrorDetails, token);
 
     public virtual MlResult<T> TryLast(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryLast(filter);
 

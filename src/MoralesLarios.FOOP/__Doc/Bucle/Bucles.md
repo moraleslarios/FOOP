@@ -16,6 +16,8 @@
 
 Los métodos `CompleteData` y las funciones de fusión de errores proporcionan un sistema robusto para **procesar colecciones de datos** donde cada elemento puede requerir transformación o validación que puede fallar. Estos métodos implementan el patrón "**todo o nada**" donde una colección completa es válida solo si todos sus elementos son procesados exitosamente.
 
+> Nota de actualización: la API actual de `Types/MlResultBucles.cs` expone estas operaciones con la familia de métodos `Projection`, `ProjectionAsync`, `ProjectionWhile`, `ProjectionWhileAsync` y `ProjectionParallelAsync`. Las sobrecargas nuevas aceptan también `Func<T, int, ...>` para recibir el índice del elemento procesado. La documentación de referencia actualizada está en [`../Types/MlResultBucles.md`](../Types/MlResultBucles.md).
+
 ### Propósito Principal
 
 - **Completado de Datos**: Transformar/enriquecer elementos de una colección

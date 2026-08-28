@@ -643,6 +643,66 @@ public static class MlResultBucles
 
 
 
+    public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)> ProjectionSplit<T, TResult>(this IEnumerable<T>             source,
+                                                                                                                                   Func<T, MlResult<TResult>> completeFuncTransform)
+        where T : notnull
+    {
+        var result = EnsureFp.NotNull(completeFuncTransform, "completeFuncTransform cannot be null")
+                            .Map (x =>
+                            {
+                                var partialData = source.Where(z => z is not null)
+                                                        .Select(z => (z, completeFuncTransform(z))).ToList();
+
+                                var partialResult = (valids: partialData.Where(x => x.Item2.IsValid).ToDictionary(x => x.Item1, x => x.Item2.SecureValidValue()),
+                                                     fails : partialData.Where(x => x.Item2.IsFail ).ToDictionary(x => x.Item1, x => x.Item2.SecureFailErrorsDetails()));
+                                return partialResult;
+                            });
+        return result;
+    }
+
+
+    public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this IEnumerable<T>             source,
+                                                                                                                                              Func<T, MlResult<TResult>> completeFuncTransform)
+        where T : notnull
+        => source.ProjectionSplit(completeFuncTransform).ToAsync();
+
+
+    public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this Task<IEnumerable<T>>       sourceAsync,
+                                                                                                                                                    Func<T, MlResult<TResult>> completeFuncTransform)
+        where T : notnull
+        => await (await sourceAsync).ProjectionSplitAsync(completeFuncTransform);
+
+
+    public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this IEnumerable<T>                   source,
+                                                                                                                                              Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+        where T : notnull
+    {
+        var result = EnsureFp.NotNull(completeFuncTransformAsync, "completeFuncTransformAsync cannot be null")
+                            .MapAsync(async x =>
+                            {
+                                var partialData = new List<(T item, MlResult<TResult> result)>();
+
+                                foreach (var item in source.Where(z => z is not null))
+                                {
+                                    var funcResult = await completeFuncTransformAsync(item);
+                                    partialData.Add((item, funcResult));
+                                }
+
+                                var partialResult = (valids: partialData.Where(x => x.result.IsValid).ToDictionary(x => x.item, x => x.result.SecureValidValue()),
+                                                     fails : partialData.Where(x => x.result.IsFail ).ToDictionary(x => x.item, x => x.result.SecureFailErrorsDetails()));
+
+                                return partialResult;
+                            });
+        return result;
+    }
+
+
+    public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+                                                                                                                                                    Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
+        where T : notnull
+        => await (await sourceAsync).ProjectionSplitAsync(completeFuncTransformAsync);
+
+
 
     public static MlResult<IEnumerable<T>> FusionFailErros<T>(this IEnumerable<MlResult<T>> source)
     {

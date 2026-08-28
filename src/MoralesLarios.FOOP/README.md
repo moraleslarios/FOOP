@@ -1,266 +1,988 @@
-# MoralesLarios.FOOP / MoralesLarios.OOFP
+# MoralesLarios.OOFP / MoralesLarios.FOOP
 
-**MoralesLarios.OOFP** es una solución modular de librerías .NET diseñada para construir software con un enfoque **funcional, consistente y reutilizable**.
+`MoralesLarios.OOFP` es el nÃºcleo funcional del ecosistema. Su objetivo es centralizar la validaciÃ³n, el control de errores y el flujo de negocio con un patrÃ³n consistente basado en `MlResult<T>` y composiciÃ³n funcional.
 
-La pieza central es la librería **`MoralesLarios.OOFP`**, sobre la que se apoyan el resto de proyectos: validación, persistencia, servicios de aplicación, Web API, controladores REST, caché, clientes HTTP, logging, IO y utilidades de infraestructura.
-
-El objetivo del ecosistema es ofrecer una forma homogénea de trabajar con:
-
-- `MlResult<T>` como contenedor de éxito/error
-- composición funcional con `Bind`, `Map`, `Match` y `ExecSelf`
-- manejo explícito de errores sin depender de excepciones como flujo de control
-- integración natural con ASP.NET Core, EF Core y DI
-- tipado fuerte mediante value objects y validaciones dedicadas
-- documentación técnica extensa y enlazada por módulos
+La librerÃ­a se usa de base por capas posteriores como `ValueObjects`, `Validation`, `EFCore`, `WebServices`, `WebApi`, clientes HTTP y utilidades. La idea principal es evitar que los errores se conviertan en un mecanismo de control principal, y en su lugar transportar el estado explÃ­cito del flujo con resultados y detalles estructurados.
 
 ---
 
-## Cómo navegar esta solución
+## QuÃ© aporta esta librerÃ­a
 
-### Documentación principal del núcleo OOFP
-
-- [Documentación técnica completa de `MoralesLarios.OOFP`](./__Doc/1_Intro.md)
-- [Documentación por tipos de `MoralesLarios.OOFP`](./__Doc/Types/README.md)
-- [Modelo de resultados y tipos base](./__Doc/Types/MlResult.md)
-- [Operaciones `Bind`](./__Doc/Types/MlResultActionsBind.md)
-- [Operaciones `Map`](./__Doc/Types/MlResultActionsMap.md)
-- [Operaciones `Match`](./__Doc/Types/MlResultActionsMatch.md)
-- [Operaciones `ExecSelf`](./__Doc/Types/MlResultActionsExecSelf.md)
-- [Operaciones `Several`](./__Doc/Types/MlResultActionsSeveral.md)
-- [Transformaciones](./__Doc/Types/MlResultTransformations.md)
-- [Bucles funcionales](./__Doc/Types/MlResultBucles.md)
-- [Cambio de tipo de retorno](./__Doc/Types/MlResultChangeReturnResult.md)
-- [Modelo de errores](./__Doc/Types/MlResultErrors.md)
-
-### Documentación por concepto dentro de `__Doc`
-
-- [Intro general](./__Doc/1_Intro.md)
-- [Bind](./__Doc/Bind/3_Bind.md)
-- [Map](./__Doc/Map/1_Map.md)
-- [Match](./__Doc/Match/1_Match.md)
-- [ExecSelf](./__Doc/ExecSelf/1_ExecSelf.md)
-- [Several](./__Doc/Several/1_EmptyToFailed.md)
-- [EnsureFp](./__Doc/EnsureFp/EnsureFp.md)
-- [Extensions](./__Doc/Extensions/Extensions.md)
-- [Transformations](./__Doc/Transformations/Transformations.md)
-- [Bucles](./__Doc/Bucle/Bucles.md)
+- `MlResult<T>` para Ã©xito/error con valor explÃ­cito.
+- Validaciones funcionales con `EnsureFp`.
+- `Bind`, `Map`, `Match`, `ExecSelf` y variantes `Try*` / `Async`.
+- `MlError` y `MlErrorsDetails` para errores detallados.
+- Extensiones para colecciones, acciones y conversiones funcionales.
+- Soporte natural de asincronÃ­a con `Task<MlResult<T>>`.
 
 ---
 
-## Qué aporta la librería principal `MoralesLarios.OOFP`
+## Estructura del nÃºcleo
 
-`MoralesLarios.OOFP` define el lenguaje común del ecosistema. Su idea principal es que la aplicación trabaje con resultados explícitos, en lugar de encadenar excepciones como mecanismo primario de control.
-
-### Principios de diseño
-
-- **Railway-Oriented Programming**: cada operación puede continuar por la vía de éxito o desviarse a la vía de error.
-- **Composición funcional**: los métodos se encadenan de forma fluida y predecible.
-- **Errores como datos**: el error no se oculta; se transporta, se inspecciona y se transforma.
-- **Asincronía segura**: existe soporte coherente para versiones `Async` y variantes que capturan excepciones.
-- **Extensibilidad**: el sistema está construido por familias de extensiones y tipos reutilizables.
-
-### Convenciones de nombres
-
-El proyecto sigue una convención uniforme:
-
-- `Bind*`: encadena operaciones que ya devuelven `MlResult`
-- `Map*`: transforma valores puros dentro de un resultado válido
-- `Match*`: ramifica según `valid` o `fail`
-- `ExecSelf*`: ejecuta efectos secundarios y devuelve el mismo resultado
-- `Try*`: captura excepciones y las convierte en fallos funcionales
-- `*Async`: versión asíncrona
-
-Esa convención se repite en todo el ecosistema para que el comportamiento sea predecible.
-
-### Ideas clave del núcleo
-
-- `MlResult<T>` es el tipo base de éxito/error.
-- `MlErrorsDetails` transporta el detalle estructurado del error.
-- `EnsureFp` aporta precondiciones funcionales.
-- Las extensiones de `Types` cubren composición, transformación, coincidencia y cambio de forma del resultado.
+```text
+MoralesLarios.FOOP/
+â”œâ”€â”€ Types/
+â”‚   â”œâ”€â”€ MlResult.cs
+â”‚   â”œâ”€â”€ MlResultActions.cs
+â”‚   â”œâ”€â”€ MlResultActionsBind.cs
+â”‚   â”œâ”€â”€ MlResultActionsMap.cs
+â”‚   â”œâ”€â”€ MlResultActionsMatch.cs
+â”‚   â”œâ”€â”€ MlResultActionsExecSelf.cs
+â”‚   â”œâ”€â”€ MlResultActionsSeveral.cs
+â”‚   â”œâ”€â”€ MlResultTransformations.cs
+â”‚   â”œâ”€â”€ MlResultBucles.cs
+â”‚   â””â”€â”€ Errors/
+â”‚       â”œâ”€â”€ MlError.cs
+â”‚       â””â”€â”€ MlErrorsDetails.cs
+â”œâ”€â”€ Helpers/
+â”‚   â”œâ”€â”€ EnsureFp.cs
+â”‚   â””â”€â”€ Extensions/
+â”‚       â””â”€â”€ Extensions.cs
+â”œâ”€â”€ GlobalUsings.cs
+â”œâ”€â”€ README.md
+â””â”€â”€ __Doc/
+```
 
 ---
 
-## Mapa del ecosistema
+## 1. El tipo central: `MlResult<T>`
 
-### Paquetes principales
+`MlResult<T>` representa dos estados posibles:
 
-| Proyecto | Rol en la solución | Documentación |
-|---|---|---|
-| `MoralesLarios.OOFP` | Núcleo funcional de toda la solución | [__Doc/1_Intro.md](./__Doc/1_Intro.md) · [__Doc/Types](./__Doc/Types/README.md) |
-| `MoralesLarios.OOFP.ValueObjects` | Value objects tipados y validados | [README](./src/MoralesLarios.OOFP.ValueObjects/README.md) |
-| `MoralesLarios.OOFP.ValueObjects.IO` | Value objects para rutas y sistema de archivos | [README](./src/MoralesLarios.OOFP.ValueObjects.IO/README.md) |
-| `MoralesLarios.OOFP.Validation` | Base de validación funcional | [README](./src/MoralesLarios.OOFP.Validation/README.md) |
-| `MoralesLarios.OOFP.Validation.Dataannotations` | Validación con DataAnnotations | [README](./src/MoralesLarios.OOFP.Validation.Dataannotations/README.md) |
-| `MoralesLarios.OOFP.Validation.FluentValidations` | Validación con FluentValidation | [README](./src/MoralesLarios.OOFP.Validation.FluentValidations/README.md) |
-| `MoralesLarios.OOFP.Internals` | Tipos internos compartidos y paginación | [README](./src/MoralesLarios.OOFP.Internals/README.md) |
-| `MoralesLarios.OOFP.Extensions.Loggers` | Logging funcional sobre `MlResult<T>` | [README](./src/MoralesLarios.OOFP.Extensions.Loggers/README.md) |
-| `MoralesLarios.OOFP.Utilities` | Lectura segura de configuración | [README](./src/MoralesLarios.OOFP.Utilities/README.md) |
-| `MoralesLarios.OOFP.IO` | IO seguro sobre ficheros y directorios | [README](./src/MoralesLarios.OOFP.IO/README.md) |
-| `MoralesLarios.OOFP.EFCore` | Repositorios funcionales y OOP sobre EF Core | [README](./src/MoralesLarios.OOFP.EFCore/README.md) |
-| `MoralesLarios.OOFP.WebServices` | Servicios de aplicación funcionales | [README](./src/MoralesLarios.OOFP.WebServices/README.md) |
-| `MoralesLarios.OOFP.WebApi` | Puente entre `MlResult<T>` e `IActionResult` | [README](./src/MoralesLarios.OOFP.WebApi/README.md) |
-| `MoralesLarios.OOFP.WebControllers` | Controladores REST genéricos | [README](./src/MoralesLarios.OOFP.WebControllers/README.md) |
-| `MoralesLarios.OOFP.WebControllers.Cache` | Controladores REST con caché por controlador | [README](./src/MoralesLarios.OOFP.WebControllers.Cache/README.md) |
-| `MoralesLarios.OOFP.HttpClients` | Clientes HTTP tipados y funcionales | [README](./src/MoralesLarios.OOFP.HttpClients/README.md) |
-| `MoralesLarios.OOFP.EFCore.WebApi` | Base de integración entre EF Core y Web API | [README](./src/MoralesLarios.OOFP.EFCore.WebApi/README.md) |
+- `IsValid == true`: el flujo tiene un valor correcto disponible.
+- `IsValid == false`: el flujo ha fallado y su detalle se encuentra en `ErrorsDetails`.
 
-### Proyectos de pruebas y verificación
+### Factories principales
 
-Estos proyectos validan la solución desde distintos ángulos y sirven como referencia de uso real:
+```csharp
+using MoralesLarios.OOFP.Types;
+using MoralesLarios.OOFP.Types.Errors;
 
-- `MoralesLarios.OOFP.Unit.Tests`
-- `MoralesLarios.OOFP.ValueObjects.Tests.Unit`
-- `MoralesLarios.OOFP.ValueObjects.IO.Test.Unit`
-- `MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit`
-- `MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit`
-- `MoralesLarios.OOFP.WebApi.Tests.Unit`
-- `MoralesLarios.OOFP.WebServices.Tests.Unit`
-- `MoralesLarios.OOFP.HttpClients.Tests.Unit`
-- `MoralesLarios.OOFP.HttpClients.Tests.Integration`
-- `MoralesLarios.OOFP.EFCore.Infrastructure.Tests`
-- `MoralesLarios.OOFP.EFCore.Integration.Tests`
-- `MoralesLarios.OOFP.Extensions.Loggers.Console.Tests`
+var ok = MlResult<int>.Valid(42);
+var fail1 = MlResult<string>.Fail("No hay datos");
+var fail2 = MlResult<int>.Fail(MlErrorsDetails.FromErrorMessage("La validaciÃ³n ha fallado"));
 
----
+var empty = MlResult.Empty();
+var discard = MlResult.Discard;
+```
 
-## La pieza central: `MoralesLarios.OOFP`
+### Propiedades y conversiones implÃ­citas
 
-Aunque toda la solución tiene valor por sí misma, `MoralesLarios.OOFP` es el fundamento común.
+```csharp
+MlResult<int> r1 = 42;
+MlResult<int> r2 = MlResult<int>.Fail("error");
+MlResult<int> r3 = "valor invÃ¡lido";
 
-### Qué resuelve
+Console.WriteLine(r1.IsValid); // True
+Console.WriteLine(r2.IsFail);  // True
+```
 
-- abstrae el patrón `Result`
-- unifica tratamiento de errores
-- permite composición funcional sin pérdida de contexto
-- proporciona la base para logging, validación, persistencia y web
+La librerÃ­a ofrece conversiones implÃ­citas para:
 
-### Qué encontrarás en su documentación técnica
+- `T` a `MlResult<T>`
+- `MlError` a `MlResult<T>`
+- `MlErrorsDetails` a `MlResult<T>`
+- `IEnumerable<MlError>` a `MlResult<T>`
 
-- [Introducción general](./__Doc/1_Intro.md)
-- [Guía por tipos](./__Doc/Types/README.md)
-- [Detalles de `MlResult<T>`](./__Doc/Types/MlResult.md)
-- [Operaciones de `Bind`](./__Doc/Types/MlResultActionsBind.md)
-- [Operaciones de `Map`](./__Doc/Types/MlResultActionsMap.md)
-- [Operaciones de `Match`](./__Doc/Types/MlResultActionsMatch.md)
-- [Operaciones de `ExecSelf`](./__Doc/Types/MlResultActionsExecSelf.md)
-- [Operaciones de `Several`](./__Doc/Types/MlResultActionsSeveral.md)
-- [Transformaciones](./__Doc/Types/MlResultTransformations.md)
-- [Bucles funcionales](./__Doc/Types/MlResultBucles.md)
-- [Cambio de retorno](./__Doc/Types/MlResultChangeReturnResult.md)
-- [Errores y detalles](./__Doc/Types/MlResultErrors.md)
+### Ejemplos de uso reales
 
-### Por qué es importante
+```csharp
+var result = MlResult<string>.Valid("Hola");
 
-Porque el resto de librerías reutilizan exactamente el mismo estilo:
+var text = result.Match(
+    valid: x => $"OK: {x}",
+    fail: errors => $"ERR: {errors}"
+);
 
-- `ValueObjects` usa `MlResult<T>` para crear y validar tipos seguros.
-- `Validation` transforma validaciones en resultados funcionales.
-- `EFCore` encapsula operaciones de base de datos en resultados.
-- `WebServices` expone la lógica de aplicación en la misma semántica funcional.
-- `WebApi` convierte esos resultados en respuestas HTTP.
-- `HttpClients` consume esas respuestas con la misma filosofía.
+Console.WriteLine(text);
+```
+
+```csharp
+var failure = MlResult<int>.Fail("El valor no es vÃ¡lido");
+
+var message = failure.Match(
+    valid: x => $"Valor: {x}",
+    fail: errors => errors.ToString()
+);
+```
+
+### `ToString()`
+
+```csharp
+var result = MlResult<int>.Fail("fallo 1");
+Console.WriteLine(result);
+```
+
+Devuelve el valor correcto si es vÃ¡lido, o el texto del error si estÃ¡ en fallo.
 
 ---
 
-## Capas de la solución
+## 2. `MlError` y `MlErrorsDetails`
 
-### 1. Dominio, semántica y tipos seguros
+### `MlError`
 
-#### `MoralesLarios.OOFP.ValueObjects`
-Librería de value objects tipados para evitar el uso de primitivos sin semántica.
+`MlError` es la pieza bÃ¡sica del error funcional. Normaliza el mensaje y ofrece una conversiÃ³n implÃ­cita desde `string`.
 
-Aporta, entre otros:
+```csharp
+using MoralesLarios.OOFP.Types.Errors;
 
-- `NotEmptyString`
-- `Key`
-- `Mail`
-- `IntNotNegative`
-- value objects numéricos y de texto
+var error = MlError.FromErrorMessage("Usuario no encontrado");
+var also = "Nombre requerido";
 
-?? [README del proyecto](./src/MoralesLarios.OOFP.ValueObjects/README.md)
+Console.WriteLine(error.Message);
+Console.WriteLine(also.ToMlError());
+```
 
-#### `MoralesLarios.OOFP.ValueObjects.IO`
-Especialización de value objects para rutas y filesystem.
+`MlErrorExtensions` aÃ±ade:
 
-Aporta:
+- `ToMlError()`
+- `ToMlErrors()`
 
-- `MlFile`
-- `MlDirectory`
-- `ExistsFile`
-- `ExistDirectory`
+```csharp
+IEnumerable<MlError> errors = "error 1".ToMlErrors();
+```
 
-?? [README del proyecto](./src/MoralesLarios.OOFP.ValueObjects.IO/README.md)
+### `MlErrorsDetails`
 
-#### `MoralesLarios.OOFP.Validation`
-Base de validación funcional con `MlValidableFp<T>`.
+`MlErrorsDetails` contiene una colecciÃ³n de errores y un diccionario con detalles adicionales.
 
-?? [README del proyecto](./src/MoralesLarios.OOFP.Validation/README.md)
+```csharp
+var errors = MlErrorsDetails.FromErrorMessage("Fallo de validaciÃ³n");
+var withValue = MlErrorsDetails.FromErrorMessageWithValue("Id no vÃ¡lido", 42);
+var withDetail = MlErrorsDetails.FromErrorDetails("Fallo inesperado", "Exception", new InvalidOperationException("boom"));
+```
 
-#### `MoralesLarios.OOFP.Validation.Dataannotations`
-Extiende la validación funcional con atributos de `DataAnnotations`.
+### Factory methods reales
 
-?? [README del proyecto](./src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)
+```csharp
+var errors1 = MlErrorsDetails.FromEnumerableStrings(new[] { "e1", "e2" });
+var errors2 = MlErrorsDetails.FromError(MlError.FromErrorMessage("error"));
+var errors3 = MlErrorsDetails.FromErrorMessageDetails("mensaje", new Dictionary<string, object> { ["key"] = 123 });
+```
 
-#### `MoralesLarios.OOFP.Validation.FluentValidations`
-Extiende la validación funcional con `FluentValidation`.
+### ConversiÃ³n implÃ­cita
 
-?? [README del proyecto](./src/MoralesLarios.OOFP.Validation.FluentValidations/README.md)
+```csharp
+MlErrorsDetails d1 = "mensaje simple";
+MlErrorsDetails d2 = new[] { "a", "b" };
+MlErrorsDetails d3 = MlError.FromErrorMessage("x");
+```
 
----
+### Formateo
 
-### 2. Infraestructura común
-
-#### `MoralesLarios.OOFP.Internals`
-Tipos internos reutilizables, especialmente para paginación y metadatos comunes.
-
-?? [README del proyecto](./src/MoralesLarios.OOFP.Internals/README.md)
-
-#### `MoralesLarios.OOFP.Extensions.Loggers`
-Extensiones para registrar trazas sobre `MlResult<T>` sin romper el flujo funcional.
-
-?? [README del proyecto](./src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
-
-#### `MoralesLarios.OOFP.Utilities`
-Lectura segura de configuración y connection strings con `MlResult<T>`.
-
-?? [README del proyecto](./src/MoralesLarios.OOFP.Utilities/README.md)
-
-#### `MoralesLarios.OOFP.IO`
-Wrapper funcional sobre `System.IO` para ficheros y directorios.
-
-?? [README del proyecto](./src/MoralesLarios.OOFP.IO/README.md)
+```csharp
+var error = MlErrorsDetails.FromErrorMessageWithValue("El registro no existe", 7);
+Console.WriteLine(error.ToString());
+```
 
 ---
 
-### 3. Persistencia
+## 3. `EnsureFp`: validaciones funcionales
 
-#### `MoralesLarios.OOFP.EFCore`
-Capa de repositorios EF Core en dos estilos:
+`EnsureFp` es la capa de precondiciones del nÃºcleo. Devuelve `MlResult<T>` y puede usarse antes de ejecutar lÃ³gica de negocio.
 
-- funcional (`*Fp`), devolviendo `MlResult<T>`
-- OOP clásico
+### `NotNull`
 
-Soporta:
+```csharp
+string? nombre = null;
 
-- CRUD completo
-- búsqueda por PK simple o compuesta
-- paginación
-- consultas posicionales
-- registro masivo por DI
+var result = EnsureFp.NotNull(nombre, "El nombre no puede ser nulo");
+```
 
-?? [README del proyecto](./src/MoralesLarios.OOFP.EFCore/README.md)
+- Si `nombre` es `null`, devuelve `fail`.
+- Si no, devuelve un `MlResult<string?>` vÃ¡lido.
 
-#### `MoralesLarios.OOFP.EFCore.WebApi`
-Proyecto de integración entre EF Core y Web API.
+### `NotEmpty`
 
-Actualmente es una base/skeleton para extender con lógica de aplicación específica.
+```csharp
+var result = EnsureFp.NotEmpty(new[] { 1, 2, 3 }, "La colecciÃ³n no puede estar vacÃ­a");
+```
 
-?? [README del proyecto](./src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
+### `NotNullEmptyOrWhitespace`
+
+```csharp
+var result = EnsureFp.NotNullEmptyOrWhitespace("   ", "El texto es obligatorio");
+```
+
+### `That`
+
+```csharp
+var result = EnsureFp.That(10, 10 > 0, "Debe ser positivo");
+```
+
+`That` evalÃºa una condiciÃ³n booleana y devuelve `Valid(value)` o `Fail(error)`.
+
+### `ThatAsync`
+
+```csharp
+var result = await EnsureFp.ThatAsync(25, 25 > 0, "Debe ser positivo");
+```
+
+### `NotNullAsync`, `NotEmptyAsync`, `NotNullEmptyOrWhitespaceAsync`
+
+```csharp
+var result = await EnsureFp.NotNullAsync("pepe", "El nombre es obligatorio");
+var emptyOk = await EnsureFp.NotEmptyAsync(new[] { 1 }, "Debe haber elementos");
+var textOk = await EnsureFp.NotNullEmptyOrWhitespaceAsync("Luis", "Texto obligatorio");
+```
 
 ---
 
-### 4. Servicios de aplicación
+## 4. `Bind`: encadenar operaciones
+
+`Bind` ejecuta la siguiente transformaciÃ³n solo si el origen es vÃ¡lido. Si falla, se propaga el error.
+
+### `Bind`
+
+```csharp
+var result = MlResult<int>.Valid(5)
+    .Bind(x => MlResult<int>.Valid(x * 2));
+
+var text = result.Match(
+    valid: x => $"Resultado: {x}",
+    fail: e => $"Error: {e}"
+);
+```
+
+### `BindAsync`
+
+```csharp
+var result = await MlResult<int>.Valid(10)
+    .BindAsync(async x =>
+    {
+        await Task.Delay(20);
+        return MlResult<int>.Valid(x + 5);
+    });
+```
+
+### `TryBind`
+
+```csharp
+var result = MlResult<int>.Valid(12)
+    .TryBind(
+        x => throw new InvalidOperationException("falla simulada"),
+        ex => $"Fallo al calcular: {ex.Message}"
+    );
+```
+
+Si la lambda lanza, la excepciÃ³n se captura y se convierte en `MlResult` errÃ³neo.
+
+### `BindMulti`
+
+```csharp
+var result = MlResult<int>.Valid(10)
+    .BindMulti(
+        x => MlResult<string>.Valid($"valor = {x}"),
+        x => MlResult<string>.Valid($"doble = {x * 2}"),
+        x => MlResult<string>.Valid($"triple = {x * 3}")
+    );
+```
+
+La versiÃ³n multi ejecuta varias validaciones y fusiona errores si alguna falla.
+
+---
+
+## 5. `Map`: transformar el valor vÃ¡lido
+
+`Map` transforma el valor solo si el resultado actual es vÃ¡lido.
+
+### `Map`
+
+```csharp
+var result = MlResult<string>.Valid("juan")
+    .Map(x => x.ToUpperInvariant());
+```
+
+### `MapAsync`
+
+```csharp
+var result = await MlResult<string>.Valid("madrid")
+    .MapAsync(async x =>
+    {
+        await Task.Delay(10);
+        return x.ToUpperInvariant();
+    });
+```
+
+### `TryMap`
+
+```csharp
+var result = MlResult<string>.Valid("hola")
+    .TryMap(x => int.Parse(x), ex => $"No se pudo parsear: {ex.Message}");
+```
+
+### `MapEnsure`
+
+```csharp
+var result = MlResult<int>.Valid(5)
+    .MapEnsure(x => x > 0, "El valor debe ser positivo");
+```
+
+Si falla la condiciÃ³n, se convierte a un `fail` con detalles.
+
+---
+
+## 6. `Match`: decidir por rama vÃ¡lida o errÃ³nea
+
+`Match` es la operaciÃ³n mÃ¡s habitual para cerrar el flujo y decidir quÃ© hacer en cada estado.
+
+### `Match`
+
+```csharp
+var result = MlResult<int>.Valid(7);
+
+var output = result.Match(
+    valid: x => $"El valor es {x}",
+    fail: errors => $"Hay error: {errors}"
+);
+```
+
+### `MatchAsync`
+
+```csharp
+var result = await MlResult<string>.Valid("ok")
+    .MatchAsync(
+        validAsync: async x =>
+        {
+            await Task.Delay(10);
+            return $"OK:{x}";
+        },
+        failAsync: async errors =>
+        {
+            await Task.Delay(10);
+            return $"ERR:{errors}";
+        }
+    );
+```
+
+### `TryMatch`
+
+```csharp
+var result = MlResult<int>.Valid(5)
+    .TryMatch(
+        valid: x => x.ToString(),
+        fail: e => $"Error: {e}",
+        errorMessageBuilder: ex => $"ExcepciÃ³n: {ex.Message}"
+    );
+```
+
+---
+
+## 7. `ExecSelf`: ejecutar efectos secundarios sin perder el flujo
+
+`ExecSelf` ejecuta una acciÃ³n y devuelve el mismo `MlResult` original. Es perfecto para logging, trazas o mÃ©tricas.
+
+### `ExecSelf`
+
+```csharp
+var result = MlResult<int>.Valid(10)
+    .ExecSelf(
+        x => Console.WriteLine($"Procesado: {x}"),
+        e => Console.WriteLine($"Error: {e}")
+    );
+```
+
+### `ExecSelfAsync`
+
+```csharp
+var result = await MlResult<string>.Valid("abc")
+    .ExecSelfAsync(
+        async x => await File.WriteAllTextAsync("out.txt", x),
+        async e => await Console.Out.WriteLineAsync(e.ToString())
+    );
+```
+
+### `TryExecSelf`
+
+```csharp
+var result = MlResult<int>.Valid(3)
+    .TryExecSelf(
+        x => throw new InvalidOperationException("boom"),
+        e => Console.WriteLine($"Error: {e}"),
+        ex => $"Se produjo: {ex.Message}"
+    );
+```
+
+---
+
+## 8. Utilidades de `MlResultActions`
+
+La clase `MlResultActions` aÃ±ade helpers para extender el resultado con detalles y datos extra.
+
+### `AddMlErrorDetailIfFail` / `AddValueDetailIfFail`
+
+```csharp
+var result = MlResult<int>.Fail("No vÃ¡lido")
+    .AddValueDetailIfFail(42);
+```
+
+Esto aÃ±ade informaciÃ³n contextual al detalle del error si el resultado estÃ¡ en estado `fail`.
+
+### `CompleteWithDataValueIfValid`
+
+```csharp
+var result = MlResult<int>.Valid(5)
+    .CompleteWithDataValueIfValid(x => x * 2);
+```
+
+### `CompleteWithDetailsValueIfFail`
+
+```csharp
+var result = MlResult<string>.Fail("error")
+    .CompleteWithDetailsValueIfFail("contexto");
+```
+
+### `SecureValidValue` / `SecureFailErrorsDetails`
+
+```csharp
+var ok = MlResult<int>.Valid(99);
+Console.WriteLine(ok.SecureValidValue());
+
+var bad = MlResult<int>.Fail("error");
+Console.WriteLine(bad.SecureFailErrorsDetails());
+```
+
+Este patrÃ³n lanza excepciÃ³n si el flujo no estÃ¡ en el estado esperado, lo que ayuda a proteger acceso inseguro a datos.
+
+### `CreateCompleteMlResult`
+
+```csharp
+var r1 = MlResult<int>.Valid(10);
+var r2 = MlResult<string>.Valid("x");
+
+var merged = r1.CreateCompleteMlResult(r2);
+```
+
+Devuelve un resultado con ambos valores cuando ambos son vÃ¡lidos; si cualquiera falla, devuelve errores fusionados.
+
+---
+
+## 9. `MlResultActionsSeveral`
+
+Esta clase ofrece atajos para transformar entradas nulas, vacÃ­as o condicionales en `MlResult`.
+
+### `NullToFailed`
+
+```csharp
+string? name = null;
+var result = name.NullToFailed("El nombre es obligatiorio");
+```
+
+### `EmptyToFailed`
+
+```csharp
+var items = Enumerable.Empty<int>();
+var result = items.EmptyToFailed("La colecciÃ³n estÃ¡ vacÃ­a");
+```
+
+### `BoolToResult`
+
+```csharp
+var result = 10.BoolToResult(10 > 0, "La condiciÃ³n no se cumple");
+```
+
+### `BoolToResult` sobre `bool`
+
+```csharp
+var result = true.BoolToResult("La condiciÃ³n no es vÃ¡lida");
+```
+
+---
+
+## 10. `MlResultTransformations`
+
+La clase `MlResultTransformations` convierte funciones o acciones normales a flujos `MlResult` sin romper el patrÃ³n.
+
+### `ToMlResult`
+
+```csharp
+Func<int, int> square = x => x * x;
+var result = square.ToMlResult(6);
+```
+
+### `TryToMlResult`
+
+```csharp
+Func<int, int> failFunc = x => int.Parse("oops");
+var result = failFunc.TryToMlResult(1, ex => $"Error: {ex.Message}");
+```
+
+### `ToMlResultAsync`
+
+```csharp
+Func<int, Task<int>> op = async x =>
+{
+    await Task.Delay(20);
+    return x + 1;
+};
+
+var result = await op.ToMlResultAsync(5);
+```
+
+### `TryToMlResultAsync`
+
+```csharp
+Func<int, Task<int>> bad = async _ =>
+{
+    await Task.Delay(10);
+    throw new InvalidOperationException("bad");
+};
+
+var result = await bad.TryToMlResultAsync(2, ex => $"Error: {ex.Message}");
+```
+
+### `TryToMlResultErrors`
+
+```csharp
+var result = ((Action<MlErrorsDetails>)(e => Console.WriteLine(e))).TryToMlResultErrors<int>(
+    MlErrorsDetails.FromErrorMessage("fallo"),
+    ex => $"Error: {ex.Message}"
+);
+```
+
+---
+
+## 11. `MlResultBucles`: proyecciÃ³n y fusiÃ³n con colecciones
+
+`MlResultBucles` hace un trabajo muy Ãºtil con `IEnumerable<T>` cuando queremos transformar cada elemento y convertirlo en un resultado funcional.
+
+### `Projection`
+
+```csharp
+var numbers = new[] { 1, 2, 3 };
+
+var result = numbers.Projection(x =>
+    x > 0
+        ? MlResult<int>.Valid(x * 10)
+        : MlResult<int>.Fail("negativo"));
+```
+
+Si cualquiera de los elementos falla, se fusionan todos los errores en una sola respuesta.
+
+### `ProjectionWhile`
+
+```csharp
+var result = numbers.ProjectionWhile(x =>
+    x < 3 ? MlResult<int>.Valid(x) : MlResult<int>.Fail("detener"));
+```
+
+Se para cuando aparece el primer fallo.
+
+### `ProjectionParallelAsync`
+
+```csharp
+var result = await numbers.ProjectionParallelAsync(async x =>
+{
+    await Task.Delay(10);
+    return MlResult<int>.Valid(x + 1);
+});
+```
+
+### `ProjectionSplit`
+
+```csharp
+var result = new[] { 1, 2, 3, -1 }
+    .ProjectionSplit(x => x > 0 ? MlResult<int>.Valid(x) : MlResult<int>.Fail("negativo"));
+```
+
+Devuelve dos diccionarios:
+
+- `valids`
+- `fails`
+
+### `FusionFailErros` / `FusionErrosIfExists`
+
+```csharp
+var failures = new[]
+{
+    MlResult<int>.Fail("e1"),
+    MlResult<int>.Fail("e2")
+};
+
+var merged = failures.FusionFailErros();
+```
+
+Funde todos los errores en un Ãºnico detalle para que el consumidor reciba un Ãºnico `fail` completo.
+
+---
+
+## 12. Extensiones genÃ©ricas de ayuda
+
+La clase `Extensions` aÃ±ade helpers Ãºtiles para validaciÃ³n, composiciÃ³n y adaptaciÃ³n de delegados.
+
+### `ValidateObject`
+
+```csharp
+public class Person
+{
+    [MinLength(2)]
+    public string Name { get; set; } = string.Empty;
+}
+
+var person = new Person { Name = "A" };
+var results = person.ValidateObject();
+```
+
+### `ToNullable`
+
+```csharp
+int value = 42;
+int? nullable = value.ToNullable();
+```
+
+### `AppendExDetails`
+
+```csharp
+var dict = new Dictionary<string, object> { ["key"] = "value" };
+var extended = dict.AppendExDetails(new InvalidOperationException("boom"));
+```
+
+### `With` / `WithAsync`
+
+```csharp
+var person = new Person().With(
+    x => x.Name = "Ana",
+    x => x.Name = x.Name.Trim()
+);
+```
+
+```csharp
+var updated = await Task.FromResult(new Person())
+    .WithAsync(x => x.Name = "Luis");
+```
+
+### `VoidToAsync`
+
+```csharp
+var task = "hola".VoidToAsync(x => Console.WriteLine(x));
+```
+
+### `ToFuncTask`
+
+```csharp
+Func<int, string> f = x => $"n = {x}";
+Func<int, Task<string>> g = f.ToFuncTask();
+```
+
+TambiÃ©n existe sobre `Action` y `Action<MlErrorsDetails>` para adapatar delegados a `Task`.
+
+---
+
+## 13. PatrÃ³n recomendado
+
+El flujo tÃ­pico en la librerÃ­a es:
+
+```csharp
+using MoralesLarios.OOFP.Helpers;
+using MoralesLarios.OOFP.Types;
+
+var age = 18;
+
+var result = EnsureFp.That(age, age >= 18, "Debes ser mayor de edad")
+    .Map(x => x + 1)
+    .Bind(x => MlResult<int>.Valid(x * 2));
+
+var text = result.Match(
+    valid: x => $"OK: {x}",
+    fail: errors => $"ERROR: {errors}"
+);
+```
+
+La secuencia suele ser:
+
+1. `EnsureFp.*` valida la entrada.
+2. `Map` transforma el valor vÃ¡lido.
+3. `Bind` encadena otra operaciÃ³n funcional.
+4. `Match` decide el resultado final.
+5. `ExecSelf` puede registrar o emitir efectos secundarios sin romper el flujo.
+
+---
+
+## 14. CuÃ¡ndo usar cada familia
+
+- `Valid` / `Fail`: construir resultados explÃ­citos.
+- `Bind`: encadenar operaciones que ya devuelven `MlResult`.
+- `Map`: transformar el valor del resultado cuando todo va bien.
+- `Match`: cerrar el flujo y decidir el comportamiento final.
+- `ExecSelf`: ejecutar eventos laterales manteniendo el mismo estado.
+- `EnsureFp`: validar entrada y condicionantes.
+- `MlErrorsDetails`: transportar detalles complejos de error.
+- `Projection*`: transformar colecciones de forma segura.
+
+---
+
+## 15. DocumentaciÃ³n adicional del nÃºcleo
+
+Estos enlaces complementan la guÃ­a principal y permiten profundizar en cada familia de mÃ©todos con ejemplos y explicaciones mÃ¡s concretas:
+
+- [Intro general y filosofÃ­a tÃ©cnica](./__Doc/1_Intro.md) â€” visiÃ³n general del proyecto, diseÃ±o y principios del ecosistema.
+- [DocumentaciÃ³n por tipos](./__Doc/Types/README.md) â€” Ã­ndice por archivo/clase principal del nÃºcleo.
+- [Tipos y resultados](./__Doc/Types/MlResult.md) â€” detalle del modelo bÃ¡sico de `MlResult` y `MlResult<T>`.
+- [Bind](./__Doc/Bind/3_Bind.md) â€” encadenamiento de operaciones con propagaciÃ³n de errores.
+- [Map](./__Doc/Map/1_Map.md) â€” transformaciones sobre valores vÃ¡lidos.
+- [Match](./__Doc/Match/1_Match.md) â€” ramas de decisiÃ³n segÃºn el estado del resultado.
+- [ExecSelf](./__Doc/ExecSelf/1_ExecSelf.md) â€” ejecuciÃ³n de efectos secundarios sin destruir el flujo.
+- [Several](./__Doc/Several/1_EmptyToFailed.md) â€” validaciÃ³n de colecciones vacÃ­as y casos de error por contenido.
+- [EnsureFp](./__Doc/EnsureFp/EnsureFp.md) â€” validaciones y precondiciones funcionales.
+- [Extensions](./__Doc/Extensions/Extensions.md) â€” utilidades auxiliares, validaciÃ³n data annotations y modificadores funcionales.
+- [Transformations](./__Doc/Transformations/Transformations.md) â€” conversiÃ³n de funciones y acciones normales a `MlResult`.
+- [Bucles](./__Doc/Bucle/Bucles.md) â€” proyecciÃ³n, fusiÃ³n y manejo de errores en colecciones.
+
+### README de cada proyecto
+
+- [MoralesLarios.OOFP.EFCore](./src/MoralesLarios.OOFP.EFCore/README.md)
+- [MoralesLarios.OOFP.EFCore.WebApi](./src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
+- [MoralesLarios.OOFP.Extensions.Loggers](./src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
+- [MoralesLarios.OOFP.HttpClients](./src/MoralesLarios.OOFP.HttpClients/README.md)
+- [MoralesLarios.OOFP.IO](./src/MoralesLarios.OOFP.IO/README.md)
+- [MoralesLarios.OOFP.Internals](./src/MoralesLarios.OOFP.Internals/README.md)
+- [MoralesLarios.OOFP.Utilities](./src/MoralesLarios.OOFP.Utilities/README.md)
+- [MoralesLarios.OOFP.Validation](./src/MoralesLarios.OOFP.Validation/README.md)
+- [MoralesLarios.OOFP.Validation.Dataannotations](./src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)
+- [MoralesLarios.OOFP.Validation.FluentValidations](./src/MoralesLarios.OOFP.Validation.FluentValidations/README.md)
+- [MoralesLarios.OOFP.ValueObjects](./src/MoralesLarios.OOFP.ValueObjects/README.md)
+- [MoralesLarios.OOFP.ValueObjects.IO](./src/MoralesLarios.OOFP.ValueObjects.IO/README.md)
+- [MoralesLarios.OOFP.WebApi](./src/MoralesLarios.OOFP.WebApi/README.md)
+- [MoralesLarios.OOFP.WebControllers](./src/MoralesLarios.OOFP.WebControllers/README.md)
+- [MoralesLarios.OOFP.WebControllers.Cache](./src/MoralesLarios.OOFP.WebControllers.Cache/README.md)
+- [MoralesLarios.OOFP.WebServices](./src/MoralesLarios.OOFP.WebServices/README.md)
+
+---
+
+## 16. Resumen
+
+`MoralesLarios.OOFP` ofrece un estilo funcional muy claro: el flujo de negocio se expresa con `MlResult<T>`, los errores se encapsulan con `MlError` y `MlErrorsDetails`, y la composiciÃ³n se hace con `Bind`, `Map`, `Match`, `ExecSelf` y varias utilidades de extensiÃ³n.
+
+Este patrÃ³n hace que el cÃ³digo sea mÃ¡s explÃ­cito, mÃ¡s fÃ¡cil de probar y mÃ¡s consistente en todo el ecosistema FOOP.
+
+Para la capa de repositorios basada en EF Core, se recomienda consultar el README de la librerÃ­a `MoralesLarios.OOFP.EFCore`. AllÃ­ se documenta el registro del repositorio, la herencia de clases base y el uso funcional real de cada repositorio.
+
+---
+
+## `ExecSelf`: ejecutar efectos secundarios sin perder el resultado
+
+`ExecSelf` ejecuta una acciÃ³n y devuelve el mismo resultado original. Es ideal para logging, trazas o mÃ©tricas sin romper el flujo.
+
+### `ExecSelf`
+
+```csharp
+var result = MlResult<int>.Valid(10)
+    .ExecSelf(
+        x => Console.WriteLine($"He procesado {x}"),
+        e => Console.WriteLine($"FallÃ³: {e}")
+    );
+```
+
+ExplicaciÃ³n: el resultado original se devuelve, pero tambiÃ©n se ejecuta la acciÃ³n adecuada.
+
+### `ExecSelfAsync`
+
+```csharp
+var result = await MlResult<string>.Valid("abc")
+    .ExecSelfAsync(
+        async x => await File.WriteAllTextAsync("out.txt", x),
+        async e => await Console.Out.WriteLineAsync(e.ToString())
+    );
+```
+
+ExplicaciÃ³n: Ãºtil para efectos laterales asÃ­ncronos.
+
+### `TryExecSelf`
+
+```csharp
+var result = MlResult<int>.Valid(3)
+    .TryExecSelf(
+        x => throw new InvalidOperationException("boom"),
+        e => Console.WriteLine($"Error: {e}"),
+        ex => $"Se produjo: {ex.Message}"
+    );
+```
+
+ExplicaciÃ³n: la acciÃ³n puede lanzar excepciÃ³n y, aun asÃ­, el flujo sigue manejÃ¡ndose con `MlResult`.
+
+---
+
+## `EnsureFp`: validaciones funcionales
+
+`EnsureFp` es la capa de precondiciones del nÃºcleo. Se usa para comprobar condiciones y convertirlas en `MlResult<T>` de manera elegante.
+
+### `NotNull`
+
+```csharp
+string? nombre = null;
+
+var result = EnsureFp.NotNull(nombre, "El nombre no puede ser nulo");
+```
+
+ExplicaciÃ³n: si `nombre` es `null`, devuelve `fail`; si no, devuelve el valor.
+
+### `NotEmpty`
+
+```csharp
+var result = EnsureFp.NotEmpty(new[] { 1, 2, 3 }, "La colecciÃ³n no puede estar vacÃ­a");
+```
+
+ExplicaciÃ³n: valida que la colecciÃ³n no sea nula ni vacÃ­a.
+
+### `NotNullEmptyOrWhitespace`
+
+```csharp
+var result = EnsureFp.NotNullEmptyOrWhitespace("    ", "El texto es obligatorio");
+```
+
+ExplicaciÃ³n: valida cadenas no nulas, no vacÃ­as y sin espacios en blanco.
+
+### `That`
+
+```csharp
+var result = EnsureFp.That(10, x => x > 0, "Debe ser positivo");
+```
+
+ExplicaciÃ³n: acepta una condiciÃ³n arbitraria para decidir si el valor es vÃ¡lido o no.
+
+### `ThatAsync`
+
+```csharp
+var result = await EnsureFp.ThatAsync(25, x => x > 0, "Debe ser positivo");
+```
+
+ExplicaciÃ³n: permite la validaciÃ³n en flujo asÃ­ncrono.
+
+---
+
+## `MlErrorsDetails`: errores estructurados
+
+`MlErrorsDetails` es el contenedor del detalle del error. Puede contener:
+
+- una colecciÃ³n de `MlError`
+- un diccionario de detalles adicionales
+
+### `FromErrorMessage`
+
+```csharp
+var e = MlErrorsDetails.FromErrorMessage("Usuario no encontrado");
+```
+
+ExplicaciÃ³n: crea un error simple con un texto de mensaje.
+
+### `FromErrorMessageWithValue`
+
+```csharp
+var e = MlErrorsDetails.FromErrorMessageWithValue("Id no vÃ¡lido", 42);
+```
+
+ExplicaciÃ³n: aÃ±ade informaciÃ³n contextual del valor que fallÃ³.
+
+### `FromErrorDetails`
+
+```csharp
+var e = MlErrorsDetails.FromErrorDetails(MlError.FromErrorMessage("Fallo tÃ©cnico"), new Dictionary<string, object>
+{
+    ["key"] = "valor"
+});
+```
+
+ExplicaciÃ³n: incluye una estructura detallada del error.
+
+### ConversiÃ³n implÃ­cita
+
+```csharp
+MlErrorsDetails errors = "error 1";
+MlErrorsDetails errors2 = new[] { "error 1", "error 2" };
+```
+
+ExplicaciÃ³n: puedes pasar texto o colecciones de texto directamente a una variable `MlErrorsDetails` sin conversiones manuales.
+
+### `ToString()`
+
+```csharp
+var error = MlErrorsDetails.FromErrorMessageWithValue("No existe el registro", 7);
+Console.WriteLine(error);
+```
+
+ExplicaciÃ³n: genera una salida legible con mensajes y detalles asociados.
+
+---
+
+## PatrÃ³n de uso recomendado
+
+Este es el flujo tÃ­pico en toda la soluciÃ³n:
+
+```csharp
+using MoralesLarios.OOFP.Helpers;
+using MoralesLarios.OOFP.Types;
+
+var age = 18;
+
+var result = EnsureFp.That(age, x => x >= 18, "Debes ser mayor de edad")
+    .Map(x => x + 1)
+    .Bind(x => MlResult<int>.Valid(x * 2));
+
+var texto = result.Match(
+    valid: x => $"OK: {x}",
+    fail: e => $"ERROR: {e}"
+);
+```
+
+ExplicaciÃ³n:
+
+1. `EnsureFp.That` valida la precondiciÃ³n.
+2. `Map` transforma el valor si la validaciÃ³n pasÃ³.
+3. `Bind` ejecuta otra operaciÃ³n funcional.
+4. `Match` decide la salida final segÃºn si el resultado fue vÃ¡lido o no.
+
+---
+
+## Caso real: flujo con validaciÃ³n y consulta
+
+```csharp
+public static async Task<string> ProcesarUsuarioAsync(string? nombre)
+{
+    var result = await EnsureFp.NotNullEmptyOrWhitespaceAsync(nombre, "El nombre es obligatorio")
+        .BindAsync(value => MlResult<string>.Valid(value.Trim()))
+        .MapAsync(value => value.ToUpperInvariant())
+        .MatchAsync(
+            validAsync: async x =>
+            {
+                await Task.Delay(10);
+                return $"Usuario procesado: {x}";
+            },
+            failAsync: async e =>
+            {
+                await Task.Delay(10);
+                return $"FallÃ³: {e}";
+            }
+        );
+
+    return result;
+}
+```
+
+ExplicaciÃ³n: este patrÃ³n es el mÃ¡s habitual en la librerÃ­a. Todo el flujo se mantiene en `MlResult`, sin necesidad de lanzar excepciones para controlar errores.
+
+---
+
+## CuÃ¡ndo usar cada familia de mÃ©todos
+
+- `Valid` / `Fail`: construir resultados explÃ­citos.
+- `Bind`: encadenar operaciones que ya devuelven `MlResult`.
+- `Map`: transformar el valor de un resultado vÃ¡lido.
+- `Match`: decidir el comportamiento final segÃºn el estado.
+- `ExecSelf`: ejecutar efectos secundarios sin perder el flujo original.
+- `EnsureFp`: validar entradas antes de seguir con la lÃ³gica.
+- `MlErrorsDetails`: transportar detalles de error.
+
+---
+
+## En resumen
+
+`MoralesLarios.OOFP` presenta un estilo funcional muy claro: todos los caminos de negocio pasan por `MlResult<T>`, y cada operaciÃ³n puede ser encadenada sin romper la semÃ¡ntica de Ã©xito/error. El resultado es un cÃ³digo mÃ¡s predecible, mÃ¡s fÃ¡cil de testear y mÃ¡s uniforme en todo el ecosistema FOOP.
+
+La documentaciÃ³n tÃ©cnica detallada de cada tipo y cada operaciÃ³n adicional se encuentra en la carpeta `__Doc` del proyecto.
+
+---
+
+### 4. Servicios de aplicaciï¿½n
 
 #### `MoralesLarios.OOFP.WebServices`
 Capa funcional entre repositorio y web.
@@ -272,13 +994,13 @@ Aporta:
 - `GenServiceFp<TEntity, TDto>`
 - `GenServiceFp<TEntity, TRequest, TResponse>`
 - `MlProblemsDetails`
-- extensiones de registro para ciclo de vida clásico y duplex
+- extensiones de registro para ciclo de vida clï¿½sico y duplex
 
 ?? [README del proyecto](./src/MoralesLarios.OOFP.WebServices/README.md)
 
 ---
 
-### 5. Exposición web
+### 5. Exposiciï¿½n web
 
 #### `MoralesLarios.OOFP.WebApi`
 Puente funcional entre `MlResult<T>` e `IActionResult`.
@@ -295,7 +1017,7 @@ Aporta:
 ?? [README del proyecto](./src/MoralesLarios.OOFP.WebApi/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers`
-Controladores genéricos ASP.NET Core para CRUD estándar.
+Controladores genï¿½ricos ASP.NET Core para CRUD estï¿½ndar.
 
 Aporta:
 
@@ -303,20 +1025,20 @@ Aporta:
 - soporte duplex request/response
 - soporte para PK compuesta
 - soporte duplex con PK compuesta
-- atributo para documentar parámetros PK en Swagger/OpenAPI
+- atributo para documentar parï¿½metros PK en Swagger/OpenAPI
 
 ?? [README del proyecto](./src/MoralesLarios.OOFP.WebControllers/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers.Cache`
-Extensión cacheada de los controladores genéricos.
+Extensiï¿½n cacheada de los controladores genï¿½ricos.
 
 Aporta:
 
-- caché por controlador
-- invalidación automática en escrituras
+- cachï¿½ por controlador
+- invalidaciï¿½n automï¿½tica en escrituras
 - vaciado manual
-- bypass dinámico
-- soporte clásico y duplex
+- bypass dinï¿½mico
+- soporte clï¿½sico y duplex
 - soporte para PK compuesta
 
 ?? [README del proyecto](./src/MoralesLarios.OOFP.WebControllers.Cache/README.md)
@@ -340,19 +1062,19 @@ Aporta:
 
 ---
 
-## End-to-end: cómo se usa este ecosistema
+## End-to-end: cï¿½mo se usa este ecosistema
 
-### Caso clásico de API
+### Caso clï¿½sico de API
 
 1. Modela el dominio con `ValueObjects`.
 2. Valida con `Validation`.
 3. Persiste con `EFCore`.
-4. Expón lógica con `WebServices`.
+4. Expï¿½n lï¿½gica con `WebServices`.
 5. Publica con `WebControllers` y `WebApi`.
-6. Añade `WebControllers.Cache` si necesitas caché.
+6. Aï¿½ade `WebControllers.Cache` si necesitas cachï¿½.
 7. Consume desde otro servicio con `HttpClients`.
 8. Registra trazas con `Extensions.Loggers`.
-9. Lee configuración con `Utilities`.
+9. Lee configuraciï¿½n con `Utilities`.
 10. Usa `IO` y `ValueObjects.IO` para operaciones de sistema de archivos.
 
 ### Ejemplo conceptual
@@ -381,7 +1103,7 @@ builder.Services.AddGenClientFp<IUsersClient, UsersClient>(
 
 ## Proyectos de pruebas
 
-La solución también incluye una capa de validación mediante proyectos de prueba unitarios e integración:
+La soluciï¿½n tambiï¿½n incluye una capa de validaciï¿½n mediante proyectos de prueba unitarios e integraciï¿½n:
 
 - `MoralesLarios.OOFP.Unit.Tests`
 - `MoralesLarios.OOFP.ValueObjects.Tests.Unit`
@@ -396,16 +1118,16 @@ La solución también incluye una capa de validación mediante proyectos de prueba 
 - `MoralesLarios.OOFP.EFCore.Integration.Tests`
 - `MoralesLarios.OOFP.Extensions.Loggers.Console.Tests`
 
-Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escenarios de integración entre capas.
+Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escenarios de integraciï¿½n entre capas.
 
 ---
 
-## Documentación adicional
+## Documentaciï¿½n adicional
 
-### Documentación raíz del núcleo OOFP
+### Documentaciï¿½n raï¿½z del nï¿½cleo OOFP
 
-- [Intro general y filosofía técnica](./__Doc/1_Intro.md)
-- [Documentación por tipos](./__Doc/Types/README.md)
+- [Intro general y filosofï¿½a tï¿½cnica](./__Doc/1_Intro.md)
+- [Documentaciï¿½n por tipos](./__Doc/Types/README.md)
 - [Tipos y resultados](./__Doc/Types/MlResult.md)
 - [Bind](./__Doc/Bind/3_Bind.md)
 - [Map](./__Doc/Map/1_Map.md)
@@ -440,19 +1162,19 @@ Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escena
 
 ## Resumen ejecutivo
 
-Si tuviera que describir la solución en una sola frase, sería esta:
+Si tuviera que describir la soluciï¿½n en una sola frase, serï¿½a esta:
 
-> **MoralesLarios.FOOP es un ecosistema .NET funcional para construir dominios, servicios, APIs y clientes con una semántica común basada en `MlResult<T>`.**
+> **MoralesLarios.FOOP es un ecosistema .NET funcional para construir dominios, servicios, APIs y clientes con una semï¿½ntica comï¿½n basada en `MlResult<T>`.**
 
-Y si tuviera que destacar una sola pieza, esa sería:
+Y si tuviera que destacar una sola pieza, esa serï¿½a:
 
-> **`MoralesLarios.OOFP` es el núcleo fundacional; el resto de proyectos amplían su valor hacia validación, persistencia, web, caché, HTTP, IO y configuración.**
+> **`MoralesLarios.OOFP` es el nï¿½cleo fundacional; el resto de proyectos amplï¿½an su valor hacia validaciï¿½n, persistencia, web, cachï¿½, HTTP, IO y configuraciï¿½n.**
 
 ---
 
 ## Compatibilidad
 
-La solución está organizada para proyectos objetivo de:
+La soluciï¿½n estï¿½ organizada para proyectos objetivo de:
 
 - `.NET 9`
 - `.NET 8`
@@ -461,9 +1183,9 @@ La solución está organizada para proyectos objetivo de:
 
 ## Licencia y estilo de trabajo
 
-La solución está pensada para ser usada como base de aplicaciones reales y para crecer por capas, manteniendo una misma forma de trabajo en todo el stack.
+La soluciï¿½n estï¿½ pensada para ser usada como base de aplicaciones reales y para crecer por capas, manteniendo una misma forma de trabajo en todo el stack.
 
-Si buscas una entrada rápida para entender la librería, empieza por:
+Si buscas una entrada rï¿½pida para entender la librerï¿½a, empieza por:
 
 1. [Intro general de `MoralesLarios.OOFP`](./__Doc/1_Intro.md)
 2. [README del proyecto principal](./src/MoralesLarios.OOFP.WebServices/README.md)
@@ -475,6 +1197,6 @@ Si buscas una entrada rápida para entender la librería, empieza por:
 
 ## Nota final
 
-Este repositorio no es una única librería aislada, sino una **plataforma modular**. Cada proyecto tiene su propio README y, cuando aplica, su propia documentación técnica enlazada desde `__Doc`.
+Este repositorio no es una ï¿½nica librerï¿½a aislada, sino una **plataforma modular**. Cada proyecto tiene su propio README y, cuando aplica, su propia documentaciï¿½n tï¿½cnica enlazada desde `__Doc`.
 
-La documentación raíz pretende ser la puerta de entrada oficial al ecosistema completo.
+La documentaciï¿½n raï¿½z pretende ser la puerta de entrada oficial al ecosistema completo.

@@ -180,18 +180,18 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails UnprocessableEntityError(string                     title      = null!, 
+    public static MlErrorsDetails UnprocessableContentError(string                     title      = null!, 
                                                            string                     detail     = null!, 
                                                            string                     type       = null!, 
                                                            Dictionary<string, object> errors     = null!)
     {
-        var result = (title ?? "Unprocessable entity",
+        var result = (title ?? "Unprocessable content",
                       new Dictionary<string, object>
                       {
                           { ProblemsDetails, new
                               {
                                     Status     = 422,
-                                    Title      = title  ?? "Unprocessable entity",
+                                    Title      = title  ?? "Unprocessable content",
                                     Detail     = detail ?? "The request is well-formed but contains semantic errors.",
                                     Type       = type   ?? "https://www.puntonetalpunto.net/",
                                     Errors     = errors ?? new Dictionary<string, object>(),
