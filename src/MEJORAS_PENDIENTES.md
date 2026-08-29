@@ -596,13 +596,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -784,13 +782,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -972,13 +968,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -1160,13 +1154,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -1348,13 +1340,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -1536,13 +1526,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -1724,13 +1712,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -1912,13 +1898,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -2100,13 +2084,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -2288,13 +2270,11 @@ volumen crece** o que hacen la API difícil de usar correctamente.
       - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
       - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
       - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
-        con la instancia **recibida por parámetro**, que es un objeto distinto con la misma clave.
-      - **Impacto:** `InvalidOperationException`: «The instance of entity type cannot be tracked
-        because another instance with the same key value is already being tracked». Falla justo en el
-        escenario más habitual: actualizar a partir de un DTO.
-      - **Propuesta:** o `Find` + copiar valores con `SetValues(item)` sobre la entidad rastreada, o
-        `AsNoTracking` para comprobar la existencia y luego `Attach` + `Update`. Elegir una estrategia
-        y aplicarla en todo el proyecto.
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
 
 - [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
       - **Proyecto:** `MoralesLarios.OOFP.EFCore`
@@ -2362,4 +2342,908 @@ volumen crece** o que hacen la API difícil de usar correctamente.
         convenciones distintas (`snake_case`, formatos de fecha propios, convertidores para tipos de
         dominio). Eso obliga a no usar la biblioteca precisamente en el caso más frecuente:
         integrarse con una API de un tercero.
-      - **Propuesta
+      - **Propuesta:** aceptar `JsonSerializerOptions` por constructor o por opciones registradas en
+        DI, con un valor por defecto sensato (`PropertyNameCaseInsensitive = true`).
+
+- [ ] **46. El código de estado HTTP se pierde como dato estructurado**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `MlResponseWebExtensions` y clientes
+      - **Miembro:** construcción del error a partir de la respuesta
+      - **Problema:** el código de estado se incrusta en el **texto** del mensaje de error en lugar de
+        guardarse en `Details` como valor.
+      - **Impacto:** el consumidor no puede decidir por programa (reintentar en `503`, no reintentar
+        en `400`, refrescar el token en `401`) sin **analizar cadenas**. Se pierde la ventaja principal
+        del modelo de errores con detalles.
+      - **Propuesta:** añadir el `HttpStatusCode` a `Details` con una clave constante y ofrecer un
+        método de extensión `GetHttpStatusCode()` sobre `MlErrorsDetails`.
+
+- [ ] **47. Métodos públicos ausentes de las interfaces**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `IGenClientFp<>`, `IHttpClientFactoryManager`
+      - **Miembro:** `GetAsync<T>(CallRequestParamsInfo)`, `GetPaginationAsync<T>(…)`,
+        `GetHttpClientFactoryKey()`
+      - **Problema:** son públicos en la implementación pero **no están declarados en la interfaz**.
+      - **Impacto:** quien programe contra la abstracción (lo correcto, y lo necesario para poder
+        hacer *mocks* en tests) **no tiene acceso a parte de la funcionalidad**, y se ve obligado a
+        acoplarse al tipo concreto.
+      - **Propuesta:** subir esos miembros a la interfaz. Si alguno no debe formar parte del contrato,
+        hacerlo `internal` o `protected`.
+
+- [ ] **48. Asimetrías de nombres y parámetros entre familias equivalentes**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`, `MoralesLarios.OOFP.WebApi`,
+        `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `GenClientFp` y su variante *duplex*; `MlResultWebExtensionsPlus`; clases
+        base de controlador
+      - **Miembro:** `PutByIdAsync` frente a `GetByIdAsync` (uno envía `idStr` suelto y el otro
+        `id-str/{idStr}`); `DeleteByIdAsync` (la variante *duplex* usa `<TResponse>` y la simple
+        `<TDto>`); los `PutAsync` simples usan el argumento nombrado `dto:` y los *duplex*
+        `dtoRequest:`
+      - **Problema:** métodos que deberían ser simétricos difieren en la ruta, en el genérico o en el
+        nombre del parámetro.
+      - **Impacto:** el cliente y el servidor **no se entienden** en las rutas afectadas (`PUT` por
+        identificador falla), y el consumidor no puede razonar por analogía: cada método hay que
+        comprobarlo en el código fuente.
+      - **Propuesta:** un único helper que construya la ruta por identificador y usarlo desde todos
+        los métodos, en cliente y servidor. Tests de contrato que recorran cliente → controlador.
+
+- [ ] **49. Rutas incoherentes entre verbos: `id-str/{id}` frente a `{id}`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** atributos de ruta de `GetAsync`, `PutAsync`, `DeleteAsync`
+      - **Problema:** el `GET` expone `id-str/{id}` mientras que `PUT` y `DELETE` usan `{id}`.
+      - **Impacto:** la API resultante no es REST reconocible: el mismo recurso tiene dos direcciones
+        según el verbo. Cualquier cliente generado a partir de la especificación OpenAPI queda
+        confuso, y quien escriba el cliente a mano se equivoca.
+      - **Propuesta:** una sola forma de ruta por recurso (`{id}` para clave simple y un patrón
+        explícito documentado para clave compuesta) aplicada a todos los verbos.
+
+- [ ] **50. `PUT` y `DELETE` con sobrecargas que reciben cuerpo**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** sobrecargas de `PutAsync` y `DeleteAsync` con `[FromBody]`
+      - **Problema:** se ofrecen variantes que esperan el cuerpo de la petición en `DELETE`.
+      - **Impacto:** muchos *proxies*, CDN y balanceadores **descartan el cuerpo de un `DELETE`**, y
+        varias bibliotecas cliente no permiten enviarlo. El endpoint funciona en local y falla al
+        desplegar detrás de una pasarela.
+      - **Propuesta:** en `DELETE`, la clave va en la ruta o en la *query string*. Si de verdad hace
+        falta enviar datos, usar `POST` sobre un sub-recurso de acción.
+
+- [ ] **51. Las clases base de controlador no son `abstract` ni declaran `[Route]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** declaración de tipo y atributos
+      - **Problema:** llevan `[ApiController]` pero **no** `[Route]`, y **no son `abstract`**.
+      - **Impacto:** MVC puede descubrir la propia clase base como controlador activable, exponiendo
+        endpoints genéricos no previstos; y sin `[Route]` el enrutado depende de convenciones que la
+        derivada debe recordar declarar.
+      - **Propuesta:** marcar las bases `abstract` y documentar que la derivada debe aportar
+        `[Route("[controller]")]`, o incluirlo en la base.
+
+- [ ] **52. Las clases base no declaran `[ProducesResponseType]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** todos los métodos de acción
+      - **Problema:** ninguna acción documenta los códigos de respuesta posibles.
+      - **Impacto:** la especificación OpenAPI generada solo declara `200`, de modo que los clientes
+        generados automáticamente **no contemplan** `201`, `204`, `400`, `404` ni el esquema de
+        `ProblemDetails`. Toda la riqueza del modelo de errores se pierde en el contrato publicado.
+      - **Propuesta:** añadir los `[ProducesResponseType]` correspondientes en cada acción, incluido
+        `[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]`.
+
+---
+
+## 🟢 Prioridad baja — limpieza, coherencia y documentación
+
+Aquí no hay datos incorrectos ni riesgos de seguridad, pero sí decisiones que **se pagan cuando el
+volumen crece** o que hacen la API difícil de usar correctamente.
+
+### Rendimiento y acceso a datos
+
+- [ ] **38. `TryLast*` materializa toda la consulta en memoria**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoReaderFp`
+      - **Miembro:** `TryLast`, `TryLastAsync` y variantes
+      - **Problema:** para obtener el último elemento se trae **la colección filtrada completa** al
+        cliente y se selecciona el último en memoria.
+      - **Impacto:** con una tabla grande esto son millones de filas por la red y un pico de memoria
+        que puede tumbar el proceso, cuando la base de datos podía resolverlo con un `TOP 1`.
+      - **Propuesta:** ordenar de forma descendente en la consulta y usar
+        `FirstOrDefaultAsync`/`LastOrDefaultAsync` sobre `IQueryable`. Exigir una ordenación explícita:
+        «el último» no tiene sentido sin orden definido.
+
+- [ ] **39. `TryUpdate(item, pk)` provoca conflictos de seguimiento de EF Core**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
+      - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
+      - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
+
+- [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** todos los repositorios de escritura (`EFRepoWriterFp`, `EFRepoUpdaterFp`,
+        `EFRepoDeleterFp` y sus equivalentes OOP)
+      - **Miembro:** cada método de escritura
+      - **Problema:** cada operación llama a `SaveChanges`/`SaveChangesAsync` por su cuenta.
+      - **Impacto:** **es imposible componer varias escrituras en una transacción.** Si la segunda
+        falla, la primera ya está confirmada y los datos quedan a medias. Además, un lote de N
+        inserciones son N idas a la base de datos.
+      - **Propuesta:** añadir un `IUnitOfWork` con `CommitAsync` y sobrecargas con un flag `autoSave`
+        (por defecto `true` para no romper a nadie). Documentar el patrón en el `README.md`.
+
+- [ ] **41. `AllAsync` no admite paginación**
+      - **Proyecto:** `MoralesLarios.OOFP.WebServices`
+      - **Archivo / clase:** `GenServiceFp`
+      - **Miembro:** `AllAsync`
+      - **Problema:** devuelve la tabla completa sin límite ni parámetros de paginación.
+      - **Impacto:** un `GET` de colección sobre una tabla de producción trae todos los registros:
+        tiempos de respuesta enormes, presión de memoria y un vector trivial de denegación de
+        servicio. La paginación existe en el repositorio, pero el servicio no la expone.
+      - **Propuesta:** añadir una sobrecarga con parámetros de página que devuelva el total. Marcar la
+        versión sin límite `[Obsolete]` o imponerle un tope máximo configurable.
+
+- [ ] **42. `HttpRequestMessage` y `HttpResponseMessage` nunca se liberan**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico y sus métodos internos
+      - **Miembro:** todos los métodos de llamada
+      - **Problema:** los mensajes de petición y respuesta se crean sin `using`.
+      - **Impacto:** se retienen los flujos de contenido y los recursos asociados hasta que actúa el
+        recolector. Bajo carga sostenida, consumo de memoria creciente y agotamiento de conexiones.
+      - **Propuesta:** `using var request = …;` y `using var response = …;` en todos los métodos.
+
+- [ ] **43. `Activator.CreateInstance<TEntity>()` en cada petición**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `Helpers/Extensions`
+      - **Miembro:** `GetPkValues<TEntity>(string[] ids, Func<TEntity, object[]> pkFields)`
+      - **Problema:** para averiguar los tipos de la clave primaria **instancia la entidad** con
+        `Activator.CreateInstance<TEntity>()` en cada petición. Eso exige constructor público sin
+        parámetros y, cuando una propiedad vale `null`, se asume silenciosamente que es `string`.
+      - **Impacto:** coste de reflexión por petición, restricción artificial sobre las entidades del
+        consumidor y conversiones equivocadas: una clave `Guid` se trata como texto.
+      - **Propuesta:** obtener los tipos por **metadatos** (los `PropertyInfo` del selector o el modelo
+        de EF Core), cachearlos en un `static` por tipo y no instanciar nada.
+
+- [ ] **44. `JsonSerializer.Serialize` cuyo resultado se descarta**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clase interna de llamadas
+      - **Miembro:** `InternalPostGetAsync`
+      - **Problema:** se serializa el objeto y **el resultado no se asigna a nada**; el cuerpo se
+        construye después por otra vía.
+      - **Impacto:** trabajo de CPU y asignaciones inútiles en cada llamada, y la duda de si esa línea
+        debía usarse (posible cambio de comportamiento pendiente).
+      - **Propuesta:** eliminar la línea o usar su resultado, comprobando que la serialización efectiva
+        aplique las mismas opciones que el resto del proyecto.
+
+### Diseño de API y contratos
+
+- [ ] **45. No se pueden inyectar `JsonSerializerOptions`**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico
+      - **Miembro:** serialización y deserialización
+      - **Problema:** las opciones de JSON están fijadas internamente; no hay forma de suministrarlas.
+      - **Impacto:** el consumidor **no puede** adaptar el cliente a un servicio remoto con
+        convenciones distintas (`snake_case`, formatos de fecha propios, convertidores para tipos de
+        dominio). Eso obliga a no usar la biblioteca precisamente en el caso más frecuente:
+        integrarse con una API de un tercero.
+      - **Propuesta:** aceptar `JsonSerializerOptions` por constructor o por opciones registradas en
+        DI, con un valor por defecto sensato (`PropertyNameCaseInsensitive = true`).
+
+- [ ] **46. El código de estado HTTP se pierde como dato estructurado**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `MlResponseWebExtensions` y clientes
+      - **Miembro:** construcción del error a partir de la respuesta
+      - **Problema:** el código de estado se incrusta en el **texto** del mensaje de error en lugar de
+        guardarse en `Details` como valor.
+      - **Impacto:** el consumidor no puede decidir por programa (reintentar en `503`, no reintentar
+        en `400`, refrescar el token en `401`) sin **analizar cadenas**. Se pierde la ventaja principal
+        del modelo de errores con detalles.
+      - **Propuesta:** añadir el `HttpStatusCode` a `Details` con una clave constante y ofrecer un
+        método de extensión `GetHttpStatusCode()` sobre `MlErrorsDetails`.
+
+- [ ] **47. Métodos públicos ausentes de las interfaces**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `IGenClientFp<>`, `IHttpClientFactoryManager`
+      - **Miembro:** `GetAsync<T>(CallRequestParamsInfo)`, `GetPaginationAsync<T>(…)`,
+        `GetHttpClientFactoryKey()`
+      - **Problema:** son públicos en la implementación pero **no están declarados en la interfaz**.
+      - **Impacto:** quien programe contra la abstracción (lo correcto, y lo necesario para poder
+        hacer *mocks* en tests) **no tiene acceso a parte de la funcionalidad**, y se ve obligado a
+        acoplarse al tipo concreto.
+      - **Propuesta:** subir esos miembros a la interfaz. Si alguno no debe formar parte del contrato,
+        hacerlo `internal` o `protected`.
+
+- [ ] **48. Asimetrías de nombres y parámetros entre familias equivalentes**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`, `MoralesLarios.OOFP.WebApi`,
+        `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `GenClientFp` y su variante *duplex*; `MlResultWebExtensionsPlus`; clases
+        base de controlador
+      - **Miembro:** `PutByIdAsync` frente a `GetByIdAsync` (uno envía `idStr` suelto y el otro
+        `id-str/{idStr}`); `DeleteByIdAsync` (la variante *duplex* usa `<TResponse>` y la simple
+        `<TDto>`); los `PutAsync` simples usan el argumento nombrado `dto:` y los *duplex*
+        `dtoRequest:`
+      - **Problema:** métodos que deberían ser simétricos difieren en la ruta, en el genérico o en el
+        nombre del parámetro.
+      - **Impacto:** el cliente y el servidor **no se entienden** en las rutas afectadas (`PUT` por
+        identificador falla), y el consumidor no puede razonar por analogía: cada método hay que
+        comprobarlo en el código fuente.
+      - **Propuesta:** un único helper que construya la ruta por identificador y usarlo desde todos
+        los métodos, en cliente y servidor. Tests de contrato que recorran cliente → controlador.
+
+- [ ] **49. Rutas incoherentes entre verbos: `id-str/{id}` frente a `{id}`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** atributos de ruta de `GetAsync`, `PutAsync`, `DeleteAsync`
+      - **Problema:** el `GET` expone `id-str/{id}` mientras que `PUT` y `DELETE` usan `{id}`.
+      - **Impacto:** la API resultante no es REST reconocible: el mismo recurso tiene dos direcciones
+        según el verbo. Cualquier cliente generado a partir de la especificación OpenAPI queda
+        confuso, y quien escriba el cliente a mano se equivoca.
+      - **Propuesta:** una sola forma de ruta por recurso (`{id}` para clave simple y un patrón
+        explícito documentado para clave compuesta) aplicada a todos los verbos.
+
+- [ ] **50. `PUT` y `DELETE` con sobrecargas que reciben cuerpo**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** sobrecargas de `PutAsync` y `DeleteAsync` con `[FromBody]`
+      - **Problema:** se ofrecen variantes que esperan el cuerpo de la petición en `DELETE`.
+      - **Impacto:** muchos *proxies*, CDN y balanceadores **descartan el cuerpo de un `DELETE`**, y
+        varias bibliotecas cliente no permiten enviarlo. El endpoint funciona en local y falla al
+        desplegar detrás de una pasarela.
+      - **Propuesta:** en `DELETE`, la clave va en la ruta o en la *query string*. Si de verdad hace
+        falta enviar datos, usar `POST` sobre un sub-recurso de acción.
+
+- [ ] **51. Las clases base de controlador no son `abstract` ni declaran `[Route]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** declaración de tipo y atributos
+      - **Problema:** llevan `[ApiController]` pero **no** `[Route]`, y **no son `abstract`**.
+      - **Impacto:** MVC puede descubrir la propia clase base como controlador activable, exponiendo
+        endpoints genéricos no previstos; y sin `[Route]` el enrutado depende de convenciones que la
+        derivada debe recordar declarar.
+      - **Propuesta:** marcar las bases `abstract` y documentar que la derivada debe aportar
+        `[Route("[controller]")]`, o incluirlo en la base.
+
+- [ ] **52. Las clases base no declaran `[ProducesResponseType]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** todos los métodos de acción
+      - **Problema:** ninguna acción documenta los códigos de respuesta posibles.
+      - **Impacto:** la especificación OpenAPI generada solo declara `200`, de modo que los clientes
+        generados automáticamente **no contemplan** `201`, `204`, `400`, `404` ni el esquema de
+        `ProblemDetails`. Toda la riqueza del modelo de errores se pierde en el contrato publicado.
+      - **Propuesta:** añadir los `[ProducesResponseType]` correspondientes en cada acción, incluido
+        `[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]`.
+
+---
+
+## 🟢 Prioridad baja — limpieza, coherencia y documentación
+
+Aquí no hay datos incorrectos ni riesgos de seguridad, pero sí decisiones que **se pagan cuando el
+volumen crece** o que hacen la API difícil de usar correctamente.
+
+### Rendimiento y acceso a datos
+
+- [ ] **38. `TryLast*` materializa toda la consulta en memoria**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoReaderFp`
+      - **Miembro:** `TryLast`, `TryLastAsync` y variantes
+      - **Problema:** para obtener el último elemento se trae **la colección filtrada completa** al
+        cliente y se selecciona el último en memoria.
+      - **Impacto:** con una tabla grande esto son millones de filas por la red y un pico de memoria
+        que puede tumbar el proceso, cuando la base de datos podía resolverlo con un `TOP 1`.
+      - **Propuesta:** ordenar de forma descendente en la consulta y usar
+        `FirstOrDefaultAsync`/`LastOrDefaultAsync` sobre `IQueryable`. Exigir una ordenación explícita:
+        «el último» no tiene sentido sin orden definido.
+
+- [ ] **39. `TryUpdate(item, pk)` provoca conflictos de seguimiento de EF Core**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
+      - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
+      - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
+
+- [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** todos los repositorios de escritura (`EFRepoWriterFp`, `EFRepoUpdaterFp`,
+        `EFRepoDeleterFp` y sus equivalentes OOP)
+      - **Miembro:** cada método de escritura
+      - **Problema:** cada operación llama a `SaveChanges`/`SaveChangesAsync` por su cuenta.
+      - **Impacto:** **es imposible componer varias escrituras en una transacción.** Si la segunda
+        falla, la primera ya está confirmada y los datos quedan a medias. Además, un lote de N
+        inserciones son N idas a la base de datos.
+      - **Propuesta:** añadir un `IUnitOfWork` con `CommitAsync` y sobrecargas con un flag `autoSave`
+        (por defecto `true` para no romper a nadie). Documentar el patrón en el `README.md`.
+
+- [ ] **41. `AllAsync` no admite paginación**
+      - **Proyecto:** `MoralesLarios.OOFP.WebServices`
+      - **Archivo / clase:** `GenServiceFp`
+      - **Miembro:** `AllAsync`
+      - **Problema:** devuelve la tabla completa sin límite ni parámetros de paginación.
+      - **Impacto:** un `GET` de colección sobre una tabla de producción trae todos los registros:
+        tiempos de respuesta enormes, presión de memoria y un vector trivial de denegación de
+        servicio. La paginación existe en el repositorio, pero el servicio no la expone.
+      - **Propuesta:** añadir una sobrecarga con parámetros de página que devuelva el total. Marcar la
+        versión sin límite `[Obsolete]` o imponerle un tope máximo configurable.
+
+- [ ] **42. `HttpRequestMessage` y `HttpResponseMessage` nunca se liberan**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico y sus métodos internos
+      - **Miembro:** todos los métodos de llamada
+      - **Problema:** los mensajes de petición y respuesta se crean sin `using`.
+      - **Impacto:** se retienen los flujos de contenido y los recursos asociados hasta que actúa el
+        recolector. Bajo carga sostenida, consumo de memoria creciente y agotamiento de conexiones.
+      - **Propuesta:** `using var request = …;` y `using var response = …;` en todos los métodos.
+
+- [ ] **43. `Activator.CreateInstance<TEntity>()` en cada petición**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `Helpers/Extensions`
+      - **Miembro:** `GetPkValues<TEntity>(string[] ids, Func<TEntity, object[]> pkFields)`
+      - **Problema:** para averiguar los tipos de la clave primaria **instancia la entidad** con
+        `Activator.CreateInstance<TEntity>()` en cada petición. Eso exige constructor público sin
+        parámetros y, cuando una propiedad vale `null`, se asume silenciosamente que es `string`.
+      - **Impacto:** coste de reflexión por petición, restricción artificial sobre las entidades del
+        consumidor y conversiones equivocadas: una clave `Guid` se trata como texto.
+      - **Propuesta:** obtener los tipos por **metadatos** (los `PropertyInfo` del selector o el modelo
+        de EF Core), cachearlos en un `static` por tipo y no instanciar nada.
+
+- [ ] **44. `JsonSerializer.Serialize` cuyo resultado se descarta**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clase interna de llamadas
+      - **Miembro:** `InternalPostGetAsync`
+      - **Problema:** se serializa el objeto y **el resultado no se asigna a nada**; el cuerpo se
+        construye después por otra vía.
+      - **Impacto:** trabajo de CPU y asignaciones inútiles en cada llamada, y la duda de si esa línea
+        debía usarse (posible cambio de comportamiento pendiente).
+      - **Propuesta:** eliminar la línea o usar su resultado, comprobando que la serialización efectiva
+        aplique las mismas opciones que el resto del proyecto.
+
+### Diseño de API y contratos
+
+- [ ] **45. No se pueden inyectar `JsonSerializerOptions`**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico
+      - **Miembro:** serialización y deserialización
+      - **Problema:** las opciones de JSON están fijadas internamente; no hay forma de suministrarlas.
+      - **Impacto:** el consumidor **no puede** adaptar el cliente a un servicio remoto con
+        convenciones distintas (`snake_case`, formatos de fecha propios, convertidores para tipos de
+        dominio). Eso obliga a no usar la biblioteca precisamente en el caso más frecuente:
+        integrarse con una API de un tercero.
+      - **Propuesta:** aceptar `JsonSerializerOptions` por constructor o por opciones registradas en
+        DI, con un valor por defecto sensato (`PropertyNameCaseInsensitive = true`).
+
+- [ ] **46. El código de estado HTTP se pierde como dato estructurado**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `MlResponseWebExtensions` y clientes
+      - **Miembro:** construcción del error a partir de la respuesta
+      - **Problema:** el código de estado se incrusta en el **texto** del mensaje de error en lugar de
+        guardarse en `Details` como valor.
+      - **Impacto:** el consumidor no puede decidir por programa (reintentar en `503`, no reintentar
+        en `400`, refrescar el token en `401`) sin **analizar cadenas**. Se pierde la ventaja principal
+        del modelo de errores con detalles.
+      - **Propuesta:** añadir el `HttpStatusCode` a `Details` con una clave constante y ofrecer un
+        método de extensión `GetHttpStatusCode()` sobre `MlErrorsDetails`.
+
+- [ ] **47. Métodos públicos ausentes de las interfaces**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `IGenClientFp<>`, `IHttpClientFactoryManager`
+      - **Miembro:** `GetAsync<T>(CallRequestParamsInfo)`, `GetPaginationAsync<T>(…)`,
+        `GetHttpClientFactoryKey()`
+      - **Problema:** son públicos en la implementación pero **no están declarados en la interfaz**.
+      - **Impacto:** quien programe contra la abstracción (lo correcto, y lo necesario para poder
+        hacer *mocks* en tests) **no tiene acceso a parte de la funcionalidad**, y se ve obligado a
+        acoplarse al tipo concreto.
+      - **Propuesta:** subir esos miembros a la interfaz. Si alguno no debe formar parte del contrato,
+        hacerlo `internal` o `protected`.
+
+- [ ] **48. Asimetrías de nombres y parámetros entre familias equivalentes**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`, `MoralesLarios.OOFP.WebApi`,
+        `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `GenClientFp` y su variante *duplex*; `MlResultWebExtensionsPlus`; clases
+        base de controlador
+      - **Miembro:** `PutByIdAsync` frente a `GetByIdAsync` (uno envía `idStr` suelto y el otro
+        `id-str/{idStr}`); `DeleteByIdAsync` (la variante *duplex* usa `<TResponse>` y la simple
+        `<TDto>`); los `PutAsync` simples usan el argumento nombrado `dto:` y los *duplex*
+        `dtoRequest:`
+      - **Problema:** métodos que deberían ser simétricos difieren en la ruta, en el genérico o en el
+        nombre del parámetro.
+      - **Impacto:** el cliente y el servidor **no se entienden** en las rutas afectadas (`PUT` por
+        identificador falla), y el consumidor no puede razonar por analogía: cada método hay que
+        comprobarlo en el código fuente.
+      - **Propuesta:** un único helper que construya la ruta por identificador y usarlo desde todos
+        los métodos, en cliente y servidor. Tests de contrato que recorran cliente → controlador.
+
+- [ ] **49. Rutas incoherentes entre verbos: `id-str/{id}` frente a `{id}`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** atributos de ruta de `GetAsync`, `PutAsync`, `DeleteAsync`
+      - **Problema:** el `GET` expone `id-str/{id}` mientras que `PUT` y `DELETE` usan `{id}`.
+      - **Impacto:** la API resultante no es REST reconocible: el mismo recurso tiene dos direcciones
+        según el verbo. Cualquier cliente generado a partir de la especificación OpenAPI queda
+        confuso, y quien escriba el cliente a mano se equivoca.
+      - **Propuesta:** una sola forma de ruta por recurso (`{id}` para clave simple y un patrón
+        explícito documentado para clave compuesta) aplicada a todos los verbos.
+
+- [ ] **50. `PUT` y `DELETE` con sobrecargas que reciben cuerpo**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** sobrecargas de `PutAsync` y `DeleteAsync` con `[FromBody]`
+      - **Problema:** se ofrecen variantes que esperan el cuerpo de la petición en `DELETE`.
+      - **Impacto:** muchos *proxies*, CDN y balanceadores **descartan el cuerpo de un `DELETE`**, y
+        varias bibliotecas cliente no permiten enviarlo. El endpoint funciona en local y falla al
+        desplegar detrás de una pasarela.
+      - **Propuesta:** en `DELETE`, la clave va en la ruta o en la *query string*. Si de verdad hace
+        falta enviar datos, usar `POST` sobre un sub-recurso de acción.
+
+- [ ] **51. Las clases base de controlador no son `abstract` ni declaran `[Route]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** declaración de tipo y atributos
+      - **Problema:** llevan `[ApiController]` pero **no** `[Route]`, y **no son `abstract`**.
+      - **Impacto:** MVC puede descubrir la propia clase base como controlador activable, exponiendo
+        endpoints genéricos no previstos; y sin `[Route]` el enrutado depende de convenciones que la
+        derivada debe recordar declarar.
+      - **Propuesta:** marcar las bases `abstract` y documentar que la derivada debe aportar
+        `[Route("[controller]")]`, o incluirlo en la base.
+
+- [ ] **52. Las clases base no declaran `[ProducesResponseType]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** todos los métodos de acción
+      - **Problema:** ninguna acción documenta los códigos de respuesta posibles.
+      - **Impacto:** la especificación OpenAPI generada solo declara `200`, de modo que los clientes
+        generados automáticamente **no contemplan** `201`, `204`, `400`, `404` ni el esquema de
+        `ProblemDetails`. Toda la riqueza del modelo de errores se pierde en el contrato publicado.
+      - **Propuesta:** añadir los `[ProducesResponseType]` correspondientes en cada acción, incluido
+        `[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]`.
+
+---
+
+## 🟢 Prioridad baja — limpieza, coherencia y documentación
+
+Aquí no hay datos incorrectos ni riesgos de seguridad, pero sí decisiones que **se pagan cuando el
+volumen crece** o que hacen la API difícil de usar correctamente.
+
+### Rendimiento y acceso a datos
+
+- [ ] **38. `TryLast*` materializa toda la consulta en memoria**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoReaderFp`
+      - **Miembro:** `TryLast`, `TryLastAsync` y variantes
+      - **Problema:** para obtener el último elemento se trae **la colección filtrada completa** al
+        cliente y se selecciona el último en memoria.
+      - **Impacto:** con una tabla grande esto son millones de filas por la red y un pico de memoria
+        que puede tumbar el proceso, cuando la base de datos podía resolverlo con un `TOP 1`.
+      - **Propuesta:** ordenar de forma descendente en la consulta y usar
+        `FirstOrDefaultAsync`/`LastOrDefaultAsync` sobre `IQueryable`. Exigir una ordenación explícita:
+        «el último» no tiene sentido sin orden definido.
+
+- [ ] **39. `TryUpdate(item, pk)` provoca conflictos de seguimiento de EF Core**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
+      - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
+      - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
+
+- [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** todos los repositorios de escritura (`EFRepoWriterFp`, `EFRepoUpdaterFp`,
+        `EFRepoDeleterFp` y sus equivalentes OOP)
+      - **Miembro:** cada método de escritura
+      - **Problema:** cada operación llama a `SaveChanges`/`SaveChangesAsync` por su cuenta.
+      - **Impacto:** **es imposible componer varias escrituras en una transacción.** Si la segunda
+        falla, la primera ya está confirmada y los datos quedan a medias. Además, un lote de N
+        inserciones son N idas a la base de datos.
+      - **Propuesta:** añadir un `IUnitOfWork` con `CommitAsync` y sobrecargas con un flag `autoSave`
+        (por defecto `true` para no romper a nadie). Documentar el patrón en el `README.md`.
+
+- [ ] **41. `AllAsync` no admite paginación**
+      - **Proyecto:** `MoralesLarios.OOFP.WebServices`
+      - **Archivo / clase:** `GenServiceFp`
+      - **Miembro:** `AllAsync`
+      - **Problema:** devuelve la tabla completa sin límite ni parámetros de paginación.
+      - **Impacto:** un `GET` de colección sobre una tabla de producción trae todos los registros:
+        tiempos de respuesta enormes, presión de memoria y un vector trivial de denegación de
+        servicio. La paginación existe en el repositorio, pero el servicio no la expone.
+      - **Propuesta:** añadir una sobrecarga con parámetros de página que devuelva el total. Marcar la
+        versión sin límite `[Obsolete]` o imponerle un tope máximo configurable.
+
+- [ ] **42. `HttpRequestMessage` y `HttpResponseMessage` nunca se liberan**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico y sus métodos internos
+      - **Miembro:** todos los métodos de llamada
+      - **Problema:** los mensajes de petición y respuesta se crean sin `using`.
+      - **Impacto:** se retienen los flujos de contenido y los recursos asociados hasta que actúa el
+        recolector. Bajo carga sostenida, consumo de memoria creciente y agotamiento de conexiones.
+      - **Propuesta:** `using var request = …;` y `using var response = …;` en todos los métodos.
+
+- [ ] **43. `Activator.CreateInstance<TEntity>()` en cada petición**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `Helpers/Extensions`
+      - **Miembro:** `GetPkValues<TEntity>(string[] ids, Func<TEntity, object[]> pkFields)`
+      - **Problema:** para averiguar los tipos de la clave primaria **instancia la entidad** con
+        `Activator.CreateInstance<TEntity>()` en cada petición. Eso exige constructor público sin
+        parámetros y, cuando una propiedad vale `null`, se asume silenciosamente que es `string`.
+      - **Impacto:** coste de reflexión por petición, restricción artificial sobre las entidades del
+        consumidor y conversiones equivocadas: una clave `Guid` se trata como texto.
+      - **Propuesta:** obtener los tipos por **metadatos** (los `PropertyInfo` del selector o el modelo
+        de EF Core), cachearlos en un `static` por tipo y no instanciar nada.
+
+- [ ] **44. `JsonSerializer.Serialize` cuyo resultado se descarta**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clase interna de llamadas
+      - **Miembro:** `InternalPostGetAsync`
+      - **Problema:** se serializa el objeto y **el resultado no se asigna a nada**; el cuerpo se
+        construye después por otra vía.
+      - **Impacto:** trabajo de CPU y asignaciones inútiles en cada llamada, y la duda de si esa línea
+        debía usarse (posible cambio de comportamiento pendiente).
+      - **Propuesta:** eliminar la línea o usar su resultado, comprobando que la serialización efectiva
+        aplique las mismas opciones que el resto del proyecto.
+
+### Diseño de API y contratos
+
+- [ ] **45. No se pueden inyectar `JsonSerializerOptions`**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico
+      - **Miembro:** serialización y deserialización
+      - **Problema:** las opciones de JSON están fijadas internamente; no hay forma de suministrarlas.
+      - **Impacto:** el consumidor **no puede** adaptar el cliente a un servicio remoto con
+        convenciones distintas (`snake_case`, formatos de fecha propios, convertidores para tipos de
+        dominio). Eso obliga a no usar la biblioteca precisamente en el caso más frecuente:
+        integrarse con una API de un tercero.
+      - **Propuesta:** aceptar `JsonSerializerOptions` por constructor o por opciones registradas en
+        DI, con un valor por defecto sensato (`PropertyNameCaseInsensitive = true`).
+
+- [ ] **46. El código de estado HTTP se pierde como dato estructurado**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `MlResponseWebExtensions` y clientes
+      - **Miembro:** construcción del error a partir de la respuesta
+      - **Problema:** el código de estado se incrusta en el **texto** del mensaje de error en lugar de
+        guardarse en `Details` como valor.
+      - **Impacto:** el consumidor no puede decidir por programa (reintentar en `503`, no reintentar
+        en `400`, refrescar el token en `401`) sin **analizar cadenas**. Se pierde la ventaja principal
+        del modelo de errores con detalles.
+      - **Propuesta:** añadir el `HttpStatusCode` a `Details` con una clave constante y ofrecer un
+        método de extensión `GetHttpStatusCode()` sobre `MlErrorsDetails`.
+
+- [ ] **47. Métodos públicos ausentes de las interfaces**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `IGenClientFp<>`, `IHttpClientFactoryManager`
+      - **Miembro:** `GetAsync<T>(CallRequestParamsInfo)`, `GetPaginationAsync<T>(…)`,
+        `GetHttpClientFactoryKey()`
+      - **Problema:** son públicos en la implementación pero **no están declarados en la interfaz**.
+      - **Impacto:** quien programe contra la abstracción (lo correcto, y lo necesario para poder
+        hacer *mocks* en tests) **no tiene acceso a parte de la funcionalidad**, y se ve obligado a
+        acoplarse al tipo concreto.
+      - **Propuesta:** subir esos miembros a la interfaz. Si alguno no debe formar parte del contrato,
+        hacerlo `internal` o `protected`.
+
+- [ ] **48. Asimetrías de nombres y parámetros entre familias equivalentes**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`, `MoralesLarios.OOFP.WebApi`,
+        `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `GenClientFp` y su variante *duplex*; `MlResultWebExtensionsPlus`; clases
+        base de controlador
+      - **Miembro:** `PutByIdAsync` frente a `GetByIdAsync` (uno envía `idStr` suelto y el otro
+        `id-str/{idStr}`); `DeleteByIdAsync` (la variante *duplex* usa `<TResponse>` y la simple
+        `<TDto>`); los `PutAsync` simples usan el argumento nombrado `dto:` y los *duplex*
+        `dtoRequest:`
+      - **Problema:** métodos que deberían ser simétricos difieren en la ruta, en el genérico o en el
+        nombre del parámetro.
+      - **Impacto:** el cliente y el servidor **no se entienden** en las rutas afectadas (`PUT` por
+        identificador falla), y el consumidor no puede razonar por analogía: cada método hay que
+        comprobarlo en el código fuente.
+      - **Propuesta:** un único helper que construya la ruta por identificador y usarlo desde todos
+        los métodos, en cliente y servidor. Tests de contrato que recorran cliente → controlador.
+
+- [ ] **49. Rutas incoherentes entre verbos: `id-str/{id}` frente a `{id}`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** atributos de ruta de `GetAsync`, `PutAsync`, `DeleteAsync`
+      - **Problema:** el `GET` expone `id-str/{id}` mientras que `PUT` y `DELETE` usan `{id}`.
+      - **Impacto:** la API resultante no es REST reconocible: el mismo recurso tiene dos direcciones
+        según el verbo. Cualquier cliente generado a partir de la especificación OpenAPI queda
+        confuso, y quien escriba el cliente a mano se equivoca.
+      - **Propuesta:** una sola forma de ruta por recurso (`{id}` para clave simple y un patrón
+        explícito documentado para clave compuesta) aplicada a todos los verbos.
+
+- [ ] **50. `PUT` y `DELETE` con sobrecargas que reciben cuerpo**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** sobrecargas de `PutAsync` y `DeleteAsync` con `[FromBody]`
+      - **Problema:** se ofrecen variantes que esperan el cuerpo de la petición en `DELETE`.
+      - **Impacto:** muchos *proxies*, CDN y balanceadores **descartan el cuerpo de un `DELETE`**, y
+        varias bibliotecas cliente no permiten enviarlo. El endpoint funciona en local y falla al
+        desplegar detrás de una pasarela.
+      - **Propuesta:** en `DELETE`, la clave va en la ruta o en la *query string*. Si de verdad hace
+        falta enviar datos, usar `POST` sobre un sub-recurso de acción.
+
+- [ ] **51. Las clases base de controlador no son `abstract` ni declaran `[Route]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** declaración de tipo y atributos
+      - **Problema:** llevan `[ApiController]` pero **no** `[Route]`, y **no son `abstract`**.
+      - **Impacto:** MVC puede descubrir la propia clase base como controlador activable, exponiendo
+        endpoints genéricos no previstos; y sin `[Route]` el enrutado depende de convenciones que la
+        derivada debe recordar declarar.
+      - **Propuesta:** marcar las bases `abstract` y documentar que la derivada debe aportar
+        `[Route("[controller]")]`, o incluirlo en la base.
+
+- [ ] **52. Las clases base no declaran `[ProducesResponseType]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** todos los métodos de acción
+      - **Problema:** ninguna acción documenta los códigos de respuesta posibles.
+      - **Impacto:** la especificación OpenAPI generada solo declara `200`, de modo que los clientes
+        generados automáticamente **no contemplan** `201`, `204`, `400`, `404` ni el esquema de
+        `ProblemDetails`. Toda la riqueza del modelo de errores se pierde en el contrato publicado.
+      - **Propuesta:** añadir los `[ProducesResponseType]` correspondientes en cada acción, incluido
+        `[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]`.
+
+---
+
+## 🟢 Prioridad baja — limpieza, coherencia y documentación
+
+Aquí no hay datos incorrectos ni riesgos de seguridad, pero sí decisiones que **se pagan cuando el
+volumen crece** o que hacen la API difícil de usar correctamente.
+
+### Rendimiento y acceso a datos
+
+- [ ] **38. `TryLast*` materializa toda la consulta en memoria**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoReaderFp`
+      - **Miembro:** `TryLast`, `TryLastAsync` y variantes
+      - **Problema:** para obtener el último elemento se trae **la colección filtrada completa** al
+        cliente y se selecciona el último en memoria.
+      - **Impacto:** con una tabla grande esto son millones de filas por la red y un pico de memoria
+        que puede tumbar el proceso, cuando la base de datos podía resolverlo con un `TOP 1`.
+      - **Propuesta:** ordenar de forma descendente en la consulta y usar
+        `FirstOrDefaultAsync`/`LastOrDefaultAsync` sobre `IQueryable`. Exigir una ordenación explícita:
+        «el último» no tiene sentido sin orden definido.
+
+- [ ] **39. `TryUpdate(item, pk)` provoca conflictos de seguimiento de EF Core**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
+      - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
+      - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
+
+- [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** todos los repositorios de escritura (`EFRepoWriterFp`, `EFRepoUpdaterFp`,
+        `EFRepoDeleterFp` y sus equivalentes OOP)
+      - **Miembro:** cada método de escritura
+      - **Problema:** cada operación llama a `SaveChanges`/`SaveChangesAsync` por su cuenta.
+      - **Impacto:** **es imposible componer varias escrituras en una transacción.** Si la segunda
+        falla, la primera ya está confirmada y los datos quedan a medias. Además, un lote de N
+        inserciones son N idas a la base de datos.
+      - **Propuesta:** añadir un `IUnitOfWork` con `CommitAsync` y sobrecargas con un flag `autoSave`
+        (por defecto `true` para no romper a nadie). Documentar el patrón en el `README.md`.
+
+- [ ] **41. `AllAsync` no admite paginación**
+      - **Proyecto:** `MoralesLarios.OOFP.WebServices`
+      - **Archivo / clase:** `GenServiceFp`
+      - **Miembro:** `AllAsync`
+      - **Problema:** devuelve la tabla completa sin límite ni parámetros de paginación.
+      - **Impacto:** un `GET` de colección sobre una tabla de producción trae todos los registros:
+        tiempos de respuesta enormes, presión de memoria y un vector trivial de denegación de
+        servicio. La paginación existe en el repositorio, pero el servicio no la expone.
+      - **Propuesta:** añadir una sobrecarga con parámetros de página que devuelva el total. Marcar la
+        versión sin límite `[Obsolete]` o imponerle un tope máximo configurable.
+
+- [ ] **42. `HttpRequestMessage` y `HttpResponseMessage` nunca se liberan**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico y sus métodos internos
+      - **Miembro:** todos los métodos de llamada
+      - **Problema:** los mensajes de petición y respuesta se crean sin `using`.
+      - **Impacto:** se retienen los flujos de contenido y los recursos asociados hasta que actúa el
+        recolector. Bajo carga sostenida, consumo de memoria creciente y agotamiento de conexiones.
+      - **Propuesta:** `using var request = …;` y `using var response = …;` en todos los métodos.
+
+- [ ] **43. `Activator.CreateInstance<TEntity>()` en cada petición**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `Helpers/Extensions`
+      - **Miembro:** `GetPkValues<TEntity>(string[] ids, Func<TEntity, object[]> pkFields)`
+      - **Problema:** para averiguar los tipos de la clave primaria **instancia la entidad** con
+        `Activator.CreateInstance<TEntity>()` en cada petición. Eso exige constructor público sin
+        parámetros y, cuando una propiedad vale `null`, se asume silenciosamente que es `string`.
+      - **Impacto:** coste de reflexión por petición, restricción artificial sobre las entidades del
+        consumidor y conversiones equivocadas: una clave `Guid` se trata como texto.
+      - **Propuesta:** obtener los tipos por **metadatos** (los `PropertyInfo` del selector o el modelo
+        de EF Core), cachearlos en un `static` por tipo y no instanciar nada.
+
+- [ ] **44. `JsonSerializer.Serialize` cuyo resultado se descarta**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clase interna de llamadas
+      - **Miembro:** `InternalPostGetAsync`
+      - **Problema:** se serializa el objeto y **el resultado no se asigna a nada**; el cuerpo se
+        construye después por otra vía.
+      - **Impacto:** trabajo de CPU y asignaciones inútiles en cada llamada, y la duda de si esa línea
+        debía usarse (posible cambio de comportamiento pendiente).
+      - **Propuesta:** eliminar la línea o usar su resultado, comprobando que la serialización efectiva
+        aplique las mismas opciones que el resto del proyecto.
+
+### Diseño de API y contratos
+
+- [ ] **45. No se pueden inyectar `JsonSerializerOptions`**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico
+      - **Miembro:** serialización y deserialización
+      - **Problema:** las opciones de JSON están fijadas internamente; no hay forma de suministrarlas.
+      - **Impacto:** el consumidor **no puede** adaptar el cliente a un servicio remoto con
+        convenciones distintas (`snake_case`, formatos de fecha propios, convertidores para tipos de
+        dominio). Eso obliga a no usar la biblioteca precisamente en el caso más frecuente:
+        integrarse con una API de un tercero.
+      - **Propuesta:** aceptar `JsonSerializerOptions` por constructor o por opciones registradas en
+        DI, con un valor por defecto sensato (`PropertyNameCaseInsensitive = true`).
+
+- [ ] **46. El código de estado HTTP se pierde como dato estructurado**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `MlResponseWebExtensions` y clientes
+      - **Miembro:** construcción del error a partir de la respuesta
+      - **Problema:** el código de estado se incrusta en el **texto** del mensaje de error en lugar de
+        guardarse en `Details` como valor.
+      - **Impacto:** el consumidor no puede decidir por programa (reintentar en `503`, no reintentar
+        en `400`, refrescar el token en `401`) sin **analizar cadenas**. Se pierde la ventaja principal
+        del modelo de errores con detalles.
+      - **Propuesta:** añadir el `HttpStatusCode` a `Details` con una clave constante y ofrecer un
+        método de extensión `GetHttpStatusCode()` sobre `MlErrorsDetails`.
+
+- [ ] **47. Métodos públicos ausentes de las interfaces**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** `IGenClientFp<>`, `IHttpClientFactoryManager`
+      - **Miembro:** `GetAsync<T>(CallRequestParamsInfo)`, `GetPaginationAsync<T>(…)`,
+        `GetHttpClientFactoryKey()`
+      - **Problema:** son públicos en la implementación pero **no están declarados en la interfaz**.
+      - **Impacto:** quien programe contra la abstracción (lo correcto, y lo necesario para poder
+        hacer *mocks* en tests) **no tiene acceso a parte de la funcionalidad**, y se ve obligado a
+        acoplarse al tipo concreto.
+      - **Propuesta:** subir esos miembros a la interfaz. Si alguno no debe formar parte del contrato,
+        hacerlo `internal` o `protected`.
+
+- [ ] **48. Asimetrías de nombres y parámetros entre familias equivalentes**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`, `MoralesLarios.OOFP.WebApi`,
+        `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `GenClientFp` y su variante *duplex*; `MlResultWebExtensionsPlus`; clases
+        base de controlador
+      - **Miembro:** `PutByIdAsync` frente a `GetByIdAsync` (uno envía `idStr` suelto y el otro
+        `id-str/{idStr}`); `DeleteByIdAsync` (la variante *duplex* usa `<TResponse>` y la simple
+        `<TDto>`); los `PutAsync` simples usan el argumento nombrado `dto:` y los *duplex*
+        `dtoRequest:`
+      - **Problema:** métodos que deberían ser simétricos difieren en la ruta, en el genérico o en el
+        nombre del parámetro.
+      - **Impacto:** el cliente y el servidor **no se entienden** en las rutas afectadas (`PUT` por
+        identificador falla), y el consumidor no puede razonar por analogía: cada método hay que
+        comprobarlo en el código fuente.
+      - **Propuesta:** un único helper que construya la ruta por identificador y usarlo desde todos
+        los métodos, en cliente y servidor. Tests de contrato que recorran cliente → controlador.
+
+- [ ] **49. Rutas incoherentes entre verbos: `id-str/{id}` frente a `{id}`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** atributos de ruta de `GetAsync`, `PutAsync`, `DeleteAsync`
+      - **Problema:** el `GET` expone `id-str/{id}` mientras que `PUT` y `DELETE` usan `{id}`.
+      - **Impacto:** la API resultante no es REST reconocible: el mismo recurso tiene dos direcciones
+        según el verbo. Cualquier cliente generado a partir de la especificación OpenAPI queda
+        confuso, y quien escriba el cliente a mano se equivoca.
+      - **Propuesta:** una sola forma de ruta por recurso (`{id}` para clave simple y un patrón
+        explícito documentado para clave compuesta) aplicada a todos los verbos.
+
+- [ ] **50. `PUT` y `DELETE` con sobrecargas que reciben cuerpo**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** clases base de controlador
+      - **Miembro:** sobrecargas de `PutAsync` y `DeleteAsync` con `[FromBody]`
+      - **Problema:** se ofrecen variantes que esperan el cuerpo de la petición en `DELETE`.
+      - **Impacto:** muchos *proxies*, CDN y balanceadores **descartan el cuerpo de un `DELETE`**, y
+        varias bibliotecas cliente no permiten enviarlo. El endpoint funciona en local y falla al
+        desplegar detrás de una pasarela.
+      - **Propuesta:** en `DELETE`, la clave va en la ruta o en la *query string*. Si de verdad hace
+        falta enviar datos, usar `POST` sobre un sub-recurso de acción.
+
+- [ ] **51. Las clases base de controlador no son `abstract` ni declaran `[Route]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** declaración de tipo y atributos
+      - **Problema:** llevan `[ApiController]` pero **no** `[Route]`, y **no son `abstract`**.
+      - **Impacto:** MVC puede descubrir la propia clase base como controlador activable, exponiendo
+        endpoints genéricos no previstos; y sin `[Route]` el enrutado depende de convenciones que la
+        derivada debe recordar declarar.
+      - **Propuesta:** marcar las bases `abstract` y documentar que la derivada debe aportar
+        `[Route("[controller]")]`, o incluirlo en la base.
+
+- [ ] **52. Las clases base no declaran `[ProducesResponseType]`**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** las 4 clases base
+      - **Miembro:** todos los métodos de acción
+      - **Problema:** ninguna acción documenta los códigos de respuesta posibles.
+      - **Impacto:** la especificación OpenAPI generada solo declara `200`, de modo que los clientes
+        generados automáticamente **no contemplan** `201`, `204`, `400`, `404` ni el esquema de
+        `ProblemDetails`. Toda la riqueza del modelo de errores se pierde en el contrato publicado.
+      - **Propuesta:** añadir los `[ProducesResponseType]` correspondientes en cada acción, incluido
+        `[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]`.
+
+---
+
+## 🟢 Prioridad baja — limpieza, coherencia y documentación
+
+Aquí no hay datos incorrectos ni riesgos de seguridad, pero sí decisiones que **se pagan cuando el
+volumen crece** o que hacen la API difícil de usar correctamente.
+
+### Rendimiento y acceso a datos
+
+- [ ] **38. `TryLast*` materializa toda la consulta en memoria**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoReaderFp`
+      - **Miembro:** `TryLast`, `TryLastAsync` y variantes
+      - **Problema:** para obtener el último elemento se trae **la colección filtrada completa** al
+        cliente y se selecciona el último en memoria.
+      - **Impacto:** con una tabla grande esto son millones de filas por la red y un pico de memoria
+        que puede tumbar el proceso, cuando la base de datos podía resolverlo con un `TOP 1`.
+      - **Propuesta:** ordenar de forma descendente en la consulta y usar
+        `FirstOrDefaultAsync`/`LastOrDefaultAsync` sobre `IQueryable`. Exigir una ordenación explícita:
+        «el último» no tiene sentido sin orden definido.
+
+- [ ] **39. `TryUpdate(item, pk)` provoca conflictos de seguimiento de EF Core**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** `Repos/EFRepoUpdaterFp`
+      - **Miembro:** `TryUpdate(TEntity item, object[] pk)`
+      - **Problema:** hace `Find` (que **rastrea** la entidad encontrada) y después llama a `Update`
+        con la instancia **recibida por parámetro**, que es otro objeto con la misma clave.
+      - **Impacto:** `InvalidOperationException`: «another instance with the same key value is already
+        being tracked». Falla en el escenario más habitual: actualizar a partir de un DTO.
+      - **Propuesta:** `Find` + `SetValues(item)` sobre la entidad rastreada, o `AsNoTracking` para
+        comprobar existencia y luego `Attach` + `Update`. Una sola estrategia en todo el proyecto.
+
+- [ ] **40. No hay unidad de trabajo: `SaveChanges` por operación**
+      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
+      - **Archivo / clase:** todos los repositorios de escritura (`EFRepoWriterFp`, `EFRepoUpdaterFp`,
+        `EFRepoDeleterFp` y sus equivalentes OOP)
+      - **Miembro:** cada método de escritura
+      - **Problema:** cada operación llama a `SaveChanges`/`SaveChangesAsync` por su cuenta.
+      - **Impacto:** **es imposible componer varias escrituras en una transacción.** Si la segunda
+        falla, la primera ya está confirmada y los datos quedan a medias. Además, un lote de N
+        inserciones son N idas a la base de datos.
+      - **Propuesta:** añadir un `IUnitOfWork` con `CommitAsync` y sobrecargas con un flag `autoSave`
+        (por defecto `true` para no romper a nadie). Documentar el patrón en el `README.md`.
+
+- [ ] **41. `AllAsync` no admite paginación**
+      - **Proyecto:** `MoralesLarios.OOFP.WebServices`
+      - **Archivo / clase:** `GenServiceFp`
+      - **Miembro:** `AllAsync`
+      - **Problema:** devuelve la tabla completa sin límite ni parámetros de paginación.
+      - **Impacto:** un `GET` de colección sobre una tabla de producción trae todos los registros:
+        tiempos de respuesta enormes, presión de memoria y un vector trivial de denegación de
+        servicio. La paginación existe en el repositorio, pero el servicio no la expone.
+      - **Propuesta:** añadir una sobrecarga con parámetros de página que devuelva el total. Marcar la
+        versión sin límite `[Obsolete]` o imponerle un tope máximo configurable.
+
+- [ ] **42. `HttpRequestMessage` y `HttpResponseMessage` nunca se liberan**
+      - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
+      - **Archivo / clase:** clases de cliente genérico y sus métodos internos
+      - **Miembro:** todos los métodos de llamada
+      - **Problema:** los mensajes de petición y respuesta se crean sin `using`.
+      - **Impacto:** se retienen los flujos de contenido y los recursos asociados hasta que actúa el
+        recolector. Bajo carga sostenida, consumo de memoria creciente y agotamiento de conexiones.
+      - **Propuesta:** `using var request = …;` y `using var response = …;` en todos los métodos.
+
+- [ ] **43. `Activator.CreateInstance<TEntity>()` en cada petición**
+      - **Proyecto:** `MoralesLarios.OOFP.WebControllers`
+      - **Archivo / clase:** `Helpers/Extensions`
+      - **Miembro:** `GetPkValues<TEntity>(string[] ids, Func<TEntity, object[]> pkFields)`
+      - **Problema:** para averiguar los tipos de la clave primaria **instancia la entidad** con
+        `Activator.CreateInstance<TEntity>()` en cada petición. Eso exige constructor público sin
+        parámetros y, cuando una propiedad vale `null`, se asume silenciosamente que es `string`.
+      - **Impacto:** coste de reflexión por petición, restricción artificial sobre las entidades del
+        consumidor y conversiones equivocadas: una clave `Guid` se trata como texto.
