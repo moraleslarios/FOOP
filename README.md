@@ -1,17 +1,15 @@
 # MoralesLarios.FOOP / MoralesLarios.OOFP
 
-**MoralesLarios.FOOP** es una plataforma modular de librer�as .NET construida sobre una base funcional com�n.  
-Su centro t�cnico es **`MoralesLarios.OOFP`**, el n�cleo sobre el que se apoyan el resto de proyectos: validaci�n, persistencia, servicios de aplicaci�n, controladores web, cach�, clientes HTTP, logging, IO, value objects y utilidades de infraestructura.
-
-La propuesta del ecosistema es ofrecer una forma homog�nea de trabajar con:
+**MoralesLarios.FOOP** es una plataforma modular de librerías .NET construida sobre una base funcional común.
+Su centro técnico es **`MoralesLarios.OOFP`**, el núcleo sobre el que se apoyan el resto de proyectos: validación, persistencia, servicios de aplicación, controladores web, caché, clientes HTTP, logging, IO, value objects y utilidades de infraestructura.
 
 El objetivo del ecosistema es ofrecer una forma homogénea de trabajar con:
 
 - `MlResult<T>` como contenedor de éxito/error
 - composición funcional con `Bind`, `Map`, `Match` y `ExecSelf`
-- manejo expl�cito de errores sin usar excepciones como flujo principal de control
+- manejo explícito de errores sin usar excepciones como flujo principal de control
 - integración natural con ASP.NET Core, EF Core y DI
-- tipos seguros mediante value objects y validaci�n dedicada
+- tipos seguros mediante value objects y validación dedicada
 - documentación técnica extensa y enlazada por módulos
 
 ---
@@ -35,33 +33,46 @@ El resultado es una arquitectura en capas, consistente y reutilizable, donde cad
 
 ## Cómo navegar esta solución
 
-### N�cleo OOFP
+### 🚀 Punto de entrada recomendado
 
-- [Documentaci�n t�cnica completa de `MoralesLarios.OOFP`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
-- [Documentaci�n por tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md)
-- [Tipos y modelo base `MlResult`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResult.md)
-- [Operaciones `Bind`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsBind.md)
-- [Operaciones `Map`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsMap.md)
-- [Operaciones `Match`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsMatch.md)
-- [Operaciones `ExecSelf`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsExecSelf.md)
-- [Operaciones `Several`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsSeveral.md)
-- [Transformaciones](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultTransformations.md)
-- [Bucles funcionales](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultBucles.md)
-- [Cambio de tipo de retorno](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultChangeReturnResult.md)
-- [Modelo de errores](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultErrors.md)
+Si es tu primera vez, sigue este orden:
 
-### Documentación por concepto dentro de `__Doc`
+1. **[Introducción general al núcleo `MoralesLarios.OOFP`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/1_Intro.md)** — filosofía, arquitectura y convención de nombres.
+2. **[README técnico del proyecto núcleo](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/README.md)** — catálogo completo de la API con ejemplos.
+3. **[Índice de documentación por tipos](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/README.md)** — un documento por archivo de código.
+4. **[README de la solución completa](https://github.com/moraleslarios/FOOP/blob/main/src/README.md)** — visión de todas las capas y proyectos.
 
-- [Intro general](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
-- [Bind](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Bind/3_Bind.md)
-- [Map](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Map/1_Map.md)
-- [Match](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Match/1_Match.md)
-- [ExecSelf](https://github.com/moraleslarios/FOOP/blob/main/__Doc/ExecSelf/1_ExecSelf.md)
-- [Several](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Several/1_EmptyToFailed.md)
-- [EnsureFp](https://github.com/moraleslarios/FOOP/blob/main/__Doc/EnsureFp/EnsureFp.md)
-- [Extensions](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Extensions/Extensions.md)
-- [Transformations](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Transformations/Transformations.md)
-- [Bucles](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Bucle/Bucles.md)
+> 💡 La documentación técnica del núcleo vive en `src/MoralesLarios.FOOP/__Doc/` y está escrita en español, con ejemplos ejecutables y secciones de "qué no hacer".
+
+### Núcleo OOFP — referencia por archivo de código
+
+| Documento | Contenido |
+|---|---|
+| [`MlResult`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResult.md) | El tipo raíz, fábricas y conversiones implícitas |
+| [Modelo de errores](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultErrors.md) | `MlError`, `MlErrorsDetails` y sus extensiones |
+| [`MlResultActions`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActions.md) | Enriquecer errores, transportar datos, acceso seguro |
+| [Operaciones `Bind`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsBind.md) | Todas las sobrecargas de `Bind*` |
+| [Operaciones `Map`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsMap.md) | Todas las sobrecargas de `Map*` |
+| [Operaciones `Match`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsMatch.md) | Todas las sobrecargas de `Match*` |
+| [Operaciones `ExecSelf`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsExecSelf.md) | Todas las sobrecargas de `ExecSelf*` |
+| [Operaciones `Several`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsSeveral.md) | `EmptyToFailed`, `NullToFailed`, `BoolToResult`, `Combine`, `Do` |
+| [Detalles del error](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsErrorsDetails.md) | Leer y fusionar el diccionario `Details` |
+| [Bucles funcionales](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultBucles.md) | `Projection*`, `ProjectionSplit*`, `Fusion*` |
+| [Transformaciones](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultTransformations.md) | `ToMlResult*`, `TryToMlResult*`, boxing |
+| [Cambio de tipo de retorno](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultChangeReturnResult.md) | Familia `ChangeReturnResult*` |
+
+### Núcleo OOFP — guías por concepto
+
+| Familia | Documentos |
+|---|---|
+| **Introducción** | [Intro general](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/1_Intro.md) |
+| **`Match`** | [`Match`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/1_Match.md) · [`TryMatch`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/2_TryMatch.md) |
+| **`Bind`** | [`Bind`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Bind/3_Bind.md) y el resto de la carpeta `Bind/` |
+| **`Map`** | [`Map`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Map/1_Map.md) y el resto de la carpeta `Map/` |
+| **`ExecSelf`** | [`ExecSelf`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/ExecSelf/1_ExecSelf.md) y el resto de la carpeta `ExecSelf/` |
+| **`Several`** | [`EmptyToFailed`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/1_EmptyToFailed.md) · [`NullToFailed`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/2_NullToFailed.md) · [`BoolToResult`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/3_BoolToResult.md) · [`Combine`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/4_Combine.md) |
+| **Precondiciones** | [`EnsureFp`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md) |
+| **Utilidades** | [Extensions](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Extensions/Extensions.md) · [Transformations](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Transformations/Transformations.md) · [Bucles](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Bucle/Bucles.md) |
 
 ---
 
@@ -92,10 +103,13 @@ Esa convención se repite en todo el ecosistema para que el comportamiento sea p
 
 ### Ideas clave del núcleo
 
-- `MlResult<T>` es el tipo base de éxito/error.
-- `MlErrorsDetails` transporta el detalle estructurado del error.
-- `EnsureFp` aporta precondiciones funcionales.
+- `MlResult<T>` es el tipo base de éxito/error. Se consulta con `IsValid` / `IsFail`.
+- `MlErrorsDetails` transporta el detalle estructurado del error: la lista `Errors` y el diccionario `Details`.
+- `EnsureFp` aporta precondiciones funcionales (`NotNull`, `NotEmpty`, `That`, …).
 - Las extensiones de `Types` cubren composición, transformación, coincidencia y cambio de forma del resultado.
+
+> ⚠️ **Regla de oro**: el valor interno (`Value`) y el detalle de errores (`ErrorsDetails`) son `internal protected`.
+> Desde código consumidor **no se accede directamente**: se usa `Match(valid: …, fail: …)` o `SecureValidValue()`.
 
 ---
 
@@ -103,29 +117,29 @@ Esa convención se repite en todo el ecosistema para que el comportamiento sea p
 
 ### Resumen de proyectos principales
 
-| Proyecto | Prop�sito | Documentaci�n |
+| Proyecto | Propósito | Documentación |
 |---|---|---|
-| `MoralesLarios.OOFP` | N�cleo funcional de la soluci�n | [Intro](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md) � [Tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md) |
+| `MoralesLarios.OOFP` | Núcleo funcional de la solución | [Intro](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/1_Intro.md) · [Tipos](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/README.md) · [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/README.md) |
 | `MoralesLarios.OOFP.ValueObjects` | Value objects tipados y validados | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects/README.md) |
 | `MoralesLarios.OOFP.ValueObjects.IO` | Value objects para rutas y sistema de archivos | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects.IO/README.md) |
-| `MoralesLarios.OOFP.Validation` | Base de validaci�n funcional | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation/README.md) |
-| `MoralesLarios.OOFP.Validation.Dataannotations` | Validaci�n con DataAnnotations | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.Dataannotations/README.md) |
-| `MoralesLarios.OOFP.Validation.FluentValidations` | Validaci�n con FluentValidation | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.FluentValidations/README.md) |
-| `MoralesLarios.OOFP.Internals` | Tipos internos compartidos y paginaci�n | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Internals/README.md) |
+| `MoralesLarios.OOFP.Validation` | Base de validación funcional | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation/README.md) |
+| `MoralesLarios.OOFP.Validation.Dataannotations` | Validación con DataAnnotations | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.Dataannotations/README.md) |
+| `MoralesLarios.OOFP.Validation.FluentValidations` | Validación con FluentValidation | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.FluentValidations/README.md) |
+| `MoralesLarios.OOFP.Internals` | Tipos internos compartidos y paginación | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Internals/README.md) |
 | `MoralesLarios.OOFP.Extensions.Loggers` | Logging funcional sobre `MlResult<T>` | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Extensions.Loggers/README.md) |
-| `MoralesLarios.OOFP.Utilities` | Lectura segura de configuraci�n | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Utilities/README.md) |
+| `MoralesLarios.OOFP.Utilities` | Lectura segura de configuración | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Utilities/README.md) |
 | `MoralesLarios.OOFP.IO` | IO seguro sobre ficheros y directorios | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.IO/README.md) |
 | `MoralesLarios.OOFP.EFCore` | Repositorios funcionales y OOP sobre EF Core | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore/README.md) |
-| `MoralesLarios.OOFP.WebServices` | Servicios de aplicaci�n funcionales | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebServices/README.md) |
+| `MoralesLarios.OOFP.WebServices` | Servicios de aplicación funcionales | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebServices/README.md) |
 | `MoralesLarios.OOFP.WebApi` | Puente entre `MlResult<T>` e `IActionResult` | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebApi/README.md) |
-| `MoralesLarios.OOFP.WebControllers` | Controladores REST gen�ricos | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers/README.md) |
-| `MoralesLarios.OOFP.WebControllers.Cache` | Controladores REST con cach� por controlador | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers.Cache/README.md) |
+| `MoralesLarios.OOFP.WebControllers` | Controladores REST genéricos | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers/README.md) |
+| `MoralesLarios.OOFP.WebControllers.Cache` | Controladores REST con caché por controlador | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers.Cache/README.md) |
 | `MoralesLarios.OOFP.HttpClients` | Clientes HTTP tipados y funcionales | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.HttpClients/README.md) |
-| `MoralesLarios.OOFP.EFCore.WebApi` | Base de integraci�n entre EF Core y Web API | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore.WebApi/README.md) |
+| `MoralesLarios.OOFP.EFCore.WebApi` | Base de integración entre EF Core y Web API | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore.WebApi/README.md) |
 
 ### Proyectos de pruebas y verificación
 
-La soluci�n incluye distintos proyectos de pruebas e integraci�n que sirven como validaci�n viva del ecosistema:
+La solución incluye distintos proyectos de pruebas e integración que sirven como validación viva del ecosistema:
 
 - `MoralesLarios.OOFP.Unit.Tests`
 - `MoralesLarios.OOFP.ValueObjects.Tests.Unit`
@@ -144,7 +158,7 @@ La soluci�n incluye distintos proyectos de pruebas e integraci�n que sirven como
 
 ## La pieza central: `MoralesLarios.OOFP`
 
-Aunque toda la soluci�n tiene valor por s� misma, **`MoralesLarios.OOFP` es el fundamento com�n**.
+Aunque toda la solución tiene valor por sí misma, **`MoralesLarios.OOFP` es el fundamento común**.
 
 ### Qué resuelve
 
@@ -155,27 +169,27 @@ Aunque toda la soluci�n tiene valor por s� misma, **`MoralesLarios.OOFP` es el f
 
 ### Qué encontrarás en su documentación técnica
 
-- [Introducci�n general](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
-- [Gu�a por tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md)
-- [Detalles de `MlResult<T>`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResult.md)
-- [Operaciones de `Bind`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsBind.md)
-- [Operaciones de `Map`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsMap.md)
-- [Operaciones de `Match`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsMatch.md)
-- [Operaciones de `ExecSelf`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsExecSelf.md)
-- [Operaciones de `Several`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultActionsSeveral.md)
-- [Transformaciones](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultTransformations.md)
-- [Bucles funcionales](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultBucles.md)
-- [Cambio de retorno](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultChangeReturnResult.md)
-- [Errores y detalles](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResultErrors.md)
+- [Introducción general](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/1_Intro.md)
+- [Guía por tipos](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/README.md)
+- [Detalles de `MlResult<T>`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResult.md)
+- [Operaciones de `Bind`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsBind.md)
+- [Operaciones de `Map`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsMap.md)
+- [Operaciones de `Match`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsMatch.md)
+- [Operaciones de `ExecSelf`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsExecSelf.md)
+- [Operaciones de `Several`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultActionsSeveral.md)
+- [Transformaciones](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultTransformations.md)
+- [Bucles funcionales](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultBucles.md)
+- [Cambio de retorno](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultChangeReturnResult.md)
+- [Errores y detalles](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResultErrors.md)
 
 ### Por qué es importante
 
-Porque el resto de proyectos reutilizan el mismo estilo y sem�ntica:
+Porque el resto de proyectos reutilizan el mismo estilo y semántica:
 
 - `ValueObjects` usa `MlResult<T>` para crear y validar tipos seguros.
 - `Validation` transforma validaciones en resultados funcionales.
 - `EFCore` encapsula operaciones de base de datos en resultados.
-- `WebServices` expone la l�gica de aplicaci�n en la misma sem�ntica.
+- `WebServices` expone la lógica de aplicación en la misma semántica.
 - `WebApi` convierte esos resultados en respuestas HTTP.
 - `HttpClients` consume esas respuestas con la misma filosofía.
 
@@ -183,7 +197,7 @@ Porque el resto de proyectos reutilizan el mismo estilo y sem�ntica:
 
 ## Capas de la solución
 
-### Dominio, sem�ntica y tipos seguros
+### Dominio, semántica y tipos seguros
 
 #### `MoralesLarios.OOFP.ValueObjects`
 Librería de value objects tipados para evitar el uso de primitivos sin semántica.
@@ -196,7 +210,7 @@ Aporta, entre otros:
 - `IntNotNegative`
 - value objects numéricos y de texto
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects/README.md)
 
 #### `MoralesLarios.OOFP.ValueObjects.IO`
 Especialización de value objects para rutas y filesystem.
@@ -208,46 +222,46 @@ Aporta:
 - `ExistsFile`
 - `ExistDirectory`
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects.IO/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.ValueObjects.IO/README.md)
 
 #### `MoralesLarios.OOFP.Validation`
 Base de validación funcional con `MlValidableFp<T>`.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation/README.md)
 
 #### `MoralesLarios.OOFP.Validation.Dataannotations`
 Extiende la validación funcional con atributos de `DataAnnotations`.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)
 
 #### `MoralesLarios.OOFP.Validation.FluentValidations`
 Extiende la validación funcional con `FluentValidation`.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.FluentValidations/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.FluentValidations/README.md)
 
 ---
 
-### Infraestructura com�n
+### Infraestructura común
 
 #### `MoralesLarios.OOFP.Internals`
-Tipos internos reutilizables, especialmente para paginaci�n y metadatos compartidos.
+Tipos internos reutilizables, especialmente para paginación y metadatos compartidos.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Internals/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Internals/README.md)
 
 #### `MoralesLarios.OOFP.Extensions.Loggers`
 Extensiones para registrar trazas sobre `MlResult<T>` sin romper el flujo funcional.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
 
 #### `MoralesLarios.OOFP.Utilities`
 Lectura segura de configuración y connection strings con `MlResult<T>`.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Utilities/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Utilities/README.md)
 
 #### `MoralesLarios.OOFP.IO`
 Wrapper funcional sobre `System.IO` para ficheros y directorios.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.IO/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.IO/README.md)
 
 ---
 
@@ -267,18 +281,18 @@ Soporta:
 - consultas posicionales
 - registro masivo por DI
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore/README.md)
 
 #### `MoralesLarios.OOFP.EFCore.WebApi`
 Proyecto de integración entre EF Core y Web API.
 
 Actualmente es una base/skeleton para extender con lógica de aplicación específica.
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
 
 ---
 
-### Servicios de aplicaci�n
+### Servicios de aplicación
 
 #### `MoralesLarios.OOFP.WebServices`
 Capa funcional entre repositorio y web.
@@ -292,11 +306,11 @@ Aporta:
 - `MlProblemsDetails`
 - extensiones de registro para ciclo de vida clásico y duplex
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebServices/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebServices/README.md)
 
 ---
 
-### Exposici�n web
+### Exposición web
 
 #### `MoralesLarios.OOFP.WebApi`
 Puente funcional entre `MlResult<T>` e `IActionResult`.
@@ -310,7 +324,7 @@ Aporta:
 - `MlErrorsDetailsExtensions`
 - helpers para headers del request
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebApi/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebApi/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers`
 Controladores genéricos ASP.NET Core para CRUD estándar.
@@ -323,7 +337,7 @@ Aporta:
 - soporte duplex con PK compuesta
 - atributo para documentar parámetros PK en Swagger/OpenAPI
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers/README.md)
 
 #### `MoralesLarios.OOFP.WebControllers.Cache`
 Extensión cacheada de los controladores genéricos.
@@ -337,7 +351,7 @@ Aporta:
 - soporte clásico y duplex
 - soporte para PK compuesta
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers.Cache/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers.Cache/README.md)
 
 ---
 
@@ -354,18 +368,18 @@ Aporta:
 - manager funcional sobre `IHttpClientFactory`
 - helpers de cabeceras y respuestas HTTP
 
-?? [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.HttpClients/README.md)
+📄 [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.HttpClients/README.md)
 
 ---
 
-## End-to-end: c�mo usar el ecosistema
+## End-to-end: cómo usar el ecosistema
 
-### Caso t�pico
+### Caso típico
 
 1. Modela el dominio con `ValueObjects`.
 2. Valida con `Validation`.
 3. Persiste con `EFCore`.
-4. Exp�n la l�gica con `WebServices`.
+4. Expón la lógica con `WebServices`.
 5. Publica con `WebControllers` y `WebApi`.
 6. Añade `WebControllers.Cache` si necesitas caché.
 7. Consume desde otro servicio con `HttpClients`.
@@ -399,7 +413,7 @@ builder.Services.AddGenClientFp<IUsersClient, UsersClient>(
 
 ## Proyectos de pruebas
 
-La soluci�n tambi�n incluye proyectos de pruebas unitarias e integraci�n que funcionan como verificaci�n viva del comportamiento:
+La solución también incluye proyectos de pruebas unitarias e integración que funcionan como verificación viva del comportamiento:
 
 - `MoralesLarios.OOFP.Unit.Tests`
 - `MoralesLarios.OOFP.ValueObjects.Tests.Unit`
@@ -422,21 +436,22 @@ Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escena
 
 ### Documentación raíz del núcleo OOFP
 
-- [Intro general y filosof�a t�cnica](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
-- [Documentaci�n por tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md)
-- [Tipos y resultados](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/MlResult.md)
-- [Bind](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Bind/3_Bind.md)
-- [Map](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Map/1_Map.md)
-- [Match](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Match/1_Match.md)
-- [ExecSelf](https://github.com/moraleslarios/FOOP/blob/main/__Doc/ExecSelf/1_ExecSelf.md)
-- [Several](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Several/1_EmptyToFailed.md)
-- [EnsureFp](https://github.com/moraleslarios/FOOP/blob/main/__Doc/EnsureFp/EnsureFp.md)
-- [Extensions](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Extensions/Extensions.md)
-- [Transformations](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Transformations/Transformations.md)
-- [Bucles](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Bucle/Bucles.md)
+- [Intro general y filosofía técnica](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/1_Intro.md)
+- [Documentación por tipos](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/README.md)
+- [Tipos y resultados](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/MlResult.md)
+- [Bind](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Bind/3_Bind.md)
+- [Map](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Map/1_Map.md)
+- [Match](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/1_Match.md)
+- [ExecSelf](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/ExecSelf/1_ExecSelf.md)
+- [Several](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/1_EmptyToFailed.md)
+- [EnsureFp](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md)
+- [Extensions](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Extensions/Extensions.md)
+- [Transformations](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Transformations/Transformations.md)
+- [Bucles](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Bucle/Bucles.md)
 
 ### README de cada proyecto
 
+- [MoralesLarios.OOFP (núcleo)](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/README.md)
 - [MoralesLarios.OOFP.EFCore](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore/README.md)
 - [MoralesLarios.OOFP.EFCore.WebApi](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.EFCore.WebApi/README.md)
 - [MoralesLarios.OOFP.Extensions.Loggers](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Extensions.Loggers/README.md)
@@ -479,12 +494,12 @@ La solución está organizada para proyectos objetivo de:
 
 ## Licencia y estilo de trabajo
 
-La soluci�n est� pensada para crecer por capas, manteniendo una misma forma de trabajo en todo el stack.
+La solución está pensada para crecer por capas, manteniendo una misma forma de trabajo en todo el stack.
 
 Si buscas una entrada rápida para entender la librería, empieza por:
 
-1. [Intro general de `MoralesLarios.OOFP`](https://github.com/moraleslarios/FOOP/blob/main/__Doc/1_Intro.md)
-2. [Documentaci�n por tipos](https://github.com/moraleslarios/FOOP/blob/main/__Doc/Types/README.md)
+1. [Intro general de `MoralesLarios.OOFP`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/1_Intro.md)
+2. [Documentación por tipos](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Types/README.md)
 3. [WebServices](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebServices/README.md)
 4. [WebApi](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebApi/README.md)
 5. [WebControllers](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.WebControllers/README.md)
@@ -494,6 +509,6 @@ Si buscas una entrada rápida para entender la librería, empieza por:
 
 ## Nota final
 
-Este repositorio no es una única librería aislada, sino una **plataforma modular**. Cada proyecto tiene su propio README y, cuando aplica, su propia documentación técnica enlazada desde `__Doc`.
+Este repositorio no es una única librería aislada, sino una **plataforma modular**. Cada proyecto tiene su propio README y, cuando aplica, su propia documentación técnica enlazada desde `src/MoralesLarios.FOOP/__Doc`.
 
 La documentación raíz pretende ser la puerta de entrada oficial al ecosistema completo.
