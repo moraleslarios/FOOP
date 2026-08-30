@@ -1,5 +1,12 @@
-> proyectos que **todavía no tienen `README.md`** propio (recogido como punto 89 del inventario de mejoras).
+# Fragmento listo para pegar en `src/README.md`
 
+> 📌 Este archivo existe solo como **respaldo temporal**. Contiene la sección que enlaza esta carpeta
+> desde el `README.md` de la solución. Pégala al final de `src/README.md` (justo después de la
+> sección «Nota final») y luego **borra este archivo**.
+
+---
+
+```markdown
 ---
 
 ## 🗂️ Temas pendientes: mejoras, nomenclatura y profesionalización
@@ -20,3 +27,16 @@ profesionalizar la biblioteca. Ninguno de ellos modifica código: son inventario
 
 **Por dónde empezar:** el [índice de la carpeta](./Temas%20Pendientes/README.md) → los puntos 🔴 críticos
 → la fase 1 de la hoja de ruta (credibilidad del repositorio, sin cambios de comportamiento).
+```
+
+---
+
+## Aviso adicional sugerido
+
+En la sección «README de cada proyecto» de `src/README.md` conviene añadir, tras el último elemento
+de la lista:
+
+```markdown
+> ⚠️ `MoralesLarios.OOFP.EFCore.WebApi` y `MoralesLarios.OOFP.WebControllers.Cache` son los dos únicos
+> proyectos que **todavía no tienen `README.md`** propio (recogido como punto 89 del inventario de mejoras).
+```
