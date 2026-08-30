@@ -2,73 +2,43 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
-//using System;
+namespace MoralesLarios.OOFP.ValueObjects;
 
-//namespace MoralesLarios.OOFP.ValueObjects;
+public class RangeEnumValueObject<TEnum> : ValueObject<string>
+    where TEnum : struct, Enum
+{
+    private RangeEnumValueObject(string value) : base(value)
+    {
+        if (!IsValid(value)) throw new ArgumentException(BuildErrorMessage(value), nameof(value));
+    }
 
-//public class RangeEnumValueObject<TEnum> : ValueObject<string>
-//    where TEnum : Enum
-//{
+    public static string BuildErrorMessage(string value) => $"{value} is not a valid value for enum {typeof(TEnum).Name}";
 
-//    protected RangeEnumValueObject(string value) : base(value)
-//        => EvaluateValueByEnum(value);
-//    public static RangeEnumValueObject<TEnum> FromEnum(TEnum enumValue) => FromString(enumValue.ToString());
-//    public static RangeEnumValueObject<TEnum> FromString(string value) => new RangeEnumValueObject<TEnum>(value);
+    public static bool IsValid(string value)
+        => !string.IsNullOrWhiteSpace(value)
+           && Enum.GetNames<TEnum>().Any(x => string.Equals(x, value, StringComparison.OrdinalIgnoreCase));
 
+    public static RangeEnumValueObject<TEnum> FromEnum(TEnum enumValue) => FromString(enumValue.ToString());
 
-//    public static RangeEnumValueObject<TEnum> ByString(string enumStringValue)
-//    {
-//        var result = MlResult.Empty()
-//                                .Map( _ => GetEnumStringValues())
-//                                .MapEnsure( ensureFunc               : stringValues => stringValues.Any(x => string.Compare(x, enumStringValue, ignoreCase: true) == 0),
-//                                            errorMessageResultBuilder: _ =>  $"{enumStringValue} no es un valor válido para el enum {typeof(TEnum).Name}")
-//                                .Map( GetEnumStringValues)
-//    }
+    public static RangeEnumValueObject<TEnum> FromString(string value) => new(value);
 
+    public static MlResult<RangeEnumValueObject<TEnum>> ByString(string value, MlErrorsDetails errorsDetails = null!)
+        => MlResult.Empty()
+            .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
+            .Map(_ => new RangeEnumValueObject<TEnum>(value));
 
+    public TEnum GetEnumValue()
+    {
+        var enumName = Enum.GetNames<TEnum>()
+            .FirstOrDefault(x => string.Equals(x, Value, StringComparison.OrdinalIgnoreCase));
 
+        if (enumName is null) throw new ArgumentException(BuildErrorMessage(Value), nameof(Value));
 
-//    public TEnum GetEnumValue()
-//    {
-//        var stringValues = GetEnumStringValues(); 
+        return Enum.Parse<TEnum>(enumName, ignoreCase: true);
+    }
 
-//        var enumValue = stringValues.FirstOrDefault(x => string.Compare(x, Value, ignoreCase: true) == 0);
-
-//        var result = (TEnum)Enum.Parse(typeof(TEnum), enumValue);
-//        return result;
-//    }
-
-//    protected virtual void EvaluateValueByEnum(string value)
-//    {
-//        var stringValues = GetEnumStringValues();    
-
-//        bool isCorrect = stringValues.Any(x => string.Compare(x, value, ignoreCase: true) == 0);
-
-//        if ( ! isCorrect)
-//        {
-//            var enumValuesStr = string.Join(",", stringValues);
-
-//            throw new ArgumentException($"El valor {value}, no está dentro de los valores permitidos {enumValuesStr}, referentes al enumerado {enumType.Name}");
-//        }
-//    }
-
-
-//    private static IEnumerable<string?> GetEnumStringValues()
-//    {
-//        var enumType = typeof(TEnum);
-
-//        var result = Enum.GetValues(enumType).OfType<object>().Select(x => x.ToString());
-
-//        return result;
-//    }
-
-
-
-//    public static implicit operator string(RangeEnumValueObject<TEnum> valueObject) => valueObject.Value;
-//    public static implicit operator TEnum (RangeEnumValueObject<TEnum> valueObject) => valueObject.GetEnumValue();
-
-//    public static implicit operator RangeEnumValueObject<TEnum>(string value) => FromString(value);
-//    public static implicit operator RangeEnumValueObject<TEnum>(TEnum value ) => FromEnum  (value);
-
-//}
-
+    public static implicit operator string(RangeEnumValueObject<TEnum> valueObject) => valueObject.Value;
+    public static implicit operator TEnum(RangeEnumValueObject<TEnum> valueObject) => valueObject.GetEnumValue();
+    public static implicit operator RangeEnumValueObject<TEnum>(string value) => FromString(value);
+    public static implicit operator RangeEnumValueObject<TEnum>(TEnum value) => FromEnum(value);
+}

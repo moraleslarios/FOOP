@@ -8,13 +8,13 @@ public class DoubleNotNegative : DoubleMoreThan
 {
     public static double limit { get; private set; } =  0;
 
-    protected DoubleNotNegative(double value) : base(value, limit)
+    protected DoubleNotNegative(double value) : base(value, limit - 1)
     {
         if ( ! IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
     }
 
     public static string BuildErrorMessage(double value) => $"{value} must be More than {limit}";
-    public static bool IsValid(double value) => value < limit;
+    public static bool IsValid(double value) => value >= limit;
 
 
     public static DoubleNotNegative FromDouble(double value) => new DoubleNotNegative(value);

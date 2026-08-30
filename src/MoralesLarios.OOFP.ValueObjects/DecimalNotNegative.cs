@@ -8,13 +8,13 @@ public class DecimalNotNegative : DecimalMoreThan
 {
     public static decimal limit { get; private set; } =  0m;
 
-    protected DecimalNotNegative(decimal value) : base(value, limit)
+    protected DecimalNotNegative(decimal value) : base(value, limit - 1)
     {
         if ( ! IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
     }
 
     public static string BuildErrorMessage(decimal value) => $"{value} must be More than {limit}";
-    public static bool IsValid(decimal value) => value < limit;
+    public static bool IsValid(decimal value) => value >= limit;
 
 
     public static DecimalNotNegative FromDecimal(decimal value) => new DecimalNotNegative(value);

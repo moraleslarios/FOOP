@@ -118,7 +118,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = IEnumerable.Projection(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType2>> result = IEnumerable.Projection(x => x.Id == 0 ?
                                                                            $"Error {x.Name}".ToMlResultFail<TestType2>() : 
                                                                            ( new TestType2(x.Id, x.Name, DateTime.Now.AddYears(-1) )));
 
@@ -137,7 +137,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = IEnumerable.Projection(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType2>> result = IEnumerable.Projection(x => x.Id == 0 ?
                                                                           $"Error {x.Name}".ToMlResultFail<TestType2>() : 
                                                                           ( new TestType2(x.Id, x.Name, DateTime.Now.AddYears(-1) )));
 
@@ -156,7 +156,7 @@ public class MlResultBuclesTests
             new TestType(3, "Name3", DateTime.Now)
         };
 
-        MlResult<IEnumerable<TestType2>> result = IEnumerable.Projection(x => x.Id == 0 ? 
+        MlResult<IEnumerable<TestType2>> result = IEnumerable.Projection(x => x.Id == 0 ?
                                                                            $"Error {x.Name}".ToMlResultFail<TestType2>() : 
                                                                            ( new TestType2(x.Id, x.Name, DateTime.MinValue )));
 
@@ -424,6 +424,97 @@ public class MlResultBuclesTests
 
         result.IsFail.Should().BeTrue();
     }
+
+
+    #region FusionFailErros
+
+
+    // Comprobación de la incidencia reportada: "FusionFailErros pierde errores por un return que falta".
+    // Este test PASA: la fusión de 3 fallos devuelve los 3 mensajes. El return final SÍ existe.
+    [Fact]
+    public void FusionFailErros_when_source_has_3_fails_return_fail_with_the_3_errorMessages()
+    {
+        IEnumerable<MlResult<int>> source =
+        [
+            "Error 1".ToMlResultFail<int>(),
+            "Error 2".ToMlResultFail<int>(),
+            "Error 3".ToMlResultFail<int>()
+        ];
+
+        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+
+        result.IsFail.Should().BeTrue();
+        result.SecureFailErrorsDetails()
+              .ToErrorsMessages()
+              .Should().BeEquivalentTo(new[] { "Error 1", "Error 2", "Error 3" });
+    }
+
+
+    // Sólo se fusionan los elementos en fallo, los válidos se ignoran.
+    [Fact]
+    public void FusionFailErros_when_source_has_validsAndFails_return_fail_onlyWith_failsErrorMessages()
+    {
+        IEnumerable<MlResult<int>> source =
+        [
+            1.ToMlResultValid(),
+            "Error 2".ToMlResultFail<int>(),
+            3.ToMlResultValid(),
+            "Error 4".ToMlResultFail<int>()
+        ];
+
+        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+
+        result.IsFail.Should().BeTrue();
+        result.SecureFailErrorsDetails()
+              .ToErrorsMessages()
+              .Should().BeEquivalentTo(new[] { "Error 2", "Error 4" });
+    }
+
+
+    // ESTE es el defecto real del return que falta: la guarda
+    //     if ( ! partialResult.Any()) MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
+    // construye el fallo pero lo descarta, así que la ejecución continúa hasta
+    // partialResult.First() y revienta con InvalidOperationException en lugar de devolver un Fail.
+    [Fact]
+    public void FusionFailErros_when_source_hasNoFails_throws_InvalidOperationException_insteadOf_returningFail()
+    {
+        IEnumerable<MlResult<int>> source = [1.ToMlResultValid(), 2.ToMlResultValid()];
+
+        Action act = () => source.FusionFailErros();
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+
+    [Fact]
+    public void FusionFailErros_when_source_isEmpty_throws_InvalidOperationException_insteadOf_returningFail()
+    {
+        IEnumerable<MlResult<int>> source = [];
+
+        Action act = () => source.FusionFailErros();
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+
+    // Este test reproduce el bug real: la rama if (!partialResult.Any()) crea un Fail
+    // pero no lo devuelve, por lo que el método sigue ejecutándose y termina con
+    // InvalidOperationException en lugar de devolver el resultado esperado.
+    [Fact]
+    public void FusionFailErros_when_source_hasNoFails_should_return_fail_with_noElementsMessage()
+    {
+        IEnumerable<MlResult<int>> source = [1.ToMlResultValid(), 2.ToMlResultValid()];
+
+        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+
+        result.IsFail.Should().BeTrue();
+        result.SecureFailErrorsDetails()
+              .ToErrorsMessages()
+              .Should().Contain("No elements found in failed state to merge");
+    }
+
+
+    #endregion FusionFailErros
 
 }
 

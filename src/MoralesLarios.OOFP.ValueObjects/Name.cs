@@ -9,11 +9,13 @@ public class Name : StringMinLength
 {
     public static int MinLenght => 3;
 
-    public Name(string value) : base(value, MinLenght) => StringMinLength.FromStringLenght(value, MinLenght);
+    private Name(string value) : base(value, MinLenght)
+    {
+    }
 
 
     public static string BuildErrorMessage(string value) => StringMinLength.BuildErrorMessage(value, MinLenght);
-    public static new bool IsValid(string value, int length) => StringMinLength.IsValid(value, MinLenght);
+    public static new bool IsValid(string value, int length) => value.Length >= length;
 
     public static Name FromString(string value) => new Name(value);
 

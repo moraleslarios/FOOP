@@ -6,7 +6,6 @@ namespace MoralesLarios.OOFP.ValueObjects.Tests.Unit;
 
 public class NameTests
 {
-
     [Fact]
     public void Name_ValueLessThanLenght_ReturnsValid()
     {
@@ -37,6 +36,19 @@ public class NameTests
         result.IsFail.Should().BeTrue();
     }
 
+    [Fact]
+    public void Name_IsValid_should_use_the_received_length()
+    {
+        Name.IsValid("ABCD", 5).Should().BeFalse();
+        Name.IsValid("ABCDE", 5).Should().BeTrue();
+    }
 
+    [Fact]
+    public void Name_should_not_expose_public_constructors()
+    {
+        typeof(Name)
+            .GetConstructors(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+            .Should().BeEmpty();
+    }
 }
 

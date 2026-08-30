@@ -8,10 +8,12 @@ public class Key : StringMinLength
 {
     public static int MinLenght => 1;
 
-    public Key(string value) : base(value, MinLenght) => StringMinLength.FromStringLenght(value, MinLenght);
+    private Key(string value) : base(value, MinLenght)
+    {
+    }
 
     public static string BuildErrorMessage(string value) => StringMinLength.BuildErrorMessage(value, MinLenght);
-    public static new bool IsValid(string value, int length) => StringMinLength.IsValid(value, MinLenght);
+    public static new bool IsValid(string value, int length) => value.Length >= length;
 
     public static Key FromString(string value) => new Key(value);
 

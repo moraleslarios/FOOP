@@ -3105,16 +3105,36 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
 
     public static MlResult<TReturn> MapAlways<T, TReturn>(this MlResult<T>   source, 
                                                                Func<TReturn> funcAlways)
-        => funcAlways();
+    {
+        var partialResult = funcAlways();
+
+        if (partialResult is null) return "The parameter 'funcAlways' returned null to executed.".ToMlResultFail<TReturn>();
+
+        var result = partialResult.ToMlResultValid();
+
+        return result;
+    }
 
     public static async Task<MlResult<TReturn>> MapAlwaysAsync<T, TReturn>(this MlResult<T>         source, 
                                                                                 Func<Task<TReturn>> funcAlwaysAsync)
-        => await funcAlwaysAsync();
+    {
+        var partialResult = await funcAlwaysAsync();
+
+        if (partialResult is null) return await "The parameter 'funcAlwaysAsync' returned null to executed.".ToMlResultFailAsync<TReturn>();
+
+        var result = await partialResult.ToMlResultValidAsync();
+
+        return result;
+    }
 
 
     public static async Task<MlResult<TReturn>> MapAlwaysAsync<T, TReturn>(this Task<MlResult<T>>   sourceAsync, 
                                                                                 Func<Task<TReturn>> funcAlwaysAsync)
-        => await funcAlwaysAsync();
+    {
+        var source = await sourceAsync;
+
+        return await source.MapAlwaysAsync(funcAlwaysAsync);
+    }
 
     public static async Task<MlResult<TReturn>> MapAlwaysAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync, 
                                                                                 Func<TReturn>     funcAlways)

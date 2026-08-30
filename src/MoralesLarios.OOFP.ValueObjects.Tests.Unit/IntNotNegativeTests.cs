@@ -6,29 +6,31 @@ namespace MoralesLarios.OOFP.ValueObjects.Tests.Unit;
 
 public class IntNotNegativeTests
 {
-
-    [Fact]
-    public void IntNotNegative_ValueMoreThanLenght_ReturnsValid()
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void ByInt_should_match_expected_validity(int value)
     {
-        var value     = 8;
-
         var result = IntNotNegative.ByInt(value);
 
-        result.IsValid.Should().BeTrue();
+        if (value < 0)
+        {
+            result.IsFail.Should().BeTrue();
+        }
+        else
+        {
+            result.IsValid.Should().BeTrue();
+            ((int)result.SecureValidValue()).Should().Be(value);
+        }
     }
 
     [Fact]
-    public void IntNotNegative_ValueMoreThanLenght_ReturnsFail()
+    public void IntNotNegative_should_not_expose_a_mutable_static_limit_field()
     {
-        var value     = -2;
-
-        var result = IntNotNegative.ByInt(value);
-
-        result.IsFail.Should().BeTrue();
+        typeof(IntNotNegative)
+            .GetField("limit", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)
+            .Should().BeNull();
     }
-
-
-
-
 }
 

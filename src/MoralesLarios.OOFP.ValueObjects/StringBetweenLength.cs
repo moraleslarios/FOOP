@@ -12,8 +12,8 @@ public class StringBetweenLength : ValueObject<NotEmptyString>
     }
 
 
-    public static string BuildErrorMessage(string value, int minLenght, int maxLenght) => $"{value} must be between {maxLenght} and {minLenght}";
-    public static bool IsValid(string value, int minLenght, int maxLenght) => value.Length > minLenght && value.Length < maxLenght;
+    public static string BuildErrorMessage(string value, int minLenght, int maxLenght) => $"{value} must be between {minLenght} and {maxLenght}";
+    public static bool IsValid(string value, int minLenght, int maxLenght) => value.Length >= minLenght && value.Length <= maxLenght;
 
     public static StringBetweenLength FromStringLenght(string value, int minLenght, int maxLenght) => new StringBetweenLength(value, minLenght, maxLenght);
 

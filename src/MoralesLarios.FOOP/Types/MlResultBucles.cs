@@ -708,7 +708,7 @@ public static class MlResultBucles
     {
         var partialResult = source.Where(x => x.IsFail).ToList();
 
-        if ( ! partialResult.Any()) MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
+        if ( ! partialResult.Any()) return MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
 
         MlErrorsDetails result = partialResult.First().ErrorsDetails;
 
