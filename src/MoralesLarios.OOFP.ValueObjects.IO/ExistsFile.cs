@@ -8,7 +8,7 @@ public class ExistsFile : NotEmptyString
 {
     protected ExistsFile(string pathStr) : base(pathStr)
     {
-        if ( ! IsValid(pathStr)) throw new ArgumentNullException(nameof(pathStr), BuildErrorMessage(pathStr));
+        if ( ! IsValid(pathStr)) throw new FileNotFoundException(BuildErrorMessage(pathStr));
     } 
 
 
@@ -19,8 +19,8 @@ public class ExistsFile : NotEmptyString
 
     public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(pathStr)
-                            .Bind( _ => EnsureFp.That(pathStr, IsValid(pathStr), errorsDetails ?? BuildErrorMessage(pathStr))
-                            .Map ( _ => new ExistsFile(pathStr)));
+                            .Bind( _ => EnsureFp.That(pathStr, IsValid(pathStr), errorsDetails ?? BuildErrorMessage(pathStr)))
+                            .Map ( _ => new ExistsFile(pathStr));
 
     public static implicit operator string    (ExistsFile pathStrObject) => pathStrObject.Value;
     public static implicit operator ExistsFile(string     pathStr      ) => new ExistsFile(pathStr);

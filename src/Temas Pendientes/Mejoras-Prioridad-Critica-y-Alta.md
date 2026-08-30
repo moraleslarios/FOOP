@@ -170,7 +170,7 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** hacer los constructores `private` (o `protected`) y dejar solo las fábricas
         como punto de entrada. Es un cambio de API pública: requiere versión mayor.
 
-- [ ] **8. `RangeEnumValueObject` está entero comentado**
+- [x] **8. `RangeEnumValueObject` está entero comentado**
       - **Proyecto:** `MoralesLarios.OOFP.ValueObjects`
       - **Archivo / clase:** `RangeEnumValueObject.cs`
       - **Miembro:** todo el fichero
@@ -180,7 +180,7 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** decidir: implementarlo y cubrirlo con tests, o eliminar el fichero. No dejarlo
         en el estado intermedio.
 
-- [ ] **9. `ExistsFile.ByString` y `ExistDirectory.ByString` tienen los paréntesis mal anidados**
+- [x] **9. `ExistsFile.ByString` y `ExistDirectory.ByString` tienen los paréntesis mal anidados**
       - **Proyecto:** `MoralesLarios.OOFP.ValueObjects.IO`
       - **Archivo / clase:** `ExistsFile`, `ExistDirectory`
       - **Miembro:** `ByString`
@@ -192,7 +192,7 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** reescribir la cadena con una expresión por línea (una por operador) para que
         el anidamiento sea visible, y añadir tests con ruta existente, ruta inexistente y ruta nula.
 
-- [ ] **10. Los constructores de `ExistsFile` y `ExistDirectory` lanzan `ArgumentNullException`**
+- [x] **10. Los constructores de `ExistsFile` y `ExistDirectory` lanzan `ArgumentNullException`**
       - **Proyecto:** `MoralesLarios.OOFP.ValueObjects.IO`
       - **Archivo / clase:** `ExistsFile`, `ExistDirectory`
       - **Miembro:** constructores
