@@ -8,8 +8,6 @@ namespace MoralesLarios.OOFP.WebServices;
 
 public static class MlProblemsDetails
 {
-    private const string ProblemsDetails = nameof(ProblemsDetails);
-
     public static MlErrorsDetails CreateProblemDetails(int                        statusCode, 
                                                        string                     title      = null!, 
                                                        string                     detail     = null!, 

@@ -11,7 +11,7 @@ Es el proyecto adecuado cuando las reglas son demasiado ricas para los atributos
 1. [¿Qué problema resuelve?](#qué-problema-resuelve)
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
-4. [Los dos únicos métodos](#los-dos-únicos-métodos)
+4. [API pública](#api-pública)
 5. [Cómo funciona la conversión, paso a paso](#cómo-funciona-la-conversión-paso-a-paso)
 6. [Restricciones genéricas: qué exigen y por qué](#restricciones-genéricas-qué-exigen-y-por-qué)
 7. [Combinación con `MlValidableFp<T>`](#combinación-con-mlvalidablefpt)
@@ -81,44 +81,57 @@ No requiere registro en el contenedor de dependencias: **todo es estático** y l
 
 ```
 MoralesLarios.OOFP.Validation.FluentValidations/
+├── FluentValidationsValidator.cs → fachada Validate/ValidateAsync
 ├── GlobalUsings.cs
 └── Helpers/
-    └── Extensions.cs      → los 2 únicos métodos públicos del proyecto
+    └── Extensions.cs      → extensiones para objeto, colección y Task
 ```
 
-Es, junto con [`Validation`](../MoralesLarios.OOFP.Validation/README.md), uno de los proyectos más pequeños de la solución: **una sola clase estática con dos métodos**. Toda la potencia viene de FluentValidation; aquí solo está la traducción.
+Toda la potencia viene de FluentValidation; este proyecto aporta la traducción a `MlResult` y una fachada estática con la misma forma que el adaptador de DataAnnotations.
 
 ---
 
-## Los dos únicos métodos
+## API pública
 
 ```csharp
 namespace MoralesLarios.OOFP.Validation.FluentValidations.Helpers;
 
 public static class Extensions
 {
-    public static MlResult<T> ValidateWitHFluentValidations<T, TValidator>(this T source)
+    public static ValidationResult ValidateWithFluentValidationResult<T, TValidator>(this T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new();
 
-    public static Task<MlResult<T>> ValidateWitHFluentValidationsAsync<T, TValidator>(this T source)
+    public static MlResult<T> ValidateWithFluentValidations<T, TValidator>(this T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new();
+
+    public static MlResult<IEnumerable<T>> ValidateWithFluentValidations<T, TValidator>(this IEnumerable<T> source)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new();
+
+    public static Task<MlResult<T>> ValidateWithFluentValidationsAsync<T, TValidator>(this T source)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new();
+
+    // Existen las equivalentes para Task<T>, IEnumerable<T> y Task<IEnumerable<T>>.
 }
 ```
 
 | Método | Devuelve | Notas |
 |---|---|---|
-| `ValidateWitHFluentValidations<T, TValidator>()` | `MlResult<T>` | Válido ⇒ devuelve **el propio objeto** intacto |
-| `ValidateWitHFluentValidationsAsync<T, TValidator>()` | `Task<MlResult<T>>` | Solo envuelve con `.ToAsync()`; **no** es asíncrono real |
+| `ValidateWithFluentValidations<T, TValidator>()` | `MlResult<T>` | Admite objeto o colección; en éxito devuelve el objeto o los elementos intactos |
+| `ValidateWithFluentValidationsAsync<T, TValidator>()` | `Task<MlResult<T>>` | Admite objeto, colección o `Task` de ambos; conserva la semántica síncrona envuelta en `Task` |
+| `ValidateWithFluentValidationResult<T, TValidator>()` | `ValidationResult` | Expone los diagnósticos nativos: `PropertyName`, `ErrorCode`, severidad y estado |
+| `FluentValidationsValidator.Validate/ValidateAsync<T, TValidator>()` | `MlResult<T>` / `Task<MlResult<T>>` | Fachada uniforme; rechaza objeto nulo y colección nula o vacía mediante `MlResult` fallido |
 
-> ⚠️ **El nombre tiene una errata en el código fuente: `ValidateWitHFluentValidations`** — con **`H` mayúscula** en `WitH` y sin la `h` de `With`. No es un error de esta documentación: es literalmente así en `Helpers/Extensions.cs`. Si lo escribes bien (`ValidateWithFluentValidations`) **no compilará**.
+> La antigua grafía `ValidateWitHFluentValidations` se mantiene como alias marcado `[Obsolete]`. Usa `ValidateWithFluentValidations` en código nuevo.
 
 Uso mínimo:
 
 ```csharp
 MlResult<CrearUsuarioDto> resultado =
-    dto.ValidateWitHFluentValidations<CrearUsuarioDto, CrearUsuarioValidator>();
+    dto.ValidateWithFluentValidations<CrearUsuarioDto, CrearUsuarioValidator>();
 ```
 
 > 💡 **Hay que indicar los dos genéricos** aunque `T` parezca inferible: al ser `TValidator` no inferible, C# obliga a escribir la lista completa de argumentos de tipo.

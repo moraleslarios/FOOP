@@ -43,6 +43,56 @@ public class MlResultWebExtensionsTests
         result.Should().NotBeOfType<NotFoundObjectResult>();
     }
 
+    [Fact]
+    public void ToSimpleRepoPostActionResult_whenValid_returnsCreated()
+    {
+        MlResult<DummyEntity> source = MlResult<DummyEntity>.Valid(new DummyEntity(1, "created"));
+
+        IActionResult result = source.ToSimpleRepoPostActionResult(TestControllerFactory.Create());
+
+        result.Should().BeOfType<CreatedResult>().Which.StatusCode.Should().Be(StatusCodes.Status201Created);
+    }
+
+    [Fact]
+    public void ToSimpleRepoPostActionResult_whenFail_returnsInternalServerError()
+    {
+        MlResult<DummyEntity> source = MlResult<DummyEntity>.Fail("repository failed");
+
+        IActionResult result = source.ToSimpleRepoPostActionResult(TestControllerFactory.Create());
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
+
+    [Fact]
+    public void ToSimpleRepoPostActionResult_whenNotFoundFail_returnsNotFound()
+    {
+        MlResult<DummyEntity> source = MlErrorsDetails.FromErrorMessageDetails(
+            "not found", new Dictionary<string, object> { { "NotFound", 1 } });
+
+        IActionResult result = source.ToSimpleRepoPostActionResult(TestControllerFactory.Create());
+
+        result.Should().BeOfType<NotFoundObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+    }
+
+    [Fact]
+    public async Task ToSimpleRepoPostActionResultAsync_whenFail_returnsInternalServerError()
+    {
+        MlResult<DummyEntity> source = MlResult<DummyEntity>.Fail("repository failed");
+
+        IActionResult result = await source.ToSimpleRepoPostActionResultAsync(TestControllerFactory.Create());
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
+
+    [Fact]
+    public async Task ToSimpleRepoPostActionResultAsync_fromTask_whenFail_returnsInternalServerError()
+    {
+        Task<MlResult<DummyEntity>> sourceAsync = Task.FromResult(MlResult<DummyEntity>.Fail("repository failed"));
+
+        IActionResult result = await sourceAsync.ToSimpleRepoPostActionResultAsync(TestControllerFactory.Create());
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
 
 
 

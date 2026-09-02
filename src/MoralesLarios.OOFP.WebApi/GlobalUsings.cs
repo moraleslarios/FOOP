@@ -14,3 +14,4 @@ global using MoralesLarios.OOFP.Helpers.Extensions;
 global using MoralesLarios.OOFP.Internals.Info;
 global using MoralesLarios.OOFP.WebApi.Data;
 global using MoralesLarios.OOFP.WebApi.Helpers;
+global using static MoralesLarios.OOFP.Shared.Web.WebErrorDetailsKeys;

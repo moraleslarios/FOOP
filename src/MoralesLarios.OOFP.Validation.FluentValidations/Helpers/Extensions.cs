@@ -8,8 +8,12 @@ namespace MoralesLarios.OOFP.Validation.FluentValidations.Helpers;
 public static class Extensions
 {
 
+    public static FluentValidation.Results.ValidationResult ValidateWithFluentValidationResult<T, TValidator>(this T source)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new()
+        => new TValidator().Validate(source);
 
-    public static MlResult<T> ValidateWitHFluentValidations<T, TValidator>(this T source)
+    public static MlResult<T> ValidateWithFluentValidations<T, TValidator>(this T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new()
     {
@@ -21,10 +25,42 @@ public static class Extensions
         return result;
     }
 
+    public static Task<MlResult<T>> ValidateWithFluentValidationsAsync<T, TValidator>(this T source)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new()
+            => source.ValidateWithFluentValidations<T, TValidator>().ToAsync();
+
+    public static async Task<MlResult<T>> ValidateWithFluentValidationsAsync<T, TValidator>(this Task<T> sourceAsync)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new()
+            => await (await sourceAsync).ValidateWithFluentValidationsAsync<T, TValidator>();
+
+    public static MlResult<IEnumerable<T>> ValidateWithFluentValidations<T, TValidator>(this IEnumerable<T> source)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new()
+            => source.Select(item => item.ValidateWithFluentValidations<T, TValidator>())
+                     .FusionErrosIfExists();
+
+    public static Task<MlResult<IEnumerable<T>>> ValidateWithFluentValidationsAsync<T, TValidator>(this IEnumerable<T> source)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new()
+            => source.ValidateWithFluentValidations<T, TValidator>().ToAsync();
+
+    public static async Task<MlResult<IEnumerable<T>>> ValidateWithFluentValidationsAsync<T, TValidator>(this Task<IEnumerable<T>> sourceAsync)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new()
+            => await (await sourceAsync).ValidateWithFluentValidationsAsync<T, TValidator>();
+
+    [Obsolete("Use ValidateWithFluentValidations instead.")]
+    public static MlResult<T> ValidateWitHFluentValidations<T, TValidator>(this T source)
+        where T          : class
+        where TValidator : AbstractValidator<T>, new()
+            => source.ValidateWithFluentValidations<T, TValidator>();
+
+    [Obsolete("Use ValidateWithFluentValidationsAsync instead.")]
     public static Task<MlResult<T>> ValidateWitHFluentValidationsAsync<T, TValidator>(this T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new()
-            => source.ValidateWitHFluentValidations<T, TValidator>().ToAsync();
-
+            => source.ValidateWithFluentValidationsAsync<T, TValidator>();
 
 }

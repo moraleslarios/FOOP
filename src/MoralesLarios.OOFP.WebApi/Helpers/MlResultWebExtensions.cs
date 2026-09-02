@@ -11,7 +11,7 @@ namespace MoralesLarios.OOFP.WebApi.Helpers;
 public static class MlResultWebExtensions
 {
 
-    private static IEnumerable<string> notFoundKeys = ["NotFound", "Not Found", "Not_Found", "not found", "NoEncontrado", "No Encontrado", "No_Encontrado", "no encontrado",
+    private static IEnumerable<string> notFoundKeys = [NOT_FOUND_KEY, "Not Found", "Not_Found", "not found", "NoEncontrado", "No Encontrado", "No_Encontrado", "no encontrado",
                                                         "No se han encontrado", "no se han encontrado"];
 
 
@@ -176,10 +176,7 @@ public static class MlResultWebExtensions
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static IActionResult ToSimpleRepoPostActionResult<T>(this MlResult<T>    source,
                                                                           ControllerBase controllerBase)
-        => source.Match(
-                            valid: x      => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", x)),
-                            fail : errors => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", new object()))
-                        );
+        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", source.SecureValidValue()));
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> to an <see cref="IActionResult"/> for a simple POST request in a repository.
@@ -201,10 +198,7 @@ public static class MlResultWebExtensions
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static async Task<IActionResult> ToSimpleRepoPostActionResultAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                       ControllerBase    controllerBase)
-        => await sourceAsync.MatchAsync(
-                            validAsync: x      => sourceAsync.ToRepoActionResultAsync(controllerBase, () => controllerBase.Created("NotUri", x)),
-                            failAsync : errors => sourceAsync.ToRepoActionResultAsync(controllerBase, () => controllerBase.Created("NotUri", new object()))
-                        );
+        => await (await sourceAsync).ToSimpleRepoPostActionResultAsync(controllerBase);
 
 
     /// <summary>
@@ -267,7 +261,7 @@ public static class MlResultWebExtensions
         var errorResult = errorsDetails switch
         {
             { } errors when ContieneCombinacion(errors.ToErrorsDescription()!, notFoundKeys.ToArray()) => new NotFoundObjectResult(errors),
-            { } errors when errors.HasKeyDetails("NotFound")                                           => new NotFoundObjectResult(errors),
+            { } errors when errors.HasKeyDetails(NOT_FOUND_KEY)                                        => new NotFoundObjectResult(errors),
             { } errors when errors.HasExceptionDetails()                                               => new ObjectResult(errors.ToErrorsDetailsDescription()) { StatusCode = 500 },
             _ => new ObjectResult(errorsDetails.ToErrorsDescription()) { StatusCode = 500 }
         };

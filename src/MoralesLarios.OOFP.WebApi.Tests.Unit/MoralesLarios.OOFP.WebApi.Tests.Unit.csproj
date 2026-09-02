@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoralesLarios.OOFP.WebApi\MoralesLarios.OOFP.WebApi.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.WebServices\MoralesLarios.OOFP.WebServices.csproj" />
   </ItemGroup>
 
   <ItemGroup>

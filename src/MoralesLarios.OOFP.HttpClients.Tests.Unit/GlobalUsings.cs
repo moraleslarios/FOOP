@@ -10,3 +10,5 @@ global using AutoFixture;
 global using AutoFixture.AutoMoq;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using MoralesLarios.OOFP.ValueObjects;

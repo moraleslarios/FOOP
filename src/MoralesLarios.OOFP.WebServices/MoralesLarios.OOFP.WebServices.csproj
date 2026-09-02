@@ -23,6 +23,7 @@
     <ProjectReference Include="..\MoralesLarios.OOFP.EFCore\MoralesLarios.OOFP.EFCore.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Extensions.Loggers\MoralesLarios.OOFP.Extensions.Loggers.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Internals\MoralesLarios.OOFP.Internals.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.Shared\MoralesLarios.OOFP.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -8,6 +8,7 @@ public static class Constants
     public static string DEFAULT_ERROR_MESSAGE { get; } = "Without custom error message. For more info, view 'Ex(s) details exceptions.";
     public static string EX_DESC_KEY           { get; } = "Ex";
     public static string VALUE_KEY             { get; } = "Value";
+    public const string NOT_FOUND_KEY = "NotFound";
 
 
 

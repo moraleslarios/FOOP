@@ -34,6 +34,16 @@ public class MlResultWebExtensionsPlusTests
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
     }
 
+    [Fact]
+    public void ToGetPdActionResult_WhenServiceBuildsNotFoundPkError_returnsNotFound()
+    {
+        MlResult<string> source = "Users".BuildNotFoundPkError(42);
+
+        IActionResult result = source.ToGetPdActionResult();
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+    }
+
 
     [Theory]
     [InlineData(404)]

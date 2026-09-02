@@ -7,10 +7,6 @@ namespace MoralesLarios.OOFP.WebApi.Helpers;
 
 public static class MlResultWebExtensionsPlus
 {
-    private const string ProblemsDetails = nameof(ProblemsDetails);
-
-
-
     public static IActionResult ToGetPdActionResult<T>(this MlResult<T> source)
     {
         var result = source.Match(

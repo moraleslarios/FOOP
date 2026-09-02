@@ -14,3 +14,4 @@ global using Microsoft.AspNetCore.Http;
 global using MoralesLarios.OOFP.Types;
 global using MoralesLarios.OOFP.ValueObjects;
 global using MoralesLarios.OOFP.WebApi.Helpers;
+global using MoralesLarios.OOFP.WebServices.Helpers;

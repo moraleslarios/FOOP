@@ -6,10 +6,6 @@ namespace MoralesLarios.OOFP.WebApi.Helpers;
 
 public static class MlErrorsDetailsExtensions
 {
-
-    private const string ProblemsDetails = nameof(ProblemsDetails);
-
-
     public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorsDetails source)
     {
         var result = MlResult.Empty()

@@ -8,16 +8,16 @@ namespace MoralesLarios.OOFP.Helpers.Extensions;
 public static class Extensions
 {
 
-    public static IEnumerable<ValidationResult> ValidateObject(this object source)
-    {
-        var valContext = new ValidationContext(source, null, null);
+    //public static IEnumerable<ValidationResult> ValidateObject(this object source)
+    //{
+    //    var valContext = new ValidationContext(source, null, null);
 
-        var resultado = new List<ValidationResult>();
+    //    var resultado = new List<ValidationResult>();
 
-        Validator.TryValidateObject(source, valContext, resultado, true);
+    //    Validator.TryValidateObject(source, valContext, resultado, true);
 
-        return resultado;
-    }
+    //    return resultado;
+    //}
 
     public static T? ToNullable<T>(this T source)
         where T : struct
