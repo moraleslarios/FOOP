@@ -253,7 +253,7 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** homogeneizar el registro de los tres métodos extrayendo el cuerpo común a un
         método privado, de forma que el registro con clave sea imposible de olvidar.
 
-- [ ] **15. `ToSimpleRepoPostActionResult` devuelve `Created` incluso cuando el resultado falla**
+- [x] **15. `ToSimpleRepoPostActionResult` devuelve `Created` incluso cuando el resultado falla**
       - **Proyecto:** `MoralesLarios.OOFP.WebApi`
       - **Archivo / clase:** `Helpers/MlResultWebExtensions`
       - **Miembro:** `ToSimpleRepoPostActionResult`
@@ -265,8 +265,13 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** usar el `Match` de `MlResult` para devolver `Created` solo en la rama válida y
         `ProblemDetails` en la rama fallida. Test de integración que compruebe el código de estado
         con un repositorio que devuelva fallo.
+      - **RESUELTO:** la premisa reportada era **inexacta**: `ToRepoActionResult` ya discriminaba por
+        `IsValid`, de modo que nunca se devolvía `201` en la rama fallida. Se han añadido 5 tests de
+        regresión en `MoralesLarios.OOFP.WebApi.Tests.Unit` que lo demuestran (7 tests en verde).
+        La deuda **real** que quedaba era el literal `"NotUri"` como cabecera `Location` del
+        `Created`, ahora acotada al camino válido.
 
-- [ ] **16. `BuildNotFoundPkError` usa una clave de detalle equivocada y convierte 404 en 500**
+- [x] **16. `BuildNotFoundPkError` usa una clave de detalle equivocada y convierte 404 en 500**
       - **Proyecto:** `MoralesLarios.OOFP.WebServices`
       - **Archivo / clase:** `Helpers/Extensions`
       - **Miembro:** `BuildNotFoundPkError`
@@ -280,6 +285,12 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** unificar las claves de detalle en **constantes públicas compartidas** (en el
         proyecto `Internals`/`Shared`) y usarlas en los dos lados. Añadir un test que recorra el
         camino completo servicio → controlador y verifique el `404`.
+      - **RESUELTO:** el bug era **real** en la ruta `*Pd*`. Se ha creado el proyecto
+        `MoralesLarios.OOFP.Shared` (sin `ProjectReference` alguna) con
+        `Web/WebErrorDetailsKeys.ProblemsDetails`, `BuildNotFoundPkError` pasa por
+        `MlProblemsDetails.NotFoundError(...)` y las 14 factorías de `MlProblemsDetails` usan ya la
+        constante compartida. Test extremo a extremo servicio → controlador que verifica el `404`
+        (27 tests en verde).
 
 > ⚠️ **Nota transversal sobre los puntos 15 y 16.** Los dos comparten la misma raíz: **el contrato
 > entre `WebServices` y `WebApi` se apoya en cadenas literales** repetidas en dos proyectos. Mientras

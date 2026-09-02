@@ -471,35 +471,41 @@ public class MlResultBuclesTests
     }
 
 
-    // ESTE es el defecto real del return que falta: la guarda
-    //     if ( ! partialResult.Any()) MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
-    // construye el fallo pero lo descarta, así que la ejecución continúa hasta
-    // partialResult.First() y revienta con InvalidOperationException en lugar de devolver un Fail.
+    // Defecto ya corregido: la guarda
+    //     if ( ! partialResult.Any()) return MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
+    // ahora SÍ devuelve el fallo, por lo que no se llega a partialResult.First()
+    // y no se lanza InvalidOperationException.
     [Fact]
-    public void FusionFailErros_when_source_hasNoFails_throws_InvalidOperationException_insteadOf_returningFail()
+    public void FusionFailErros_when_source_hasNoFails_notThrows_and_return_fail()
     {
         IEnumerable<MlResult<int>> source = [1.ToMlResultValid(), 2.ToMlResultValid()];
 
         Action act = () => source.FusionFailErros();
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().NotThrow();
+        source.FusionFailErros().IsFail.Should().BeTrue();
     }
 
 
     [Fact]
-    public void FusionFailErros_when_source_isEmpty_throws_InvalidOperationException_insteadOf_returningFail()
+    public void FusionFailErros_when_source_isEmpty_notThrows_and_return_fail_with_noElementsMessage()
     {
         IEnumerable<MlResult<int>> source = [];
 
         Action act = () => source.FusionFailErros();
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().NotThrow();
+
+        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+
+        result.IsFail.Should().BeTrue();
+        result.SecureFailErrorsDetails()
+              .ToErrorsMessages()
+              .Should().Contain("No elements found in failed state to merge");
     }
 
 
-    // Este test reproduce el bug real: la rama if (!partialResult.Any()) crea un Fail
-    // pero no lo devuelve, por lo que el método sigue ejecutándose y termina con
-    // InvalidOperationException en lugar de devolver el resultado esperado.
+    // Comportamiento correcto tras el arreglo del return que faltaba.
     [Fact]
     public void FusionFailErros_when_source_hasNoFails_should_return_fail_with_noElementsMessage()
     {

@@ -1,5 +1,4 @@
-﻿
-namespace MoralesLarios.OOFP.IO;
+﻿namespace MoralesLarios.OOFP.IO;
 
 public interface IWrapperIO
 {

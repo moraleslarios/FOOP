@@ -9,6 +9,11 @@ public static class Constants
     public static string EX_DESC_KEY           { get; } = "Ex";
     public static string VALUE_KEY             { get; } = "Value";
     public const string NOT_FOUND_KEY = "NotFound";
+    public const string PARAM_NAME_KEY = "ParamName";
+
+    public const string FAILED_INDEXES_KEY = "FailedIndexes";
+
+    public const string EXPECTED_KEY = "Expected";
 
 
 

@@ -1,4 +1,4 @@
-﻿# MoralesLarios.OOFP - Documentación Técnica Completa
+# MoralesLarios.OOFP - Documentación Técnica Completa
 
 ## Tabla de Contenidos
 
@@ -61,7 +61,15 @@ MoralesLarios.OOFP/
 ├── MoralesLarios.OOFP.csproj         # Configuración del proyecto
 ├── Helpers/                          # Utilidades y extensiones
 │   ├── Constants.cs                  # Constantes del proyecto
-│   ├── EnsureFp.cs                   # Validaciones funcionales
+│   ├── EnsureFp.cs                   # Guardas clásicas (That, NotNull, NotEmpty, NotNullEmptyOrWhitespace)
+│   ├── EnsureFp.Core.cs              # Predicados y mensajes perezosos, TryThat y variantes …Arg
+│   ├── EnsureFp.Aggregation.cs       # All, AllResults, AllOrFirst, Any: acumulación de errores
+│   ├── EnsureFp.Strings.cs           # Longitudes, expresiones regulares, prefijos/sufijos, conjuntos
+│   ├── EnsureFp.Numbers.cs           # Comparaciones, rangos y signo (IComparable / INumber)
+│   ├── EnsureFp.Collections.cs       # Cardinalidad, duplicados, nulos y predicados por elemento
+│   ├── EnsureFp.Types.cs             # Guid, enum, fechas, Uri, email, rutas y Nullable<T>
+│   ├── EnsureFp.Async.cs             # Fuentes Task<T> y predicados asíncronos
+│   ├── EnsureFpMessages.cs           # Plantillas de los mensajes automáticos
 │   └── Extensions/                   # Extensiones generales
 │       ├── Extensions.cs             # Extensiones base
 │       └── ParallelExtensions.cs     # Extensiones paralelas
@@ -91,7 +99,7 @@ MoralesLarios.OOFP/
     ├── ExecSelf/                     # Detalle de la familia ExecSelf
     ├── Several/                      # Combine, NullToFailed, BoolToResult, EmptyToFailed
     ├── Bucle/                        # Proyecciones sobre colecciones
-    ├── EnsureFp/                     # Validaciones funcionales
+    ├── EnsureFp/                     # Precondiciones funcionales (10 documentos)
     ├── Extensions/                   # Extensiones auxiliares
     ├── Transformations/              # Conversiones desde/hacia MlResult
     └── PendingTasks.txt              # Tareas pendientes
@@ -520,29 +528,83 @@ Detalle completo en [`Types/MlResultErrors.md`](./Types/MlResultErrors.md) y
 
 ## Extensiones y Utilidades
 
-### `EnsureFp` — validaciones funcionales
+### `EnsureFp` — precondiciones funcionales
 
 Métodos **estáticos** (no de extensión) que devuelven `MlResult<T>`. Sustituyen a las guard clauses con
-`throw`. La primitiva es `That`; las demás son atajos de uso frecuente.
+`throw`: en lugar de interrumpir el flujo con una excepción, colocan el valor en el carril válido o
+devuelven un fallo enriquecido con el que se puede seguir componiendo.
+
+La primitiva sigue siendo `That`; el resto son reglas de uso frecuente construidas sobre ella.
 
 ```csharp
 public MlResult<Pedido> Validar(Pedido pedido) =>
-    EnsureFp.NotNull(pedido, "El pedido es obligatorio")
-            .Bind(p => EnsureFp.NotNullEmptyOrWhitespace(p.Referencia, "Falta la referencia")
-                                .Map(_ => p))
-            .Bind(p => EnsureFp.NotEmpty(p.Lineas, "El pedido no tiene líneas").Map(_ => p))
-            .Bind(p => EnsureFp.That(p, p.Total > 0, "El total debe ser positivo"));
+    EnsureFp.NotNullArg(pedido)
+            .Bind(p => EnsureFp.NotNullEmptyOrWhitespaceArg(p.Referencia).Map(_ => p))
+            .Bind(p => EnsureFp.NotEmptyCollectionArg<List<Linea>, Linea>(p.Lineas).Map(_ => p))
+            .Bind(p => EnsureFp.PositiveArg(p.Total).Map(_ => p));
 ```
 
-| Método | Comprueba |
-| --- | --- |
-| `NotNull<T>(valor, error)` | Que no sea `null`. |
-| `NotEmpty<T>(coleccion, error)` | Que la colección tenga elementos. |
-| `NotNullEmptyOrWhitespace(texto, error)` | Que la cadena tenga contenido real. |
-| `That<T>(valor, condicion, error)` | **Cualquier** condición. |
+#### Las tres variantes de cada regla
 
-Cada uno admite el error como `string` o como `MlErrorsDetails`, y todos tienen su variante `*Async`
-(8 + 8 métodos). Detalle en [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md).
+Toda regla existe en tres formas, y esa simetría es la clave de la familia:
+
+| Variante | Firma | Cuándo usarla |
+| --- | --- | --- |
+| Con mensaje | `MaxLength(valor, 50, "El nombre es demasiado largo")` | El mensaje se muestra al usuario o al cliente de la API. |
+| Con detalle | `MaxLength(valor, 50, misErrorsDetails)` | Necesitas adjuntar `Details` propios (código de error, contexto…). |
+| Con sufijo `…Arg` | `MaxLengthArg(valor, 50)` | Validación interna: el mensaje y el nombre del parámetro se generan solos. |
+
+Las variantes `…Arg` usan `[CallerArgumentExpression]`, así que el compilador captura la expresión que
+escribiste y `EnsureFpMessages` compone un texto homogéneo. Además añaden a `Details` las claves
+`ParamName` y `Value` (y `Expected` en las reglas numéricas), lo que hace los fallos trazables sin
+esfuerzo.
+
+#### Las ocho familias
+
+| Familia | Archivo fuente | Ejemplos representativos |
+| --- | --- | --- |
+| Núcleo | `EnsureFp.cs`, `EnsureFp.Core.cs` | `That`, `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace`, `TryThat`, `ThatArg` |
+| Agregación | `EnsureFp.Aggregation.cs` | `All`, `AllResults`, `AllOrFirst`, `Any` (+ sus versiones `…Async`) |
+| Cadenas | `EnsureFp.Strings.cs` | `MaxLength`, `MinLength`, `LengthBetween`, `Matches`, `StartsWith`, `ContainsText`, `IsOneOf` |
+| Números | `EnsureFp.Numbers.cs` | `GreaterThan`, `LessOrEqual`, `InRange`, `OutOfRange`, `Positive`, `NotZero` |
+| Colecciones | `EnsureFp.Collections.cs` | `NotEmptyCollection`, `CountBetween`, `AllMatch`, `NoDuplicates`, `NoNullItems`, `ContainsItem` |
+| Tipos concretos | `EnsureFp.Types.cs` | `NotEmptyGuid`, `IsDefined`, `InFuture`, `IsValidUri`, `IsValidEmail`, `FileExists` |
+| `Nullable<T>` | `EnsureFp.Types.cs` | `NotNullValue`, `NotNullValueThat` (devuelven el `T` ya desenvuelto) |
+| Asíncronas | `EnsureFp.Async.cs` | `ThatAsync`, `TryThatAsync`, `NotNullAsync`, `NotNullValueAsync` |
+
+Los mensajes automáticos viven centralizados en `EnsureFpMessages.cs`, de modo que un cambio de
+redacción es un cambio en un único sitio.
+
+#### Acumular errores en lugar de detenerse
+
+`That` y sus derivados son *fail-fast*. Cuando lo que quieres es devolver **todos** los problemas de
+una vez —el caso típico de un formulario o del cuerpo de una petición— la respuesta es `All`:
+
+```csharp
+MlResult<ClienteDto> validado =
+    EnsureFp.All(dto,
+        d => EnsureFp.NotNullEmptyOrWhitespaceArg(d.Nombre).Map(_ => d),
+        d => EnsureFp.IsValidEmailArg(d.Email).Map(_ => d),
+        d => EnsureFp.InRangeArg(d.Edad, 18, 120).Map(_ => d));
+```
+
+`All` ejecuta **todos** los validadores y fusiona los `MlErrorsDetails` resultantes.
+`AllOrFirst` conserva la semántica *fail-fast*, y `Any` basta con que una regla pase.
+
+#### Predicados que pueden lanzar
+
+Si el predicado consulta un recurso que puede fallar, `TryThat` captura la excepción y la incorpora al
+error en vez de propagarla:
+
+```csharp
+MlResult<string> ruta = EnsureFp.TryThat(candidato,
+                                        p => File.Exists(p),
+                                        ex => $"No se pudo comprobar la ruta: {ex.Message}");
+```
+
+Documentación completa —más de 90 reglas, con su semántica ante `null`, sus claves de `Details` y sus
+ejemplos— en [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md), que además indexa las nueve páginas de
+detalle de la familia.
 
 ### `Helpers/Extensions` — utilidades transversales
 
@@ -788,11 +850,26 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 | 3 | [`3_BoolToResult.md`](./Several/3_BoolToResult.md) | Convertir un `bool` en `MlResult` |
 | 4 | [`4_Combine.md`](./Several/4_Combine.md) | `Combine` y `Do` ⚠️ (**no** acumula errores) |
 
+#### `EnsureFp` — precondiciones antes de entrar al carril
+
+| # | Documento | Tema |
+|---|-----------|------|
+| — | [`EnsureFp.md`](./EnsureFp/EnsureFp.md) | ⭐ Índice de la familia: convenciones, tabla de decisión y mapa de páginas |
+| 1 | [`1_EnsureFpCore.md`](./EnsureFp/1_EnsureFpCore.md) | `That`, `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace`, `TryThat` y variantes `…Arg` |
+| 2 | [`2_EnsureFpAggregation.md`](./EnsureFp/2_EnsureFpAggregation.md) | `All`, `AllResults`, `AllOrFirst`, `Any`: acumular todos los errores |
+| 3 | [`3_EnsureFpStrings.md`](./EnsureFp/3_EnsureFpStrings.md) | Longitudes, expresiones regulares, prefijos/sufijos, subcadenas y conjuntos |
+| 4 | [`4_EnsureFpNumbers.md`](./EnsureFp/4_EnsureFpNumbers.md) | Comparaciones, rangos y signo sobre `IComparable<T>` e `INumber<T>` |
+| 5 | [`5_EnsureFpCollections.md`](./EnsureFp/5_EnsureFpCollections.md) | Cardinalidad, duplicados, elementos nulos y predicados por elemento |
+| 6 | [`6_EnsureFpTypes.md`](./EnsureFp/6_EnsureFpTypes.md) | `Guid`, `enum`, fechas, `Uri`, email y rutas del sistema de archivos |
+| 7 | [`7_EnsureFpNullables.md`](./EnsureFp/7_EnsureFpNullables.md) | `Nullable<T>`: desenvolver el valor validando a la vez |
+| 8 | [`8_EnsureFpAsync.md`](./EnsureFp/8_EnsureFpAsync.md) | Fuentes `Task<T>`, predicados asíncronos y `CancellationToken` |
+| 9 | [`9_EnsureFpMessages.md`](./EnsureFp/9_EnsureFpMessages.md) | `EnsureFpMessages`: las plantillas de los mensajes automáticos |
+
 ### Utilidades y transformaciones
 
 | Documento | Tema |
 |-----------|------|
-| [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md) | Precondiciones: `That`, `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace` |
+| [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md) | Índice de las más de 90 precondiciones y sus nueve páginas de detalle |
 | [`Transformations/Transformations.md`](./Transformations/Transformations.md) | `ToMlResultValid`, `ToMlResultFail`, `TryToMlResult*`, boxing |
 | [`Extensions/Extensions.md`](./Extensions/Extensions.md) | `ToAsync`, `With`, `ToFuncTask`, `AppendExDetails`, `Constants` |
 | [`Bucle/Bucles.md`](./Bucle/Bucles.md) | `Projection`, `ProjectionWhile`, `ProjectionParallelAsync`, `ProjectionSplit` |
@@ -810,7 +887,7 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 
 **Si ya sabes ROP y quieres empezar a escribir código:**
 
-1. [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md) — entrar al carril validando
+1. [`EnsureFp/EnsureFp.md`](./EnsureFp/EnsureFp.md) — entrar al carril validando (y [`2_EnsureFpAggregation.md`](./EnsureFp/2_EnsureFpAggregation.md) si necesitas acumular errores)
 2. [`Transformations/Transformations.md`](./Transformations/Transformations.md) — envolver código que lanza
 3. [`Bind/3_Bind.md`](./Bind/3_Bind.md) → [`Map/1_Map.md`](./Map/1_Map.md) → [`Match/1_Match.md`](./Match/1_Match.md)
 4. [`ExecSelf/1_ExecSelf.md`](./ExecSelf/1_ExecSelf.md) — logging sin romper la cadena

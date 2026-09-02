@@ -9,7 +9,7 @@ La librería se usa de base por capas posteriores como `ValueObjects`, `Validati
 ## Qué aporta esta librería
 
 - `MlResult<T>` para éxito/error con valor explícito.
-- Validaciones funcionales con `EnsureFp`.
+- Validaciones funcionales con `EnsureFp`: más de 90 reglas listas para usar (cadenas, números, colecciones, `Guid`, enumerados, fechas, `Uri`, email, rutas y `Nullable<T>`), con agregación de errores, captura de excepciones y variantes asíncronas.
 - `Bind`, `Map`, `Match`, `ExecSelf` y variantes `Try*` / `Async`.
 - `MlError` y `MlErrorsDetails` para errores detallados.
 - Extensiones para colecciones, acciones y conversiones funcionales.
@@ -35,7 +35,16 @@ MoralesLarios.FOOP/
 │       ├── MlError.cs
 │       └── MlErrorsDetails.cs
 ├── Helpers/
-│   ├── EnsureFp.cs
+│   ├── Constants.cs                # Claves de detalle compartidas (ParamName, Value, Expected…)
+│   ├── EnsureFp.cs                 # API histórica: That, NotNull, NotEmpty, NotNullEmptyOrWhitespace
+│   ├── EnsureFp.Core.cs            # That con predicados/mensajes perezosos, TryThat, guardas *Arg
+│   ├── EnsureFp.Aggregation.cs     # All, AllResults, AllOrFirst, Any (+ Async)
+│   ├── EnsureFp.Strings.cs         # Longitudes, regex, prefijos, conjuntos permitidos
+│   ├── EnsureFp.Numbers.cs         # Comparaciones, rangos, signo y cero
+│   ├── EnsureFp.Collections.cs     # Cardinalidad, predicados, duplicados, nulos
+│   ├── EnsureFp.Types.cs           # Guid, enums, fechas, Uri, email, rutas y Nullable<T>
+│   ├── EnsureFp.Async.cs           # Fuentes Task<T>, predicados asíncronos, CancellationToken
+│   ├── EnsureFpMessages.cs         # Mensajes automáticos centralizados
 │   └── Extensions/
 │       └── Extensions.cs
 ├── GlobalUsings.cs
@@ -359,109 +368,152 @@ if (string.IsNullOrWhiteSpace(nombre)) throw new ArgumentException("Nombre vací
 if (edad < 18)                      throw new ArgumentException("Menor de edad");
 
 // ✅ Con EnsureFp: el fallo es un valor y la cadena continúa de forma natural.
-var result = EnsureFp.NotNullEmptyOrWhitespace(nombre, "El nombre es obligatorio.")
-                     .Bind(n => EnsureFp.That(n, edad >= 18, "Debes ser mayor de edad."));
+var result = EnsureFp.NotNullEmptyOrWhitespaceArg(nombre)
+                     .Bind(n => EnsureFp.GreaterOrEqualArg(edad, 18).Map(_ => n));
 ```
 
-Todos los métodos comparten la misma forma: **reciben el valor a validar y el error a devolver si la validación no se cumple**, y devuelven `MlResult<T>` con el propio valor si todo va bien. Además, cada método admite tanto un `string` como un `MlErrorsDetails` como segundo argumento, por si necesitas un error enriquecido en lugar de un simple mensaje.
+Es una `static partial class` repartida en ocho ficheros de reglas (`EnsureFp.Core.cs`, `.Aggregation.cs`, `.Strings.cs`, `.Numbers.cs`, `.Collections.cs`, `.Types.cs`, `.Async.cs`, más el histórico `EnsureFp.cs`) y un catálogo de mensajes (`EnsureFpMessages.cs`).
 
-### `NotNull`
+### Las tres variantes de cada regla
 
-La validación más básica: comprueba si el valor entrante es `null` antes de continuar. Si la comprobación falla, el flujo se corta inmediatamente con un error claro y estructurado; si no, el valor sigue viajando por la cadena.
+Todos los métodos comparten la misma forma: **reciben el valor a validar y el error a devolver si la validación no se cumple**, y devuelven `MlResult<T>` con el propio valor si todo va bien. Cada regla existe en tres sabores:
+
+| Variante | Ejemplo | Qué aporta |
+|----------|---------|------------|
+| Con `string` | `MaxLength(nombre, 50, "Nombre demasiado largo")` | mensaje pensado para el usuario final |
+| Con `MlErrorsDetails` | `MaxLength(nombre, 50, detalles)` | error enriquecido con tus propias claves |
+| Con sufijo `…Arg` | `MaxLengthArg(nombre, 50)` | mensaje, nombre del parámetro y detalles **automáticos** |
+
+Las variantes `…Arg` aprovechan `[CallerArgumentExpression]`, así que capturan la expresión escrita en la llamada:
 
 ```csharp
-string? nombre = null;
+var r = EnsureFp.MaxLengthArg(dto.Nombre, 10);
 
-var result = EnsureFp.NotNull(nombre, "El nombre no puede ser nulo");
+// Mensaje: "'dto.Nombre' debe tener como máximo 10 caracteres (actual: 27)."
+// Details: { ParamName = "dto.Nombre", Value = "…", Expected = 10 }
 ```
 
-- Si `nombre` es `null`, devuelve `fail` con el mensaje indicado.
-- Si no, devuelve un `MlResult<string?>` válido que contiene el mismo `nombre`.
+### `That` y `TryThat`: la regla de propósito general
 
-Es el sustituto directo de `ArgumentNullException` cuando la ausencia de valor es una **situación de negocio esperable** (por ejemplo, un campo que el usuario no ha rellenado) y no un error de programación.
-
-### `NotEmpty`
-
-Valida que una colección no sea `null` **ni** esté vacía. Es muy útil antes de procesar lotes, porque evita ejecutar toda la maquinaria de un proceso masivo para descubrir al final que no había nada que procesar.
+`That` evalúa una condición y devuelve `Valid(value)` o `Fail(error)`. Admite la condición **ya evaluada** (`bool`) o como **predicado diferido** (`Func<T, bool>`), y el error como texto fijo o como fábrica perezosa (`Func<string>`, `Func<T, string>`):
 
 ```csharp
-var result = EnsureFp.NotEmpty(new[] { 1, 2, 3 }, "La colección no puede estar vacía");
+// Condición ya evaluada
+EnsureFp.That(edad, edad >= 18, "Debes ser mayor de edad.");
+
+// Predicado diferido: solo se evalúa si hace falta
+EnsureFp.That(nif, n => _repo.Existe(n), n => $"El NIF {n} ya está registrado.");
+
+// Con mensaje y nombre de parámetro automáticos
+EnsureFp.ThatArg(importe, importe > 0);
 ```
+
+`TryThat` es la variante segura cuando el predicado puede lanzar (parseo, deserialización, expresiones regulares complejas): captura la excepción y la publica en `Details["Ex"]`.
 
 ```csharp
-// Caso real: no tiene sentido facturar un pedido sin líneas.
-var facturable = EnsureFp.NotEmpty(pedido.Lineas, "El pedido no contiene líneas.")
-                         .Map(lineas => lineas.Sum(l => l.Importe));
+var r = EnsureFp.TryThat(json,
+                         s => JsonSerializer.Deserialize<Config>(s)!.Version >= 3,
+                         ex => $"Configuración ilegible: {ex.Message}");
 ```
 
-### `NotNullEmptyOrWhitespace`
-
-Valida cadenas de texto en las tres situaciones problemáticas de golpe: `null`, cadena vacía (`""`) y cadena compuesta sólo por espacios (`"   "`). Es la validación por defecto para cualquier texto que llegue desde el exterior, porque `" "` suele ser tan inválido como `null` pero se cuela en un simple `!= null`.
+### Guardas básicas
 
 ```csharp
-var result = EnsureFp.NotNullEmptyOrWhitespace("   ", "El texto es obligatorio");
-// → fail: los espacios en blanco no cuentan como contenido válido.
+EnsureFp.NotNull(pedido, "El pedido es obligatorio");          // valor != null
+EnsureFp.NotEmpty(pedido.Lineas, "El pedido no tiene líneas"); // colección con elementos
+EnsureFp.NotNullEmptyOrWhitespace(nombre, "Nombre obligatorio"); // null, "" y "   " fallan
+EnsureFp.NotNullArg(pedido);                                    // mensaje automático
 ```
 
-### `That`
+### Agregación: informar de **todos** los errores
 
-`That` es la validación de propósito general: evalúa una **condición booleana** y devuelve `Valid(value)` si se cumple o `Fail(error)` si no. Aquí es donde encajan las reglas de negocio que no son simples comprobaciones de nulidad.
+`Bind` se detiene en el primer fallo. Cuando el destinatario es un formulario o una API pública conviene devolver todos los problemas juntos: eso es `All`, que ejecuta todas las reglas y **fusiona** los errores y los detalles.
 
 ```csharp
-var result = EnsureFp.That(10, 10 > 0, "Debe ser positivo");
+var r = EnsureFp.All(dto,
+                     x => EnsureFp.NotNullEmptyOrWhitespaceArg(x.Nombre).Map(_ => x),
+                     x => EnsureFp.IsValidEmailArg(x.Email).Map(_ => x),
+                     x => EnsureFp.InRangeArg(x.Edad, 18, 120).Map(_ => x),
+                     x => EnsureFp.CountAtLeastArg(x.Lineas, 1).Map(_ => x));
 ```
 
-Importante: la condición se recibe ya **evaluada** (es un `bool`, no una lambda), así que puedes construirla con cualquier expresión, incluso combinando varias comprobaciones:
+| Método | Semántica |
+|--------|-----------|
+| `All` | ejecuta **todas** las reglas y acumula todos los errores |
+| `AllResults` | igual, partiendo de `MlResult<T>` ya calculados |
+| `AllOrFirst` | *fail-fast*: se detiene en la primera regla que falla |
+| `Any` | válido si al menos una regla pasa (alternativas) |
+| `AllAsync` · `AllOrFirstAsync` · `AnyAsync` | equivalentes con reglas asíncronas |
+
+### Reglas especializadas
+
+En lugar de escribir la condición a mano con `That`, la regla especializada aporta el mensaje, el nombre del parámetro y los detalles de diagnóstico:
+
+| Familia | Reglas |
+|---------|--------|
+| **Cadenas** | `NotNullOrEmpty`, `MaxLength`, `MinLength`, `LengthBetween`, `LengthExactly`, `Matches`, `NotMatches`, `StartsWith`, `EndsWith`, `ContainsText`, `NotContainsText`, `IsOneOf` |
+| **Números y comparables** | `GreaterThan`, `GreaterOrEqual`, `LessThan`, `LessOrEqual`, `InRange`, `OutOfRange`, `Positive`, `NotNegative`, `Negative`, `NotZero` |
+| **Colecciones** | `NotEmptyCollection`, `CountExactly`, `CountAtLeast`, `CountAtMost`, `CountBetween`, `AllMatch`, `NoneMatch`, `AnyMatch`, `NoDuplicates`, `NoNullItems`, `ContainsItem` |
+| **Tipos concretos** | `NotEmptyGuid`, `NotNullNotEmptyGuid`, `IsDefined<TEnum>`, `InFuture`, `InPast`, `NotDefault`, `IsAbsoluteUri`, `IsValidUri`, `IsValidEmail`, `FileExists`, `DirectoryExists` |
+| **`Nullable<T>`** | `NotNullValue`, `NotNullValueThat`, `NotNullValueArg` — validan **y desenvuelven** `T?` a `MlResult<T>` |
 
 ```csharp
-var edad = 17;
-
-var mayorDeEdad = EnsureFp.That(edad, edad >= 18, "Debes ser mayor de edad para continuar.");
-
-// Reglas compuestas en una sola guarda.
-var importe = 1500m;
-var saldo   = 900m;
-
-var pagoValido = EnsureFp.That(importe,
-                              importe > 0 && importe <= saldo,
-                              $"El importe {importe:N2} € supera el saldo disponible ({saldo:N2} €).");
+EnsureFp.LengthBetweenArg(referencia, 3, 20);
+EnsureFp.MatchesArg(referencia, @"^[A-Z0-9\-]+$");
+EnsureFp.PositiveArg(importe);
+EnsureFp.NoDuplicatesArg(lineas.Select(l => l.Sku));
+EnsureFp.IsDefinedArg(estado);                      // enum recibido de un JSON
+EnsureFp.NotEmptyGuidArg(id);                       // Guid.Empty falla
+MlResult<int> edad = EnsureFp.NotNullValueArg(dto.Edad);   // int? → int
 ```
 
-### `ThatAsync`
+Las reglas de predicado sobre colecciones informan además de **qué posiciones** han fallado en `Details["FailedIndexes"]`, y las de rango publican el límite esperado en `Details["Expected"]`.
 
-Versión asíncrona de `That`, pensada para encajar en cadenas `async` sin romper el `await`. Devuelve `Task<MlResult<T>>`, de modo que puede seguir componiéndose con `BindAsync`, `MapAsync` o `MatchAsync`.
+### Variantes asíncronas
+
+Las sobrecargas asíncronas admiten **fuentes `Task<T>`**, **predicados `Func<T, Task<bool>>`** y `CancellationToken`, así que ya no hace falta resolver la consulta fuera de la cadena:
 
 ```csharp
-var result = await EnsureFp.ThatAsync(25, 25 > 0, "Debe ser positivo");
+public Task<MlResult<Cliente>> AltaAsync(AltaDto dto, CancellationToken ct)
+    => EnsureFp.NotNullArg(dto)
+               .Bind(d => EnsureFp.IsValidEmailArg(d.Email).Map(_ => d))
+               .BindAsync(d => EnsureFp.ThatAsync(d,
+                                                  async (x, token) => !await _repo.ExisteNifAsync(x.Nif, token),
+                                                  $"Ya existe un cliente con el NIF {d.Nif}",
+                                                  ct))
+               .MapAsync(d => new Cliente(d.Nif, d.Nombre).ToAsync());
 ```
 
-Su utilidad real es servir de **primer eslabón de una cadena asíncrona**, evitando tener que mezclar métodos síncronos y asíncronos:
+Disponibles: `ThatAsync`, `ThatArgAsync`, `TryThatAsync`, `NotNullAsync`, `NotEmptyAsync`, `NotNullEmptyOrWhitespaceAsync`, `NotNullValueAsync` y sus variantes `…ArgAsync`.
 
-```csharp
-var resultado = await EnsureFp.ThatAsync(pedidoId, pedidoId > 0, "Identificador de pedido no válido.")
-    .BindAsync(id => _repo.GetPedidoAsync(id))
-    .MapAsync(pedido => pedido.ToDto());
-```
+### Mensajes y claves de detalle
 
-### `NotNullAsync`, `NotEmptyAsync`, `NotNullEmptyOrWhitespaceAsync`
+Todos los mensajes automáticos se generan en `EnsureFpMessages`, de forma que el formato es idéntico en toda la solución. Los detalles usan claves constantes compartidas (`Helpers/Constants.cs`):
 
-Son las contrapartidas asíncronas de las tres validaciones anteriores. Su comportamiento es idéntico, pero devuelven `Task<MlResult<T>>` para poder iniciar o continuar un flujo `async` sin fricción.
+| Clave | Constante | Contenido |
+|-------|-----------|-----------|
+| `ParamName` | `PARAM_NAME_KEY` | nombre o expresión del argumento validado |
+| `Value` | `VALUE_KEY` | valor recibido |
+| `Expected` | `EXPECTED_KEY` | límite o valor esperado por la regla |
+| `FailedIndexes` | `FAILED_INDEXES_KEY` | posiciones que incumplen un predicado de colección |
+| `Ex` | `EX_DESC_KEY` | excepción capturada por `TryThat` |
 
-```csharp
-var result  = await EnsureFp.NotNullAsync("pepe", "El nombre es obligatorio");
-var emptyOk = await EnsureFp.NotEmptyAsync(new[] { 1 }, "Debe haber elementos");
-var textOk  = await EnsureFp.NotNullEmptyOrWhitespaceAsync("Luis", "Texto obligatorio");
-```
+> 🔑 **No analices el texto del mensaje** para tomar decisiones: usa las claves de `Details`.
 
 **Resumen de la familia `EnsureFp`:**
 
-| Método | Valida | Úsalo cuando… |
-|--------|--------|---------------|
-| `NotNull` | valor `!= null` | el dato puede no venir informado. |
-| `NotEmpty` | colección con al menos un elemento | vas a procesar un lote o agregar valores. |
-| `NotNullEmptyOrWhitespace` | texto con contenido real | el dato es una cadena de entrada de usuario. |
-| `That` | cualquier condición booleana | expresas una regla de negocio. |
-| `*Async` | lo mismo, en flujo asíncrono | la cadena posterior es `async`. |
+| Bloque | Métodos representativos | Úsalo cuando… |
+|--------|------------------------|---------------|
+| Núcleo | `That`, `TryThat`, `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace`, `*Arg` | validas argumentos al entrar en un método |
+| Agregación | `All`, `AllOrFirst`, `Any` | quieres devolver todos los errores juntos |
+| Cadenas | `MaxLength`, `Matches`, `IsOneOf`… | el dato es texto de entrada |
+| Números | `InRange`, `Positive`, `NotZero`… | validas importes, edades, páginas |
+| Colecciones | `CountBetween`, `AllMatch`, `NoDuplicates`… | procesas lotes o listas |
+| Tipos | `NotEmptyGuid`, `IsDefined`, `IsValidEmail`… | el dato llega de una ruta, un JSON o un formulario |
+| `Nullable<T>` | `NotNullValue`, `NotNullValueThat` | necesitas validar y desenvolver un `T?` |
+| Asíncronas | `ThatAsync`, `TryThatAsync`, `NotNullAsync`… | la condición requiere E/S o la cadena es `async` |
+
+📚 Documentación detallada de cada bloque en [`__Doc/EnsureFp/EnsureFp.md`](./__Doc/EnsureFp/EnsureFp.md) y sus nueve páginas de familia.
 
 ---
 
@@ -1725,7 +1777,10 @@ Esta tabla resume, en una sola vista, la decisión que hay que tomar en cada pun
 
 | Necesidad | Familia recomendada | Método típico |
 |-----------|---------------------|---------------|
-| Comprobar precondiciones al entrar en un método | `EnsureFp` | `NotNull`, `NotEmpty`, `That` |
+| Comprobar precondiciones al entrar en un método | `EnsureFp` | `NotNullArg`, `NotEmptyArg`, `ThatArg` |
+| Validar con reglas especializadas (texto, número, colección, `Guid`, enum, email…) | `EnsureFp` | `MaxLengthArg`, `InRangeArg`, `NoDuplicatesArg`, `IsDefinedArg` |
+| Devolver **todos** los errores de validación de golpe | `EnsureFp` | `All`, `AllResults` |
+| Validar con un predicado que puede lanzar o que requiere E/S | `EnsureFp` | `TryThat`, `ThatAsync`, `TryThatAsync` |
 | Convertir un `null` o una colección vacía en fallo | `MlResultActionsSeveral` | `NullToFailed`, `EmptyToFailed` |
 | Adaptar una API que devuelve `bool` | `MlResultActionsSeveral` | `BoolToResult` |
 | Encadenar un paso que **puede fallar** | `Bind` | `Bind`, `BindAsync`, `TryBind` |
@@ -1758,7 +1813,7 @@ Y los tres errores más frecuentes al empezar:
 
 📘 **[Introducción general y índice completo de la documentación](./__Doc/1_Intro.md)** —
 filosofía, convención de nombres y el
-[mapa de los 48 documentos de `__Doc/`](./__Doc/1_Intro.md#índice-completo-de-la-documentación).
+[mapa de los 57 documentos de `__Doc/`](./__Doc/1_Intro.md#índice-completo-de-la-documentación).
 
 ### Referencia por archivo de código (`__Doc/Types/`)
 
@@ -1823,7 +1878,16 @@ filosofía, convención de nombres y el
 
 **Utilidades y colecciones**
 
-- [`EnsureFp`](./__Doc/EnsureFp/EnsureFp.md) — precondiciones funcionales
+- [`EnsureFp`](./__Doc/EnsureFp/EnsureFp.md) ⭐ — índice de la familia de precondiciones funcionales
+  - [`1_EnsureFpCore`](./__Doc/EnsureFp/1_EnsureFpCore.md) — `That`, `TryThat`, guardas básicas y variantes `…Arg`
+  - [`2_EnsureFpAggregation`](./__Doc/EnsureFp/2_EnsureFpAggregation.md) — `All`, `AllResults`, `AllOrFirst`, `Any`
+  - [`3_EnsureFpStrings`](./__Doc/EnsureFp/3_EnsureFpStrings.md) — longitudes, patrones, prefijos, conjuntos permitidos
+  - [`4_EnsureFpNumbers`](./__Doc/EnsureFp/4_EnsureFpNumbers.md) — comparaciones, rangos y signo
+  - [`5_EnsureFpCollections`](./__Doc/EnsureFp/5_EnsureFpCollections.md) — cardinalidad, predicados, duplicados, nulos
+  - [`6_EnsureFpTypes`](./__Doc/EnsureFp/6_EnsureFpTypes.md) — `Guid`, enumerados, fechas, `Uri`, email y rutas
+  - [`7_EnsureFpNullables`](./__Doc/EnsureFp/7_EnsureFpNullables.md) — validar y desenvolver `Nullable<T>`
+  - [`8_EnsureFpAsync`](./__Doc/EnsureFp/8_EnsureFpAsync.md) — fuentes `Task<T>`, predicados asíncronos y `CancellationToken`
+  - [`9_EnsureFpMessages`](./__Doc/EnsureFp/9_EnsureFpMessages.md) — catálogo de mensajes y claves de detalle
 - [`Transformations`](./__Doc/Transformations/Transformations.md) — entrar al carril desde código que lanza
 - [`Extensions`](./__Doc/Extensions/Extensions.md) — `ToAsync`, `With`, `ToFuncTask`, `Constants`
 - [`Bucles`](./__Doc/Bucle/Bucles.md) — proyecciones sobre colecciones
@@ -1836,6 +1900,7 @@ filosofía, convención de nombres y el
 - [MoralesLarios.OOFP.Extensions.Loggers](../MoralesLarios.OOFP.Extensions.Loggers/README.md)
 - [MoralesLarios.OOFP.HttpClients](../MoralesLarios.OOFP.HttpClients/README.md)
 - [MoralesLarios.OOFP.IO](../MoralesLarios.OOFP.IO/README.md)
+- [MoralesLarios.OOFP.Shared](../MoralesLarios.OOFP.Shared/README.md) — constantes compartidas entre proyectos
 - [MoralesLarios.OOFP.Internals](../MoralesLarios.OOFP.Internals/README.md)
 - [MoralesLarios.OOFP.Utilities](../MoralesLarios.OOFP.Utilities/README.md)
 - [MoralesLarios.OOFP.Validation](../MoralesLarios.OOFP.Validation/README.md)
@@ -1863,7 +1928,7 @@ central cabe en una frase:
 |-------|----------------|---------------|
 | `MlResult<T>` | Contenedor de éxito con valor o fallo con errores | [`MlResult.md`](./__Doc/Types/MlResult.md) |
 | `MlErrorsDetails` | Transporta los errores y el diccionario `Details` | [`MlResultErrors.md`](./__Doc/Types/MlResultErrors.md) |
-| `EnsureFp` | Entrar al carril validando precondiciones | [`EnsureFp.md`](./__Doc/EnsureFp/EnsureFp.md) |
+| `EnsureFp` | Entrar al carril validando precondiciones: más de 90 reglas, agregación de errores y variantes asíncronas | [`EnsureFp.md`](./__Doc/EnsureFp/EnsureFp.md) |
 | `Bind` / `Map` | Avanzar por el carril (con y sin `MlResult` de vuelta) | [`3_Bind.md`](./__Doc/Bind/3_Bind.md) · [`1_Map.md`](./__Doc/Map/1_Map.md) |
 | `Match` | Salir del carril y materializar la respuesta | [`1_Match.md`](./__Doc/Match/1_Match.md) |
 

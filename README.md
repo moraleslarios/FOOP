@@ -66,12 +66,12 @@ Si es tu primera vez, sigue este orden:
 | Familia | Documentos |
 |---|---|
 | **Introducción** | [Intro general](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/1_Intro.md) |
-| **`Match`** | [`Match`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/1_Match.md) · [`TryMatch`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/2_TryMatch.md) |
+| **`Match`** | [`Match`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/1_Match.md) · [`MatchAll`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/2_MatchAll.md) |
 | **`Bind`** | [`Bind`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Bind/3_Bind.md) y el resto de la carpeta `Bind/` |
 | **`Map`** | [`Map`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Map/1_Map.md) y el resto de la carpeta `Map/` |
 | **`ExecSelf`** | [`ExecSelf`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/ExecSelf/1_ExecSelf.md) y el resto de la carpeta `ExecSelf/` |
 | **`Several`** | [`EmptyToFailed`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/1_EmptyToFailed.md) · [`NullToFailed`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/2_NullToFailed.md) · [`BoolToResult`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/3_BoolToResult.md) · [`Combine`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/4_Combine.md) |
-| **Precondiciones** | [`EnsureFp`](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md) |
+| **Precondiciones** | [`EnsureFp` (índice)](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md) · [Núcleo](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/1_EnsureFpCore.md) · [Agregación](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/2_EnsureFpAggregation.md) · [Cadenas](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/3_EnsureFpStrings.md) · [Números](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/4_EnsureFpNumbers.md) · [Colecciones](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/5_EnsureFpCollections.md) · [Tipos](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/6_EnsureFpTypes.md) · [Nullables](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/7_EnsureFpNullables.md) · [Asíncronas](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/8_EnsureFpAsync.md) · [Mensajes](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/9_EnsureFpMessages.md) |
 | **Utilidades** | [Extensions](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Extensions/Extensions.md) · [Transformations](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Transformations/Transformations.md) · [Bucles](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Bucle/Bucles.md) |
 
 ---
@@ -105,7 +105,7 @@ Esa convención se repite en todo el ecosistema para que el comportamiento sea p
 
 - `MlResult<T>` es el tipo base de éxito/error. Se consulta con `IsValid` / `IsFail`.
 - `MlErrorsDetails` transporta el detalle estructurado del error: la lista `Errors` y el diccionario `Details`.
-- `EnsureFp` aporta precondiciones funcionales (`NotNull`, `NotEmpty`, `That`, …).
+- `EnsureFp` aporta más de 90 precondiciones funcionales agrupadas en ocho familias (núcleo, agregación, cadenas, números, colecciones, tipos concretos, `Nullable<T>` y asíncronas). Cada regla existe en tres variantes: con mensaje `string`, con `MlErrorsDetails` completo y con sufijo `…Arg`, que deduce el nombre del parámetro con `[CallerArgumentExpression]` y genera el mensaje automáticamente. Además, `All` acumula y devuelve todos los errores de validación de una vez, y `TryThat` captura las excepciones que lance el predicado.
 - Las extensiones de `Types` cubren composición, transformación, coincidencia y cambio de forma del resultado.
 
 > ⚠️ **Regla de oro**: el valor interno (`Value`) y el detalle de errores (`ErrorsDetails`) son `internal protected`.
@@ -125,6 +125,7 @@ Esa convención se repite en todo el ecosistema para que el comportamiento sea p
 | `MoralesLarios.OOFP.Validation` | Base de validación funcional | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation/README.md) |
 | `MoralesLarios.OOFP.Validation.Dataannotations` | Validación con DataAnnotations | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.Dataannotations/README.md) |
 | `MoralesLarios.OOFP.Validation.FluentValidations` | Validación con FluentValidation | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.FluentValidations/README.md) |
+| `MoralesLarios.OOFP.Shared` | Constantes compartidas entre proyectos (sin dependencias) | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Shared/README.md) |
 | `MoralesLarios.OOFP.Internals` | Tipos internos compartidos y paginación | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Internals/README.md) |
 | `MoralesLarios.OOFP.Extensions.Loggers` | Logging funcional sobre `MlResult<T>` | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Extensions.Loggers/README.md) |
 | `MoralesLarios.OOFP.Utilities` | Lectura segura de configuración | [README](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Utilities/README.md) |
@@ -444,7 +445,7 @@ Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escena
 - [Match](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Match/1_Match.md)
 - [ExecSelf](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/ExecSelf/1_ExecSelf.md)
 - [Several](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Several/1_EmptyToFailed.md)
-- [EnsureFp](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md)
+- [EnsureFp (índice de la familia)](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md) — y sus nueve páginas: [Núcleo](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/1_EnsureFpCore.md), [Agregación](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/2_EnsureFpAggregation.md), [Cadenas](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/3_EnsureFpStrings.md), [Números](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/4_EnsureFpNumbers.md), [Colecciones](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/5_EnsureFpCollections.md), [Tipos](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/6_EnsureFpTypes.md), [Nullables](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/7_EnsureFpNullables.md), [Asíncronas](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/8_EnsureFpAsync.md), [Mensajes](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/EnsureFp/9_EnsureFpMessages.md)
 - [Extensions](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Extensions/Extensions.md)
 - [Transformations](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Transformations/Transformations.md)
 - [Bucles](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.FOOP/__Doc/Bucle/Bucles.md)
@@ -458,6 +459,7 @@ Estos proyectos sirven para verificar contratos, ejemplos reales de uso y escena
 - [MoralesLarios.OOFP.HttpClients](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.HttpClients/README.md)
 - [MoralesLarios.OOFP.IO](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.IO/README.md)
 - [MoralesLarios.OOFP.Internals](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Internals/README.md)
+- [MoralesLarios.OOFP.Shared](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Shared/README.md)
 - [MoralesLarios.OOFP.Utilities](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Utilities/README.md)
 - [MoralesLarios.OOFP.Validation](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation/README.md)
 - [MoralesLarios.OOFP.Validation.Dataannotations](https://github.com/moraleslarios/FOOP/blob/main/src/MoralesLarios.OOFP.Validation.Dataannotations/README.md)

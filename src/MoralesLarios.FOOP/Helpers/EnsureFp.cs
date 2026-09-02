@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.Helpers;
-public static class EnsureFp
+public static partial class EnsureFp
 {
 
 
@@ -84,8 +84,6 @@ public static class EnsureFp
 
     public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(string value, MlErrorsDetails errorsDetails)
         => ThatAsync(value, !string.IsNullOrWhiteSpace(value), errorsDetails);
-
-
 
 
 

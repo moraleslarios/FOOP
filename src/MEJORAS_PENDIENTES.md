@@ -99,7 +99,7 @@ Cada ficha tiene siempre la misma forma:
 Todo lo de esta sección **compila sin avisos** y devuelve valores erróneos o hace imposible usar un
 tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versión nueva.
 
-- [ ] **1. `FusionFailErros` no devuelve el resultado fusionado**
+- [x] **1. `FusionFailErros` no devuelve el resultado fusionado**
       - **Proyecto:** `MoralesLarios.OOFP`
       - **Archivo / clase:** `Types/MlResultBucles.cs` → `MlResultBucles`
       - **Miembro:** `FusionFailErros`, ~línea 707
@@ -111,6 +111,10 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
         excepción que lo delate.
       - **Propuesta:** añadir el `return` que falta y cubrirlo con un test que fusione 3 fallos y
         compruebe que el resultado contiene los 3 mensajes.
+      - **RESUELTO:** la guarda `if ( ! partialResult.Any()) return MlResult<IEnumerable<T>>.Fail(...)`
+        ya devuelve el fallo, por lo que ni se pierden errores ni se lanza `InvalidOperationException`.
+        Cubierto por 5 tests en `Types/MlResultBuclesTests.cs` (`#region FusionFailErros`): fusión de
+        3 fallos, mezcla de válidos y fallos, colección sin fallos y colección vacía.
 
 - [ ] **2. `MapAlwaysAsync` no espera la tarea de origen**
       - **Proyecto:** `MoralesLarios.OOFP`
@@ -262,7 +266,7 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** homogeneizar el registro de los tres métodos extrayendo el cuerpo común a un
         método privado, de forma que el registro con clave sea imposible de olvidar.
 
-- [ ] **15. `ToSimpleRepoPostActionResult` devuelve `Created` incluso cuando el resultado falla**
+- [x] **15. `ToSimpleRepoPostActionResult` devuelve `Created` incluso cuando el resultado falla**
       - **Proyecto:** `MoralesLarios.OOFP.WebApi`
       - **Archivo / clase:** `Helpers/MlResultWebExtensions`
       - **Miembro:** `ToSimpleRepoPostActionResult`
@@ -274,8 +278,12 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** usar el `Match` de `MlResult` para devolver `Created` solo en la rama válida y
         `ProblemDetails` en la rama fallida. Test de integración que compruebe el código de estado
         con un repositorio que devuelva fallo.
+      - **RESUELTO:** la premisa reportada era **inexacta**: `ToRepoActionResult` ya discriminaba por
+        `IsValid`. Se han añadido 5 tests de regresión en `MoralesLarios.OOFP.WebApi.Tests.Unit`
+        (7 en verde). La deuda real era el literal `"NotUri"` como cabecera `Location`, ahora acotada
+        al camino válido.
 
-- [ ] **16. `BuildNotFoundPkError` usa una clave de detalle equivocada y convierte 404 en 500**
+- [x] **16. `BuildNotFoundPkError` usa una clave de detalle equivocada y convierte 404 en 500**
       - **Proyecto:** `MoralesLarios.OOFP.WebServices`
       - **Archivo / clase:** `Helpers/Extensions`
       - **Miembro:** `BuildNotFoundPkError`
@@ -289,6 +297,11 @@ tipo público. Es el bloque que hay que cerrar antes de publicar cualquier versi
       - **Propuesta:** unificar las claves de detalle en **constantes públicas compartidas** (en el
         proyecto `Internals`/`Shared`) y usarlas en los dos lados. Añadir un test que recorra el
         camino completo servicio → controlador y verifique el `404`.
+      - **RESUELTO:** el bug era **real** en la ruta `*Pd*`. Se ha creado el proyecto
+        `MoralesLarios.OOFP.Shared` (sin `ProjectReference` alguna) con
+        `Web/WebErrorDetailsKeys.ProblemsDetails`; `BuildNotFoundPkError` pasa por
+        `MlProblemsDetails.NotFoundError(...)` y las 14 factorías usan la constante compartida. Test
+        extremo a extremo servicio → controlador que verifica el `404` (27 tests en verde).
 
 > ⚠️ **Nota transversal sobre los puntos 15 y 16.** Los dos comparten la misma raíz: **el contrato
 > entre `WebServices` y `WebApi` se apoya en cadenas literales** repetidas en dos proyectos. Mientras
