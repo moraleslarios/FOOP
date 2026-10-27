@@ -2,7 +2,7 @@
 
 [ApiController]
 public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
-                                                            Func<TEntity, object[]>      _pkFields) : ControllerBase
+                                                            Func<TEntity, object[]>      _keySelector) : ControllerBase
         where TEntity : class
         where TDto    : class
 {
@@ -34,7 +34,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEnt
     public virtual async Task<IActionResult> GetByIdAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _ => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .TryMapAsync( _ => ids.ParseKeyValues(_keySelector), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .MatchAsync(
                                                     fail       : _    => MlResults.NotFound(detail: $"Row with ids: {ids} not found."),
                                                     validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
@@ -72,7 +72,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEnt
                                                                                CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_keySelector), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.UpdateAsync(dto                 : dto,
                                                                                                   notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
@@ -104,7 +104,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEnt
     public virtual async Task<IActionResult> DeleteAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_keySelector), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
@@ -123,7 +123,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEnt
 
 
 
-    //private object[] InternalGetPkValues(string ids) => ParseKeyValues(ids.Split(','), _pkFields);
+    //private object[] InternalGetPkValues(string ids) => ParseKeyValues(ids.Split(','), _keySelector);
     //private string InternalGetPkValuesErrorMessage(Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
 
 
@@ -160,7 +160,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEnt
 
 [ApiController]
 public class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
-                                                                           Func<TEntity, object[]>                     _pkFields) : ControllerBase
+                                                                           Func<TEntity, object[]>                     _keySelector) : ControllerBase
         where TEntity   : class
         where TRequest  : class
         where TResponse : class
@@ -192,7 +192,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICru
     public virtual async Task<IActionResult> GetByIdAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _ => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .TryMapAsync( _ => ids.ParseKeyValues(_keySelector), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .MatchAsync(
                                                     fail       : _    => MlResults.NotFound(detail: $"Row with ids: {ids} not found."),
                                                     validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
@@ -230,7 +230,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICru
                                                                                CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_keySelector), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.UpdateAsync(dtoRequest          : dto,
                                                                                                   notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
@@ -262,7 +262,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICru
     public virtual async Task<IActionResult> DeleteAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_keySelector), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
@@ -281,7 +281,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICru
 
 
 
-    //private object[] InternalGetPkValues(string ids) => ParseKeyValues(ids.Split(','), _pkFields);
+    //private object[] InternalGetPkValues(string ids) => ParseKeyValues(ids.Split(','), _keySelector);
     //private string InternalGetPkValuesErrorMessage(Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
 
 

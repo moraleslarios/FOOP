@@ -41,7 +41,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                                              parameters.PageNumber, 
                                                                                              parameters.PageSize))
                                     .TryMapAsync         (client => client.GetFromJsonAsync<T>(parameters.Url, ct))
-                                            .MyMethodFinalLogAsync(_logger, $"GetPaginationAsync<{typeof(T).Name}>");
+                                            .MyMethodFinalLogAsync(_logger, $"GetPagedAsync<{typeof(T).Name}>");
         return result!;
     }
 

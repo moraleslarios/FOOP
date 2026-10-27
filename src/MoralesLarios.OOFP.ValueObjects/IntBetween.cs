@@ -23,9 +23,9 @@ public partial class IntBetween : ValueObject<int>
                     .Map ( _ => new IntBetween(value, minLength, maxLength));
 
     public static implicit operator int (IntBetween valueObject) => valueObject.Value;
-    public static implicit operator IntBetween ((int value, int minLenght, int maxLenght) tupleValues) => new IntBetween(tupleValues.value, 
-                                                                                                                         tupleValues.minLenght, 
-                                                                                                                         tupleValues.maxLenght);
+    public static implicit operator IntBetween ((int value, int minLength, int maxLength) tupleValues) => new IntBetween(tupleValues.value, 
+                                                                                                                         tupleValues.minLength, 
+                                                                                                                         tupleValues.maxLength);
 
 
 

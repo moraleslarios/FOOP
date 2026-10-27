@@ -11,9 +11,9 @@ public class IntLessThanTests
     public void IntLessThan_ValueLessThanLength_ReturnsValid()
     {
         var value     = 5;
-        var minLenght = 8;
+        var minLength = 8;
 
-        var result = IntLessThan.FromIntLength(value, minLenght);
+        var result = IntLessThan.FromIntLength(value, minLength);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -22,9 +22,9 @@ public class IntLessThanTests
     public void IntLessThan_ValueLessThanLength_ReturnsFail()
     {
         var value     = 5;
-        var minLenght = 2;
+        var minLength = 2;
 
-        var result = IntLessThan.FromIntLength(value, minLenght);
+        var result = IntLessThan.FromIntLength(value, minLength);
 
         result.IsFailure.Should().BeTrue();
     }

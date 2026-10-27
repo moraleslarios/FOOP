@@ -11,7 +11,7 @@ namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 public static partial class MlResultActionResultExtensionsLegacy
 {
 
-    private static IEnumerable<string> notFoundKeys = [NOT_FOUND_KEY, "Not Found", "Not_Found", "not found", "NoEncontrado", "No Encontrado", "No_Encontrado", "no encontrado",
+    private static readonly IEnumerable<string> NotFoundDetailKeys = [NOT_FOUND_KEY, "Not Found", "Not_Found", "not found", "NoEncontrado", "No Encontrado", "No_Encontrado", "no encontrado",
                                                         "No se han encontrado", "no se han encontrado"];
 
 
@@ -260,7 +260,7 @@ public static partial class MlResultActionResultExtensionsLegacy
 
         var errorResult = errorsDetails switch
         {
-            { } errors when ContainsAnyKey(errors.GetErrorsSummary()!, notFoundKeys.ToArray()) => new NotFoundObjectResult(errors),
+            { } errors when ContainsAnyKey(errors.GetErrorsSummary()!, NotFoundDetailKeys.ToArray()) => new NotFoundObjectResult(errors),
             { } errors when errors.ContainsMetadata(NOT_FOUND_KEY)                                        => new NotFoundObjectResult(errors),
             { } errors when errors.ContainsException()                                               => new ObjectResult(errors.ToErrorsDetailsDescription()) { StatusCode = 500 },
             _ => new ObjectResult(errorsDetails.GetErrorsSummary()) { StatusCode = 500 }

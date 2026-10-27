@@ -3,9 +3,9 @@
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers;
 
 public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
-                                                               Func<TEntity, object[]>      _pkFields,
+                                                               Func<TEntity, object[]>      _keySelector,
                                                                IOutputCacheStore            _outputCacheStore)
-        : MlCompositeKeyCrudControllerBase<TEntity, TDto>(_genServiceFp, _pkFields)
+        : MlCompositeKeyCrudControllerBase<TEntity, TDto>(_genServiceFp, _keySelector)
      where TEntity : class
      where TDto    : class
 {
@@ -78,9 +78,9 @@ public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceF
 
 
 public class MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
-                                                                              Func<TEntity, object[]>                     _pkFields,
+                                                                              Func<TEntity, object[]>                     _keySelector,
                                                                               IOutputCacheStore                           _outputCacheStore)
-        : MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _pkFields)
+        : MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _keySelector)
     where TEntity   : class
     where TRequest  : class
     where TResponse : class

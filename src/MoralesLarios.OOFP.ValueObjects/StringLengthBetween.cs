@@ -23,8 +23,8 @@ public partial class StringLengthBetween : ValueObject<NotEmptyString>
                             .Map ( _ => new StringLengthBetween(value, minLength, maxLength));
 
     public static implicit operator string         (StringLengthBetween valueObject) => valueObject.Value;
-    public static implicit operator StringLengthBetween((string value, int minLenght, int maxLenght) tupleValues) => new StringLengthBetween(tupleValues.value, 
-                                                                                                                                             tupleValues.minLenght, 
-                                                                                                                                             tupleValues.maxLenght);
+    public static implicit operator StringLengthBetween((string value, int minLength, int maxLength) tupleValues) => new StringLengthBetween(tupleValues.value, 
+                                                                                                                                             tupleValues.minLength, 
+                                                                                                                                             tupleValues.maxLength);
 }
 
