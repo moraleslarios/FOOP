@@ -1,0 +1,24 @@
+Linea base antes de los renombrados v2.0.0 (rama release/2.0.0-nomenclatura, commit 5aaa9dd)
+
+Build: dotnet build MoralesLarios.OOFP.sln -> 0 errores.
+       Build completo (no incremental): 11 x CS0108 en MoralesLarios.OOFP.ValueObjects
+       (StringAs*.BuildErrorMessage oculta StringAsNumeric<T>.BuildErrorMessage) + 4 x CS8604
+       conocidos en el nucleo (Helpers/EnsureFp.Strings.cs).
+
+Tests (dotnet test MoralesLarios.OOFP.sln):
+  MoralesLarios.OOFP.Unit.Tests                              781 / 781  OK
+  MoralesLarios.OOFP.ValueObjects.Tests.Unit                 117 / 117  OK
+  MoralesLarios.OOFP.WebApi.Tests.Unit                        54 /  54  OK
+  MoralesLarios.OOFP.ValueObjects.IO.Test.Unit                22 /  22  OK
+  MoralesLarios.OOFP.Utilities.Tests.Unit                     18 /  18  OK
+  MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit  16 /  16  OK
+  MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit    12 /  12  OK
+  MoralesLarios.OOFP.HttpClients.Tests.Unit                    7 /   7  OK
+  MoralesLarios.OOFP.HttpClients.Tests.Integration            27 /  33  (6 fallos PREEXISTENTES: requieren servidor HTTP vivo)
+  MoralesLarios.OOFP.WebServices.Tests.Unit                    0        (no contiene tests)
+  MoralesLarios.OOFP.EFCore.Integration.Tests                  0        (no contiene tests)
+  MoralesLarios.OOFP.Extensions.Loggers.Console.Tests          -        (aplicacion de consola, no es proyecto de test)
+  MoralesLarios.OOFP.ValueObjects.IO.2.Tests.Unit              -        (fuera del .sln; NO COMPILA: namespace invalido "IO.2", 0 tests, net6.0)
+
+Total ejecutable: 1 054 tests; 1 048 OK + 6 fallos preexistentes de integracion.
+Criterio de aceptacion tras cada fase: mismos numeros.
