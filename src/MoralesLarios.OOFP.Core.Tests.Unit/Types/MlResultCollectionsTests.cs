@@ -594,7 +594,7 @@ public class MlResultCollectionsTests
     }
 
 
-    #region FusionFailErros
+    #region MergeFailureErrors
 
 
     // Comprobación de la incidencia reportada: "MergeFailureErrors pierde errores por un return que falta".
@@ -688,7 +688,7 @@ public class MlResultCollectionsTests
     }
 
 
-    #endregion FusionFailErros
+    #endregion MergeFailureErrors
 
 }
 

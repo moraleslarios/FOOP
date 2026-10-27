@@ -159,7 +159,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEnt
 
 
 [ApiController]
-public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+public class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
                                                                            Func<TEntity, object[]>                     _pkFields) : ControllerBase
         where TEntity   : class
         where TRequest  : class

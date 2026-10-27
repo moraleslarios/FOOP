@@ -61,7 +61,7 @@ public interface ICrudServiceFp<TEntity, TDto>
 }
 
 
-public interface IGenServiceFp<TEntity, TRequest, TResponse>
+public interface ICrudServiceFp<TEntity, TRequest, TResponse>
     where TEntity : class
     where TRequest : class
     where TResponse : class

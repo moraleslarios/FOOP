@@ -1,0 +1,8 @@
+{
+  "id": "fase11c-format-composite-key",
+  "level": 9,
+  "renames": [
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Application",         "name": "GetPkValues", "new": "FormatCompositeKey", "bridge": true, "note": "Formatea object[] a texto: mismo concepto que GetPkValuesString (estaba duplicado)" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.EntityFrameworkCore", "name": "GetPkValues", "new": "FormatCompositeKey", "bridge": true, "note": "Idem" }
+  ]
+}

@@ -114,9 +114,9 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
 Ejemplo con s�lo DI (sin gen�ricos, sin `where`):
 
 ```csharp
-public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>> _logger,
-                               IHttpClientFactoryManager  _httpClientFactoryManager,
-                               Key                        _httpClientFactoryKey) : IGenClientFp<TDto>
+public class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
+                               IHttpApiInvoker  _httpClientFactoryManager,
+                               Key                        _httpClientFactoryKey) : IRestClientFp<TDto>
 {
     // cuerpo
 }
@@ -217,7 +217,7 @@ Cuando los argumentos con nombre aparecen en una **invocaci�n multil�nea ani
 - La **columna de continuaci�n** (donde arranca cada argumento de la l�nea 2..N) se alinea **bajo el `(` del m�todo invocado** (`receptor.Method(`), **no** bajo el `.` de la cadena fluent ni bajo el `_ =>` de la lambda.
 - Cada invocaci�n anidada calcula **su propia columna de `:`** seg�n su propio nombre m�s largo. No se intenta unificar columnas de distintas invocaciones.
 
-Ejemplo can�nico (`HttpClientFactoryManager.PostAsync` con 4 argumentos con nombre):
+Ejemplo can�nico (`HttpApiInvoker.PostAsync` con 4 argumentos con nombre):
 
 ```csharp
 var result = await _logger.LogMlResultInformationAsync("Creando un nuevo Col Val.")

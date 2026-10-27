@@ -6,25 +6,25 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MoralesLarios.OOFP.Http;
 
-public static class RegisterServices
+public static partial class RegisterServices
 {
 
-    public static IServiceCollection AddHttpClientsFp(this IServiceCollection services)
+    public static IServiceCollection AddMlHttp(this IServiceCollection services)
     {
-        services.AddTransient<IHttpClientFactoryManager, HttpClientFactoryManager>();
+        services.AddTransient<IHttpApiInvoker, HttpApiInvoker>();
 
         return services;
     }
 
 
 
-    public static IServiceCollection AddGenClientFp<TService, TImplementation>(this IServiceCollection services,
-                                                                                    Func<ServiceKey>      configureHttpClientKey = null!,
+    public static IServiceCollection AddRestClient<TService, TImplementation>(this IServiceCollection services,
+                                                                                    Func<ServiceKey>      clientNameFactory = null!,
                                                                                     Action<HttpClient> configureClient    = null!)
         where TService        : class
         where TImplementation : class, TService
     {
-        var httpClientFactoryKey = ResolveHttpClientFactoryKey(configureHttpClientKey, typeof(TImplementation).Name!);
+        var httpClientFactoryKey = ResolveHttpClientFactoryKey(clientNameFactory, typeof(TImplementation).Name!);
 
         services.AddHttpClient(httpClientFactoryKey, client =>
         {
@@ -37,15 +37,15 @@ public static class RegisterServices
     }
 
 
-    public static IServiceCollection AddGenClientComplexFp<TService, TImplementation, TDto>(this IServiceCollection services,
-                                                                                                 Func<ServiceKey>      configureHttpClientKey = null!,
+    public static IServiceCollection AddCompositeKeyRestClient<TService, TImplementation, TDto>(this IServiceCollection services,
+                                                                                                 Func<ServiceKey>      clientNameFactory = null!,
                                                                                                  Action<HttpClient> configureClient    = null!)
         where TService        : class
         where TImplementation : class, TService
         where TDto            : class
     {
 
-        var httpClientFactoryKey = ResolveHttpClientFactoryKey(configureHttpClientKey, typeof(TImplementation).Name!);
+        var httpClientFactoryKey = ResolveHttpClientFactoryKey(clientNameFactory, typeof(TImplementation).Name!);
 
         services.AddHttpClient(httpClientFactoryKey, client =>
         {
@@ -53,15 +53,15 @@ public static class RegisterServices
         });
 
 
-        services.AddTransient<IGenClientFp<TDto>>(sp => ActivatorUtilities.CreateInstance<GenClientFp<TDto>>(sp, httpClientFactoryKey));
+        services.AddTransient<IRestClientFp<TDto>>(sp => ActivatorUtilities.CreateInstance<RestClientFp<TDto>>(sp, httpClientFactoryKey));
         services.AddTransient<TService          >(sp => ActivatorUtilities.CreateInstance<TImplementation  >(sp, httpClientFactoryKey));
 
         return services;
     }
 
 
-    public static IServiceCollection AddGenClientDuplexComplexFp<TService, TImplementation, TRequest, TResponse>(this IServiceCollection services,
-                                                                                                                      Func<ServiceKey>      configureHttpClientKey = null!,
+    public static IServiceCollection AddCompositeKeyRestClient<TService, TImplementation, TRequest, TResponse>(this IServiceCollection services,
+                                                                                                                      Func<ServiceKey>      clientNameFactory = null!,
                                                                                                                       Action<HttpClient> configureClient    = null!)
         where TService        : class
         where TImplementation : class, TService
@@ -69,7 +69,7 @@ public static class RegisterServices
         where TResponse       : class
     {
 
-        var httpClientFactoryKey = ResolveHttpClientFactoryKey(configureHttpClientKey, typeof(TImplementation).Name!);
+        var httpClientFactoryKey = ResolveHttpClientFactoryKey(clientNameFactory, typeof(TImplementation).Name!);
 
         services.AddHttpClient(httpClientFactoryKey, client =>
         {
@@ -77,17 +77,17 @@ public static class RegisterServices
         });
 
 
-        services.AddTransient<IGenClientFp<TRequest, TResponse>>(sp => ActivatorUtilities.CreateInstance<GenClientFp<TRequest, TResponse>>(sp, httpClientFactoryKey));
+        services.AddTransient<IRestClientFp<TRequest, TResponse>>(sp => ActivatorUtilities.CreateInstance<RestClientFp<TRequest, TResponse>>(sp, httpClientFactoryKey));
         services.AddTransient<TService                         >(sp => ActivatorUtilities.CreateInstance<TImplementation                 >(sp, httpClientFactoryKey));
 
         return services;
     }
 
 
-    private static ServiceKey ResolveHttpClientFactoryKey(Func<ServiceKey> configureHttpClientKey, string defaultKeyName)
+    private static ServiceKey ResolveHttpClientFactoryKey(Func<ServiceKey> clientNameFactory, string defaultKeyName)
     {
-        var httpClientFactoryKey = configureHttpClientKey is not null
-            ? configureHttpClientKey()
+        var httpClientFactoryKey = clientNameFactory is not null
+            ? clientNameFactory()
             : ServiceKey.CreateFromString(defaultKeyName);
 
         if (httpClientFactoryKey is null)

@@ -87,7 +87,7 @@ public class MlResultChangeReturnResultTests
     #endregion ChangeReturnResult
 
 
-    #region ChangeReturnResultAlwaisValid
+    #region ChangeReturnResultAlwaysValid
 
 
 
@@ -142,10 +142,10 @@ public class MlResultChangeReturnResultTests
 
 
 
-    #endregion ChangeReturnResultAlwaisValid
+    #endregion ChangeReturnResultAlwaysValid
 
 
-    #region ChangeReturnResultAlwaisFail
+    #region ChangeReturnResultAlwaysFail
 
 
     [Fact]
@@ -196,7 +196,7 @@ public class MlResultChangeReturnResultTests
 
 
 
-    #endregion ChangeReturnResultAlwaisFail
+    #endregion ChangeReturnResultAlwaysFail
 
 
     #region ChangeReturnResultIfValid

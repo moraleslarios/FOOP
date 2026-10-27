@@ -51,13 +51,13 @@ public static partial class Extensions
         where TValidator : AbstractValidator<T>, new()
             => await (await sourceAsync).ValidateWithFluentValidationAsync<T, TValidator>();
 
-    [Obsolete("Use ValidateWithFluentValidations instead.")]
+    [Obsolete("Use ValidateWithFluentValidation instead.")]
     public static MlResult<T> ValidateWitHFluentValidations<T, TValidator>(this T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new()
             => source.ValidateWithFluentValidation<T, TValidator>();
 
-    [Obsolete("Use ValidateWithFluentValidationsAsync instead.")]
+    [Obsolete("Use ValidateWithFluentValidationAsync instead.")]
     public static Task<MlResult<T>> ValidateWitHFluentValidationsAsync<T, TValidator>(this T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new()

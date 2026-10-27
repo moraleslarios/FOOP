@@ -1,0 +1,40 @@
+{
+  "id": "fase11-nivel10-http",
+  "level": 10,
+  "renames": [
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "GetHttpClientFactoryKey", "new": "GetClientName",         "bridge": true, "note": "Devuelve el nombre del cliente registrado" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "PostGetPaginationAsync",  "new": "PostAndReadPagedAsync", "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "PostGetAsync",            "new": "PostAndReadAsync",      "bridge": true, "note": "PostGet se leia como POST seguido de GET" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "GetPaginationAsync",      "new": "GetPagedAsync",         "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "InternalGetUrl",          "new": "BuildRequestUri",       "bridge": true, "note": "Internal ya lo dice el modificador; construye una URI" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "InternalPostGetAsync",    "new": "SendAndReadAsync",      "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "match": "^SetHeaderPageInfo(Async)?$",   "replace": "AddPaginationHeaders$1", "bridge": true, "note": "Info vacio. Pasar a HttpRequestMessage es cambio de contrato" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "match": "^SetHeaderPageNumber(Async)?$", "replace": "AddPageNumberHeader$1",  "bridge": true, "note": "Derivado" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "match": "^SetHeaderPageSize(Async)?$",   "replace": "AddPageSizeHeader$1",    "bridge": true, "note": "Derivado" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "match": "^SetHeaderInfoAsInt(Async)?$",  "replace": "AddIntHeader$1",         "bridge": true, "note": "Derivado" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "match": "^SetHeaderInfo(Async)?$",       "replace": "AddHeader$1",            "bridge": true, "note": "Derivado" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "match": "^SetHeaders(Async)?$",          "replace": "TrySetHeaders$1",        "bridge": true, "note": "Ya devuelve MlResult: Try es honesto" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "GetPkValuesString", "new": "FormatCompositeKey", "bridge": true, "note": "Describe el que, no el como" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "AddGenClientFp",              "new": "AddRestClient",             "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "AddGenClientComplexFp",       "new": "AddCompositeKeyRestClient", "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "AddGenClientDuplexComplexFp", "new": "AddCompositeKeyRestClient", "bridge": true, "note": "La aridad generica (4) distingue la variante DTO entrada != salida" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http", "name": "AddHttpClientsFp",            "new": "AddMlHttp",                 "bridge": true, "note": "Derivado: el proyecto ya no se llama HttpClients; Fp en DI no aporta" },
+    { "kind": "parameter", "assembly": "MoralesLarios.OOFP.Http", "name": "httpClientFactoryKey",   "new": "clientName",      "bridge": false, "note": "Coherente con GetClientName e IHttpClientFactory.CreateClient(name). El tipo (ServiceKey) no cambia" },
+    { "kind": "parameter", "assembly": "MoralesLarios.OOFP.Http", "name": "configureHttpClientKey", "new": "configureClient", "bridge": false },
+    { "kind": "parameter", "assembly": "MoralesLarios.OOFP.Http", "name": "pk",                     "new": "keyValues",       "bridge": false },
+    { "kind": "typeparam", "assembly": "MoralesLarios.OOFP.Http", "name": "K", "new": "TResponse", "bridge": false, "note": "Una letra suelta no dice su papel" },
+
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "IGenComplexClientFp",       "new": "ICompositeKeyRestClientFp", "bridge": false, "note": "Complex no significaba nada: la entidad tiene clave compuesta" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "GenComplexClientFp",        "new": "CompositeKeyRestClientFp",  "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "IGenClientFp",              "new": "IRestClientFp",             "bridge": false, "note": "Gen no se entiende; Rest dice protocolo y estilo" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "GenClientFp",               "new": "RestClientFp",              "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "IHttpClientFactoryManager", "new": "IHttpApiInvoker",           "bridge": false, "note": "No es una fabrica de HttpClient: ejecuta la llamada y deserializa" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "HttpClientFactoryManager",  "new": "HttpApiInvoker",            "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "CallRequestPaginationParamsInfo", "new": "PagedApiCallOptions", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Http", "name": "CallRequestParamsInfo",           "new": "ApiCallOptions",      "bridge": false, "note": "Cuatro sustantivos genericos encadenados" },
+
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Http.Tests.Integration", "match": "^GenClientFp",      "replace": "RestClientFp",             "bridge": false },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Http.Tests.Integration", "match": "^GenComplexClient", "replace": "CompositeKeyRestClient",   "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Http.Tests.Unit",        "match": "AddGenClient(Duplex)?(Complex)?Fp", "replace": "AddRestClient", "bridge": false }
+  ]
+}

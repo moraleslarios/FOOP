@@ -10,7 +10,7 @@ public static partial class MlErrorDetailsExtensions
     {
         var result = MlResult.Empty()
                                 .MapEnsure( _  => source.ContainsMetadata(ProblemsDetails),
-                                            _  => "The MlErrorsDetails does not have details.")
+                                            _  => "The MlErrorDetails does not have metadata.")
                                 .Map      ( _  => source.Metadata[ProblemsDetails])
                                 .MapEnsure(obj => obj is not null, 
                                             _  => "The details ProblemsDetails key has a null object.")

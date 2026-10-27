@@ -79,9 +79,9 @@ public class MlCachedCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEnti
 
 
 
-public class SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+public class MlCachedCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
                                                                             IOutputCacheStore                           _outputCacheStore)
-        : SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(_genServiceFp)
+        : MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(_genServiceFp)
     where TEntity   : class
     where TRequest  : class
     where TResponse : class

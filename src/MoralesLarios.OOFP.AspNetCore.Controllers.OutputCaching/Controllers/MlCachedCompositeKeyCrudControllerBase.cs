@@ -77,10 +77,10 @@ public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceF
 
 
 
-public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+public class MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
                                                                               Func<TEntity, object[]>                     _pkFields,
                                                                               IOutputCacheStore                           _outputCacheStore)
-        : SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _pkFields)
+        : MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _pkFields)
     where TEntity   : class
     where TRequest  : class
     where TResponse : class

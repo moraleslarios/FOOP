@@ -7,8 +7,8 @@ using System.Reflection.PortableExecutable;
 namespace MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
 public class PruebasClient(ILogger<PruebasClient>    _logger,
-                           IHttpClientFactoryManager _httpClientFactoryManager,
-                           ServiceKey                       _httpClientFactoryKey) : GenClientFp<PruebasDto>(_logger, _httpClientFactoryManager, _httpClientFactoryKey), IPruebasClient
+                           IHttpApiInvoker _httpClientFactoryManager,
+                           ServiceKey                       _httpClientFactoryKey) : RestClientFp<PruebasDto>(_logger, _httpClientFactoryManager, _httpClientFactoryKey), IPruebasClient
 {
 
 

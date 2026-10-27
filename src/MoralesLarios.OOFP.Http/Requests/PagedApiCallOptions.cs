@@ -4,15 +4,15 @@
 
 
 
-public record CallRequestPaginationParamsInfo(string                      Url,
+public record PagedApiCallOptions(string                      Url,
                                               ServiceKey                         HttpClientFactoryKey,
                                               IntNonNegative              PageNumber,
                                               IntNonNegative              PageSize,
                                               Dictionary<string, string>? Headers           = null!,
                                               CancellationToken           CancellationToken = default)
-    : CallRequestParamsInfo(Url, HttpClientFactoryKey, Headers,  CancellationToken)
+    : ApiCallOptions(Url, HttpClientFactoryKey, Headers,  CancellationToken)
 {
-    public static implicit operator CallRequestPaginationParamsInfo((string                      url,
+    public static implicit operator PagedApiCallOptions((string                      url,
                                                                      ServiceKey                         httpClientFactoryKey,
                                                                      IntNonNegative              pageNumber,
                                                                      IntNonNegative              pageSize,
@@ -26,16 +26,16 @@ public record CallRequestPaginationParamsInfo(string                      Url,
 
 
 
-public record CallRequestPaginationParamsInfo<TRequest>(                     string                      Url,
+public record PagedApiCallOptions<TRequest>(                     string                      Url,
                                                                              ServiceKey                         HttpClientFactoryKey,
                                                         [property: Required] TRequest                    RequestBody,
                                                                              IntNonNegative              PageNumber,
                                                                              IntNonNegative              PageSize,
                                                                              Dictionary<string, string>? Headers           = null!,
                                                                              CancellationToken           CancellationToken = default)
-    : CallRequestParamsInfo<TRequest>(Url, HttpClientFactoryKey, RequestBody, Headers, CancellationToken)
+    : ApiCallOptions<TRequest>(Url, HttpClientFactoryKey, RequestBody, Headers, CancellationToken)
 {
-    public static implicit operator CallRequestPaginationParamsInfo<TRequest>((string                      url,
+    public static implicit operator PagedApiCallOptions<TRequest>((string                      url,
                                                                                ServiceKey                         httpClientFactoryKey,
                                                                                TRequest                    requestBody,
                                                                                IntNonNegative              pageNumber,

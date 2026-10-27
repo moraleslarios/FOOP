@@ -44,7 +44,7 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                                                                       Func<MlErrorDetails, string> failMessageBuilder   = null!,
                                                                       params object[]               pk)
     {
-        var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TDto).Name} table by Id ({pk.GetPkValues()})")
+        var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TDto).Name} table by Id ({pk.FormatCompositeKey()})")
                             .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                     token               : ct,
                                                                     keyValues                  : pk))
@@ -52,11 +52,11 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
                                                                                     ? (successMessageFactory is null
-                                                                                            ? $"The query to the {typeof(TDto).Name} table for the pk {pk.GetPkValues()} completed successfully"
+                                                                                            ? $"The query to the {typeof(TDto).Name} table for the pk {pk.FormatCompositeKey()} completed successfully"
                                                                                             : successMessageFactory(x))
-                                                                                    : $"No data found in the {typeof(TDto).Name} table for the pk {pk.GetPkValues()}",
+                                                                                    : $"No data found in the {typeof(TDto).Name} table for the pk {pk.FormatCompositeKey()}",
                                                    failBuildMessage : errors => failMessageBuilder is null
-                                                                                    ? $"An error occurred while querying the {typeof(TDto).Name} table for the pk {pk.GetPkValues()}. Error: {errors.ToString()}"
+                                                                                    ? $"An error occurred while querying the {typeof(TDto).Name} table for the pk {pk.FormatCompositeKey()}. Error: {errors.ToString()}"
                                                                                     : failMessageBuilder(errors));
         return result;
     }
@@ -184,8 +184,8 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
 
 
     //private MlErrorDetails BuildEntityNotFoundError(string tableName, params object[] keyValues)
-    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})",
-    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})" });
+    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({keyValues.FormatCompositeKey()})",
+    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({keyValues.FormatCompositeKey()})" });
 }
 
 
@@ -201,8 +201,8 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
 
 
 
-public class GenServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity>                                  _repo,
-                                                        ILogger<GenServiceFp<TEntity, TRequest, TResponse>> _logger) : IGenServiceFp<TEntity, TRequest, TResponse>
+public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity>                                  _repo,
+                                                        ILogger<CrudServiceFp<TEntity, TRequest, TResponse>> _logger) : ICrudServiceFp<TEntity, TRequest, TResponse>
     where TEntity   : class
     where TRequest  : class
     where TResponse : class
@@ -244,7 +244,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity>  
                                                                            Func<MlErrorDetails, string> failMessageBuilder   = null!,
                                                                            params object[]               pk)
     {
-        var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TResponse).Name} table by Id ({pk.GetPkValues()})")
+        var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TResponse).Name} table by Id ({pk.FormatCompositeKey()})")
                             .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                     token               : ct,
                                                                     keyValues                  : pk))
@@ -252,11 +252,11 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity>  
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
                                                                                     ? (successMessageFactory is null
-                                                                                            ? $"The query to the {typeof(TResponse).Name} table for the pk {pk.GetPkValues()} completed successfully"
+                                                                                            ? $"The query to the {typeof(TResponse).Name} table for the pk {pk.FormatCompositeKey()} completed successfully"
                                                                                             : successMessageFactory(x))
-                                                                                    : $"No data found in the {typeof(TResponse).Name} table for the pk {pk.GetPkValues()}",
+                                                                                    : $"No data found in the {typeof(TResponse).Name} table for the pk {pk.FormatCompositeKey()}",
                                                    failBuildMessage : errors => failMessageBuilder is null
-                                                                                    ? $"An error occurred while querying the {typeof(TResponse).Name} table for the pk {pk.GetPkValues()}. Error: {errors.ToString()}"
+                                                                                    ? $"An error occurred while querying the {typeof(TResponse).Name} table for the pk {pk.FormatCompositeKey()}. Error: {errors.ToString()}"
                                                                                     : failMessageBuilder(errors));
         return result;
     }
@@ -384,8 +384,8 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity>  
 
 
     //private MlErrorDetails BuildEntityNotFoundError(string tableName, params object[] keyValues)
-    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})",
-    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})" });
+    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({keyValues.FormatCompositeKey()})",
+    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({keyValues.FormatCompositeKey()})" });
 
 
     private string DtosDescType => $"dto Request {typeof(TRequest).Name} to dto Response {typeof(TResponse).Name}";

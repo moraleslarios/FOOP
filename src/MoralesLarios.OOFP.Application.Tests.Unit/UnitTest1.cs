@@ -17,7 +17,7 @@ public class UnitTest1
 
     //    var data = new PkComplexOptions<Data>();
 
-    //    var result = data.GetPkValues(new[] { "1", "Test", DateTime.UtcNow.ToString("o") }, d => new object[] { d.Id, d.MemberName, d.CreatedAt });
+    //    var result = data.FormatCompositeKey(new[] { "1", "Test", DateTime.UtcNow.ToString("o") }, d => new object[] { d.Id, d.MemberName, d.CreatedAt });
 
     //}
 }
@@ -40,7 +40,7 @@ public class UnitTest1
 
 
 
-//    public object[] GetPkValues(string[] values, Func<TEntity, object[]> pkFields)
+//    public object[] FormatCompositeKey(string[] values, Func<TEntity, object[]> pkFields)
 //    {
 //        var sample = Activator.CreateInstance<TEntity>();   // requiere new() o reflexión
 //        var sampleP = pkFields(sample);                       // todos serán default/null

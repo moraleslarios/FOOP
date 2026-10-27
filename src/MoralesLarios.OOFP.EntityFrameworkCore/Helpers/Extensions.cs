@@ -4,12 +4,12 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Helpers;
 
-public static class Extensions
+public static partial class Extensions
 {
 
 
 
-    public static string GetPkValues(this object[] source)
+    public static string FormatCompositeKey(this object[] source)
     {
         var result = source.Count() == 1
                      ? source[0].ToString() ?? string.Empty

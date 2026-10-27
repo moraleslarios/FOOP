@@ -1,13 +1,13 @@
 namespace MoralesLarios.OOFP.Http.Requests;
 
 
-public record CallRequestParamsInfo(string                      Url,
+public record ApiCallOptions(string                      Url,
                                     ServiceKey                         HttpClientFactoryKey,
                                     Dictionary<string, string>? Headers           = null!,
                                     CancellationToken           CancellationToken = default
 )
 {
-    public static implicit operator CallRequestParamsInfo((NotEmptyString              url,
+    public static implicit operator ApiCallOptions((NotEmptyString              url,
                                                            ServiceKey                         httpClientFactoryKey,
                                                            Dictionary<string, string>? headers,
                                                            CancellationToken           cancellationToken) value) 
@@ -17,14 +17,14 @@ public record CallRequestParamsInfo(string                      Url,
 
 
 
-public record CallRequestParamsInfo<TRequest>(                     string                      Url,
+public record ApiCallOptions<TRequest>(                     string                      Url,
                                                                    ServiceKey                         HttpClientFactoryKey,
                                               [property: Required] TRequest                    RequestBody,
                                                                    Dictionary<string, string>? Headers           = null!,
                                                                    CancellationToken           CancellationToken = default
 )
 {
-    public static implicit operator CallRequestParamsInfo<TRequest>((string                      url,
+    public static implicit operator ApiCallOptions<TRequest>((string                      url,
                                                                      ServiceKey                         httpClientFactoryKey,
                                                                      TRequest                    requestBody,
                                                                      Dictionary<string, string>? headers,

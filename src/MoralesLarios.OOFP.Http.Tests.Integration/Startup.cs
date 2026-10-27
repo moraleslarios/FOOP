@@ -21,7 +21,7 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClientsFp();
+        services.AddMlHttp();
 
         services.AddHttpClient("default", client =>
         {
@@ -41,22 +41,22 @@ public class Startup
         //});
 
 
-        services.AddGenClientFp<IPruebasClient, PruebasClient>(configureClient: client =>
+        services.AddRestClient<IPruebasClient, PruebasClient>(configureClient: client =>
         {
             client.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/");
         });
 
-        services.AddGenClientFp<ISimplePruebaComplexClient, SimplePruebaComplexClient>(configureClient: client =>
+        services.AddRestClient<ISimplePruebaComplexClient, SimplePruebaComplexClient>(configureClient: client =>
         {
             client.BaseAddress = new Uri("https://localhost:7197/api/PruebaComplex/");
         });
 
-        services.AddGenClientComplexFp<IPruebaComplexClient, PruebaComplexClient, PruebaComplexDto>(configureClient: client =>
+        services.AddCompositeKeyRestClient<IPruebaComplexClient, PruebaComplexClient, PruebaComplexDto>(configureClient: client =>
         {
             client.BaseAddress = new Uri("https://localhost:7197/api/PruebaComplex/");
         });
 
-        services.AddGenClientDuplexComplexFp<IPruebaDuplexClient, PruebaDuplexClient, PruebaRequestDto, PruebaResponseDto>(configureClient: client =>
+        services.AddCompositeKeyRestClient<IPruebaDuplexClient, PruebaDuplexClient, PruebaRequestDto, PruebaResponseDto>(configureClient: client =>
         {
             client.BaseAddress = new Uri("https://localhost:7197/api/PruebaDuplex/");
         });

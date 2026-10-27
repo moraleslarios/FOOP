@@ -10,22 +10,22 @@ public class RegisterServicesTests
 {
     private interface ITestClient { }
 
-    private sealed class TestClient : GenClientFp<string>, ITestClient
+    private sealed class TestClient : RestClientFp<string>, ITestClient
     {
         public static ServiceKey? CapturedKey { get; private set; }
 
-        public TestClient(ILogger<GenClientFp<string>> logger, IHttpClientFactoryManager httpClientFactoryManager, ServiceKey httpClientFactoryKey)
+        public TestClient(ILogger<RestClientFp<string>> logger, IHttpApiInvoker httpClientFactoryManager, ServiceKey httpClientFactoryKey)
             : base(logger, httpClientFactoryManager, httpClientFactoryKey)
         {
             CapturedKey = httpClientFactoryKey;
         }
     }
 
-    private sealed class DuplexService : GenClientFp<string, string>, ITestClient
+    private sealed class DuplexService : RestClientFp<string, string>, ITestClient
     {
         public static ServiceKey? CapturedKey { get; private set; }
 
-        public DuplexService(ILogger<GenClientFp<string, string>> logger, IHttpClientFactoryManager httpClientFactoryManager, ServiceKey httpClientFactoryKey)
+        public DuplexService(ILogger<RestClientFp<string, string>> logger, IHttpApiInvoker httpClientFactoryManager, ServiceKey httpClientFactoryKey)
             : base(logger, httpClientFactoryManager, httpClientFactoryKey)
         {
             CapturedKey = httpClientFactoryKey;
@@ -33,13 +33,13 @@ public class RegisterServicesTests
     }
 
     [Fact]
-    public void AddGenClientFp_uses_default_key_when_not_configured()
+    public void AddRestClient_uses_default_key_when_not_configured()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddHttpClientsFp();
+        services.AddMlHttp();
 
-        services.AddGenClientFp<ITestClient, TestClient>();
+        services.AddRestClient<ITestClient, TestClient>();
         var provider = services.BuildServiceProvider();
 
         _ = provider.GetRequiredService<ITestClient>();
@@ -48,14 +48,14 @@ public class RegisterServicesTests
     }
 
     [Fact]
-    public void AddGenClientFp_uses_custom_key_when_configured()
+    public void AddRestClient_uses_custom_key_when_configured()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddHttpClientsFp();
+        services.AddMlHttp();
         var expected = ServiceKey.CreateFromString("custom-client");
 
-        services.AddGenClientFp<ITestClient, TestClient>(() => expected);
+        services.AddRestClient<ITestClient, TestClient>(() => expected);
         var provider = services.BuildServiceProvider();
 
         _ = provider.GetRequiredService<ITestClient>();
@@ -64,14 +64,14 @@ public class RegisterServicesTests
     }
 
     [Fact]
-    public void AddGenClientComplexFp_uses_custom_key_when_configured()
+    public void AddCompositeKeyRestClient_uses_custom_key_when_configured()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddHttpClientsFp();
+        services.AddMlHttp();
         var expected = ServiceKey.CreateFromString("complex-client");
 
-        services.AddGenClientComplexFp<ITestClient, TestClient, string>(() => expected);
+        services.AddCompositeKeyRestClient<ITestClient, TestClient, string>(() => expected);
         var provider = services.BuildServiceProvider();
 
         _ = provider.GetRequiredService<ITestClient>();
@@ -80,26 +80,26 @@ public class RegisterServicesTests
     }
 
     [Fact]
-    public void AddGenClientComplexFp_throws_when_key_is_null()
+    public void AddCompositeKeyRestClient_throws_when_key_is_null()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddHttpClientsFp();
+        services.AddMlHttp();
 
-        Action act = () => services.AddGenClientComplexFp<ITestClient, TestClient, string>(() => null!);
+        Action act = () => services.AddCompositeKeyRestClient<ITestClient, TestClient, string>(() => null!);
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("httpClientFactoryKey no puede ser null");
     }
 
     [Fact]
-    public void AddGenClientDuplexComplexFp_throws_when_key_is_null()
+    public void AddCompositeKeyRestClient_duplex_throws_when_key_is_null()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddHttpClientsFp();
+        services.AddMlHttp();
 
-        Action act = () => services.AddGenClientDuplexComplexFp<ITestClient, DuplexService, string, string>(() => null!);
+        Action act = () => services.AddCompositeKeyRestClient<ITestClient, DuplexService, string, string>(() => null!);
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("httpClientFactoryKey no puede ser null");

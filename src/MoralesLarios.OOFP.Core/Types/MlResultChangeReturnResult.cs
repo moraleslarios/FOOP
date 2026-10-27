@@ -71,7 +71,7 @@ public static partial class MlResultChangeReturnResult
     #endregion ChangeReturnResult
 
 
-    #region ChangeReturnResultAlwaisValid
+    #region ChangeReturnResultAlwaysValid
 
 
 
@@ -102,10 +102,10 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    #endregion ChangeReturnResultAlwaisValid
+    #endregion ChangeReturnResultAlwaysValid
 
 
-    #region ChangeReturnResultAlwaisFail
+    #region ChangeReturnResultAlwaysFail
 
 
 
@@ -186,7 +186,7 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    #endregion ChangeReturnResultAlwaisFail
+    #endregion ChangeReturnResultAlwaysFail
 
 
     #region ChangeReturnResultIfValid

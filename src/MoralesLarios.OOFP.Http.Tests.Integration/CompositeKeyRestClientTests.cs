@@ -2,7 +2,7 @@
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration;
 
-public class GenComplexClientTests(IPruebaComplexClient _sut)
+public class CompositeKeyRestClientTests(IPruebaComplexClient _sut)
 {
 
 

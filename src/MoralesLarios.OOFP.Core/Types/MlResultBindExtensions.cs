@@ -413,7 +413,7 @@ public static partial class MlResultBindExtensions
     #endregion
 
 
-    #region BindSaveValueInDetailsIfFaildFuncResultAsync
+    #region BindSaveValueInDetailsIfFailedFuncResultAsync
 
     /// <summary>
     /// Execute the function if the source is valid, otherwise return the source.

@@ -98,7 +98,7 @@ public class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TD
 
 
 [ApiController]
-public class SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp) : ControllerBase
+public class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp) : ControllerBase
     where TEntity   : class
     where TRequest  : class
     where TResponse : class

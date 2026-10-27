@@ -241,7 +241,7 @@ public class MlErrorDetailsActionsTests
 
 
 
-    #region AddDetailValue
+    #region AddValueMetadata
 
 
     [Fact]
@@ -303,7 +303,7 @@ public class MlErrorDetailsActionsTests
 
 
 
-    #region HasValueDetails
+    #region ContainsValueMetadata
 
 
     [Fact]
@@ -381,7 +381,7 @@ public class MlErrorDetailsActionsTests
 
 
 
-    #region HasExceptionDetails
+    #region ContainsException
 
 
     [Fact]

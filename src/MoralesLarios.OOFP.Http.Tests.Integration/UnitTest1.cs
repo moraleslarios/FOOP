@@ -9,12 +9,12 @@ using System.Formats.Asn1;
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration;
 
-public class UnitTest1(IHttpClientFactoryManager _sut)
+public class UnitTest1(IHttpApiInvoker _sut)
 {
     //    [Fact]
     //    public async Task Test1()
     //    {
-    //        var data2 = await _sut.PostGetAsync<IEnumerable<int>, IEnumerable<CustomerDto>>(
+    //        var data2 = await _sut.PostAndReadAsync<IEnumerable<int>, IEnumerable<CustomerDto>>(
     //            ("ByCustomersKeys", "default", [11000, 11001], default));
 
     //        //var data2 = await _sut.PostAsync<IEnumerable<int>, IEnumerable<CustomerDto>>(null!);
@@ -23,8 +23,8 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //    [Fact]
     //    public async Task Test2()
     //    {
-    //        var data2 = await _sut.PostGetPaginationAsync<string, CustomerDto>
-    //            (new CallRequestPaginationParamsInfo<string>("MaritalStatusPagination",
+    //        var data2 = await _sut.PostAndReadPagedAsync<string, CustomerDto>
+    //            (new PagedApiCallOptions<string>("MaritalStatusPagination",
     //                                                         "default",
     //                                                         "M",
     //                                                         1,
@@ -150,7 +150,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //[Fact]
     //public async Task TextBad2Async()
     //{
-    //    var result = await _sut.PostGetAsync<IEnumerable<int>, IEnumerable<string>>(("bad2", 
+    //    var result = await _sut.PostAndReadAsync<IEnumerable<int>, IEnumerable<string>>(("bad2", 
     //                                                  "vinos-api", 
     //                                                  [1, 2, 3], 
     //                                                  new Dictionary<string, string>
@@ -164,7 +164,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     [Fact]
     public async Task TextBad2_2Async()
     {
-        var result = await _sut.PostGetAsync<IEnumerable<int>, IEnumerable<string>>(
+        var result = await _sut.PostAndReadAsync<IEnumerable<int>, IEnumerable<string>>(
                                                       "vinos-api",
                                                       [1, 2, 3],
                                                       "bad2",

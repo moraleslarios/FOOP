@@ -9,7 +9,7 @@ queda encapsulado dentro de una tubería ferroviaria (*railway oriented programm
 Está construido sobre `IHttpClientFactory` (por lo que hereda su gestión de pool de conexiones y su
 configuración por nombre) y es el **espejo exacto** de `MoralesLarios.OOFP.AspNetCore.Controllers`: si el servidor
 expone sus CRUD heredando de `MlCrudControllerBase<TEntity, TDto, TPk>`, el cliente los consume heredando
-de `GenClientFp<TDto>` sin escribir una sola línea de infraestructura.
+de `RestClientFp<TDto>` sin escribir una sola línea de infraestructura.
 
 ---
 
@@ -19,10 +19,10 @@ de `GenClientFp<TDto>` sin escribir una sola línea de infraestructura.
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Arquitectura: las tres capas de cliente](#arquitectura-las-tres-capas-de-cliente)
-5. [`IHttpClientFactoryManager` — la capa de transporte](#ihttpclientfactorymanager--la-capa-de-transporte)
-6. [`GenClientFp<TDto>` — cliente CRUD de clave simple](#genclientfptdto--cliente-crud-de-clave-simple)
-7. [`GenComplexClientFp<TDto>` — cliente CRUD de clave compuesta](#gencomplexclientfptdto--cliente-crud-de-clave-compuesta)
-8. [Records de parámetros: `CallRequestParamsInfo` y paginación](#records-de-parámetros-callrequestparamsinfo-y-paginación)
+5. [`IHttpApiInvoker` — la capa de transporte](#ihttpclientfactorymanager--la-capa-de-transporte)
+6. [`RestClientFp<TDto>` — cliente CRUD de clave simple](#genclientfptdto--cliente-crud-de-clave-simple)
+7. [`CompositeKeyRestClientFp<TDto>` — cliente CRUD de clave compuesta](#gencomplexclientfptdto--cliente-crud-de-clave-compuesta)
+8. [Records de parámetros: `ApiCallOptions` y paginación](#records-de-parámetros-callrequestparamsinfo-y-paginación)
 9. [Helpers de cabeceras y de respuestas](#helpers-de-cabeceras-y-de-respuestas)
 10. [`RegisterServices` — registro en el contenedor](#registerservices--registro-en-el-contenedor)
 11. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
@@ -79,12 +79,12 @@ logging duplicado en cada método y cinco `catch` que se olvidan a la primera.
 ### ✅ Con la librería
 
 ```csharp
-public interface IPruebasClient : IGenClientFp<PruebasDto> { }
+public interface IPruebasClient : IRestClientFp<PruebasDto> { }
 
-public class PruebasClient(ILogger<GenClientFp<PruebasDto>> logger,
-                           IHttpClientFactoryManager        manager,
+public class PruebasClient(ILogger<RestClientFp<PruebasDto>> logger,
+                           IHttpApiInvoker        manager,
                            Key                              key)
-    : GenClientFp<PruebasDto>(logger, manager, key), IPruebasClient { }
+    : RestClientFp<PruebasDto>(logger, manager, key), IPruebasClient { }
 ```
 
 Eso es **todo**. Con esas cuatro líneas ya tienes `GetAllAsync`, `GetByIdAsync`, `PostAsync`, `PutAsync`,
@@ -137,19 +137,19 @@ así que dentro de este proyecto no necesitas `using` explícitos.
 
 ```text
 MoralesLarios.OOFP.Http/
-├── IHttpClientFactoryManager.cs      ← contrato de transporte (9 métodos)
-├── HttpClientFactoryManager.cs       ← implementación real: tuberías MlResult sobre IHttpClientFactory
-├── IGenClientFp.cs                   ← contrato CRUD simplex + duplex (8 miembros cada uno)
-├── GenClientFp.cs                    ← CRUD de clave simple (2 clases: simplex y duplex)
-├── IGenComplexClientFp.cs            ← contrato CRUD con clave compuesta (10 miembros cada uno)
-├── GenComplexClientFp.cs             ← CRUD de clave compuesta (2 clases: simplex y duplex)
+├── IHttpApiInvoker.cs      ← contrato de transporte (9 métodos)
+├── HttpApiInvoker.cs       ← implementación real: tuberías MlResult sobre IHttpClientFactory
+├── IRestClientFp.cs                   ← contrato CRUD simplex + duplex (8 miembros cada uno)
+├── RestClientFp.cs                    ← CRUD de clave simple (2 clases: simplex y duplex)
+├── ICompositeKeyRestClientFp.cs            ← contrato CRUD con clave compuesta (10 miembros cada uno)
+├── CompositeKeyRestClientFp.cs             ← CRUD de clave compuesta (2 clases: simplex y duplex)
 ├── ParamsInfo/
-│   ├── CallRequestParamsInfo.cs      ← record de parámetros (+ variante genérica con RequestBody)
-│   └── CallRequestPaginationParamsInfo.cs  ← añade PageNumber y PageSize
+│   ├── ApiCallOptions.cs      ← record de parámetros (+ variante genérica con RequestBody)
+│   └── PagedApiCallOptions.cs  ← añade PageNumber y PageSize
 ├── Helpers/
 │   ├── MlHttpRequestExtensions.cs    ← cabeceras sobre HttpClient y HttpRequestMessage
 │   └── MlResponseWebExtensions.cs    ← descripción legible del error de una HttpResponseMessage
-├── RegisterServices.cs               ← AddHttpClientsFp + 3 helpers de registro
+├── RegisterServices.cs               ← AddMlHttp + 3 helpers de registro
 └── GlobalUsings.cs
 ```
 
@@ -161,19 +161,19 @@ El proyecto ofrece **tres niveles de abstracción**. Elige el más alto que te s
 
 ```text
 ┌───────────────────────────────────────────────────────────────────────────────┐
-│ Nivel 3 — GenComplexClientFp<TDto> / <TRequest, TResponse>                    │
+│ Nivel 3 — CompositeKeyRestClientFp<TDto> / <TRequest, TResponse>                    │
 │   CRUD con CLAVE COMPUESTA. Recibe params object[] keyValues, lo formatea a          │
 │   "v1,v2,v3" y delega en el nivel 2.                                          │
 └───────────────────────────────┬───────────────────────────────────────────────┘
-                                │  IGenClientFp<TDto>
+                                │  IRestClientFp<TDto>
 ┌───────────────────────────────▼───────────────────────────────────────────────┐
-│ Nivel 2 — GenClientFp<TDto> / <TRequest, TResponse>                           │
+│ Nivel 2 — RestClientFp<TDto> / <TRequest, TResponse>                           │
 │   CRUD con CLAVE SIMPLE. Traduce cada verbo a una URL relativa                │
 │   ("", "id-str/{id}", "{id}") y delega en el nivel 1.                         │
 └───────────────────────────────┬───────────────────────────────────────────────┘
-                                │  IHttpClientFactoryManager
+                                │  IHttpApiInvoker
 ┌───────────────────────────────▼───────────────────────────────────────────────┐
-│ Nivel 1 — HttpClientFactoryManager                                            │
+│ Nivel 1 — HttpApiInvoker                                            │
 │   TRANSPORTE. Crea el HttpClient, serializa, pone cabeceras, envía,           │
 │   valida el status, deserializa y loguea. Devuelve MlResult<T>.               │
 └───────────────────────────────┬───────────────────────────────────────────────┘
@@ -183,11 +183,11 @@ El proyecto ofrece **tres niveles de abstracción**. Elige el más alto que te s
 ```
 
 Y esta es la tubería real que ejecuta **cada** llamada del nivel 1 (extraída de
-`HttpClientFactoryManager.ActionPostAsync<T>`):
+`HttpApiInvoker.ActionPostAsync<T>`):
 
 ```csharp
 await MlResult.EmptyAsync()
-        .TryMapAsync         ( _       => _httpClientFactory.CreateClient(httpClientFactoryKey))
+        .TryMapAsync         ( _       => _httpClientFactory.CreateClient(clientName))
         .ExecSelfIfValidAsync(client   => _logger.LogMlResultInformationAsync($"Haciendo post a la url …"))
         .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
         .BindAsync           (response => response.IsSuccessStatusCode
@@ -205,46 +205,46 @@ un JSON malformado lo captura el último `TryMapAsync`. **Ningún camino sale po
 
 ---
 
-## `IHttpClientFactoryManager` — la capa de transporte
+## `IHttpApiInvoker` — la capa de transporte
 
-Es la única clase que toca `HttpClient` directamente. Regístrala con `services.AddHttpClientsFp()`
-(`AddTransient<IHttpClientFactoryManager, HttpClientFactoryManager>()`).
+Es la única clase que toca `HttpClient` directamente. Regístrala con `services.AddMlHttp()`
+(`AddTransient<IHttpApiInvoker, HttpApiInvoker>()`).
 
 ### Contrato real
 
 ```csharp
-public interface IHttpClientFactoryManager
+public interface IHttpApiInvoker
 {
-    MlResult<HttpClient> CreateHttpClient(ServiceKey httpClientFactoryKey);
+    MlResult<HttpClient> CreateHttpClient(ServiceKey clientName);
 
-    Task<MlResult<T>>     GetAsync       <T>(ServiceKey httpClientFactoryKey, string url = "",
+    Task<MlResult<T>>     GetAsync       <T>(ServiceKey clientName, string url = "",
                                              Dictionary<string, string> headers = null,
                                              CancellationToken ct = default);
 
-    Task<MlResult<T>>     PostAsync      <T>(ServiceKey httpClientFactoryKey, T itemBody, string url = null!,
+    Task<MlResult<T>>     PostAsync      <T>(ServiceKey clientName, T itemBody, string url = null!,
                                              Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
 
-    Task<MlResult<K>>     PostAsync   <T, K>(ServiceKey httpClientFactoryKey, T itemBody, string url = null,
+    Task<MlResult<K>>     PostAsync   <T, K>(ServiceKey clientName, T itemBody, string url = null,
                                              Dictionary<string, string> headers = null,
                                              CancellationToken ct = default);
 
-    Task<MlResult<TResult>> PostGetAsync<T, TResult>(ServiceKey httpClientFactoryKey, T itemBody,
+    Task<MlResult<TResult>> PostAndReadAsync<T, TResult>(ServiceKey clientName, T itemBody,
                                                      string url = null!,
                                                      Dictionary<string, string> headers = null!,
                                                      CancellationToken ct = default);
 
     Task<MlResult<PagedResult<TItem>>>
-        PostGetPaginationAsync<TRequest, TItem>(
-            CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default);
+        PostAndReadPagedAsync<TRequest, TItem>(
+            PagedApiCallOptions<TRequest> parameters, CancellationToken ct = default);
 
-    Task<MlResult<Empty>> PutAsync       <T>(ServiceKey httpClientFactoryKey, T itemBody, string url = null!,
+    Task<MlResult<Empty>> PutAsync       <T>(ServiceKey clientName, T itemBody, string url = null!,
                                              Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
-    Task<MlResult<Empty>> DeleteAsync    <T>(ServiceKey httpClientFactoryKey, T itemBody, string url = null!,
+    Task<MlResult<Empty>> DeleteAsync    <T>(ServiceKey clientName, T itemBody, string url = null!,
                                              Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
-    Task<MlResult<Empty>> DeleteByIdAsync<T>(ServiceKey httpClientFactoryKey, NotEmptyString url, Dictionary<string, string> headers = null!,
+    Task<MlResult<Empty>> DeleteByIdAsync<T>(ServiceKey clientName, NotEmptyString url, Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
 }
 ```
@@ -255,23 +255,23 @@ public interface IHttpClientFactoryManager
 | `GetAsync<T>(key, url, headers, ct)` | `GET` | ninguno | `MlResult<T>` | Construye un `HttpRequestMessage`, aplica cabeceras y deserializa a `T`. |
 | `PostAsync<T>(key, item, url, …)` | `POST` | `T` | `MlResult<T>` | Envía y **espera del servidor el mismo tipo** `T`. |
 | `PostAsync<T, K>(key, item, url, …)` | `POST` | `T` | `MlResult<K>` | Variante *duplex*: envía `T`, recibe `K`. |
-| `PostGetAsync<T, TResult>(key, item, url, …)` | `POST` | `T` | `MlResult<TResult>` | Idéntico a `PostAsync<T, K>`; nombre alternativo para consultas que viajan en el cuerpo. |
-| `PostGetPaginationAsync<TRequest, TItem>(parameters, ct)` | `POST` | `TRequest` | `MlResult<PagedResult<…>>` | Valida el record con *Data Annotations*, añade `X-Page-Number`/`X-Page-Size` y deserializa el sobre paginado. |
+| `PostAndReadAsync<T, TResult>(key, item, url, …)` | `POST` | `T` | `MlResult<TResult>` | Idéntico a `PostAsync<T, K>`; nombre alternativo para consultas que viajan en el cuerpo. |
+| `PostAndReadPagedAsync<TRequest, TItem>(parameters, ct)` | `POST` | `TRequest` | `MlResult<PagedResult<…>>` | Valida el record con *Data Annotations*, añade `X-Page-Number`/`X-Page-Size` y deserializa el sobre paginado. |
 | `PutAsync<T>(key, item, url, …)` | `PUT` | `T` | `MlResult<Empty>` | No lee el cuerpo de respuesta: solo confirma éxito. |
 | `DeleteAsync<T>(key, item, url, …)` | `DELETE` | `T` | `MlResult<Empty>` | ⚠️ `DELETE` **con cuerpo**: muchos proxies lo descartan. |
 | `DeleteByIdAsync<T>(key, url, …)` | `DELETE` | ninguno | `MlResult<Empty>` | La `url` es un `NotEmptyString`, así que un id vacío falla antes de salir a la red. El genérico `T` **solo se usa para el texto del log**. |
 
 ### Miembros públicos que están en la clase pero **no** en la interfaz
 
-`HttpClientFactoryManager` expone dos sobrecargas adicionales que **no forman parte de
-`IHttpClientFactoryManager`**, por lo que son invisibles si resuelves el servicio por la interfaz:
+`HttpApiInvoker` expone dos sobrecargas adicionales que **no forman parte de
+`IHttpApiInvoker`**, por lo que son invisibles si resuelves el servicio por la interfaz:
 
 ```csharp
-public virtual Task<MlResult<T>> GetAsync<T>(CallRequestParamsInfo parameters, CancellationToken ct = default);
-public virtual Task<MlResult<T>> GetPaginationAsync<T>(CallRequestPaginationParamsInfo parameters, CancellationToken ct = default);
+public virtual Task<MlResult<T>> GetAsync<T>(ApiCallOptions parameters, CancellationToken ct = default);
+public virtual Task<MlResult<T>> GetPagedAsync<T>(PagedApiCallOptions parameters, CancellationToken ct = default);
 ```
 
-Para usarlas tienes que inyectar la **clase concreta** (`HttpClientFactoryManager`) o extender la interfaz.
+Para usarlas tienes que inyectar la **clase concreta** (`HttpApiInvoker`) o extender la interfaz.
 
 ### Cómo se transforma un error del servidor
 
@@ -301,26 +301,26 @@ nunca se propaga una excepción por culpa del formateo del error.
 
 ---
 
-## `GenClientFp<TDto>` — cliente CRUD de clave simple
+## `RestClientFp<TDto>` — cliente CRUD de clave simple
 
 Dos clases hermanas con la misma forma: **simplex** (un solo DTO para ida y vuelta) y **duplex**
 (`TRequest` para enviar, `TResponse` para recibir).
 
 ```csharp
-public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>> _logger,
-                               IHttpClientFactoryManager  _httpClientFactoryManager,
-                               Key                        _httpClientFactoryKey) : IGenClientFp<TDto>
+public class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
+                               IHttpApiInvoker  _httpClientFactoryManager,
+                               Key                        _httpClientFactoryKey) : IRestClientFp<TDto>
 
-public class GenClientFp<TRequest, TResponse>(ILogger<GenClientFp<TRequest, TResponse>> _logger,
-                                              IHttpClientFactoryManager                 _httpClientFactoryManager,
+public class RestClientFp<TRequest, TResponse>(ILogger<RestClientFp<TRequest, TResponse>> _logger,
+                                              IHttpApiInvoker                 _httpClientFactoryManager,
                                               Key                                       _httpClientFactoryKey)
-    : IGenClientFp<TRequest, TResponse>
+    : IRestClientFp<TRequest, TResponse>
 ```
 
-### Contrato `IGenClientFp<TDto>`
+### Contrato `IRestClientFp<TDto>`
 
 ```csharp
-public interface IGenClientFp<TDto>
+public interface IRestClientFp<TDto>
 {
     Task<MlResult<IEnumerable<TDto>>> GetAllAsync   (Dictionary<string, string> headers = null!, CancellationToken ct = default);
     Task<MlResult<TDto>>              GetByIdAsync  (NotEmptyString idStr, Dictionary<string, string> headers = null!, CancellationToken ct = default);
@@ -329,16 +329,16 @@ public interface IGenClientFp<TDto>
     Task<MlResult<Empty>>             PutByIdAsync  (NotEmptyString idStr, TDto itemBody, Dictionary<string, string> headers = null!, CancellationToken ct = default);
     Task<MlResult<Empty>>             DeleteAsync   (TDto itemBody, Dictionary<string, string> headers = null!, CancellationToken ct = default);
     Task<MlResult<Empty>>             DeleteByIdAsync(NotEmptyString idStr, Dictionary<string, string> headers = null!, CancellationToken ct = default);
-    IHttpClientFactoryManager         GetIHttpClientFactoryManager();
+    IHttpApiInvoker         GetIHttpClientFactoryManager();
 }
 ```
 
-La versión *duplex* `IGenClientFp<TRequest, TResponse>` es idéntica cambiando
+La versión *duplex* `IRestClientFp<TRequest, TResponse>` es idéntica cambiando
 `GetAllAsync → IEnumerable<TResponse>`, `GetByIdAsync → TResponse` y `PostAsync(TRequest) → TResponse`.
 
 ### URL relativa que genera cada método
 
-Todos los métodos son `virtual` y son **delegaciones de una línea** al `IHttpClientFactoryManager`.
+Todos los métodos son `virtual` y son **delegaciones de una línea** al `IHttpApiInvoker`.
 Esta tabla es la parte que de verdad importa, porque define el contrato de rutas con el servidor:
 
 | Método del cliente | Llamada al manager | URL relativa enviada | Petición completa (`BaseAddress = https://host/api/Pruebas/`) |
@@ -360,70 +360,70 @@ Esta tabla es la parte que de verdad importa, porque define el contrato de rutas
 ### Miembros de infraestructura
 
 ```csharp
-public IHttpClientFactoryManager GetIHttpClientFactoryManager();   // en la interfaz
-public Key                       GetHttpClientFactoryKey();        // ⚠️ NO está en la interfaz
+public IHttpApiInvoker GetIHttpClientFactoryManager();   // en la interfaz
+public Key                       GetClientName();        // ⚠️ NO está en la interfaz
 ```
 
 `GetIHttpClientFactoryManager()` es la vía oficial para bajar al nivel 1 desde un cliente derivado
-(por ejemplo para llamar a un endpoint que no es CRUD). `GetHttpClientFactoryKey()` existe en la clase
-pero **no en `IGenClientFp<>`**, así que solo es accesible desde dentro de la jerarquía o con la clase concreta.
+(por ejemplo para llamar a un endpoint que no es CRUD). `GetClientName()` existe en la clase
+pero **no en `IRestClientFp<>`**, así que solo es accesible desde dentro de la jerarquía o con la clase concreta.
 
 ### Cliente personalizado: el patrón recomendado
 
 ```csharp
 // 1) Interfaz de tu dominio, que hereda el CRUD completo
-public interface IPruebasClient : IGenClientFp<PruebasDto>
+public interface IPruebasClient : IRestClientFp<PruebasDto>
 {
     Task<MlResult<IEnumerable<PruebasDto>>> GetActivasAsync(CancellationToken ct = default);
 }
 
 // 2) Implementación: hereda la infraestructura, añade lo tuyo
-public class PruebasClient(ILogger<GenClientFp<PruebasDto>> logger,
-                           IHttpClientFactoryManager        manager,
+public class PruebasClient(ILogger<RestClientFp<PruebasDto>> logger,
+                           IHttpApiInvoker        manager,
                            Key                              key)
-    : GenClientFp<PruebasDto>(logger, manager, key), IPruebasClient
+    : RestClientFp<PruebasDto>(logger, manager, key), IPruebasClient
 {
     // Endpoint que no es CRUD: bajamos al nivel 1 con el manager heredado
     public Task<MlResult<IEnumerable<PruebasDto>>> GetActivasAsync(CancellationToken ct = default)
         => GetIHttpClientFactoryManager()
-               .GetAsync<IEnumerable<PruebasDto>>(GetHttpClientFactoryKey(), "activas", null!, ct);
+               .GetAsync<IEnumerable<PruebasDto>>(GetClientName(), "activas", null!, ct);
 
     // Sobrescribimos un verbo para adaptar la ruta al servidor real
     public override Task<MlResult<PruebasDto>> GetByIdAsync(NotEmptyString idStr,
                                                             Dictionary<string, string> headers = null!,
                                                             CancellationToken ct = default)
         => GetIHttpClientFactoryManager()
-               .GetAsync<PruebasDto>(GetHttpClientFactoryKey(), $"{idStr}", headers, ct);
+               .GetAsync<PruebasDto>(GetClientName(), $"{idStr}", headers, ct);
 }
 ```
 
 > ⚠️ El parámetro `Key key` **no lo puede resolver el contenedor por sí solo**: por eso el registro se
-> hace con `ActivatorUtilities.CreateInstance<TImplementation>(sp, httpClientFactoryKey)`
+> hace con `ActivatorUtilities.CreateInstance<TImplementation>(sp, clientName)`
 > (ver [`RegisterServices`](#registerservices--registro-en-el-contenedor)).
 
 ---
 
-## `GenComplexClientFp<TDto>` — cliente CRUD de clave compuesta
+## `CompositeKeyRestClientFp<TDto>` — cliente CRUD de clave compuesta
 
 Cuando la entidad tiene **clave primaria compuesta** (por ejemplo `(int Id, DateTime Fecha)`), no puedes
-pasar un solo `idStr`. `GenComplexClientFp<TDto>` resuelve eso: recibe `params object[] keyValues`, lo convierte
-en una cadena `"v1,v2"` con formato estable y delega en un `IGenClientFp<TDto>` inyectado.
+pasar un solo `idStr`. `CompositeKeyRestClientFp<TDto>` resuelve eso: recibe `params object[] keyValues`, lo convierte
+en una cadena `"v1,v2"` con formato estable y delega en un `IRestClientFp<TDto>` inyectado.
 
 ```csharp
-public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
-                                      IGenClientFp<TDto>                _genClientFp)
-    : IGenComplexClientFp<TDto>
+public class CompositeKeyRestClientFp<TDto>(ILogger<CompositeKeyRestClientFp<TDto>> _logger,
+                                      IRestClientFp<TDto>                _genClientFp)
+    : ICompositeKeyRestClientFp<TDto>
 
-public class GenComplexClientFp<TRequest, TResponse>(
-        ILogger<GenComplexClientFp<TRequest, TResponse>> _logger,
-        IGenClientFp<TRequest, TResponse>                _genClientFp)
-    : IGenComplexClientFp<TRequest, TResponse>
+public class CompositeKeyRestClientFp<TRequest, TResponse>(
+        ILogger<CompositeKeyRestClientFp<TRequest, TResponse>> _logger,
+        IRestClientFp<TRequest, TResponse>                _genClientFp)
+    : ICompositeKeyRestClientFp<TRequest, TResponse>
 ```
 
 **Es composición, no herencia:** el cliente complejo *usa* un cliente simple. Eso significa que el
-`IGenClientFp<TDto>` también debe estar registrado (lo hace `AddGenClientComplexFp<…>` por ti).
+`IRestClientFp<TDto>` también debe estar registrado (lo hace `AddCompositeKeyRestClient<…>` por ti).
 
-### Contrato `IGenComplexClientFp<TDto>` (10 miembros)
+### Contrato `ICompositeKeyRestClientFp<TDto>` (10 miembros)
 
 ```csharp
 Task<MlResult<IEnumerable<TDto>>> GetAllAsync   (Dictionary<string,string> headers = null!, CancellationToken ct = default);
@@ -455,10 +455,10 @@ Cada operación "por id" viene **duplicada** con dos formas de pasar la clave:
 
 ### Formateo de la clave compuesta
 
-El método protegido `GetPkValuesString` (idéntico en las dos clases) es el corazón de la traducción:
+El método protegido `FormatCompositeKey` (idéntico en las dos clases) es el corazón de la traducción:
 
 ```csharp
-protected virtual string GetPkValuesString(object[] pkValues)
+protected virtual string FormatCompositeKey(object[] pkValues)
     => string.Join(",", pkValues.Select(v => v switch
     {
         DateTime dt => dt.ToString("yyyy-MM-ddTHH:mm:ss.fff"),
@@ -489,11 +489,11 @@ El resultado se pasa por `NotEmptyString.FromString(...)`, de modo que una clave
 ### Cliente personalizado con clave compuesta
 
 ```csharp
-public interface IReservasClient : IGenComplexClientFp<ReservaDto> { }
+public interface IReservasClient : ICompositeKeyRestClientFp<ReservaDto> { }
 
-public class ReservasClient(ILogger<GenComplexClientFp<ReservaDto>> logger,
-                            IGenClientFp<ReservaDto>                inner)
-    : GenComplexClientFp<ReservaDto>(logger, inner), IReservasClient { }
+public class ReservasClient(ILogger<CompositeKeyRestClientFp<ReservaDto>> logger,
+                            IRestClientFp<ReservaDto>                inner)
+    : CompositeKeyRestClientFp<ReservaDto>(logger, inner), IReservasClient { }
 ```
 
 Uso:
@@ -506,46 +506,46 @@ var reserva = await _reservasClient.GetByIdAsync([7, new DateOnly(2024, 3, 15)])
 
 ---
 
-## Records de parámetros: `CallRequestParamsInfo` y paginación
+## Records de parámetros: `ApiCallOptions` y paginación
 
 Cuando una llamada necesita muchos datos (url + clave + cuerpo + cabeceras + token + página + tamaño),
 pasarlos como parámetros posicionales es frágil. El proyecto ofrece cuatro `record` inmutables con
 **conversiones implícitas desde tuplas**.
 
 ```csharp
-public record CallRequestParamsInfo(string                      Url,
+public record ApiCallOptions(string                      Url,
                                     Key                         HttpClientFactoryKey,
                                     Dictionary<string, string>? Headers           = null!,
                                     CancellationToken           CancellationToken = default);
 
-public record CallRequestParamsInfo<TRequest>(
+public record ApiCallOptions<TRequest>(
                          string                      Url,
                          Key                         HttpClientFactoryKey,
     [property: Required] TRequest                    RequestBody,
                          Dictionary<string, string>? Headers           = null!,
                          CancellationToken           CancellationToken = default);
 
-public record CallRequestPaginationParamsInfo(string Url, Key HttpClientFactoryKey,
+public record PagedApiCallOptions(string Url, Key HttpClientFactoryKey,
                                               IntNonNegative PageNumber, IntNonNegative PageSize,
                                               Dictionary<string, string>? Headers = null!,
                                               CancellationToken CancellationToken = default)
-    : CallRequestParamsInfo(Url, HttpClientFactoryKey, Headers, CancellationToken);
+    : ApiCallOptions(Url, HttpClientFactoryKey, Headers, CancellationToken);
 
-public record CallRequestPaginationParamsInfo<TRequest>(
+public record PagedApiCallOptions<TRequest>(
                          string Url, Key HttpClientFactoryKey,
     [property: Required] TRequest RequestBody,
                          IntNonNegative PageNumber, IntNonNegative PageSize,
                          Dictionary<string, string>? Headers = null!,
                          CancellationToken CancellationToken = default)
-    : CallRequestParamsInfo<TRequest>(Url, HttpClientFactoryKey, RequestBody, Headers, CancellationToken);
+    : ApiCallOptions<TRequest>(Url, HttpClientFactoryKey, RequestBody, Headers, CancellationToken);
 ```
 
 | Record | Hereda de | Añade | Se usa en |
 |---|---|---|---|
-| `CallRequestParamsInfo` | — | `Url`, `HttpClientFactoryKey`, `Headers`, `CancellationToken` | `HttpClientFactoryManager.GetAsync<T>(parameters, ct)`. |
-| `CallRequestParamsInfo<TRequest>` | — | `RequestBody` con `[Required]` | `InternalPostGetAsync` (protegido). |
-| `CallRequestPaginationParamsInfo` | `CallRequestParamsInfo` | `PageNumber`, `PageSize` | `GetPaginationAsync<T>(parameters, ct)`. |
-| `CallRequestPaginationParamsInfo<TRequest>` | `CallRequestParamsInfo<TRequest>` | `PageNumber`, `PageSize` | `PostGetPaginationAsync<TRequest, TItem>`. |
+| `ApiCallOptions` | — | `Url`, `HttpClientFactoryKey`, `Headers`, `CancellationToken` | `HttpApiInvoker.GetAsync<T>(parameters, ct)`. |
+| `ApiCallOptions<TRequest>` | — | `RequestBody` con `[Required]` | `SendAndReadAsync` (protegido). |
+| `PagedApiCallOptions` | `ApiCallOptions` | `PageNumber`, `PageSize` | `GetPagedAsync<T>(parameters, ct)`. |
+| `PagedApiCallOptions<TRequest>` | `ApiCallOptions<TRequest>` | `PageNumber`, `PageSize` | `PostAndReadPagedAsync<TRequest, TItem>`. |
 
 ### Construcción desde tupla (conversión implícita)
 
@@ -553,12 +553,12 @@ Cada record define un `implicit operator` desde la tupla con **todos** sus miemb
 
 ```csharp
 // Con nombre de tipo explícito
-var p1 = new CallRequestPaginationParamsInfo("pruebas", "PruebasClient", 1, 20, null, default);
+var p1 = new PagedApiCallOptions("pruebas", "PruebasClient", 1, 20, null, default);
 
 // Con tupla: el compilador aplica la conversión implícita
-CallRequestPaginationParamsInfo p2 = ("pruebas", "PruebasClient", 1, 20, null, CancellationToken.None);
+PagedApiCallOptions p2 = ("pruebas", "PruebasClient", 1, 20, null, CancellationToken.None);
 
-var page = await _manager.GetPaginationAsync<IEnumerable<PruebasDto>>(p2);
+var page = await _manager.GetPagedAsync<IEnumerable<PruebasDto>>(p2);
 ```
 
 > 💡 `ServiceKey`, `IntNonNegative` y `NotEmptyString` son *value objects* con conversiones implícitas desde
@@ -567,7 +567,7 @@ var page = await _manager.GetPaginationAsync<IEnumerable<PruebasDto>>(p2);
 
 ### Validación automática
 
-`GetPaginationAsync` y `PostGetPaginationAsync` **empiezan** validando el record:
+`GetPagedAsync` y `PostAndReadPagedAsync` **empiezan** validando el record:
 
 ```csharp
 await DataAnnotationsValidator.ValidateAsync(parameters)
@@ -590,32 +590,32 @@ Extensiones que devuelven `MlResult<…>` en lugar de lanzar. Todas tienen su ge
 **Sobre `HttpClient`:**
 
 ```csharp
-MlResult<HttpClient> SetHeaderInfo     (this HttpClient client, Name headerKey, string headerValue);
-MlResult<HttpClient> SetHeaderInfoAsInt(this HttpClient client, Name headerKey, int    headerValue);
-MlResult<HttpClient> SetHeaderPageNumber(this HttpClient client, IntNonNegative pageNumber); // "X-Page-Number"
-MlResult<HttpClient> SetHeaderPageSize  (this HttpClient client, IntNonNegative pageSize);   // "X-Page-Size"
-MlResult<HttpClient> SetHeaderPageInfo  (this HttpClient client, IntNonNegative pageNumber, IntNonNegative pageSize);
+MlResult<HttpClient> AddHeader     (this HttpClient client, Name headerKey, string headerValue);
+MlResult<HttpClient> AddIntHeader(this HttpClient client, Name headerKey, int    headerValue);
+MlResult<HttpClient> AddPageNumberHeader(this HttpClient client, IntNonNegative pageNumber); // "X-Page-Number"
+MlResult<HttpClient> AddPageSizeHeader  (this HttpClient client, IntNonNegative pageSize);   // "X-Page-Size"
+MlResult<HttpClient> AddPaginationHeaders  (this HttpClient client, IntNonNegative pageNumber, IntNonNegative pageSize);
 ```
 
 **Sobre `HttpRequestMessage`:**
 
 ```csharp
-MlResult<HttpRequestMessage> SetHeaderInfo(this HttpRequestMessage request, Name headerKey, NotEmptyString headerValue);
-MlResult<HttpRequestMessage> SetHeaders   (this HttpRequestMessage request, Dictionary<string, string> headerKeyValues);
+MlResult<HttpRequestMessage> AddHeader(this HttpRequestMessage request, Name headerKey, NotEmptyString headerValue);
+MlResult<HttpRequestMessage> TrySetHeaders   (this HttpRequestMessage request, Dictionary<string, string> headerKeyValues);
 ```
 
 | Extensión | Cabecera / efecto | Detalle de implementación |
 |---|---|---|
-| `SetHeaderInfo` (client) | `DefaultRequestHeaders.Add(key, value)` | `EnsureFp.NotNull(client)` → `TryExecSelfIfValid` → `Map(_ => client)`. |
-| `SetHeaderInfoAsInt` | Igual, con `value.ToString()` | Base de las dos siguientes. |
-| `SetHeaderPageNumber` | **`X-Page-Number`** | Constante literal, no expuesta como `const`. |
-| `SetHeaderPageSize` | **`X-Page-Size`** | Idem. |
-| `SetHeaderPageInfo` | ambas, encadenadas con `Bind` | Si la primera falla, la segunda no se ejecuta. |
-| `SetHeaderInfo` (request) | `request.Headers.Add(…)` | Valida `request` **y** `headerValue`. |
-| `SetHeaders` (request) | recorre el diccionario | Es el que usa el `HttpClientFactoryManager` en cada verbo, siempre con `headers ?? []`. |
+| `AddHeader` (client) | `DefaultRequestHeaders.Add(key, value)` | `EnsureFp.NotNull(client)` → `TryExecSelfIfValid` → `Map(_ => client)`. |
+| `AddIntHeader` | Igual, con `value.ToString()` | Base de las dos siguientes. |
+| `AddPageNumberHeader` | **`X-Page-Number`** | Constante literal, no expuesta como `const`. |
+| `AddPageSizeHeader` | **`X-Page-Size`** | Idem. |
+| `AddPaginationHeaders` | ambas, encadenadas con `Bind` | Si la primera falla, la segunda no se ejecuta. |
+| `AddHeader` (request) | `request.Headers.Add(…)` | Valida `request` **y** `headerValue`. |
+| `TrySetHeaders` (request) | recorre el diccionario | Es el que usa el `HttpApiInvoker` en cada verbo, siempre con `headers ?? []`. |
 
 > ⚠️ `HttpHeaders.Add` **lanza** si la cabecera ya existe; `TryExecSelfIfValid` la captura y la convierte
-> en `MlResult` fallido, así que llamar dos veces a `SetHeaderPageInfo` sobre el mismo `HttpClient`
+> en `MlResult` fallido, así que llamar dos veces a `AddPaginationHeaders` sobre el mismo `HttpClient`
 > devuelve un fallo en vez de sobrescribir. Usa un `HttpClient` recién creado por llamada (que es lo que
 > hace el manager) o `TryAddWithoutValidation` en tu propio código.
 >
@@ -634,7 +634,7 @@ Ambas devuelven `string.Empty` si la respuesta fue correcta y, si no, el bloque 
 (código, razón, detalle) descrito [más arriba](#cómo-se-transforma-un-error-del-servidor).
 
 > ⚠️ La versión **sincrónica** hace `response.Content.ReadAsStringAsync().Result`, y es precisamente la que
-> usan todas las tuberías del `HttpClientFactoryManager`. Es un bloqueo de hilo dentro de un método `async`:
+> usan todas las tuberías del `HttpApiInvoker`. Es un bloqueo de hilo dentro de un método `async`:
 > en un servidor con carga puede agotar el *thread pool*. Lo correcto sería usar
 > `ToResponseErrorsDescriptionAsync` con `BindAsync`.
 
@@ -643,55 +643,55 @@ Ambas devuelven `string.Empty` si la respuesta fue correcta y, si no, el bloque 
 ## `RegisterServices` — registro en el contenedor
 
 ```csharp
-public static IServiceCollection AddHttpClientsFp(this IServiceCollection services);
+public static IServiceCollection AddMlHttp(this IServiceCollection services);
 
-public static IServiceCollection AddGenClientFp<TService, TImplementation>(
+public static IServiceCollection AddRestClient<TService, TImplementation>(
         this IServiceCollection services,
-        Action<ServiceKey>        configureHttpClientKey = null!,
+        Action<ServiceKey>        clientNameFactory = null!,
         Action<HttpClient> configureClient        = null!)
     where TService : class where TImplementation : class, TService;
 
-public static IServiceCollection AddGenClientComplexFp<TService, TImplementation, TDto>(…)
+public static IServiceCollection AddCompositeKeyRestClient<TService, TImplementation, TDto>(…)
     where TService : class where TImplementation : class, TService where TDto : class;
 
-public static IServiceCollection AddGenClientDuplexComplexFp<TService, TImplementation, TRequest, TResponse>(…)
+public static IServiceCollection AddCompositeKeyRestClient<TService, TImplementation, TRequest, TResponse>(…)
     where TService : class where TImplementation : class, TService
     where TRequest : class where TResponse : class;
 ```
 
 | Método | Qué registra | Cuándo usarlo |
 |---|---|---|
-| `AddHttpClientsFp()` | `IHttpClientFactoryManager → HttpClientFactoryManager` (**Transient**) | **Siempre**, una sola vez. Es el prerrequisito de todo lo demás. |
-| `AddGenClientFp<TService, TImpl>()` | `AddHttpClient(nombre, configureClient)` + `TService → TImpl` (Transient) con la `ServiceKey` inyectada | Cliente de **clave simple** (derivado de `GenClientFp<…>`). |
-| `AddGenClientComplexFp<TService, TImpl, TDto>()` | Lo anterior **más** `IGenClientFp<TDto> → GenClientFp<TDto>` | Cliente de **clave compuesta simplex** (derivado de `GenComplexClientFp<TDto>`). |
-| `AddGenClientDuplexComplexFp<TService, TImpl, TRequest, TResponse>()` | Idem con `IGenClientFp<TRequest, TResponse>` | Cliente de **clave compuesta duplex**. |
+| `AddMlHttp()` | `IHttpApiInvoker → HttpApiInvoker` (**Transient**) | **Siempre**, una sola vez. Es el prerrequisito de todo lo demás. |
+| `AddRestClient<TService, TImpl>()` | `AddHttpClient(nombre, configureClient)` + `TService → TImpl` (Transient) con la `ServiceKey` inyectada | Cliente de **clave simple** (derivado de `RestClientFp<…>`). |
+| `AddCompositeKeyRestClient<TService, TImpl, TDto>()` | Lo anterior **más** `IRestClientFp<TDto> → RestClientFp<TDto>` | Cliente de **clave compuesta simplex** (derivado de `CompositeKeyRestClientFp<TDto>`). |
+| `AddCompositeKeyRestClient<TService, TImpl, TRequest, TResponse>()` | Idem con `IRestClientFp<TRequest, TResponse>` | Cliente de **clave compuesta duplex**. |
 
 Registro típico en `Program.cs`:
 
 ```csharp
-builder.Services.AddHttpClientsFp();
+builder.Services.AddMlHttp();
 
-builder.Services.AddGenClientFp<IPruebasClient, PruebasClient>(
+builder.Services.AddRestClient<IPruebasClient, PruebasClient>(
     configureClient: c =>
     {
         c.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/");
         c.Timeout     = TimeSpan.FromSeconds(30);
     });
 
-builder.Services.AddGenClientComplexFp<IReservasClient, ReservasClient, ReservaDto>(
+builder.Services.AddCompositeKeyRestClient<IReservasClient, ReservasClient, ReservaDto>(
     configureClient: c => c.BaseAddress = new Uri("https://localhost:7197/api/Reservas/"));
 ```
 
-> ⚠️⚠️ **NO uses el parámetro `configureHttpClientKey`.** El código es:
+> ⚠️⚠️ **NO uses el parámetro `clientNameFactory`.** El código es:
 >
 > ```csharp
-> ServiceKey httpClientFactoryKey = null!;
-> if (configureHttpClientKey is not null) configureHttpClientKey(httpClientFactoryKey);  // ← recibe null y no asigna nada
-> else httpClientFactoryKey = ServiceKey.CreateFromString(typeof(TImplementation).Name!);
+> ServiceKey clientName = null!;
+> if (clientNameFactory is not null) clientNameFactory(clientName);  // ← recibe null y no asigna nada
+> else clientName = ServiceKey.CreateFromString(typeof(TImplementation).Name!);
 > ```
 >
 > Al ser `ServiceKey` un tipo de referencia pasado **por valor**, el `Action<ServiceKey>` no puede devolver nada: si
-> pasas `configureHttpClientKey`, la clave se queda en `null` y el `AddHttpClient(null, …)` posterior
+> pasas `clientNameFactory`, la clave se queda en `null` y el `AddHttpClient(null, …)` posterior
 > revienta. **Usa siempre solo `configureClient`** y deja que la clave se derive del nombre de la
 > implementación (`nameof(PruebasClient)`), que es el comportamiento correcto de la rama `else`.
 
@@ -705,18 +705,18 @@ builder.Services.AddGenClientComplexFp<IReservasClient, ReservasClient, ReservaD
 
 Estas son observaciones verificadas leyendo la implementación. Consúltalas antes de depurar algo "raro".
 
-1. **`configureHttpClientKey` no funciona** en los tres helpers de registro (ver el bloque anterior).
+1. **`clientNameFactory` no funciona** en los tres helpers de registro (ver el bloque anterior).
    Es el problema más grave del proyecto.
-2. **El `ILogger<>` inyectado en `GenClientFp<…>` y en `GenComplexClientFp<…>` nunca se usa.** El logging
-   real ocurre una capa más abajo, en `HttpClientFactoryManager` (que sí usa su logger).
+2. **El `ILogger<>` inyectado en `RestClientFp<…>` y en `CompositeKeyRestClientFp<…>` nunca se usa.** El logging
+   real ocurre una capa más abajo, en `HttpApiInvoker` (que sí usa su logger).
 3. **`GetByIdAsync` usa el prefijo `id-str/` pero `PutByIdAsync` y `DeleteByIdAsync` no.** Encaja con
    `WebControllers`, pero es una asimetría que sorprende.
 4. **El `DeleteByIdAsync` duplex llama a `DeleteByIdAsync<TResponse>` mientras el simplex llama a
    `DeleteByIdAsync<TDto>`.** El genérico solo se usa para el texto del log, así que es inocuo, pero es
    incoherente.
-5. **`GetHttpClientFactoryKey()` no está en `IGenClientFp<>`**: si resuelves por la interfaz no lo verás.
-6. **`GetAsync<T>(CallRequestParamsInfo)` y `GetPaginationAsync<T>(CallRequestPaginationParamsInfo)`
-   tampoco están en `IHttpClientFactoryManager`.** Son públicos en la clase concreta, inaccesibles por DI.
+5. **`GetClientName()` no está en `IRestClientFp<>`**: si resuelves por la interfaz no lo verás.
+6. **`GetAsync<T>(ApiCallOptions)` y `GetPagedAsync<T>(PagedApiCallOptions)`
+   tampoco están en `IHttpApiInvoker`.** Son públicos en la clase concreta, inaccesibles por DI.
 7. **El código HTTP de error se pierde como dato estructurado**: viaja dentro del texto del mensaje.
    No hay 404 vs 500 distinguible sin *string matching*.
 8. **`ToResponseErrorsDescription()` (síncrono) usa `.Result`** dentro de tuberías `async`: bloqueo de hilo.
@@ -731,18 +731,18 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
 11. **`Path.CombineAll` para construir las URL de los mensajes de log.** En Windows produce
     `https://host\pruebas`. Solo afecta a los logs, no a la petición real, pero ensucia la traza.
 12. **Erratas en nombres públicos:** el genérico `TItem` (falta la `e` de *Enumerable*) en
-    `PostGetPaginationAsync`, el genérico `K` en vez de `TResult` en `PostAsync<T, K>`, y la palabra
+    `PostAndReadPagedAsync`, el genérico `K` en vez de `TResult` en `PostAsync<T, K>`, y la palabra
     `BaseAddress` en los comentarios de la interfaz pública.
 13. **Anotaciones de nulabilidad inconsistentes**: unos parámetros usan `= null!` y otros `= null`
     (`GetAsync<T>`, `PostAsync<T, K>`), lo que genera avisos distintos según el método.
-14. **Sobrecarga `PostGetAsync` comentada** dentro de `IHttpClientFactoryManager` (la que recibía
-    `CallRequestParamsInfo<TRequest>`): código muerto en un archivo de contrato público.
-15. **`PostGetAsync<T, TResult>` y `PostAsync<T, K>` son idénticos**: ambos serializan, hacen `POST` y
+14. **Sobrecarga `PostAndReadAsync` comentada** dentro de `IHttpApiInvoker` (la que recibía
+    `ApiCallOptions<TRequest>`): código muerto en un archivo de contrato público.
+15. **`PostAndReadAsync<T, TResult>` y `PostAsync<T, K>` son idénticos**: ambos serializan, hacen `POST` y
     deserializan a otro tipo. Dos nombres para la misma operación.
-16. **`GetPkValuesString` no contempla `null`** (`NullReferenceException`) y formatea los tipos no
+16. **`FormatCompositeKey` no contempla `null`** (`NullReferenceException`) y formatea los tipos no
     temporales con la **cultura del hilo**.
 17. **La coma como separador de PK compuesta** rompe si una parte de la clave es un `string` con comas.
-18. **`SetHeaders` valida `request` pero el mensaje dice `nameof(headerKeyValues)`**, y el diccionario en sí
+18. **`TrySetHeaders` valida `request` pero el mensaje dice `nameof(headerKeyValues)`**, y el diccionario en sí
     no se valida (aunque el manager siempre pasa `headers ?? []`, así que en la práctica no falla).
 19. **Mezcla de idiomas en los mensajes**: los de `EnsureFp` en el manager están en español
     (`"itemBody no puede ser nulo"`) y los de los helpers de cabeceras en inglés
@@ -755,7 +755,7 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
 
 - **Sin reintentos, *circuit breaker* ni *timeout* por política.** No hay integración con Polly ni con
   `AddStandardResilienceHandler`. Puedes añadirla tú encadenando sobre el `AddHttpClient` que hace
-  `AddGenClientFp` (el nombre del cliente es `nameof(TImplementation)`).
+  `AddRestClient` (el nombre del cliente es `nameof(TImplementation)`).
 - **Sin autenticación.** No hay soporte de `Bearer`, API key ni refresco de token: pásalos a mano en el
   diccionario `headers` o registra un `DelegatingHandler`.
 - **Sin `PATCH`.** Solo `GET`, `POST`, `PUT` y `DELETE`.
@@ -764,8 +764,8 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
 - **Sin `IAsyncEnumerable` ni *streaming*.** Todo se deserializa en memoria completo.
 - **Sin caché de cliente.** El *bypass* de caché (`X-Bypass-Cache`) solo tiene sentido contra un servidor
   que use `MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching`; aquí es simplemente una cabecera más.
-- **Sin `GetAllPaginationAsync` en `IGenClientFp`.** La paginación solo está en el nivel 1
-  (`GetPaginationAsync` / `PostGetPaginationAsync`), no en los clientes CRUD generados.
+- **Sin `GetAllPaginationAsync` en `IRestClientFp`.** La paginación solo está en el nivel 1
+  (`GetPagedAsync` / `PostAndReadPagedAsync`), no en los clientes CRUD generados.
 - **Sin *tests* propios** en la solución para este proyecto (existen
   `MoralesLarios.OOFP.Http.Tests.Unit` y `…Tests.Integration` como esqueletos).
 
@@ -780,16 +780,16 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
 public record PruebasDto(int Id, string Nombre, bool Activa);
 
 // ── Contrato e implementación ─────────────────────────────────────────────
-public interface IPruebasClient : IGenClientFp<PruebasDto> { }
+public interface IPruebasClient : IRestClientFp<PruebasDto> { }
 
-public class PruebasClient(ILogger<GenClientFp<PruebasDto>> logger,
-                           IHttpClientFactoryManager        manager,
+public class PruebasClient(ILogger<RestClientFp<PruebasDto>> logger,
+                           IHttpApiInvoker        manager,
                            Key                              key)
-    : GenClientFp<PruebasDto>(logger, manager, key), IPruebasClient { }
+    : RestClientFp<PruebasDto>(logger, manager, key), IPruebasClient { }
 
 // ── Registro ──────────────────────────────────────────────────────────────
-builder.Services.AddHttpClientsFp();
-builder.Services.AddGenClientFp<IPruebasClient, PruebasClient>(
+builder.Services.AddMlHttp();
+builder.Services.AddRestClient<IPruebasClient, PruebasClient>(
     configureClient: c => c.BaseAddress = new Uri("https://localhost:7197/api/Pruebas/"));
 
 // ── Consumo ───────────────────────────────────────────────────────────────
@@ -843,7 +843,7 @@ var headers = new Dictionary<string, string>
 var dto = await _client.GetByIdAsync("42", headers);
 ```
 
-Las cabeceras se aplican al `HttpRequestMessage` de **esa** petición (vía `SetHeadersAsync`), no al
+Las cabeceras se aplican al `HttpRequestMessage` de **esa** petición (vía `TrySetHeadersAsync`), no al
 `HttpClient`, así que no contaminan llamadas posteriores.
 
 ### Ejemplo 5 — Bypass de la caché del servidor
@@ -862,14 +862,14 @@ public Task<MlResult<IEnumerable<PruebasDto>>> TodasFrescasAsync()
 ```csharp
 public record ReservaDto(int SalaId, DateOnly Dia, string Titulo);
 
-public interface IReservasClient : IGenComplexClientFp<ReservaDto> { }
+public interface IReservasClient : ICompositeKeyRestClientFp<ReservaDto> { }
 
-public class ReservasClient(ILogger<GenComplexClientFp<ReservaDto>> logger,
-                            IGenClientFp<ReservaDto>                inner)
-    : GenComplexClientFp<ReservaDto>(logger, inner), IReservasClient { }
+public class ReservasClient(ILogger<CompositeKeyRestClientFp<ReservaDto>> logger,
+                            IRestClientFp<ReservaDto>                inner)
+    : CompositeKeyRestClientFp<ReservaDto>(logger, inner), IReservasClient { }
 
-// Registro (¡registra también el IGenClientFp<ReservaDto> interno!)
-builder.Services.AddGenClientComplexFp<IReservasClient, ReservasClient, ReservaDto>(
+// Registro (¡registra también el IRestClientFp<ReservaDto> interno!)
+builder.Services.AddCompositeKeyRestClient<IReservasClient, ReservasClient, ReservaDto>(
     configureClient: c => c.BaseAddress = new Uri("https://localhost:7197/api/Reservas/"));
 
 // Uso
@@ -887,12 +887,12 @@ var borrar   = await _reservas.DeleteByIdAsync(pk);                  // DELETE .
 public record CrearUsuarioRequest(string Nombre, string Email, string Password);
 public record UsuarioResponse   (int Id, string Nombre, string Email, DateTime Alta);
 
-public interface IUsuariosClient : IGenClientFp<CrearUsuarioRequest, UsuarioResponse> { }
+public interface IUsuariosClient : IRestClientFp<CrearUsuarioRequest, UsuarioResponse> { }
 
-public class UsuariosClient(ILogger<GenClientFp<CrearUsuarioRequest, UsuarioResponse>> logger,
-                            IHttpClientFactoryManager manager,
+public class UsuariosClient(ILogger<RestClientFp<CrearUsuarioRequest, UsuarioResponse>> logger,
+                            IHttpApiInvoker manager,
                             Key                       key)
-    : GenClientFp<CrearUsuarioRequest, UsuarioResponse>(logger, manager, key), IUsuariosClient { }
+    : RestClientFp<CrearUsuarioRequest, UsuarioResponse>(logger, manager, key), IUsuariosClient { }
 
 // El POST envía el Request y devuelve el Response, sin exponer nunca el password de vuelta
 MlResult<UsuarioResponse> creado =
@@ -902,14 +902,14 @@ MlResult<UsuarioResponse> creado =
 ### Ejemplo 8 — Paginación con el nivel 1
 
 ```csharp
-public class PruebasPagedService(HttpClientFactoryManager _manager)   // ← clase concreta, no la interfaz
+public class PruebasPagedService(HttpApiInvoker _manager)   // ← clase concreta, no la interfaz
 {
     public Task<MlResult<PagedResult<PruebasDto>>> PaginaAsync(int pagina, int tamano)
     {
-        CallRequestPaginationParamsInfo parametros =
+        PagedApiCallOptions parametros =
             ("pruebas/paged", "PruebasClient", pagina, tamano, null, CancellationToken.None);
 
-        return _manager.GetPaginationAsync<PagedResult<PruebasDto>>(parametros);
+        return _manager.GetPagedAsync<PagedResult<PruebasDto>>(parametros);
     }
 }
 ```
@@ -917,34 +917,34 @@ public class PruebasPagedService(HttpClientFactoryManager _manager)   // ← cla
 El manager añade `X-Page-Number` y `X-Page-Size` al `HttpClient` antes de llamar, exactamente las
 cabeceras que lee `GetHeaderPaginationInfo()` en el servidor.
 
-> ⚠️ Recuerda: `GetPaginationAsync` **no** está en `IHttpClientFactoryManager`, así que hay que inyectar
-> `HttpClientFactoryManager`. Si prefieres depender de la interfaz, usa
-> `PostGetPaginationAsync<TRequest, TEnumerableResponse>`, que sí está declarado.
+> ⚠️ Recuerda: `GetPagedAsync` **no** está en `IHttpApiInvoker`, así que hay que inyectar
+> `HttpApiInvoker`. Si prefieres depender de la interfaz, usa
+> `PostAndReadPagedAsync<TRequest, TEnumerableResponse>`, que sí está declarado.
 
-### Ejemplo 9 — Consulta compleja que viaja en el cuerpo (`PostGetAsync`)
+### Ejemplo 9 — Consulta compleja que viaja en el cuerpo (`PostAndReadAsync`)
 
 ```csharp
 public record FiltroPruebas(string? Nombre, bool? Activa, DateOnly? Desde, DateOnly? Hasta);
 
-public class BusquedaService(IHttpClientFactoryManager _manager)
+public class BusquedaService(IHttpApiInvoker _manager)
 {
     public Task<MlResult<IEnumerable<PruebasDto>>> BuscarAsync(FiltroPruebas filtro,
                                                                 CancellationToken ct = default)
-        => _manager.PostGetAsync<FiltroPruebas, IEnumerable<PruebasDto>>(
-               httpClientFactoryKey: "PruebasClient",
+        => _manager.PostAndReadAsync<FiltroPruebas, IEnumerable<PruebasDto>>(
+               clientName: "PruebasClient",
                itemBody:             filtro,
                url:                  "buscar",
                ct:                   ct);
 }
 ```
 
-Un filtro con demasiados campos no cabe cómodamente en la *query string*; `PostGetAsync` lo envía como
+Un filtro con demasiados campos no cabe cómodamente en la *query string*; `PostAndReadAsync` lo envía como
 JSON en el cuerpo de un `POST` y deserializa la lista de resultados.
 
 ### Ejemplo 10 — Bajar al `HttpClient` crudo cuando algo no encaja
 
 ```csharp
-public class DescargasClient(IHttpClientFactoryManager _manager)
+public class DescargasClient(IHttpApiInvoker _manager)
 {
     public async Task<MlResult<byte[]>> DescargarPdfAsync(int id, CancellationToken ct = default)
         => await _manager.CreateHttpClient("DescargasClient")                      // MlResult<HttpClient>
@@ -1002,13 +1002,13 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 
 | Tu escenario | Usa | Cómo |
 |---|---|---|
-| CRUD estándar con PK de un solo campo | `GenClientFp<TDto>` | Hereda + `AddGenClientFp<IX, X>()`. |
-| CRUD con PK de un solo campo y DTOs distintos de ida/vuelta | `GenClientFp<TRequest, TResponse>` | Hereda + `AddGenClientFp<IX, X>()`. |
-| CRUD con **PK compuesta** | `GenComplexClientFp<TDto>` | Hereda + `AddGenClientComplexFp<IX, X, TDto>()`. |
-| CRUD con PK compuesta y DTOs distintos | `GenComplexClientFp<TRequest, TResponse>` | Hereda + `AddGenClientDuplexComplexFp<…>()`. |
-| Endpoint suelto que no es CRUD | `IHttpClientFactoryManager` | Inyéctalo directo o usa `GetIHttpClientFactoryManager()`. |
-| Consulta con muchos filtros | `PostGetAsync<TFiltro, TResultado>` | El filtro viaja como JSON en el cuerpo. |
-| Listado paginado | `PostGetPaginationAsync<…>` (interfaz) o `GetPaginationAsync<T>` (clase) | Con `CallRequestPaginationParamsInfo`. |
+| CRUD estándar con PK de un solo campo | `RestClientFp<TDto>` | Hereda + `AddRestClient<IX, X>()`. |
+| CRUD con PK de un solo campo y DTOs distintos de ida/vuelta | `RestClientFp<TRequest, TResponse>` | Hereda + `AddRestClient<IX, X>()`. |
+| CRUD con **PK compuesta** | `CompositeKeyRestClientFp<TDto>` | Hereda + `AddCompositeKeyRestClient<IX, X, TDto>()`. |
+| CRUD con PK compuesta y DTOs distintos | `CompositeKeyRestClientFp<TRequest, TResponse>` | Hereda + `AddCompositeKeyRestClient<…>()`. |
+| Endpoint suelto que no es CRUD | `IHttpApiInvoker` | Inyéctalo directo o usa `GetIHttpClientFactoryManager()`. |
+| Consulta con muchos filtros | `PostAndReadAsync<TFiltro, TResultado>` | El filtro viaja como JSON en el cuerpo. |
+| Listado paginado | `PostAndReadPagedAsync<…>` (interfaz) o `GetPagedAsync<T>` (clase) | Con `PagedApiCallOptions`. |
 | Descarga binaria, `PATCH`, `multipart`, *streaming* | `CreateHttpClient(key)` + `TryMapAsync` | Puerta de escape al `HttpClient` crudo. |
 
 ### ¿Qué método del manager llamo?
@@ -1017,11 +1017,11 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 |---|---|---|
 | Leer una colección o un elemento | `GetAsync<T>` | `MlResult<T>` |
 | Crear y recuperar lo creado (mismo tipo) | `PostAsync<T>` | `MlResult<T>` |
-| Crear y recuperar otro tipo | `PostAsync<T, K>` / `PostGetAsync<T, TResult>` | `MlResult<K>` |
+| Crear y recuperar otro tipo | `PostAsync<T, K>` / `PostAndReadAsync<T, TResult>` | `MlResult<K>` |
 | Actualizar sin leer respuesta | `PutAsync<T>` | `MlResult<Empty>` |
 | Borrar enviando la entidad | `DeleteAsync<T>` | `MlResult<Empty>` |
 | Borrar por id | `DeleteByIdAsync<T>` | `MlResult<Empty>` |
-| Página de resultados | `PostGetPaginationAsync<TRequest, TItem>` | `MlResult<PagedResult<…>>` |
+| Página de resultados | `PostAndReadPagedAsync<TRequest, TItem>` | `MlResult<PagedResult<…>>` |
 | El `HttpClient` en bruto | `CreateHttpClient` | `MlResult<HttpClient>` (**síncrono**) |
 
 ### ¿Cómo consumo el `MlResult` que me devuelven?
@@ -1040,17 +1040,17 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 
 ## Mejores prácticas
 
-1. **Registra siempre `AddHttpClientsFp()` primero.** Sin `IHttpClientFactoryManager` en el contenedor,
+1. **Registra siempre `AddMlHttp()` primero.** Sin `IHttpApiInvoker` en el contenedor,
    los clientes generados no se pueden construir.
 
-2. **Nunca pases `configureHttpClientKey`.** Está roto (ver particularidad 1). Usa solo `configureClient`
+2. **Nunca pases `clientNameFactory`.** Está roto (ver particularidad 1). Usa solo `configureClient`
    y deja que la clave sea `nameof(TImplementation)`.
 
 3. **Pon la barra final en el `BaseAddress`.** `"https://host/api/Pruebas/"`, no `".../Pruebas"`. Es la
    causa número uno de 404 inexplicables.
 
-4. **Define una interfaz de dominio por cliente** (`IPruebasClient : IGenClientFp<PruebasDto>`) en lugar de
-   inyectar `IGenClientFp<PruebasDto>`. Así añades métodos propios, puedes tener varios clientes del mismo
+4. **Define una interfaz de dominio por cliente** (`IPruebasClient : IRestClientFp<PruebasDto>`) en lugar de
+   inyectar `IRestClientFp<PruebasDto>`. Así añades métodos propios, puedes tener varios clientes del mismo
    DTO apuntando a hosts distintos y los mocks de los tests quedan con nombre claro.
 
 5. **No abras el `MlResult` dentro de la capa de aplicación.** Compón con `Bind`/`Map` y traduce solo en la
@@ -1066,16 +1066,16 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
    la variante con `params` al final: es la única que admite cabeceras y `CancellationToken` con claridad.
 
 9. **Formatea tú los valores no temporales de una PK compuesta** con `InvariantCulture` antes de pasarlos
-   (`decimal`, `double`, `float`), porque `GetPkValuesString` usa la cultura del hilo.
+   (`decimal`, `double`, `float`), porque `FormatCompositeKey` usa la cultura del hilo.
 
 10. **No metas comas ni `null` en una PK compuesta.** Las comas rompen el `Split(',')` del servidor y el
     `null` provoca `NullReferenceException` en el formateo.
 
 11. **Pasa las cabeceras por petición, no por `HttpClient`.** El diccionario `headers` de cada método se
-    aplica al `HttpRequestMessage`; usar `SetHeaderInfo` sobre un `HttpClient` compartido acumula cabeceras
+    aplica al `HttpRequestMessage`; usar `AddHeader` sobre un `HttpClient` compartido acumula cabeceras
     y falla en la segunda llamada.
 
-12. **Añade resiliencia por fuera.** Tras `AddGenClientFp<IX, X>()` puedes escribir
+12. **Añade resiliencia por fuera.** Tras `AddRestClient<IX, X>()` puedes escribir
     `services.AddHttpClient(nameof(X)).AddStandardResilienceHandler()` para sumar reintentos, *timeout* y
     *circuit breaker* sin tocar la librería.
 
@@ -1091,8 +1091,8 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 16. **Si necesitas distinguir el código HTTP, envuelve la llamada.** El status solo llega dentro del texto
     del error; añade tú la clave con `AddMetadataOrThrow` en el punto de la petición si vas a decidir según 404 / 409.
 
-17. **Para paginación desde una interfaz, usa `PostGetPaginationAsync`.** `GetPaginationAsync` obliga a
-    depender de la clase concreta `HttpClientFactoryManager`.
+17. **Para paginación desde una interfaz, usa `PostAndReadPagedAsync`.** `GetPagedAsync` obliga a
+    depender de la clase concreta `HttpApiInvoker`.
 
 18. **Un `ServiceKey` = un `BaseAddress`.** No reutilices el mismo nombre de cliente para dos hosts: la
     configuración de `IHttpClientFactory` es por nombre y la última gana.
@@ -1103,18 +1103,18 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 
 `MoralesLarios.OOFP.Http` es el lado cliente del enfoque ferroviario de la solución:
 
-- **Tres niveles**: `HttpClientFactoryManager` (transporte), `GenClientFp<…>` (CRUD de clave simple) y
-  `GenComplexClientFp<…>` (CRUD de clave compuesta), cada uno construido sobre el anterior.
+- **Tres niveles**: `HttpApiInvoker` (transporte), `RestClientFp<…>` (CRUD de clave simple) y
+  `CompositeKeyRestClientFp<…>` (CRUD de clave compuesta), cada uno construido sobre el anterior.
 - **Cero excepciones y cero `null`**: todo devuelve `MlResult<T>`; los fallos de red, de estado HTTP y de
   deserialización se convierten en errores componibles con código, razón y cuerpo del error.
-- **Cuatro líneas por cliente**: heredar de `GenClientFp<TDto>` y llamar a `AddGenClientFp<IX, X>()` te da
+- **Cuatro líneas por cliente**: heredar de `RestClientFp<TDto>` y llamar a `AddRestClient<IX, X>()` te da
   siete verbos CRUD con logging incluido.
 - **Espejo de `WebControllers`**: las rutas que genera (`""`, `id-str/{id}`, `{id}`) encajan con las que
   publican los controladores base del lado servidor, y las cabeceras `X-Page-Number` / `X-Page-Size` con
   las que lee `WebApi`.
 - **Puerta de escape siempre disponible**: `CreateHttpClient(key)` y `GetIHttpClientFactoryManager()` te
   devuelven al `HttpClient` crudo, ya envuelto en `MlResult`, para todo lo que la librería no cubre.
-- **Con aristas conocidas**: `configureHttpClientKey` no funciona, el status HTTP no viaja estructurado, no
+- **Con aristas conocidas**: `clientNameFactory` no funciona, el status HTTP no viaja estructurado, no
   hay control del JSON ni resiliencia integrada y `ToResponseErrorsDescription` bloquea con `.Result`.
 
 ---

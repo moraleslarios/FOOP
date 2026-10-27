@@ -6,7 +6,7 @@ using MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration;
 
-public class GenClientFpPruebasTests(IPruebasClient _sut)
+public class RestClientFpPruebasTests(IPruebasClient _sut)
 {
     [Fact]
     public async Task GetAllAsync_integracion()

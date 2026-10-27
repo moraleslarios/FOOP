@@ -10,7 +10,7 @@ public static partial class MlResultSeveralExtensions
 {
 
 
-    #region EmptyToFailed
+    #region FailIfEmpty
 
 
 
@@ -88,11 +88,11 @@ public static partial class MlResultSeveralExtensions
 
 
 
-    #endregion EmptyToFailed
+    #endregion FailIfEmpty
 
 
 
-    #region NullToFailed
+    #region FailIfNull
 
 
     public static MlResult<T> FailIfNull<T>(this T               source,
@@ -153,7 +153,7 @@ public static partial class MlResultSeveralExtensions
 
 
 
-    #region BoolToResult
+    #region FailIfFalse
 
 
 

@@ -46,7 +46,7 @@ public static partial class RegisterServices
 
     public static IServiceCollection AddTransientCrudServicesDuplexFpWithoutRepositories(this IServiceCollection services)
     {
-        services.AddTransient(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
+        services.AddTransient(typeof(ICrudServiceFp<,,>), typeof(CrudServiceFp<,,>));
 
         return services;
     }
@@ -54,7 +54,7 @@ public static partial class RegisterServices
     public static IServiceCollection AddScopedCrudServicesDuplexFpWithoutRepositories(this IServiceCollection services)
     {
 
-        services.AddScoped(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
+        services.AddScoped(typeof(ICrudServiceFp<,,>), typeof(CrudServiceFp<,,>));
 
         return services;
     }
@@ -62,7 +62,7 @@ public static partial class RegisterServices
 
     public static IServiceCollection AddSingletonCrudServicesDuplexFpWithoutRepositories(this IServiceCollection services)
     {
-        services.AddSingleton(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
+        services.AddSingleton(typeof(ICrudServiceFp<,,>), typeof(CrudServiceFp<,,>));
 
         return services;
     }

@@ -4,13 +4,13 @@
 
 namespace MoralesLarios.OOFP.Http;
 
-public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>> _logger,
-                               IHttpClientFactoryManager  _httpClientFactoryManager,
-                               ServiceKey                        _httpClientFactoryKey) : IGenClientFp<TDto>
+public partial class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
+                               IHttpApiInvoker  _httpClientFactoryManager,
+                               ServiceKey                        _httpClientFactoryKey) : IRestClientFp<TDto>
 { 
 
-    public IHttpClientFactoryManager GetIHttpClientFactoryManager() => _httpClientFactoryManager;
-    public ServiceKey                       GetHttpClientFactoryKey()      => _httpClientFactoryKey;
+    public IHttpApiInvoker GetIHttpClientFactoryManager() => _httpClientFactoryManager;
+    public ServiceKey                       GetClientName()      => _httpClientFactoryKey;
 
 
     public virtual Task<MlResult<IEnumerable<TDto>>> GetAllAsync(Dictionary<string, string> headers = null!, 
@@ -65,13 +65,13 @@ public class GenClientFp<TDto>(ILogger<GenClientFp<TDto>> _logger,
 
 
 
-public class GenClientFp<TRequest, TResponse>(ILogger<GenClientFp<TRequest, TResponse>> _logger,
-                                              IHttpClientFactoryManager                 _httpClientFactoryManager,
-                                              ServiceKey                                       _httpClientFactoryKey) : IGenClientFp<TRequest, TResponse>
+public partial class RestClientFp<TRequest, TResponse>(ILogger<RestClientFp<TRequest, TResponse>> _logger,
+                                              IHttpApiInvoker                 _httpClientFactoryManager,
+                                              ServiceKey                                       _httpClientFactoryKey) : IRestClientFp<TRequest, TResponse>
 { 
 
-    public IHttpClientFactoryManager GetIHttpClientFactoryManager() => _httpClientFactoryManager;
-    public ServiceKey                       GetHttpClientFactoryKey()      => _httpClientFactoryKey;
+    public IHttpApiInvoker GetIHttpClientFactoryManager() => _httpClientFactoryManager;
+    public ServiceKey                       GetClientName()      => _httpClientFactoryKey;
 
 
     public virtual Task<MlResult<IEnumerable<TResponse>>> GetAllAsync(Dictionary<string, string> headers = null!, 

@@ -2,7 +2,7 @@
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
-public interface IPruebasClient : IGenClientFp<PruebasDto>
+public interface IPruebasClient : IRestClientFp<PruebasDto>
 {
     Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithCache2Async();
     Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithCacheAsync();

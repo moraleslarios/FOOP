@@ -250,7 +250,8 @@ internal static class Runner
     {
         var owner = symbol switch
         {
-            INamedTypeSymbol t => t.ContainingNamespace.ToDisplayString(),
+            // Con aridad: GenClientFp<T> y GenClientFp<TReq, TResp> son tipos distintos.
+            INamedTypeSymbol t => t.ContainingNamespace.ToDisplayString() + "`" + t.Arity,
             IParameterSymbol p => p.ContainingSymbol.ToDisplayString(),
             ITypeParameterSymbol tp => tp.ContainingSymbol.ToDisplayString(),
             _ => symbol.ContainingType?.ToDisplayString() ?? ""

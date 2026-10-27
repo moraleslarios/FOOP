@@ -1,5 +1,5 @@
 ﻿namespace MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
-public interface IPruebaComplexClient : IGenComplexClientFp<PruebaComplexDto>
+public interface IPruebaComplexClient : ICompositeKeyRestClientFp<PruebaComplexDto>
 {
 }

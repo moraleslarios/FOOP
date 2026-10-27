@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration;
 
-public class GenClientFpTests
+public class RestClientFpTests
 {
 
 }

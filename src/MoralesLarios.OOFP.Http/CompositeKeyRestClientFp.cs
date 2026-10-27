@@ -1,7 +1,7 @@
 ﻿namespace MoralesLarios.OOFP.Http;
 
-public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
-                                      IGenClientFp<TDto>                _genClientFp) : IGenComplexClientFp<TDto>
+public class CompositeKeyRestClientFp<TDto>(ILogger<CompositeKeyRestClientFp<TDto>> _logger,
+                                      IRestClientFp<TDto>                _genClientFp) : ICompositeKeyRestClientFp<TDto>
 {
 
 
@@ -12,15 +12,15 @@ public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
 
     public virtual async Task<MlResult<TDto>> GetByIdAsync(       Dictionary<string, string> headers = null!,
                                                                   CancellationToken          ct      = default,
-                                                           params object[]                   pk)
-        => await NotEmptyString.FromString(GetPkValuesString(pk))
+                                                           params object[]                   keyValues)
+        => await NotEmptyString.FromString(FormatCompositeKey(keyValues))
                                      .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
 
 
-        public virtual async Task<MlResult<TDto>> GetByIdAsync(object[]                   pk,
+        public virtual async Task<MlResult<TDto>> GetByIdAsync(object[]                   keyValues,
                                                                Dictionary<string, string> headers = null!,
                                                                CancellationToken          ct      = default)
-        => await GetByIdAsync(headers, ct, pk);
+        => await GetByIdAsync(headers, ct, keyValues);
 
 
     public virtual Task<MlResult<TDto>> PostAsync(TDto                       itemBody, 
@@ -37,15 +37,15 @@ public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
     public virtual Task<MlResult<EmptyValue>> PutByIdAsync(       TDto                       itemBody,
                                                              Dictionary<string, string> headers = null!, 
                                                              CancellationToken          ct      = default,
-                                                      params object[]                   pk)
-        => NotEmptyString.FromString(GetPkValuesString(pk))
+                                                      params object[]                   keyValues)
+        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
                          .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
 
-    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(object[]                   keyValues,
                                                       TDto                       itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
-        => PutByIdAsync(itemBody, headers, ct, pk);
+        => PutByIdAsync(itemBody, headers, ct, keyValues);
 
     public virtual Task<MlResult<EmptyValue>> DeleteAsync(TDto                       itemBody, 
                                                      Dictionary<string, string> headers = null!, 
@@ -54,17 +54,17 @@ public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
 
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
                                                                 CancellationToken          ct      = default,
-                                                         params object[]                   pk)
-        => NotEmptyString.FromString(GetPkValuesString(pk))
+                                                         params object[]                   keyValues)
+        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
                             .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
 
-    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(object[]                   keyValues,
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
-        => DeleteByIdAsync(headers, ct, pk);
+        => DeleteByIdAsync(headers, ct, keyValues);
 
 
-    protected virtual string GetPkValuesString(object[] pkValues)
+    protected virtual string FormatCompositeKey(object[] pkValues)
     {
         return string.Join(",", pkValues.Select(v => v switch
         {
@@ -86,8 +86,8 @@ public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
 
 
 
-public class GenComplexClientFp<TRequest, TResponse>(ILogger<GenComplexClientFp<TRequest, TResponse>> _logger,
-                                                     IGenClientFp<TRequest, TResponse>                _genClientFp) : IGenComplexClientFp<TRequest, TResponse>
+public class CompositeKeyRestClientFp<TRequest, TResponse>(ILogger<CompositeKeyRestClientFp<TRequest, TResponse>> _logger,
+                                                     IRestClientFp<TRequest, TResponse>                _genClientFp) : ICompositeKeyRestClientFp<TRequest, TResponse>
 {
 
 
@@ -98,15 +98,15 @@ public class GenComplexClientFp<TRequest, TResponse>(ILogger<GenComplexClientFp<
 
     public virtual async Task<MlResult<TResponse>> GetByIdAsync(       Dictionary<string, string> headers = null!,
                                                                        CancellationToken          ct      = default,
-                                                                params object[]                   pk)
-        => await NotEmptyString.FromString(GetPkValuesString(pk))
+                                                                params object[]                   keyValues)
+        => await NotEmptyString.FromString(FormatCompositeKey(keyValues))
                                      .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
 
 
-        public virtual async Task<MlResult<TResponse>> GetByIdAsync(object[]                   pk,
+        public virtual async Task<MlResult<TResponse>> GetByIdAsync(object[]                   keyValues,
                                                                     Dictionary<string, string> headers = null!,
                                                                     CancellationToken          ct      = default)
-        => await GetByIdAsync(headers, ct, pk);
+        => await GetByIdAsync(headers, ct, keyValues);
 
 
     public virtual Task<MlResult<TResponse>> PostAsync(TRequest                   itemBody, 
@@ -123,15 +123,15 @@ public class GenComplexClientFp<TRequest, TResponse>(ILogger<GenComplexClientFp<
     public virtual Task<MlResult<EmptyValue>> PutByIdAsync(       TRequest                   itemBody,
                                                              Dictionary<string, string> headers = null!, 
                                                              CancellationToken          ct      = default,
-                                                      params object[]                   pk)
-        => NotEmptyString.FromString(GetPkValuesString(pk))
+                                                      params object[]                   keyValues)
+        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
                          .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
 
-    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(object[]                   keyValues,
                                                       TRequest                   itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
-        => PutByIdAsync(itemBody, headers, ct, pk);
+        => PutByIdAsync(itemBody, headers, ct, keyValues);
 
     public virtual Task<MlResult<EmptyValue>> DeleteAsync(TRequest                   itemBody, 
                                                      Dictionary<string, string> headers = null!, 
@@ -140,17 +140,17 @@ public class GenComplexClientFp<TRequest, TResponse>(ILogger<GenComplexClientFp<
 
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
                                                                 CancellationToken          ct      = default,
-                                                         params object[]                   pk)
-        => NotEmptyString.FromString(GetPkValuesString(pk))
+                                                         params object[]                   keyValues)
+        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
                             .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
 
-    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(object[]                   keyValues,
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
-        => DeleteByIdAsync(headers, ct, pk);
+        => DeleteByIdAsync(headers, ct, keyValues);
 
 
-    protected virtual string GetPkValuesString(object[] pkValues)
+    protected virtual string FormatCompositeKey(object[] pkValues)
     {
         return string.Join(",", pkValues.Select(v => v switch
         {

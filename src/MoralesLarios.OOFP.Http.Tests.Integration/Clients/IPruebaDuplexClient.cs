@@ -2,6 +2,6 @@
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
-public interface IPruebaDuplexClient : IGenClientFp<PruebaRequestDto, PruebaResponseDto>
+public interface IPruebaDuplexClient : IRestClientFp<PruebaRequestDto, PruebaResponseDto>
 {
 }

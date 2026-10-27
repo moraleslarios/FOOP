@@ -15,7 +15,7 @@ public static partial class RegisterServices
 
     public static TRepo GetRepository<TRepo>()
             => ServiceProvider.GetService<TRepo>() 
-                    ?? throw new ArgumentException($"{typeof(TRepo).Name} is not registered in the IServiceCollection. It must be registered individually or using one of the AddTransientOOFPRepos<T, TContext>, AddScopedOOFPRepos<T, TContext>, or AddSingletonOOFPRepos<T, TContext> methods.");
+                    ?? throw new ArgumentException($"{typeof(TRepo).Name} is not registered in the IServiceCollection. It must be registered individually or using one of the AddOofpRepositoriesTransient<T, TContext>, AddOofpRepositories<T, TContext>, or AddOofpRepositoriesSingleton<T, TContext> methods.");
 
 
     public static IServiceCollection AddOofpRepositoriesTransient<T, TContext>(this IServiceCollection services)

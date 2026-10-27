@@ -29,7 +29,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     }
 
     public virtual MlResult<T> TryFind(params object[] keyValues)
-        => TryFind($"{keyValues.GetPkValues()} values not found data in {typeName}", keyValues);
+        => TryFind($"{keyValues.FormatCompositeKey()} values not found data in {typeName}", keyValues);
 
 
     public virtual async Task<MlResult<T>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
@@ -42,7 +42,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     }
 
     public virtual Task<MlResult<T>> TryFindAsync(CancellationToken token = default, params object[] keyValues)
-        => TryFindAsync($"{keyValues.GetPkValues()} values not found data in {typeName}", token, keyValues);
+        => TryFindAsync($"{keyValues.FormatCompositeKey()} values not found data in {typeName}", token, keyValues);
 
 
     public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails)
