@@ -174,7 +174,7 @@ var saldo = _repo.ConsultarSaldo(cuenta)
 **3. Distingue error técnico de error de negocio.** Un fallo de negocio puede tener un valor por defecto razonable; una excepción de infraestructura normalmente no debe silenciarse:
 
 ```csharp
-.MapIfFail(errores => errores.GetDetailException().IsValid
+.MapIfFail(errores => errores.GetDetailException().IsSuccess
                           ? throw new InvalidOperationException("Fallo técnico no recuperable")  // ⚠️ ver TryMapIfFail
                           : Tarifa.Estandar);
 ```
@@ -303,7 +303,7 @@ public async Task<MlResult<TarjetaSaldoVm>> ObtenerTarjetaAsync(string iban)
             funcFail : errores => new TarjetaSaldoVm(
                                     Importe    = "—",
                                     Actualizado = "no disponible",
-                                    Estado      = errores.GetDetailException().IsValid
+                                    Estado      = errores.GetDetailException().IsSuccess
                                                         ? EstadoTarjeta.ErrorTecnico
                                                         : EstadoTarjeta.SinDatos,
                                     Aviso       = errores.ToErrorsDescription()));
@@ -385,7 +385,7 @@ var bien4 = Principal().ExecSelfIfFail(e => _log.LogWarning("{D}", e.ToErrorsDes
 
 5. **Usa la Forma B como traductor final a modelo de vista.** Unifica los dos carriles en un tipo que la presentación sabe pintar, sin `if` en la vista.
 
-6. **Aprovecha el `MlErrorsDetails` que recibes.** No lo ignores con `_ =>`: puede alimentar el motivo, decidir entre varios valores por defecto o distinguir error técnico de error de negocio con `GetDetailException().IsValid`.
+6. **Aprovecha el `MlErrorsDetails` que recibes.** No lo ignores con `_ =>`: puede alimentar el motivo, decidir entre varios valores por defecto o distinguir error técnico de error de negocio con `GetDetailException().IsSuccess`.
 
 7. **Para «recuperar solo si no fue una excepción», usa [`MapIfFailWithoutException`](7_MapIfFailWithoutException.md)**, no un `if` dentro del delegado.
 

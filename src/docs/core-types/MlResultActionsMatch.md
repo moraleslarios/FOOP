@@ -2,7 +2,7 @@
 
 `Match` es la **salida** de la tubería funcional: el único punto donde se abandona el mundo
 `MlResult<T>` y se obtiene un valor concreto, tratando de forma explícita **ambas ramas**
-(válido y fallido). Por eso nunca hace falta acceder a `.Value` ni comprobar `IsValid` a mano.
+(válido y fallido). Por eso nunca hace falta acceder a `.Value` ni comprobar `IsSuccess` a mano.
 
 ---
 
@@ -10,8 +10,8 @@
 
 | Estado de `source` | Función ejecutada |
 | --- | --- |
-| `IsValid == true` | `valid(value)` — recibe el valor válido. |
-| `IsFail == true` | `fail(errorsDetails)` — recibe el `MlErrorsDetails` completo. |
+| `IsSuccess == true` | `valid(value)` — recibe el valor válido. |
+| `IsFailure == true` | `fail(errorsDetails)` — recibe el `MlErrorsDetails` completo. |
 
 Es **exhaustivo por construcción**: el compilador te obliga a proporcionar las dos funciones, así
 que es imposible olvidar el tratamiento del error.
@@ -134,7 +134,7 @@ MlResult<string> json = ObtenerCliente(id)
               fail               : errores => JsonSerializer.Serialize(new { errores = errores.ToErrorsMessages() }),
               errorMessageBuilder: ex      => $"Error al serializar la respuesta del cliente {id}: {ex.Message}");
 
-// json.IsFail == true si alguno de los dos serializadores lanzó excepción.
+// json.IsFailure == true si alguno de los dos serializadores lanzó excepción.
 ```
 
 ### Región `MatchAll`: mismo resultado en cualquier caso
@@ -157,7 +157,7 @@ MlResult<string> estado = await ProcesarLoteAsync(lote)
 var cliente = resultado.Value;
 
 // ❌ Ramificación manual: verbosa, fácil de olvidar el else.
-if (resultado.IsValid) { /* ... */ } else { /* ... */ }
+if (resultado.IsSuccess) { /* ... */ } else { /* ... */ }
 
 // ✅ Match: exhaustivo, conciso y sin acceso al estado interno.
 var respuesta = resultado.Match(valid: c => Ok(c), fail: e => BadRequest(e.ToErrorsMessages()));
@@ -174,7 +174,7 @@ var respuesta = resultado.Match(valid: c => Ok(c), fail: e => BadRequest(e.ToErr
 | Seguir dentro de `MlResult` transformando el valor válido | [`Map`](MlResultActionsMap.md) |
 | Seguir dentro de `MlResult` con una operación que puede fallar | [`Bind`](MlResultActionsBind.md) |
 | Solo observar (log, métrica) sin cambiar nada | [`ExecSelf`](MlResultActionsExecSelf.md) |
-| Obtener el valor con garantías dentro de la tubería | `SecureValidValue` ([`MlResultActions`](MlResultActions.md)) |
+| Obtener el valor con garantías dentro de la tubería | `GetValueOrThrow` ([`MlResultActions`](MlResultActions.md)) |
 
 ---
 

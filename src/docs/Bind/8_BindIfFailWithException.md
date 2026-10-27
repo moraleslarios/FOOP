@@ -29,7 +29,7 @@ resultado.BindIfFail(errores =>
 {
     var resultadoEx = errores.GetDetailException();
 
-    if (resultadoEx.IsFail) return errores;                  // no había excepción
+    if (resultadoEx.IsFailure) return errores;                  // no había excepción
 
     var ex = resultadoEx.Match(valid: e => e, fail: _ => null!);
 
@@ -58,7 +58,7 @@ resultado.BindIfFailWithException(ex => ex switch
 
 ## Cómo llega la excepción a los detalles
 
-`BindIfFailWithException` no captura excepciones: **las lee** de `Details`, bajo la clave convencional `EX_DESC_KEY` (`"Ex"`). Esa clave la rellena automáticamente cualquier método de la familia `Try*` cuando captura una excepción:
+`BindIfFailWithException` no captura excepciones: **las lee** de `Details`, bajo la clave convencional `ExceptionMetadataKey` (`"Ex"`). Esa clave la rellena automáticamente cualquier método de la familia `Try*` cuando captura una excepción:
 
 ```csharp
 // TryBind captura la excepción y la guarda en Details["Ex"]
@@ -174,7 +174,7 @@ El propio código fuente lo documenta con un comentario, y merece la pena repeti
 
 | | `BindIfFailWithValue` | `BindIfFailWithException` |
 |---|---|---|
-| Dato que busca en `Details` | `Details["Value"]` (clave `VALUE_KEY`) | `Details["Ex"]` (clave `EX_DESC_KEY`) |
+| Dato que busca en `Details` | `Details["Value"]` (clave `ValueMetadataKey`) | `Details["Ex"]` (clave `ExceptionMetadataKey`) |
 | Quién lo pone | Tú, con `AddValueIfFail(...)` | Automáticamente cualquier método `Try*` |
 | Si el dato **no está** | Añade un error nuevo al fallo que ya venía | **Devuelve el fallo exactamente como llegó** |
 

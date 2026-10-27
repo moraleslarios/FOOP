@@ -13,7 +13,7 @@ public class KeyTests
 
         var result = Key.ByString(value);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class KeyTests
 
         var result = Key.ByString(value);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class KeyTests
 
         var result = Key.ByString(value);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]

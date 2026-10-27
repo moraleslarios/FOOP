@@ -16,7 +16,7 @@ public class ExtensionsTests
 
         MlResult<User> result = source.ValidateWithDataannotations();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -28,7 +28,7 @@ public class ExtensionsTests
 
         MlResult<User> result = source.ValidateWithDataannotations();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -43,7 +43,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
 
-        var resultErrors = result.SecureFailErrorsDetails().Errors.Count();
+        var resultErrors = result.GetFailureDetailsOrThrow().Errors.Count();
 
         resultErrors.Should().Be(2);
     }
@@ -87,7 +87,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
 
-        var resultErrors = result.SecureFailErrorsDetails().Errors.Count();
+        var resultErrors = result.GetFailureDetailsOrThrow().Errors.Count();
 
         resultErrors.Should().Be(1);
     }

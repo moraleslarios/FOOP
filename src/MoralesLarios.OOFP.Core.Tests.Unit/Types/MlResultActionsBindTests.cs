@@ -37,7 +37,7 @@ public class MlResultActionsBindTests
 
         MlResult<string> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethod);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -162,7 +162,7 @@ public class MlResultActionsBindTests
 
         MlResult<string> result = partialResultResult.TryBindSaveValueInDetailsIfFailedFuncResult(BindTestMethodStringThrowException, _ => "Error forced !!!!");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -183,7 +183,7 @@ public class MlResultActionsBindTests
                                                                         x => "Biieenn 2",
                                                                         x => "Bien 3333");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -198,7 +198,7 @@ public class MlResultActionsBindTests
                                                                         x => "Biieenn 2",
                                                                         x => "Bien 3333");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -211,7 +211,7 @@ public class MlResultActionsBindTests
                                                                         x => "Biieenn 2",
                                                                         x => "error".ToMlResultFail<string>());
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -426,7 +426,7 @@ public class MlResultActionsBindTests
         MlResult<int> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethodInt)
                                                 .BindIfFailWithValue(x => x * 2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -482,7 +482,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> expected = 0;
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -519,7 +519,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.TryBindIfFail(errorsDetails => BindTestMethodIntThrowException(0), "Other error");
 
-        result.IsFail.Should().BeTrue(); 
+        result.IsFailure.Should().BeTrue(); 
     }
 
     [Fact]
@@ -531,7 +531,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -546,7 +546,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -564,7 +564,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResult.TryBindIfFailAsync(errorsDetails => BindTestMethodIntThrowExceptionAsync(0), "Other error");
 
-        result.IsFail.Should().BeTrue(); 
+        result.IsFailure.Should().BeTrue(); 
     }
 
     [Fact]
@@ -576,7 +576,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -591,7 +591,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -610,7 +610,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResultAsync.TryBindIfFailAsync(errorsDetails => BindTestMethodIntThrowExceptionAsync(0), "Other error");
 
-        result.IsFail.Should().BeTrue(); 
+        result.IsFailure.Should().BeTrue(); 
     }
 
     [Fact]
@@ -622,7 +622,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -637,7 +637,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -702,7 +702,7 @@ public class MlResultActionsBindTests
                                                                                                   funcFail           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year),
                                                                                                   errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -717,7 +717,7 @@ public class MlResultActionsBindTests
                                                                                                   funcFail           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year),
                                                                                                   errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -737,7 +737,7 @@ public class MlResultActionsBindTests
                                                                                                   funcFail           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year / 0),
                                                                                                   errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -757,7 +757,7 @@ public class MlResultActionsBindTests
                                                                                                        funcFailAsync           : valueDateTime  => (Convert.ToDecimal(valueDateTime.Year)).ToMlResultValidAsync(),
                                                                                                        errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -777,7 +777,7 @@ public class MlResultActionsBindTests
                                                                                                        funcFailAsync           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year / 0).ToMlResultValidAsync(),
                                                                                                        errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -801,7 +801,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.BindIfFailWithException(ex => (ex != null! ? 1 : 0).ToMlResultValid());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -811,7 +811,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -845,7 +845,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResult.BindIfFailWithExceptionAsync(ex => (ex != null! ? 1 : 0).ToMlResultValidAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -855,7 +855,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -890,7 +890,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResultAsync.BindIfFailWithExceptionAsync(ex => (ex != null! ? 1 : 0).ToMlResultValidAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -900,7 +900,7 @@ public class MlResultActionsBindTests
         Task<MlResult<int>> partialResultAsync =  ("miError",
                                                         new Dictionary<string, object>
                                                         {
-                                                            { EX_DESC_KEY, new Exception("miException") },
+                                                            { ExceptionMetadataKey, new Exception("miException") },
                                                             { "key2", "value2" }
                                                         }
                                                     ).ToMlResultFailAsync<int>();
@@ -937,7 +937,7 @@ public class MlResultActionsBindTests
         Task<MlResult<int>> partialResultAsync =  ("miError",
                                                         new Dictionary<string, object>
                                                         {
-                                                            { EX_DESC_KEY, new Exception("miException") },
+                                                            { ExceptionMetadataKey, new Exception("miException") },
                                                             { "key2", "value2" }
                                                         }
                                                     ).ToMlResultFailAsync<int>();
@@ -962,14 +962,14 @@ public class MlResultActionsBindTests
     //    MlResult<int> partialResult =  ("miError",
     //                                        new Dictionary<string, object>
     //                                        {
-    //                                            { EX_DESC_KEY, new Exception("miException") },
+    //                                            { ExceptionMetadataKey, new Exception("miException") },
     //                                            { "key2", "value2" }
     //                                        }
     //                                    );
 
     //    MlResult<bool> result = partialResult.BindIfFailWithException(ex => (ex != null).ToMlResultValid()));
 
-    //    result.IsValid.Should().BeTrue();
+    //    result.IsSuccess.Should().BeTrue();
     //}
 
 
@@ -994,7 +994,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult =  ("miError",
                                                 new Dictionary<string, object>
                                                 {
-                                                    { EX_DESC_KEY, new Exception("miException") },
+                                                    { ExceptionMetadataKey, new Exception("miException") },
                                                     { "key2", "value2" }
                                                 }
                                             );
@@ -1033,7 +1033,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.BindIfFailWithException<int, InvalidOperationException>(ex => (ex != null! ? 1 : 0).ToMlResultValid());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -1043,7 +1043,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new InvalidOperationException("miException") },
+                                                { ExceptionMetadataKey, new InvalidOperationException("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1059,7 +1059,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new InvalidOperationException("miException") },
+                                                { ExceptionMetadataKey, new InvalidOperationException("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1078,7 +1078,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new InvalidOperationException("miException") },
+                                                { ExceptionMetadataKey, new InvalidOperationException("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1113,7 +1113,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.BindIfFailWithoutException( _ => 1.ToMlResultValid());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1122,7 +1122,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult =  ("miError",
                                                        new Dictionary<string, object>
                                                        {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1139,7 +1139,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.BindIfFailWithoutException( _ => 1.ToMlResultValid());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1163,7 +1163,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResult.BindIfFailWithoutExceptionAsync(_ => 1.ToMlResultValidAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -1175,7 +1175,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult = ("miError",
                                                                   new Dictionary<string, object>
                                                                   {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                                                                                          );
@@ -1194,7 +1194,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResult.BindIfFailWithoutExceptionAsync(_ => 1.ToMlResultValidAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1216,7 +1216,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResultAsync.BindIfFailWithoutExceptionAsync(_ => 1.ToMlResultValidAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -1226,7 +1226,7 @@ public class MlResultActionsBindTests
         Task<MlResult<int>> partialResultAsync =  ("miError",
                                                                    new Dictionary<string, object>
                                                                    {
-                                                            { EX_DESC_KEY, new Exception("miException") },
+                                                            { ExceptionMetadataKey, new Exception("miException") },
                                                             { "key2", "value2" }
                                                         }
                                                                                                                       ).ToMlResultFailAsync<int>();
@@ -1246,7 +1246,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = await partialResultAsync.BindIfFailWithoutExceptionAsync(_ => 1.ToMlResultValidAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1269,7 +1269,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.TryBindIfFailWithoutException(_ => 1.ToMlResultValid());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1278,7 +1278,7 @@ public class MlResultActionsBindTests
         MlResult<int> partialResult =  ("miError",
                                                                   new Dictionary<string, object>
                                                                   {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                                                                                          );
@@ -1295,7 +1295,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.TryBindIfFailWithoutException(_ => 1.ToMlResultValid());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1319,7 +1319,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> result = partialResult.TryBindIfFailWithoutException(_ => (initialValue / 0).ToMlResultValid());
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1333,7 +1333,7 @@ public class MlResultActionsBindTests
 
         bool hasExError = result.Match(
                                             valid: _             => false,
-                                            fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                            fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                         );
 
         hasExError.Should().BeTrue();
@@ -1349,7 +1349,7 @@ public class MlResultActionsBindTests
 
         MlResult<string> result = partialResult.BindIfFailWithoutException<int, string>( funcValid: _ => 1.ToString().ToMlResultValid(),
                                                                                          funcFail:  _ => "done !!!".ToMlResultValid());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1383,7 +1383,7 @@ public class MlResultActionsBindTests
 
         MlResult<string> result = partialResult.BindIfFailWithoutException<int, string>( funcValid: _ => 1.ToString().ToMlResultValid(),
                                                                                                     funcFail:  _ => "done !!!".ToMlResultValid());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1393,7 +1393,7 @@ public class MlResultActionsBindTests
 
         MlResult<string> result = await partialResult.BindIfFailWithoutExceptionAsync<int, string>( funcValidAsync: _ => 1.ToString().ToMlResultValidAsync(),
                                                                                                     funcFailAsync :  _ => "done !!!".ToMlResultValidAsync());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1428,7 +1428,7 @@ public class MlResultActionsBindTests
 
         MlResult<string> result = await partialResult.BindIfFailWithoutExceptionAsync<int, string>( funcValidAsync: _ => 1.ToString().ToMlResultValidAsync(),
                                                                                                     funcFailAsync :  _ => "done !!!".ToMlResultValidAsync());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -1439,7 +1439,7 @@ public class MlResultActionsBindTests
 
         MlResult<string> result = await partialResultAsync.BindIfFailWithoutExceptionAsync<int, string>( funcValidAsync: _ => 1.ToString().ToMlResultValidAsync(),
                                                                                                          funcFailAsync : _ => "done !!!".ToMlResultValidAsync());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1486,7 +1486,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1,
                                                                               x_name => "Name",
                                                                               x_date => date);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1499,7 +1499,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1,
                                                                               x_name => "Name",
                                                                               x_date => date);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -1562,7 +1562,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
                                                                               x_name => "Error".ToMlResultFail<string>().ToMlResultObject(),
                                                                               x_date => date.ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1575,7 +1575,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
                                                                               x_name => "Error_Name".ToMlResultFail<string>()  .ToMlResultObject(),
                                                                               x_date => "Error_Date".ToMlResultFail<DateTime>().ToMlResultObject());
-        var errors = result.SecureFailErrorsDetails().Errors.Count();
+        var errors = result.GetFailureDetailsOrThrow().Errors.Count();
 
         errors.Should().Be(2);
     }
@@ -1587,7 +1587,7 @@ public class MlResultActionsBindTests
 
         MlResult<TestType> result = partialResult.TryBindBuild<int, TestType>(x_id   => 1.ToMlResultValid(),
                                                                               x_name => "Error".ToMlResultFail<string>().ToMlResultObject());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1602,7 +1602,7 @@ public class MlResultActionsBindTests
                                                                               x_date => date.ToMlResultValid(),
                                                                               x_date => date.ToMlResultValid());
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -1616,7 +1616,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1     .ToMlResultValidAsync().ToMlResultObjectAsync(),
                                                                                               x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
                                                                                               x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1629,7 +1629,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1     .ToMlResultValidAsync().ToMlResultObjectAsync(),
                                                                                               x_name => "Name".ToMlResultValidAsync().ToMlResultObjectAsync(),
                                                                                               x_date => date  .ToMlResultValidAsync().ToMlResultObjectAsync());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1691,7 +1691,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1      .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
                                                                                               x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync(),
                                                                                               x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1702,7 +1702,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1      .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
                                                                                               x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync());
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1716,7 +1716,7 @@ public class MlResultActionsBindTests
                                                                                               x_name => "Error".ToMlResultFailAsync<string>().ToMlResultObjectAsync(),
                                                                                               x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync(),
                                                                                               x_date => date   .ToMlResultValidAsync()       .ToMlResultObjectAsync());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -1730,7 +1730,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1                            .ToMlResultObjectAsync(),
                                                                                               x_name => BindTestMethodAsync(x_name)  .ToMlResultObjectAsync(),
                                                                                               x_date => date.  ToMlResultValidAsync().ToMlResultObjectAsync());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -1744,7 +1744,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = await partialResultAsync.TryBindBuildAsync<int, TestType>(x_id   => 1.ToMlResultObjectAsync(),
                                                                                               x_name => BindTestMethodAsync(x_name).ToMlResultObjectAsync(), //Fail
                                                                                               x_date => date.ToMlResultValidAsync().ToMlResultObjectAsync());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -1763,7 +1763,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = partialResult.TryBindBuildTuple(x_id   => 1     .ToMlResultValid(),
                                                                     x_name => "Name".ToMlResultValid());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1773,7 +1773,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = partialResult.TryBindBuildTuple(x_id => 1.ToMlResultValid(),
                                                                     x_name => "Name".ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1783,7 +1783,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = partialResult.TryBindBuildTuple(x_id   => "Error_force".ToMlResultFail<int>(),
                                                                     x_name => "Name".ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1810,7 +1810,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResult.TryBindBuildTupleAsync(x_id   => 1     .ToMlResultValid(),
                                                                                x_name => "Name".ToMlResultValid());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1820,7 +1820,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResult.TryBindBuildTupleAsync(x_id => 1.ToMlResultValid(),
                                                                                x_name => "Name".ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1830,7 +1830,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResult.TryBindBuildTupleAsync(x_id   => "Error_force".ToMlResultFail<int>(),
                                                                                x_name => "Name".ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1857,7 +1857,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResultAsync.TryBindBuildTupleAsync(x_id   => 1.ToMlResultValid(),
                                                                                     x_name => "Name".ToMlResultValid());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1867,7 +1867,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResultAsync.TryBindBuildTupleAsync(x_id   => 1.ToMlResultValid(),
                                                                                     x_name => "Name".ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1877,7 +1877,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResultAsync.TryBindBuildTupleAsync(x_id   => "Error_force".ToMlResultFail<int>(),
                                                                                     x_name => "Name".ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1906,7 +1906,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResultAsync.TryBindBuildTupleAsync(x_id   => 1.ToMlResultValidAsync(),
                                                                                     x_name => "Name".ToMlResultValidAsync());
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -1916,7 +1916,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResultAsync.TryBindBuildTupleAsync(x_id   => 1.ToMlResultValidAsync(),
                                                                                     x_name => "Name".ToMlResultValidAsync());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1926,7 +1926,7 @@ public class MlResultActionsBindTests
 
         MlResult<(int, string)> result = await partialResultAsync.TryBindBuildTupleAsync(x_id   => "Error_force".ToMlResultFailAsync<int>(),
                                                                                     x_name => "Name".ToMlResultValidAsync());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -1988,7 +1988,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuildWhile<int, TestType>(x_id   => 1,
                                                                                 x_name => "Name",
                                                                                 x_date => date);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -2001,7 +2001,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuildWhile<int, TestType>(x_id   => 1,
                                                                                 x_name => "Name",
                                                                                 x_date => date);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -2064,7 +2064,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuildWhile<int, TestType>(x_id   => 1.ToMlResultValid(),
                                                                                 x_name => "Error".ToMlResultFail<string>().ToMlResultObject(),
                                                                                 x_date => date.ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -2074,7 +2074,7 @@ public class MlResultActionsBindTests
 
         MlResult<TestType> result = partialResult.TryBindBuildWhile<int, TestType>(x_id   => 1.ToMlResultValid(),
                                                                                 x_name => "Error".ToMlResultFail<string>().ToMlResultObject());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -2088,7 +2088,7 @@ public class MlResultActionsBindTests
                                                                                 x_name => "Error".ToMlResultFail<string>().ToMlResultObject(),
                                                                                 x_date => date.ToMlResultValid(),
                                                                                 x_date => date.ToMlResultValid());
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -2101,7 +2101,7 @@ public class MlResultActionsBindTests
         MlResult<TestType> result = partialResult.TryBindBuildWhile<int, TestType>(x_id   => 1.ToMlResultValid(),
                                                                                 x_name => "Error_Name".ToMlResultFail<string>().ToMlResultObject(),
                                                                                 x_date => "Error_Date".ToMlResultFail<DateTime>().ToMlResultObject());
-        var errors = result.SecureFailErrorsDetails().Errors.Count();
+        var errors = result.GetFailureDetailsOrThrow().Errors.Count();
 
         errors.Should().Be(1);
     }

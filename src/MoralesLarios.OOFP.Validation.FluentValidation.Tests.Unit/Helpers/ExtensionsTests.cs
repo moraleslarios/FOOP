@@ -17,7 +17,7 @@ public class ExtensionsTests
 
         MlResult<User> result = source.ValidateWithFluentValidations<User, UserValidator>();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -29,7 +29,7 @@ public class ExtensionsTests
 
         MlResult<User> result = source.ValidateWithFluentValidations<User, UserValidator>();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -79,8 +79,8 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Count().Should().Be(2);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Count().Should().Be(2);
     }
 
     [Fact]
@@ -93,8 +93,8 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Count().Should().Be(1);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Count().Should().Be(1);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class ExtensionsTests
 
         MlResult<User> result = await sourceAsync.ValidateWithFluentValidationsAsync<User, UserValidator>();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = await sourceAsync.ValidateWithFluentValidationsAsync<User, UserValidator>();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public class ExtensionsTests
 
         MlResult<User> result = FluentValidationsValidator.Validate<User, UserValidator>(source!);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = FluentValidationsValidator.Validate<User, UserValidator>(source);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class ExtensionsTests
 
         MlResult<User> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(source);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(source);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class ExtensionsTests
         MlResult<User> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(
             Task.FromResult(new User("user", DateTime.Now, "password", "password")));
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public class ExtensionsTests
 
         MlResult<IEnumerable<User>> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(sourceAsync);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

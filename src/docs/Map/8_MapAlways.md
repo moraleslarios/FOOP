@@ -67,7 +67,7 @@ public static MlResult<TReturn> MapAlways<T, TReturn>(this MlResult<T>   source,
 Es importante entender lo que **no** hace:
 
 - **No** llama a `source.Match(...)`.
-- **No** consulta `source.IsValid`.
+- **No** consulta `source.IsSuccess`.
 - **No** conserva ni un solo error ni detalle del origen.
 - El parámetro `source` existe **únicamente** para que el método pueda escribirse como extensión y encajar en una cadena fluida.
 
@@ -317,7 +317,7 @@ public async Task<MlResult<RegistroAuditoria>> EjecutarConAuditoriaAsync(string 
         },
         funcFailAlwaysAsync: async err =>
         {
-            var esTecnico = err.GetDetailException().IsValid;   // ¿había excepción en Details["Ex"]?
+            var esTecnico = err.GetDetailException().IsSuccess;   // ¿había excepción en Details["Ex"]?
             var reg = RegistroAuditoria.Fallido(operacion, inicio, DateTime.UtcNow,
                                                 err.ToErrorsDescription(),
                                                 esTecnico ? "TECNICO" : "NEGOCIO");
@@ -327,7 +327,7 @@ public async Task<MlResult<RegistroAuditoria>> EjecutarConAuditoriaAsync(string 
 }
 ```
 
-Fíjate en `err.GetDetailException().IsValid` como forma idiomática de preguntar "¿este fallo es técnico?".
+Fíjate en `err.GetDetailException().IsSuccess` como forma idiomática de preguntar "¿este fallo es técnico?".
 
 ### Ejemplo 3: Recarga total de estado (Forma A bien usada)
 
@@ -355,7 +355,7 @@ public async Task<Semaforo> ComprobarSaludAsync()
 
     var semaforo = await comprobaciones.MapAlwaysAsync(
         funcValidAlwaysAsync: _   => Semaforo.Verde.ToAsync(),
-        funcFailAlwaysAsync : err => (err.GetDetailException().IsValid
+        funcFailAlwaysAsync : err => (err.GetDetailException().IsSuccess
                                           ? Semaforo.Rojo(err.ToErrorsMessages())      // avería
                                           : Semaforo.Ambar(err.ToErrorsMessages()))    // degradación de negocio
                                      .ToAsync());
@@ -410,7 +410,7 @@ var r5 = ObtenerCliente(id)
 
 7. **Protege con `TryMapAlways` los delegados frágiles** (serialización, E/S, cálculos con datos parciales). Recuerda que en la rama fallida los errores originales **se arrastran** si el delegado lanza.
 
-8. **Distingue fallo técnico de fallo de negocio dentro de `funcFailAlways`** con `err.GetDetailException().IsValid`. Así una sola llamada a `MapAlways` puede producir respuestas diferenciadas (503 vs. 400, rojo vs. ámbar).
+8. **Distingue fallo técnico de fallo de negocio dentro de `funcFailAlways`** con `err.GetDetailException().IsSuccess`. Así una sola llamada a `MapAlways` puede producir respuestas diferenciadas (503 vs. 400, rojo vs. ámbar).
 
 9. **No uses `MapAlways` para efectos secundarios.** Si solo quieres registrar o notificar sin cambiar el resultado, la herramienta correcta es [`ExecSelf`](../ExecSelf/1_ExecSelf.md).
 

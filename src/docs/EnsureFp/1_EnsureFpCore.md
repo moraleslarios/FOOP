@@ -158,8 +158,8 @@ var result = TryThat(json,
                      "El JSON no contiene un identificador válido.");
 
 // Si Parse lanza:
-//   result.IsFail == true
-//   result.SecureFailErrorsDetails().GetDetailException()   → la JsonException original
+//   result.IsFailure == true
+//   result.GetFailureDetailsOrThrow().GetDetailException()   → la JsonException original
 ```
 
 La tercera sobrecarga permite construir el mensaje **a partir de la excepción**:
@@ -266,10 +266,10 @@ Todas las constantes viven en `Helpers/Constants.cs` y están disponibles por `g
 | Constante | Valor | Quién la rellena |
 |---|---|---|
 | `PARAM_NAME_KEY` | `"ParamName"` | todas las variantes `*Arg` y `TryThat` |
-| `VALUE_KEY` | `"Value"` | las variantes `*Arg` |
+| `ValueMetadataKey` | `"Value"` | las variantes `*Arg` |
 | `EXPECTED_KEY` | `"Expected"` | reglas numéricas `*Arg` (límite/rango esperado) |
 | `FAILED_INDEXES_KEY` | `"FailedIndexes"` | `AllMatch`, `NoneMatch`, `AnyMatch` |
-| `EX_DESC_KEY` | `"Ex"` | `TryThat*` al capturar la excepción |
+| `ExceptionMetadataKey` | `"Ex"` | `TryThat*` al capturar la excepción |
 
 Lectura desde el consumidor:
 

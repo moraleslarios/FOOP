@@ -456,7 +456,7 @@ public class ProcesadorInformesTests
 
         var resultado = sut.Procesar("cualquiera.json");
 
-        resultado.IsFail.Should().BeTrue();
+        resultado.IsFailure.Should().BeTrue();
     }
 }
 ```
@@ -476,7 +476,7 @@ var lineas = _io.ReadAllLines(ruta)
 
 
 // ❌ MAL: dar por hecho que un Valid significa "leído sin problemas"
-if (_io.EnumerateFiles(carpeta).IsValid) { /* nada se ha leído todavía */ }
+if (_io.EnumerateFiles(carpeta).IsSuccess) { /* nada se ha leído todavía */ }
 
 // ✅ BIEN: materializar y comprobar
 var ficheros = _io.EnumerateFiles(carpeta).TryMap(f => f.ToList(), "Error al enumerar");

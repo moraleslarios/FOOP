@@ -14,7 +14,7 @@ public class RegexValueTests
 
         var result = RegexValue.ByRegex(value, pattern);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class RegexValueTests
 
         var result = RegexValue.ByRegex(value, pattern);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class RegexValueTests
 
         var result = RegexValue.ByRegex(value, pattern);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

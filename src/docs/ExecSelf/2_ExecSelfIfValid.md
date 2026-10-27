@@ -34,7 +34,7 @@ MlResult<Usuario> resultado = ObtenerUsuario(id)
 ```csharp
 // ❌ Comprobación manual: rompe el encadenamiento y accede al valor directamente.
 var r = ObtenerUsuario(id);
-if (r.IsValid) _log.LogInformation("Usuario recuperado");   // ¿y el valor? Value es internal protected
+if (r.IsSuccess) _log.LogInformation("Usuario recuperado");   // ¿y el valor? Value es internal protected
 
 // ✅ Encadenable y con el valor ya desempaquetado.
 var r = ObtenerUsuario(id)
@@ -215,7 +215,7 @@ email sí cuente como error, cambia ese eslabón por `TryExecSelfIfValidAsync`.
 
 ```csharp
 // ❌
-resultado.ExecSelf(r => { if (r.IsValid) Notificar(); });
+resultado.ExecSelf(r => { if (r.IsSuccess) Notificar(); });
 
 // ✅
 resultado.ExecSelfIfValid(v => Notificar(v));

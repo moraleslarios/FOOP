@@ -55,8 +55,8 @@ Definidas en `Helpers/Constants.cs` y usadas por toda la librería:
 
 | Constante | Valor | Quién la escribe |
 | --- | --- | --- |
-| `Constants.EX_DESC_KEY` | `"Ex"` | Todos los métodos `Try*` al capturar una excepción. Si ya existía, se numeran `Ex2`, `Ex3`… |
-| `Constants.VALUE_KEY` | `"Value"` | `AddValueIfFail`, `AddValueDetailIfFail` y las familias `*IfFailWithValue`. |
+| `Constants.ExceptionMetadataKey` | `"Ex"` | Todos los métodos `Try*` al capturar una excepción. Si ya existía, se numeran `Ex2`, `Ex3`… |
+| `Constants.ValueMetadataKey` | `"Value"` | `AddValueIfFail`, `AddValueDetailIfFail` y las familias `*IfFailWithValue`. |
 
 ---
 
@@ -90,7 +90,7 @@ falla limpiamente si la excepción es de otra clase:
 // ¿Fue concretamente un timeout? Si fue otra cosa (o no hubo excepción), obtenemos Fail.
 MlResult<TimeoutException> timeout = errores.GetDetailException<TimeoutException>();
 
-bool debeReintentar = timeout.IsValid;
+bool debeReintentar = timeout.IsSuccess;
 ```
 
 ---
@@ -201,7 +201,7 @@ public async Task<IActionResult> ProcesarPagoAsync(PagoDto dto)
         })
         .MatchAsync(
             valid: recibo  => Ok(recibo),
-            fail : errores => errores.GetDetailException<TimeoutException>().IsValid
+            fail : errores => errores.GetDetailException<TimeoutException>().IsSuccess
                                   ? Accepted(new { mensaje = "Pago encolado para reintento" })
                                   : BadRequest(new { errores = errores.ToErrorsMessages() }));
 }

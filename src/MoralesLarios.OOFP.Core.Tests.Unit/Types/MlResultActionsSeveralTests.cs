@@ -353,7 +353,7 @@ public class MlResultActionsSeveralTests
 
         MlResult<string?> result = await sourceAsync.NullToFailedAsync(MlError.FromErrorMessage("Error"));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -363,7 +363,7 @@ public class MlResultActionsSeveralTests
 
         MlResult<string?> result = await sourceAsync.NullToFailedAsync(MlErrorsDetails.FromErrorMessage("Error"));
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -373,7 +373,7 @@ public class MlResultActionsSeveralTests
 
         MlResult<int> result = await sourceAsync.BoolToResultAsync(condition: false, error: MlError.FromErrorMessage("Error"));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -383,7 +383,7 @@ public class MlResultActionsSeveralTests
 
         MlResult<int> result = await sourceAsync.BoolToResultAsync(condition: true, errorsDetails: MlErrorsDetails.FromErrorMessage("Error"));
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 

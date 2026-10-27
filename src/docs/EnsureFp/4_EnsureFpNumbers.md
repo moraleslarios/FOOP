@@ -177,9 +177,9 @@ que añaden todas las guardas `*Arg`.
 ```csharp
 var resultado = InRangeArg(edad, 18, 120);
 
-if (resultado.IsFail)
+if (resultado.IsFailure)
 {
-    var detalles = resultado.SecureFailErrorsDetails();
+    var detalles = resultado.GetFailureDetailsOrThrow();
 
     detalles.ToErrorsMessages();        // "'edad' debe estar entre 18 y 120 (actual: 15)."
     detalles.ToDetailsDescription();    // ParamName = edad, Value = 15, Expected = 18..120

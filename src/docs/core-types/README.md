@@ -63,7 +63,7 @@ Esto significa que **no necesitas adaptar tu código a la librería**: existe la
 
 ## Regla de oro: no accedas al valor directamente
 
-En `MlResult<T>`, tanto `Value` como `ErrorsDetails` son `internal protected`. Es intencional: **la forma soportada de salir del raíl es `Match`** (o `SecureValidValue` cuando ya has garantizado la validez).
+En `MlResult<T>`, tanto `Value` como `ErrorsDetails` son `internal protected`. Es intencional: **la forma soportada de salir del raíl es `Match`** (o `GetValueOrThrow` cuando ya has garantizado la validez).
 
 ```csharp
 // ❌ No compila fuera de la librería

@@ -87,7 +87,7 @@ logger.LogInformation("Comenzando la ejecución");
 //MlResult<int> partialResult1Exception = ("miError",
 //                                            new Dictionary<string, object>
 //                                            {
-//                                                { EX_DESC_KEY, new Exception("miException") },
+//                                                { ExceptionMetadataKey, new Exception("miException") },
 //                                                { "key2", "value2" }
 //                                            }
 //                                        );
@@ -132,7 +132,7 @@ logger.LogInformation($"**************  Probando el método LogMlResultIfFailWit
 MlResult<int> partialResult1Exception = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );

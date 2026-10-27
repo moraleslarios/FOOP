@@ -109,8 +109,8 @@ En el segundo caso no hay `try/catch`, no hay excepciones de negocio y quien lla
 
 | Estado | Propiedades | Significado |
 |--------|-------------|-------------|
-| Válido | `IsValid == true`, `IsFail == false` | El flujo tiene un valor correcto disponible en `Value`. |
-| Fallido | `IsValid == false`, `IsFail == true` | El flujo ha fallado y el motivo está en `ErrorsDetails`. |
+| Válido | `IsSuccess == true`, `IsFailure == false` | El flujo tiene un valor correcto disponible en `Value`. |
+| Fallido | `IsSuccess == false`, `IsFailure == true` | El flujo ha fallado y el motivo está en `ErrorsDetails`. |
 
 Estos dos estados son mutuamente excluyentes: nunca hay un resultado "medio válido". Esto es precisamente lo que permite que todas las operaciones posteriores sean predecibles: cada método sabe exactamente qué hacer en cada una de las dos ramas.
 
@@ -152,9 +152,9 @@ MlResult<int> r1 = 42;                            // int            → resultad
 MlResult<int> r2 = MlResult<int>.Fail("error");   // construcción explícita
 MlResult<int> r3 = "valor inválido";              // string          → resultado fallido
 
-Console.WriteLine(r1.IsValid); // True
-Console.WriteLine(r2.IsFail);  // True
-Console.WriteLine(r3.IsFail);  // True
+Console.WriteLine(r1.IsSuccess); // True
+Console.WriteLine(r2.IsFailure);  // True
+Console.WriteLine(r3.IsFailure);  // True
 ```
 
 La librería ofrece conversiones implícitas para:
@@ -493,10 +493,10 @@ Todos los mensajes automáticos se generan en `EnsureFpMessages`, de forma que e
 | Clave | Constante | Contenido |
 |-------|-----------|-----------|
 | `ParamName` | `PARAM_NAME_KEY` | nombre o expresión del argumento validado |
-| `Value` | `VALUE_KEY` | valor recibido |
+| `Value` | `ValueMetadataKey` | valor recibido |
 | `Expected` | `EXPECTED_KEY` | límite o valor esperado por la regla |
 | `FailedIndexes` | `FAILED_INDEXES_KEY` | posiciones que incumplen un predicado de colección |
-| `Ex` | `EX_DESC_KEY` | excepción capturada por `TryThat` |
+| `Ex` | `ExceptionMetadataKey` | excepción capturada por `TryThat` |
 
 > 🔑 **No analices el texto del mensaje** para tomar decisiones: usa las claves de `Details`.
 
@@ -995,24 +995,24 @@ var result = MlResult<string>.Fail("error")
 
 Muy útil justo antes de devolver el resultado a la capa superior, para dejar constancia del contexto de ejecución (nombre del método, parámetros de entrada, identificador de correlación…).
 
-### `SecureValidValue` / `SecureFailErrorsDetails`
+### `GetValueOrThrow` / `GetFailureDetailsOrThrow`
 
 Permiten **acceder directamente** al contenido del resultado, pero de forma protegida: si el resultado no está en el estado esperado, lanzan excepción en lugar de devolver un valor basura o `null`.
 
 ```csharp
 var ok = MlResult<int>.Valid(99);
-Console.WriteLine(ok.SecureValidValue());        // 99
+Console.WriteLine(ok.GetValueOrThrow());        // 99
 
 var bad = MlResult<int>.Fail("error");
-Console.WriteLine(bad.SecureFailErrorsDetails()); // error
+Console.WriteLine(bad.GetFailureDetailsOrThrow()); // error
 ```
 
 Este patrón lanza excepción si el flujo no está en el estado esperado, lo que ayuda a proteger el acceso inseguro a datos: convierte un posible bug silencioso en un fallo inmediato y visible.
 
-- `SecureValidValue()` → devuelve el valor; **lanza** si el resultado está en `fail`.
-- `SecureFailErrorsDetails()` → devuelve el detalle del error; **lanza** si el resultado es válido.
+- `GetValueOrThrow()` → devuelve el valor; **lanza** si el resultado está en `fail`.
+- `GetFailureDetailsOrThrow()` → devuelve el detalle del error; **lanza** si el resultado es válido.
 
-⚠️ **Cuándo usarlos:** principalmente en **tests** y en puntos donde ya has comprobado el estado (`if (result.IsValid) …`). En código de producción, la vía recomendada es siempre `Match`, porque no puede lanzar y obliga a tratar ambas ramas.
+⚠️ **Cuándo usarlos:** principalmente en **tests** y en puntos donde ya has comprobado el estado (`if (result.IsSuccess) …`). En código de producción, la vía recomendada es siempre `Match`, porque no puede lanzar y obliga a tratar ambas ramas.
 
 ### `CreateCompleteMlResult`
 
@@ -1046,8 +1046,8 @@ var envio = cliente.CreateCompleteMlResult(direccion)
 | `AddMlErrorDetailIfFail` | fallo | adjuntar un detalle de error extra. |
 | `CompleteWithDataValueIfValid` | válido | derivar/completar el valor. |
 | `CompleteWithDetailsValueIfFail` | fallo | añadir contexto al detalle. |
-| `SecureValidValue` | válido (o lanza) | acceso directo controlado al valor. |
-| `SecureFailErrorsDetails` | fallo (o lanza) | acceso directo controlado al error. |
+| `GetValueOrThrow` | válido (o lanza) | acceso directo controlado al valor. |
+| `GetFailureDetailsOrThrow` | fallo (o lanza) | acceso directo controlado al error. |
 | `CreateCompleteMlResult` | ambos | combinar dos resultados y fusionar errores. |
 ```
 
@@ -1447,7 +1447,7 @@ var result = numeros.ProjectionSplit(x => x % 2 == 0
     ? MlResult<int>.Valid(x)
     : MlResult<int>.Fail($"{x} es impar."));
 
-var split = result.SecureValidValue();
+var split = result.GetValueOrThrow();
 
 Console.WriteLine(split.valids.Count);   // 2  → los pares 2 y 4
 Console.WriteLine(split.fails.Count);    // 2  → los impares 1 y 3
@@ -1465,7 +1465,7 @@ public async Task<InformeSincronizacion> SincronizarAsync(IEnumerable<RegistroEx
             .Map(r => r.ToEntidad())
             .AddValueDetailIfFail(registro.Id));   // deja constancia de QUÉ registro falló
 
-    var split = resultado.SecureValidValue();
+    var split = resultado.GetValueOrThrow();
 
     // 1) Persistimos únicamente lo válido.
     await _repo.GuardarAsync(split.valids.Values);
@@ -1802,7 +1802,7 @@ Esta tabla resume, en una sola vista, la decisión que hay que tomar en cada pun
 Y los tres errores más frecuentes al empezar:
 
 - **Usar `Map` donde toca `Bind`** → aparece un `MlResult<MlResult<T>>`. Si tu lambda devuelve `MlResult`, usa `Bind`.
-- **Leer `Value` directamente** → si el resultado está en fallo, `Value` no es fiable. Usa `Match` (o `SecureValidValue()` sólo en tests).
+- **Leer `Value` directamente** → si el resultado está en fallo, `Value` no es fiable. Usa `Match` (o `GetValueOrThrow()` sólo en tests).
 - **Hacer `Match` en medio de la cadena** para volver a construir otro `MlResult` después → sustitúyelo por un `Bind`.
 
 ---
@@ -1945,7 +1945,7 @@ central cabe en una frase:
 
 ### Errores frecuentes que conviene recordar
 
-1. **No leas `Value` directamente**: usa `Match` (o `SecureValidValue()` solo cuando ya has
+1. **No leas `Value` directamente**: usa `Match` (o `GetValueOrThrow()` solo cuando ya has
    garantizado la validez).
 2. **`Combine` no acumula errores**: cortocircuita. Si necesitas acumular, usa
    [`Projection`](../docs/loops/Bucles.md).

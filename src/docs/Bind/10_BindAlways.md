@@ -26,11 +26,11 @@ Su utilidad es la de un punto de convergencia: el momento del *pipeline* en el q
 
 ```csharp
 // ❌ Con un if sobre el estado: verboso y expone el estado interno
-var respuesta = resultado.IsValid
+var respuesta = resultado.IsSuccess
                     ? ConstruirRespuestaOk(resultado)
                     : ConstruirRespuestaError(resultado);
 
-// ✅ Con BindAlways: las dos ramas quedan a la vista, sin tocar IsValid
+// ✅ Con BindAlways: las dos ramas quedan a la vista, sin tocar IsSuccess
 var respuesta = resultado.BindAlways(
                     funcValidAlways: pedido  => ConstruirRespuestaOk(pedido),
                     funcFailAlways : errores => ConstruirRespuestaError(errores));

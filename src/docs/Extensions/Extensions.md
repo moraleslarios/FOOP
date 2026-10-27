@@ -28,7 +28,7 @@ archivos del namespace `MoralesLarios.OOFP.Helpers`:
 |---------|-----------|
 | `Helpers/Extensions/ParallelExtensions.cs` | `ToAsync<T>` |
 | `Helpers/Extensions/Extensions.cs` | `With`, `ToFuncTask`, `AppendExDetails`, `ValidateObject`, `ToNullable`, `VoidToAsync` |
-| `Helpers/Constants.cs` | `EX_DESC_KEY`, `VALUE_KEY`, mensajes por defecto |
+| `Helpers/Constants.cs` | `ExceptionMetadataKey`, `ValueMetadataKey`, mensajes por defecto |
 
 Son piezas pequeñas, pero conocerlas evita mucho código repetitivo: `ToAsync` aparece en casi
 todas las tuberías asíncronas y `ToFuncTask` resuelve los problemas de inferencia de tipos
@@ -186,9 +186,9 @@ apaño necesario, no un capricho.
 ```csharp
 public static Dictionary<string, object> AppendExDetails(this Dictionary<string, object> source, Exception ex)
 {
-    var exKeys = source.Keys.Where(x => x.StartsWith(EX_DESC_KEY)).ToList();
+    var exKeys = source.Keys.Where(x => x.StartsWith(ExceptionMetadataKey)).ToList();
 
-    var exKey = exKeys.Any() ? $"{EX_DESC_KEY}{exKeys.Count + 1}" : EX_DESC_KEY;
+    var exKey = exKeys.Any() ? $"{ExceptionMetadataKey}{exKeys.Count + 1}" : ExceptionMetadataKey;
 
     var result = source.ToDictionary(x => x.Key, x => x.Value);
 
@@ -199,7 +199,7 @@ public static Dictionary<string, object> AppendExDetails(this Dictionary<string,
 ```
 
 Añade una excepción al diccionario de `Details` **generando una clave nueva** si ya había
-otra. Como `EX_DESC_KEY` vale `"Ex"`, las claves resultantes son:
+otra. Como `ExceptionMetadataKey` vale `"Ex"`, las claves resultantes son:
 
 | Excepción | Clave |
 |-----------|-------|
@@ -219,7 +219,7 @@ var conUna = detalles.AppendExDetails(exNegocio);    // { PedidoId, Ex }
 var conDos = conUna.AppendExDetails(exLogger);       // { PedidoId, Ex, Ex2 }
 ```
 
-⚠️ **Cuidado con la numeración.** El cálculo `$"{EX_DESC_KEY}{exKeys.Count + 1}"` usa el
+⚠️ **Cuidado con la numeración.** El cálculo `$"{ExceptionMetadataKey}{exKeys.Count + 1}"` usa el
 número de claves existentes, así que si alguien añade manualmente una clave que empiece por
 `"Ex"` (por ejemplo `"ExtraInfo"`), la numeración se descuadra. **No uses claves propias que
 empiecen por `Ex`.**
@@ -327,8 +327,8 @@ public static class Constants
     public static string DEFAULT_ERROR_MESSAGE { get; }
         = "Without custom error message. For more info, view 'Ex(s) details exceptions.";
 
-    public static string EX_DESC_KEY { get; } = "Ex";
-    public static string VALUE_KEY   { get; } = "Value";
+    public static string ExceptionMetadataKey { get; } = "Ex";
+    public static string ValueMetadataKey   { get; } = "Value";
 
     public static string DEFAULT_EX_ERROR_MESSAGE(Exception ex)
         => $"An error occurred while executing the function. Error: {ex.Message}.More info in Ex Details.";
@@ -337,8 +337,8 @@ public static class Constants
 
 | Constante | Valor | Para qué sirve |
 |-----------|-------|----------------|
-| `EX_DESC_KEY` | `"Ex"` | Clave de `Details` donde se guardan las excepciones |
-| `VALUE_KEY` | `"Value"` | Clave donde `*WithValue` guarda el valor original |
+| `ExceptionMetadataKey` | `"Ex"` | Clave de `Details` donde se guardan las excepciones |
+| `ValueMetadataKey` | `"Value"` | Clave donde `*WithValue` guarda el valor original |
 | `DEFAULT_ERROR_MESSAGE` | (texto) | Mensaje cuando no se indica ninguno |
 | `DEFAULT_EX_ERROR_MESSAGE(ex)` | (texto + `ex.Message`) | Mensaje por defecto de los `Try*` |
 
@@ -353,7 +353,7 @@ public static class Constants
 
 ```csharp
 // ❌ Depender de la constante literal
-var ex = resultado.ErrorsDetails.Details["Ex"];
+var ex = resultado.FailureDetails.Details["Ex"];
 
 // ✅ Accesor oficial
 resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
@@ -525,7 +525,7 @@ var detalles = new Dictionary<string, object> { ["UsuarioExportacion"] = usuario
 
 
 // ❌ Leer Details con la clave literal
-var ex = (Exception)resultado.ErrorsDetails.Details["Ex"];
+var ex = (Exception)resultado.FailureDetails.Details["Ex"];
 
 // ✅ Accesor oficial
 resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
@@ -550,7 +550,7 @@ var errores = dto.ValidateObject();
 4. **`ToFuncTask` para reutilizar métodos síncronos** en operadores `*Async`, en lugar de
    duplicarlos con `async`.
 5. **Nunca uses claves de `Details` que empiecen por `Ex`** ni la clave `Value`: colisionan
-   con `EX_DESC_KEY` y `VALUE_KEY`.
+   con `ExceptionMetadataKey` y `ValueMetadataKey`.
 6. **Accede a los detalles con los accesores oficiales** (`GetDetailException`,
    `GetDetailValue<T>`), no con claves literales.
 7. **Pasa siempre un mensaje de dominio a los `Try*`**: los mensajes por defecto están en
@@ -576,7 +576,7 @@ var errores = dto.ValidateObject();
   `IEnumerable<ValidationResult>`; **no** devuelve `MlResult`. Prefiere el paquete
   `Validation.Dataannotations`.
 - **`ToNullable`** y **`VoidToAsync`** son azúcar sintáctico de uso marginal.
-- **`Constants`**: `EX_DESC_KEY = "Ex"`, `VALUE_KEY = "Value"`, más los mensajes por defecto
+- **`Constants`**: `ExceptionMetadataKey = "Ex"`, `ValueMetadataKey = "Value"`, más los mensajes por defecto
   en inglés que exponen `ex.Message`. **No colisiones con esas claves.**
 
 ---
@@ -588,6 +588,6 @@ var errores = dto.ValidateObject();
 - [`MlResult`](../core-types/MlResult.md) — el tipo central
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — guardas de entrada al carril
 - [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — efectos laterales, donde `ToFuncTask` es más útil
-- [`MapIfFailWithValue`](../Map/5_MapIfFailWithValue.md) — uso de `VALUE_KEY`
-- [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) — uso de `EX_DESC_KEY`
+- [`MapIfFailWithValue`](../Map/5_MapIfFailWithValue.md) — uso de `ValueMetadataKey`
+- [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) — uso de `ExceptionMetadataKey`
 - [`Bucles y proyecciones`](../loops/Bucles.md) — recorrido de colecciones

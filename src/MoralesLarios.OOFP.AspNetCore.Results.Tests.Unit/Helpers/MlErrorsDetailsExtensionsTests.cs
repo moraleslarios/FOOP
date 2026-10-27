@@ -20,7 +20,7 @@ public class MlErrorsDetailsExtensionsTests
 
         MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -31,7 +31,7 @@ public class MlErrorsDetailsExtensionsTests
 
         MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class MlErrorsDetailsExtensionsTests
 
         MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]

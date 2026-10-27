@@ -24,7 +24,7 @@ public static class MlResultWebExtensions
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static IActionResult ToRepoGetActionResult<T>(this MlResult<T>    source, 
                                                               ControllerBase controllerBase)
-        => source.ToRepoActionResult(controllerBase, () => controllerBase.Ok(source.SecureValidValue()));
+        => source.ToRepoActionResult(controllerBase, () => controllerBase.Ok(source.GetValueOrThrow()));
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> to an <see cref="IActionResult"/> for a GET request in a repository.
@@ -35,7 +35,7 @@ public static class MlResultWebExtensions
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static Task<IActionResult> ToRepoGetActionResultAsync<T>(this MlResult<T>    source, 
                                                                          ControllerBase controllerBase)
-        => source.ToRepoActionResult(controllerBase, () => controllerBase.Ok(source.SecureValidValue())).ToAsync();
+        => source.ToRepoActionResult(controllerBase, () => controllerBase.Ok(source.GetValueOrThrow())).ToAsync();
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> from a task to an <see cref="IActionResult"/> for a GET request in a repository.
@@ -49,7 +49,7 @@ public static class MlResultWebExtensions
     {
         MlResult<T> source = await sourceAsync;
 
-        return source.ToRepoActionResult(controllerBase, () => controllerBase.Ok(source.SecureValidValue()));
+        return source.ToRepoActionResult(controllerBase, () => controllerBase.Ok(source.GetValueOrThrow()));
     }
 
     /// <summary>
@@ -91,12 +91,12 @@ public static class MlResultWebExtensions
         var result = EnsureFp.NotNullEmptyOrWhitespace(getMethodName, "El nombre del método GET no puede ser nulo, vacío o espacio en blanco")
                                 .Match(valid: _      => source.ToRepoActionResult(controllerBase: controllerBase,
                                                                                   OkHandler     : () => controllerBase.CreatedAtRoute(getMethodName,
-                                                                                                                                        source.IsValid
-                                                                                                                                                ? pkSelector(source.SecureValidValue())
+                                                                                                                                        source.IsSuccess
+                                                                                                                                                ? pkSelector(source.GetValueOrThrow())
                                                                                                                                                 : null!,
-                                                                                                                                        source.SecureValidValue())).ToMlResultValid(),
+                                                                                                                                        source.GetValueOrThrow())).ToMlResultValid(),
                                         fail: errors => (new BadRequestObjectResult(errors.ToErrorsDescription()) as IActionResult).ToMlResultValid())
-                                .SecureValidValue();
+                                .GetValueOrThrow();
         return result;
     }
 
@@ -176,7 +176,7 @@ public static class MlResultWebExtensions
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static IActionResult ToSimpleRepoPostActionResult<T>(this MlResult<T>    source,
                                                                           ControllerBase controllerBase)
-        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", source.SecureValidValue()));
+        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", source.GetValueOrThrow()));
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> to an <see cref="IActionResult"/> for a simple POST request in a repository.
@@ -252,11 +252,11 @@ public static class MlResultWebExtensions
                                     .MapIfFail<ControllerBase, IActionResult>(funcValid: x      => controllerBase.Ok(x),
                                                                               funcFail : errors => new BadRequestObjectResult(errors.ToErrorsDescription()));
 
-        if (controllerBase is null) return badRequest.SecureValidValue();
+        if (controllerBase is null) return badRequest.GetValueOrThrow();
 
-        if (source.IsValid) return OkHandler();
+        if (source.IsSuccess) return OkHandler();
 
-        var errorsDetails = source.SecureFailErrorsDetails();
+        var errorsDetails = source.GetFailureDetailsOrThrow();
 
         var errorResult = errorsDetails switch
         {

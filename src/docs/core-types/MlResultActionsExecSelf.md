@@ -38,22 +38,22 @@ MlResult<Pedido> pedido = ObtenerPedido(id)
 | `TryExecSelfAsync` | 18 | Versiones asíncronas de `TryExecSelf`. |
 | `ExecSelfIf` | 1 | Según un **predicado** sobre el valor: ejecuta `actionTrue` o `actionFalse`. |
 | `TryExecSelfIf` | 2 | Idem con captura de excepciones. |
-| `ExecSelfIfValid` | 1 | Solo si `IsValid`. Recibe el valor. |
+| `ExecSelfIfValid` | 1 | Solo si `IsSuccess`. Recibe el valor. |
 | `ExecSelfIfValidAsync` | 4 | Versiones asíncronas. |
 | `TryExecSelfIfValid` / `TryExecSelfIfValidAsync` | 2 / 8 | Idem con captura de excepciones. |
-| `ExecSelfIfFail` | 1 | Solo si `IsFail`. Recibe el `MlErrorsDetails`. |
+| `ExecSelfIfFail` | 1 | Solo si `IsFailure`. Recibe el `MlErrorsDetails`. |
 | `ExecSelfIfFailAsync` | 4 | Versiones asíncronas. |
 | `ExecSelfFailAsync` | 2 | Variante asíncrona con nombre abreviado (sin `If`). |
 | `TryExecSelfFail` | 2 | Versión síncrona con captura de excepciones. |
 | `TryExecSelfFailAsync` | 4 | Versiones asíncronas. |
 | `TryExecSelfIfFailAsync` | 8 | Versiones asíncronas con el nombre completo. |
-| `ExecSelfIfFailWithValue` | 1 | Solo si `IsFail` **y** hay valor en `Details["Value"]`. |
+| `ExecSelfIfFailWithValue` | 1 | Solo si `IsFailure` **y** hay valor en `Details["Value"]`. |
 | `ExecSelfIfFailWithValueAsync` | 4 | Versiones asíncronas. |
 | `TryExecSelfIfFailWithValue` / `...Async` | 2 / 8 | Idem con captura de excepciones. |
-| `ExecSelfIfFailWithException` | 1 | Solo si `IsFail` **y** hay excepción en `Details["Ex"]`. |
+| `ExecSelfIfFailWithException` | 1 | Solo si `IsFailure` **y** hay excepción en `Details["Ex"]`. |
 | `ExecSelfIfFailWithExceptionAsync` | 4 | Versiones asíncronas. |
 | `TryExecSelfIfFailWithException` / `...Async` | 2 / 8 | Idem con captura de excepciones. |
-| `ExecSelfIfFailWithoutException` | 1 | Solo si `IsFail` **y no** hay excepción (fallo de negocio). |
+| `ExecSelfIfFailWithoutException` | 1 | Solo si `IsFailure` **y no** hay excepción (fallo de negocio). |
 | `ExecSelfIfFailWithoutExceptionAsync` | 4 | Versiones asíncronas. |
 
 > ⚠️ **Dos particularidades reales del código fuente:**

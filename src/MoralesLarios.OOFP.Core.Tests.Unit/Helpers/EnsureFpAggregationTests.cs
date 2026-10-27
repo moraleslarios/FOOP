@@ -27,8 +27,8 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.All("hola mundo", NotEmptyRule, MinLengthRule(3), StartsWithRule("hola"));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("hola mundo");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("hola mundo");
     }
 
     [Fact]
@@ -36,9 +36,9 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.All("ab", MinLengthRule(5), StartsWithRule("hola"));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(2);
-        result.SecureFailErrorsDetails().Errors.Select(x => x.Message)
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(2);
+        result.GetFailureDetailsOrThrow().Errors.Select(x => x.Message)
               .Should().Contain("longitud mínima 5")
               .And.Contain("debe empezar por hola");
     }
@@ -48,9 +48,9 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.All("hola", MinLengthRule(3), StartsWithRule("xxx"));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(1);
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("debe empezar por xxx");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(1);
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("debe empezar por xxx");
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class EnsureFpAggregationTests
 
         var result = EnsureFp.All(1, counterRule, counterRule, counterRule);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
         executions.Should().Be(3);
     }
 
@@ -71,8 +71,8 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.All("dato");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("dato");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("dato");
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class EnsureFpAggregationTests
 
         var result = EnsureFp.All("dato", validators);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -92,8 +92,8 @@ public class EnsureFpAggregationTests
 
         var result = EnsureFp.All("ab", validators);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(2);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(2);
     }
 
     [Fact]
@@ -101,8 +101,8 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.AllResults("dato", MlResult<string>.Valid("dato"), MlResult<string>.Valid("dato"));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("dato");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("dato");
     }
 
     [Fact]
@@ -113,8 +113,8 @@ public class EnsureFpAggregationTests
                                          MlResult<string>.Fail("error 1"),
                                          MlResult<string>.Fail("error 2"));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(2);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(2);
     }
 
     [Fact]
@@ -125,9 +125,9 @@ public class EnsureFpAggregationTests
 
         var result = EnsureFp.All(1, rule1, rule2);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details.Should().ContainKey("Key1");
-        result.SecureFailErrorsDetails().Details.Should().ContainKey("Key2");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey("Key1");
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey("Key2");
     }
 
     #endregion
@@ -139,7 +139,7 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.AllOrFirst("hola mundo", NotEmptyRule, MinLengthRule(3), StartsWithRule("hola"));
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -147,9 +147,9 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.AllOrFirst("ab", MinLengthRule(5), StartsWithRule("hola"));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(1);
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("longitud mínima 5");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(1);
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("longitud mínima 5");
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class EnsureFpAggregationTests
 
         var result = EnsureFp.AllOrFirst(1, counterRule, counterRule, counterRule);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
         executions.Should().Be(1);
     }
 
@@ -170,7 +170,7 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.AllOrFirst("dato");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     #endregion
@@ -182,8 +182,8 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.Any("hola", MinLengthRule(50), StartsWithRule("hola"));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("hola");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("hola");
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class EnsureFpAggregationTests
 
         var result = EnsureFp.Any(1, okRule, failRule, failRule);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         executions.Should().Be(1);
     }
 
@@ -205,8 +205,8 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.Any("ab", MinLengthRule(5), StartsWithRule("hola"));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(2);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(2);
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public class EnsureFpAggregationTests
     {
         var result = EnsureFp.Any("dato");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     #endregion
@@ -228,8 +228,8 @@ public class EnsureFpAggregationTests
                                              x => MlResult<string>.Valid(x).ToAsync(),
                                              x => MlResult<string>.Valid(x).ToAsync());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("hola");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("hola");
     }
 
     [Fact]
@@ -239,8 +239,8 @@ public class EnsureFpAggregationTests
                                              _ => MlResult<string>.Fail("error 1").ToAsync(),
                                              _ => MlResult<string>.Fail("error 2").ToAsync());
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(2);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(2);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public class EnsureFpAggregationTests
     {
         var result = await EnsureFp.AllAsync("dato");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -260,7 +260,7 @@ public class EnsureFpAggregationTests
 
         var result = await EnsureFp.AllOrFirstAsync("dato", failRule, failRule);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
         executions.Should().Be(1);
     }
 
@@ -269,7 +269,7 @@ public class EnsureFpAggregationTests
     {
         var result = await EnsureFp.AllOrFirstAsync("dato", x => MlResult<string>.Valid(x).ToAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class EnsureFpAggregationTests
                                              _ => MlResult<string>.Fail("error 1").ToAsync(),
                                              x => MlResult<string>.Valid(x).ToAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -289,8 +289,8 @@ public class EnsureFpAggregationTests
                                              _ => MlResult<string>.Fail("error 1").ToAsync(),
                                              _ => MlResult<string>.Fail("error 2").ToAsync());
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.Should().HaveCount(2);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.Should().HaveCount(2);
     }
 
     #endregion

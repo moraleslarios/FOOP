@@ -29,7 +29,7 @@ public class StringAsIntTests
     {
         var value = "67890";
         var result = StringAsInt.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class StringAsIntTests
     {
         var value = "XYZ";
         MlResult<StringAsInt> result = StringAsInt.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 

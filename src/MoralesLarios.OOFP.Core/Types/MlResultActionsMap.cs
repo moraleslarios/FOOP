@@ -919,7 +919,7 @@ public static class MlResultActionsMap
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a previous 'Value' execution
+    /// source parameter has a previous 'SuccessValue' execution
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     /// <typeparam name="T"></typeparam>
@@ -1009,7 +1009,7 @@ public static class MlResultActionsMap
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a previous 'Value' execution
+    /// source parameter has a previous 'SuccessValue' execution
     /// -- 2 funcs (valid and fail) are necessary, since they have to preserve output compatibility --
     /// </summary>
     /// <typeparam name="T"></typeparam>

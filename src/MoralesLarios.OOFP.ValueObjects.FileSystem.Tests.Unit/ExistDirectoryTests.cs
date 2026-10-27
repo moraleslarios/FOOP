@@ -11,7 +11,7 @@ public class ExistDirectoryTests
     {
         string dirStr = AppContext.BaseDirectory;
         MlResult<ExistDirectory> result = ExistDirectory.ByString(dirStr);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -19,7 +19,7 @@ public class ExistDirectoryTests
     {
         string dirStr = Path.Combine(AppContext.BaseDirectory, "NonExistentDirFolder123");
         MlResult<ExistDirectory> result = ExistDirectory.ByString(dirStr);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -36,14 +36,14 @@ public class ExistDirectoryTests
     {
         string? dirStr = null;
         MlResult<ExistDirectory> result = ExistDirectory.ByString(dirStr!);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
     public void ByString_EmptyValue_ReturnsFail()
     {
         MlResult<ExistDirectory> result = ExistDirectory.ByString(string.Empty);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class ExistDirectoryTests
     {
         string dirStr = Path.Combine(AppContext.BaseDirectory, "NonExistentDirFolder123");
         MlResult<ExistDirectory> result = ExistDirectory.ByString(dirStr, "Custom dir error");
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]

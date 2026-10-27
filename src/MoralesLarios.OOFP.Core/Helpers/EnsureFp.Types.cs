@@ -264,7 +264,7 @@ public static partial class EnsureFp
         => Uri.TryCreate(value, uriKind, out var uri)
                 ? MlResult<Uri>.Valid(uri)
                 : BuildRule(value, false, EnsureFpMessages.IsValidUri(paramName), paramName)
-                        .SecureFailErrorsDetails()
+                        .GetFailureDetailsOrThrow()
                         .ToMlResultFail<Uri>();
 
     #endregion
@@ -345,7 +345,7 @@ public static partial class EnsureFp
 
     /// <summary>
     /// Comprueba que el nullable de tipo valor tiene valor y lo devuelve ya desenvuelto,
-    /// evitando el <c>.Value</c> manual en el código llamante.
+    /// evitando el <c>.SuccessValue</c> manual en el código llamante.
     /// </summary>
     public static MlResult<T> NotNullValue<T>(T? value, string errorMessage)
         where T : struct

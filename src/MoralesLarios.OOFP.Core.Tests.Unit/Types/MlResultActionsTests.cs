@@ -50,7 +50,7 @@ public class MlResultActionsTests
 
         MlResult<int> result = partialResult.AddValueDetailIfFail("XXXX");
 
-        MlResult<int> expected = ("Error", new Dictionary<string, object> { { VALUE_KEY, "XXXX" } });
+        MlResult<int> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, "XXXX" } });
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -96,7 +96,7 @@ public class MlResultActionsTests
 
         MlResult<int> result = await partialResult.AddValueDetailIfFailAsync("XXXX");
 
-        MlResult<int> expected = ("Error", new Dictionary<string, object> { { VALUE_KEY, "XXXX" } });
+        MlResult<int> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, "XXXX" } });
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -151,7 +151,7 @@ public class MlResultActionsTests
 
         MlResult<int> result = await partialResultAsync.AddValueDetailIfFailAsync("XXXX");
 
-        MlResult<int> expected = ("Error", new Dictionary<string, object> { { VALUE_KEY, "XXXX" } });
+        MlResult<int> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, "XXXX" } });
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -174,7 +174,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDataValueIfValid(x => (initialValue, x)));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDataValueIfValid(x => (initialValue, x)));
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }           
 
 
@@ -208,7 +208,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueIfValidAsync(x => (initialValue, x).ToAsync()));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -231,7 +231,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueIfValidAsync(x => (initialValue, x).ToAsync()));
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }   
 
 
@@ -244,7 +244,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = await partialResultAsync.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                                 .CompleteWithDataValueIfValidAsync(x => (initialValue, x).ToAsync()));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = await partialResultAsync.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                                 .CompleteWithDataValueIfValidAsync(x => (initialValue, x).ToAsync()));
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }   
 
 
@@ -288,7 +288,7 @@ public class MlResultActionsTests
 
         MlResult<string> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDetailsValueIfFail(initialValue));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -299,7 +299,7 @@ public class MlResultActionsTests
         MlResult<string> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDetailsValueIfFail(initialValue));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -311,7 +311,7 @@ public class MlResultActionsTests
         MlResult<string> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDetailsValueIfFail(initialValue));
 
-        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { VALUE_KEY, 0 } });
+        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -326,7 +326,7 @@ public class MlResultActionsTests
 
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public class MlResultActionsTests
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -349,7 +349,7 @@ public class MlResultActionsTests
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
 
-        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { VALUE_KEY, 0 } });
+        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -365,7 +365,7 @@ public class MlResultActionsTests
 
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -376,7 +376,7 @@ public class MlResultActionsTests
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -388,7 +388,7 @@ public class MlResultActionsTests
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
 
-        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { VALUE_KEY, 0 } });
+        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -411,7 +411,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDataValue(initialValue, x => (initialValue, x)));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -435,7 +435,7 @@ public class MlResultActionsTests
         MlResult<(int, string)> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDataValue(initialValue, x => (initialValue, x)));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -448,7 +448,7 @@ public class MlResultActionsTests
         MlResult<(int, string)> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDataValue(initialValue, x => (initialValue, x)));
 
-        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { VALUE_KEY, 0 } });
+        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -462,7 +462,7 @@ public class MlResultActionsTests
         MlResult<(int, string)> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDataValue(initialValue, x => (initialValue, x)));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -472,7 +472,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = partialResult.CompleteWithDataValue(99, x => (99, "valor relleno"));
 
-        MlResult<string> expected = ("Error", new Dictionary<string, object> { { VALUE_KEY, 99 } });
+        MlResult<string> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, 99 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -485,7 +485,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -509,7 +509,7 @@ public class MlResultActionsTests
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -522,7 +522,7 @@ public class MlResultActionsTests
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
 
-        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { VALUE_KEY, 0 } });
+        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -538,7 +538,7 @@ public class MlResultActionsTests
 
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -562,7 +562,7 @@ public class MlResultActionsTests
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -575,7 +575,7 @@ public class MlResultActionsTests
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
 
-        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { VALUE_KEY, 0 } });
+        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -614,7 +614,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = source1.CreateCompleteMlResult(source2);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -626,7 +626,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = source1.CreateCompleteMlResult(source2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -637,7 +637,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = source1.CreateCompleteMlResult(source2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -648,7 +648,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = source1.CreateCompleteMlResult(source2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -661,7 +661,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1.CreateCompleteMlResultAsync(source2);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -673,7 +673,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1Async.CreateCompleteMlResultAsync(source2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -684,7 +684,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source2Async.CreateCompleteMlResultAsync(source1);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -695,7 +695,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1.CreateCompleteMlResultAsync(source2Async);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -708,7 +708,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1Async.CreateCompleteMlResultAsync(source2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -719,7 +719,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1.CreateCompleteMlResultAsync(source2Async);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -732,7 +732,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1Async.CreateCompleteMlResultAsync(source2Async);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -749,7 +749,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = source1.CreateCompleteMlResult(source2);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -761,7 +761,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = source1.CreateCompleteMlResult(source2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -773,7 +773,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1Async.CreateCompleteMlResultAsync(source2);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -784,7 +784,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1.CreateCompleteMlResultAsync(source2Async);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -796,7 +796,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1Async.CreateCompleteMlResultAsync(source2);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -810,7 +810,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1.CreateCompleteMlResultAsync(source2Async);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -824,7 +824,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1Async.CreateCompleteMlResultAsync(source2Async);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -836,7 +836,7 @@ public class MlResultActionsTests
 
         MlResult<(int, int)> result = await source1Async.CreateCompleteMlResultAsync(source2Async);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -877,7 +877,7 @@ public class MlResultActionsTests
 
         bool hasValue = result.Match(
             valid: _ => false,
-            fail: errors => errors.Details.ContainsKey(VALUE_KEY) && (int)errors.Details[VALUE_KEY] == 69);
+            fail: errors => errors.Details.ContainsKey(ValueMetadataKey) && (int)errors.Details[ValueMetadataKey] == 69);
 
         hasValue.Should().BeTrue();
     }
@@ -891,7 +891,7 @@ public class MlResultActionsTests
             value: 69,
             completeFunc: x => (x, x.ToString()));
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 

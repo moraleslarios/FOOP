@@ -15,7 +15,7 @@ public class IntMoreThanTests
 
         var result = IntMoreThan.ByIntLength(value, minLenght);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public class IntMoreThanTests
 
         var result = IntMoreThan.ByIntLength(value, minLenght);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 

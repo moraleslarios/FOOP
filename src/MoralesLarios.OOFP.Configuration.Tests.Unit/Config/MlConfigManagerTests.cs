@@ -17,7 +17,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     {
         string appSettingKey = "NotExists";
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -69,8 +69,8 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     {
         string appSettingKey = "NotExists:ComplexKey";
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey);
-        result.IsFail.Should().BeTrue();
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -83,7 +83,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -154,7 +154,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorMessage);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -178,7 +178,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorMessage);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorMessage);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorMessage);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

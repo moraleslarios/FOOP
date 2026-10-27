@@ -22,7 +22,7 @@ public class MlResultActionsMapTests
 
         MlResult<decimal> result = await partialResult.TryMapAsync(x =>  (x / divisor).ToAsync());
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -36,7 +36,7 @@ public class MlResultActionsMapTests
 
         MlResult<IEnumerable<decimal>> result = await partialResult.TryMapAsync(x => x.Select(y => (y / divisor)).ToList().AsEnumerable().ToAsync());
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -177,7 +177,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = partialResult.MapIfFail(x => x.Errors.Count());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = partialResult.MapIfFail(x => x.Errors.Count());
         
-        result.IsFail.Should().BeFalse();
+        result.IsFailure.Should().BeFalse();
     }
 
 
@@ -225,7 +225,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = await partialResult.MapIfFailAsync(x => x.Errors.Count().ToAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = await partialResult.MapIfFailAsync(x => x.Errors.Count().ToAsync());
 
-        result.IsFail.Should().BeFalse();
+        result.IsFailure.Should().BeFalse();
     }
 
 
@@ -271,7 +271,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = await partialResultAsync.MapIfFailAsync(x => x.Errors.Count().ToAsync());
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -294,7 +294,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = await partialResultAsync.MapIfFailAsync(x => x.Errors.Count().ToAsync());
 
-        result.IsFail.Should().BeFalse();
+        result.IsFailure.Should().BeFalse();
     }
 
 
@@ -384,7 +384,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = partialResult.TryMapIfFail(errorsDetails => MapTestMethodAIntThrowException(0), "Other error");
 
-        result.IsFail.Should().BeTrue(); 
+        result.IsFailure.Should().BeTrue(); 
     }
 
     [Fact]
@@ -396,7 +396,7 @@ public class MlResultActionsMapTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -411,7 +411,7 @@ public class MlResultActionsMapTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -430,7 +430,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = await partialResult.TryMapIfFailAsync(errorsDetails => MapTestMethodAIntThrowExceptionAsync(0), "Other error");
 
-        result.IsFail.Should().BeTrue(); 
+        result.IsFailure.Should().BeTrue(); 
     }
 
     [Fact]
@@ -442,7 +442,7 @@ public class MlResultActionsMapTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -457,7 +457,7 @@ public class MlResultActionsMapTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -476,7 +476,7 @@ public class MlResultActionsMapTests
 
         MlResult<int> result = await partialResultAsync.TryMapIfFailAsync(errorsDetails => MapTestMethodAIntThrowExceptionAsync(0), "Other error");
 
-        result.IsFail.Should().BeTrue(); 
+        result.IsFailure.Should().BeTrue(); 
     }
 
     [Fact]
@@ -488,7 +488,7 @@ public class MlResultActionsMapTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -503,7 +503,7 @@ public class MlResultActionsMapTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -528,7 +528,7 @@ public class MlResultActionsMapTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -886,7 +886,7 @@ public class MlResultActionsMapTests
                                                          funcTrue : x =>  "1",
                                                          funcFalse: x => "-1");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -900,7 +900,7 @@ public class MlResultActionsMapTests
                                                          funcTrue  : x =>  (x / divisor).ToString(),
                                                          funcFalse : x => "-1");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -914,7 +914,7 @@ public class MlResultActionsMapTests
                                                          funcTrue  : x => "1",
                                                          funcFalse : x => (x / divisor).ToString());
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 

@@ -15,7 +15,7 @@ public class StringMaxLengthTests
 
         var result = StringMaxLength.ByStringLength(validString, maxLength);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public class StringMaxLengthTests
 
         var result = StringMaxLength.ByStringLength(validString, maxLength);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class StringMaxLengthTests
 
         var result = StringMaxLength.ByStringLength(validString, maxLength);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 }

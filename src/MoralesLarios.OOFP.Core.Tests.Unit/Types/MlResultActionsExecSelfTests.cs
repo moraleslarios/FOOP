@@ -28,7 +28,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.ExecSelfIfFailWithValue<int, int>(value => internalResult += value);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -42,7 +42,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.ExecSelfIfFailWithValue<int, int>(value => internalResult += value);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -87,7 +87,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.TryExecSelfIfFailWithValue<int, int>(value => internalResult += value);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -101,7 +101,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.TryExecSelfIfFailWithValue<int, int>(value => internalResult += value);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -178,7 +178,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.ExecSelfIfFailWithException(exception => internalResult += 1);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -251,7 +251,7 @@ public class MlResultActionsExecSelfTests
 
     //    MlResult<int> result = partialResult.ExecSelfIfFailWithException(exception => internalResult += 1);
 
-    //    result.IsFail.Should().BeTrue();
+    //    result.IsFailure.Should().BeTrue();
     //}
 
 
@@ -280,7 +280,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.ExecSelfIfFailWithoutException(errorDetails => internalResult += 1);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -303,7 +303,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -312,7 +312,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.ExecSelfIfFailWithoutException(errorDetails => internalResult += 1);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -321,7 +321,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -342,7 +342,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.ExecSelfIfFailWithoutException(errorDetails => internalResult += 1);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -376,7 +376,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.TryExecSelfIfFailWithException(exception => internalResult += 1, "miError");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -388,7 +388,7 @@ public class MlResultActionsExecSelfTests
 
         MlResult<int> result = partialResult.TryExecSelfIfFailWithException(exception => internalResult += 1, "miErrorControlado");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -426,7 +426,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                       );
@@ -444,7 +444,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                       );
@@ -467,7 +467,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { EX_DESC_KEY, new Exception("miException") },
+                                                { ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                       );
@@ -504,7 +504,7 @@ public class MlResultActionsExecSelfTests
                                                  x => actionTrueCount += x,
                                                  x => actionFalseCount += x);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(3);
         actionFalseCount.Should().Be(0);
     }
@@ -521,7 +521,7 @@ public class MlResultActionsExecSelfTests
                                                  x => actionTrueCount += x,
                                                  x => actionFalseCount += x);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(0);
         actionFalseCount.Should().Be(3);
     }
@@ -538,7 +538,7 @@ public class MlResultActionsExecSelfTests
                                                  x => actionTrueCount += x,
                                                  x => actionFalseCount += x);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
         actionTrueCount.Should().Be(0);
         actionFalseCount.Should().Be(0);
     }
@@ -555,7 +555,7 @@ public class MlResultActionsExecSelfTests
                                                             async x => { actionTrueCount += x; await Task.CompletedTask; },
                                                             async x => { actionFalseCount += x; await Task.CompletedTask; });
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(5);
         actionFalseCount.Should().Be(0);
     }
@@ -572,7 +572,7 @@ public class MlResultActionsExecSelfTests
                                                                  async x => { actionTrueCount += x; await Task.CompletedTask; },
                                                                  async x => { actionFalseCount += x; await Task.CompletedTask; });
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(0);
         actionFalseCount.Should().Be(5);
     }
@@ -589,7 +589,7 @@ public class MlResultActionsExecSelfTests
                                                                  x => actionTrueCount += x,
                                                                  async x => { actionFalseCount += x; await Task.CompletedTask; });
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(2);
         actionFalseCount.Should().Be(0);
     }
@@ -606,7 +606,7 @@ public class MlResultActionsExecSelfTests
                                                                  async x => { actionTrueCount += x; await Task.CompletedTask; },
                                                                  x => actionFalseCount += x);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(0);
         actionFalseCount.Should().Be(2);
     }
@@ -623,7 +623,7 @@ public class MlResultActionsExecSelfTests
                                                                  x => actionTrueCount += x,
                                                                  x => actionFalseCount += x);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(1);
         actionFalseCount.Should().Be(0);
     }
@@ -639,7 +639,7 @@ public class MlResultActionsExecSelfTests
                                                           _ => { },
                                                           _ => "error controlado");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -652,7 +652,7 @@ public class MlResultActionsExecSelfTests
                                                           _ => throw new Exception("boom"),
                                                           ex => $"error: {ex.Message}");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -668,7 +668,7 @@ public class MlResultActionsExecSelfTests
                                                          x => actionFalseCount += x,
                                                          _ => "error controlado");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
         actionTrueCount.Should().Be(0);
         actionFalseCount.Should().Be(0);
     }
@@ -686,7 +686,7 @@ public class MlResultActionsExecSelfTests
                                                                     x => actionFalseCount += x,
                                                                     _ => "error controlado");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(4);
         actionFalseCount.Should().Be(0);
     }
@@ -704,7 +704,7 @@ public class MlResultActionsExecSelfTests
                                                                     async x => { actionFalseCount += x; await Task.CompletedTask; },
                                                                     ex => ex.Message);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         actionTrueCount.Should().Be(0);
         actionFalseCount.Should().Be(4);
     }
@@ -719,7 +719,7 @@ public class MlResultActionsExecSelfTests
                                                                    async _ => await Task.CompletedTask,
                                                                    ex => $"error: {ex.Message}");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     #endregion

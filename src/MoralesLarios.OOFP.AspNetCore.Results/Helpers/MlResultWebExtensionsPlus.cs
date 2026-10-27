@@ -40,7 +40,7 @@ public static class MlResultWebExtensionsPlus
                                                                                             fail :  _             => MlActionResults.InternalServerError()
                                                                                        )
                                                     ));
-        return result.SecureValidValue();
+        return result.GetValueOrThrow();
     }
 
     public static IActionResult ToPostPdActionResult<T>(this MlResult<T> source)

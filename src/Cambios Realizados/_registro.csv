@@ -140,3 +140,14 @@ fase2-nivel1-erratas;1;Comentario;MoralesLarios.OOFP.Http;HttpClientFactoryManag
 fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;Id (Id.cs excluido de la compilacion);Bydouble / Fromdouble;ByDouble / FromDouble;0;2;Codigo muerto: <Compile Remove="Id.cs" />
 fase2-nivel1-erratas;1;Documento;docs;Bind;11_BindSaveValueInDetailsIfFaildFuncResultAsync.md;11_BindSaveValueInDetailsIfFailedFuncResultAsync.md;0;0;
 fase2-nivel1-erratas;1;Metodo;-;-;TryMapIAsyncf;TryMapIfAsync;0;0;Ya corregido en la revision Map/Bind (commit 1f5f910)
+fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResult<T>;IsValid;IsSuccess;1;282;Valid es vocabulario de validacion, par simetrico IsSuccess/IsFailure
+fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResult<T>;IsFail;IsFailure;1;328;
+fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResult<T>;Value;SuccessValue;0;30;internal protected
+fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResult<T>;ErrorsDetails;FailureDetails;0;22;internal protected
+fase3a-nivel2-mlresult;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActions;SecureValidValue;GetValueOrThrow;1;121;Secure sugeria seguridad, el metodo lanza si el resultado es fallido
+fase3a-nivel2-mlresult;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActions;SecureValidValueAsync;GetValueOrThrowAsync;1;0;Secure sugeria seguridad, el metodo lanza si el resultado es fallido
+fase3a-nivel2-mlresult;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActions;SecureFailErrorsDetails;GetFailureDetailsOrThrow;1;87;Derivado: pareja de GetValueOrThrow
+fase3a-nivel2-mlresult;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActions;SecureFailErrorsDetailsAsync;GetFailureDetailsOrThrowAsync;2;5;Derivado: pareja de GetValueOrThrow
+fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Helpers.Constants;EX_DESC_KEY;ExceptionMetadataKey;1;86;El valor "Ex" no cambia aqui (cambio de contrato -> Fase 12)
+fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Helpers.Constants;VALUE_KEY;ValueMetadataKey;1;41;
+fase3a-nivel2-mlresult;2;Correccion;MoralesLarios.OOFP.Core;MlResultTransformations.SecureGetValueFromMlResultBoxed;p.Name == "IsValid" / "Value";nameof(MlResult<object>.IsSuccess) / nameof(...SuccessValue);0;2;Reflexion por literal: el renombrado la rompia

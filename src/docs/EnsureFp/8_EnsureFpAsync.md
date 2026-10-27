@@ -202,16 +202,16 @@ public static Task<MlResult<T>> TryThatAsync<T>(T value, Func<T, Task<bool>> pre
 
 Una comprobación asíncrona toca infraestructura, y la infraestructura falla: tiempos de espera
 agotados, conexiones caídas, respuestas 500. `TryThatAsync` captura la excepción, la convierte en un
-fallo del carril y la guarda en los detalles bajo la clave `Ex` (`EX_DESC_KEY`).
+fallo del carril y la guarda en los detalles bajo la clave `Ex` (`ExceptionMetadataKey`).
 
 ```csharp
 var r = await TryThatAsync(dto.Nif,
                            nif => servicioExterno.ValidarNifAsync(nif),
                            ex => $"No se pudo validar el NIF contra el servicio externo: {ex.Message}");
 
-if (r.IsFail)
+if (r.IsFailure)
 {
-    var detalles = r.SecureFailErrorsDetails();
+    var detalles = r.GetFailureDetailsOrThrow();
     var excepcion = detalles.GetDetailException();   // la excepción original, para el log
     logger.LogError(excepcion, "Fallo validando NIF");
 }
@@ -344,7 +344,7 @@ public async Task<MlResult<Usuario>> RegistrarAsync(RegistroDto dto, Cancellatio
         d => IsValidEmail(d.Email, "El correo no tiene un formato válido.").Map(_ => d),
         d => MinLength(d.Password, 8, "La contraseña debe tener al menos 8 caracteres.").Map(_ => d));
 
-    if (sintaxis.IsFail) return sintaxis.SecureFailErrorsDetails().ToMlResultFail<Usuario>();
+    if (sintaxis.IsFailure) return sintaxis.GetFailureDetailsOrThrow().ToMlResultFail<Usuario>();
 
     return await TryThatAsync(dto,
                               async d => ! await repositorio.ExisteEmailAsync(d.Email, ct),
@@ -381,7 +381,7 @@ public async Task<IActionResult> Confirmar(int id, CancellationToken ct) =>
     (await ConfirmarAsync(id, ct))
         .Match(
             valid: p => Ok(p),
-            fail:  e => e.Details.ContainsKey(EX_DESC_KEY)
+            fail:  e => e.Details.ContainsKey(ExceptionMetadataKey)
                             ? StatusCode(StatusCodes.Status503ServiceUnavailable, e.ToErrorsMessages())
                             : BadRequest(e.ToErrorsMessages()));
 ```

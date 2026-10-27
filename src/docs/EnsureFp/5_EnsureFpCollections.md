@@ -132,9 +132,9 @@ clave `FailedIndexes` con las **posiciones exactas** que rompen la regla.
 var resultado = AllMatch(lineas, l => l.Cantidad > 0,
                          "Todas las líneas deben tener cantidad positiva.");
 
-if (resultado.IsFail)
+if (resultado.IsFailure)
 {
-    var detalles = resultado.SecureFailErrorsDetails();
+    var detalles = resultado.GetFailureDetailsOrThrow();
     var indices  = detalles.GetDetailValue<IEnumerable<int>>();   // p. ej. [2, 7]
     // → "Las líneas 3 y 8 tienen cantidad cero o negativa."
 }

@@ -13,7 +13,7 @@ public class NotEmptyStringTests
     {
         MlResult<NotEmptyString> result = NotEmptyString.ByString("Valid String");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public class NotEmptyStringTests
     {
         MlResult<NotEmptyString> result = NotEmptyString.ByString("");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]

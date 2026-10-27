@@ -3,11 +3,11 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.Helpers;
-public static class Constants
+public static partial class Constants
 {
     public static string DEFAULT_ERROR_MESSAGE { get; } = "Without custom error message. For more info, view 'Ex(s) details exceptions.";
-    public static string EX_DESC_KEY           { get; } = "Ex";
-    public static string VALUE_KEY             { get; } = "Value";
+    public static string ExceptionMetadataKey           { get; } = "Ex";
+    public static string ValueMetadataKey             { get; } = "Value";
     public const string NOT_FOUND_KEY = "NotFound";
     public const string PARAM_NAME_KEY = "ParamName";
 

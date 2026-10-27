@@ -28,7 +28,7 @@ public static partial class EnsureFp
 
             var partialResult = validator(value);
 
-            if (partialResult.IsFail) failsDetails.Add(partialResult.SecureFailErrorsDetails());
+            if (partialResult.IsFailure) failsDetails.Add(partialResult.GetFailureDetailsOrThrow());
         }
 
         return BuildAggregationResult(value, failsDetails);
@@ -45,8 +45,8 @@ public static partial class EnsureFp
     /// Fusiona los errores de todos los <c>MlResult</c> fallidos, devolviendo el valor original si todos son válidos.
     /// </summary>
     public static MlResult<T> AllResults<T>(T value, params MlResult<T>[] results)
-        => BuildAggregationResult(value, (results ?? Array.Empty<MlResult<T>>()).Where(x => x.IsFail)
-                                                                               .Select(x => x.SecureFailErrorsDetails())
+        => BuildAggregationResult(value, (results ?? Array.Empty<MlResult<T>>()).Where(x => x.IsFailure)
+                                                                               .Select(x => x.GetFailureDetailsOrThrow())
                                                                                .ToList());
 
     #endregion
@@ -66,7 +66,7 @@ public static partial class EnsureFp
 
             var partialResult = validator(value);
 
-            if (partialResult.IsFail) return partialResult;
+            if (partialResult.IsFailure) return partialResult;
         }
 
         return MlResult<T>.Valid(value);
@@ -98,9 +98,9 @@ public static partial class EnsureFp
 
             var partialResult = validator(value);
 
-            if (partialResult.IsValid) return MlResult<T>.Valid(value);
+            if (partialResult.IsSuccess) return MlResult<T>.Valid(value);
 
-            failsDetails.Add(partialResult.SecureFailErrorsDetails());
+            failsDetails.Add(partialResult.GetFailureDetailsOrThrow());
         }
 
         return BuildAggregationResult(value, failsDetails);
@@ -132,7 +132,7 @@ public static partial class EnsureFp
 
             var partialResult = await validator(value);
 
-            if (partialResult.IsFail) failsDetails.Add(partialResult.SecureFailErrorsDetails());
+            if (partialResult.IsFailure) failsDetails.Add(partialResult.GetFailureDetailsOrThrow());
         }
 
         return BuildAggregationResult(value, failsDetails);
@@ -151,7 +151,7 @@ public static partial class EnsureFp
 
             var partialResult = await validator(value);
 
-            if (partialResult.IsFail) return partialResult;
+            if (partialResult.IsFailure) return partialResult;
         }
 
         return MlResult<T>.Valid(value);
@@ -172,9 +172,9 @@ public static partial class EnsureFp
 
             var partialResult = await validator(value);
 
-            if (partialResult.IsValid) return MlResult<T>.Valid(value);
+            if (partialResult.IsSuccess) return MlResult<T>.Valid(value);
 
-            failsDetails.Add(partialResult.SecureFailErrorsDetails());
+            failsDetails.Add(partialResult.GetFailureDetailsOrThrow());
         }
 
         return BuildAggregationResult(value, failsDetails);

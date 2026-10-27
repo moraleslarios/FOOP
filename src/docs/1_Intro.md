@@ -130,15 +130,15 @@ public partial record MlResult<T>
     internal protected T               Value         { get; init; }
     internal protected MlErrorsDetails ErrorsDetails { get; init; }
 
-    public bool IsValid { get; init; }
-    public bool IsFail  => ! IsValid;
+    public bool IsSuccess { get; init; }
+    public bool IsFailure  => ! IsSuccess;
 }
 ```
 
 Tres detalles importantes:
 
 1. **Es un `record`, no una `class`**: inmutable y con igualdad por valor.
-2. **Las propiedades de estado son `IsValid` e `IsFail`** (no `IsSuccess` / `IsFailure`).
+2. **Las propiedades de estado son `IsSuccess` e `IsFailure`** (no `IsSuccess` / `IsFailure`).
 3. **`Value` y `ErrorsDetails` son `internal protected`**: no son accesibles desde tu código. Es
    deliberado y es la clave de la librería: te obliga a pasar por
    [`Match`](core-types/MlResultActionsMatch.md), `Map` o `Bind`, de modo que nunca puedas leer un valor
@@ -184,8 +184,8 @@ No existen `Exception`, `Value`, `HasException` ni `HasValue`: esa información 
 
 | Clave | Constante | Contenido |
 | --- | --- | --- |
-| `"Ex"` | `EX_DESC_KEY` | Excepción capturada por cualquier método `Try*`. Si ya había una, se numeran `Ex2`, `Ex3`… |
-| `"Value"` | `VALUE_KEY` | Valor de entrada que provocó el fallo. |
+| `"Ex"` | `ExceptionMetadataKey` | Excepción capturada por cualquier método `Try*`. Si ya había una, se numeran `Ex2`, `Ex3`… |
+| `"Value"` | `ValueMetadataKey` | Valor de entrada que provocó el fallo. |
 
 Se leen de forma **tipada y segura** con
 [`MlResultActionsErrorsDetails`](core-types/MlResultActionsErrorsDetails.md):
@@ -632,8 +632,8 @@ Detalle en [`Extensions/Extensions.md`](Extensions/Extensions.md).
 | Constante | Valor / uso |
 | --- | --- |
 | `DEFAULT_ERROR_MESSAGE` | Mensaje usado cuando un `MlError` se crea sin texto. |
-| `EX_DESC_KEY` | `"Ex"`: clave de la excepción en `Details`. |
-| `VALUE_KEY` | `"Value"`: clave del valor de entrada en `Details`. |
+| `ExceptionMetadataKey` | `"Ex"`: clave de la excepción en `Details`. |
+| `ValueMetadataKey` | `"Value"`: clave del valor de entrada en `Details`. |
 | `DEFAULT_EX_ERROR_MESSAGE(ex)` | Mensaje por defecto de las operaciones `Try*`. |
 
 ---
@@ -684,8 +684,8 @@ return tarifa.Match(valid: t => Ok(t), fail: er => BadRequest(er.ToErrorsMessage
 
 | ❌ Antipatrón | ✅ Alternativa |
 | --- | --- |
-| Comprobar `IsFail` con `if` en cada paso | Encadenar con `Bind` / `Map` |
-| Intentar leer el valor directamente | `Match`, o `SecureValidValue()` en infraestructura |
+| Comprobar `IsFailure` con `if` en cada paso | Encadenar con `Bind` / `Map` |
+| Intentar leer el valor directamente | `Match`, o `GetValueOrThrow()` en infraestructura |
 | Lanzar excepciones para el flujo de negocio | Devolver `Fail` con un mensaje claro |
 | Envolver toda la tubería en un `try/catch` | Usar las variantes `Try*` en el paso concreto que puede lanzar |
 | Devolver `null` | Devolver `MlResult<T>` o usar `NullToFailed` |
@@ -818,8 +818,8 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 | 2 | [`2_MapEnsure.md`](Map/2_MapEnsure.md) | `MapEnsure`: validar y transformar |
 | 3 | [`3_MapIf.md`](Map/3_MapIf.md) | `MapIf`: transformación condicional |
 | 4 | [`4_MapIfFail.md`](Map/4_MapIfFail.md) | `MapIfFail`: valor de reserva ante fallo |
-| 5 | [`5_MapIfFailWithValue.md`](Map/5_MapIfFailWithValue.md) | Reserva usando el valor original (`VALUE_KEY`) |
-| 6 | [`6_MapIfFailWithException.md`](Map/6_MapIfFailWithException.md) | Reserva según la excepción (`EX_DESC_KEY`) |
+| 5 | [`5_MapIfFailWithValue.md`](Map/5_MapIfFailWithValue.md) | Reserva usando el valor original (`ValueMetadataKey`) |
+| 6 | [`6_MapIfFailWithException.md`](Map/6_MapIfFailWithException.md) | Reserva según la excepción (`ExceptionMetadataKey`) |
 | 7 | [`7_MapIfFailWithoutException.md`](Map/7_MapIfFailWithoutException.md) | Reserva solo para fallos sin excepción |
 | 8 | [`8_MapAlways.md`](Map/8_MapAlways.md) | `MapAlways`: transformar ambas ramas a un tipo común |
 

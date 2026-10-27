@@ -16,12 +16,12 @@ public class IntNotNegativeTests
 
         if (value < 0)
         {
-            result.IsFail.Should().BeTrue();
+            result.IsFailure.Should().BeTrue();
         }
         else
         {
-            result.IsValid.Should().BeTrue();
-            ((int)result.SecureValidValue()).Should().Be(value);
+            result.IsSuccess.Should().BeTrue();
+            ((int)result.GetValueOrThrow()).Should().Be(value);
         }
     }
 

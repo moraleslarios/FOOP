@@ -719,7 +719,7 @@ public static class MlResultActionsExecSelf
                                                             var actionResult = actionFailValue.TryToMlResult(value, errorMessageBuilder);
 
                                                             var result = actionResult.Match(
-                                                                                                fail : errorDetails => source.ErrorsDetails.Merge(errorDetails).ToMlResultFail<T>(),
+                                                                                                fail : errorDetails => source.FailureDetails.Merge(errorDetails).ToMlResultFail<T>(),
                                                                                                 valid: _            => source
                                                                                             );
 
@@ -744,7 +744,7 @@ public static class MlResultActionsExecSelf
                                                             var actionResult = await actionFailValueAsync.TryToMlResultAsync(value, errorMessageBuilder);
 
                                                             var result = actionResult.Match(
-                                                                                                fail : errorDetails => source.ErrorsDetails.Merge(errorDetails).ToMlResultFail<T>(),
+                                                                                                fail : errorDetails => source.FailureDetails.Merge(errorDetails).ToMlResultFail<T>(),
                                                                                                 valid: _            => source
                                                                                             );
 
@@ -851,7 +851,7 @@ public static class MlResultActionsExecSelf
                                                             var actionResult = actionFailException.TryToMlResult(exception, errorMessageBuilder);
 
                                                             var result = actionResult.Match(
-                                                                                                fail: errorDetails => source.ErrorsDetails.Merge(errorDetails).ToMlResultFail<T>(),
+                                                                                                fail: errorDetails => source.FailureDetails.Merge(errorDetails).ToMlResultFail<T>(),
                                                                                                 valid: _ => source
                                                                                             );
 
@@ -876,7 +876,7 @@ public static class MlResultActionsExecSelf
                                                                         var actionResult = await actionFailExceptionAsync.TryToMlResultAsync(exception, errorMessageBuilder);
 
                                                                         var result = await actionResult.MatchAsync(
-                                                                                                            failAsync : async errorDetails => await source.ErrorsDetails.Merge(errorDetails).ToMlResultFailAsync<T>(),
+                                                                                                            failAsync : async errorDetails => await source.FailureDetails.Merge(errorDetails).ToMlResultFailAsync<T>(),
                                                                                                             validAsync: async _            => await source.ToAsync()
                                                                                                         );
 

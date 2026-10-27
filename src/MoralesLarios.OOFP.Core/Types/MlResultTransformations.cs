@@ -100,7 +100,7 @@ public static class MlResultTransformations
     //        string message = BuildErrorMessage(errorMessageBuilder, ex);
 
     //        var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                               Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+    //                                               Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
     //        return errorDetails.ToMlResultFail<T>();
     //    }
@@ -136,7 +136,7 @@ public static class MlResultTransformations
             string message = BuildErrorMessage(errorMessageBuilder, ex);
 
             var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             result = errorDetails.ToMlResultFail<T>();
         }
@@ -164,7 +164,7 @@ public static class MlResultTransformations
             string message = BuildErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -188,7 +188,7 @@ public static class MlResultTransformations
     //        string message = BuildErrorMessage(errorMessageBuilder, ex);
 
     //        var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                    Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+    //                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
     //        return errorDetails.ToMlResultFail<T>();
     //    }
@@ -222,7 +222,7 @@ public static class MlResultTransformations
             string message = BuildErrorMessage(errorMessageBuilder, ex);
 
             var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-                                        Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                        Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             result = errorDetails.ToMlResultFail<T>();
         }
@@ -250,7 +250,7 @@ public static class MlResultTransformations
             string message = BuildErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-                                        Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                        Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -344,7 +344,7 @@ public static class MlResultTransformations
     //        string msg = BuildErrorMessage(errorMessageBuilder, ex);
 
     //        result = new MlErrorsDetails(Errors : new List<MlError> { new MlError(msg) },
-    //                                     Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+    //                                     Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
     //    }
 
@@ -405,7 +405,7 @@ public static class MlResultTransformations
             string message = BuildErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -449,7 +449,7 @@ public static class MlResultTransformations
             string message = BuildErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -604,20 +604,20 @@ public static class MlResultTransformations
         var properties = source.GetType().GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 
         var partialResult = MlResult.Empty()
-                                        .Map      ( _              => properties.FirstOrDefault(p => p.Name == "IsValid" && p.PropertyType == typeof(bool)))
+                                        .Map      ( _              => properties.FirstOrDefault(p => p.Name == nameof(MlResult<object>.IsSuccess) && p.PropertyType == typeof(bool)))
                                         .MapEnsure(isValidProperty => isValidProperty is not null,
-                                                    _              => "The encapsulated MlResult object does not have a property 'IsValid' of type bool. The type isn't MlResult.")
+                                                    _              => $"The encapsulated MlResult object does not have a property '{nameof(MlResult<object>.IsSuccess)}' of type bool. The type isn't MlResult.")
                                         .Map      (isValidProperty => isValidProperty!.GetValue(source))
                                         .MapEnsure(isValidObj      => isValidObj is bool,
-                                                    _              => "The 'IsValid' property is not of type bool")
+                                                    _              => $"The '{nameof(MlResult<object>.IsSuccess)}' property is not of type bool")
                                         .MapEnsure(isValid         => (bool)isValid!,
-                                                    _              => "The encapsulated MlResult object in obj, from which you want to extract the 'Value' property, is in a Fail state, so this information cannot be retrieved.")
-                                        .Map      ( _              => properties.FirstOrDefault(p => p.Name == "Value"))
+                                                    _              => $"The encapsulated MlResult object in obj, from which you want to extract the '{nameof(MlResult<object>.SuccessValue)}' property, is in a Fail state, so this information cannot be retrieved.")
+                                        .Map      ( _              => properties.FirstOrDefault(p => p.Name == nameof(MlResult<object>.SuccessValue)))
                                         .MapEnsure(valueProperty   => valueProperty is not null,
-                                                    _              => "The source object does not have a property 'Value'")
+                                                    _              => $"The source object does not have a property '{nameof(MlResult<object>.SuccessValue)}'")
                                         .Map      ( valueProperty  => valueProperty!.GetValue(source));
 
-        var result = partialResult.IsValid ? partialResult.Value : throw new ArgumentException(partialResult.ErrorsDetails.ToString());
+        var result = partialResult.IsSuccess ? partialResult.SuccessValue : throw new ArgumentException(partialResult.FailureDetails.ToString());
 
         return result!;
     }
@@ -699,7 +699,7 @@ public static class MlResultTransformations
             string msg = BuildErrorMessage(errorMessageBuilder, ex);
 
             result = new MlErrorsDetails(Errors : new List<MlError> { new MlError(msg) },
-                                         Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
             
         }
 
@@ -739,7 +739,7 @@ public static class MlResultTransformations
             string msg = BuildErrorMessage(errorMessageBuilder, ex);
 
             result = new MlErrorsDetails(Errors : new List<MlError> { new MlError(msg) },
-                                         Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
             
         }
 

@@ -150,6 +150,6 @@ MlResult<Informe> informeAsync = await ObtenerDatosAsync(rango)
 
 ## Ver también
 
-- [`MlResultActions`](MlResultActions.md) — `CreateCompleteMlResult`, `SecureValidValue`, etc.
+- [`MlResultActions`](MlResultActions.md) — `CreateCompleteMlResult`, `GetValueOrThrow`, etc.
 - [`MlResultBucles`](MlResultBucles.md) — `Projection*`, `MergeFailureErrors`, `MergeErrorsIfExists`.
 - [`MlResultTransformations`](MlResultTransformations.md) — conversiones `ToMlResult*` / `TryToMlResult*`.

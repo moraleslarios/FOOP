@@ -39,16 +39,16 @@ En un pipeline funcional, meter un log obliga normalmente a **partir la cadena**
 public async Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
 {
     var validado = dto.Validate();
-    if (validado.IsFail)
+    if (validado.IsFailure)
     {
-        _logger.LogWarning($"Validación fallida: {validado.ErrorsDetails.ToErrorsDescription()}");
+        _logger.LogWarning($"Validación fallida: {validado.FailureDetails.ToErrorsDescription()}");
         return validado.ToMlResultFail<Pedido>();       // hay que reconstruir el Fail
     }
 
     var guardado = await _repo.AddAsync(Mapear(validado.Value));
-    if (guardado.IsFail)
+    if (guardado.IsFailure)
     {
-        _logger.LogError($"Error al guardar: {guardado.ErrorsDetails.ToErrorsDescription()}");
+        _logger.LogError($"Error al guardar: {guardado.FailureDetails.ToErrorsDescription()}");
         return guardado;
     }
 
@@ -650,7 +650,7 @@ source.LogMlResultIfFailWithException(_logger, LogLevel.Error,
 
 // ❌ MAL: partir la cadena para registrar
 var r = await pipeline;
-if (r.IsFail) _logger.LogError(r.ErrorsDetails.ToErrorsDescription());
+if (r.IsFailure) _logger.LogError(r.FailureDetails.ToErrorsDescription());
 return r;
 
 // ✅ BIEN: log transparente

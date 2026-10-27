@@ -5,7 +5,7 @@
 2. [Mapa de la clase](#mapa-de-la-clase)
 3. [Enriquecer errores: `AddMlErrorDetailIfFail` y `AddValueDetailIfFail`](#enriquecer-errores-addmlerrordetailiffail-y-addvaluedetailiffail)
 4. [Completar con datos: la familia `CompleteWithData*`](#completar-con-datos-la-familia-completewithdata)
-5. [Acceso seguro: `SecureValidValue` y `SecureFailErrorsDetails`](#acceso-seguro-securevalidvalue-y-securefailerrorsdetails)
+5. [Acceso seguro: `GetValueOrThrow` y `GetFailureDetailsOrThrow`](#acceso-seguro-securevalidvalue-y-securefailerrorsdetails)
 6. [Composición cruda: `CreateCompleteMlResult`](#composición-cruda-createcompletemlresult)
 7. [Ejemplos Prácticos](#ejemplos-prácticos)
 8. [Mejores Prácticas](#mejores-prácticas)
@@ -57,10 +57,10 @@ puedes leerlos directamente, y eso es una virtud, no una limitación. Te obliga 
 | | `CompleteWithDetailsValueIfFailAsync` | 1 | Idem, asíncrono |
 | | `CompleteWithDataValue` | 1 | Guarda el valor sea válido o fallido |
 | | `CompleteWithDataValueAsync` | 4 | Idem, asíncrono |
-| **Acceso seguro** | `SecureValidValue` | 1 | Devuelve el valor o `default` sin lanzar |
-| | `SecureValidValueAsync` | 1 | Idem, asíncrono |
-| | `SecureFailErrorsDetails` | 1 | Devuelve los errores o unos vacíos, sin lanzar |
-| | `SecureFailErrorsDetailsAsync` | 2 | Idem, asíncrono |
+| **Acceso seguro** | `GetValueOrThrow` | 1 | Devuelve el valor o `default` sin lanzar |
+| | `GetValueOrThrowAsync` | 1 | Idem, asíncrono |
+| | `GetFailureDetailsOrThrow` | 1 | Devuelve los errores o unos vacíos, sin lanzar |
+| | `GetFailureDetailsOrThrowAsync` | 2 | Idem, asíncrono |
 | **Composición** | `CreateCompleteMlResult` | 3 | Construye un `MlResult<T>` a partir de sus piezas |
 | | `CreateCompleteMlResultAsync` | 8 | Idem, asíncrono |
 
@@ -161,37 +161,37 @@ var resultado = EjecutarConsulta(sql)
 
 ---
 
-## Acceso seguro: `SecureValidValue` y `SecureFailErrorsDetails`
+## Acceso seguro: `GetValueOrThrow` y `GetFailureDetailsOrThrow`
 
 Son las **puertas de escape controladas**. Nunca lanzan excepciones, sea cual sea el estado.
 
 ```csharp
-public static T               SecureValidValue<T>       (this MlResult<T> source);
-public static MlErrorsDetails SecureFailErrorsDetails<T>(this MlResult<T> source);
+public static T               GetValueOrThrow<T>       (this MlResult<T> source);
+public static MlErrorsDetails GetFailureDetailsOrThrow<T>(this MlResult<T> source);
 ```
 
 | Método | Si el resultado es válido | Si el resultado es fallido |
 | --- | --- | --- |
-| `SecureValidValue` | Devuelve el valor | Devuelve `default(T)` (`null` en referencias, `0` en `int`…) |
-| `SecureFailErrorsDetails` | Devuelve un `MlErrorsDetails` vacío | Devuelve los errores reales |
+| `GetValueOrThrow` | Devuelve el valor | Devuelve `default(T)` (`null` en referencias, `0` en `int`…) |
+| `GetFailureDetailsOrThrow` | Devuelve un `MlErrorsDetails` vacío | Devuelve los errores reales |
 
 ```csharp
 // Caso legítimo: interoperar con un API que espera el valor pelado y acepta null.
-var cliente = ObtenerCliente(id).SecureValidValue();
+var cliente = ObtenerCliente(id).GetValueOrThrow();
 if (cliente is null) return NotFound();
 
 // Caso legítimo: volcar los errores en un log sin ramificar.
 _log.LogDebug("Errores acumulados: {E}",
-              resultado.SecureFailErrorsDetails().ToErrorsDescription());
+              resultado.GetFailureDetailsOrThrow().ToErrorsDescription());
 ```
 
-⚠️ **Cuidado con `SecureValidValue`:** te devuelve `default(T)` en la rama fallida, lo que significa
+⚠️ **Cuidado con `GetValueOrThrow`:** te devuelve `default(T)` en la rama fallida, lo que significa
 que **pierdes por completo el motivo del fallo**. Úsalo solo cuando de verdad no te importe, y prefiere
 `Match` en todo lo demás:
 
 ```csharp
 // ❌ Pierde información y te obliga a comprobar null.
-var total = CalcularTotal(pedido).SecureValidValue();
+var total = CalcularTotal(pedido).GetValueOrThrow();
 
 // ✅ Explícito, sin nulos y con valor por defecto intencionado.
 var total = CalcularTotal(pedido).Match(valid: t => t, fail: _ => 0m);
@@ -332,7 +332,7 @@ legibles. Diez mensajes seguidos producen ruido.
 
 Colócalo inmediatamente antes de la transformación que descarta la información que querrás en el log.
 
-### 3. `SecureValidValue` solo en las fronteras
+### 3. `GetValueOrThrow` solo en las fronteras
 
 Dentro del dominio, `Match`. En el borde (interoperar con un API que exige el valor pelado), `Secure*`.
 Y si necesitas un valor por defecto explícito, `Match(valid: x => x, fail: _ => defecto)` es más claro.
@@ -357,7 +357,7 @@ encadenarlos con total libertad sin alterar la semántica de la tubería.
 - `AddMlErrorDetailIfFail` apila mensajes de contexto capa a capa; `AddValueDetailIfFail` conserva el
   dato culpable en `Details["Value"]`.
 - La familia `CompleteWithData*` guarda información para usarla más abajo en la tubería.
-- `SecureValidValue` devuelve `default(T)` en la rama fallida: cómodo, pero pierde el motivo del error.
+- `GetValueOrThrow` devuelve `default(T)` en la rama fallida: cómodo, pero pierde el motivo del error.
 - `CreateCompleteMlResult` es la construcción de bajo nivel, ideal para adaptadores.
 
 ## Ver también

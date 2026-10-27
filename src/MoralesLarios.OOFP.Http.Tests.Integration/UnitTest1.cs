@@ -61,7 +61,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //            LastName = $"Tests - {DateTime.Now.ToString()}"
     //        };
     //        var result = await _sut.PutAsync<CustomerDto>("default", item, null!, default);
-    //        Assert.True(result.IsValid);
+    //        Assert.True(result.IsSuccess);
     //    }
 
 
@@ -76,7 +76,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //            LastName = $"Tests - {DateTime.Now.ToString()}"
     //        };
     //        var result = await _sut.DeleteAsync<CustomerDto>("default", item, null!, default);
-    //        Assert.True(result.IsValid);
+    //        Assert.True(result.IsSuccess);
     //    }
 
     //    [Fact]
@@ -84,7 +84,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //    {
 
     //        var result = await _sut.DeleteByIdAsync<CustomerDto>("default", "29487", default);
-    //        Assert.True(result.IsValid);
+    //        Assert.True(result.IsSuccess);
     //    }
 
 

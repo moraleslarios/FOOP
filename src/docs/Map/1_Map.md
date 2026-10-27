@@ -96,14 +96,14 @@ MlResult<MlResult<Factura>> mal = ObtenerPedido(id)
                                      .Map(p => Facturar(p));      // Facturar devuelve MlResult<Factura>
 
 // A partir de aquí todo se vuelve incómodo: el fallo de Facturar queda "escondido"
-// dentro de un resultado VÁLIDO, y las comprobaciones de IsValid mienten.
+// dentro de un resultado VÁLIDO, y las comprobaciones de IsSuccess mienten.
 
 // ✅ BIEN: Bind aplana
 MlResult<Factura> bien = ObtenerPedido(id)
                             .Bind(p => Facturar(p));
 ```
 
-> 🔎 **Síntoma para detectarlo**: si ves un `IsValid` que dice `true` pero el resultado "no funciona", o si necesitas escribir `.Value.Value`, casi seguro has usado `Map` donde tocaba `Bind`.
+> 🔎 **Síntoma para detectarlo**: si ves un `IsSuccess` que dice `true` pero el resultado "no funciona", o si necesitas escribir `.Value.Value`, casi seguro has usado `Map` donde tocaba `Bind`.
 
 ---
 

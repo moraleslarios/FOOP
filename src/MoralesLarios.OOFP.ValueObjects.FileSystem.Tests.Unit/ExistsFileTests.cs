@@ -18,7 +18,7 @@ public class ExistsFileTests
 
     //    MlResult<ExistsFile> result = ExistsFile.ByString(pathStr);
 
-    //    result.IsValid.Should().BeTrue();
+    //    result.IsSuccess.Should().BeTrue();
     //}
 
     [Fact]
@@ -30,7 +30,7 @@ public class ExistsFileTests
 
         MlResult<ExistsFile> result = ExistsFile.ByString(pathStr);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -52,14 +52,14 @@ public class ExistsFileTests
     {
         string? pathStr = null;
         MlResult<ExistsFile> result = ExistsFile.ByString(pathStr!);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
     public void ByString_emptyvalue_return_invalid()
     {
         MlResult<ExistsFile> result = ExistsFile.ByString(string.Empty);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class ExistsFileTests
     {
         string pathStr = Path.Combine(AppContext.BaseDirectory, "FakeFiles", "TextFile2.txt");
         MlResult<ExistsFile> result = ExistsFile.ByString(pathStr, "Custom file error");
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class ExistsFileTests
                                         "FakeFiles",
                                         "TextFile1.txt");
         MlResult<ExistsFile> result = ExistsFile.ByString(pathStr);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]

@@ -92,7 +92,7 @@ public MlResult<ClienteDto> Validar(ClienteDto dto) =>
 Si fallan tres de las cuatro reglas, el resultado contiene los tres mensajes:
 
 ```csharp
-var errores = resultado.SecureFailErrorsDetails().ToErrorsMessages();
+var errores = resultado.GetFailureDetailsOrThrow().ToErrorsMessages();
 // "El nombre es obligatorio.", "El email no tiene un formato válido.", "El tenant es obligatorio."
 ```
 

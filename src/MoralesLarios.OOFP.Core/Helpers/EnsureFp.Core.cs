@@ -187,7 +187,7 @@ public static partial class EnsureFp
                 ? MlResult<T>.Valid(value)
                 : MlErrorsDetails.FromErrorMessage(errorMessage)
                                  .AddDetail(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
-                                 .AddDetail<object>(VALUE_KEY, value!)
+                                 .AddDetail<object>(ValueMetadataKey, value!)
                                  .ToMlResultFail<T>();
 
     private static MlResult<T> BuildExceptionFail<T>(string?                 paramName,
@@ -218,7 +218,7 @@ public static partial class EnsureFp
 
         var errorsDetails = MlErrorsDetails.FromErrorMessage(errorMessage)
                                            .AddDetail(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
-                                           .AddDetail<object>(VALUE_KEY, value!);
+                                           .AddDetail<object>(ValueMetadataKey, value!);
 
         foreach (var (key, detailValue) in extraDetails ?? Array.Empty<(string, object)>())
             errorsDetails = errorsDetails.AddDetail(key, detailValue);

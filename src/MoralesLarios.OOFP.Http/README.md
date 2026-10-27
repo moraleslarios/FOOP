@@ -814,7 +814,7 @@ Console.WriteLine(mensaje);
 
 > ⚠️ **Regla de oro:** `Value` y `ErrorsDetails` son `internal protected`. Desde código de aplicación
 > accede **siempre** con `Match(valid:…, fail:…)` o, si estás seguro de la validez, con
-> `SecureValidValue()`. Ver [`MlResult`](../docs/core-types/MlResult.md).
+> `GetValueOrThrow()`. Ver [`MlResult`](../docs/core-types/MlResult.md).
 
 ### Ejemplo 3 — Encadenar varias llamadas HTTP en una sola tubería
 
@@ -877,7 +877,7 @@ object[] pk = [7, new DateOnly(2024, 3, 15)];
 
 var leer     = await _reservas.GetByIdAsync(pk);                     // GET    .../id-str/7,2024-03-15
 var crear    = await _reservas.PostAsync(new ReservaDto(7, new DateOnly(2024,3,16), "Retro"));
-var modif    = await _reservas.PutByIdAsync(pk, crear.SecureValidValue());  // PUT    .../7,2024-03-15
+var modif    = await _reservas.PutByIdAsync(pk, crear.GetValueOrThrow());  // PUT    .../7,2024-03-15
 var borrar   = await _reservas.DeleteByIdAsync(pk);                  // DELETE .../7,2024-03-15
 ```
 
@@ -963,17 +963,17 @@ partir de ahí sigues en la tubería con `TryMapAsync` / `BindAsync` para lo que
 public async Task<PruebasDto> MalAsync(int id)
 {
     var r = await _client.GetByIdAsync($"{id}");
-    if (r.IsFail) throw new Exception("No encontrado");   // se pierde código, razón y cuerpo
-    return r.SecureValidValue();
+    if (r.IsFailure) throw new Exception("No encontrado");   // se pierde código, razón y cuerpo
+    return r.GetValueOrThrow();
 }
 
 // ❌ MAL: string matching sobre el mensaje para adivinar el código HTTP
 public async Task<IActionResult> TambienMalAsync(int id)
 {
     var r = await _client.GetByIdAsync($"{id}");
-    if (r.IsFail && r.Match(_ => "", e => e.ToErrorsDescription()).Contains("404"))
+    if (r.IsFailure && r.Match(_ => "", e => e.ToErrorsDescription()).Contains("404"))
         return NotFound();
-    return Ok(r.SecureValidValue());
+    return Ok(r.GetValueOrThrow());
 }
 ```
 

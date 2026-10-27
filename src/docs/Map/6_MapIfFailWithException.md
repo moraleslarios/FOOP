@@ -77,7 +77,7 @@ punto exacto de la tubería donde tiene sentido.
 ## Cómo llega la excepción a los detalles
 
 La excepción no aparece por arte de magia: alguien la capturó y la guardó en
-`Details["Ex"]` (la constante `EX_DESC_KEY`). Las vías habituales son:
+`Details["Ex"]` (la constante `ExceptionMetadataKey`). Las vías habituales son:
 
 ```csharp
 // 1) Cualquier método Try* de la librería lo hace por ti
@@ -103,7 +103,7 @@ MlResult<Exception> exResult = errores.GetDetailException();
 MlResult<TimeoutException> toResult = errores.GetDetailException<TimeoutException>();
 
 // Comprobación booleana rápida
-bool esTecnico = errores.GetDetailException().IsValid;
+bool esTecnico = errores.GetDetailException().IsSuccess;
 ```
 
 > 📌 `AppendExDetails` numera las excepciones sucesivas como `Ex`, `Ex2`, `Ex3`… si se apilan
@@ -473,7 +473,7 @@ resultado.MapIfFailWithException(ex => default!);
 resultado.MapIfFailWithException<TimeoutException>(ex => …);   // no compila
 
 // ❌ 4) Acceder a .Value para inspeccionar la excepción
-if (resultado.IsFail) { var ex = resultado.ErrorsDetails.Details["Ex"]; }
+if (resultado.IsFailure) { var ex = resultado.FailureDetails.Details["Ex"]; }
 ```
 
 ✅ En su lugar:

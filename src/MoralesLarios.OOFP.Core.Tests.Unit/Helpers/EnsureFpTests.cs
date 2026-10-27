@@ -18,7 +18,7 @@ public class EnsureFpTests
 
         var result = EnsureFp.NotNull(data, "data");
 
-        result.IsValid.Should().BeFalse();
+        result.IsSuccess.Should().BeFalse();
     }
 
 
@@ -29,7 +29,7 @@ public class EnsureFpTests
 
         var result = await EnsureFp.NotNullAsync(data, "data");
 
-        result.IsValid.Should().BeFalse();
+        result.IsSuccess.Should().BeFalse();
     }
 
 

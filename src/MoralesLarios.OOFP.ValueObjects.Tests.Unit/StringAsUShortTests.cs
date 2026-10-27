@@ -28,7 +28,7 @@ public class StringAsUShortTests
     {
         var value = "60000";
         var result = StringAsUShort.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsUShortTests
     {
         var value = "XYZ";
         MlResult<StringAsUShort> result = StringAsUShort.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

@@ -96,8 +96,8 @@ Definidas en `Helpers/Constants.cs`:
 
 | Constante | Valor | Uso |
 | --- | --- | --- |
-| `Constants.EX_DESC_KEY` | `"Ex"` | Excepción capturada por los métodos `Try*`. Si hay varias se numeran `Ex`, `Ex2`, `Ex3`… |
-| `Constants.VALUE_KEY` | `"Value"` | Valor de entrada que provocó el fallo (familias `*WithValue`). |
+| `Constants.ExceptionMetadataKey` | `"Ex"` | Excepción capturada por los métodos `Try*`. Si hay varias se numeran `Ex`, `Ex2`, `Ex3`… |
+| `Constants.ValueMetadataKey` | `"Value"` | Valor de entrada que provocó el fallo (familias `*WithValue`). |
 
 ### Fábricas
 

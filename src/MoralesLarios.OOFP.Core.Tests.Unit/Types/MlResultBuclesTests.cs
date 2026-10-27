@@ -45,7 +45,7 @@ public class MlResultBuclesTests
 
         MlResult<IEnumerable<TestType>> expected = MlResult<IEnumerable<TestType>>.Fail("Error Name2", "Error Name3");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class MlResultBuclesTests
 
         MlResult<IEnumerable<TestType2>> expected = MlResult<IEnumerable<TestType2>>.Fail("Error Name2", "Error Name3");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public class MlResultBuclesTests
 
         MlResult<IEnumerable<TestType>> result = await sourceAsync.ProjectionAsync<TestType, TestType>(x => x with { Date = DateTime.MinValue });
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -269,7 +269,7 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -281,9 +281,9 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
 
-        result.SecureValidValue().valids.Count.Should().Be(2);
+        result.GetValueOrThrow().valids.Count.Should().Be(2);
     }
 
     [Fact]
@@ -295,10 +295,10 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
 
-        result.SecureValidValue().valids.Count.Should().Be(3);
-        result.SecureValidValue().fails .Count.Should().Be(0);
+        result.GetValueOrThrow().valids.Count.Should().Be(3);
+        result.GetValueOrThrow().fails .Count.Should().Be(0);
     }
 
     [Fact]
@@ -310,9 +310,9 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(0);
-        result.SecureValidValue().fails .Count.Should().Be(3);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(0);
+        result.GetValueOrThrow().fails .Count.Should().Be(3);
     }
 
     [Fact]
@@ -322,12 +322,12 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colec.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(3);
-        result.SecureValidValue().fails.Count.Should().Be(0);
-        result.SecureValidValue().valids["uno"].Should().Be(3);
-        result.SecureValidValue().valids["dos"].Should().Be(3);
-        result.SecureValidValue().valids["tres"].Should().Be(4);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(3);
+        result.GetValueOrThrow().fails.Count.Should().Be(0);
+        result.GetValueOrThrow().valids["uno"].Should().Be(3);
+        result.GetValueOrThrow().valids["dos"].Should().Be(3);
+        result.GetValueOrThrow().valids["tres"].Should().Be(4);
     }
 
     [Fact]
@@ -337,12 +337,12 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colec.ProjectionSplitAsync(x => $"Error {x}".ToMlResultFail<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(0);
-        result.SecureValidValue().fails.Count.Should().Be(3);
-        result.SecureValidValue().fails["uno"].ToString().Should().Contain("Error uno");
-        result.SecureValidValue().fails["dos"].ToString().Should().Contain("Error dos");
-        result.SecureValidValue().fails["tres"].ToString().Should().Contain("Error tres");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(0);
+        result.GetValueOrThrow().fails.Count.Should().Be(3);
+        result.GetValueOrThrow().fails["uno"].ToString().Should().Contain("Error uno");
+        result.GetValueOrThrow().fails["dos"].ToString().Should().Contain("Error dos");
+        result.GetValueOrThrow().fails["tres"].ToString().Should().Contain("Error tres");
     }
 
     [Fact]
@@ -352,9 +352,9 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(3);
-        result.SecureValidValue().fails.Count.Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(3);
+        result.GetValueOrThrow().fails.Count.Should().Be(0);
     }
 
     [Fact]
@@ -364,9 +364,9 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => Task.FromResult(x.Length.ToMlResultValid<int>()));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(3);
-        result.SecureValidValue().fails.Count.Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(3);
+        result.GetValueOrThrow().fails.Count.Should().Be(0);
     }
 
     [Fact]
@@ -376,9 +376,9 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => Task.FromResult($"Error {x}".ToMlResultFail<int>()));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(0);
-        result.SecureValidValue().fails.Count.Should().Be(3);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(0);
+        result.GetValueOrThrow().fails.Count.Should().Be(3);
     }
 
     [Fact]
@@ -388,11 +388,11 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(2);
-        result.SecureValidValue().fails.Count.Should().Be(0);
-        result.SecureValidValue().valids["uno"].Should().Be(3);
-        result.SecureValidValue().valids["tres"].Should().Be(4);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(2);
+        result.GetValueOrThrow().fails.Count.Should().Be(0);
+        result.GetValueOrThrow().valids["uno"].Should().Be(3);
+        result.GetValueOrThrow().valids["tres"].Should().Be(4);
     }
 
     [Fact]
@@ -404,13 +404,13 @@ public class MlResultBuclesTests
             ? $"Error {x}".ToMlResultFail<int>()
             : x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count.Should().Be(2);
-        result.SecureValidValue().fails.Count.Should().Be(2);
-        result.SecureValidValue().valids["uno"].Should().Be(3);
-        result.SecureValidValue().valids["tres"].Should().Be(4);
-        result.SecureValidValue().fails["dos"].ToString().Should().Contain("Error dos");
-        result.SecureValidValue().fails["cuatro"].ToString().Should().Contain("Error cuatro");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count.Should().Be(2);
+        result.GetValueOrThrow().fails.Count.Should().Be(2);
+        result.GetValueOrThrow().valids["uno"].Should().Be(3);
+        result.GetValueOrThrow().valids["tres"].Should().Be(4);
+        result.GetValueOrThrow().fails["dos"].ToString().Should().Contain("Error dos");
+        result.GetValueOrThrow().fails["cuatro"].ToString().Should().Contain("Error cuatro");
     }
 
     [Fact]
@@ -422,7 +422,7 @@ public class MlResultBuclesTests
 
         MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(completeFuncTransformAsync);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -437,7 +437,7 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -449,9 +449,9 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
 
-        result.SecureValidValue().valids.Count().Should().Be(2);
+        result.GetValueOrThrow().valids.Count().Should().Be(2);
     }
 
     [Fact]
@@ -463,10 +463,10 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
 
-        result.SecureValidValue().valids.Count().Should().Be(3);
-        result.SecureValidValue().fails .Count().Should().Be(0);
+        result.GetValueOrThrow().valids.Count().Should().Be(3);
+        result.GetValueOrThrow().fails .Count().Should().Be(0);
     }
 
     [Fact]
@@ -478,9 +478,9 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(0);
-        result.SecureValidValue().fails .Count().Should().Be(3);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(0);
+        result.GetValueOrThrow().fails .Count().Should().Be(3);
     }
 
     [Fact]
@@ -490,12 +490,12 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colec.ProjectionSplitPlusAsync(x => x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(3);
-        result.SecureValidValue().fails.Count().Should().Be(0);
-        result.SecureValidValue().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
-        result.SecureValidValue().valids.Single(x => x.Key == "dos").Value.Should().Be(3);
-        result.SecureValidValue().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(3);
+        result.GetValueOrThrow().fails.Count().Should().Be(0);
+        result.GetValueOrThrow().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
+        result.GetValueOrThrow().valids.Single(x => x.Key == "dos").Value.Should().Be(3);
+        result.GetValueOrThrow().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
     }
 
     [Fact]
@@ -505,12 +505,12 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colec.ProjectionSplitPlusAsync(x => $"Error {x}".ToMlResultFail<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(0);
-        result.SecureValidValue().fails.Count().Should().Be(3);
-        result.SecureValidValue().fails.Single(x => x.Key == "uno").Errors.ToString().Should().Contain("Error uno");
-        result.SecureValidValue().fails.Single(x => x.Key == "dos").Errors.ToString().Should().Contain("Error dos");
-        result.SecureValidValue().fails.Single(x => x.Key == "tres").Errors.ToString().Should().Contain("Error tres");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(0);
+        result.GetValueOrThrow().fails.Count().Should().Be(3);
+        result.GetValueOrThrow().fails.Single(x => x.Key == "uno").Errors.ToString().Should().Contain("Error uno");
+        result.GetValueOrThrow().fails.Single(x => x.Key == "dos").Errors.ToString().Should().Contain("Error dos");
+        result.GetValueOrThrow().fails.Single(x => x.Key == "tres").Errors.ToString().Should().Contain("Error tres");
     }
 
     [Fact]
@@ -520,9 +520,9 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(3);
-        result.SecureValidValue().fails.Count().Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(3);
+        result.GetValueOrThrow().fails.Count().Should().Be(0);
     }
 
     [Fact]
@@ -532,9 +532,9 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => Task.FromResult(x.Length.ToMlResultValid<int>()));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(3);
-        result.SecureValidValue().fails.Count().Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(3);
+        result.GetValueOrThrow().fails.Count().Should().Be(0);
     }
 
     [Fact]
@@ -544,9 +544,9 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => Task.FromResult($"Error {x}".ToMlResultFail<int>()));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(0);
-        result.SecureValidValue().fails.Count().Should().Be(3);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(0);
+        result.GetValueOrThrow().fails.Count().Should().Be(3);
     }
 
     [Fact]
@@ -556,11 +556,11 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(2);
-        result.SecureValidValue().fails.Count().Should().Be(0);
-        result.SecureValidValue().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
-        result.SecureValidValue().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(2);
+        result.GetValueOrThrow().fails.Count().Should().Be(0);
+        result.GetValueOrThrow().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
+        result.GetValueOrThrow().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
     }
 
     [Fact]
@@ -572,13 +572,13 @@ public class MlResultBuclesTests
             ? $"Error {x}".ToMlResultFail<int>()
             : x.Length.ToMlResultValid<int>());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().valids.Count().Should().Be(2);
-        result.SecureValidValue().fails.Count().Should().Be(2);
-        result.SecureValidValue().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
-        result.SecureValidValue().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
-        result.SecureValidValue().fails.Single(x => x.Key == "dos").Errors.ToString().Should().Contain("Error dos");
-        result.SecureValidValue().fails.Single(x => x.Key == "cuatro").Errors.ToString().Should().Contain("Error cuatro");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().valids.Count().Should().Be(2);
+        result.GetValueOrThrow().fails.Count().Should().Be(2);
+        result.GetValueOrThrow().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
+        result.GetValueOrThrow().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
+        result.GetValueOrThrow().fails.Single(x => x.Key == "dos").Errors.ToString().Should().Contain("Error dos");
+        result.GetValueOrThrow().fails.Single(x => x.Key == "cuatro").Errors.ToString().Should().Contain("Error cuatro");
     }
 
     [Fact]
@@ -590,7 +590,7 @@ public class MlResultBuclesTests
 
         MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(completeFuncTransformAsync);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -611,8 +611,8 @@ public class MlResultBuclesTests
 
         MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails()
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow()
               .ToErrorsMessages()
               .Should().BeEquivalentTo(new[] { "Error 1", "Error 2", "Error 3" });
     }
@@ -632,8 +632,8 @@ public class MlResultBuclesTests
 
         MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails()
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow()
               .ToErrorsMessages()
               .Should().BeEquivalentTo(new[] { "Error 2", "Error 4" });
     }
@@ -651,7 +651,7 @@ public class MlResultBuclesTests
         Action act = () => source.MergeFailureErrors();
 
         act.Should().NotThrow();
-        source.MergeFailureErrors().IsFail.Should().BeTrue();
+        source.MergeFailureErrors().IsFailure.Should().BeTrue();
     }
 
 
@@ -666,8 +666,8 @@ public class MlResultBuclesTests
 
         MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails()
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow()
               .ToErrorsMessages()
               .Should().Contain("No elements found in failed state to merge");
     }
@@ -681,8 +681,8 @@ public class MlResultBuclesTests
 
         MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails()
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow()
               .ToErrorsMessages()
               .Should().Contain("No elements found in failed state to merge");
     }

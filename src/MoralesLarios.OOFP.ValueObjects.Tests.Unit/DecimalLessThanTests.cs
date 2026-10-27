@@ -14,7 +14,7 @@ public class DecimalLessThanTests
 
         var result = DecimalLessThan.ByDecimalLength(value, length);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class DecimalLessThanTests
 
         var result = DecimalLessThan.ByDecimalLength(value, length);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

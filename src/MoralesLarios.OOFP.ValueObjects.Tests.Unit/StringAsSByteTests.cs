@@ -28,7 +28,7 @@ public class StringAsSByteTests
     {
         var value = "100";
         var result = StringAsSByte.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsSByteTests
     {
         var value = "XYZ";
         MlResult<StringAsSByte> result = StringAsSByte.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

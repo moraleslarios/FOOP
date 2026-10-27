@@ -864,7 +864,7 @@ public async Task<MlResult<Vino>> CrearConPuntuacionAsync(
                                 .BindAsync(v => _puntos.TryAddAsync(punto, ct)
                                                        .MapAsync(_ => v));
 
-    if (resultado.IsValid) await tx.CommitAsync(ct);
+    if (resultado.IsSuccess) await tx.CommitAsync(ct);
     else                   await tx.RollbackAsync(ct);
 
     return resultado;

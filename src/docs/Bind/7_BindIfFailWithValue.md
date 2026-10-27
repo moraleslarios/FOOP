@@ -42,7 +42,7 @@ error** y lo pasa a tu función de recuperación.
 ## El requisito previo: `AddValueIfFail`
 
 🔑 **Este es el punto que más confusión genera.** `BindIfFailWithValue` **no adivina** el valor: lo lee
-de `Details["Value"]` (la constante `VALUE_KEY`). Si nadie lo guardó ahí antes, no hay nada que
+de `Details["Value"]` (la constante `ValueMetadataKey`). Si nadie lo guardó ahí antes, no hay nada que
 recuperar.
 
 El encargado de guardarlo es [`AddValueIfFail`](../core-types/MlResultActionsErrorsDetails.md):
@@ -213,8 +213,8 @@ public class ImportadorCsv
             .ToList();
 
         return new ResumenImportacion(
-            Importadas: resultados.Count(r => r.IsValid),
-            Rechazadas: resultados.Count(r => r.IsFail));
+            Importadas: resultados.Count(r => r.IsSuccess),
+            Rechazadas: resultados.Count(r => r.IsFailure));
     }
 
     private MlResult<Registro> ProcesarLinea(LineaCsv linea)
@@ -377,7 +377,7 @@ a lo largo de la tubería, usa una **tupla** o un objeto de contexto en el camin
 - [`8_BindIfFailWithException.md`](8_BindIfFailWithException.md) — recuperación solo ante excepciones.
 - [`9_BindIfFailWithoutException.md`](9_BindIfFailWithoutException.md) — recuperación solo ante fallos de negocio.
 - [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetDetailValue<T>` y el resto del acceso a detalles.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la clave `VALUE_KEY` y las factorías de `MlErrorsDetails`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la clave `ValueMetadataKey` y las factorías de `MlErrorsDetails`.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — la versión que solo observa, sin transformar.
 - [`../Map/5_MapIfFailWithValue.md`](../Map/5_MapIfFailWithValue.md) — la versión con función que no puede fallar.
 - [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — referencia con todas las sobrecargas.

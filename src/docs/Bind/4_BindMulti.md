@@ -55,8 +55,8 @@ public static MlResult<TReturn> BindMulti<T, TReturn>(this   MlResult<T>        
         fail : errors => errors,
         valid: value  => value.ToMlResultValid()
                               .Map(x => funcs.Select(func => func(value)).ToList())
-                              .Bind(resultData => resultData.Any(x => x.IsFail)
-                                                     ? resultData.MergeFailureErrors().SecureFailErrorsDetails()
+                              .Bind(resultData => resultData.Any(x => x.IsFailure)
+                                                     ? resultData.MergeFailureErrors().GetFailureDetailsOrThrow()
                                                      : returnFunc(value)));
 ```
 
@@ -120,7 +120,7 @@ public static MlResult<TReturn> BindMulti<T, TReturn, TFuncColec>(this   MlResul
 Internamente hace lo mismo, pero pasa a `returnFunc` únicamente los valores válidos:
 
 ```csharp
-returnFunc(value, resultsData.Where(x => x.IsValid).Select(y => y.SecureValidValue()))
+returnFunc(value, resultsData.Where(x => x.IsSuccess).Select(y => y.GetValueOrThrow()))
 ```
 
 📌 Las formas 1 y 2 son en realidad atajos que delegan en la forma 3 con `TFuncColec = TReturn`.

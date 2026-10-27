@@ -24,7 +24,7 @@ En una tubería de `MlResult<T>` conviven dos clases de fallo muy distintas:
 
 `ExecSelfIfFailWithException` ejecuta una acción **solo cuando el fallo es técnico**, es decir, cuando
 hay una excepción guardada en `MlErrorsDetails.Details` bajo la clave convencional `"Ex"`
-(`Constants.EX_DESC_KEY`), y te la entrega ya tipada como `Exception`:
+(`Constants.ExceptionMetadataKey`), y te la entrega ya tipada como `Exception`:
 
 ```csharp
 resultado.ExecSelfIfFailWithException((errores, ex) =>

@@ -28,7 +28,7 @@ public class StringAsUIntTests
     {
         var value = "4000000000";
         var result = StringAsUInt.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsUIntTests
     {
         var value = "XYZ";
         MlResult<StringAsUInt> result = StringAsUInt.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

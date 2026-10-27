@@ -31,9 +31,9 @@ public class MlErrorsDetails(IEnumerable<MlError>       Errors  = null!,
     public static MlErrorsDetails FromErrorDetails           (string              errorMessage  , string key, object detail                 ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { key, detail} }); 
     public static MlErrorsDetails FromErrorMessage           (string              errorMessage                                              ) => FromErrorMessageDetails(errorMessage);
 
-    public static MlErrorsDetails FromErrorMessageWithException(string errorMessage, Exception exception) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { EX_DESC_KEY, exception} });
-    public static MlErrorsDetails FromErrorMessageWithValue    (string errorMessage, object    value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { VALUE_KEY , value     } });
-    public static MlErrorsDetails FromErrorMessageWithValue<T> (string errorMessage, T         value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { VALUE_KEY , value!    } });
+    public static MlErrorsDetails FromErrorMessageWithException(string errorMessage, Exception exception) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { ExceptionMetadataKey, exception} });
+    public static MlErrorsDetails FromErrorMessageWithValue    (string errorMessage, object    value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { ValueMetadataKey , value     } });
+    public static MlErrorsDetails FromErrorMessageWithValue<T> (string errorMessage, T         value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { ValueMetadataKey , value!    } });
 
 
     public static implicit operator MlErrorsDetails(List<MlError> errors        ) => new(errors);

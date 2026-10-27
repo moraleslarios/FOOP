@@ -13,7 +13,7 @@ public class DataannotationsValidatorTests
 
         MlResult<User> result = await DataannotationsValidator.ValidateAsync(source!);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class DataannotationsValidatorTests
 
         MlResult<User> result = await DataannotationsValidator.ValidateAsync(sourceAsync!);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class DataannotationsValidatorTests
 
         MlResult<IEnumerable<User>> result = await DataannotationsValidator.ValidateAsync(source!);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -43,6 +43,6 @@ public class DataannotationsValidatorTests
 
         MlResult<IEnumerable<User>> result = await DataannotationsValidator.ValidateAsync(sourceAsync!);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }

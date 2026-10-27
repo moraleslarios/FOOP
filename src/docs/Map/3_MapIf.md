@@ -27,7 +27,7 @@
 // ❌ Sacar el valor de la tubería para poder decidir
 var r = ObtenerPrecio(articuloId);
 decimal final;
-if (r.IsValid)
+if (r.IsSuccess)
 {
     var p = r.Value;                          // acceso interno, no disponible
     final = p.EsPromocion ? p.Base * 0.8m : p.Base;

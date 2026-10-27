@@ -44,11 +44,11 @@ public static class MlErrorsDetailsActions
 
         var principalDetailsWithEx = sourceDetails.Where(x => x.Value is Exception)
                                            .Concat(otherDetails.Where(x => x.Value is Exception))
-                                           .Select((x, index) => ($"{EX_DESC_KEY}{(index == 0 ? string.Empty : index.ToString())}", x.Value))
+                                           .Select((x, index) => ($"{ExceptionMetadataKey}{(index == 0 ? string.Empty : index.ToString())}", x.Value))
                                            .ToDictionary(x => x.Item1, x => x.Item2);
 
-        //var printipalDetailsWitoutEx = source.Details.Where(x => x.Key != EX_DESC_KEY).ToDictionary(x => x.Key, x => x.Value);
-        //var otherDetailsWitoutEx     = other .Details.Where(x => x.Key != EX_DESC_KEY).ToDictionary(x => x.Key, x => x.Value);
+        //var printipalDetailsWitoutEx = source.Details.Where(x => x.Key != ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
+        //var otherDetailsWitoutEx     = other .Details.Where(x => x.Key != ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
 
         var printipalDetailsWitoutEx = sourceDetails.Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
         var otherDetailsWitoutEx     = otherDetails .Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
@@ -148,21 +148,21 @@ public static class MlErrorsDetailsActions
 
     public static MlErrorsDetails AddDetailValue<T>(this MlErrorsDetails source, T value)
     {
-        if (source.Details.ContainsKey(VALUE_KEY)) source.Details.Remove(VALUE_KEY);
+        if (source.Details.ContainsKey(ValueMetadataKey)) source.Details.Remove(ValueMetadataKey);
 
-        var result = source.AddDetail(VALUE_KEY, value!);
+        var result = source.AddDetail(ValueMetadataKey, value!);
 
         return result;
     }
 
 
 
-    public static bool HasValueDetails(this MlErrorsDetails source) => source.Details.ContainsKey(VALUE_KEY);
+    public static bool HasValueDetails(this MlErrorsDetails source) => source.Details.ContainsKey(ValueMetadataKey);
 
     public static Task<bool> HasValueDetailsAsync(this MlErrorsDetails source) => source.HasValueDetails().ToAsync();
 
 
-    public static bool HasExceptionDetails(this MlErrorsDetails source) => source.Details.ContainsKey(EX_DESC_KEY);
+    public static bool HasExceptionDetails(this MlErrorsDetails source) => source.Details.ContainsKey(ExceptionMetadataKey);
 
     public static Task<bool> HasExceptionDetailsAsync(this MlErrorsDetails source) => source.HasExceptionDetails().ToAsync();
 

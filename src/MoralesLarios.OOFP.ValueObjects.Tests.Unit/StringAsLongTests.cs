@@ -28,7 +28,7 @@ public class StringAsLongTests
     {
         var value = "9000000000000000000";
         var result = StringAsLong.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsLongTests
     {
         var value = "XYZ";
         MlResult<StringAsLong> result = StringAsLong.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

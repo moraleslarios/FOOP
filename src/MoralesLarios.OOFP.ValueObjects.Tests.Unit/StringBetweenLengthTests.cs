@@ -15,7 +15,7 @@ public class StringBetweenLengthTests
 
         var result = StringBetweenLength.ByStringLength(value, 3, 5);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class StringBetweenLengthTests
 
         var result = StringBetweenLength.ByStringLength(validString, minLength, maxLength);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class StringBetweenLengthTests
 
         var result = StringBetweenLength.ByStringLength(validString, minLength, maxLength);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class StringBetweenLengthTests
 
         var result = StringBetweenLength.ByStringLength(validString, minLength, maxLength);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class StringBetweenLengthTests
 
         var result = StringBetweenLength.ByStringLength(validString, minLength, maxLength);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 }

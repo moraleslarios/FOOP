@@ -185,8 +185,8 @@ Además del mensaje, los fallos de `EnsureFp` adjuntan información estructurada
 por su nombre**.
 
 ```csharp
-public const string EX_DESC_KEY        = "Ex";
-public const string VALUE_KEY          = "Value";
+public const string ExceptionMetadataKey        = "Ex";
+public const string ValueMetadataKey          = "Value";
 public const string NOT_FOUND_KEY      = "NotFound";
 public const string PARAM_NAME_KEY     = "ParamName";
 public const string FAILED_INDEXES_KEY = "FailedIndexes";
@@ -196,10 +196,10 @@ public const string EXPECTED_KEY       = "Expected";
 | Constante | Clave | Contenido | La añaden |
 |---|---|---|---|
 | `PARAM_NAME_KEY` | `ParamName` | nombre o expresión del parámetro que falló | todas las variantes `*Arg` |
-| `VALUE_KEY` | `Value` | el valor recibido | todas las variantes `*Arg` |
+| `ValueMetadataKey` | `Value` | el valor recibido | todas las variantes `*Arg` |
 | `EXPECTED_KEY` | `Expected` | el límite, rango o conjunto esperado | reglas de números, longitudes y cardinalidad |
 | `FAILED_INDEXES_KEY` | `FailedIndexes` | `IEnumerable<int>` con las posiciones que incumplen | `AllMatch`, `NoneMatch`, `NoDuplicates`, `NoNullItems` |
-| `EX_DESC_KEY` | `Ex` | la excepción capturada | `TryThat` y `TryThatAsync` |
+| `ExceptionMetadataKey` | `Ex` | la excepción capturada | `TryThat` y `TryThatAsync` |
 | `NOT_FOUND_KEY` | `NotFound` | marca semántica de «recurso inexistente» | usada por la capa web, no por `EnsureFp` |
 
 Otras constantes útiles del mismo fichero:
@@ -229,15 +229,15 @@ de `MlErrorsDetailsActions`:
 ```csharp
 var resultado = MaxLengthArg(nombre, 10);
 
-if (resultado.IsFail)
+if (resultado.IsFailure)
 {
-    var d = resultado.SecureFailErrorsDetails();
+    var d = resultado.GetFailureDetailsOrThrow();
 
     var mensaje  = d.ToErrorsMessages();
     // "'nombre' debe tener como máximo 10 caracteres (actual: 27)."
 
     var param    = d.Details[PARAM_NAME_KEY];      // "nombre"
-    var valor    = d.Details[VALUE_KEY];           // "Un nombre demasiado largo..."
+    var valor    = d.Details[ValueMetadataKey];           // "Un nombre demasiado largo..."
     var esperado = d.Details[EXPECTED_KEY];        // 10
 
     var volcado  = d.ToDetailsDescription();       // todo el diccionario, para el log
@@ -268,7 +268,7 @@ public async Task<IActionResult> Crear(CrearPedidoDto dto, CancellationToken ct)
 private IActionResult Responder(MlErrorsDetails e)
 {
     // 1. Fallo técnico: el predicado lanzó una excepción → 503
-    if (e.Details.ContainsKey(EX_DESC_KEY))
+    if (e.Details.ContainsKey(ExceptionMetadataKey))
     {
         logger.LogError(e.GetDetailException(), "Fallo técnico validando la petición");
         return StatusCode(StatusCodes.Status503ServiceUnavailable,

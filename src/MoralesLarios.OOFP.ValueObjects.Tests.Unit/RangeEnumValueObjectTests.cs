@@ -14,8 +14,8 @@ public class RangeEnumValueObjectTests
     {
         var result = RangeEnumValueObject<TestStatus>.ByString("Active");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().GetEnumValue().Should().Be(TestStatus.Active);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().GetEnumValue().Should().Be(TestStatus.Active);
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class RangeEnumValueObjectTests
     {
         var result = RangeEnumValueObject<TestStatus>.ByString("Unknown");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]

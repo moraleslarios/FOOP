@@ -26,9 +26,9 @@ public static class Extensions
 
     public static Dictionary<string, object> AppendExDetails(this Dictionary<string, object> source, Exception ex)
     {
-        var exKeys = source.Keys.Where(x => x.StartsWith(EX_DESC_KEY)).ToList();
+        var exKeys = source.Keys.Where(x => x.StartsWith(ExceptionMetadataKey)).ToList();
 
-        var exKey = exKeys.Any() ? $"{EX_DESC_KEY}{exKeys.Count + 1}" : EX_DESC_KEY;
+        var exKey = exKeys.Any() ? $"{ExceptionMetadataKey}{exKeys.Count + 1}" : ExceptionMetadataKey;
 
         var result = source.ToDictionary(x => x.Key, x => x.Value);
 

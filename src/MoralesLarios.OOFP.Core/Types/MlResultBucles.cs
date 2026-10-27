@@ -19,9 +19,9 @@ public static partial class MlResultBucles
     //{
     //    var partialData = x.Select(completeFuncTransform).ToList();
 
-    //    var result = partialData.Any(x => x.IsFail) ?
+    //    var result = partialData.Any(x => x.IsFailure) ?
     //                 MergeFailureErrors(partialData) :
-    //                 MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.Value));
+    //                 MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.SuccessValue));
 
     //    return result;
     //}
@@ -46,9 +46,9 @@ public static partial class MlResultBucles
     //                                partialData.Add(funcResult);
     //                            }
 
-    //                            var result = partialData.Any(x => x.IsFail) ?
+    //                            var result = partialData.Any(x => x.IsFailure) ?
     //                                         MergeFailureErrors(partialData)   :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.Value));
+    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
     //                            return result;
     //                        });
@@ -70,9 +70,9 @@ public static partial class MlResultBucles
     //                                partialData.Add(funcResult);
     //                            }
 
-    //                            var result = partialData.Any(x => x.IsFail) ?
+    //                            var result = partialData.Any(x => x.IsFailure) ?
     //                                         MergeFailureErrors(partialData)   :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.Value));
+    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
     //                            return result;
     //                        });
@@ -89,9 +89,9 @@ public static partial class MlResultBucles
                             {
                                 var partialData = x.Select(completeFuncTransform).ToList();
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData)   :
-                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
+                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -107,9 +107,9 @@ public static partial class MlResultBucles
                             {
                                 var partialData = x.Select(completeFuncTransform).ToList();
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData)   :
-                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
+                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -145,9 +145,9 @@ public static partial class MlResultBucles
                                     partialData.Add(funcResult);
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData)   :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -171,9 +171,9 @@ public static partial class MlResultBucles
                                     partialData.Add(funcResult);
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData)   :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -206,9 +206,9 @@ public static partial class MlResultBucles
                                     partialData.Add(funcResult);
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData)   :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -232,9 +232,9 @@ public static partial class MlResultBucles
                                     index++;
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData)   :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -255,12 +255,12 @@ public static partial class MlResultBucles
     //                            {
     //                                var funcResult = completeFuncTransform(item);
     //                                partialData.Add(funcResult);
-    //                                if (funcResult.IsFail) break;
+    //                                if (funcResult.IsFailure) break;
     //                            }
 
-    //                            var result = partialData.Any(x => x.IsFail) ?
+    //                            var result = partialData.Any(x => x.IsFailure) ?
     //                                         MergeFailureErrors(partialData) :
-    //                                         MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.Value));
+    //                                         MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.SuccessValue));
 
     //                            return result;
     //                        });
@@ -285,12 +285,12 @@ public static partial class MlResultBucles
     //                            {
     //                                var funcResult = await completeFuncTransformAsync(item);
     //                                partialData.Add(funcResult);
-    //                                if (funcResult.IsFail) break;
+    //                                if (funcResult.IsFailure) break;
     //                            }
 
-    //                            var result = partialData.Any(x => x.IsFail) ?
+    //                            var result = partialData.Any(x => x.IsFailure) ?
     //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.Value));
+    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
     //                            return result;
     //                        });
@@ -309,12 +309,12 @@ public static partial class MlResultBucles
     //                            {
     //                                var funcResult = await completeFuncTransformAsync(item);
     //                                partialData.Add(funcResult);
-    //                                if (funcResult.IsFail) break;
+    //                                if (funcResult.IsFailure) break;
     //                            }
 
-    //                            var result = partialData.Any(x => x.IsFail) ?
+    //                            var result = partialData.Any(x => x.IsFailure) ?
     //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.Value));
+    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
     //                            return result;
     //                        });
@@ -333,12 +333,12 @@ public static partial class MlResultBucles
                                 {
                                     var funcResult = completeFuncTransform(item);
                                     partialData.Add(funcResult);
-                                    if (funcResult.IsFail) break;
+                                    if (funcResult.IsFailure) break;
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
+                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -359,13 +359,13 @@ public static partial class MlResultBucles
                                 {
                                     var funcResult = completeFuncTransform(item, index);
                                     partialData.Add(funcResult);
-                                    if (funcResult.IsFail) break;
+                                    if (funcResult.IsFailure) break;
                                     index++;
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
+                                             MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -398,12 +398,12 @@ public static partial class MlResultBucles
                                 {
                                     var funcResult = await completeFuncTransformAsync(item);
                                     partialData.Add(funcResult);
-                                    if (funcResult.IsFail) break;
+                                    if (funcResult.IsFailure) break;
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -427,13 +427,13 @@ public static partial class MlResultBucles
                                 {
                                     var funcResult = await completeFuncTransformAsync(item, index);
                                     partialData.Add(funcResult);
-                                    if (funcResult.IsFail) break;
+                                    if (funcResult.IsFailure) break;
                                     index++;
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -463,12 +463,12 @@ public static partial class MlResultBucles
                                 {
                                     var funcResult = await completeFuncTransformAsync(item);
                                     partialData.Add(funcResult);
-                                    if (funcResult.IsFail) break;
+                                    if (funcResult.IsFailure) break;
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -489,13 +489,13 @@ public static partial class MlResultBucles
                                 {
                                     var funcResult = await completeFuncTransformAsync(item, index);
                                     partialData.Add(funcResult);
-                                    if (funcResult.IsFail) break;
+                                    if (funcResult.IsFailure) break;
                                     index++;
                                 }
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -519,9 +519,9 @@ public static partial class MlResultBucles
 
     //                            List<MlResult<T>> partialData = tasks.Select(t => t.Result).ToList();
 
-    //                            var result = partialData.Any(x => x.IsFail) ?
+    //                            var result = partialData.Any(x => x.IsFailure) ?
     //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.Value));
+    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
     //                            return result;
     //                        });
@@ -540,9 +540,9 @@ public static partial class MlResultBucles
 
     //                            List<MlResult<T>> partialData = tasks.Select(t => t.Result).ToList();
 
-    //                            var result = partialData.Any(x => x.IsFail) ?
+    //                            var result = partialData.Any(x => x.IsFailure) ?
     //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.Value));
+    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
     //                            return result;
     //                        });
@@ -563,9 +563,9 @@ public static partial class MlResultBucles
 
                                 List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -586,9 +586,9 @@ public static partial class MlResultBucles
 
                                 List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -609,9 +609,9 @@ public static partial class MlResultBucles
 
                                 List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -632,9 +632,9 @@ public static partial class MlResultBucles
 
                                 List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
 
-                                var result = partialData.Any(x => x.IsFail) ?
+                                var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
-                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
+                                             await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.SuccessValue));
 
                                 return result;
                             });
@@ -653,8 +653,8 @@ public static partial class MlResultBucles
                                 var partialData = source.Where(z => z is not null)
                                                         .Select(z => (z, completeFuncTransform(z))).ToList();
 
-                                var partialResult = (valids: partialData.Where(x => x.Item2.IsValid).ToDictionary(x => x.Item1, x => x.Item2.SecureValidValue()),
-                                                     fails : partialData.Where(x => x.Item2.IsFail ).ToDictionary(x => x.Item1, x => x.Item2.SecureFailErrorsDetails()));
+                                var partialResult = (valids: partialData.Where(x => x.Item2.IsSuccess).ToDictionary(x => x.Item1, x => x.Item2.GetValueOrThrow()),
+                                                     fails : partialData.Where(x => x.Item2.IsFailure ).ToDictionary(x => x.Item1, x => x.Item2.GetFailureDetailsOrThrow()));
                                 return partialResult;
                             });
         return result;
@@ -688,8 +688,8 @@ public static partial class MlResultBucles
                                     partialData.Add((item, funcResult));
                                 }
 
-                                var partialResult = (valids: partialData.Where(x => x.result.IsValid).ToDictionary(x => x.item, x => x.result.SecureValidValue()),
-                                                     fails : partialData.Where(x => x.result.IsFail ).ToDictionary(x => x.item, x => x.result.SecureFailErrorsDetails()));
+                                var partialResult = (valids: partialData.Where(x => x.result.IsSuccess).ToDictionary(x => x.item, x => x.result.GetValueOrThrow()),
+                                                     fails : partialData.Where(x => x.result.IsFailure ).ToDictionary(x => x.item, x => x.result.GetFailureDetailsOrThrow()));
 
                                 return partialResult;
                             });
@@ -714,10 +714,10 @@ public static partial class MlResultBucles
                                 {
                                     var partialData = source.Where(z => z is not null)
                                                             .Select(z => (z, completeFuncTransform(z))).ToList();
-                                    var partialResult = (valids: partialData.Where(x => x.Item2.IsValid)
-                                                                            .Select(x => new ProyectSplitValidInfo<TKey, TResult>(x.Item1, x.Item2.SecureValidValue())),
-                                                         fails: partialData.Where(x => x.Item2.IsFail)
-                                                                            .Select(x => new ProyectSplitFailInfo<TKey>(x.Item1, x.Item2.SecureFailErrorsDetails())));
+                                    var partialResult = (valids: partialData.Where(x => x.Item2.IsSuccess)
+                                                                            .Select(x => new ProyectSplitValidInfo<TKey, TResult>(x.Item1, x.Item2.GetValueOrThrow())),
+                                                         fails: partialData.Where(x => x.Item2.IsFailure)
+                                                                            .Select(x => new ProyectSplitFailInfo<TKey>(x.Item1, x.Item2.GetFailureDetailsOrThrow())));
                                     return partialResult;
                                 });
         return result;
@@ -751,10 +751,10 @@ public static partial class MlResultBucles
                                     partialData.Add((item, funcResult));
                                 }
 
-                                var partialResult = (valids: partialData.Where(x => x.result.IsValid)
-                                                                        .Select(x => new ProyectSplitValidInfo<TKey, TResult>(x.item, x.result.SecureValidValue())),
-                                                     fails: partialData.Where(x => x.result.IsFail)
-                                                                        .Select(x => new ProyectSplitFailInfo<TKey>(x.item, x.result.SecureFailErrorsDetails())));
+                                var partialResult = (valids: partialData.Where(x => x.result.IsSuccess)
+                                                                        .Select(x => new ProyectSplitValidInfo<TKey, TResult>(x.item, x.result.GetValueOrThrow())),
+                                                     fails: partialData.Where(x => x.result.IsFailure)
+                                                                        .Select(x => new ProyectSplitFailInfo<TKey>(x.item, x.result.GetFailureDetailsOrThrow())));
 
                                 return partialResult;
                             });
@@ -774,15 +774,15 @@ public static partial class MlResultBucles
 
     public static MlResult<IEnumerable<T>> MergeFailureErrors<T>(this IEnumerable<MlResult<T>> source)
     {
-        var partialResult = source.Where(x => x.IsFail).ToList();
+        var partialResult = source.Where(x => x.IsFailure).ToList();
 
         if ( ! partialResult.Any()) return MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
 
-        MlErrorsDetails result = partialResult.First().ErrorsDetails;
+        MlErrorsDetails result = partialResult.First().FailureDetails;
 
         foreach (var item in partialResult.Skip(1))
         {
-            result = result.Merge(item.ErrorsDetails);
+            result = result.Merge(item.FailureDetails);
         }
 
         return result;
@@ -800,18 +800,18 @@ public static partial class MlResultBucles
 
     public static MlResult<IEnumerable<T>> MergeErrorsIfExists<T>(this IEnumerable<MlResult<T>> source)
     {
-        var partialResult = source.Where(x => x.IsFail).ToList();
+        var partialResult = source.Where(x => x.IsFailure).ToList();
 
         if ( ! partialResult.Any())
         {
-            return MlResult<IEnumerable<T>>.Valid(source.Select(x => x.SecureValidValue()));
+            return MlResult<IEnumerable<T>>.Valid(source.Select(x => x.GetValueOrThrow()));
         }
 
-        MlErrorsDetails result = partialResult.First().ErrorsDetails;
+        MlErrorsDetails result = partialResult.First().FailureDetails;
 
         foreach (var item in partialResult.Skip(1))
         {
-            result = result.Merge(item.ErrorsDetails);
+            result = result.Merge(item.FailureDetails);
         }
 
         return result;
@@ -829,9 +829,9 @@ public static partial class MlResultBucles
 
 
     public static MlResult<IEnumerable<T>> VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>> source)
-        => source.Any(x => x.IsFail) ?
+        => source.Any(x => x.IsFailure) ?
            MergeFailureErrors(source)   :
-           MlResult<IEnumerable<T>>.Valid(source.Select(x => x.Value));
+           MlResult<IEnumerable<T>>.Valid(source.Select(x => x.SuccessValue));
 
 
 

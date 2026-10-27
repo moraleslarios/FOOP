@@ -179,12 +179,12 @@ string message = BuildErrorMessage(errorMessageBuilder, ex);
 
 var errorDetails = new MlErrorsDetails(
         Errors : new List<MlError> { new MlError(message) },
-        Details: new Dictionary<string, object> { { EX_DESC_KEY, ex } });
+        Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
 return errorDetails.ToMlResultFail<T>();
 ```
 
-🔑 **La excepción se guarda en `Details`** bajo la clave `EX_DESC_KEY`. Por eso puedes
+🔑 **La excepción se guarda en `Details`** bajo la clave `ExceptionMetadataKey`. Por eso puedes
 recuperarla después con `GetDetailException()`, y por eso funcionan
 [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) y
 [`BindIfFailWithException`](../Bind/8_BindIfFailWithException.md).
@@ -283,7 +283,7 @@ fallo de negocio.
 
 ```csharp
 // ✅ Uso correcto: propagar errores cambiando el tipo del carril
-if (!validacion.IsValid)
+if (!validacion.IsSuccess)
     return validacion.ToMlResultFail<Cliente, PedidoDto>();
 
 // ❌ Si validacion es válido, obtienes un fallo con un mensaje en inglés que no dice nada
@@ -341,16 +341,16 @@ public static object SecureGetValueFromMlResultBoxed(this object source)
 ```
 
 Extrae por **reflexión** la propiedad `Value` de un `MlResult<T>` metido en una variable
-`object`. Comprueba paso a paso que exista `IsValid` de tipo `bool`, que sea `true` y que
+`object`. Comprueba paso a paso que exista `IsSuccess` de tipo `bool`, que sea `true` y que
 exista `Value`.
 
 ⚠️ **Lanza `ArgumentException`** si algo falla. Es el único método de la librería que rompe
 la promesa de no lanzar:
 
 ```csharp
-var result = partialResult.IsValid
+var result = partialResult.IsSuccess
                  ? partialResult.Value
-                 : throw new ArgumentException(partialResult.ErrorsDetails.ToString());
+                 : throw new ArgumentException(partialResult.FailureDetails.ToString());
 ```
 
 💡 **Uso muy restringido**: solo para infraestructura genérica (por ejemplo, un filtro de
@@ -400,9 +400,9 @@ más concisa de adjuntar `Details`.
 
 **4. `ToMlResultFail<T, TReturn>` devuelve un fallo con mensaje en inglés
 (`"Don't change MlResult Fail of valid source."`) si el origen es válido.** Comprueba
-`IsValid` antes de llamarlo.
+`IsSuccess` antes de llamarlo.
 
-**5. La excepción capturada se guarda en `Details[EX_DESC_KEY]`.** Recupérala con
+**5. La excepción capturada se guarda en `Details[ExceptionMetadataKey]`.** Recupérala con
 `GetDetailException()`, nunca accediendo a `Details` a mano.
 
 **6. `TryToMlResultErrors` siempre devuelve `Fail`** y **nunca pierde los errores
@@ -585,7 +585,7 @@ var r = validacion.Match(valid: c   => Procesar(c),
 
 
 // ❌ Leer la excepción accediendo a Details a mano
-var ex = (Exception)resultado.ErrorsDetails.Details["Ex"];   // la clave real es EX_DESC_KEY = "Ex"
+var ex = (Exception)resultado.FailureDetails.Details["Ex"];   // la clave real es ExceptionMetadataKey = "Ex"
 
 // ✅ Usa el accesor oficial
 resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
@@ -610,7 +610,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
    (`ErroresPedido.NoEncontrado<T>(id)`): mensajes consistentes y códigos de regla en un
    único sitio.
 4. **Recuerda que `ToMlResultValid` no filtra `null`.**
-5. **Comprueba `IsValid` antes de usar `ToMlResultFail<T, TReturn>`**, o prefiere `Match`.
+5. **Comprueba `IsSuccess` antes de usar `ToMlResultFail<T, TReturn>`**, o prefiere `Match`.
 6. **Recupera las excepciones con los operadores `*WithException`**, no accediendo a
    `Details` directamente.
 7. **`FromMlResultObject<T>` en lugar de castear**: devuelve un fallo descriptivo si el tipo
@@ -634,7 +634,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
   listas, arrays, `IEnumerable` y **4 formas de tupla con `Details`**), todas con gemela
   `*Async`. El genérico `<T>` es obligatorio.
 - **`TryToMlResult`** envuelve delegados y acciones que lanzan; guarda la excepción en
-  `Details[EX_DESC_KEY]` y construye el mensaje con `BuildErrorMessage`.
+  `Details[ExceptionMetadataKey]` y construye el mensaje con `BuildErrorMessage`.
 - **`TryToMlResultErrors`** siempre devuelve `Fail` y **nunca pierde los errores
   originales**: si la acción lanza, los amplía con `AppendExErrorDetail`.
 - ⚠️ **`ToMlResultFail<T, TReturn>`** devuelve un fallo con el mensaje

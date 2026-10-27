@@ -31,9 +31,9 @@ Es la única familia de la librería que **sí acumula errores** de verdad (recu
 // Validar 500 líneas de un fichero importado y saber TODAS las que están mal
 MlResult<IEnumerable<Linea>> r = lineasCrudas.Projection(ValidarLinea);
 
-if (r.IsFail)
+if (r.IsFailure)
     // Contiene los errores de todas las líneas defectuosas, no solo de la primera
-    _log.LogWarning(r.ErrorsDetails.ToErrorsDescription());
+    _log.LogWarning(r.FailureDetails.ToErrorsDescription());
 ```
 
 > ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
@@ -97,7 +97,7 @@ public static MlResult<IEnumerable<TResult>> Projection<T, TResult>(this IEnumer
                         {
                             var partialData = x.Select(completeFuncTransform).ToList();
 
-                            var result = partialData.Any(x => x.IsFail) ?
+                            var result = partialData.Any(x => x.IsFailure) ?
                                          MergeFailureErrors(partialData)   :
                                          MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
 
@@ -118,8 +118,8 @@ var lineas = new[] { "10;ABC", "xx;DEF", "30;GHI", "yy;JKL" };
 
 var r = lineas.Projection((linea, i) => ParsearLinea(linea, i));
 
-// r.IsFail == true, y ErrorsDetails contiene los errores de las líneas 2 Y 4
-Console.WriteLine(r.ErrorsDetails.ToErrorsDescription());
+// r.IsFailure == true, y ErrorsDetails contiene los errores de las líneas 2 Y 4
+Console.WriteLine(r.FailureDetails.ToErrorsDescription());
 // → "Línea 2: cantidad ilegible 'xx'" + "Línea 4: cantidad ilegible 'yy'"
 ```
 
@@ -157,10 +157,10 @@ public static MlResult<IEnumerable<TResult>> ProjectionWhile<T, TResult>(this IE
                             {
                                 var funcResult = completeFuncTransform(item);
                                 partialData.Add(funcResult);
-                                if (funcResult.IsFail) break;      // ← corta aquí
+                                if (funcResult.IsFailure) break;      // ← corta aquí
                             }
 
-                            var result = partialData.Any(x => x.IsFail) ?
+                            var result = partialData.Any(x => x.IsFailure) ?
                                          MergeFailureErrors(partialData) :
                                          MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
 
@@ -188,7 +188,7 @@ foreach (var item in x)
 {
     var funcResult = completeFuncTransform(item, index);
     partialData.Add(funcResult);
-    if (funcResult.IsFail) break;
+    if (funcResult.IsFailure) break;
     index++;                          // ← solo se incrementa si NO falló
 }
 ```
@@ -221,7 +221,7 @@ public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync
 
                             List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
 
-                            var result = partialData.Any(x => x.IsFail) ?
+                            var result = partialData.Any(x => x.IsFailure) ?
                                          MergeFailureErrors(partialData) :
                                          await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
 
@@ -285,8 +285,8 @@ public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDet
                                                     .Select(z => (z, completeFuncTransform(z))).ToList();
 
                             var partialResult = (
-                                valids: partialData.Where(x => x.Item2.IsValid).ToDictionary(x => x.Item1, x => x.Item2.SecureValidValue()),
-                                fails : partialData.Where(x => x.Item2.IsFail ).ToDictionary(x => x.Item1, x => x.Item2.SecureFailErrorsDetails()));
+                                valids: partialData.Where(x => x.Item2.IsSuccess).ToDictionary(x => x.Item1, x => x.Item2.GetValueOrThrow()),
+                                fails : partialData.Where(x => x.Item2.IsFailure ).ToDictionary(x => x.Item1, x => x.Item2.GetFailureDetailsOrThrow()));
                             return partialResult;
                         });
     return result;
@@ -302,7 +302,7 @@ desapercibido. Devuelve **dos diccionarios**, indexados por el elemento original
 ```csharp
 var r = await pedidos.ProjectionSplitAsync(p => ProcesarAsync(p));
 
-var (procesados, rechazados) = r.SecureValidValue();
+var (procesados, rechazados) = r.GetValueOrThrow();
 
 _log.LogInformation("{Ok} procesados, {Ko} rechazados", procesados.Count, rechazados.Count);
 
@@ -359,7 +359,7 @@ interna de las proyecciones. También puedes usarlos tú.
 
 ```csharp
 public static MlResult<IEnumerable<T>> VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>> source)
-    => source.Any(x => x.IsFail) ?
+    => source.Any(x => x.IsFailure) ?
        MergeFailureErrors(source)   :
        MlResult<IEnumerable<T>>.Valid(source.Select(x => x.Value));
 ```
@@ -381,20 +381,20 @@ consulta diferida.
 ```csharp
 public static MlResult<IEnumerable<T>> MergeErrorsIfExists<T>(this IEnumerable<MlResult<T>> source)
 {
-    var partialResult = source.Where(x => x.IsFail).ToList();
+    var partialResult = source.Where(x => x.IsFailure).ToList();
 
     if (!partialResult.Any())
-        return MlResult<IEnumerable<T>>.Valid(source.Select(x => x.SecureValidValue()));
+        return MlResult<IEnumerable<T>>.Valid(source.Select(x => x.GetValueOrThrow()));
 
-    MlErrorsDetails result = partialResult.First().ErrorsDetails;
+    MlErrorsDetails result = partialResult.First().FailureDetails;
     foreach (var item in partialResult.Skip(1))
-        result = result.Merge(item.ErrorsDetails);
+        result = result.Merge(item.FailureDetails);
 
     return result;
 }
 ```
 
-Hace lo mismo que `VerifiedEnumerableResultData` pero usando `SecureValidValue()` en lugar de
+Hace lo mismo que `VerifiedEnumerableResultData` pero usando `GetValueOrThrow()` en lugar de
 `.Value`, y **maneja correctamente el caso "ninguno falló"**. Es la opción más robusta de las
 tres.
 
@@ -403,12 +403,12 @@ tres.
 ```csharp
 public static MlResult<IEnumerable<T>> MergeFailureErrors<T>(this IEnumerable<MlResult<T>> source)
 {
-    var partialResult = source.Where(x => x.IsFail).ToList();
+    var partialResult = source.Where(x => x.IsFailure).ToList();
 
     if (!partialResult.Any()) MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
     //                        ↑ ⚠️ FALTA EL 'return': el resultado se descarta
 
-    MlErrorsDetails result = partialResult.First().ErrorsDetails;   // ⚠️ lanza si está vacío
+    MlErrorsDetails result = partialResult.First().FailureDetails;   // ⚠️ lanza si está vacío
     // …
 }
 ```
@@ -419,7 +419,7 @@ public static MlResult<IEnumerable<T>> MergeFailureErrors<T>(this IEnumerable<Ml
 
 🔑 **Consecuencia práctica:** **nunca llames a `MergeFailureErrors` directamente** salvo que
 estés seguro de que hay al menos un fallo. Las proyecciones internas lo hacen bien (siempre
-comprueban `Any(x => x.IsFail)` antes), pero tú no tienes por qué acordarte.
+comprueban `Any(x => x.IsFailure)` antes), pero tú no tienes por qué acordarte.
 
 ```csharp
 // ❌ Si todos los resultados son válidos, LANZA InvalidOperationException
@@ -565,7 +565,7 @@ public class SincronizadorStock
             todos.Add(r.Map(items => items));   // acumulamos el resultado del lote
         }
 
-        return todos.SelectMany(r => r.IsValid ? r.SecureValidValue() : [])
+        return todos.SelectMany(r => r.IsSuccess ? r.GetValueOrThrow() : [])
                     .ToMlResultValid();
     }
 }
@@ -720,7 +720,7 @@ var r = _db.Pedidos.Where(p => p.Abierto).ToList().Projection(Validar);
 - [`EmptyToFailed`](../Several/1_EmptyToFailed.md) — rechazar colecciones vacías antes de proyectar
 - [`Combine`](../Several/4_Combine.md) — ⚠️ **no** acumula errores, a diferencia de `Projection`
 - [`MlResultErrors`](../core-types/MlResultErrors.md) — `Merge`, `ToErrorsDescription`, `ToErrorsMessages`
-- [`Transformations`](../Transformations/Transformations.md) — `TryToMlResultAsync`, `SecureValidValue`
+- [`Transformations`](../Transformations/Transformations.md) — `TryToMlResultAsync`, `GetValueOrThrow`
 - [`Bind`](../Bind/3_Bind.md) — el cortocircuito de un solo valor
 - [`Map`](../Map/1_Map.md) — transformación de un solo valor
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — validar cada elemento

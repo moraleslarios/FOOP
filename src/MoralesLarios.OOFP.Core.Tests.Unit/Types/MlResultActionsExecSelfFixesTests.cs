@@ -16,7 +16,7 @@ public class MlResultActionsExecSelfFixesTests
         => (message,
                 new Dictionary<string, object>
                 {
-                    { EX_DESC_KEY, new Exception("miException") },
+                    { ExceptionMetadataKey, new Exception("miException") },
                     { "key2", "value2" }
                 }
             );
@@ -43,7 +43,7 @@ public class MlResultActionsExecSelfFixesTests
         });
 
         internalResult.Should().Be(1);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -62,7 +62,7 @@ public class MlResultActionsExecSelfFixesTests
         });
 
         internalResult.Should().Be(0);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -81,8 +81,8 @@ public class MlResultActionsExecSelfFixesTests
         });
 
         internalResult.Should().Be(0);
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(1);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(1);
     }
 
 
@@ -142,7 +142,7 @@ public class MlResultActionsExecSelfFixesTests
 
         asyncErrors.Errors.Select(x => x.Message)
                           .Should()
-                          .NotContain(x => x.Contains(EX_DESC_KEY) && x.Contains("does not exist"));
+                          .NotContain(x => x.Contains(ExceptionMetadataKey) && x.Contains("does not exist"));
 
         asyncErrors.Errors.First().Message.Should().Be("miError");
     }
@@ -162,7 +162,7 @@ public class MlResultActionsExecSelfFixesTests
             await Task.CompletedTask;
         });
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
 
         asyncErrors.Should().NotBeNull();
         asyncErrors.Errors.Should().HaveCount(1);

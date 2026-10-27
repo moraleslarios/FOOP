@@ -16,12 +16,12 @@ public class DecimalNotNegativeTests
 
         if (value < 0)
         {
-            result.IsFail.Should().BeTrue();
+            result.IsFailure.Should().BeTrue();
         }
         else
         {
-            result.IsValid.Should().BeTrue();
-            ((decimal)result.SecureValidValue()).Should().Be(value);
+            result.IsSuccess.Should().BeTrue();
+            ((decimal)result.GetValueOrThrow()).Should().Be(value);
         }
     }
 }
@@ -38,12 +38,12 @@ public class DoubleNotNegativeTests
 
         if (value < 0)
         {
-            result.IsFail.Should().BeTrue();
+            result.IsFailure.Should().BeTrue();
         }
         else
         {
-            result.IsValid.Should().BeTrue();
-            ((double)result.SecureValidValue()).Should().Be(value);
+            result.IsSuccess.Should().BeTrue();
+            ((double)result.GetValueOrThrow()).Should().Be(value);
         }
     }
 }

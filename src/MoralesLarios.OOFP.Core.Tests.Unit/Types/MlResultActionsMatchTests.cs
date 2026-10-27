@@ -95,7 +95,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -114,7 +114,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -470,7 +470,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -500,7 +500,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -531,7 +531,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -562,7 +562,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -594,7 +594,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -628,7 +628,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -663,7 +663,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -697,7 +697,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -729,7 +729,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -763,7 +763,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -796,7 +796,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                 valid: x             => false,
-                                fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );     
 
         hasErrors.Should().BeTrue();
@@ -826,7 +826,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                 valid: x             => false,
-                                fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );     
 
         hasErrors.Should().BeTrue();
@@ -858,7 +858,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                 valid: x             => false,
-                                fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );     
 
         hasErrors.Should().BeTrue();
@@ -888,7 +888,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
                                 valid: x             => false,
-                                fail : errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );     
 
         hasErrors.Should().BeTrue();
@@ -925,7 +925,7 @@ public class MlResultActionsMatchTests
                                                                     fail: errors => errors.Errors.Count().ToString());
         bool hasErrors = result.Match(
                                 valid: x => false,
-                                fail: errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail: errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );
 
         hasErrors.Should().BeTrue();
@@ -954,7 +954,7 @@ public class MlResultActionsMatchTests
                                                                     fail: errors => (errors.Errors.Count() / divisor).ToString());
         bool hasErrors = result.Match(
                                 valid: x => false,
-                                fail: errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail: errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );
 
         hasErrors.Should().BeTrue();
@@ -986,7 +986,7 @@ public class MlResultActionsMatchTests
                                                                                failAsync : errors => errors.Errors.Count().ToString().ToAsync());
         bool hasErrors = result.Match(
                                 valid: x => false,
-                                fail: errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail: errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );
 
         hasErrors.Should().BeTrue();
@@ -1015,7 +1015,7 @@ public class MlResultActionsMatchTests
                                                                                failAsync : errors => (errors.Errors.Count() / divisor).ToString().ToAsync());
         bool hasErrors = result.Match(
                                 valid: x => false,
-                                fail: errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY)
+                                fail: errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
                                 );
 
         hasErrors.Should().BeTrue();
@@ -1072,7 +1072,7 @@ public class MlResultActionsMatchTests
 
         bool hasErrors = result.Match(
             valid: _ => false,
-            fail: errorsDetails => errorsDetails.Details.ContainsKey(EX_DESC_KEY));
+            fail: errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey));
 
         hasErrors.Should().BeTrue();
     }

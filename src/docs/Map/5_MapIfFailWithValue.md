@@ -62,7 +62,7 @@ Pero hay casos legítimos en los que quieres el dato de vuelta:
 | Registrar el dato que falló | Auditar exactamente qué entrada provocó el problema. |
 
 La librería resuelve esto guardando el valor **dentro del diccionario `Details`** del error,
-bajo la clave `"Value"` (la constante `VALUE_KEY`). `MapIfFailWithValue` lo lee de ahí.
+bajo la clave `"Value"` (la constante `ValueMetadataKey`). `MapIfFailWithValue` lo lee de ahí.
 
 ---
 
@@ -93,7 +93,7 @@ public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, str
                     valid: _ => source);
 
 public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, object errorValue)
-    => source.AddMlErrorDetailIfFail(VALUE_KEY, errorValue);
+    => source.AddMlErrorDetailIfFail(ValueMetadataKey, errorValue);
 ```
 
 > ⚠️ `AddDetail<T>` hace `source.Details.Add(key, value)`, es decir **muta el diccionario** y

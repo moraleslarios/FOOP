@@ -20,7 +20,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> result = errors1.GetDetail<string>("key3");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> result = errors1.GetDetail<string>("key2");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -51,7 +51,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> result = errors1.GetDetail<string>("key2");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -59,14 +59,14 @@ public class MlResultActionsErrorsDetailsTests
     {
         MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { VALUE_KEY, "value1" },
+                                                { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
 
         MlResult<string> result = errors1.GetDetailValue<string>();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
 
@@ -82,7 +82,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> result = errors1.GetDetailValue<string>();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -172,7 +172,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<int> expected = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { VALUE_KEY, 69 }
+                                                { ValueMetadataKey, 69 }
                                             }
                                     );
 
@@ -190,7 +190,7 @@ public class MlResultActionsErrorsDetailsTests
     {
         MlErrorsDetails source = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { VALUE_KEY, "value1" },
+                                                { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -201,7 +201,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> expected = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { VALUE_KEY, "value1" },
+                                                { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -214,7 +214,7 @@ public class MlResultActionsErrorsDetailsTests
     {
         MlErrorsDetails source = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { VALUE_KEY, "value1" },
+                                                { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -230,7 +230,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> expected = (["miError", "miError2"], new Dictionary<string, object> 
                                             { 
-                                                { VALUE_KEY, "value1" },
+                                                { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" },
                                                 { "other", "value1-2" },
                                                 { "key2-2", "value2-2" }
@@ -250,7 +250,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> result = await errorsAsync.GetDetailAsync<string>("key1");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -258,12 +258,12 @@ public class MlResultActionsErrorsDetailsTests
     {
         Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
-            { VALUE_KEY, 69 }
+            { ValueMetadataKey, 69 }
         }).ToAsync();
 
         MlResult<int> result = await errorsAsync.GetDetailValueAsync<int>();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -271,12 +271,12 @@ public class MlResultActionsErrorsDetailsTests
     {
         Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
-            { EX_DESC_KEY, new InvalidOperationException("oops") }
+            { ExceptionMetadataKey, new InvalidOperationException("oops") }
         }).ToAsync();
 
         MlResult<InvalidOperationException> result = await errorsAsync.GetDetailExceptionAsync<InvalidOperationException>();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -284,12 +284,12 @@ public class MlResultActionsErrorsDetailsTests
     {
         Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
-            { EX_DESC_KEY, new InvalidOperationException("oops") }
+            { ExceptionMetadataKey, new InvalidOperationException("oops") }
         }).ToAsync();
 
         MlResult<Exception> result = await errorsAsync.GetDetailExceptionAsync();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]

@@ -37,7 +37,7 @@ public class StringAsNumericTests
 
         var result = StringAsNumeric<decimal>.ByString(value);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class StringAsNumericTests
 
         MlResult<StringAsNumeric<decimal>> result = StringAsNumeric<decimal>.ByString(value);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 

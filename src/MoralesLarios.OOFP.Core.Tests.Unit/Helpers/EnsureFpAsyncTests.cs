@@ -10,8 +10,8 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(Task.FromResult(10), x => x > 5, "error");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(10);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(10);
     }
 
     [Fact]
@@ -19,8 +19,8 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(Task.FromResult(1), x => x > 5, "error");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("error");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("error");
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync<string>(null!, x => x is not null, "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -38,8 +38,8 @@ public class EnsureFpAsyncTests
 
         var result = await EnsureFp.ThatAsync(Task.FromResult(1), x => x > 5, errorsDetails);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("detalle");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("detalle");
     }
 
     [Fact]
@@ -47,8 +47,8 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(Task.FromResult("ok"), true, "error");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("ok");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("ok");
     }
 
     #endregion
@@ -60,7 +60,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(10, x => Task.FromResult(x > 5), "error");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(1, x => Task.FromResult(x > 5), "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(10, (Func<int, Task<bool>>)null!, "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(Task.FromResult(10), x => Task.FromResult(x > 5), "error");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(10, (x, ct) => Task.FromResult(x > 5), "error", CancellationToken.None);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatAsync(10, (Func<int, CancellationToken, Task<bool>>)null!, "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     #endregion
@@ -114,12 +114,12 @@ public class EnsureFpAsyncTests
 
         var result = await EnsureFp.ThatArgAsync(quantity, x => Task.FromResult(x > 5));
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
 
-        var details = result.SecureFailErrorsDetails();
+        var details = result.GetFailureDetailsOrThrow();
 
         details.Details[PARAM_NAME_KEY].Should().Be("quantity");
-        details.Details[VALUE_KEY].Should().Be(1);
+        details.Details[ValueMetadataKey].Should().Be(1);
     }
 
     [Fact]
@@ -127,8 +127,8 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.ThatArgAsync(Task.FromResult(10), x => x > 5);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(10);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(10);
     }
 
     #endregion
@@ -142,11 +142,11 @@ public class EnsureFpAsyncTests
 
         var result = await EnsureFp.TryThatAsync(myValue, x => throw new InvalidOperationException("boom"), "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
 
-        var details = result.SecureFailErrorsDetails();
+        var details = result.GetFailureDetailsOrThrow();
 
-        details.Details.Should().ContainKey(EX_DESC_KEY);
+        details.Details.Should().ContainKey(ExceptionMetadataKey);
         details.Details[PARAM_NAME_KEY].Should().Be("myValue");
     }
 
@@ -155,7 +155,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.TryThatAsync(10, x => Task.FromResult(x > 5), "error");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -165,8 +165,8 @@ public class EnsureFpAsyncTests
                                                      x => throw new InvalidOperationException("boom"),
                                                      ex => $"Fallo controlado: {ex.Message}");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("Fallo controlado: boom");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("Fallo controlado: boom");
     }
 
     [Fact]
@@ -176,8 +176,8 @@ public class EnsureFpAsyncTests
 
         var result = await EnsureFp.TryThatAsync<int>(5, x => throw new InvalidOperationException("boom"), errorsDetails);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details.Should().ContainKey(EX_DESC_KEY);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey(ExceptionMetadataKey);
     }
 
     #endregion
@@ -189,7 +189,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.NotNullAsync(Task.FromResult("texto"), "error");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.NotNullAsync(Task.FromResult<string>(null!), "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -207,8 +207,8 @@ public class EnsureFpAsyncTests
 
         var result = await EnsureFp.NotNullArgAsync(customerAsync);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("customerAsync");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("customerAsync");
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.NotEmptyAsync(Task.FromResult<IEnumerable<int>>(new[] { 1, 2 }), "error");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -226,8 +226,8 @@ public class EnsureFpAsyncTests
 
         var result = await EnsureFp.NotEmptyArgAsync(itemsAsync);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("itemsAsync");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("itemsAsync");
     }
 
     [Theory]
@@ -238,7 +238,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.NotNullEmptyOrWhitespaceAsync(Task.FromResult(value!), "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -248,8 +248,8 @@ public class EnsureFpAsyncTests
 
         var result = await EnsureFp.NotNullEmptyOrWhitespaceArgAsync(nameAsync);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("nameAsync");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("nameAsync");
     }
 
     [Fact]
@@ -257,8 +257,8 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.NotNullValueAsync(Task.FromResult<int?>(7), "error");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(7);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(7);
     }
 
     [Fact]
@@ -266,7 +266,7 @@ public class EnsureFpAsyncTests
     {
         var result = await EnsureFp.NotNullValueAsync(Task.FromResult<int?>(null), "error");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     #endregion

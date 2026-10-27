@@ -35,21 +35,21 @@ public partial record MlResult
 
 public partial record MlResult<T>
 {
-    internal protected T               Value         { get; init; }
-    internal protected MlErrorsDetails ErrorsDetails { get; init; }
+    internal protected T               SuccessValue         { get; init; }
+    internal protected MlErrorsDetails FailureDetails { get; init; }
 
-    public bool IsValid { get; init; }
-    public bool IsFail => ! IsValid;
+    public bool IsSuccess { get; init; }
+    public bool IsFailure => ! IsSuccess;
 
 
     public static MlResult<T> _  => new(default(T)!);
     public static MlResult<T> Discard => _ ;
 
 
-    internal MlResult(T                    t                                                        ) => (Value, ErrorsDetails, IsValid) = (t       , new MlErrorsDetails()                                    , true );
-    internal MlResult(MlErrorsDetails                                         errorsDetails         ) => (Value, ErrorsDetails, IsValid) = (default!, errorsDetails                                            , false);
-    internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (Value, ErrorsDetails, IsValid) = (default!, new MlErrorsDetails(errors, details)                     , false);
-    internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (Value, ErrorsDetails, IsValid) = (default!, new MlErrorsDetails(new List<MlError> { error }, details), false);
+    internal MlResult(T                    t                                                        ) => (SuccessValue, FailureDetails, IsSuccess) = (t       , new MlErrorsDetails()                                    , true );
+    internal MlResult(MlErrorsDetails                                         errorsDetails         ) => (SuccessValue, FailureDetails, IsSuccess) = (default!, errorsDetails                                            , false);
+    internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorsDetails(errors, details)                     , false);
+    internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorsDetails(new List<MlError> { error }, details), false);
 
 
 

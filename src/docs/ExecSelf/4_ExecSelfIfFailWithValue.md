@@ -27,7 +27,7 @@ resultado.ExecSelfIfFailWithValue<Resultado, LineaCsv>((errores, linea) =>
 ```
 
 El valor viaja en `MlErrorsDetails.Details` bajo la clave convencional `"Value"`
-(`Constants.VALUE_KEY`). Si esa clave **no** existe o el tipo no coincide, la acción **no se
+(`Constants.ValueMetadataKey`). Si esa clave **no** existe o el tipo no coincide, la acción **no se
 ejecuta** y el resultado se propaga igual: no hay excepciones ni sorpresas.
 
 > ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
@@ -310,7 +310,7 @@ adjunto, usa `MapIfFailWithValue` o `BindIfFailWithValue`.
 - `ExecSelfIfFailWithValue` ejecuta una acción solo si el resultado es fallido **y** hay un valor del
   tipo esperado en `Details["Value"]`.
 - Ese valor lo pone normalmente `AddValueIfFail`, y sin él la acción se omite en silencio.
-- La clave convencional es `"Value"` (`Constants.VALUE_KEY`).
+- La clave convencional es `"Value"` (`Constants.ValueMetadataKey`).
 - Requiere **dos** genéricos explícitos: `<T, TValue>`.
 - Existen las cuatro combinaciones asíncronas y las variantes `Try*`, que convierten en fallo las
   excepciones del delegado.

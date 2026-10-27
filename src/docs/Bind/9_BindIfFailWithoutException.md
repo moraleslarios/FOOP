@@ -44,7 +44,7 @@ var perfil = ObtenerPerfil(id)
 
 ## Cuándo un fallo «no tiene excepción»
 
-El criterio es puramente mecánico: **un fallo «no tiene excepción» cuando su diccionario `Details` no contiene la clave convencional `"Ex"`** (`EX_DESC_KEY`). Esa clave la rellenan automáticamente los métodos de la familia `Try*` cuando capturan una excepción.
+El criterio es puramente mecánico: **un fallo «no tiene excepción» cuando su diccionario `Details` no contiene la clave convencional `"Ex"`** (`ExceptionMetadataKey`). Esa clave la rellenan automáticamente los métodos de la familia `Try*` cuando capturan una excepción.
 
 | Cómo se creó el fallo | ¿Lleva `Details["Ex"]`? | ¿Se ejecuta tu función? |
 |---|---|---|

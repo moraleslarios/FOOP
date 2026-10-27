@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.Types;
 
-public static class MlResultActions
+public static partial class MlResultActions
 {
 
     public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, 
@@ -19,7 +19,7 @@ public static class MlResultActions
 
     public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, 
                                                            object      errorValue)
-        => source.AddMlErrorDetailIfFail(VALUE_KEY, errorValue);
+        => source.AddMlErrorDetailIfFail(ValueMetadataKey, errorValue);
 
     public static Task<MlResult<T>> AddMlErrorDetailIfFailAsync<T>(this MlResult<T> source, 
                                                                               string      errorKey, 
@@ -175,23 +175,23 @@ public static class MlResultActions
 
 
 
-    public static T SecureValidValue<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the secure value from MlResult in Fail state")
+    public static T GetValueOrThrow<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the secure value from MlResult in Fail state")
         => source.Match(valid: x => x,
                         fail : _ => throw new InvalidProgramException(exceptionMessage));
 
-    public static async Task<T> SecureValidValueAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = "Cannot obtain the secure value from MlResult in Fail state")
+    public static async Task<T> GetValueOrThrowAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = "Cannot obtain the secure value from MlResult in Fail state")
         => await sourceAsync.MatchAsync(valid     : x => x,
                                         failAsync : _ => throw new InvalidProgramException(exceptionMessage));
 
-    public static MlErrorsDetails SecureFailErrorsDetails<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
+    public static MlErrorsDetails GetFailureDetailsOrThrow<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
         => source.Match(valid: _ => throw new InvalidProgramException(exceptionMessage),
                         fail : errors => errors);
 
-    public static Task<MlErrorsDetails> SecureFailErrorsDetailsAsync<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
-        => source.SecureFailErrorsDetails(exceptionMessage).ToAsync();
+    public static Task<MlErrorsDetails> GetFailureDetailsOrThrowAsync<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
+        => source.GetFailureDetailsOrThrow(exceptionMessage).ToAsync();
 
-    public static async Task<MlErrorsDetails> SecureFailErrorsDetailsAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
-        => await sourceAsync.SecureFailErrorsDetailsAsync(exceptionMessage);
+    public static async Task<MlErrorsDetails> GetFailureDetailsOrThrowAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
+        => await sourceAsync.GetFailureDetailsOrThrowAsync(exceptionMessage);
 
 
     #endregion

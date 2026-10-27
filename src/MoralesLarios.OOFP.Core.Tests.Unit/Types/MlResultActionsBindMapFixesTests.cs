@@ -5,8 +5,8 @@ namespace MoralesLarios.OOFP.Core.Tests.Unit.Types;
 /// <c>MlResultActionsMap</c> y <c>MlResultActionsBind</c>:
 ///
 ///  - Recursiones infinitas (StackOverflowException) en los overloads de reenvio.
-///  - Doble await de la Task fuente (<c>(await sourceAsync).Value</c>).
-///  - Uso de <c>source.Value</c> en vez del valor ya casado por el <c>Match</c>.
+///  - Doble await de la Task fuente (<c>(await sourceAsync).SuccessValue</c>).
+///  - Uso de <c>source.SuccessValue</c> en vez del valor ya casado por el <c>Match</c>.
 ///  - Task fuente no observada en <c>BindAlwaysAsync</c>.
 ///  - Auto-recursion en <c>TryBindAlwaysAsync</c>.
 ///  - Perdida del filtro <c>TException</c> en <c>TryBindIfFailWithoutExceptionAsync</c>.
@@ -61,8 +61,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await source.TryBindAsync(funcAsync          : value => MlResult<int>.Valid(value * 2).ToAsync(),
                                                errorMessageBuilder: _     => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(14);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(14);
         counter.Awaits.Should().Be(1, "la Task fuente solo se debe materializar una vez");
     }
 
@@ -80,7 +80,7 @@ public class MlResultActionsBindMapFixesTests
                                                         },
                                                         errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         received.Should().Be(33, "debe recibir el valor casado por el Match, no source.Value");
     }
 
@@ -98,7 +98,7 @@ public class MlResultActionsBindMapFixesTests
                                                      },
                                                      errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
         executed.Should().BeFalse();
     }
 
@@ -112,7 +112,7 @@ public class MlResultActionsBindMapFixesTests
                                         .TryBindAsync(funcAsync          : throwingFunc,
                                                       errorMessageBuilder: ex => $"{ErrorMsg}:{ex.Message}");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -134,8 +134,8 @@ public class MlResultActionsBindMapFixesTests
                                             },
                                             errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(6);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(6);
         received.Should().Be(5);
     }
 
@@ -148,7 +148,7 @@ public class MlResultActionsBindMapFixesTests
         var result = ValidSource().TryBind(func               : throwingFunc,
                                            errorMessageBuilder: ex => $"{ErrorMsg}:{ex.Message}");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -164,7 +164,7 @@ public class MlResultActionsBindMapFixesTests
                                                         },
                                                         errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         received.Should().Be(21);
     }
 
@@ -187,8 +187,8 @@ public class MlResultActionsBindMapFixesTests
                                            },
                                            errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(12);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(12);
         received.Should().Be(4);
     }
 
@@ -201,7 +201,7 @@ public class MlResultActionsBindMapFixesTests
         var result = ValidSource().TryMap(func               : throwingFunc,
                                           errorMessageBuilder: ex => $"{ErrorMsg}:{ex.Message}");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -217,8 +217,8 @@ public class MlResultActionsBindMapFixesTests
                                                       },
                                                       errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(18);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(18);
         received.Should().Be(9);
     }
 
@@ -232,8 +232,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await source.TryMapAsync(funcAsync          : value => Task.FromResult(value + 1),
                                               errorMessageBuilder: _     => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(7);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(7);
         counter.Awaits.Should().Be(1, "la Task fuente solo se debe materializar una vez");
     }
 
@@ -258,7 +258,7 @@ public class MlResultActionsBindMapFixesTests
                                         funcFail : _ => MlResult<int>.Valid(-1),
                                         errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         received.Should().Be(15, "debe recibir el valor casado por el Match, no source.Value");
     }
 
@@ -277,7 +277,7 @@ public class MlResultActionsBindMapFixesTests
                                               funcFailAsync : _ => MlResult<int>.Valid(-1).ToAsync(),
                                               errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         received.Should().Be(16);
     }
 
@@ -296,7 +296,7 @@ public class MlResultActionsBindMapFixesTests
                                         funcFail : _ => -1,
                                         errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         received.Should().Be(17, "debe recibir el valor casado por el Match, no source.Value");
     }
 
@@ -315,7 +315,7 @@ public class MlResultActionsBindMapFixesTests
                                               funcFailAsync : _ => Task.FromResult(-1),
                                               errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         received.Should().Be(18);
     }
 
@@ -334,8 +334,8 @@ public class MlResultActionsBindMapFixesTests
 
         var result = await source.BindAlwaysAsync(funcAlwaysAsync: () => MlResult<string>.Valid("ok").ToAsync());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("ok");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("ok");
         counter.Awaits.Should().Be(1, "la Task fuente debe observarse (antes quedaba sin await)");
     }
 
@@ -346,8 +346,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await FailSource().ToAsync()
                                        .BindAlwaysAsync(funcAlwaysAsync: () => MlResult<string>.Valid("always").ToAsync());
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("always");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("always");
     }
 
 
@@ -363,8 +363,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await ValidSource().TryBindAlwaysAsync(funcAlwaysAsync    : () => MlResult<string>.Valid("done").ToAsync(),
                                                             errorMessageBuilder: _  => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("done");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("done");
     }
 
 
@@ -376,7 +376,7 @@ public class MlResultActionsBindMapFixesTests
         var result = await ValidSource().TryBindAlwaysAsync(funcAlwaysAsync    : throwingFunc,
                                                             errorMessageBuilder: ex => $"{ErrorMsg}:{ex.Message}");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -386,8 +386,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await ValidSource().TryBindAlwaysAsync(funcAlwaysAsync: () => MlResult<string>.Valid("done").ToAsync(),
                                                             errorMessage   : ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("done");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("done");
     }
 
 
@@ -403,8 +403,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await FailSource().ToAsync()
                                        .MapIfFailAsync(funcAsync: _ => Task.FromResult(-1));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(-1);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(-1);
     }
 
 
@@ -414,8 +414,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await ValidSource(88).ToAsync()
                                           .MapIfFailAsync(funcAsync: _ => Task.FromResult(-1));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(88);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(88);
     }
 
 
@@ -425,8 +425,8 @@ public class MlResultActionsBindMapFixesTests
         var result = await FailSource().ToAsync()
                                        .MapAlwaysAsync(funcAlwaysAsync: () => Task.FromResult("always"));
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("always");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("always");
     }
 
 
@@ -453,7 +453,7 @@ public class MlResultActionsBindMapFixesTests
                                                 },
                                                 errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsFail.Should().BeTrue("el filtro TException debe impedir ejecutar funcFail");
+        result.IsFailure.Should().BeTrue("el filtro TException debe impedir ejecutar funcFail");
         failExecuted.Should().BeFalse("antes del arreglo se perdia el filtro TException y se ejecutaba");
     }
 
@@ -474,8 +474,8 @@ public class MlResultActionsBindMapFixesTests
                                            },
                                            errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(-1);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(-1);
         failExecuted.Should().BeTrue();
     }
 
@@ -489,8 +489,8 @@ public class MlResultActionsBindMapFixesTests
                                               funcFailAsync: _     => MlResult<int>.Valid(-1).ToAsync(),
                                               errorMessageBuilder: _ => ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(88);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(88);
     }
 
 
@@ -508,8 +508,8 @@ public class MlResultActionsBindMapFixesTests
                                            funcAsync   : _ => MlResult<int>.Valid(-5).ToAsync(),
                                            errorMessage: ErrorMsg);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(-5);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(-5);
     }
 
 

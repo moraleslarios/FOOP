@@ -28,7 +28,7 @@ public class StringAsByteTests
     {
         var value = "250";
         var result = StringAsByte.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsByteTests
     {
         var value = "XYZ";
         MlResult<StringAsByte> result = StringAsByte.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

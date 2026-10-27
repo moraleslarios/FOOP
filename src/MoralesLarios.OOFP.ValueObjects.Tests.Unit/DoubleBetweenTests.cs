@@ -15,7 +15,7 @@ public class DoubleBetweenTests
 
         var result = DoubleBetween.ByDoubleLength(value, minLength, maxLength);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public class DoubleBetweenTests
 
         var result = DoubleBetween.ByDoubleLength(value, minLength, maxLength);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class DoubleBetweenTests
 
         var result = DoubleBetween.ByDoubleLength(value, minLength, maxLength);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

@@ -13,13 +13,13 @@ Se declara como `partial record`, por lo que la comparación e impresión son es
 
 | Miembro | Tipo | Descripción |
 |---|---|---|
-| `IsValid` | `bool` | `true` si el resultado es válido. Es `{ get; init; }`. |
-| `IsFail` | `bool` | Azúcar de `!IsValid`. |
+| `IsSuccess` | `bool` | `true` si el resultado es válido. Es `{ get; init; }`. |
+| `IsFailure` | `bool` | Azúcar de `!IsSuccess`. |
 | `Value` | `T` | **`internal protected`**. No accesible desde código consumidor. |
 | `ErrorsDetails` | `MlErrorsDetails` | **`internal protected`**. No accesible desde código consumidor. |
 | `ToString()` | `string` | Si es válido, `Value?.ToString()` (o `"Not right value"` si es `null`); si es fallido, la descripción de los errores. |
 
-> ⚠️ **`Value` y `ErrorsDetails` son `internal protected` a propósito.** Nunca los leas directamente: usa [`Match`](MlResultActionsMatch.md) para materializar el resultado, o `SecureValidValue` ([`MlResultActions`](MlResultActions.md)) si ya has verificado que es válido.
+> ⚠️ **`Value` y `ErrorsDetails` son `internal protected` a propósito.** Nunca los leas directamente: usa [`Match`](MlResultActionsMatch.md) para materializar el resultado, o `GetValueOrThrow` ([`MlResultActions`](MlResultActions.md)) si ya has verificado que es válido.
 
 ---
 

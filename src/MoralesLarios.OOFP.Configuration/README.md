@@ -489,9 +489,9 @@ using (var scope = app.Services.CreateScope())
                              .Bind(_ => config.ReadAppSettingKey<string>("Api:BaseUrl"))
                              .Bind(_ => config.ReadAppSettingKey<string>("Rutas:RutaFicheros"));
 
-    if (comprobacion.IsFail)
+    if (comprobacion.IsFailure)
         throw new InvalidOperationException(
-            $"Configuración incompleta: {comprobacion.ErrorsDetails.ToErrorsDescription()}");
+            $"Configuración incompleta: {comprobacion.FailureDetails.ToErrorsDescription()}");
 }
 
 app.Run();

@@ -28,7 +28,7 @@ public class StringAsDecimalTests
     {
         var value = "99999.99";
         var result = StringAsDecimal.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsDecimalTests
     {
         var value = "XYZ";
         MlResult<StringAsDecimal> result = StringAsDecimal.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

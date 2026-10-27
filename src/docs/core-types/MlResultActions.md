@@ -23,10 +23,10 @@ válido dentro de un método sin salir del modelo funcional.
 | `CompleteWithDetailsValueIfFailAsync` | 1 | Versión asíncrona. |
 | `CompleteWithDataValue` | 1 | Combina el resultado con un dato adicional, actuando tanto en la rama válida como en la fallida. |
 | `CompleteWithDataValueAsync` | 4 | Versiones asíncronas. |
-| `SecureValidValue` | 1 | Acceso **seguro** al valor válido: devuelve `MlResult<T>` en lugar de lanzar o exponer `Value`. |
-| `SecureValidValueAsync` | 1 | Versión asíncrona. |
-| `SecureFailErrorsDetails` | 1 | Acceso **seguro** al `MlErrorsDetails`: si el resultado es válido, devuelve `Fail` indicándolo. |
-| `SecureFailErrorsDetailsAsync` | 2 | Versiones asíncronas. |
+| `GetValueOrThrow` | 1 | Acceso **seguro** al valor válido: devuelve `MlResult<T>` en lugar de lanzar o exponer `Value`. |
+| `GetValueOrThrowAsync` | 1 | Versión asíncrona. |
+| `GetFailureDetailsOrThrow` | 1 | Acceso **seguro** al `MlErrorsDetails`: si el resultado es válido, devuelve `Fail` indicándolo. |
+| `GetFailureDetailsOrThrowAsync` | 2 | Versiones asíncronas. |
 | `CreateCompleteMlResult` | 3 | Crea un resultado que **transporta dos valores a la vez** (el actual y uno nuevo), fusionando errores si alguno falla. |
 | `CreateCompleteMlResultAsync` | 8 | Versiones asíncronas. |
 
@@ -57,7 +57,7 @@ tarifa.ExecSelfIfFail(e => _log.LogError("Error de tarifa: {Detalle}", e.ToDescr
 
 ### `AddValueDetailIfFail`
 
-Variante especializada que guarda un valor bajo la clave convencional `"Value"` (`Constants.VALUE_KEY`).
+Variante especializada que guarda un valor bajo la clave convencional `"Value"` (`Constants.ValueMetadataKey`).
 Es lo que habilita las familias `*IfFailWithValue` de `Bind`, `Map` y `ExecSelf`:
 
 ```csharp
@@ -110,29 +110,29 @@ MlResult<(Pedido pedido, Usuario usuario)> conUsuario = ObtenerPedido(pedidoId)
 
 ## Acceso seguro al contenido
 
-`MlResult<T>.Value` y `MlResult<T>.ErrorsDetails` son `internal protected`: **no son accesibles desde
+`MlResult<T>.Value` y `MlResult<T>.FailureDetails` son `internal protected`: **no son accesibles desde
 tu código de aplicación**, y eso es intencionado. Cuando de verdad necesitas leerlos (por ejemplo,
 dentro de un método privado que ya ha comprobado el estado), usa estas extensiones.
 
-### `SecureValidValue`
+### `GetValueOrThrow`
 
 ```csharp
 MlResult<Cliente> resultado = ObtenerCliente(id);
 
 // Devuelve el propio valor envuelto si es válido; si es fallido, propaga el error.
-MlResult<Cliente> valor = resultado.SecureValidValue();
+MlResult<Cliente> valor = resultado.GetValueOrThrow();
 ```
 
-Frente al acceso directo, `SecureValidValue` **nunca lanza**: el caso "no hay valor" se representa
+Frente al acceso directo, `GetValueOrThrow` **nunca lanza**: el caso "no hay valor" se representa
 como `Fail`, coherente con el resto de la librería.
 
-### `SecureFailErrorsDetails`
+### `GetFailureDetailsOrThrow`
 
 El simétrico: obtiene el `MlErrorsDetails` de un resultado fallido. Si el resultado **es válido**,
 devuelve un `Fail` indicando que no hay errores que leer.
 
 ```csharp
-MlResult<MlErrorsDetails> errores = resultado.SecureFailErrorsDetails();
+MlResult<MlErrorsDetails> errores = resultado.GetFailureDetailsOrThrow();
 
 string informe = errores.Match(
     valid: e => e.ToDescription(),

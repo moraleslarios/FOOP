@@ -415,12 +415,12 @@ internal static class Runner
     private static async Task<Solution> AddBridgesAsync(Solution solution, ISymbol renamedSymbol, List<MemberDeclarationSyntax> bridges, Dictionary<string, DocumentId> bridgeDocs)
     {
         var originalType = renamedSymbol.ContainingType!;
-        var typeKey      = solution.GetProject(originalType.ContainingAssembly)!.Id.Id + "|" + FullName(originalType);
+        var typeKey      = solution.GetProject(originalType.ContainingAssembly)!.Id.Id + "|" + originalType.ToDisplayString();
 
-        // Re-localizar el tipo contenedor en la solucion ya renombrada.
+        // Re-localizar el tipo contenedor en la solucion ya renombrada (con aridad: MlResult != MlResult<T>).
         var project     = solution.GetProject(solution.Projects.First(p => p.AssemblyName == originalType.ContainingAssembly.Name).Id)!;
         var compilation = (await project.GetCompilationAsync())!;
-        var type        = AllTypes(compilation.Assembly.GlobalNamespace).First(t => FullName(t) == FullName(originalType));
+        var type        = AllTypes(compilation.Assembly.GlobalNamespace).First(t => t.ToDisplayString() == originalType.ToDisplayString());
 
         // Todo lo que depende de los arboles de sintaxis se resuelve ANTES de EnsurePartialAsync, que los invalida.
         var hasExisting = bridgeDocs.TryGetValue(typeKey, out var existingId) || TryFindExistingBridgeDoc(solution, type, out existingId);

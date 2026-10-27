@@ -1,10 +1,10 @@
-param([Parameter(Mandatory)][string]$Pattern, [Parameter(Mandatory)][string]$Replacement, [string]$Include = '*.cs,*.csproj,*.json,*.md')
+param([Parameter(Mandatory)][string]$Pattern, [Parameter(Mandatory)][string]$Replacement, [string]$Include = '*.cs,*.csproj,*.json,*.md', [string]$ExcludePath = '^$')
 $ErrorActionPreference = 'Stop'
 $src = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $src
 $inc = $Include.Split(',')
 $files = Get-ChildItem -Recurse -File -Include $inc |
-    Where-Object { $_.FullName -notmatch '\\(bin|obj|\.git|\.vs|scripts|Temas Pendientes|Cambios Realizados)\\' -and $_.Name -notmatch '^(MEJORAS_PENDIENTES|CONSEJOS_NOMENCLATURA)\.md$' }
+    Where-Object { $_.FullName -notmatch '\\(bin|obj|\.git|\.vs|scripts|Temas Pendientes|Cambios Realizados)\\' -and $_.Name -notmatch '^(MEJORAS_PENDIENTES|CONSEJOS_NOMENCLATURA)\.md$' -and $_.FullName.Substring($src.Length) -notmatch $ExcludePath }
 $total = 0; $nf = 0
 foreach ($f in $files) {
     $b = [System.IO.File]::ReadAllBytes($f.FullName)

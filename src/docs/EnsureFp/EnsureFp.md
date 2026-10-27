@@ -353,8 +353,8 @@ var r = EnsureFp.TryThat(cadenaJson,
                          s => JsonSerializer.Deserialize<Config>(s)!.Version >= 3,
                          ex => $"No se pudo interpretar la configuración: {ex.Message}");
 
-if (r.IsFail)
-    logger.LogError(r.SecureFailErrorsDetails().GetDetailException(), "Configuración inválida");
+if (r.IsFailure)
+    logger.LogError(r.GetFailureDetailsOrThrow().GetDetailException(), "Configuración inválida");
 ```
 
 ### Ejemplo 5: qué no hacer

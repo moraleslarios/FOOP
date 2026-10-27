@@ -212,7 +212,7 @@ var pasos = new List<MlResult<object>>
     ValidarEmail(dto.Email).ToMlResultObject()
 };
 
-bool todoOk = pasos.All(p => p.IsValid);
+bool todoOk = pasos.All(p => p.IsSuccess);
 
 // Recuperar el tipo original de forma segura.
 MlResult<string> nombre = pasos[0].FromMlResultObject<string>();

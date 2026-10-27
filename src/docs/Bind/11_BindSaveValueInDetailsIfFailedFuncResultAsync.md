@@ -81,7 +81,7 @@ public static MlResult<TReturn> BindSaveValueInDetailsIfFailedFuncResult<T, TRet
         {
             var result = func(value);
 
-            if (result.IsFail) result.AddValueDetailIfFail(value!);
+            if (result.IsFailure) result.AddValueDetailIfFail(value!);
 
             return result;
         }
@@ -107,7 +107,7 @@ La cadena de llamadas es la siguiente:
 ```csharp
 // MlResultActions.cs
 public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, object errorValue)
-    => source.AddMlErrorDetailIfFail(VALUE_KEY, errorValue);
+    => source.AddMlErrorDetailIfFail(ValueMetadataKey, errorValue);
 
 public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, string errorKey, object errorValue)
     => source.Match(
@@ -115,12 +115,12 @@ public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, str
             valid: _            => source);
 ```
 
-Donde `VALUE_KEY` es la constante `"Value"` definida en `Helpers/Constants.cs`. Es exactamente la misma clave que usan `AddValueIfFail` y `GetDetailValue<T>()`, así que las tres piezas encajan sin configuración.
+Donde `ValueMetadataKey` es la constante `"Value"` definida en `Helpers/Constants.cs`. Es exactamente la misma clave que usan `AddValueIfFail` y `GetDetailValue<T>()`, así que las tres piezas encajan sin configuración.
 
 ```csharp
 // Constants.cs
-public const string VALUE_KEY = "Value";
-public const string EX_DESC_KEY = "Ex";     // la clave que usa la familia WithException
+public const string ValueMetadataKey = "Value";
+public const string ExceptionMetadataKey = "Ex";     // la clave que usa la familia WithException
 ```
 
 ---
@@ -130,7 +130,7 @@ public const string EX_DESC_KEY = "Ex";     // la clave que usa la familia WithE
 Aquí hay un detalle de implementación que conviene conocer, porque explica un comportamiento sorprendente. Mira otra vez esta línea:
 
 ```csharp
-if (result.IsFail) result.AddValueDetailIfFail(value!);   // ⚠️ el retorno se descarta
+if (result.IsFailure) result.AddValueDetailIfFail(value!);   // ⚠️ el retorno se descarta
 
 return result;                                            // …y aun así funciona
 ```
@@ -215,7 +215,7 @@ public static async Task<MlResult<TReturn>> BindSaveValueInDetailsIfFailedFuncRe
                 {
                     var result = await funcAsync(value);
 
-                    if (result.IsFail) result.AddValueDetailIfFail(value!);
+                    if (result.IsFailure) result.AddValueDetailIfFail(value!);
 
                     return result;
                 }
@@ -370,7 +370,7 @@ public MlResult<RespuestaScoring> ConsultarScoring(SolicitudCredito solicitud)
 
         .ExecSelfIfFail(errores =>
         {
-            var esTecnico = errores.GetDetailException().IsValid;
+            var esTecnico = errores.GetDetailException().IsSuccess;
 
             _log.Log(esTecnico ? LogLevel.Error : LogLevel.Warning,
                      "Scoring fallido | Solicitud: {S} | Tipo: {T} | {E}",
@@ -422,7 +422,7 @@ ObtenerExpediente(id)
 
 - `BindSaveValueInDetailsIfFailedFuncResult` es un `Bind` que, **si la función falla**, guarda el valor de entrada en `Details["Value"]`.
 - Si el resultado **ya venía fallido**, se comporta como un `Bind` normal: no añade nada.
-- La clave usada es la constante `VALUE_KEY` (`"Value"`), la misma que leen `GetDetailValue<T>()` y `BindIfFailWithValue`.
+- La clave usada es la constante `ValueMetadataKey` (`"Value"`), la misma que leen `GetDetailValue<T>()` y `BindIfFailWithValue`.
 - ⚠️ Internamente funciona por **mutación** del diccionario de detalles, y `Dictionary.Add` **lanza si la clave ya existe**: no apiles dos guardados sobre el mismo fallo.
 - Tiene 3 sobrecargas asíncronas y 4 + 8 variantes `Try*` que además dejan la excepción en `Details["Ex"]`.
 - Su compañero natural es [`BindIfFailWithValue`](7_BindIfFailWithValue.md), que recoge el valor guardado para intentar un plan B.

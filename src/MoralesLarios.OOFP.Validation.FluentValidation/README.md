@@ -36,7 +36,7 @@ FluentValidation devuelve un `ValidationResult` con `IsValid` y `Errors`. Es có
 var validador = new CrearUsuarioValidator();
 var resultado = validador.Validate(dto);
 
-if (! resultado.IsValid)
+if (! resultado.IsSuccess)
     return BadRequest(resultado.Errors.Select(e => e.ErrorMessage));
 
 var creado = await _repo.AddAsync(dto);      // ¿y si esto falla? otro if...
@@ -421,7 +421,7 @@ return resultado.Match(
                           fail : _  => BadRequest(errores.ToErrorsMessages())));
 ```
 
-> 💡 `GetDetailException()` devuelve `MlResult<Exception>`: `IsValid` significa "hay excepción registrada", es decir, **el fallo es técnico y no debe mostrarse al usuario**.
+> 💡 `GetDetailException()` devuelve `MlResult<Exception>`: `IsSuccess` significa "hay excepción registrada", es decir, **el fallo es técnico y no debe mostrarse al usuario**.
 
 ### Ejemplo 6 — Validador con dependencias inyectadas
 

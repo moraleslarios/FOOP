@@ -13,7 +13,7 @@ public class AgeTests
 
         var result = Age.ByInt(value);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class AgeTests
 
         var result = Age.ByInt(value);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 

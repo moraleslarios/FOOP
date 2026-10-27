@@ -22,7 +22,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<NotEmptyString> result = request.GetHeaderInfo("X-Custom-Header");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<NotEmptyString> result = request.GetHeaderInfo("X-Custom-Header");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 
@@ -64,7 +64,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<IntNotNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<IntNotNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<IntNotNegative> result = request.GetHeaderPageNumber();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<IntNotNegative> result = request.GetHeaderPageNumber();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<IntNotNegative> result = request.GetHeaderPageSize();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<IntNotNegative> result = request.GetHeaderPageSize();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -188,7 +188,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> result = request.GetHeaderPageInfo();
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> result = request.GetHeaderPageInfo();
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
 

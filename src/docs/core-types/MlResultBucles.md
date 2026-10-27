@@ -106,7 +106,7 @@ MlResult<IEnumerable<StepResult>> result = steps.ProjectionWhile((step, index) =
 {
 	MlResult<StepResult> stepResult = ExecuteStep(step);
 
-	return stepResult.IsFail
+	return stepResult.IsFailure
 		? MlResult<StepResult>.Fail($"Falló el paso {index + 1}: {step.Name}")
 		: stepResult;
 });
@@ -146,7 +146,7 @@ MlResult<IEnumerable<EnrichedOrder>> result = await orders.ProjectionParallelAsy
 	Customer customer = await customerService.GetAsync(order.CustomerId);
 	ShippingInfo shipping = await shippingService.GetAsync(order.Id);
 
-	return shipping.IsValid
+	return shipping.IsSuccess
 		? MlResult<EnrichedOrder>.Valid(new EnrichedOrder(index + 1, order, customer, shipping))
 		: MlResult<EnrichedOrder>.Fail($"Pedido {order.Id} inválido en posición {index + 1}");
 });
@@ -264,7 +264,7 @@ MlResult<IEnumerable<Regla>> resultado = await Task.WhenAll(tareas)
 
 - `MergeErrorsIfExists` es **seguro en cualquier caso**: si no hay fallos devuelve `Valid`.
 - `MergeFailureErrors` está pensado para la rama en la que **ya sabes** que hay fallos (por ejemplo, dentro
-  de un `if (resultados.Any(r => r.IsFail))`). Es lo que usan las proyecciones internamente.
+  de un `if (resultados.Any(r => r.IsFailure))`). Es lo que usan las proyecciones internamente.
 - `VerifiedEnumerableResultData` expresa la misma idea desde la perspectiva de la **verificación**: "dame
   los datos solo si la colección entera es correcta".
 

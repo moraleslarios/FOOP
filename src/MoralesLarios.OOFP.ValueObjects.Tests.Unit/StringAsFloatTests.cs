@@ -28,7 +28,7 @@ public class StringAsFloatTests
     {
         var value = "3.14159";
         var result = StringAsFloat.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsFloatTests
     {
         var value = "XYZ";
         MlResult<StringAsFloat> result = StringAsFloat.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

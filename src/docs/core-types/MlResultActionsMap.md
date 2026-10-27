@@ -10,8 +10,8 @@ proyectar campos, formatear textos, calcular totales…
 
 | Estado de `source` | Comportamiento de `Map` |
 | --- | --- |
-| `IsValid == true` | Ejecuta la función y devuelve `MlResult<TReturn>` válido con el nuevo valor. |
-| `IsFail == true` | **No ejecuta nada**: propaga tal cual el `MlErrorsDetails` original, cambiando solo el tipo genérico. |
+| `IsSuccess == true` | Ejecuta la función y devuelve `MlResult<TReturn>` válido con el nuevo valor. |
+| `IsFailure == true` | **No ejecuta nada**: propaga tal cual el `MlErrorsDetails` original, cambiando solo el tipo genérico. |
 
 Es decir, `Map` es un **cortocircuito**: los errores viajan intactos por la tubería hasta el
 `Match` final, sin `if`s ni `try/catch` intermedios.
@@ -136,7 +136,7 @@ MlResult<int> cantidad = MlResult<string>.Valid(entradaUsuario)
             errorMessageBuilder: ex    => $"La cantidad '{entradaUsuario}' no es un número válido: {ex.Message}");
 
 // Si int.Parse lanza FormatException:
-//   - cantidad.IsFail == true
+//   - cantidad.IsFailure == true
 //   - el mensaje es el construido por errorMessageBuilder
 //   - la excepción original queda accesible en ErrorsDetails.Details["Ex"]
 ```

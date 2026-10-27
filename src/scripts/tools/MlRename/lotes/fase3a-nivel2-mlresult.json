@@ -1,0 +1,14 @@
+{
+  "id": "fase3a-nivel2-mlresult",
+  "level": 2,
+  "renames": [
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Types.MlResult", "name": "IsValid",       "new": "IsSuccess",      "bridge": true,  "note": "Valid es vocabulario de validacion; par simetrico IsSuccess/IsFailure" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Types.MlResult", "name": "IsFail",        "new": "IsFailure",      "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Types.MlResult", "name": "Value",         "new": "SuccessValue",   "bridge": false, "note": "internal protected" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Types.MlResult", "name": "ErrorsDetails", "new": "FailureDetails", "bridge": false, "note": "internal protected" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Types.MlResultActions", "match": "^SecureValidValue",        "replace": "GetValueOrThrow",          "bridge": true, "note": "Secure sugeria seguridad; el metodo lanza si el resultado es fallido" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Types.MlResultActions", "match": "^SecureFailErrorsDetails", "replace": "GetFailureDetailsOrThrow", "bridge": true, "note": "Derivado: pareja de GetValueOrThrow" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Helpers.Constants", "name": "EX_DESC_KEY", "new": "ExceptionMetadataKey", "bridge": true, "note": "El valor \"Ex\" no cambia aqui (cambio de contrato -> Fase 12)" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Helpers.Constants", "name": "VALUE_KEY",   "new": "ValueMetadataKey",     "bridge": true }
+  ]
+}

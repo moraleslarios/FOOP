@@ -28,7 +28,7 @@ public class StringAsDoubleTests
     {
         var value = "3.141592653589793";
         var result = StringAsDouble.ByString(value);
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class StringAsDoubleTests
     {
         var value = "XYZ";
         MlResult<StringAsDouble> result = StringAsDouble.ByString(value);
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 }
 

@@ -19,13 +19,13 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.NotEmptyGuid(id, "error");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(id);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(id);
     }
 
     [Fact]
     public void NotEmptyGuid_withEmptyGuid_return_Fail()
-        => EnsureFp.NotEmptyGuid(Guid.Empty, "error").IsFail.Should().BeTrue();
+        => EnsureFp.NotEmptyGuid(Guid.Empty, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void NotEmptyGuidArg_addParamNameDetail()
@@ -34,8 +34,8 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.NotEmptyGuidArg(customerId);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("customerId");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("customerId");
     }
 
     [Fact]
@@ -45,13 +45,13 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.NotNullNotEmptyGuid(id, "error");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(id!.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(id!.Value);
     }
 
     [Fact]
     public void NotNullNotEmptyGuid_withNull_return_Fail()
-        => EnsureFp.NotNullNotEmptyGuid(null, "error").IsFail.Should().BeTrue();
+        => EnsureFp.NotNullNotEmptyGuid(null, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void NotNullNotEmptyGuidArg_withEmptyGuid_return_Fail()
@@ -60,8 +60,8 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.NotNullNotEmptyGuidArg(orderId);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("orderId");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("orderId");
     }
 
     #endregion
@@ -70,11 +70,11 @@ public class EnsureFpTypesTests
 
     [Fact]
     public void IsDefined_withDefinedValue_return_Valid()
-        => EnsureFp.IsDefined(TestColor.Green, "error").IsValid.Should().BeTrue();
+        => EnsureFp.IsDefined(TestColor.Green, "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void IsDefined_withUndefinedValue_return_Fail()
-        => EnsureFp.IsDefined((TestColor)99, "error").IsFail.Should().BeTrue();
+        => EnsureFp.IsDefined((TestColor)99, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void IsDefinedArg_buildMessageWithEnumType()
@@ -83,9 +83,9 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.IsDefinedArg(color);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
 
-        var details = result.SecureFailErrorsDetails();
+        var details = result.GetFailureDetailsOrThrow();
 
         details.Details[PARAM_NAME_KEY].Should().Be("color");
         details.Errors.First().Message.Should().Contain(nameof(TestColor));
@@ -97,31 +97,31 @@ public class EnsureFpTypesTests
 
     [Fact]
     public void InFuture_withFutureDate_return_Valid()
-        => EnsureFp.InFuture(DateTime.Now.AddDays(1), "error").IsValid.Should().BeTrue();
+        => EnsureFp.InFuture(DateTime.Now.AddDays(1), "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void InFuture_withPastDate_return_Fail()
-        => EnsureFp.InFuture(DateTime.Now.AddDays(-1), "error").IsFail.Should().BeTrue();
+        => EnsureFp.InFuture(DateTime.Now.AddDays(-1), "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void InFuture_withUtcDate_useUtcNow()
-        => EnsureFp.InFuture(DateTime.UtcNow.AddMinutes(5), "error").IsValid.Should().BeTrue();
+        => EnsureFp.InFuture(DateTime.UtcNow.AddMinutes(5), "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void InPast_withPastDate_return_Valid()
-        => EnsureFp.InPast(DateTime.Now.AddDays(-1), "error").IsValid.Should().BeTrue();
+        => EnsureFp.InPast(DateTime.Now.AddDays(-1), "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void InPast_withFutureDate_return_Fail()
-        => EnsureFp.InPast(DateTime.Now.AddDays(1), "error").IsFail.Should().BeTrue();
+        => EnsureFp.InPast(DateTime.Now.AddDays(1), "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void InFuture_withDateTimeOffset_return_Valid()
-        => EnsureFp.InFuture(DateTimeOffset.UtcNow.AddHours(1), "error").IsValid.Should().BeTrue();
+        => EnsureFp.InFuture(DateTimeOffset.UtcNow.AddHours(1), "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void InPast_withDateOnly_return_Valid()
-        => EnsureFp.InPast(DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), "error").IsValid.Should().BeTrue();
+        => EnsureFp.InPast(DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void InFutureArg_addParamNameDetail()
@@ -130,8 +130,8 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.InFutureArg(expirationDate);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("expirationDate");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("expirationDate");
     }
 
     #endregion
@@ -140,15 +140,15 @@ public class EnsureFpTypesTests
 
     [Fact]
     public void NotDefault_withNonDefaultValue_return_Valid()
-        => EnsureFp.NotDefault(7, "error").IsValid.Should().BeTrue();
+        => EnsureFp.NotDefault(7, "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void NotDefault_withDefaultValue_return_Fail()
-        => EnsureFp.NotDefault(0, "error").IsFail.Should().BeTrue();
+        => EnsureFp.NotDefault(0, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void NotDefault_withNullReference_return_Fail()
-        => EnsureFp.NotDefault<string>(null!, "error").IsFail.Should().BeTrue();
+        => EnsureFp.NotDefault<string>(null!, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void NotDefaultArg_addParamNameDetail()
@@ -157,8 +157,8 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.NotDefaultArg(startDate);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("startDate");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("startDate");
     }
 
     #endregion
@@ -167,28 +167,28 @@ public class EnsureFpTypesTests
 
     [Fact]
     public void IsAbsoluteUri_withAbsoluteUri_return_Valid()
-        => EnsureFp.IsAbsoluteUri(new Uri("https://moraleslarios.com"), "error").IsValid.Should().BeTrue();
+        => EnsureFp.IsAbsoluteUri(new Uri("https://moraleslarios.com"), "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void IsAbsoluteUri_withRelativeUri_return_Fail()
-        => EnsureFp.IsAbsoluteUri(new Uri("/api/values", UriKind.Relative), "error").IsFail.Should().BeTrue();
+        => EnsureFp.IsAbsoluteUri(new Uri("/api/values", UriKind.Relative), "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void IsAbsoluteUri_withNull_return_Fail()
-        => EnsureFp.IsAbsoluteUri(null!, "error").IsFail.Should().BeTrue();
+        => EnsureFp.IsAbsoluteUri(null!, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void IsValidUri_withValidUrl_return_builtUri()
     {
         var result = EnsureFp.IsValidUri("https://moraleslarios.com/api", "error");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Host.Should().Be("moraleslarios.com");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Host.Should().Be("moraleslarios.com");
     }
 
     [Fact]
     public void IsValidUri_withInvalidUrl_return_Fail()
-        => EnsureFp.IsValidUri("no es una uri", "error").IsFail.Should().BeTrue();
+        => EnsureFp.IsValidUri("no es una uri", "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void IsValidUriArg_addParamNameDetail()
@@ -197,8 +197,8 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.IsValidUriArg(endpoint);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("endpoint");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("endpoint");
     }
 
     #endregion
@@ -209,7 +209,7 @@ public class EnsureFpTypesTests
     [InlineData("moraleslarios@gmail.com")]
     [InlineData("juan.francisco@sub.dominio.es")]
     public void IsValidEmail_withValidEmails_return_Valid(string email)
-        => EnsureFp.IsValidEmail(email, "error").IsValid.Should().BeTrue();
+        => EnsureFp.IsValidEmail(email, "error").IsSuccess.Should().BeTrue();
 
     [Theory]
     [InlineData(null)]
@@ -219,7 +219,7 @@ public class EnsureFpTypesTests
     [InlineData("sin@dominio")]
     [InlineData("dos@@arrobas.com")]
     public void IsValidEmail_withInvalidEmails_return_Fail(string? email)
-        => EnsureFp.IsValidEmail(email!, "error").IsFail.Should().BeTrue();
+        => EnsureFp.IsValidEmail(email!, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void IsValidEmailArg_addParamNameDetail()
@@ -228,8 +228,8 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.IsValidEmailArg(userEmail);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("userEmail");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("userEmail");
     }
 
     #endregion
@@ -245,7 +245,7 @@ public class EnsureFpTypesTests
 
         try
         {
-            EnsureFp.FileExists(path, "error").IsValid.Should().BeTrue();
+            EnsureFp.FileExists(path, "error").IsSuccess.Should().BeTrue();
         }
         finally
         {
@@ -256,11 +256,11 @@ public class EnsureFpTypesTests
     [Fact]
     public void FileExists_withMissingFile_return_Fail()
         => EnsureFp.FileExists(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.txt"), "error")
-                   .IsFail.Should().BeTrue();
+                   .IsFailure.Should().BeTrue();
 
     [Fact]
     public void DirectoryExists_withExistingDirectory_return_Valid()
-        => EnsureFp.DirectoryExists(Path.GetTempPath(), "error").IsValid.Should().BeTrue();
+        => EnsureFp.DirectoryExists(Path.GetTempPath(), "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void DirectoryExistsArg_withMissingDirectory_return_FailWithPathInMessage()
@@ -269,9 +269,9 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.DirectoryExistsArg(directory);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
 
-        var details = result.SecureFailErrorsDetails();
+        var details = result.GetFailureDetailsOrThrow();
 
         details.Details[PARAM_NAME_KEY].Should().Be("directory");
         details.Errors.First().Message.Should().Contain(directory);
@@ -288,13 +288,13 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.NotNullValue(age, "error");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(42);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(42);
     }
 
     [Fact]
     public void NotNullValue_withNull_return_Fail()
-        => EnsureFp.NotNullValue<int>(null, "error").IsFail.Should().BeTrue();
+        => EnsureFp.NotNullValue<int>(null, "error").IsFailure.Should().BeTrue();
 
     [Fact]
     public void NotNullValueArg_addParamNameDetail()
@@ -303,17 +303,17 @@ public class EnsureFpTypesTests
 
         var result = EnsureFp.NotNullValueArg(birthDate);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("birthDate");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("birthDate");
     }
 
     [Fact]
     public void NotNullValueThat_withValueAndPredicateOk_return_Valid()
-        => EnsureFp.NotNullValueThat<int>(10, x => x > 5, "error").IsValid.Should().BeTrue();
+        => EnsureFp.NotNullValueThat<int>(10, x => x > 5, "error").IsSuccess.Should().BeTrue();
 
     [Fact]
     public void NotNullValueThat_withValueAndPredicateKo_return_Fail()
-        => EnsureFp.NotNullValueThat<int>(1, x => x > 5, "error").IsFail.Should().BeTrue();
+        => EnsureFp.NotNullValueThat<int>(1, x => x > 5, "error").IsFailure.Should().BeTrue();
 
     #endregion
 

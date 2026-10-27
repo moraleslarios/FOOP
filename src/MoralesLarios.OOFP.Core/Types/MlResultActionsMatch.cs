@@ -12,22 +12,22 @@ public static class MlResultActionsMatch
     public static TReturn Match<T, TReturn>(this MlResult<T>                    source,
                                                  Func<T              , TReturn> valid,
                                                  Func<MlErrorsDetails, TReturn> fail)
-        => source.IsValid ? valid(source.Value) : fail(source.ErrorsDetails);
+        => source.IsSuccess ? valid(source.SuccessValue) : fail(source.FailureDetails);
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                          source,
                                                                   Func<T              , Task<TReturn>> validAsync,
                                                                   Func<MlErrorsDetails, Task<TReturn>> failAsync)
-        => source.IsValid ? await validAsync(source.Value) : await failAsync(source.ErrorsDetails);
+        => source.IsSuccess ? await validAsync(source.SuccessValue) : await failAsync(source.FailureDetails);
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                          source,
                                                                   Func<T              ,      TReturn>  valid,
                                                                   Func<MlErrorsDetails, Task<TReturn>> failAsync)
-        => source.IsValid ? valid(source.Value) : await failAsync(source.ErrorsDetails);
+        => source.IsSuccess ? valid(source.SuccessValue) : await failAsync(source.FailureDetails);
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                          source,
                                                                   Func<T              , Task<TReturn>> validAsync,
                                                                   Func<MlErrorsDetails,      TReturn>  fail)
-        => source.IsValid ? await validAsync(source.Value) : fail(source.ErrorsDetails);
+        => source.IsSuccess ? await validAsync(source.SuccessValue) : fail(source.FailureDetails);
 
     public static Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                    source,
                                                             Func<T              , TReturn> valid,
@@ -42,7 +42,7 @@ public static class MlResultActionsMatch
     {
         var partialResult = (await sourceAsync);
 
-        var result = partialResult.IsValid ? (await validAsync(partialResult.Value)) : (await failAsync(partialResult.ErrorsDetails));
+        var result = partialResult.IsSuccess ? (await validAsync(partialResult.SuccessValue)) : (await failAsync(partialResult.FailureDetails));
 
         return result;
     }
@@ -53,7 +53,7 @@ public static class MlResultActionsMatch
     {
         var partialResult = (await sourceAsync);
 
-        var result = partialResult.IsValid ? valid(partialResult.Value) : await failAsync(partialResult.ErrorsDetails);
+        var result = partialResult.IsSuccess ? valid(partialResult.SuccessValue) : await failAsync(partialResult.FailureDetails);
 
         return result;
     }
@@ -64,7 +64,7 @@ public static class MlResultActionsMatch
     {
         var partialResult = (await sourceAsync);
 
-        var result = partialResult.IsValid ? await validAsync(partialResult.Value) : fail(partialResult.ErrorsDetails);
+        var result = partialResult.IsSuccess ? await validAsync(partialResult.SuccessValue) : fail(partialResult.FailureDetails);
 
         return result;
     }

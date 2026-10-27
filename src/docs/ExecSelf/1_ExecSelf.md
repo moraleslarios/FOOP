@@ -111,12 +111,12 @@ var resultado = ProcesarLote(lineas)
     .ExecSelf(r => _auditoria.Registrar(new Entrada
     {
         Operacion = "ProcesarLote",
-        Correcto  = r.IsValid,      // Nombres reales: IsValid / IsFail
+        Correcto  = r.IsSuccess,      // Nombres reales: IsSuccess / IsFailure
         Momento   = DateTime.UtcNow
     }));
 ```
 
-> 📌 Los nombres son **`IsValid`** e **`IsFail`**, no `IsSuccess` / `IsFailure`.
+> 📌 Los nombres son **`IsSuccess`** e **`IsFailure`**, no `IsSuccess` / `IsFailure`.
 
 ### `ExecSelfIfValid` y `ExecSelfIfFail`
 
@@ -267,7 +267,7 @@ public class ServicioPedidos
 
             // Siempre: cerramos la métrica de duración.
             .ExecSelfAsync(r => _metricas.Registrar(
-                r.IsValid ? "pedido.ok" : "pedido.ko", cronometro.ElapsedMilliseconds));
+                r.IsSuccess ? "pedido.ok" : "pedido.ko", cronometro.ElapsedMilliseconds));
     }
 }
 ```
@@ -291,7 +291,7 @@ public Task<MlResult<Transferencia>> TransferirAsync(SolicitudTransferencia soli
                 Origen    = solicitud.CuentaOrigen,
                 Destino   = solicitud.CuentaDestino,
                 Importe   = solicitud.Importe,
-                Correcto  = resultado.IsValid,
+                Correcto  = resultado.IsSuccess,
                 Detalle   = resultado.Match(valid: t       => $"Ref: {t.Referencia}",
                                             fail : errores => errores.ToErrorsDescription()),
                 Momento   = DateTime.UtcNow
@@ -330,7 +330,7 @@ Cuanto más concreta sea la variante, menos `if` habrá dentro del delegado:
 
 ```csharp
 // ❌ Comprobación manual dentro del delegado.
-resultado.ExecSelf(r => { if (r.IsFail) _log.LogWarning("Error"); });
+resultado.ExecSelf(r => { if (r.IsFailure) _log.LogWarning("Error"); });
 
 // ✅ La variante ya expresa la condición.
 resultado.ExecSelfIfFail(errores => _log.LogWarning("Error: {E}", errores.ToErrorsDescription()));
@@ -391,7 +391,7 @@ Una tubería con un `ExecSelf` entre cada paso se vuelve ilegible. Instrumenta l
 - Existen sobrecargas asíncronas para todas las combinaciones de fuente y delegado.
 - ⚠️ El método síncrono es `TryExecSelfFail` (no `TryExecSelfIfFail`) y **no existe**
   `TryExecSelfIfFailWithoutException`.
-- Los nombres del estado son `IsValid` / `IsFail`.
+- Los nombres del estado son `IsSuccess` / `IsFailure`.
 - `MlErrorsDetails` solo tiene `Errors` y `Details`: consúltalo con `ToErrorsMessages()`,
   `ToErrorsDescription()`, `GetDetailException()` y `GetDetailValue<T>()`.
 

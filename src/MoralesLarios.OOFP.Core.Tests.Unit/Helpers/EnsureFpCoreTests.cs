@@ -18,8 +18,8 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.That(5, true, () => "no debería construirse");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(5);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(5);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.That(5, true, () => { evaluated = true; return "mensaje"; });
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         evaluated.Should().BeFalse();
     }
 
@@ -38,8 +38,8 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.That(5, false, () => "valor incorrecto");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("valor incorrecto");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("valor incorrecto");
     }
 
     [Fact]
@@ -47,9 +47,9 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.That(5, false, () => MlErrorsDetails.FromErrorDetails("fallo", "Key1", "Detail1"));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("fallo");
-        result.SecureFailErrorsDetails().Details.Should().ContainKey("Key1");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("fallo");
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey("Key1");
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.That(5, false, builder);
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     #endregion
@@ -71,8 +71,8 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.That(10, x => x > 5, "debe ser mayor que 5");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(10);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(10);
     }
 
     [Fact]
@@ -80,8 +80,8 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.That(3, x => x > 5, "debe ser mayor que 5");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("debe ser mayor que 5");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("debe ser mayor que 5");
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.That(3, predicate, "predicado nulo");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -101,8 +101,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.That(3, x => x > 5, errorsDetails);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("fallo detalles");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("fallo detalles");
     }
 
     [Fact]
@@ -110,8 +110,8 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.That(3, x => x > 5, x => $"el valor {x} no es mayor que 5");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("el valor 3 no es mayor que 5");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("el valor 3 no es mayor que 5");
     }
 
     [Fact]
@@ -121,8 +121,8 @@ public class EnsureFpCoreTests
                                    x => x > 5,
                                    x => MlErrorsDetails.FromErrorMessageWithValue($"valor {x} inválido", x));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("valor 3 inválido");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("valor 3 inválido");
     }
 
     #endregion
@@ -134,8 +134,8 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.TryThat("abc", x => x.Length == 3, "longitud incorrecta");
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("abc");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("abc");
     }
 
     [Fact]
@@ -143,8 +143,8 @@ public class EnsureFpCoreTests
     {
         var result = EnsureFp.TryThat("abcd", x => x.Length == 3, "longitud incorrecta");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Be("longitud incorrecta");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Be("longitud incorrecta");
     }
 
     [Fact]
@@ -154,8 +154,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.TryThat(data, x => x.Length == 3, "longitud incorrecta");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details.Should().ContainKey(EX_DESC_KEY);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey(ExceptionMetadataKey);
     }
 
     [Fact]
@@ -165,8 +165,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.TryThat(data, x => x.Length == 3, ex => $"excepción capturada: {ex.GetType().Name}");
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Contain("NullReferenceException");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Contain("NullReferenceException");
     }
 
     [Fact]
@@ -176,8 +176,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.TryThat(data, x => x.Length == 3, MlErrorsDetails.FromErrorMessage("no usado"));
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details.Should().ContainKey(EX_DESC_KEY);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey(ExceptionMetadataKey);
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.TryThat("abc", predicate, "mensaje");
 
-        result.IsFail.Should().BeTrue();
+        result.IsFailure.Should().BeTrue();
     }
 
     #endregion
@@ -201,8 +201,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotNullArg(myArgument);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Contain("myArgument");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Contain("myArgument");
     }
 
     [Fact]
@@ -212,8 +212,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotNullArg(myArgument);
 
-        result.SecureFailErrorsDetails().Details.Should().ContainKey(PARAM_NAME_KEY);
-        result.SecureFailErrorsDetails().Details[PARAM_NAME_KEY].Should().Be("myArgument");
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey(PARAM_NAME_KEY);
+        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("myArgument");
     }
 
     [Fact]
@@ -223,8 +223,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotNullArg(myArgument);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be("hola");
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("hola");
     }
 
     [Fact]
@@ -234,8 +234,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotEmptyArg(myCollection);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Contain("myCollection");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Contain("myCollection");
     }
 
     [Fact]
@@ -245,8 +245,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotEmptyArg(myCollection);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().BeEquivalentTo(new[] { 1, 2, 3 });
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().BeEquivalentTo(new[] { 1, 2, 3 });
     }
 
     [Theory]
@@ -259,8 +259,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotNullEmptyOrWhitespaceArg(myText);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Contain("myText");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Contain("myText");
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotNullEmptyOrWhitespaceArg(myText);
 
-        result.IsValid.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -280,8 +280,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.ThatArg(age, age >= 18);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Errors.First().Message.Should().Contain("age");
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Errors.First().Message.Should().Contain("age");
     }
 
     [Fact]
@@ -291,9 +291,9 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.ThatArg(age, x => x >= 18);
 
-        result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails().Details.Should().ContainKey(VALUE_KEY);
-        result.SecureFailErrorsDetails().Details[VALUE_KEY].Should().Be(15);
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().Details.Should().ContainKey(ValueMetadataKey);
+        result.GetFailureDetailsOrThrow().Details[ValueMetadataKey].Should().Be(15);
     }
 
     [Fact]
@@ -303,8 +303,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.ThatArg(age, x => x >= 18);
 
-        result.IsValid.Should().BeTrue();
-        result.SecureValidValue().Should().Be(20);
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be(20);
     }
 
     #endregion

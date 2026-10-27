@@ -136,7 +136,7 @@ public static partial class MlResultActionsBind
         var result = await partialMlResult.MatchAsync
         (
             failAsync :       errorsDetails =>       MlResult<TReturn>.Fail(errorsDetails).ToAsync(),
-            validAsync: async value         => await funcAsync.TryToMlResultAsync((await sourceAsync).Value, errorMessageBuilder)
+            validAsync: async value         => await funcAsync.TryToMlResultAsync((await sourceAsync).SuccessValue, errorMessageBuilder)
         );
 
         return result;
@@ -171,8 +171,8 @@ public static partial class MlResultActionsBind
                             fail: errors => errors,
                             valid: value => value.ToMlResultValid()
                                                     .Map(x => funcs.Select(func => func(value)).ToList())
-                                                    .Bind(resultData => resultData.Any(x => x.IsFail)
-                                                                            ? resultData.MergeFailureErrors().SecureFailErrorsDetails()
+                                                    .Bind(resultData => resultData.Any(x => x.IsFailure)
+                                                                            ? resultData.MergeFailureErrors().GetFailureDetailsOrThrow()
                                                                             : returnFunc(value)));
 
 
@@ -191,8 +191,8 @@ public static partial class MlResultActionsBind
             validAsync: async value         =>
             {
                 var resultsData = funcs.Select(func => func(value)).ToList();
-                var partialResult = resultsData.Any(x => x.IsFail)
-                                        ? await resultsData.MergeFailureErrorsAsync().SecureFailErrorsDetailsAsync()
+                var partialResult = resultsData.Any(x => x.IsFailure)
+                                        ? await resultsData.MergeFailureErrorsAsync().GetFailureDetailsOrThrowAsync()
                                         : await returnFuncAsync(value);
                 return partialResult;
             }
@@ -216,8 +216,8 @@ public static partial class MlResultActionsBind
                     resultsData.Add(funcResult);
                 }
 
-                var partialResult = resultsData.Any(x => x.IsFail)
-                                        ? await resultsData.MergeFailureErrorsAsync().SecureFailErrorsDetailsAsync()
+                var partialResult = resultsData.Any(x => x.IsFailure)
+                                        ? await resultsData.MergeFailureErrorsAsync().GetFailureDetailsOrThrowAsync()
                                         : await returnFuncAsync(value);
                 return partialResult;
             }
@@ -316,10 +316,10 @@ public static partial class MlResultActionsBind
                     {
                         var resultsData = funcs.Select(func => func(value)).ToList();
 
-                        var partialResult = resultsData.Any(x => x.IsFail)
-                                                ? resultsData.MergeFailureErrors().SecureFailErrorsDetails()
+                        var partialResult = resultsData.Any(x => x.IsFailure)
+                                                ? resultsData.MergeFailureErrors().GetFailureDetailsOrThrow()
                                                 : returnFunc(value,
-                                                             resultsData.Where(x => x.IsValid).Select(y => y.SecureValidValue()));
+                                                             resultsData.Where(x => x.IsSuccess).Select(y => y.GetValueOrThrow()));
 
                         return partialResult;
 
@@ -348,10 +348,10 @@ public static partial class MlResultActionsBind
             validAsync: async value =>
             {
                 var resultsData = funcs.Select(func => func(value)).ToList();
-                var partialResult = resultsData.Any(x => x.IsFail)
-                                        ? await resultsData.MergeFailureErrorsAsync().SecureFailErrorsDetailsAsync()
+                var partialResult = resultsData.Any(x => x.IsFailure)
+                                        ? await resultsData.MergeFailureErrorsAsync().GetFailureDetailsOrThrowAsync()
                                         : await returnFuncAsync(value,
-                                                                resultsData.Where(x => x.IsValid).Select(y => y.SecureValidValue()));
+                                                                resultsData.Where(x => x.IsSuccess).Select(y => y.GetValueOrThrow()));
                 return partialResult;
             }
         );
@@ -372,10 +372,10 @@ public static partial class MlResultActionsBind
                     var funcResult = await funcAsync(value);
                     resultsData.Add(funcResult);
                 }
-                var partialResult = resultsData.Any(x => x.IsFail)
-                                        ? await resultsData.MergeFailureErrorsAsync().SecureFailErrorsDetailsAsync()
+                var partialResult = resultsData.Any(x => x.IsFailure)
+                                        ? await resultsData.MergeFailureErrorsAsync().GetFailureDetailsOrThrowAsync()
                                         : await returnFuncAsync(value,
-                                                                resultsData.Where(x => x.IsValid).Select(y => y.SecureValidValue()));
+                                                                resultsData.Where(x => x.IsSuccess).Select(y => y.GetValueOrThrow()));
                 return partialResult;
             }
         );
@@ -417,7 +417,7 @@ public static partial class MlResultActionsBind
 
     /// <summary>
     /// Execute the function if the source is valid, otherwise return the source.
-    /// If the func method fails, the 'Value' of the source is added as ErrorDetails.
+    /// If the func method fails, the 'SuccessValue' of the source is added as ErrorDetails.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TReturn"></typeparam>
@@ -433,7 +433,7 @@ public static partial class MlResultActionsBind
             {
                 var result = func(value);
 
-                if (result.IsFail) result.AddValueDetailIfFail(value!);
+                if (result.IsFailure) result.AddValueDetailIfFail(value!);
 
                 return result;
             }
@@ -449,7 +449,7 @@ public static partial class MlResultActionsBind
                                     {
                                         var result = await funcAsync(value);
 
-                                        if (result.IsFail) result.AddValueDetailIfFail(value!);
+                                        if (result.IsFailure) result.AddValueDetailIfFail(value!);
 
                                         return result;
                                     }
@@ -475,7 +475,7 @@ public static partial class MlResultActionsBind
             {
                 var result = func.TryToMlResult(value, errorMessageBuilder);
 
-                if (result.IsFail) result.AddValueDetailIfFail(value!);
+                if (result.IsFailure) result.AddValueDetailIfFail(value!);
 
                 return result;
             }
@@ -516,7 +516,7 @@ public static partial class MlResultActionsBind
             {
                 var result = await funcAsync.TryToMlResultAsync(value, errorMessageBuilder);
 
-                if (result.IsFail) result.AddValueDetailIfFail(value!);
+                if (result.IsFailure) result.AddValueDetailIfFail(value!);
 
                 return result;
             }
@@ -541,7 +541,7 @@ public static partial class MlResultActionsBind
                                     validAsync: async value =>
                                     {
                                         var result = await funcAsync.TryToMlResultAsync(value, errorMessageBuilder);
-                                        if (result.IsFail) result.AddValueDetailIfFail(value!);
+                                        if (result.IsFailure) result.AddValueDetailIfFail(value!);
                                         return result;
                                     }
                                 );
@@ -1203,7 +1203,7 @@ public static partial class MlResultActionsBind
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a previous 'Value' execution
+    /// source parameter has a previous 'SuccessValue' execution
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     /// <typeparam name="T"></typeparam>
@@ -1305,7 +1305,7 @@ public static partial class MlResultActionsBind
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a previous 'Value' execution
+    /// source parameter has a previous 'SuccessValue' execution
     /// -- 2 funcs (valid and fail) are necessary, since they have to preserve output compatibility --
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -5552,14 +5552,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                 {
                                                     var mlResultTyped = func(value);
 
-                                                    var mlResult = mlResultTyped.IsValid 
+                                                    var mlResult = mlResultTyped.IsSuccess 
                                                                         ? ApplyValue(func(value)) 
-                                                                        : mlResultTyped.ErrorsDetails.ToMlResultFail<object>();
+                                                                        : mlResultTyped.FailureDetails.ToMlResultFail<object>();
                                                     partialResult.Add(mlResult);
 
                                                     if (breakInError)
                                                     {
-                                                        if (mlResult.IsFail) break;
+                                                        if (mlResult.IsFailure) break;
                                                     }
                                                        
                                                 }
@@ -5579,14 +5579,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                 {
                                                                     var mlResultTyped = await func(value);
 
-                                                                    var mlResult = mlResultTyped.IsValid
+                                                                    var mlResult = mlResultTyped.IsSuccess
                                                                                         ? await ApplyValueAsync(func(value))
-                                                                                        : await mlResultTyped.ErrorsDetails.ToMlResultFailAsync<object>();
+                                                                                        : await mlResultTyped.FailureDetails.ToMlResultFailAsync<object>();
                                                                     partialResult.Add(mlResult);
 
                                                                     if (breakInError)
                                                                     {
-                                                                        if (mlResult.IsFail) break;
+                                                                        if (mlResult.IsFailure) break;
                                                                     }
                                                                         
                                                                 }

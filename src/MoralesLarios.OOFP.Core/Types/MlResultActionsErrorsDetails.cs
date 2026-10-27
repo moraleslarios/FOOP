@@ -92,11 +92,11 @@ public static partial class MlResultActionsErrorsDetails
 
     public static MlResult<T> GetDetailValue<T>(this MlErrorsDetails source)
     {
-        if ( ! source.Details.ContainsKey(VALUE_KEY)) return source.AddError($"The key {VALUE_KEY} does not exist in the details");  //MlResult<T>.Fail($"The key {VALUE_KEY} does not exist in the details");
+        if ( ! source.Details.ContainsKey(ValueMetadataKey)) return source.AddError($"The key {ValueMetadataKey} does not exist in the details");  //MlResult<T>.Fail($"The key {ValueMetadataKey} does not exist in the details");
         
-        var result = source.Details[VALUE_KEY] is T value 
+        var result = source.Details[ValueMetadataKey] is T value 
                             ? MlResult<T>.Valid(value) 
-                            : source.AddError($"The key {VALUE_KEY} does not contain a value of type {typeof(T).Name}");
+                            : source.AddError($"The key {ValueMetadataKey} does not contain a value of type {typeof(T).Name}");
 
         return result;
     }
@@ -131,11 +131,11 @@ public static partial class MlResultActionsErrorsDetails
         => (await sourceAsync).GetDetailValue<T>();
 
 
-    public static MlResult<T> GetDetailException<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(EX_DESC_KEY);
-    public static Task<MlResult<T>> GetDetailExceptionAsync<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(EX_DESC_KEY).ToAsync();
+    public static MlResult<T> GetDetailException<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey);
+    public static Task<MlResult<T>> GetDetailExceptionAsync<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey).ToAsync();
     public static async Task<MlResult<T>> GetDetailExceptionAsync<T>(this Task<MlErrorsDetails> sourceAsync) where T : Exception => (await sourceAsync).GetDetailException<T>();
-    public static MlResult<Exception> GetDetailException(this MlErrorsDetails source) => source.GetDetail<Exception>(EX_DESC_KEY);
-    public static Task<MlResult<Exception>> GetDetailExceptionAsync(this MlErrorsDetails source) => source.GetDetail<Exception>(EX_DESC_KEY).ToAsync();
+    public static MlResult<Exception> GetDetailException(this MlErrorsDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey);
+    public static Task<MlResult<Exception>> GetDetailExceptionAsync(this MlErrorsDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey).ToAsync();
     public static async Task<MlResult<Exception>> GetDetailExceptionAsync(this Task<MlErrorsDetails> sourceAsync) => (await sourceAsync).GetDetailException();
 }
 

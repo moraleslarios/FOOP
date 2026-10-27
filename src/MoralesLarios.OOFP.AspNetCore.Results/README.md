@@ -41,10 +41,10 @@ public async Task<IActionResult> Get(int id)
 {
     var result = await _service.FindByIdAsync(id);
 
-    if (result.IsValid)
-        return Ok(result.SecureValidValue());
+    if (result.IsSuccess)
+        return Ok(result.GetValueOrThrow());
 
-    var errors = result.SecureFailErrorsDetails();
+    var errors = result.GetFailureDetailsOrThrow();
 
     // ¿Es un "no encontrado"? ¿Cómo lo sé? Comparando cadenas...
     if (errors.ToErrorsDescription().Contains("not found", StringComparison.OrdinalIgnoreCase))
@@ -487,7 +487,7 @@ Lógica de `ToRepoActionResult`:
 
 | Condición | Resultado |
 |---|---|
-| `IsValid` | lo que devuelva el `OkHandler` que le pases |
+| `IsSuccess` | lo que devuelva el `OkHandler` que le pases |
 | la descripción del error contiene alguna `notFoundKeys` | `NotFoundObjectResult` |
 | `errors.HasKeyDetails("NotFound")` | `NotFoundObjectResult` |
 | `errors.HasExceptionDetails()` | `ObjectResult` con `StatusCode = 500` y la descripción de la excepción |
@@ -784,7 +784,7 @@ return await _service.CreateAsync(dto)
 **Acceder a `Value` en lugar de dejar que la extensión lo haga:**
 ```csharp
 // ❌ Value y ErrorsDetails son internal protected: no compila desde tu proyecto
-if (resultado.IsValid) return Ok(resultado.Value);
+if (resultado.IsSuccess) return Ok(resultado.Value);
 
 // ✅
 return resultado.ToGetPdActionResult();
@@ -834,7 +834,7 @@ return resultado.ToGetPdActionResult();
 
 7. **Un endpoint = una expresión.** Si aparece un `if` en tu controlador, la decisión está en el sitio equivocado: muévela al raíl.
 
-8. **No accedas a `Value` ni a `ErrorsDetails`.** Son `internal protected`. Usa `Match`, `SecureValidValue()` o directamente las extensiones de este proyecto.
+8. **No accedas a `Value` ni a `ErrorsDetails`.** Son `internal protected`. Usa `Match`, `GetValueOrThrow()` o directamente las extensiones de este proyecto.
 
 9. **Para respuestas no-JSON usa `Match`** y reutiliza únicamente la rama de error (`GetProblemDetails()` + `ToMlActionResult()`).
 
