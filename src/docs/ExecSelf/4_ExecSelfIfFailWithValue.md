@@ -40,7 +40,7 @@ ejecuta** y el resultado se propaga igual: no hay excepciones ni sorpresas.
 ## El requisito previo: `AddValueIfFail`
 
 `ExecSelfIfFailWithValue` **no adivina** el valor: alguien tiene que haberlo guardado antes. La
-forma habitual es `AddValueIfFail`, de `MlResultActionsErrorsDetails`:
+forma habitual es `AddValueIfFail`, de `MlResultErrorDetailsExtensions`:
 
 ```csharp
 public MlResult<Registro> ImportarLinea(LineaCsv linea)
@@ -67,7 +67,7 @@ public MlResult<Registro> ImportarLinea(LineaCsv linea)
 Otras formas de que la clave `"Value"` acabe rellena:
 
 - `MlResult.Fail<T>(mensaje, valor)` y `MlErrorDetails.FromErrorMessageWithValue(mensaje, valor)`.
-- `AddValueDetailIfFail` y `CompleteWithDataValueIfValid` de `MlResultActions`.
+- `AddValueDetailIfFail` y `CompleteWithDataValueIfValid` de `MlResultExtensions`.
 - Las familias `BindIfFailWithValue` y `MapIfFailWithValue`, que ya asumen ese contrato.
 
 ---
@@ -183,8 +183,8 @@ public record ResumenImportacion(int Correctos, int Rechazados, IReadOnlyList<Li
 
 Ninguna línea mala interrumpe el bucle y el informe final sabe **qué** línea falló y **por qué**.
 
-> 💡 Si el bucle lo estás escribiendo a mano, mira `ProjectionSplit` en
-> [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md): separa correctos y fallidos por ti.
+> 💡 Si el bucle lo estás escribiendo a mano, mira `TraverseSplit` en
+> [`../Types/MlResultCollections.md`](../core-types/MlResultCollections.md): separa correctos y fallidos por ti.
 
 ### Ejemplo 2: Cola de reintentos con la petición original
 
@@ -323,7 +323,7 @@ adjunto, usa `MapIfFailWithValue` o `BindIfFailWithValue`.
 - [`3_ExecSelfIfFail.md`](3_ExecSelfIfFail.md) — efectos en la rama fallida.
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — el equivalente con la excepción.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — solo fallos de negocio.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetMetadataValue<T>`, `GetDetail<T>`.
-- [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia y recuento de sobrecargas.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `AddValueIfFail`, `GetMetadataValue<T>`, `GetDetail<T>`.
+- [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md) — referencia y recuento de sobrecargas.
 - [`../Bind/7_BindIfFailWithValue.md`](../Bind/7_BindIfFailWithValue.md) y [`../Map/5_MapIfFailWithValue.md`](../Map/5_MapIfFailWithValue.md) — cuando sí quieres recuperar.
-- [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md) — `ProjectionSplit` para separar correctos y fallidos.
+- [`../Types/MlResultCollections.md`](../core-types/MlResultCollections.md) — `TraverseSplit` para separar correctos y fallidos.

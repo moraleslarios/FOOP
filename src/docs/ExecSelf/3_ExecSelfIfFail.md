@@ -318,7 +318,7 @@ publicar en una cola, `TryExecSelfFail` / `TryExecSelfIfFailAsync`.
 - [`4_ExecSelfIfFailWithValue.md`](4_ExecSelfIfFailWithValue.md) — recuperar el valor adjunto al fallo.
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — solo fallos con excepción.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — solo fallos de negocio.
-- [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia y recuento de sobrecargas.
+- [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md) — referencia y recuento de sobrecargas.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — sistema de errores completo.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — lectura y fusión de `Details`.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — lectura y fusión de `Details`.
 - [`../Map/4_MapIfFail.md`](../Map/4_MapIfFail.md) y [`../Bind/6_BindIfFail.md`](../Bind/6_BindIfFail.md) — cuando sí quieres recuperar.

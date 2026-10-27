@@ -551,6 +551,6 @@ resultado.ExecSelfIfFail(e => e.GetException()
 - [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) — la versión cuya recuperación sí puede volver a fallar.
 - [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) — su espejo en la familia `Bind`.
 - [`../ExecSelf/5_ExecSelfIfFailWithException.md`](../ExecSelf/5_ExecSelfIfFailWithException.md) — registrar sin recuperar.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `GetException<TException>`, `MergeErrorsDetailsIfFail`.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException`, `GetException<TException>`, `MergeErrorsDetailsIfFail`.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlErrorDetails` y la clave `Ex`.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la familia `Map`.

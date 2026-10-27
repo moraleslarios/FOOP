@@ -571,9 +571,9 @@ La misma necesidad, «obtener un pedido y devolver una respuesta HTTP», resuelt
 ## Ver también
 
 - [`2_MatchAll.md`](2_MatchAll.md) — la sobrecarga incondicional (`Func<TReturn>` sin parámetros).
-- [`../Types/MlResultActionsMatch.md`](../core-types/MlResultActionsMatch.md) — referencia completa del archivo fuente.
+- [`../Types/MlResultMatchExtensions.md`](../core-types/MlResultMatchExtensions.md) — referencia completa del archivo fuente.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — el sistema de errores (`MlError`, `MlErrorDetails`).
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `GetMetadataValue<T>`, `GetDetail<T>`.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException`, `GetMetadataValue<T>`, `GetDetail<T>`.
 - [`../Bind/3_Bind.md`](../Bind/3_Bind.md) — encadenar operaciones que pueden fallar.
 - [`../Map/1_Map.md`](../Map/1_Map.md) — transformar el valor sin salir de la tubería.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios sin alterar el resultado.

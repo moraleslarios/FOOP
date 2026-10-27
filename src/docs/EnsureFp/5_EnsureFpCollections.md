@@ -349,4 +349,4 @@ public MlResult<IEnumerable<string>> ValidarPermisos(IEnumerable<string> permiso
 - [3. Cadenas de texto](3_EnsureFpStrings.md) — `IsOneOf`, longitudes
 - [4. Números y rangos](4_EnsureFpNumbers.md)
 - [9. Mensajes y claves de detalle](9_EnsureFpMessages.md)
-- [Bucles y colecciones con `MlResult`](../loops/Bucles.md)
+- [Bucles y colecciones con `MlResult`](../loops/Collections.md)

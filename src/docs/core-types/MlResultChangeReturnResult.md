@@ -136,8 +136,8 @@ MlResult<Preferencias> prefs = _repo.ObtenerPreferencias(usuarioId)
 | Alternativa | Diferencia |
 | --- | --- |
 | `ChangeReturnResultIfFailToValid` | Valor fijo o fábrica sin parámetros; ignora los errores. |
-| [`MapIfFail`](MlResultActionsMap.md) | Recibe el `MlErrorDetails` y puede usarlo para decidir el valor. |
-| [`BindIfFail`](MlResultActionsBind.md) | Igual, pero el reemplazo puede volver a fallar. |
+| [`MapIfFail`](MlResultMapExtensions.md) | Recibe el `MlErrorDetails` y puede usarlo para decidir el valor. |
+| [`BindIfFail`](MlResultBindExtensions.md) | Igual, pero el reemplazo puede volver a fallar. |
 
 Usa `ChangeReturnResultIfFailToValid` cuando el motivo del fallo **da igual**; usa `MapIfFail` o
 `BindIfFail` cuando sí importa.
@@ -169,8 +169,8 @@ public MlResult<Informe> GenerarInforme(Filtro filtro)
 Es útil también en **pruebas** y en *feature flags*, donde quieres forzar una rama sin tocar la lógica.
 
 > 💡 Si además de cambiar el tipo necesitas **ejecutar** algo en ambas ramas, mira
-> [`BindAlways` / `MapAlways`](MlResultActionsMap.md) o
-> [la región `MatchAll` de `Match`](MlResultActionsMatch.md), que evalúan una función en cualquier
+> [`BindAlways` / `MapAlways`](MlResultMapExtensions.md) o
+> [la región `MatchAll` de `Match`](MlResultMatchExtensions.md), que evalúan una función en cualquier
 > estado.
 
 ---
@@ -180,13 +180,13 @@ Es útil también en **pruebas** y en *feature flags*, donde quieres forzar una 
 | Quiero… | Método |
 | --- | --- |
 | Cambiar el tipo, conservando el estado | `ChangeReturnResult` / `ChangeReturnResultIfValid` |
-| Transformar el valor (me interesa el original) | [`Map`](MlResultActionsMap.md) |
-| Encadenar otra operación que puede fallar | [`Bind`](MlResultActionsBind.md) |
+| Transformar el valor (me interesa el original) | [`Map`](MlResultMapExtensions.md) |
+| Encadenar otra operación que puede fallar | [`Bind`](MlResultBindExtensions.md) |
 | Que un éxito se convierta en error | `ChangeReturnResultIfValidToFail` |
 | Un valor por defecto si falla, sin mirar el error | `ChangeReturnResultIfFailToValid` |
-| Un valor por defecto **calculado a partir** del error | [`MapIfFail`](MlResultActionsMap.md) |
+| Un valor por defecto **calculado a partir** del error | [`MapIfFail`](MlResultMapExtensions.md) |
 | Ignorar el estado y devolver siempre válido / fallido | `ChangeReturnResultAlwaysValid` / `...AlwaisFail` |
-| Salir de `MlResult` con un valor concreto | [`Match`](MlResultActionsMatch.md) |
+| Salir de `MlResult` con un valor concreto | [`Match`](MlResultMatchExtensions.md) |
 
 ---
 
@@ -216,7 +216,7 @@ public async Task<IActionResult> RegistrarUsuarioAsync(RegistroDto dto)
 
 ## Ver también
 
-- [`MlResultActionsMap`](MlResultActionsMap.md) — transformar el valor.
-- [`MlResultActionsBind`](MlResultActionsBind.md) — encadenar operaciones que pueden fallar.
-- [`MlResultActionsMatch`](MlResultActionsMatch.md) — salir del `MlResult`.
-- [`MlResultTransformations`](MlResultTransformations.md) — entrar en el `MlResult`.
+- [`MlResultMapExtensions`](MlResultMapExtensions.md) — transformar el valor.
+- [`MlResultBindExtensions`](MlResultBindExtensions.md) — encadenar operaciones que pueden fallar.
+- [`MlResultMatchExtensions`](MlResultMatchExtensions.md) — salir del `MlResult`.
+- [`MlResultConversions`](MlResultConversions.md) — entrar en el `MlResult`.

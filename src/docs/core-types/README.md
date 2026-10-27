@@ -12,16 +12,16 @@ Esta sección documenta la librería **por clase/archivo**, y complementa la doc
 |---|---|---|
 | [`MlResult` y `MlResult<T>`](MlResult.md) | `Types/MlResult.cs` | El tipo raíz: éxito con valor o fallo con errores. |
 | [Modelo de errores](MlResultErrors.md) | `Types/Errors/*.cs` | `MlError`, `MlErrorDetails`, `MlErrorDetailsActions`, `ErrorMessage`. |
-| [`MlResultActionsBind`](MlResultActionsBind.md) | `Types/MlResultActionsBind.cs` | Encadenar operaciones que devuelven `MlResult<T>` (mónada). |
-| [`MlResultActionsMap`](MlResultActionsMap.md) | `Types/MlResultActionsMap.cs` | Transformar el valor sin salir del raíl (functor). |
-| [`MlResultActionsMatch`](MlResultActionsMatch.md) | `Types/MlResultActionsMatch.cs` | Salir del raíl y materializar un valor final. |
-| [`MlResultActionsExecSelf`](MlResultActionsExecSelf.md) | `Types/MlResultActionsExecSelf.cs` | Efectos laterales (log, auditoría) preservando el resultado. |
-| [`MlResultActionsSeveral`](MlResultActionsSeveral.md) | `Types/MlResultActionsSeveral.cs` | `EmptyToFailed`, `NullToFailed`, `BoolToResult`, `Combine`, `Do`. |
-| [`MlResultActions`](MlResultActions.md) | `Types/MlResultActions.cs` | Enriquecer detalles, acumular datos y accesos "seguros" al valor. |
-| [`MlResultActionsErrorsDetails`](MlResultActionsErrorsDetails.md) | `Types/MlResultActionsErrorsDetails.cs` | Leer/fusionar el diccionario `Details` de un fallo. |
-| [`MlResultBucles`](MlResultBucles.md) | `Types/MlResultBucles.cs` | Proyecciones sobre colecciones (`Projection*`) y fusión de errores. |
+| [`MlResultBindExtensions`](MlResultBindExtensions.md) | `Types/MlResultBindExtensions.cs` | Encadenar operaciones que devuelven `MlResult<T>` (mónada). |
+| [`MlResultMapExtensions`](MlResultMapExtensions.md) | `Types/MlResultMapExtensions.cs` | Transformar el valor sin salir del raíl (functor). |
+| [`MlResultMatchExtensions`](MlResultMatchExtensions.md) | `Types/MlResultMatchExtensions.cs` | Salir del raíl y materializar un valor final. |
+| [`MlResultExecSelfExtensions`](MlResultExecSelfExtensions.md) | `Types/MlResultExecSelfExtensions.cs` | Efectos laterales (log, auditoría) preservando el resultado. |
+| [`MlResultSeveralExtensions`](MlResultSeveralExtensions.md) | `Types/MlResultSeveralExtensions.cs` | `FailIfEmpty`, `FailIfNull`, `FailIfFalse`, `CombineAll`, `Do`. |
+| [`MlResultExtensions`](MlResultExtensions.md) | `Types/MlResultExtensions.cs` | Enriquecer detalles, acumular datos y accesos "seguros" al valor. |
+| [`MlResultErrorDetailsExtensions`](MlResultErrorDetailsExtensions.md) | `Types/MlResultErrorDetailsExtensions.cs` | Leer/fusionar el diccionario `Details` de un fallo. |
+| [`MlResultCollections`](MlResultCollections.md) | `Types/MlResultCollections.cs` | Proyecciones sobre colecciones (`Traverse*`) y fusión de errores. |
 | [`MlResultChangeReturnResult`](MlResultChangeReturnResult.md) | `Types/MlResultChangeReturnResult.cs` | Cambiar el tipo/estado devuelto conservando el contexto de error. |
-| [`MlResultTransformations`](MlResultTransformations.md) | `Types/MlResultTransformations.cs` | Puentes entre el mundo imperativo (excepciones) y `MlResult`. |
+| [`MlResultConversions`](MlResultConversions.md) | `Types/MlResultConversions.cs` | Puentes entre el mundo imperativo (excepciones) y `MlResult`. |
 
 Helpers relacionados que viven fuera de `Types`:
 
@@ -91,7 +91,7 @@ malas prácticas a evitar. **Si estás aprendiendo, empieza por aquí.**
 
 | Documento | Tema |
 |-----------|------|
-| [`2_MlResultActions`](../Bind/2_MlResultActions.md) | Utilidades base y acceso seguro al valor |
+| [`2_MlResultActions`](../Bind/2_MlResultExtensions.md) | Utilidades base y acceso seguro al valor |
 | [`3_Bind`](../Bind/3_Bind.md) | ⭐ `Bind` y `TryBind`: el operador fundamental |
 | [`4_BindMulti`](../Bind/4_BindMulti.md) | Elegir rama según condiciones |
 | [`5_BindIf`](../Bind/5_BindIf.md) | Ejecutar solo si se cumple un predicado |
@@ -138,9 +138,9 @@ malas prácticas a evitar. **Si estás aprendiendo, empieza por aquí.**
 | Documento | Tema |
 |-----------|------|
 | [`1_EmptyToFailed`](../Several/1_EmptyToFailed.md) | Rechazar colecciones vacías |
-| [`2_NullToFailed`](../Several/2_NullToFailed.md) | Convertir `null` en fallo explícito |
+| [`2_NullToFailed`](../Several/2_FailIfNull.md) | Convertir `null` en fallo explícito |
 | [`3_BoolToResult`](../Several/3_BoolToResult.md) | Convertir un `bool` en `MlResult` |
-| [`4_Combine`](../Several/4_Combine.md) | `Combine` y `Do` ⚠️ (**no** acumula errores) |
+| [`4_Combine`](../Several/4_Combine.md) | `CombineAll` y `Do` ⚠️ (**no** acumula errores) |
 
 ### Utilidades y colecciones
 
@@ -149,7 +149,7 @@ malas prácticas a evitar. **Si estás aprendiendo, empieza por aquí.**
 | [`EnsureFp`](../EnsureFp/EnsureFp.md) | Precondiciones: `That`, `NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace` |
 | [`Transformations`](../Transformations/Transformations.md) | `ToMlResultValid`, `ToMlResultFail`, `TryToMlResult*` |
 | [`Extensions`](../Extensions/Extensions.md) | `ToAsync`, `With`, `ToFuncTask`, `AppendExDetails`, `Constants` |
-| [`Bucles`](../loops/Bucles.md) | `Projection`, `ProjectionWhile`, `ProjectionParallelAsync`, `ProjectionSplit` |
+| [`Bucles`](../loops/Collections.md) | `Traverse`, `TraverseWhile`, `ProjectionParallelAsync`, `TraverseSplit` |
 
 ---
 

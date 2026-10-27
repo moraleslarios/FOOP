@@ -321,4 +321,4 @@ resultado.ExecSelf(p => _log.LogInformation("{P}", p));
 - [`../Bind/3_Bind.md`](../Bind/3_Bind.md) — la operación hermana para funciones que fallan.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir del `MlResult`.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios sin transformar.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la clase.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la clase.

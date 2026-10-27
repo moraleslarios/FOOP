@@ -45,7 +45,7 @@ error** y lo pasa a tu función de recuperación.
 de `Details["Value"]` (la constante `ValueMetadataKey`). Si nadie lo guardó ahí antes, no hay nada que
 recuperar.
 
-El encargado de guardarlo es [`AddValueIfFail`](../core-types/MlResultActionsErrorsDetails.md):
+El encargado de guardarlo es [`AddValueIfFail`](../core-types/MlResultErrorDetailsExtensions.md):
 
 ```csharp
 public static MlResult<T> AddValueIfFail<T, TValue>(this MlResult<T> source, TValue value);
@@ -376,8 +376,8 @@ a lo largo de la tubería, usa una **tupla** o un objeto de contexto en el camin
 - [`6_BindIfFail.md`](6_BindIfFail.md) — recuperación sin necesitar el valor original.
 - [`8_BindIfFailWithException.md`](8_BindIfFailWithException.md) — recuperación solo ante excepciones.
 - [`9_BindIfFailWithoutException.md`](9_BindIfFailWithoutException.md) — recuperación solo ante fallos de negocio.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetMetadataValue<T>` y el resto del acceso a detalles.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `AddValueIfFail`, `GetMetadataValue<T>` y el resto del acceso a detalles.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la clave `ValueMetadataKey` y las factorías de `MlErrorDetails`.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — la versión que solo observa, sin transformar.
 - [`../Map/5_MapIfFailWithValue.md`](../Map/5_MapIfFailWithValue.md) — la versión con función que no puede fallar.
-- [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — referencia con todas las sobrecargas.
+- [`../Types/MlResultBindExtensions.md`](../core-types/MlResultBindExtensions.md) — referencia con todas las sobrecargas.

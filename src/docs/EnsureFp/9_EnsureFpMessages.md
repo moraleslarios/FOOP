@@ -368,4 +368,4 @@ que **nunca se produce una `NullReferenceException` al generar un mensaje**.
 - [6. Tipos concretos](6_EnsureFpTypes.md)
 - [8. Variantes asíncronas](8_EnsureFpAsync.md)
 - [`MlResultErrors`: anatomía de `MlErrorDetails`](../core-types/MlResultErrors.md)
-- [`MlResultActionsErrorsDetails`: métodos sobre los detalles](../core-types/MlResultActionsErrorsDetails.md)
+- [`MlResultErrorDetailsExtensions`: métodos sobre los detalles](../core-types/MlResultErrorDetailsExtensions.md)

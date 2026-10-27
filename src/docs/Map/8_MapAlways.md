@@ -439,5 +439,5 @@ var r5 = ObtenerCliente(id)
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir del carril con un valor desnudo.
 - [`../Match/2_MatchAll.md`](../Match/2_MatchAll.md) — la sobrecarga `Match(Func<TReturn>)`, gemela de la Forma A.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios en ambas ramas sin alterar el resultado.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la familia `Map`.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorDetails`.

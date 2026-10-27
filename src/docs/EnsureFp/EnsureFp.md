@@ -12,7 +12,7 @@
 4. [Mapa de la familia: las nueve páginas](#mapa-de-la-familia-las-nueve-páginas)
 5. [Las tres variantes de cada regla](#las-tres-variantes-de-cada-regla)
 6. [Panorámica de la API por familias](#panorámica-de-la-api-por-familias)
-7. [`EnsureFp` frente a `NullToFailed`, `EmptyToFailed` y `BoolToResult`](#ensurefp-frente-a-nulltofailed-emptytofailed-y-booltoresult)
+7. [`EnsureFp` frente a `FailIfNull`, `FailIfEmpty` y `FailIfFalse`](#ensurefp-frente-a-nulltofailed-emptytofailed-y-booltoresult)
 8. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
 9. [Ejemplos prácticos](#ejemplos-prácticos)
 10. [Mejores prácticas](#mejores-prácticas)
@@ -95,7 +95,7 @@ var r = EnsureFp.NotNull(cliente, "El cliente es obligatorio");
 // var r = cliente.NotNull("El cliente es obligatorio");
 
 // ✅ Si quieres sintaxis de extensión, usa los métodos de Several
-var r = cliente.NullToFailed("El cliente es obligatorio");
+var r = cliente.FailIfNull("El cliente es obligatorio");
 ```
 
 💡 **Consejo:** añade `using static MoralesLarios.OOFP.Helpers.EnsureFp;` en los archivos con
@@ -210,7 +210,7 @@ Resumen de un vistazo. El inventario exhaustivo de sobrecargas está en cada pá
 
 ---
 
-## `EnsureFp` frente a `NullToFailed`, `EmptyToFailed` y `BoolToResult`
+## `EnsureFp` frente a `FailIfNull`, `FailIfEmpty` y `FailIfFalse`
 
 Las herramientas se solapan en los casos simples; la diferencia es **la sintaxis y el punto de
 uso**:
@@ -218,11 +218,11 @@ uso**:
 | Herramienta | Forma | Formas de error | Comprobación de `null` |
 |-------------|-------|-----------------|------------------------|
 | `EnsureFp.NotNull` | Estático | `string`, `MlErrorDetails`, `…Arg` | `is not null` (estricto) |
-| [`NullToFailed`](../Several/2_NullToFailed.md) | Extensión | 4 formas | `== null` (respeta `operator==`) |
+| [`FailIfNull`](../Several/2_FailIfNull.md) | Extensión | 4 formas | `== null` (respeta `operator==`) |
 | `EnsureFp.NotEmpty` | Estático | `string`, `MlErrorDetails`, `…Arg` | `!= null && Any()` |
-| [`EmptyToFailed`](../Several/1_EmptyToFailed.md) | Extensión | 3 formas | `!= null && Any()` |
+| [`FailIfEmpty`](../Several/1_EmptyToFailed.md) | Extensión | 3 formas | `!= null && Any()` |
 | `EnsureFp.That` | Estático | `string`, `MlErrorDetails`, perezosas, `…Arg` | — |
-| [`BoolToResult`](../Several/3_BoolToResult.md) | Extensión | 4 formas | — |
+| [`FailIfFalse`](../Several/3_BoolToResult.md) | Extensión | 4 formas | — |
 | [`MapEnsure`](../Map/2_MapEnsure.md) | Extensión de `MlResult<T>` | varias | Predicado **diferido** |
 
 🔑 **Criterio práctico:**
@@ -243,7 +243,7 @@ public MlResult<Recibo> Emitir(Pedido pedido, string serie)
 
 // Estilo B: todo fluido con las extensiones de Several
 public MlResult<Recibo> Emitir(Pedido pedido, string serie)
-    => pedido.NullToFailed("El pedido es obligatorio")
+    => pedido.FailIfNull("El pedido es obligatorio")
              .MapEnsure(p => p.Lineas.Any(), "El pedido no tiene líneas")
              .Map(p => Construir(p, serie));
 ```
@@ -277,7 +277,7 @@ Ambos son correctos. Elige uno **y sé consistente en todo el proyecto**.
 | Detenerse en el primer error | `AllOrFirst(dto, reglas…)` |
 | Aceptar si cumple al menos una alternativa | `Any(dto, reglas…)` |
 | Validar **ya dentro** del carril | [`MapEnsure`](../Map/2_MapEnsure.md) |
-| Sintaxis fluida en lugar de estática | [`NullToFailed`](../Several/2_NullToFailed.md), [`BoolToResult`](../Several/3_BoolToResult.md) |
+| Sintaxis fluida en lugar de estática | [`FailIfNull`](../Several/2_FailIfNull.md), [`FailIfFalse`](../Several/3_BoolToResult.md) |
 | Validar con reglas de FluentValidation o DataAnnotations | Paquetes `MoralesLarios.OOFP.Validation.*` |
 
 ---
@@ -363,7 +363,7 @@ if (r.IsFailure)
 // ❌ Llamarlo como método de extensión: no compila
 // var r = cliente.NotNull("El cliente es obligatorio");
 
-// ✅ Prefijo de clase, using static, o usa NullToFailed
+// ✅ Prefijo de clase, using static, o usa FailIfNull
 var r = EnsureFp.NotNull(cliente, "El cliente es obligatorio");
 
 
@@ -478,6 +478,6 @@ EnsureFp.InRangeArg(dto.Edad, 18, 120);
 
 - [Introducción general a la librería](../1_Intro.md)
 - [`MapEnsure` — validar dentro del carril](../Map/2_MapEnsure.md)
-- [`EmptyToFailed`](../Several/1_EmptyToFailed.md) · [`NullToFailed`](../Several/2_NullToFailed.md) · [`BoolToResult`](../Several/3_BoolToResult.md) · [`Combine`](../Several/4_Combine.md)
+- [`FailIfEmpty`](../Several/1_EmptyToFailed.md) · [`FailIfNull`](../Several/2_FailIfNull.md) · [`FailIfFalse`](../Several/3_BoolToResult.md) · [`CombineAll`](../Several/4_Combine.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../Bind/3_Bind.md)
 - [`MlResultErrors` — anatomía de `MlErrorDetails`](../core-types/MlResultErrors.md)

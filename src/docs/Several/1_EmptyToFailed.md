@@ -1,4 +1,4 @@
-# EmptyToFailed — Convertir una colección vacía en un fallo
+# FailIfEmpty — Convertir una colección vacía en un fallo
 
 ## Índice
 
@@ -19,7 +19,7 @@
 
 ## Introducción
 
-`EmptyToFailed` es una **puerta de entrada al carril**: recibe una colección normal
+`FailIfEmpty` es una **puerta de entrada al carril**: recibe una colección normal
 (`IEnumerable<T>`) y devuelve un `MlResult<IEnumerable<T>>` que será:
 
 - **válido** si la colección tiene al menos un elemento, o
@@ -31,9 +31,9 @@ var clientes = _repo.BuscarPorProvincia("Málaga");
 if (clientes is null || !clientes.Any())
     return NotFound("No hay clientes en esa provincia");
 
-// ✅ Con EmptyToFailed: la comprobación entra en el carril y se encadena
+// ✅ Con FailIfEmpty: la comprobación entra en el carril y se encadena
 return _repo.BuscarPorProvincia("Málaga")
-            .EmptyToFailed("No hay clientes en esa provincia")
+            .FailIfEmpty("No hay clientes en esa provincia")
             .Map(cs => cs.Select(c => c.ToDto()))
             .Match(valid: dtos => Ok(dtos),
                    fail : err  => NotFound(err.GetErrorMessages()));
@@ -51,7 +51,7 @@ es una respuesta perfectamente normal del almacenamiento. Pero muchas veces sí 
 pedido, no puedes cerrar el pedido.
 
 El código imperativo resuelve esto con un `if` que se repite en todas las capas y que,
-además, se olvida con facilidad. `EmptyToFailed` convierte ese `if` en un eslabón de la
+además, se olvida con facilidad. `FailIfEmpty` convierte ese `if` en un eslabón de la
 tubería:
 
 | Entrada | Salida |
@@ -60,31 +60,31 @@ tubería:
 | Colección con 0 elementos | `MlResult` **Fail** con tu error |
 | Colección con 1 o más elementos | `MlResult` **Valid** con la misma colección |
 
-Fíjate en que la colección devuelta es **la misma instancia** que entró: `EmptyToFailed`
+Fíjate en que la colección devuelta es **la misma instancia** que entró: `FailIfEmpty`
 no copia, no materializa a lista y no transforma nada.
 
 ---
 
 ## Un detalle importante: no es un operador del carril
 
-🔑 A diferencia de `Map`, `Bind` o `Match`, **`EmptyToFailed` no es una extensión de
+🔑 A diferencia de `Map`, `Bind` o `Match`, **`FailIfEmpty` no es una extensión de
 `MlResult<T>`**: es una extensión de `IEnumerable<T>`.
 
 ```csharp
 // ✅ Correcto: se aplica sobre la colección "desnuda"
 IEnumerable<Factura> facturas = _repo.Pendientes();
-MlResult<IEnumerable<Factura>> resultado = facturas.EmptyToFailed("Sin facturas pendientes")!;
+MlResult<IEnumerable<Factura>> resultado = facturas.FailIfEmpty("Sin facturas pendientes")!;
 
 // ❌ NO compila: el origen ya es un MlResult, no un IEnumerable
 MlResult<IEnumerable<Factura>> yaEnCarril = ObtenerFacturas();
-yaEnCarril.EmptyToFailed("Sin facturas pendientes");   // error de compilación
+yaEnCarril.FailIfEmpty("Sin facturas pendientes");   // error de compilación
 
 // ✅ Si ya estás en el carril, entra con Bind
-yaEnCarril.Bind(fs => fs.EmptyToFailed("Sin facturas pendientes")!);
+yaEnCarril.Bind(fs => fs.FailIfEmpty("Sin facturas pendientes")!);
 ```
 
 Este matiz es la causa de la mayoría de las confusiones con este método: piensa en él
-como en `NullToFailed` o `BoolToResult`, es decir, como en un **constructor de
+como en `FailIfNull` o `FailIfFalse`, es decir, como en un **constructor de
 `MlResult` a partir de un dato del mundo exterior**.
 
 ---
@@ -92,28 +92,28 @@ como en `NullToFailed` o `BoolToResult`, es decir, como en un **constructor de
 ## Firmas reales e implementación
 
 ```csharp
-public static MlResult<IEnumerable<T>>? EmptyToFailed<T>(this IEnumerable<T> items,
+public static MlResult<IEnumerable<T>>? FailIfEmpty<T>(this IEnumerable<T> items,
                                                               MlError        error)
     => (items != null && items.Any())
             ? items.ToMlResultValid()
             : error.ToMlResultFail<IEnumerable<T>>();
 
-public static MlResult<IEnumerable<T>>? EmptyToFailed<T>(this IEnumerable<T>  items,
+public static MlResult<IEnumerable<T>>? FailIfEmpty<T>(this IEnumerable<T>  items,
                                                               MlErrorDetails errorsDetails)
     => (items != null && items.Any())
             ? items.ToMlResultValid()
             : errorsDetails.ToMlResultFail<IEnumerable<T>>();
 
-public static MlResult<IEnumerable<T>>? EmptyToFailed<T>(this IEnumerable<T> items,
+public static MlResult<IEnumerable<T>>? FailIfEmpty<T>(this IEnumerable<T> items,
                                                               string         messageError)
-    => EmptyToFailed(items, MlError.FromErrorMessage(messageError));
+    => FailIfEmpty(items, MlError.FromErrorMessage(messageError));
 ```
 
 Puntos que conviene retener:
 
 | Detalle | Consecuencia práctica |
 |---------|----------------------|
-| La comprobación es `items != null && items.Any()` | Cubre el `null` **y** el vacío en una sola llamada; no necesitas `NullToFailed` antes |
+| La comprobación es `items != null && items.Any()` | Cubre el `null` **y** el vacío en una sola llamada; no necesitas `FailIfNull` antes |
 | El valor válido es `items`, tal cual | No hay copia ni materialización: la pereza de LINQ se conserva |
 | La sobrecarga de `string` delega en la de `MlError` | Un único punto de verdad: no hay divergencias de comportamiento entre sobrecargas |
 | No existe `TryEmptyToFailed` | No hace falta: el método no invoca ningún delegado tuyo, así que no puede lanzar excepciones de usuario |
@@ -126,21 +126,21 @@ Todas las sobrecargas se diferencian **solo** en cómo describes el fallo:
 
 ```csharp
 // 1) string  → el caso habitual, mensaje literal
-var r1 = lineas.EmptyToFailed("El pedido no tiene líneas");
+var r1 = lineas.FailIfEmpty("El pedido no tiene líneas");
 
 // 2) MlError → cuando reutilizas un catálogo de errores
 public static class ErroresPedido
 {
     public static readonly MlError SinLineas = MlError.FromErrorMessage("El pedido no tiene líneas");
 }
-var r2 = lineas.EmptyToFailed(ErroresPedido.SinLineas);
+var r2 = lineas.FailIfEmpty(ErroresPedido.SinLineas);
 
 // 3) MlErrorDetails → cuando quieres varios errores y/o detalles de diagnóstico
 var detalles = MlErrorDetails.FromErrorMessageDetails(
                     "El pedido no tiene líneas",
                     new Dictionary<string, object> { ["PedidoId"] = pedidoId,
                                                      ["Origen"]   = "CierrePedidoService" });
-var r3 = lineas.EmptyToFailed(detalles);
+var r3 = lineas.FailIfEmpty(detalles);
 ```
 
 La tercera forma es la más valiosa en servicios reales: los `Details` viajan con el error
@@ -158,7 +158,7 @@ verás `!` en varias llamadas internas de la propia librería:
 
 ```csharp
 // La librería misma se ve obligada a usar '!'
-MlResult<IEnumerable<T>> seguro = items.EmptyToFailed(error)!;
+MlResult<IEnumerable<T>> seguro = items.FailIfEmpty(error)!;
 ```
 
 Recomendación: encapsula la llamada en un método propio que devuelva el tipo no nullable,
@@ -172,15 +172,15 @@ reenumerable, puedes perder el primer elemento o pagar dos veces la consulta:
 ```csharp
 // ⚠️ Riesgo: la consulta se ejecuta en Any() y otra vez al recorrer el resultado
 var r = _db.Clientes.Where(c => c.Activo)          // IQueryable diferido
-                    .EmptyToFailed("Sin clientes activos");
+                    .FailIfEmpty("Sin clientes activos");
 
 // ✅ Materializa antes de comprobar
 var r = _db.Clientes.Where(c => c.Activo)
                     .ToList()
-                    .EmptyToFailed("Sin clientes activos");
+                    .FailIfEmpty("Sin clientes activos");
 ```
 
-**3. La sobrecarga `EmptyToFailedAsync<T>(this IEnumerable<T>, string)` no es realmente
+**3. La sobrecarga `FailIfEmptyAsync<T>(this IEnumerable<T>, string)` no es realmente
 asíncrona.** Se limita a envolver el resultado con `.ToAsync()` (`Task.FromResult`).
 Existe solo para poder encadenar sin romper la cadena `await`; no aporta paralelismo.
 
@@ -192,12 +192,12 @@ Hay dos grupos, según **de dónde venga la colección**:
 
 | Origen | Error como… | Firma | Naturaleza |
 |--------|-------------|-------|-----------|
-| `IEnumerable<T>` | `MlError` | `EmptyToFailedAsync<T>(this IEnumerable<T>, MlError)` | Envoltura (`ToAsync()`) |
-| `IEnumerable<T>` | `MlErrorDetails` | `EmptyToFailedAsync<T>(this IEnumerable<T>, MlErrorDetails)` | Envoltura |
-| `IEnumerable<T>` | `string` | `EmptyToFailedAsync<T>(this IEnumerable<T>, string)` | Envoltura |
-| `Task<IEnumerable<T>>` | `MlError` | `EmptyToFailedAsync<T>(this Task<IEnumerable<T>>, MlError)` | **Espera el origen** |
-| `Task<IEnumerable<T>>` | `MlErrorDetails` | `EmptyToFailedAsync<T>(this Task<IEnumerable<T>>, MlErrorDetails)` | **Espera el origen** |
-| `Task<IEnumerable<T>>` | `string` | `EmptyToFailedAsync<T>(this Task<IEnumerable<T>>, string)` | **Espera el origen** |
+| `IEnumerable<T>` | `MlError` | `FailIfEmptyAsync<T>(this IEnumerable<T>, MlError)` | Envoltura (`ToAsync()`) |
+| `IEnumerable<T>` | `MlErrorDetails` | `FailIfEmptyAsync<T>(this IEnumerable<T>, MlErrorDetails)` | Envoltura |
+| `IEnumerable<T>` | `string` | `FailIfEmptyAsync<T>(this IEnumerable<T>, string)` | Envoltura |
+| `Task<IEnumerable<T>>` | `MlError` | `FailIfEmptyAsync<T>(this Task<IEnumerable<T>>, MlError)` | **Espera el origen** |
+| `Task<IEnumerable<T>>` | `MlErrorDetails` | `FailIfEmptyAsync<T>(this Task<IEnumerable<T>>, MlErrorDetails)` | **Espera el origen** |
+| `Task<IEnumerable<T>>` | `string` | `FailIfEmptyAsync<T>(this Task<IEnumerable<T>>, string)` | **Espera el origen** |
 
 Las tres últimas son las verdaderamente útiles, porque te permiten enlazar directamente
 con un repositorio asíncrono sin `await` intermedio:
@@ -205,11 +205,11 @@ con un repositorio asíncrono sin `await` intermedio:
 ```csharp
 // Sin variante asíncrona: hay que romper la expresión
 var pedidos = await _repo.PendientesAsync(clienteId);
-var resultado = pedidos.EmptyToFailed("Sin pedidos pendientes")!;
+var resultado = pedidos.FailIfEmpty("Sin pedidos pendientes")!;
 
 // Con variante asíncrona: una sola expresión encadenable
 var resultado = await _repo.PendientesAsync(clienteId)
-                           .EmptyToFailedAsync("Sin pedidos pendientes")!;
+                           .FailIfEmptyAsync("Sin pedidos pendientes")!;
 ```
 
 ---
@@ -218,16 +218,16 @@ var resultado = await _repo.PendientesAsync(clienteId)
 
 | Necesito… | Uso |
 |-----------|-----|
-| Fallar si la colección viene vacía o `null` | `EmptyToFailed(...)` |
-| Fallar si un objeto individual es `null` | [`NullToFailed`](2_NullToFailed.md) |
-| Fallar según una condición booleana arbitraria | [`BoolToResult`](3_BoolToResult.md) |
+| Fallar si la colección viene vacía o `null` | `FailIfEmpty(...)` |
+| Fallar si un objeto individual es `null` | [`FailIfNull`](2_FailIfNull.md) |
+| Fallar según una condición booleana arbitraria | [`FailIfFalse`](3_BoolToResult.md) |
 | Validar el contenido, no la cantidad | [`MapEnsure`](../Map/2_MapEnsure.md) |
-| Comprobar el vacío cuando ya estoy en el carril | `.Bind(items => items.EmptyToFailed("...")!)` |
+| Comprobar el vacío cuando ya estoy en el carril | `.Bind(items => items.FailIfEmpty("...")!)` |
 | Comprobar el vacío sin salir del carril y sin cambiar el tipo | `.MapEnsure(items => items.Any(), "...")` |
-| Partir de una colección que llega en un `Task` | `EmptyToFailedAsync` (sobrecargas de `Task<IEnumerable<T>>`) |
+| Partir de una colección que llega en un `Task` | `FailIfEmptyAsync` (sobrecargas de `Task<IEnumerable<T>>`) |
 
-💡 **`EmptyToFailed` frente a `MapEnsure`**: si la colección viene de fuera del carril,
-usa `EmptyToFailed` (es un constructor). Si ya está dentro de un `MlResult`, prefiere
+💡 **`FailIfEmpty` frente a `MapEnsure`**: si la colección viene de fuera del carril,
+usa `FailIfEmpty` (es un constructor). Si ya está dentro de un `MlResult`, prefiere
 `MapEnsure(items => items.Any(), "...")`, que es más idiomático y no obliga a `Bind` ni a `!`.
 
 ---
@@ -245,14 +245,14 @@ public class CierrePedidoService
     public async Task<MlResult<PedidoCerrado>> CerrarAsync(int pedidoId)
         => await EnsureFp.That(pedidoId, pedidoId > 0, "El identificador de pedido debe ser positivo")
                          .BindAsync(id => _repo.ObtenerLineasAsync(id)
-                                               .EmptyToFailedAsync(
+                                               .FailIfEmptyAsync(
                                                    MlErrorDetails.FromErrorMessageDetails(
                                                        "No se puede cerrar un pedido sin líneas",
                                                        new Dictionary<string, object> { ["PedidoId"] = id }))!)
                          .BindAsync(async lineas =>
                          {
                              var tarifas = await _tarifas.ActivasAsync();
-                             return tarifas.EmptyToFailed("No hay tarifas activas: no se puede valorar el pedido")!
+                             return tarifas.FailIfEmpty("No hay tarifas activas: no se puede valorar el pedido")!
                                            .Map(ts => (Lineas: lineas, Tarifas: ts));
                          })
                          .MapAsync(par => new PedidoCerrado(pedidoId,
@@ -270,7 +270,7 @@ Dos comprobaciones de vacío, dos motivos de negocio distintos y ninguna sentenc
 public async Task<IActionResult> Buscar(string provincia)
     => await EnsureFp.NotNullEmptyOrWhitespace(provincia, "Debe indicar una provincia")
                      .BindAsync(p => _repo.BuscarPorProvinciaAsync(p)
-                                          .EmptyToFailedAsync(
+                                          .FailIfEmptyAsync(
                                               MlErrorDetails.FromErrorMessageDetails(
                                                   "No hay clientes en la provincia indicada",
                                                   new Dictionary<string, object> { ["NoEncontrado"] = true }))!)
@@ -293,8 +293,8 @@ public async Task<MlResult<InformeImportacion>> ImportarAsync(string ruta)
     // El fichero DEBE traer filas: si no, es un error
     var filas = await LeerCsvAsync(ruta);
 
-    return await filas.EmptyToFailed($"El fichero '{ruta}' no contiene filas de datos")!
-                      .BindAsync(fs => fs.ProjectionAsync(ValidarFilaAsync))     // acumula errores por fila
+    return await filas.FailIfEmpty($"El fichero '{ruta}' no contiene filas de datos")!
+                      .BindAsync(fs => fs.TraverseAsync(ValidarFilaAsync))     // acumula errores por fila
                       .BindAsync(validas =>
                       {
                           // Aquí el vacío SÍ se tolera: puede que todas las filas fueran duplicados
@@ -306,7 +306,7 @@ public async Task<MlResult<InformeImportacion>> ImportarAsync(string ruta)
 }
 ```
 
-Regla de oro: usa `EmptyToFailed` **solo** cuando el vacío impida continuar. Si el vacío
+Regla de oro: usa `FailIfEmpty` **solo** cuando el vacío impida continuar. Si el vacío
 es un resultado legítimo, no lo conviertas en fallo.
 
 ### Ejemplo 4: reutilizar un catálogo de errores
@@ -324,8 +324,8 @@ public static class ErroresCatalogo
 }
 
 // Uso: mensajes consistentes en toda la aplicación
-var tarifas   = (await _tarifas.ActivasAsync()).EmptyToFailed(ErroresCatalogo.SinTarifas)!;
-var almacenes = (await _almacenes.OperativosAsync()).EmptyToFailed(ErroresCatalogo.SinAlmacenes)!;
+var tarifas   = (await _tarifas.ActivasAsync()).FailIfEmpty(ErroresCatalogo.SinTarifas)!;
+var almacenes = (await _almacenes.OperativosAsync()).FailIfEmpty(ErroresCatalogo.SinAlmacenes)!;
 
 // Y al reportar, los detalles vienen incluidos
 tarifas.ExecSelfIfFail(err => _log.LogWarning("{Desc}", err.GetMetadataSummary()));
@@ -336,19 +336,19 @@ tarifas.ExecSelfIfFail(err => _log.LogWarning("{Desc}", err.GetMetadataSummary()
 ```csharp
 // ❌ Enumerar dos veces una fuente diferida
 var r = ConsultaCostosaDiferida()
-            .EmptyToFailed("Sin datos");     // Any() ejecuta la consulta…
+            .FailIfEmpty("Sin datos");     // Any() ejecuta la consulta…
 var lista = r.Match(valid: x => x.ToList(), fail: _ => new List<T>());  // …y aquí otra vez
 
 // ✅ Materializar una sola vez
 var datos = ConsultaCostosaDiferida().ToList();
-var r     = datos.EmptyToFailed("Sin datos")!;
+var r     = datos.FailIfEmpty("Sin datos")!;
 
 
-// ❌ Comprobar el null "por si acaso" antes de EmptyToFailed
-var r = (items ?? Enumerable.Empty<Cliente>()).EmptyToFailed("Sin clientes");
+// ❌ Comprobar el null "por si acaso" antes de FailIfEmpty
+var r = (items ?? Enumerable.Empty<Cliente>()).FailIfEmpty("Sin clientes");
 
-// ✅ EmptyToFailed ya cubre el null
-var r = items.EmptyToFailed("Sin clientes")!;
+// ✅ FailIfEmpty ya cubre el null
+var r = items.FailIfEmpty("Sin clientes")!;
 
 
 // ❌ Acceder al valor directamente
@@ -362,7 +362,7 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
 
 ## Mejores Prácticas
 
-1. **Usa `EmptyToFailed` solo cuando el vacío bloquee el proceso.** Una lista vacía
+1. **Usa `FailIfEmpty` solo cuando el vacío bloquee el proceso.** Una lista vacía
    devuelta a un listado de UI es una respuesta válida, no un error.
 2. **Materializa las fuentes diferidas** (`ToList()`, `ToArray()`) antes de llamarlo, para
    evitar enumerar dos veces la consulta.
@@ -371,20 +371,20 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
 4. **Centraliza los errores frecuentes** en una clase estática de catálogo, como en el
    ejemplo 4, para mantener mensajes y códigos consistentes.
 5. **Si ya estás en el carril, usa `MapEnsure(items => items.Any(), "...")`** en lugar de
-   `Bind(... EmptyToFailed ...)`: es más corto y no necesita el operador `!`.
+   `Bind(... FailIfEmpty ...)`: es más corto y no necesita el operador `!`.
 6. **Añade `!` de forma sistemática** o encapsula la llamada, para convivir con la
    anotación nullable del tipo de retorno.
 7. **Usa las sobrecargas de `Task<IEnumerable<T>>`** para enlazar con repositorios
    asíncronos sin romper la expresión.
 8. **Escribe mensajes que expliquen la consecuencia**, no solo el hecho: en vez de
    "lista vacía", escribe "no se puede cerrar un pedido sin líneas".
-9. **No lo combines con `NullToFailed`**: la comprobación de `null` ya está incluida.
+9. **No lo combines con `FailIfNull`**: la comprobación de `null` ya está incluida.
 
 ---
 
 ## Resumen
 
-- `EmptyToFailed` transforma un `IEnumerable<T>` en `MlResult<IEnumerable<T>>`: **Fail** si
+- `FailIfEmpty` transforma un `IEnumerable<T>` en `MlResult<IEnumerable<T>>`: **Fail** si
   es `null` o está vacío, **Valid** con la misma colección en caso contrario.
 - Es un **constructor de `MlResult`**, extensión de `IEnumerable<T>`, no un operador del
   carril: para usarlo dentro de una tubería necesitas `Bind`.
@@ -400,11 +400,11 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
 
 ## Ver también
 
-- [`NullToFailed`](2_NullToFailed.md) — el equivalente para objetos individuales
-- [`BoolToResult`](3_BoolToResult.md) — construir un `MlResult` a partir de una condición
-- [`Combine`](4_Combine.md) — fusionar varios `MlResult`
+- [`FailIfNull`](2_FailIfNull.md) — el equivalente para objetos individuales
+- [`FailIfFalse`](3_BoolToResult.md) — construir un `MlResult` a partir de una condición
+- [`CombineAll`](4_Combine.md) — fusionar varios `MlResult`
 - [`MapEnsure`](../Map/2_MapEnsure.md) — validar sin salir del carril
 - [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que devuelven `MlResult`
-- [`Bucles y proyecciones`](../loops/Bucles.md) — recorrer colecciones dentro del carril
+- [`Bucles y proyecciones`](../loops/Collections.md) — recorrer colecciones dentro del carril
 - [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y sus fábricas
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — validaciones de entrada al carril

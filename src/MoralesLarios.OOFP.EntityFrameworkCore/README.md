@@ -70,7 +70,7 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 
 | Problema | Cómo lo resuelve |
 |---|---|
-| `Find` devuelve `null` | `NullToFailed` lo convierte en `Fail` con mensaje |
+| `Find` devuelve `null` | `FailIfNull` lo convierte en `Fail` con mensaje |
 | Cualquier operación lanza | Todo va dentro de `TryMap` / `TryBind` |
 | Argumentos nulos o vacíos | `EnsureFp.NotNull` / `EnsureFp.NotEmpty` antes de tocar la BD |
 | No se compone | El `MlResult` encadena con `Map`, `Bind`, `Match`… |
@@ -82,7 +82,7 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 | Dependencia | Versión | Para qué |
 |---|---|---|
 | `Microsoft.EntityFrameworkCore` | 8.0.3 | `DbContext`, `DbSet<T>`, `ToListAsync` |
-| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `EnsureFp`, `TryMap`, `NullToFailed` |
+| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `EnsureFp`, `TryMap`, `FailIfNull` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | `PaginationInfo`, `PaginationResultInfo<T>` |
 | [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | — | `IntNotNegative` (conversiones de paginación) |
 
@@ -139,7 +139,7 @@ Tu servicio
      ▼
 IEFRepoReaderFp<T>          🟢 pública — devuelve MlResult<T>
   EFRepoReaderFp<T, TContext>
-     │  valida con EnsureFp, envuelve en TryMap, NullToFailed
+     │  valida con EnsureFp, envuelve en TryMap, FailIfNull
      ▼
 IEFRepoReader<T>            🔒 internal — devuelve T (puede ser null, puede lanzar)
   EFRepoReader<T, TContext>
@@ -316,7 +316,7 @@ public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params o
     => EnsureFp.NotNull(pk, "The object array pk cannot be null")
                .TryMap (x => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
                .TryMap (x => _repoReader!.Find(pk))
-               .TryBind(x => x.NullToFailed(notFoundErrorDetails));   // 🔑 null → Fail
+               .TryBind(x => x.FailIfNull(notFoundErrorDetails));   // 🔑 null → Fail
 ```
 
 **Claves para PK compuestas**: el `params object[]` acepta varias claves en el orden declarado en `HasKey`.

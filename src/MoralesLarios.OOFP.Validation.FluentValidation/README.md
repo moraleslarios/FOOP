@@ -386,7 +386,7 @@ RuleFor(x => x.Email).NotEmpty().WithMessage("El campo {PropertyName} es obligat
 
 ### Ejemplo 3 — Validar una colección acumulando todos los errores
 
-Las extensiones solo trabajan con un objeto. Para una colección, combina con [`MergeErrorsIfExists`](../docs/loops/Bucles.md):
+Las extensiones solo trabajan con un objeto. Para una colección, combina con [`MergeErrorsIfExists`](../docs/loops/Collections.md):
 
 ```csharp
 public static MlResult<IEnumerable<FilaCsv>> ValidarFichero(List<FilaCsv> filas)
@@ -603,4 +603,4 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` y `TryMap` — transformar el valor válido](../docs/Map/1_Map.md)
 - [`Match` — convertir el resultado en respuesta](../docs/Match/1_Match.md)
-- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Collections.md)

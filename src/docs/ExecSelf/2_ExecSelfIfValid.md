@@ -271,5 +271,5 @@ mecanismos previstos para trabajar con el valor de forma segura; los otros son `
 - [`4_ExecSelfIfFailWithValue.md`](4_ExecSelfIfFailWithValue.md) — recuperar el valor adjunto al fallo.
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — fallos con excepción.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — fallos de negocio puros.
-- [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia completa con el recuento de sobrecargas.
+- [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md) — referencia completa con el recuento de sobrecargas.
 - [`../Map/1_Map.md`](../Map/1_Map.md) y [`../Bind/3_Bind.md`](../Bind/3_Bind.md) — cuando sí quieres transformar.

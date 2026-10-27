@@ -19,7 +19,7 @@ Se declara como `partial record`, por lo que la comparación e impresión son es
 | `ErrorsDetails` | `MlErrorDetails` | **`internal protected`**. No accesible desde código consumidor. |
 | `ToString()` | `string` | Si es válido, `Value?.ToString()` (o `"Not right value"` si es `null`); si es fallido, la descripción de los errores. |
 
-> ⚠️ **`Value` y `ErrorsDetails` son `internal protected` a propósito.** Nunca los leas directamente: usa [`Match`](MlResultActionsMatch.md) para materializar el resultado, o `GetValueOrThrow` ([`MlResultActions`](MlResultActions.md)) si ya has verificado que es válido.
+> ⚠️ **`Value` y `ErrorsDetails` son `internal protected` a propósito.** Nunca los leas directamente: usa [`Match`](MlResultMatchExtensions.md) para materializar el resultado, o `GetValueOrThrow` ([`MlResultExtensions`](MlResultExtensions.md)) si ya has verificado que es válido.
 
 ---
 
@@ -126,7 +126,7 @@ El flujo típico es: **construir → encadenar → materializar**.
 public async Task<IActionResult> GetCustomer(int id)
     => await EnsureFp.That(id, id > 0, "El identificador debe ser mayor que cero")   // precondición
                      .BindAsync(validId => repository.FindAsync(validId))            // acceso a datos
-                     .BindAsync(customer => customer.NullToFailed($"No existe el cliente {id}"))
+                     .BindAsync(customer => customer.FailIfNull($"No existe el cliente {id}"))
                      .MapAsync(customer => mapper.Map<CustomerDto>(customer))        // proyección a DTO
                      .ExecSelfIfFailAsync(errors => logger.LogWarning(errors.GetErrorsSummary()))
                      .MatchAsync(                                                    // salida al mundo real
@@ -148,11 +148,11 @@ Puntos clave del ejemplo:
 
 | Necesitas... | Usa |
 |---|---|
-| Encadenar operaciones que devuelven `MlResult` | [`Bind`](MlResultActionsBind.md) |
-| Transformar el valor con una función normal | [`Map`](MlResultActionsMap.md) |
-| Obtener un valor final (HTTP response, DTO, string) | [`Match`](MlResultActionsMatch.md) |
-| Loguear/auditar sin romper la cadena | [`ExecSelf`](MlResultActionsExecSelf.md) |
-| Validar nulos, vacíos, booleanos o combinar resultados | [`Several`](MlResultActionsSeveral.md) |
-| Recorrer colecciones | [`MlResultBucles`](MlResultBucles.md) |
-| Envolver código que lanza excepciones | [`MlResultTransformations`](MlResultTransformations.md) |
-| Leer la excepción o el valor guardado en un fallo | [`MlResultActionsErrorsDetails`](MlResultActionsErrorsDetails.md) |
+| Encadenar operaciones que devuelven `MlResult` | [`Bind`](MlResultBindExtensions.md) |
+| Transformar el valor con una función normal | [`Map`](MlResultMapExtensions.md) |
+| Obtener un valor final (HTTP response, DTO, string) | [`Match`](MlResultMatchExtensions.md) |
+| Loguear/auditar sin romper la cadena | [`ExecSelf`](MlResultExecSelfExtensions.md) |
+| Validar nulos, vacíos, booleanos o combinar resultados | [`Several`](MlResultSeveralExtensions.md) |
+| Recorrer colecciones | [`MlResultCollections`](MlResultCollections.md) |
+| Envolver código que lanza excepciones | [`MlResultConversions`](MlResultConversions.md) |
+| Leer la excepción o el valor guardado en un fallo | [`MlResultErrorDetailsExtensions`](MlResultErrorDetailsExtensions.md) |

@@ -435,5 +435,5 @@ var f = r.TryMapIf(cond, fT, fF, "msg");
 - [`4_MapIfFail.md`](4_MapIfFail.md) — transformar en la rama de fallo.
 - [`8_MapAlways.md`](8_MapAlways.md) — transformar sea válido o fallido.
 - [`../Bind/5_BindIf.md`](../Bind/5_BindIf.md) — bifurcar hacia operaciones que pueden fallar.
-- [`../Types/MlResultTransformations.md`](../core-types/MlResultTransformations.md) — cómo funciona `TryToMlResult`.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la clase.
+- [`../Types/MlResultConversions.md`](../core-types/MlResultConversions.md) — cómo funciona `TryToMlResult`.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la clase.

@@ -156,7 +156,7 @@ public class HttpClientFactoryManager(IHttpClientFactory                _httpCli
         var result = await MlResult.EmptyAsync()
                                     .BindAsync           ( _       => new HttpRequestMessage(HttpMethod.Delete, url).SetHeadersAsync(headers ?? []))
                                     .TryBindAsync        (request  => _httpClientFactory.CreateClient(httpClientFactoryKey)
-                                                                                            .Combine(request))
+                                                                                            .CombineAll(request))
                                     .ExecSelfIfValidAsync(tuple    => _logger.LogMlResultInformationAsync($"Haciendo Delete a la url {Path.Combine(tuple.Item1.BaseAddress?.ToString() ?? string.Empty, url ?? string.Empty)}"))
                                     .TryMapAsync         (tuple    => tuple.Item1.SendAsync(tuple.Item2, ct))
                                     .BindAsync           (response => response.IsSuccessStatusCode

@@ -12,7 +12,7 @@ public class ExistsFileTests
     //[Fact]
     //public void ByString_existvalue_return_valid()
     //{
-    //    string pathStr = Path.Combine(AppContext.BaseDirectory,
+    //    string pathStr = Path.CombineAll(AppContext.BaseDirectory,
     //                                    "FakeFiles",
     //                                    "TextFile1.txt");
 

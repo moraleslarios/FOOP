@@ -329,7 +329,7 @@ Reintentar «saldo insuficiente» es inútil; reintentar un *timeout* tiene sent
 ### 6. Limita la cascada
 
 Tres *fallbacks* encadenados ya son un olor a diseño: probablemente necesitas una estrategia explícita
-(patrón *chain of responsibility* o una lista de proveedores recorrida con `Projection`).
+(patrón *chain of responsibility* o una lista de proveedores recorrida con `Traverse`).
 
 ---
 
@@ -357,5 +357,5 @@ Tres *fallbacks* encadenados ya son un olor a diseño: probablemente necesitas u
 - [`10_BindAlways.md`](10_BindAlways.md) — ejecutar algo con independencia del estado.
 - [`../Map/4_MapIfFail.md`](../Map/4_MapIfFail.md) — valor por defecto sin posibilidad de fallo.
 - [`../ExecSelf/3_ExecSelfIfFail.md`](../ExecSelf/3_ExecSelfIfFail.md) — observar el fallo sin alterarlo.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `MergeErrorsDetailsIfFail` y compañía.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException`, `MergeErrorsDetailsIfFail` y compañía.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir de `MlResult` hacia cualquier tipo.

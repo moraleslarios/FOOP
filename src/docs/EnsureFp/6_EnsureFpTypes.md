@@ -394,4 +394,4 @@ public MlResult<PedidoConfirmado> Validar(PedidoConfirmado evento) =>
 - [4. Números y rangos](4_EnsureFpNumbers.md)
 - [7. Tipos `Nullable<T>`](7_EnsureFpNullables.md)
 - [9. Mensajes y claves de detalle](9_EnsureFpMessages.md)
-- [`NullToFailed`](../Several/2_NullToFailed.md) — alternativa por extensión para nulos
+- [`FailIfNull`](../Several/2_FailIfNull.md) — alternativa por extensión para nulos

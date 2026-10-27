@@ -105,7 +105,7 @@ Se lee de un tirón:
 La cadena de llamadas es la siguiente:
 
 ```csharp
-// MlResultActions.cs
+// MlResultExtensions.cs
 public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, object errorValue)
     => source.AddMlErrorDetailIfFail(ValueMetadataKey, errorValue);
 
@@ -436,7 +436,7 @@ ObtenerExpediente(id)
 - [`7_BindIfFailWithValue.md`](7_BindIfFailWithValue.md) — recoger el valor guardado para recuperarse.
 - [`8_BindIfFailWithException.md`](8_BindIfFailWithException.md) — recuperarse según la excepción de `Details["Ex"]`.
 - [`10_BindAlways.md`](10_BindAlways.md) — el punto de convergencia del *pipeline*.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetMetadataValue<T>`, `GetException`.
-- [`../Types/MlResultActions.md`](../core-types/MlResultActions.md) — `AddValueDetailIfFail`, `AddMlErrorDetailIfFail`.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `AddValueIfFail`, `GetMetadataValue<T>`, `GetException`.
+- [`../Types/MlResultExtensions.md`](../core-types/MlResultExtensions.md) — `AddValueDetailIfFail`, `AddMlErrorDetailIfFail`.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la estructura real de `MlErrorDetails`.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — observar el valor guardado sin alterar el resultado.

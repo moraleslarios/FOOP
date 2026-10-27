@@ -564,4 +564,4 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 - [`TryMap` — capturar excepciones en el raíl](../docs/Map/1_Map.md) 🔑 imprescindible aquí
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`EnsureFp` — validaciones de guarda](../docs/EnsureFp/EnsureFp.md)
-- [`MergeErrorsIfExists` — procesar colecciones acumulando errores](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` — procesar colecciones acumulando errores](../docs/loops/Collections.md)

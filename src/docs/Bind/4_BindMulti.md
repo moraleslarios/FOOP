@@ -65,7 +65,7 @@ Los tres pasos, en orden:
 1. **Si `source` es fallido**, no se ejecuta nada y los errores se propagan tal cual.
 2. **Si es válido**, se ejecutan **todas** las funciones de `funcs` sobre el mismo `value`
    (`funcs.Select(func => func(value)).ToList()` — el `ToList()` fuerza la evaluación completa).
-3. Si **alguna** falló, se llama a [`MergeFailureErrors()`](../core-types/MlResultBucles.md) para reunir todos
+3. Si **alguna** falló, se llama a [`MergeFailureErrors()`](../core-types/MlResultCollections.md) para reunir todos
    los errores en uno solo. Si **ninguna** falló, se ejecuta `returnFunc(value)`.
 
 | Estado de entrada | Resultado de `funcs` | ¿Se ejecuta `returnFunc`? | Resultado final |
@@ -334,8 +334,8 @@ ensuciar cada validador.
 
 - [`3_Bind.md`](3_Bind.md) — el encadenamiento con cortocircuito.
 - [`5_BindIf.md`](5_BindIf.md) — ejecución condicional de un único paso.
-- [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md) — `MergeFailureErrors` y `MergeErrorsIfExists`, la fusión de errores en detalle.
+- [`../Types/MlResultCollections.md`](../core-types/MlResultCollections.md) — `MergeFailureErrors` y `MergeErrorsIfExists`, la fusión de errores en detalle.
 - [`../Several/4_Combine.md`](../Several/4_Combine.md) — combinar varios resultados en una tupla.
-- [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — referencia con todas las sobrecargas.
+- [`../Types/MlResultBindExtensions.md`](../core-types/MlResultBindExtensions.md) — referencia con todas las sobrecargas.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — construir validaciones concisas.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — traducir el resultado acumulado a una respuesta HTTP.

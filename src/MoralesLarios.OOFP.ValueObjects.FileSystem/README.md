@@ -410,7 +410,7 @@ public static MlResult<MlFile> ProcesarInforme(string rutaOrigen, string carpeta
             Directory.CreateDirectory(x.destino);
 
             var contenido = File.ReadAllText(x.origen);
-            var salida    = MlFile.FromString(Path.Combine(x.destino, $"procesado_{Path.GetFileName(x.origen)}"));
+            var salida    = MlFile.FromString(Path.CombineAll(x.destino, $"procesado_{Path.GetFileName(x.origen)}"));
 
             File.WriteAllText(salida, contenido.ToUpperInvariant());
 
@@ -419,7 +419,7 @@ public static MlResult<MlFile> ProcesarInforme(string rutaOrigen, string carpeta
         ex => $"Error procesando el informe: {ex.Message}");
 ```
 
-> 💡 `Path.Combine`, `Path.GetFileName` y `File.ReadAllText` reciben los VO **sin cast explícito**, gracias a la conversión implícita a `string`.
+> 💡 `Path.CombineAll`, `Path.GetFileName` y `File.ReadAllText` reciben los VO **sin cast explícito**, gracias a la conversión implícita a `string`.
 
 ### Ejemplo 3 — Separar error de formato de error de existencia
 

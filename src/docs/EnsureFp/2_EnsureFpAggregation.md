@@ -193,7 +193,7 @@ public Task<MlResult<UsuarioDto>> ValidarAsync(UsuarioDto dto) =>
 ```
 
 Si necesitas paralelismo real sobre una colección, usa
-[`ProjectionParallelAsync`](../loops/Bucles.md) en lugar de esta familia.
+[`ProjectionParallelAsync`](../loops/Collections.md) en lugar de esta familia.
 
 ---
 
@@ -237,13 +237,13 @@ restricciones se satisface trivialmente.
 | Cortar antes de una regla costosa o dependiente | `AllOrFirst` |
 | Aceptar el valor si encaja con **alguno** de varios formatos | `Any` |
 | Lo mismo, con reglas que consultan base de datos | `AllAsync` / `AllOrFirstAsync` / `AnyAsync` |
-| Validar **cada elemento** de una colección | [`Bucles`](../loops/Bucles.md) (`Projection*`) |
+| Validar **cada elemento** de una colección | [`Bucles`](../loops/Collections.md) (`Traverse*`) |
 | Validar reglas encadenadas donde cada paso transforma el valor | [`Bind`](../Bind/3_Bind.md) |
 
 > ℹ️ Comparación con [`BindMulti`](../Bind/4_BindMulti.md): `BindMulti` acumula errores de varias
 > funciones que pueden devolver **tipos distintos** dentro de una cadena ya iniciada. `All` opera
 > sobre **un mismo valor y un mismo tipo** y es el punto de entrada natural desde un DTO.
-> Y a diferencia de [`Combine`](../Several/4_Combine.md), esta familia **sí** acumula errores.
+> Y a diferencia de [`CombineAll`](../Several/4_Combine.md), esta familia **sí** acumula errores.
 
 ---
 
@@ -330,7 +330,7 @@ public async Task<MlResult<Pedido>> ProcesarAsync(Pedido pedido) =>
    entenderse por sí solo.
 6. **Con una sola regla no uses `All`**: llama directamente a la regla.
 7. **Las variantes asíncronas son secuenciales.** No las uses para paralelizar; para eso está
-   [`ProjectionParallelAsync`](../loops/Bucles.md).
+   [`ProjectionParallelAsync`](../loops/Collections.md).
 8. **`Any` necesita mensajes que expliquen alternativas**, no que afirmen un único fallo
    («No es un DNI válido» + «No es un NIE válido» se lee bien; «Dato incorrecto» ×3 no).
 
@@ -342,6 +342,6 @@ public async Task<MlResult<Pedido>> ProcesarAsync(Pedido pedido) =>
 - [1. Núcleo: `That`, `TryThat`, `*Arg`](1_EnsureFpCore.md)
 - [8. Variantes asíncronas](8_EnsureFpAsync.md)
 - [`BindMulti`](../Bind/4_BindMulti.md) — acumular errores con tipos distintos
-- [`Combine`](../Several/4_Combine.md) — ⚠️ **no** acumula errores
-- [`Bucles`](../loops/Bucles.md) — validar elemento a elemento
-- [Modelo de errores](../core-types/MlResultErrors.md) · [`Details`](../core-types/MlResultActionsErrorsDetails.md)
+- [`CombineAll`](../Several/4_Combine.md) — ⚠️ **no** acumula errores
+- [`Bucles`](../loops/Collections.md) — validar elemento a elemento
+- [Modelo de errores](../core-types/MlResultErrors.md) · [`Details`](../core-types/MlResultErrorDetailsExtensions.md)

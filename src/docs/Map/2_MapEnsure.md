@@ -399,4 +399,4 @@ public async Task<IActionResult> ConfirmarAsync(int id)
 - [`../Bind/4_BindMulti.md`](../Bind/4_BindMulti.md) — acumular todos los errores de validación.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — entrar en el mundo `MlResult` validando.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — construir `MlErrorDetails` con detalles.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la clase.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la clase.

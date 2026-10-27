@@ -75,16 +75,16 @@ MoralesLarios.OOFP/
 │       └── ParallelExtensions.cs     # Extensiones paralelas
 ├── Types/                            # Tipos principales
 │   ├── MlResult.cs                   # Tipo resultado principal
-│   ├── MlResultActions.cs            # Extensiones transversales (enriquecer, completar, acceso seguro)
-│   ├── MlResultActionsBind.cs        # Operaciones Bind (+ TryBindBuild)
-│   ├── MlResultActionsErrorsDetails.cs # Lectura/escritura/fusión de los Details del error
-│   ├── MlResultActionsExecSelf.cs    # Operaciones ExecSelf (efectos secundarios)
-│   ├── MlResultActionsMap.cs         # Operaciones Map
-│   ├── MlResultActionsMatch.cs       # Operaciones Match (salida del MlResult)
-│   ├── MlResultActionsSeveral.cs     # Combine, NullToFailed, BoolToResult, EmptyToFailed, Do
-│   ├── MlResultBucles.cs             # Proyecciones sobre colecciones
+│   ├── MlResultExtensions.cs            # Extensiones transversales (enriquecer, completar, acceso seguro)
+│   ├── MlResultBindExtensions.cs        # Operaciones Bind (+ TryBindBuild)
+│   ├── MlResultErrorDetailsExtensions.cs # Lectura/escritura/fusión de los Details del error
+│   ├── MlResultExecSelfExtensions.cs    # Operaciones ExecSelf (efectos secundarios)
+│   ├── MlResultMapExtensions.cs         # Operaciones Map
+│   ├── MlResultMatchExtensions.cs       # Operaciones Match (salida del MlResult)
+│   ├── MlResultSeveralExtensions.cs     # Combine, FailIfNull, FailIfFalse, FailIfEmpty, Do
+│   ├── MlResultCollections.cs             # Proyecciones sobre colecciones
 │   ├── MlResultChangeReturnResult.cs # Cambio del tipo de retorno
-│   ├── MlResultTransformations.cs    # Frontera con el código imperativo (ToMlResult*, TryToMlResult*)
+│   ├── MlResultConversions.cs    # Frontera con el código imperativo (ToMlResult*, TryToMlResult*)
 │   └── Errors/                       # Gestión de errores
 │       ├── ErrorMessage.cs           # record ErrorMessage(string Message)
 │       ├── MlError.cs                # Error base
@@ -97,7 +97,7 @@ MoralesLarios.OOFP/
     ├── Map/                          # Detalle de la familia Map
     ├── Match/                        # Detalle de la familia Match
     ├── ExecSelf/                     # Detalle de la familia ExecSelf
-    ├── Several/                      # Combine, NullToFailed, BoolToResult, EmptyToFailed
+    ├── Several/                      # Combine, FailIfNull, FailIfFalse, FailIfEmpty
     ├── Bucle/                        # Proyecciones sobre colecciones
     ├── EnsureFp/                     # Precondiciones funcionales (10 documentos)
     ├── Extensions/                   # Extensiones auxiliares
@@ -110,7 +110,7 @@ MoralesLarios.OOFP/
 Cada archivo tiene una responsabilidad específica:
 
 - **MlResult.cs**: Define la estructura base del tipo resultado
-- **MlResultActions*.cs**: Cada archivo implementa un conjunto específico de operaciones
+- **MlResultExtensions*.cs**: Cada archivo implementa un conjunto específico de operaciones
 - **Errors/**: Manejo completo del sistema de errores
 - **Helpers/**: Utilidades transversales
 
@@ -141,7 +141,7 @@ Tres detalles importantes:
 2. **Las propiedades de estado son `IsSuccess` e `IsFailure`** (no `IsSuccess` / `IsFailure`).
 3. **`Value` y `ErrorsDetails` son `internal protected`**: no son accesibles desde tu código. Es
    deliberado y es la clave de la librería: te obliga a pasar por
-   [`Match`](core-types/MlResultActionsMatch.md), `Map` o `Bind`, de modo que nunca puedas leer un valor
+   [`Match`](core-types/MlResultMatchExtensions.md), `Map` o `Bind`, de modo que nunca puedas leer un valor
    que no existe.
 
 ```csharp
@@ -188,7 +188,7 @@ No existen `Exception`, `Value`, `HasException` ni `HasValue`: esa información 
 | `"Value"` | `ValueMetadataKey` | Valor de entrada que provocó el fallo. |
 
 Se leen de forma **tipada y segura** con
-[`MlResultActionsErrorsDetails`](core-types/MlResultActionsErrorsDetails.md):
+[`MlResultErrorDetailsExtensions`](core-types/MlResultErrorDetailsExtensions.md):
 
 ```csharp
 MlResult<Exception> ex     = errores.GetException();          // clave "Ex"
@@ -246,7 +246,7 @@ construyen con la misma fórmula.
 | Pieza | Obligatoria | Significado |
 | --- | :---: | --- |
 | `Try` | No | Envuelve el delegado en un `try/catch`. La excepción se guarda en `Details["Ex"]`. |
-| **Prefijo** | Sí | La operación: `Bind`, `Map`, `ExecSelf`, `Match`, `Projection`, `ChangeReturnResult`… |
+| **Prefijo** | Sí | La operación: `Bind`, `Map`, `ExecSelf`, `Match`, `Traverse`, `ChangeReturnResult`… |
 | **Contexto** | No | Cuándo/cómo se ejecuta: `If`, `IfFail`, `IfValid`, `IfFailWithValue`, `IfFailWithException`, `IfFailWithoutException`, `Always`, `Ensure`, `While`, `Multi`… |
 | `Async` | No | Existe una variante asíncrona (fuente `Task<...>` y/o delegado asíncrono). |
 
@@ -272,7 +272,7 @@ MlResult<Factura> resultado = ValidarPedido(pedido)      // MlResult<Pedido>
                                   .Bind(EmitirFactura);   // MlResult<Factura>
 ```
 
-Detalle: [`Types/MlResultActionsBind.md`](core-types/MlResultActionsBind.md).
+Detalle: [`Types/MlResultBindExtensions.md`](core-types/MlResultBindExtensions.md).
 
 #### **Map** — Transformación de valores
 
@@ -289,7 +289,7 @@ MlResult<ClienteDto> dto = ObtenerCliente(id).Map(c => c.ToDto());
 | No, es una conversión pura | `Map` |
 | Puede lanzar una excepción | `TryMap` / `TryBind` |
 
-Detalle: [`Types/MlResultActionsMap.md`](core-types/MlResultActionsMap.md).
+Detalle: [`Types/MlResultMapExtensions.md`](core-types/MlResultMapExtensions.md).
 
 #### **ExecSelf** — Efectos secundarios
 
@@ -302,7 +302,7 @@ await ConfirmarPedidoAsync(pedido)
           .ExecSelfIfFailAsync (er => _log.LogWarning("Fallo: {E}", er.GetErrorsSummary()));
 ```
 
-Detalle: [`Types/MlResultActionsExecSelf.md`](core-types/MlResultActionsExecSelf.md).
+Detalle: [`Types/MlResultExecSelfExtensions.md`](core-types/MlResultExecSelfExtensions.md).
 
 #### **Match** — Salida del `MlResult`
 
@@ -314,7 +314,7 @@ return resultado.Match(
     fail : errores => BadRequest(errores.GetErrorMessages()));
 ```
 
-Detalle: [`Types/MlResultActionsMatch.md`](core-types/MlResultActionsMatch.md).
+Detalle: [`Types/MlResultMatchExtensions.md`](core-types/MlResultMatchExtensions.md).
 
 ### Modificador `Try`
 
@@ -406,16 +406,16 @@ sobrecargas de cada método) está en [`docs/core-types/`](core-types/README.md)
 | Archivo fuente | Contenido | Referencia |
 | --- | --- | --- |
 | `Types/MlResult.cs` | El tipo, fábricas y conversiones implícitas | [`MlResult.md`](core-types/MlResult.md) |
-| `Types/MlResultActionsBind.cs` | `Bind`, `BindMulti`, `BindIf`, `BindIfFail*`, `BindAlways`, `TryBindBuild*` | [`MlResultActionsBind.md`](core-types/MlResultActionsBind.md) |
-| `Types/MlResultActionsMap.cs` | `Map`, `MapEnsure`, `MapIf`, `MapIfFail*`, `MapAlways` | [`MlResultActionsMap.md`](core-types/MlResultActionsMap.md) |
-| `Types/MlResultActionsMatch.cs` | `Match`, `TryMatch` y las sobrecargas «todo en uno» | [`MlResultActionsMatch.md`](core-types/MlResultActionsMatch.md) |
-| `Types/MlResultActionsExecSelf.cs` | `ExecSelf*`: efectos secundarios sin alterar el resultado | [`MlResultActionsExecSelf.md`](core-types/MlResultActionsExecSelf.md) |
-| `Types/MlResultActionsSeveral.cs` | `Combine`, `NullToFailed`, `EmptyToFailed`, `BoolToResult`, `Do` | [`MlResultActionsSeveral.md`](core-types/MlResultActionsSeveral.md) |
-| `Types/MlResultBucles.cs` | `Projection*`, `ProjectionSplit*`, `Fusion*` | [`MlResultBucles.md`](core-types/MlResultBucles.md) |
-| `Types/MlResultTransformations.cs` | `ToMlResult*`, `TryToMlResult*`, boxing | [`MlResultTransformations.md`](core-types/MlResultTransformations.md) |
+| `Types/MlResultBindExtensions.cs` | `Bind`, `BindMulti`, `BindIf`, `BindIfFail*`, `BindAlways`, `TryBindBuild*` | [`MlResultBindExtensions.md`](core-types/MlResultBindExtensions.md) |
+| `Types/MlResultMapExtensions.cs` | `Map`, `MapEnsure`, `MapIf`, `MapIfFail*`, `MapAlways` | [`MlResultMapExtensions.md`](core-types/MlResultMapExtensions.md) |
+| `Types/MlResultMatchExtensions.cs` | `Match`, `TryMatch` y las sobrecargas «todo en uno» | [`MlResultMatchExtensions.md`](core-types/MlResultMatchExtensions.md) |
+| `Types/MlResultExecSelfExtensions.cs` | `ExecSelf*`: efectos secundarios sin alterar el resultado | [`MlResultExecSelfExtensions.md`](core-types/MlResultExecSelfExtensions.md) |
+| `Types/MlResultSeveralExtensions.cs` | `CombineAll`, `FailIfNull`, `FailIfEmpty`, `FailIfFalse`, `Do` | [`MlResultSeveralExtensions.md`](core-types/MlResultSeveralExtensions.md) |
+| `Types/MlResultCollections.cs` | `Traverse*`, `TraverseSplit*`, `Fusion*` | [`MlResultCollections.md`](core-types/MlResultCollections.md) |
+| `Types/MlResultConversions.cs` | `ToMlResult*`, `TryToMlResult*`, boxing | [`MlResultConversions.md`](core-types/MlResultConversions.md) |
 | `Types/MlResultChangeReturnResult.cs` | Cambiar el tipo de retorno conservando el estado | [`MlResultChangeReturnResult.md`](core-types/MlResultChangeReturnResult.md) |
-| `Types/MlResultActions.cs` | Enriquecer errores, transportar datos, acceso seguro | [`MlResultActions.md`](core-types/MlResultActions.md) |
-| `Types/MlResultActionsErrorsDetails.cs` | Leer, escribir y fusionar los `Details` del error | [`MlResultActionsErrorsDetails.md`](core-types/MlResultActionsErrorsDetails.md) |
+| `Types/MlResultExtensions.cs` | Enriquecer errores, transportar datos, acceso seguro | [`MlResultExtensions.md`](core-types/MlResultExtensions.md) |
+| `Types/MlResultErrorDetailsExtensions.cs` | Leer, escribir y fusionar los `Details` del error | [`MlResultErrorDetailsExtensions.md`](core-types/MlResultErrorDetailsExtensions.md) |
 | `Types/Errors/*.cs` | `MlError`, `MlErrorDetails` y sus acciones | [`MlResultErrors.md`](core-types/MlResultErrors.md) |
 
 ### Cómo elegir la operación adecuada
@@ -432,11 +432,11 @@ sobrecargas de cada método) está en [`docs/core-types/`](core-types/README.md)
 | Reaccionar solo a fallos **de negocio** (sin excepción) | `BindIfFailWithoutException` |
 | Registrar/auditar sin alterar el flujo | `ExecSelf*` |
 | Ejecutar código **siempre** (limpieza, caché) | `BindAlways` / `MapAlways` |
-| Combinar resultados de **tipos distintos** | `Combine` |
+| Combinar resultados de **tipos distintos** | `CombineAll` |
 | Construir un objeto acumulando **todos** los errores | `TryBindBuild` |
 | Detenerte en el primer error al construir | `TryBindBuildWhile` |
-| Recorrer una colección (todo o nada) | `Projection` |
-| Recorrer una colección tolerando fallos | `ProjectionSplit` |
+| Recorrer una colección (todo o nada) | `Traverse` |
+| Recorrer una colección tolerando fallos | `TraverseSplit` |
 | Salir del `MlResult` | `Match` |
 
 ---
@@ -482,7 +482,7 @@ usuario *todos* los problemas de una vez, tienes tres herramientas:
 
 | Herramienta | Cuándo |
 | --- | --- |
-| `Combine` | Varios `MlResult` de **tipos distintos** ya calculados. |
+| `CombineAll` | Varios `MlResult` de **tipos distintos** ya calculados. |
 | `MergeErrorsIfExists` | Una **colección** de `MlResult<T>` ya calculada. |
 | `TryBindBuild` | Construir un objeto ejecutando **todas** las funciones de sus campos. |
 
@@ -522,7 +522,7 @@ private IActionResult Traducir(MlErrorDetails errores) =>
 ```
 
 Detalle completo en [`Types/MlResultErrors.md`](core-types/MlResultErrors.md) y
-[`Types/MlResultActionsErrorsDetails.md`](core-types/MlResultActionsErrorsDetails.md).
+[`Types/MlResultErrorDetailsExtensions.md`](core-types/MlResultErrorDetailsExtensions.md).
 
 ---
 
@@ -645,7 +645,7 @@ Detalle en [`Extensions/Extensions.md`](Extensions/Extensions.md).
 ```csharp
 MlResult<string> a = texto.ToMlResultValid();               // valor válido
 MlResult<Cliente> b = "No encontrado".ToMlResultFail<Cliente>();  // fallo
-MlResult<Cliente> c = cliente.NullToFailed("Cliente nulo"); // null ⇒ Fail
+MlResult<Cliente> c = cliente.FailIfNull("Cliente nulo"); // null ⇒ Fail
 MlResult<Config>  d = ((Func<Config>)Cargar).TryToMlResult("No se pudo cargar"); // código que lanza
 ```
 
@@ -688,7 +688,7 @@ return tarifa.Match(valid: t => Ok(t), fail: er => BadRequest(er.GetErrorMessage
 | Intentar leer el valor directamente | `Match`, o `GetValueOrThrow()` en infraestructura |
 | Lanzar excepciones para el flujo de negocio | Devolver `Fail` con un mensaje claro |
 | Envolver toda la tubería en un `try/catch` | Usar las variantes `Try*` en el paso concreto que puede lanzar |
-| Devolver `null` | Devolver `MlResult<T>` o usar `NullToFailed` |
+| Devolver `null` | Devolver `MlResult<T>` o usar `FailIfNull` |
 
 ---
 
@@ -782,15 +782,15 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 | [Índice de tipos](core-types/README.md) | — | Portada de la referencia por tipos |
 | [`MlResult.md`](core-types/MlResult.md) | `Types/MlResult.cs` | El tipo raíz, fábricas y conversiones implícitas |
 | [`MlResultErrors.md`](core-types/MlResultErrors.md) | `Types/Errors/*.cs` | `MlError`, `MlErrorDetails`, `ErrorMessage` |
-| [`MlResultActions.md`](core-types/MlResultActions.md) | `Types/MlResultActions.cs` | Enriquecer errores, transportar datos, acceso seguro |
-| [`MlResultActionsBind.md`](core-types/MlResultActionsBind.md) | `Types/MlResultActionsBind.cs` | `Bind`, `BindMulti`, `BindIf`, `BindIfFail*`, `BindAlways`, `TryBindBuild*` |
-| [`MlResultActionsMap.md`](core-types/MlResultActionsMap.md) | `Types/MlResultActionsMap.cs` | `Map`, `MapEnsure`, `MapIf`, `MapIfFail*`, `MapAlways` |
-| [`MlResultActionsMatch.md`](core-types/MlResultActionsMatch.md) | `Types/MlResultActionsMatch.cs` | `Match`, `TryMatch` y las sobrecargas «todo en uno» |
-| [`MlResultActionsExecSelf.md`](core-types/MlResultActionsExecSelf.md) | `Types/MlResultActionsExecSelf.cs` | `ExecSelf*`: efectos laterales sin alterar el resultado |
-| [`MlResultActionsSeveral.md`](core-types/MlResultActionsSeveral.md) | `Types/MlResultActionsSeveral.cs` | `EmptyToFailed`, `NullToFailed`, `BoolToResult`, `Combine`, `Do` |
-| [`MlResultActionsErrorsDetails.md`](core-types/MlResultActionsErrorsDetails.md) | `Types/MlResultActionsErrorsDetails.cs` | Leer, escribir y fusionar los `Details` del error |
-| [`MlResultBucles.md`](core-types/MlResultBucles.md) | `Types/MlResultBucles.cs` | `Projection*`, `ProjectionSplit*`, `Fusion*` |
-| [`MlResultTransformations.md`](core-types/MlResultTransformations.md) | `Types/MlResultTransformations.cs` | `ToMlResult*`, `TryToMlResult*`, boxing |
+| [`MlResultExtensions.md`](core-types/MlResultExtensions.md) | `Types/MlResultExtensions.cs` | Enriquecer errores, transportar datos, acceso seguro |
+| [`MlResultBindExtensions.md`](core-types/MlResultBindExtensions.md) | `Types/MlResultBindExtensions.cs` | `Bind`, `BindMulti`, `BindIf`, `BindIfFail*`, `BindAlways`, `TryBindBuild*` |
+| [`MlResultMapExtensions.md`](core-types/MlResultMapExtensions.md) | `Types/MlResultMapExtensions.cs` | `Map`, `MapEnsure`, `MapIf`, `MapIfFail*`, `MapAlways` |
+| [`MlResultMatchExtensions.md`](core-types/MlResultMatchExtensions.md) | `Types/MlResultMatchExtensions.cs` | `Match`, `TryMatch` y las sobrecargas «todo en uno» |
+| [`MlResultExecSelfExtensions.md`](core-types/MlResultExecSelfExtensions.md) | `Types/MlResultExecSelfExtensions.cs` | `ExecSelf*`: efectos laterales sin alterar el resultado |
+| [`MlResultSeveralExtensions.md`](core-types/MlResultSeveralExtensions.md) | `Types/MlResultSeveralExtensions.cs` | `FailIfEmpty`, `FailIfNull`, `FailIfFalse`, `CombineAll`, `Do` |
+| [`MlResultErrorDetailsExtensions.md`](core-types/MlResultErrorDetailsExtensions.md) | `Types/MlResultErrorDetailsExtensions.cs` | Leer, escribir y fusionar los `Details` del error |
+| [`MlResultCollections.md`](core-types/MlResultCollections.md) | `Types/MlResultCollections.cs` | `Traverse*`, `TraverseSplit*`, `Fusion*` |
+| [`MlResultConversions.md`](core-types/MlResultConversions.md) | `Types/MlResultConversions.cs` | `ToMlResult*`, `TryToMlResult*`, boxing |
 | [`MlResultChangeReturnResult.md`](core-types/MlResultChangeReturnResult.md) | `Types/MlResultChangeReturnResult.cs` | Cambiar el tipo de retorno conservando el estado |
 
 ### Guías por familia de operadores
@@ -799,7 +799,7 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 
 | # | Documento | Tema |
 |---|-----------|------|
-| 2 | [`2_MlResultActions.md`](Bind/2_MlResultActions.md) | Utilidades base y acceso seguro al valor |
+| 2 | [`2_MlResultActions.md`](Bind/2_MlResultExtensions.md) | Utilidades base y acceso seguro al valor |
 | 3 | [`3_Bind.md`](Bind/3_Bind.md) | ⭐ `Bind` y `TryBind`: el operador fundamental |
 | 4 | [`4_BindMulti.md`](Bind/4_BindMulti.md) | `BindMulti`: elegir rama según condiciones |
 | 5 | [`5_BindIf.md`](Bind/5_BindIf.md) | `BindIf`: ejecutar solo si se cumple un predicado |
@@ -846,9 +846,9 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 | # | Documento | Tema |
 |---|-----------|------|
 | 1 | [`1_EmptyToFailed.md`](Several/1_EmptyToFailed.md) | Rechazar colecciones vacías |
-| 2 | [`2_NullToFailed.md`](Several/2_NullToFailed.md) | Convertir `null` en fallo explícito |
+| 2 | [`2_NullToFailed.md`](Several/2_FailIfNull.md) | Convertir `null` en fallo explícito |
 | 3 | [`3_BoolToResult.md`](Several/3_BoolToResult.md) | Convertir un `bool` en `MlResult` |
-| 4 | [`4_Combine.md`](Several/4_Combine.md) | `Combine` y `Do` ⚠️ (**no** acumula errores) |
+| 4 | [`4_Combine.md`](Several/4_Combine.md) | `CombineAll` y `Do` ⚠️ (**no** acumula errores) |
 
 #### `EnsureFp` — precondiciones antes de entrar al carril
 
@@ -872,7 +872,7 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 | [`EnsureFp/EnsureFp.md`](EnsureFp/EnsureFp.md) | Índice de las más de 90 precondiciones y sus nueve páginas de detalle |
 | [`Transformations/Transformations.md`](Transformations/Transformations.md) | `ToMlResultValid`, `ToMlResultFail`, `TryToMlResult*`, boxing |
 | [`Extensions/Extensions.md`](Extensions/Extensions.md) | `ToAsync`, `With`, `ToFuncTask`, `AppendExDetails`, `Constants` |
-| [`Bucle/Bucles.md`](loops/Bucles.md) | `Projection`, `ProjectionWhile`, `ProjectionParallelAsync`, `ProjectionSplit` |
+| [`Bucle/Bucles.md`](loops/Collections.md) | `Traverse`, `TraverseWhile`, `ProjectionParallelAsync`, `TraverseSplit` |
 
 ### Rutas de lectura recomendadas
 
@@ -894,9 +894,9 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 
 **Si necesitas manejar colecciones:**
 
-1. [`Bucle/Bucles.md`](loops/Bucles.md) — las cuatro estrategias de proyección
+1. [`Bucle/Bucles.md`](loops/Collections.md) — las cuatro estrategias de proyección
 2. [`Several/1_EmptyToFailed.md`](Several/1_EmptyToFailed.md) — rechazar lo vacío
-3. [`Several/4_Combine.md`](Several/4_Combine.md) — ⚠️ ojo: `Combine` **no** acumula errores
+3. [`Several/4_Combine.md`](Several/4_Combine.md) — ⚠️ ojo: `CombineAll` **no** acumula errores
 
 **Si estás depurando un fallo y quieres recuperarte:**
 

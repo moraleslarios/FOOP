@@ -416,4 +416,4 @@ var bien4 = Principal().ExecSelfIfFail(e => _log.LogWarning("{D}", e.GetErrorsSu
 - [`../Bind/6_BindIfFail.md`](../Bind/6_BindIfFail.md) — recuperación que también puede fallar.
 - [`../ExecSelf/3_ExecSelfIfFail.md`](../ExecSelf/3_ExecSelfIfFail.md) — observar el fallo sin modificarlo.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir del mundo `MlResult`.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la clase.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la clase.

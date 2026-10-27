@@ -1,7 +1,7 @@
 # MlResult MatchAll - Ejecución Incondicional con Transformación
 
 > ⚠️ **Aviso importante sobre los nombres.** En el código fuente existe una región llamada
-> `#region MatchAll` dentro de `Types/MlResultActionsMatch.cs`, pero **no existe ningún método público
+> `#region MatchAll` dentro de `Types/MlResultMatchExtensions.cs`, pero **no existe ningún método público
 > llamado `MatchAll`**. Los métodos de esa región se llaman igualmente
 > `Match` / `MatchAsync` / `TryMatch` / `TryMatchAsync`; lo que los distingue es su **firma**: reciben
 > un único delegado **sin parámetros** (`Func<TReturn> funcAll`) y devuelven `MlResult<TReturn>`.
@@ -258,7 +258,7 @@ Puntos a observar:
 
 ```csharp
 public Task<MlResult<InformeLote>> EjecutarLoteAsync(IEnumerable<Factura> facturas) =>
-    facturas.ProjectionAsync(_emisor.EmitirAsync)      // Task<MlResult<IEnumerable<Emision>>>
+    facturas.TraverseAsync(_emisor.EmitirAsync)      // Task<MlResult<IEnumerable<Emision>>>
 
         // Guardamos el detalle del fallo por si el informe lo necesita.
         .ExecSelfIfFailAsync(er => _incidencias.Anotar(er.GetErrorsSummary()))
@@ -420,7 +420,7 @@ MlResult<Acuse> acuse = resultado.Match(() => new Acuse(_reloj.Ahora));
 ## Ver también
 
 - [`1_Match.md`](1_Match.md) — la sobrecarga clásica de dos ramas.
-- [`../Types/MlResultActionsMatch.md`](../core-types/MlResultActionsMatch.md) — referencia completa del archivo fuente.
-- [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — efectos secundarios sin alterar el resultado.
+- [`../Types/MlResultMatchExtensions.md`](../core-types/MlResultMatchExtensions.md) — referencia completa del archivo fuente.
+- [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md) — efectos secundarios sin alterar el resultado.
 - [`../Map/8_MapAlways.md`](../Map/8_MapAlways.md) y [`../Bind/10_BindAlways.md`](../Bind/10_BindAlways.md) — operaciones incondicionales que continúan la tubería.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — recuperar la excepción guardada por `TryMatch`.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — recuperar la excepción guardada por `TryMatch`.

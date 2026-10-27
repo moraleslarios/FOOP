@@ -730,4 +730,4 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 - [`Match` — la base del log condicional](../docs/Match/1_Match.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`ExecSelf` — efectos secundarios sin cambiar el resultado](../docs/ExecSelf/1_ExecSelf.md)
-- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Collections.md)

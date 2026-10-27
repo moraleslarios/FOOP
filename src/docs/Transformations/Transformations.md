@@ -21,7 +21,7 @@
 
 ## Introducción
 
-`MlResultTransformations` es la clase de **fábricas y conversiones** de la librería. Es la
+`MlResultConversions` es la clase de **fábricas y conversiones** de la librería. Es la
 menos vistosa y la más usada: todos los demás operadores (`Map`, `Bind`, `ExecSelf`…)
 dependen de ella internamente. Cubre cuatro necesidades:
 
@@ -66,8 +66,8 @@ var r3 = await cliente.ToMlResultValidAsync();
 Cliente? c = null;
 var r4 = c.ToMlResultValid();                // Valid(null)
 
-// ✅ Si quieres rechazar el null, usa NullToFailed
-var r5 = c.NullToFailed("El cliente es obligatorio");
+// ✅ Si quieres rechazar el null, usa FailIfNull
+var r5 = c.FailIfNull("El cliente es obligatorio");
 ```
 
 💡 Como existe la conversión implícita, muchas veces `ToMlResultValid()` es opcional: puedes
@@ -391,7 +391,7 @@ var r = parsear.TryToMlResult(entrada, ex => "El formato del archivo no es váli
 ## ⚠️ Particularidades reales del código fuente
 
 **1. `ToMlResultValid` no comprueba `null`.** Un `null` produce un resultado **válido** que
-contiene `null`. Usa [`NullToFailed`](../Several/2_NullToFailed.md) si quieres rechazarlo.
+contiene `null`. Usa [`FailIfNull`](../Several/2_FailIfNull.md) si quieres rechazarlo.
 
 **2. Los genéricos de `ToMlResultFail<T>` son obligatorios**: no se pueden inferir.
 
@@ -444,7 +444,7 @@ nombres.
 | Propagar errores cambiando el tipo | `errorsDetails.ToMlResultFail<TReturn>()` |
 | Pasar al mundo `object` | `.ToMlResultObject()` |
 | Volver del mundo `object` con seguridad | `.FromMlResultObject<T>()` |
-| Rechazar un `null` | [`NullToFailed`](../Several/2_NullToFailed.md) |
+| Rechazar un `null` | [`FailIfNull`](../Several/2_FailIfNull.md) |
 | Recuperar la excepción de un fallo | `GetException()` |
 
 ---
@@ -474,7 +474,7 @@ public class ImportadorService
                        return deserializar.TryToMlResult(contenido,
                                   ex => "El contenido del archivo no tiene el formato esperado");
                    })
-                   .Bind(lista => lista.EmptyToFailed("El archivo no contiene pedidos")!)
+                   .Bind(lista => lista.FailIfEmpty("El archivo no contiene pedidos")!)
                    .ExecSelfIfFailWithException(ex => _log.LogError(ex, "Importación fallida"));
     }
 }
@@ -572,7 +572,7 @@ var r = parsear.TryToMlResult(entrada, ex => "El formato de la entrada no es vá
 var r = clienteNulo.ToMlResultValid();      // Valid(null)
 
 // ✅
-var r = clienteNulo.NullToFailed("El cliente es obligatorio");
+var r = clienteNulo.FailIfNull("El cliente es obligatorio");
 
 
 // ❌ ToMlResultFail<T, TReturn> sobre un resultado válido
@@ -626,7 +626,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
 
 ## Resumen
 
-- `MlResultTransformations` reúne las **fábricas y conversiones** del `MlResult`: es la base
+- `MlResultConversions` reúne las **fábricas y conversiones** del `MlResult`: es la base
   sobre la que se construyen todos los demás operadores.
 - **`ToMlResultValid<T>`** mete un valor en el carril aprovechando la conversión implícita.
   ⚠️ **No comprueba `null`.**
@@ -653,7 +653,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
 - [`MlResult`](../core-types/MlResult.md) — el tipo central y sus conversiones implícitas
 - [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails`, `AppendExErrorDetail`
 - [`Extensions`](../Extensions/Extensions.md) — `ToAsync` y otras utilidades transversales
-- [`NullToFailed`](../Several/2_NullToFailed.md) — rechazar valores nulos al entrar
+- [`FailIfNull`](../Several/2_FailIfNull.md) — rechazar valores nulos al entrar
 - [`TryMap`](../Map/1_Map.md) y [`TryBind`](../Bind/3_Bind.md) — captura de excepciones dentro del carril
 - [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) — recuperar la excepción de `Details`
 - [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — efectos laterales seguros

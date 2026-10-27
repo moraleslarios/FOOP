@@ -51,7 +51,7 @@ El criterio es puramente mecánico: **un fallo «no tiene excepción» cuando su
 | `"El importe debe ser positivo".ToMlResultFail<T>()` | No | ✅ Sí |
 | `MapEnsure(x => x > 0, "…")` | No | ✅ Sí |
 | `EnsureFp.NotNull(dto, "…")` / `EnsureFp.That(...)` | No | ✅ Sí |
-| `NullToFailed(...)` / `EmptyToFailed(...)` / `BoolToResult(...)` | No | ✅ Sí |
+| `FailIfNull(...)` / `FailIfEmpty(...)` / `FailIfFalse(...)` | No | ✅ Sí |
 | `BindMulti` fusionando errores de validación | No | ✅ Sí |
 | `TryBind` / `TryMap` / `TryMatch`… que capturó una excepción | Sí | ❌ No |
 | `MlErrorDetails.FromErrorMessageWithException(msg, ex)` | Sí | ❌ No |
@@ -316,5 +316,5 @@ public async Task<IActionResult> Crear([FromBody] PedidoDto dto)
 - [`3_Bind.md`](3_Bind.md) — encadenamiento básico y `TryBind`, origen habitual de `Details["Ex"]`.
 - [`../ExecSelf/6_ExecSelfIfFailWithoutException.md`](../ExecSelf/6_ExecSelfIfFailWithoutException.md) — el mismo filtro para efectos laterales.
 - [`../Map/7_MapIfFailWithoutException.md`](../Map/7_MapIfFailWithoutException.md) — cuando la recuperación no puede fallar.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `MergeErrorsDetailsIfFail`, `AddValueIfFail`.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException`, `MergeErrorsDetailsIfFail`, `AddValueIfFail`.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — claves convencionales `Ex`, `Ex2`, `Value` y factorías de `MlErrorDetails`.

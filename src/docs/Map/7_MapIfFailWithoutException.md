@@ -445,6 +445,6 @@ var stock3 = await _almacen.ConsultarStockAsync(sku)
 - [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) — la versión `Bind`, cuando la recuperación devuelve `MlResult`.
 - [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) — su complementaria en la familia `Bind`.
 - [`../ExecSelf/6_ExecSelfIfFailWithoutException.md`](../ExecSelf/6_ExecSelfIfFailWithoutException.md) — efectos secundarios sin alterar el resultado.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException()`, `MergeErrorsDetailsIfFail` y el resto de utilidades de detalles.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException()`, `MergeErrorsDetailsIfFail` y el resto de utilidades de detalles.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorDetails`.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la familia `Map`.

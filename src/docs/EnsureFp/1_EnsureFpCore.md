@@ -358,5 +358,5 @@ public MlResult<Transferencia> Autorizar(Transferencia t, decimal limiteDiario) 
 - [8. Variantes asíncronas](8_EnsureFpAsync.md)
 - [9. Mensajes y claves de detalle](9_EnsureFpMessages.md)
 - [`Bind`](../Bind/3_Bind.md) · [`Map`](../Map/1_Map.md) · [`MapEnsure`](../Map/2_MapEnsure.md)
-- [`NullToFailed`](../Several/2_NullToFailed.md) · [`EmptyToFailed`](../Several/1_EmptyToFailed.md) ·
-  [`BoolToResult`](../Several/3_BoolToResult.md)
+- [`FailIfNull`](../Several/2_FailIfNull.md) · [`FailIfEmpty`](../Several/1_EmptyToFailed.md) ·
+  [`FailIfFalse`](../Several/3_BoolToResult.md)

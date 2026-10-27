@@ -368,4 +368,4 @@ llamadas a librerías externas, ficheros, red y bases de datos.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — `ExecSelfIf`, para efectos condicionales.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — bifurcar por estado en lugar de por valor.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — construir las guardas previas.
-- [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — referencia con todas las sobrecargas.
+- [`../Types/MlResultBindExtensions.md`](../core-types/MlResultBindExtensions.md) — referencia con todas las sobrecargas.

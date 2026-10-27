@@ -225,7 +225,7 @@ resultado.Match(
 |---|---|---|
 | Firma | `MlResult<T>` | `MlResult<IEnumerable<T>>` |
 | Errores dentro de un objeto | Todos, acumulados | Todos, acumulados |
-| Errores entre objetos | — | Todos, fusionados con [`MergeErrorsIfExists`](../docs/loops/Bucles.md) |
+| Errores entre objetos | — | Todos, fusionados con [`MergeErrorsIfExists`](../docs/loops/Collections.md) |
 | Vacío / `null` | `null` ⇒ `Fail` (solo en `DataannotationsValidator`) | `null` o vacío ⇒ `Fail` (solo en `DataannotationsValidator`) |
 
 `MergeErrorsIfExists` recorre la secuencia de `MlResult<T>`, y:
@@ -561,4 +561,4 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` — transformar el valor válido](../docs/Map/1_Map.md)
 - [`Match` — convertir el resultado en respuesta](../docs/Match/1_Match.md)
-- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Collections.md)

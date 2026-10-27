@@ -221,15 +221,15 @@ else
 | `MergeErrorsDetailsAsync<T, TReturn>(...)` (4 sobrecargas) | Versiones asíncronas. |
 
 Fusionar es lo que permite **acumular** errores en operaciones como
-[`Combine`](MlResultActionsSeveral.md) o `TryBindBuild`, en lugar de perder todos menos el primero.
+[`CombineAll`](MlResultSeveralExtensions.md) o `TryBindBuild`, en lugar de perder todos menos el primero.
 
 ---
 
-## Recuperar los detalles: `MlResultActionsErrorsDetails`
+## Recuperar los detalles: `MlResultErrorDetailsExtensions`
 
 La lectura tipada de los detalles (por ejemplo, recuperar la excepción o el valor original) está en
 una clase aparte, documentada en su propio fichero:
-[`MlResultActionsErrorsDetails`](MlResultActionsErrorsDetails.md).
+[`MlResultErrorDetailsExtensions`](MlResultErrorDetailsExtensions.md).
 
 Métodos más usados:
 
@@ -298,7 +298,7 @@ librería a ASP.NET Core.
 ## Ver también
 
 - [`MlResult<T>`](MlResult.md) — el tipo que transporta estos errores.
-- [`MlResultActionsErrorsDetails`](MlResultActionsErrorsDetails.md) — lectura tipada de `Details`.
-- [`MlResultActions`](MlResultActions.md) — `AddMlErrorDetailIfFail`, `AddValueDetailIfFail`, etc.
-- [`MlResultActionsMap`](MlResultActionsMap.md) — familias `MapIfFailWith*`.
-- [`MlResultActionsBind`](MlResultActionsBind.md) — familias `BindIfFailWith*`.
+- [`MlResultErrorDetailsExtensions`](MlResultErrorDetailsExtensions.md) — lectura tipada de `Details`.
+- [`MlResultExtensions`](MlResultExtensions.md) — `AddMlErrorDetailIfFail`, `AddValueDetailIfFail`, etc.
+- [`MlResultMapExtensions`](MlResultMapExtensions.md) — familias `MapIfFailWith*`.
+- [`MlResultBindExtensions`](MlResultBindExtensions.md) — familias `BindIfFailWith*`.

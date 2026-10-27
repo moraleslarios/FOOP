@@ -284,4 +284,4 @@ evita convertir campos opcionales en obligatorios por inercia.
 - [4. Números y rangos](4_EnsureFpNumbers.md)
 - [6. Tipos concretos: `Guid`, enumerados, fechas…](6_EnsureFpTypes.md)
 - [8. Variantes asíncronas](8_EnsureFpAsync.md)
-- [`NullToFailed`](../Several/2_NullToFailed.md) — alternativa por extensión
+- [`FailIfNull`](../Several/2_FailIfNull.md) — alternativa por extensión

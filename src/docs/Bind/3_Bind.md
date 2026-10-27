@@ -299,7 +299,7 @@ public async Task<MlResult<Movimiento>> TransferirAsync(int origen, int destino,
 
 `.Map(d => (Origen: o, Destino: d))` es el patrón para **arrastrar dos valores** por la tubería sin
 variables intermedias. Para más de dos, considera
-[`Combine`](../Several/4_Combine.md) o `TryBindBuildTuple`.
+[`CombineAll`](../Several/4_Combine.md) o `TryBindBuildTuple`.
 
 ### Ejemplo 4: Salir de la tubería en un controlador
 
@@ -351,7 +351,7 @@ válidos y mucho más legibles que las llamadas explícitas a `Valid`/`Fail`.
 ### 5. Añade contexto en las fronteras
 
 Un `AddMlErrorDetailIfFail` por capa produce una traza de causas encadenadas sin coste alguno. Ver
-[`2_MlResultActions.md`](2_MlResultActions.md).
+[`2_MlResultActions.md`](2_MlResultExtensions.md).
 
 ### 6. Nombra siempre los argumentos de `Match`
 
@@ -390,7 +390,7 @@ orden.
 
 ## Ver también
 
-- [`2_MlResultActions.md`](2_MlResultActions.md) — enriquecer errores y acceso seguro.
+- [`2_MlResultActions.md`](2_MlResultExtensions.md) — enriquecer errores y acceso seguro.
 - [`4_BindMulti.md`](4_BindMulti.md) — acumulación de errores en detalle.
 - [`5_BindIf.md`](5_BindIf.md) — ejecución condicional.
 - [`6_BindIfFail.md`](6_BindIfFail.md) — recuperación de fallos.
@@ -399,4 +399,4 @@ orden.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — cómo salir de la tubería.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios sin alterar el flujo.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — crear el primer `MlResult` de la cadena.
-- [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — referencia completa con todas las sobrecargas.
+- [`../Types/MlResultBindExtensions.md`](../core-types/MlResultBindExtensions.md) — referencia completa con todas las sobrecargas.

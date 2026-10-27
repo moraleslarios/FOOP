@@ -324,6 +324,6 @@ Esta familia **observa**. Para recuperar según la excepción, usa
 - [`4_ExecSelfIfFailWithValue.md`](4_ExecSelfIfFailWithValue.md) — el valor adjunto al fallo.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — el complemento exacto de este documento.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y las claves convencionales.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException()`, `GetException<T>()`.
-- [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia y recuento de sobrecargas.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException()`, `GetException<T>()`.
+- [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md) — referencia y recuento de sobrecargas.
 - [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) y [`../Map/6_MapIfFailWithException.md`](../Map/6_MapIfFailWithException.md) — cuando sí quieres recuperar.

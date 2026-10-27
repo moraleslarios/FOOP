@@ -23,14 +23,14 @@ La librería se usa de base por capas posteriores como `ValueObjects`, `Validati
 MoralesLarios.OOFP.Core/
 ├── Types/
 │   ├── MlResult.cs
-│   ├── MlResultActions.cs
-│   ├── MlResultActionsBind.cs
-│   ├── MlResultActionsMap.cs
-│   ├── MlResultActionsMatch.cs
-│   ├── MlResultActionsExecSelf.cs
-│   ├── MlResultActionsSeveral.cs
-│   ├── MlResultTransformations.cs
-│   ├── MlResultBucles.cs
+│   ├── MlResultExtensions.cs
+│   ├── MlResultBindExtensions.cs
+│   ├── MlResultMapExtensions.cs
+│   ├── MlResultMatchExtensions.cs
+│   ├── MlResultExecSelfExtensions.cs
+│   ├── MlResultSeveralExtensions.cs
+│   ├── MlResultConversions.cs
+│   ├── MlResultCollections.cs
 │   └── Errors/
 │       ├── MlError.cs
 │       └── MlErrorDetails.cs
@@ -63,10 +63,10 @@ MoralesLarios.OOFP.Core/
 5. [`Map`: transformar el valor válido](#5-map-transformar-el-valor-válido)
 6. [`Match`: decidir por rama válida o errónea](#6-match-decidir-por-rama-válida-o-errónea)
 7. [`ExecSelf`: ejecutar efectos secundarios sin perder el flujo](#7-execself-ejecutar-efectos-secundarios-sin-perder-el-flujo)
-8. [Utilidades de `MlResultActions`](#8-utilidades-de-mlresultactions)
-9. [`MlResultActionsSeveral`](#9-mlresultactionsseveral)
-10. [`MlResultTransformations`](#10-mlresulttransformations)
-11. [`MlResultBucles`: proyección y fusión con colecciones](#11-mlresultbucles-proyección-y-fusión-con-colecciones)
+8. [Utilidades de `MlResultExtensions`](#8-utilidades-de-mlresultactions)
+9. [`MlResultSeveralExtensions`](#9-mlresultactionsseveral)
+10. [`MlResultConversions`](#10-mlresulttransformations)
+11. [`MlResultCollections`: proyección y fusión con colecciones](#11-mlresultbucles-proyección-y-fusión-con-colecciones)
 12. [Extensiones genéricas de ayuda](#12-extensiones-genéricas-de-ayuda)
 13. [Patrón recomendado](#13-patrón-recomendado)
 14. [Cuándo usar cada familia](#14-cuándo-usar-cada-familia)
@@ -77,7 +77,7 @@ MoralesLarios.OOFP.Core/
 
 ## 1. El tipo central: `MlResult<T>`
 
-`MlResult<T>` es el punto de entrada del diseño funcional de la librería: la práctica totalidad de operaciones, validaciones y transformaciones del ecosistema se apoyan en el mismo contrato de éxito o fallo. Entender bien este tipo es entender el 80 % de la librería, porque el resto de familias de métodos (`Bind`, `Map`, `Match`, `ExecSelf`, `EnsureFp`, `Projection*`…) no son más que formas distintas de operar sobre él.
+`MlResult<T>` es el punto de entrada del diseño funcional de la librería: la práctica totalidad de operaciones, validaciones y transformaciones del ecosistema se apoyan en el mismo contrato de éxito o fallo. Entender bien este tipo es entender el 80 % de la librería, porque el resto de familias de métodos (`Bind`, `Map`, `Match`, `ExecSelf`, `EnsureFp`, `Traverse*`…) no son más que formas distintas de operar sobre él.
 
 ### La idea de fondo: el error como dato, no como excepción
 
@@ -98,7 +98,7 @@ public User GetUser(int id)
 // ✅ Estilo funcional: la firma declara que esto puede fallar y el fallo es un valor.
 public MlResult<User> GetUser(int id)
     => EnsureFp.That(id, id > 0, "Id no válido")
-               .Bind(validId => _repo.Find(validId).NullToFailed($"No existe el usuario {validId}"));
+               .Bind(validId => _repo.Find(validId).FailIfNull($"No existe el usuario {validId}"));
 ```
 
 En el segundo caso no hay `try/catch`, no hay excepciones de negocio y quien llama al método está **obligado por el propio tipo** a decidir qué hacer si falla.
@@ -609,7 +609,7 @@ Si la lambda lanza, la excepción se captura y se convierte en `MlResult` errón
 var config = MlResult<string>.Valid(jsonRecibido)
     .TryBind(
         json => JsonSerializer.Deserialize<Configuracion>(json)
-                    .NullToFailed("El JSON no contenía una configuración válida."),
+                    .FailIfNull("El JSON no contenía una configuración válida."),
         ex   => $"El JSON recibido no se pudo interpretar: {ex.Message}"
     );
 ```
@@ -944,9 +944,9 @@ var resultado = ProcesarLote(lote)
 
 ---
 
-## 8. Utilidades de `MlResultActions`
+## 8. Utilidades de `MlResultExtensions`
 
-La clase `MlResultActions` añade helpers para **enriquecer** el resultado: añadir detalles al error, completar el valor válido, acceder de forma segura al contenido o combinar varios resultados en uno. Son piezas de apoyo que evitan escribir código repetitivo alrededor de `MlResult<T>`.
+La clase `MlResultExtensions` añade helpers para **enriquecer** el resultado: añadir detalles al error, completar el valor válido, acceder de forma segura al contenido o combinar varios resultados en uno. Son piezas de apoyo que evitan escribir código repetitivo alrededor de `MlResult<T>`.
 
 ### `AddMlErrorDetailIfFail` / `AddValueDetailIfFail`
 
@@ -966,7 +966,7 @@ Esto añade información contextual al detalle del error si el resultado está e
 // Caso real: cada capa añade su contexto sin reescribir el error original.
 public MlResult<Pedido> BuscarPedido(int id)
     => _repo.Find(id)
-            .NullToFailed("El pedido no existe.")
+            .FailIfNull("El pedido no existe.")
             .AddValueDetailIfFail(id)                                  // ¿qué id se buscó?
             .AddMlErrorDetailIfFail($"Consulta ejecutada por {_usuarioActual}.");
 ```
@@ -1053,79 +1053,79 @@ var envio = cliente.CreateCompleteMlResult(direccion)
 
 ---
 
-## 9. `MlResultActionsSeveral`
+## 9. `MlResultSeveralExtensions`
 
 Esta clase ofrece atajos para transformar **entradas del mundo imperativo** (valores nulos, colecciones vacías, condiciones booleanas) en `MlResult`. Es la puerta de entrada más cómoda al flujo funcional cuando trabajas con APIs, ORM o librerías que devuelven `null` o `bool` en lugar de resultados.
 
 Son métodos de extensión, así que se leen de forma muy natural: se aplican directamente sobre el valor de origen.
 
-### `NullToFailed`
+### `FailIfNull`
 
 Convierte un valor potencialmente nulo en un `MlResult`: si es `null`, resultado fallido con el mensaje indicado; si no, resultado válido con el valor. Es el método más usado del núcleo, porque casi todos los accesos a datos pueden devolver "nada".
 
 ```csharp
 string? name = null;
-var result = name.NullToFailed("El nombre es obligatiorio");
+var result = name.FailIfNull("El nombre es obligatiorio");
 ```
 
 ```csharp
 // Caso real: un FirstOrDefault se convierte en un flujo funcional en una sola línea.
 var usuario = _context.Users.FirstOrDefault(u => u.Email == email)
-                            .NullToFailed($"No existe ningún usuario con el email '{email}'.");
+                            .FailIfNull($"No existe ningún usuario con el email '{email}'.");
 
 // Y encadena de forma inmediata:
 var dto = usuario.Map(u => u.ToDto());
 ```
 
-Diferencia con `EnsureFp.NotNull`: son equivalentes en comportamiento, pero `NullToFailed` es una **extensión** (se aplica al final de una expresión, ideal para encadenar) mientras que `EnsureFp.NotNull` es una **llamada estática** (ideal para abrir un método a modo de guarda).
+Diferencia con `EnsureFp.NotNull`: son equivalentes en comportamiento, pero `FailIfNull` es una **extensión** (se aplica al final de una expresión, ideal para encadenar) mientras que `EnsureFp.NotNull` es una **llamada estática** (ideal para abrir un método a modo de guarda).
 
-### `EmptyToFailed`
+### `FailIfEmpty`
 
 Convierte una colección vacía (o nula) en un resultado fallido. Evita ejecutar procesos de agregación sobre conjuntos sin elementos, que es una fuente clásica de resultados engañosos (medias de cero elementos, `Max()` que lanza, etc.).
 
 ```csharp
 var items = Enumerable.Empty<int>();
-var result = items.EmptyToFailed("La colección está vacía");
+var result = items.FailIfEmpty("La colección está vacía");
 ```
 
 ```csharp
 // Caso real: calcular estadísticas sólo si hay datos que analizar.
 var resumen = _repo.GetVentas(mes)
-    .EmptyToFailed($"No hay ventas registradas en el mes {mes}.")
+    .FailIfEmpty($"No hay ventas registradas en el mes {mes}.")
     .Map(ventas => new Resumen(
         Total:  ventas.Sum(v => v.Importe),
         Media:  ventas.Average(v => v.Importe),
         Maximo: ventas.Max(v => v.Importe)));
 ```
 
-### `BoolToResult`
+### `FailIfFalse`
 
 Convierte una condición booleana en un resultado, **conservando el valor original** cuando la condición se cumple. Es el equivalente en forma de extensión a `EnsureFp.That`.
 
 ```csharp
-var result = 10 BoolToResult(10 > 0, "La condición no se cumple");
+var result = 10 FailIfFalse(10 > 0, "La condición no se cumple");
 // → válido con 10, porque la condición es verdadera.
 ```
 
 ```csharp
 // Caso real: comprobar una regla sobre un objeto sin salir de la expresión.
-var pedidoEditable = pedido.BoolToResult(
+var pedidoEditable = pedido.FailIfFalse(
     pedido.Estado == EstadoPedido.Borrador,
     $"El pedido {pedido.Id} no se puede modificar porque está en estado {pedido.Estado}.");
 ```
 
-### `BoolToResult` sobre `bool`
+### `FailIfFalse` sobre `bool`
 
 Sobrecarga aplicada directamente sobre un `bool`: si es `true`, resultado válido; si es `false`, resultado fallido con el mensaje. Se usa cuando el valor que te interesa **es** la propia condición, típicamente al envolver métodos que devuelven `bool` para indicar éxito.
 
 ```csharp
-var result = true BoolToResult("La condición no es válida");
+var result = true FailIfFalse("La condición no es válida");
 ```
 
 ```csharp
 // Caso real: adaptar una API antigua que informa del éxito con un bool.
 var borrado = _legacyRepo.Delete(id)
-                         .BoolToResult($"No se pudo eliminar el registro {id}.");
+                         .FailIfFalse($"No se pudo eliminar el registro {id}.");
 
 var mensaje = borrado.Match(
     valid: _      => "Registro eliminado correctamente.",
@@ -1136,19 +1136,19 @@ var mensaje = borrado.Match(
 ```
 | Extensión | Se aplica sobre | Falla cuando… |
 |-----------|-----------------|---------------|
-| `NullToFailed` | cualquier referencia/nullable | el valor es `null`. |
-| `EmptyToFailed` | `IEnumerable<T>` | la colección es nula o vacía. |
-| `BoolToResult` (valor + condición) | cualquier valor | la condición es `false`. |
-| `BoolToResult` (sobre `bool`) | `bool` | el propio valor es `false`. |
+| `FailIfNull` | cualquier referencia/nullable | el valor es `null`. |
+| `FailIfEmpty` | `IEnumerable<T>` | la colección es nula o vacía. |
+| `FailIfFalse` (valor + condición) | cualquier valor | la condición es `false`. |
+| `FailIfFalse` (sobre `bool`) | `bool` | el propio valor es `false`. |
 ```
 
 Estos cuatro atajos son, en la práctica, **el puente entre el código heredado y el flujo funcional**: permiten adoptar `MlResult<T>` de forma incremental sin reescribir las capas inferiores.
 
 ---
 
-## 10. `MlResultTransformations`
+## 10. `MlResultConversions`
 
-La clase `MlResultTransformations` convierte **funciones y acciones normales** en flujos `MlResult` sin romper el patrón. Su valor está en la interoperabilidad: te permite reutilizar delegados, métodos existentes o lógica de terceros dentro de una cadena funcional, sin tener que reescribirlos para que devuelvan `MlResult`.
+La clase `MlResultConversions` convierte **funciones y acciones normales** en flujos `MlResult` sin romper el patrón. Su valor está en la interoperabilidad: te permite reutilizar delegados, métodos existentes o lógica de terceros dentro de una cadena funcional, sin tener que reescribirlos para que devuelvan `MlResult`.
 
 En todos los casos, la mecánica es la misma: se invoca la función con el argumento indicado y el retorno se envuelve como resultado válido; en las variantes `Try*`, cualquier excepción se captura y se transforma en `fail`.
 
@@ -1237,7 +1237,7 @@ var result = ((Action<MlErrorDetails>)(e => Console.WriteLine(e))).TryToMlResult
 
 En otras palabras: ejecuta el manejador con el detalle de error indicado y, si el propio manejador revienta, ese segundo fallo también queda encapsulado en un `MlResult` en lugar de escaparse.
 
-**Resumen de la familia `MlResultTransformations`:**
+**Resumen de la familia `MlResultConversions`:**
 
 | Método | Delegado de entrada | Protegido | Asíncrono |
 |--------|--------------------|-----------|-----------|
@@ -1251,11 +1251,11 @@ Todas ellas convierten un delegado o método existente en un `MlResult`, de modo
 
 ---
 
-## 11. `MlResultBucles`: proyección y fusión con colecciones
+## 11. `MlResultCollections`: proyección y fusión con colecciones
 
 Esta es, probablemente, la familia que más código repetitivo elimina de una aplicación real. Todo proceso por lotes —importar un fichero, validar una lista de líneas, enriquecer un catálogo llamando a un servicio externo— se enfrenta siempre a las mismas preguntas: *¿qué hago cuando un elemento falla?*, *¿sigo o me paro?*, *¿cómo devuelvo todos los errores juntos?*, *¿cómo separo lo que ha ido bien de lo que ha ido mal?*
 
-`MlResultBucles` responde a esas cuatro preguntas con cuatro métodos distintos. La clave para usarla bien es entender que **cada uno implementa una política de error diferente** y que elegir el correcto es una decisión de negocio, no técnica.
+`MlResultCollections` responde a esas cuatro preguntas con cuatro métodos distintos. La clave para usarla bien es entender que **cada uno implementa una política de error diferente** y que elegir el correcto es una decisión de negocio, no técnica.
 
 ### El problema que resuelve
 
@@ -1288,11 +1288,11 @@ if (errores.Any()) return BadRequest(errores);
 return Ok(resultados);
 ```
 
-Y así con `MlResultBucles`:
+Y así con `MlResultCollections`:
 
 ```csharp
 // ✅ La política de error la elige el método; el cuerpo sólo describe la transformación de UN elemento.
-var resultado = filas.Projection(fila => ConvertirFila(fila));   // MlResult<IEnumerable<Cliente>>
+var resultado = filas.Traverse(fila => ConvertirFila(fila));   // MlResult<IEnumerable<Cliente>>
 ```
 
 La transformación se escribe **para un solo elemento** (`T → MlResult<TResult>`) y el método se encarga de recorrer, acumular, fusionar errores y decidir el resultado global. Esto tiene una ventaja añadida importante: la función de transformación es una unidad pequeña, reutilizable y trivialmente testeable por separado.
@@ -1301,21 +1301,21 @@ La transformación se escribe **para un solo elemento** (`T → MlResult<TResult
 
 | Método | Recorrido | Ante un fallo | Resultado |
 |--------|-----------|---------------|-----------|
-| `Projection` | recorre **todos** los elementos | continúa y **acumula** | `MlResult<IEnumerable<TResult>>`: válido con todos los valores, o fallido con **todos** los errores fusionados. |
-| `ProjectionWhile` | recorre **hasta el primer fallo** | **se detiene** | `MlResult<IEnumerable<TResult>>`: válido con todos los valores, o fallido con el **primer** error. |
-| `ProjectionParallelAsync` | lanza **todas** las tareas en paralelo | continúa y **acumula** | `Task<MlResult<IEnumerable<TResult>>>` con la misma semántica que `Projection`. |
-| `ProjectionSplit` | recorre **todos** los elementos | ni corta ni falla | `MlResult<(Dictionary valids, Dictionary fails)>`: **siempre válido**, con lo bueno y lo malo separado. |
+| `Traverse` | recorre **todos** los elementos | continúa y **acumula** | `MlResult<IEnumerable<TResult>>`: válido con todos los valores, o fallido con **todos** los errores fusionados. |
+| `TraverseWhile` | recorre **hasta el primer fallo** | **se detiene** | `MlResult<IEnumerable<TResult>>`: válido con todos los valores, o fallido con el **primer** error. |
+| `ProjectionParallelAsync` | lanza **todas** las tareas en paralelo | continúa y **acumula** | `Task<MlResult<IEnumerable<TResult>>>` con la misma semántica que `Traverse`. |
+| `TraverseSplit` | recorre **todos** los elementos | ni corta ni falla | `MlResult<(Dictionary valids, Dictionary fails)>`: **siempre válido**, con lo bueno y lo malo separado. |
 
 Regla mental rápida:
 
-- ¿Quiero **informar de todo** lo que está mal y no guardar nada si algo falla? → `Projection`.
-- ¿El proceso es **secuencial y dependiente** y no tiene sentido seguir tras un fallo? → `ProjectionWhile`.
+- ¿Quiero **informar de todo** lo que está mal y no guardar nada si algo falla? → `Traverse`.
+- ¿El proceso es **secuencial y dependiente** y no tiene sentido seguir tras un fallo? → `TraverseWhile`.
 - ¿Cada elemento implica **I/O independiente** (HTTP, base de datos) y quiero paralelismo? → `ProjectionParallelAsync`.
-- ¿Quiero un proceso **tolerante**, que guarde lo válido y reporte lo inválido? → `ProjectionSplit`.
+- ¿Quiero un proceso **tolerante**, que guarde lo válido y reporte lo inválido? → `TraverseSplit`.
 
 Todos ellos admiten además una sobrecarga con **índice** (`Func<T, int, MlResult<TResult>>`), muy útil para mensajes de error del tipo "línea 27 del fichero".
 
-### `Projection`
+### `Traverse`
 
 Aplica la transformación a **todos** los elementos y fusiona los errores de los que hayan fallado. Es una operación *todo o nada*: si un solo elemento es inválido, el resultado global es fallido, pero **con la lista completa de motivos**, no sólo con el primero.
 
@@ -1324,7 +1324,7 @@ Aplica la transformación a **todos** los elementos y fusiona los errores de los
 ```csharp
 var numeros = new[] { 1, 2, 3 };
 
-var result = numeros.Projection(x => MlResult<int>.Valid(x * 10));
+var result = numeros.Traverse(x => MlResult<int>.Valid(x * 10));
 // → válido con [10, 20, 30]
 ```
 
@@ -1332,7 +1332,7 @@ var result = numeros.Projection(x => MlResult<int>.Valid(x * 10));
 
 ```csharp
 public MlResult<IEnumerable<Cliente>> ImportarClientes(IEnumerable<FilaCsv> filas)
-    => filas.Projection((fila, indice) =>
+    => filas.Traverse((fila, indice) =>
         EnsureFp.NotNullEmptyOrWhitespace(fila.Nombre, $"Línea {indice + 1}: el nombre es obligatorio.")
             .Bind(_ => EnsureFp.NotNullEmptyOrWhitespace(fila.Email, $"Línea {indice + 1}: el email es obligatorio.))
             .MapEnsure(_ => fila.Email.Contains('@'),  $"Línea {indice + 1}: el email '{fila.Email}' no es válido.")
@@ -1353,7 +1353,7 @@ var respuesta = importacion.Match(
 
 Observa el detalle importante: **no se importa nada** si hay un solo error. Eso es lo correcto cuando el fichero representa una unidad de trabajo (una remesa, un asiento contable) y una importación parcial dejaría los datos incoherentes.
 
-### `ProjectionWhile`
+### `TraverseWhile`
 
 Recorre la colección **hasta el primer fallo** y se detiene ahí. Los elementos posteriores ni se evalúan.
 
@@ -1362,7 +1362,7 @@ Se usa cuando **el orden importa y los pasos dependen entre sí**, o cuando segu
 ```csharp
 var numeros = new[] { 1, 2, 3, 4 };
 
-var result = numeros.ProjectionWhile(x => x < 3
+var result = numeros.TraverseWhile(x => x < 3
     ? MlResult<int>.Valid(x)
     : MlResult<int>.Fail($"El valor {x} no es válido."));
 
@@ -1377,7 +1377,7 @@ Aquí cada movimiento parte del saldo resultante del anterior, así que en cuant
 ```csharp
 decimal saldo = 1_000m;
 
-var result = movimientos.ProjectionWhile((mov, indice) =>
+var result = movimientos.TraverseWhile((mov, indice) =>
     EnsureFp.That(mov, saldo + mov.Importe >= 0,
                   $"Movimiento {indice + 1} ({mov.Concepto}): saldo insuficiente. " +
                   $"Saldo actual {saldo:N2} €, importe {mov.Importe:N2} €.")
@@ -1393,11 +1393,11 @@ var mensaje = result.Match(
 );
 ```
 
-Con `Projection` este mismo código sería incorrecto: seguiría aplicando movimientos sobre un saldo que ya sabemos inconsistente y generaría una cascada de errores derivados carentes de valor.
+Con `Traverse` este mismo código sería incorrecto: seguiría aplicando movimientos sobre un saldo que ya sabemos inconsistente y generaría una cascada de errores derivados carentes de valor.
 
 ### `ProjectionParallelAsync`
 
-Lanza la transformación de **todos** los elementos a la vez (`Task.WhenAll`) y espera a que terminen todas. La política de error es la de `Projection`: acumula y fusiona.
+Lanza la transformación de **todos** los elementos a la vez (`Task.WhenAll`) y espera a que terminen todas. La política de error es la de `Traverse`: acumula y fusiona.
 
 Es la herramienta indicada cuando el coste de cada elemento es **espera de I/O** —una llamada HTTP, una consulta a base de datos, una lectura de fichero— porque el tiempo total pasa de ser la *suma* de todas las llamadas a ser aproximadamente el de **la más lenta**.
 
@@ -1431,10 +1431,10 @@ public async Task<MlResult<IEnumerable<ProductoConPrecio>>> EnriquecerAsync(IEnu
 ```
 - La lambda debe ser **segura frente a concurrencia**: no mutes variables compartidas (como el `saldo` del ejemplo anterior) ni uses un `DbContext` de EF Core desde varias tareas a la vez.
 - El **orden de ejecución no está garantizado** (el orden del resultado sí se corresponde con el de las tareas lanzadas).
-- Si cada elemento consume un recurso limitado (conexiones, cuota de una API), lanzar cientos de tareas de golpe puede ser contraproducente; en ese caso es preferible `ProjectionAsync` secuencial o trocear la colección en bloques.
+- Si cada elemento consume un recurso limitado (conexiones, cuota de una API), lanzar cientos de tareas de golpe puede ser contraproducente; en ese caso es preferible `TraverseAsync` secuencial o trocear la colección en bloques.
 ```
 
-### `ProjectionSplit`
+### `TraverseSplit`
 
 Devuelve **dos diccionarios**: uno con los elementos que han ido bien (`valids`, clave = elemento original, valor = resultado) y otro con los que han fallado (`fails`, clave = elemento original, valor = su `MlErrorDetails`).
 
@@ -1443,7 +1443,7 @@ Su particularidad más importante es que **el resultado global es válido inclus
 ```csharp
 var numeros = new[] { 1, 2, 3, 4 };
 
-var result = numeros.ProjectionSplit(x => x % 2 == 0
+var result = numeros.TraverseSplit(x => x % 2 == 0
     ? MlResult<int>.Valid(x)
     : MlResult<int>.Fail($"{x} es impar."));
 
@@ -1460,7 +1460,7 @@ Un proceso batch que se ejecuta de madrugada no debe abortarse porque 5 registro
 ```csharp
 public async Task<InformeSincronizacion> SincronizarAsync(IEnumerable<RegistroExterno> registros)
 {
-    var resultado = registros.ProjectionSplit(registro =>
+    var resultado = registros.TraverseSplit(registro =>
         ValidarRegistro(registro)                  // MlResult<RegistroExterno>
             .Map(r => r.ToEntidad())
             .AddValueDetailIfFail(registro.Id));   // deja constancia de QUÉ registro falló
@@ -1491,7 +1491,7 @@ Fíjate en que la clave del diccionario es **el elemento original**, no un índi
 
 ### `MergeFailureErrors` y `MergeErrorsIfExists`
 
-Estos dos métodos trabajan sobre una colección que **ya es** `IEnumerable<MlResult<T>>` —es decir, cuando tú mismo has generado los resultados y sólo necesitas consolidarlos en uno. Son las piezas que usan internamente los métodos `Projection*`, pero resultan muy útiles por separado.
+Estos dos métodos trabajan sobre una colección que **ya es** `IEnumerable<MlResult<T>>` —es decir, cuando tú mismo has generado los resultados y sólo necesitas consolidarlos en uno. Son las piezas que usan internamente los métodos `Traverse*`, pero resultan muy útiles por separado.
 
 | Método | Si hay fallos | Si no hay fallos |
 |--------|---------------|------------------|
@@ -1541,23 +1541,23 @@ Y una nota práctica sobre la elección entre familias: cuando las validaciones 
 ### Guía rápida de decisión
 
 ```csharp
-// Todo o nada, informando de todos los errores  → Projection
-var a = filas.Projection(ValidarFila);
+// Todo o nada, informando de todos los errores  → Traverse
+var a = filas.Traverse(ValidarFila);
 
-// Secuencial y dependiente, parar en el primer error → ProjectionWhile
-var b = movimientos.ProjectionWhile(Aplicar);
+// Secuencial y dependiente, parar en el primer error → TraverseWhile
+var b = movimientos.TraverseWhile(Aplicar);
 
 // I/O independiente por elemento, en paralelo → ProjectionParallelAsync
 var c = await skus.ProjectionParallelAsync(ConsultarPrecioAsync);
 
-// Tolerante: guarda lo bueno, informa de lo malo → ProjectionSplit
-var d = registros.ProjectionSplit(Convertir);
+// Tolerante: guarda lo bueno, informa de lo malo → TraverseSplit
+var d = registros.TraverseSplit(Convertir);
 
 // Consolidar resultados que ya tengo → MergeErrorsIfExists
 var e = resultadosSueltos.MergeErrorsIfExists();
 ```
 
-Todas las variantes disponen de su versión `*Async` (`ProjectionAsync`, `ProjectionWhileAsync`, `ProjectionSplitAsync`, `MergeFailureErrorsAsync`, `MergeErrorsIfExistsAsync`) y aceptan tanto una colección síncrona como un `Task<IEnumerable<T>>` de entrada, de modo que encajan sin fricción en cualquier punto de una cadena asíncrona.
+Todas las variantes disponen de su versión `*Async` (`TraverseAsync`, `ProjectionWhileAsync`, `ProjectionSplitAsync`, `MergeFailureErrorsAsync`, `MergeErrorsIfExistsAsync`) y aceptan tanto una colección síncrona como un `Task<IEnumerable<T>>` de entrada, de modo que encajan sin fricción en cualquier punto de una cadena asíncrona.
 
 ---
 
@@ -1714,7 +1714,7 @@ var dto = await ObtenerPedidoAsync(id)
 El estilo de trabajo que propone la librería sigue siempre el mismo orden. No es una imposición arbitraria: cada fase tiene una responsabilidad clara y respetar la secuencia es lo que hace que el código resulte legible sin comentarios.
 
 ```text
-1. Validar        → EnsureFp / MapEnsure / NullToFailed      (¿puedo empezar?)
+1. Validar        → EnsureFp / MapEnsure / FailIfNull      (¿puedo empezar?)
 2. Transformar    → Map / TryMap                              (adapto los datos)
 3. Encadenar      → Bind / BindAsync / TryBind                (pasos que pueden fallar)
 4. Observar       → ExecSelf / ExecSelfAsync                   (logs, métricas, eventos)
@@ -1781,22 +1781,22 @@ Esta tabla resume, en una sola vista, la decisión que hay que tomar en cada pun
 | Validar con reglas especializadas (texto, número, colección, `Guid`, enum, email…) | `EnsureFp` | `MaxLengthArg`, `InRangeArg`, `NoDuplicatesArg`, `IsDefinedArg` |
 | Devolver **todos** los errores de validación de golpe | `EnsureFp` | `All`, `AllResults` |
 | Validar con un predicado que puede lanzar o que requiere E/S | `EnsureFp` | `TryThat`, `ThatAsync`, `TryThatAsync` |
-| Convertir un `null` o una colección vacía en fallo | `MlResultActionsSeveral` | `NullToFailed`, `EmptyToFailed` |
-| Adaptar una API que devuelve `bool` | `MlResultActionsSeveral` | `BoolToResult` |
+| Convertir un `null` o una colección vacía en fallo | `MlResultSeveralExtensions` | `FailIfNull`, `FailIfEmpty` |
+| Adaptar una API que devuelve `bool` | `MlResultSeveralExtensions` | `FailIfFalse` |
 | Encadenar un paso que **puede fallar** | `Bind` | `Bind`, `BindAsync`, `TryBind` |
 | Transformar un valor que **no puede fallar** | `Map` | `Map`, `MapAsync` |
 | Parsear o convertir con riesgo de excepción | `Map` protegido | `TryMap` |
 | Aplicar una regla de negocio en medio de la cadena | `Map` | `MapEnsure` |
 | Validar varias reglas del mismo objeto y ver **todos** los errores | `Bind` | `BindMulti` |
 | Registrar trazas, métricas o eventos | `ExecSelf` | `ExecSelf`, `ExecSelfAsync`, `TryExecSelf` |
-| Añadir contexto de diagnóstico al error | `MlResultActions` | `AddValueDetailIfFail` |
-| Combinar dos resultados independientes | `MlResultActions` | `CreateCompleteMlResult` |
-| Procesar una colección (todo o nada) | `MlResultBucles` | `Projection` |
-| Procesar una colección parando al primer fallo | `MlResultBucles` | `ProjectionWhile` |
-| Procesar una colección con I/O en paralelo | `MlResultBucles` | `ProjectionParallelAsync` |
-| Procesar una colección tolerante a fallos parciales | `MlResultBucles` | `ProjectionSplit` |
-| Consolidar resultados ya obtenidos | `MlResultBucles` | `MergeErrorsIfExists` |
-| Reutilizar delegados o métodos existentes | `MlResultTransformations` | `ToMlResult`, `TryToMlResultAsync` |
+| Añadir contexto de diagnóstico al error | `MlResultExtensions` | `AddValueDetailIfFail` |
+| Combinar dos resultados independientes | `MlResultExtensions` | `CreateCompleteMlResult` |
+| Procesar una colección (todo o nada) | `MlResultCollections` | `Traverse` |
+| Procesar una colección parando al primer fallo | `MlResultCollections` | `TraverseWhile` |
+| Procesar una colección con I/O en paralelo | `MlResultCollections` | `ProjectionParallelAsync` |
+| Procesar una colección tolerante a fallos parciales | `MlResultCollections` | `TraverseSplit` |
+| Consolidar resultados ya obtenidos | `MlResultCollections` | `MergeErrorsIfExists` |
+| Reutilizar delegados o métodos existentes | `MlResultConversions` | `ToMlResult`, `TryToMlResultAsync` |
 | Cerrar el flujo y devolver una respuesta | `Match` | `Match`, `MatchAsync` |
 
 Y los tres errores más frecuentes al empezar:
@@ -1822,22 +1822,22 @@ filosofía, convención de nombres y el
 | [Índice de tipos](../docs/core-types/README.md) | Portada de la referencia por archivo |
 | [`MlResult`](../docs/core-types/MlResult.md) | El tipo raíz, fábricas y conversiones implícitas |
 | [Modelo de errores](../docs/core-types/MlResultErrors.md) | `MlError`, `MlErrorDetails`, `ErrorMessage` |
-| [`MlResultActions`](../docs/core-types/MlResultActions.md) | Enriquecer errores, transportar datos, acceso seguro |
-| [`MlResultActionsBind`](../docs/core-types/MlResultActionsBind.md) | Todas las sobrecargas de `Bind*` |
-| [`MlResultActionsMap`](../docs/core-types/MlResultActionsMap.md) | Todas las sobrecargas de `Map*` |
-| [`MlResultActionsMatch`](../docs/core-types/MlResultActionsMatch.md) | Todas las sobrecargas de `Match*` |
-| [`MlResultActionsExecSelf`](../docs/core-types/MlResultActionsExecSelf.md) | Todas las sobrecargas de `ExecSelf*` |
-| [`MlResultActionsSeveral`](../docs/core-types/MlResultActionsSeveral.md) | `EmptyToFailed`, `NullToFailed`, `BoolToResult`, `Combine`, `Do` |
-| [`MlResultActionsErrorsDetails`](../docs/core-types/MlResultActionsErrorsDetails.md) | Leer y fusionar el diccionario `Details` |
-| [`MlResultBucles`](../docs/core-types/MlResultBucles.md) | `Projection*`, `ProjectionSplit*`, `Fusion*` |
-| [`MlResultTransformations`](../docs/core-types/MlResultTransformations.md) | `ToMlResult*`, `TryToMlResult*`, boxing |
+| [`MlResultExtensions`](../docs/core-types/MlResultExtensions.md) | Enriquecer errores, transportar datos, acceso seguro |
+| [`MlResultBindExtensions`](../docs/core-types/MlResultBindExtensions.md) | Todas las sobrecargas de `Bind*` |
+| [`MlResultMapExtensions`](../docs/core-types/MlResultMapExtensions.md) | Todas las sobrecargas de `Map*` |
+| [`MlResultMatchExtensions`](../docs/core-types/MlResultMatchExtensions.md) | Todas las sobrecargas de `Match*` |
+| [`MlResultExecSelfExtensions`](../docs/core-types/MlResultExecSelfExtensions.md) | Todas las sobrecargas de `ExecSelf*` |
+| [`MlResultSeveralExtensions`](../docs/core-types/MlResultSeveralExtensions.md) | `FailIfEmpty`, `FailIfNull`, `FailIfFalse`, `CombineAll`, `Do` |
+| [`MlResultErrorDetailsExtensions`](../docs/core-types/MlResultErrorDetailsExtensions.md) | Leer y fusionar el diccionario `Details` |
+| [`MlResultCollections`](../docs/core-types/MlResultCollections.md) | `Traverse*`, `TraverseSplit*`, `Fusion*` |
+| [`MlResultConversions`](../docs/core-types/MlResultConversions.md) | `ToMlResult*`, `TryToMlResult*`, boxing |
 | [`MlResultChangeReturnResult`](../docs/core-types/MlResultChangeReturnResult.md) | Cambiar el tipo de retorno conservando el estado |
 
 ### Guías por concepto
 
 **`Bind` — encadenar operaciones que devuelven `MlResult`**
 
-- [`3_Bind`](../docs/Bind/3_Bind.md) ⭐ · [`2_MlResultActions`](../docs/Bind/2_MlResultActions.md) ·
+- [`3_Bind`](../docs/Bind/3_Bind.md) ⭐ · [`2_MlResultActions`](../docs/Bind/2_MlResultExtensions.md) ·
   [`4_BindMulti`](../docs/Bind/4_BindMulti.md) · [`5_BindIf`](../docs/Bind/5_BindIf.md)
 - Recuperación: [`6_BindIfFail`](../docs/Bind/6_BindIfFail.md) ·
   [`7_BindIfFailWithValue`](../docs/Bind/7_BindIfFailWithValue.md) ·
@@ -1872,7 +1872,7 @@ filosofía, convención de nombres y el
 **`Several` — puentes desde el mundo imperativo**
 
 - [`1_EmptyToFailed`](../docs/Several/1_EmptyToFailed.md) ·
-  [`2_NullToFailed`](../docs/Several/2_NullToFailed.md) ·
+  [`2_NullToFailed`](../docs/Several/2_FailIfNull.md) ·
   [`3_BoolToResult`](../docs/Several/3_BoolToResult.md) ·
   [`4_Combine`](../docs/Several/4_Combine.md) ⚠️ (**no** acumula errores)
 
@@ -1890,7 +1890,7 @@ filosofía, convención de nombres y el
   - [`9_EnsureFpMessages`](../docs/EnsureFp/9_EnsureFpMessages.md) — catálogo de mensajes y claves de detalle
 - [`Transformations`](../docs/Transformations/Transformations.md) — entrar al carril desde código que lanza
 - [`Extensions`](../docs/Extensions/Extensions.md) — `ToAsync`, `With`, `ToFuncTask`, `Constants`
-- [`Bucles`](../docs/loops/Bucles.md) — proyecciones sobre colecciones
+- [`Bucles`](../docs/loops/Collections.md) — proyecciones sobre colecciones
 
 ### Documentación de los proyectos del ecosistema
 
@@ -1947,11 +1947,11 @@ central cabe en una frase:
 
 1. **No leas `Value` directamente**: usa `Match` (o `GetValueOrThrow()` solo cuando ya has
    garantizado la validez).
-2. **`Combine` no acumula errores**: cortocircuita. Si necesitas acumular, usa
-   [`Projection`](../docs/loops/Bucles.md).
+2. **`CombineAll` no acumula errores**: cortocircuita. Si necesitas acumular, usa
+   [`Traverse`](../docs/loops/Collections.md).
 3. **`MlErrorDetails` solo expone `Errors` y `Details`**: no existen `AllErrors`,
    `FirstErrorMessage` ni `HasException`.
-4. **`ProjectionAsync` con delegado asíncrono es secuencial**: para paralelismo usa
+4. **`TraverseAsync` con delegado asíncrono es secuencial**: para paralelismo usa
    `ProjectionParallelAsync`.
 5. **No hagas `Match` en medio de la cadena** para reconstruir otro `MlResult`: eso es un
    `Bind`.

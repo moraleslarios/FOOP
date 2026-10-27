@@ -349,7 +349,7 @@ public class ServicioClientes
 
 ### Ejemplo 3 — Validación en cascada de objetos anidados
 
-No es automática: hay que orquestarla. Para una colección, `Projection` valida todos los elementos y fusiona los errores.
+No es automática: hay que orquestarla. Para una colección, `Traverse` valida todos los elementos y fusiona los errores.
 
 ```csharp
 public class LineaPedido : MlValidableFp<LineaPedido>
@@ -371,7 +371,7 @@ public class Pedido : MlValidableFp<Pedido>
     public override MlResult<Pedido> Validate()
         => EnsureFp.That(this, ClienteId > 0, "El pedido debe tener un cliente")
              .Bind(p => EnsureFp.NotEmpty(p.Lineas, "El pedido debe tener al menos una línea"))
-             .Bind(_ => Lineas.Projection(l => l.Validate()))        // valida TODAS las líneas
+             .Bind(_ => Lineas.Traverse(l => l.Validate()))        // valida TODAS las líneas
              .Bind(_ => Envio is null
                             ? "La dirección de envío es obligatoria".ToMlResultFail<DireccionEnvio>()
                             : Envio.Validate())                       // valida el objeto anidado
@@ -379,7 +379,7 @@ public class Pedido : MlValidableFp<Pedido>
 }
 ```
 
-> 💡 [`Projection`](../docs/loops/Bucles.md) recorre la colección, valida cada elemento y **fusiona todos los errores** en un único `MlErrorDetails`: el usuario ve de golpe qué líneas están mal.
+> 💡 [`Traverse`](../docs/loops/Collections.md) recorre la colección, valida cada elemento y **fusiona todos los errores** en un único `MlErrorDetails`: el usuario ve de golpe qué líneas están mal.
 
 ### Ejemplo 4 — Añadir contexto al error para diagnóstico
 
@@ -466,7 +466,7 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 | Devolver todos los errores de un formulario | `BindMulti` |
 | Comprobar una condición suelta | `EnsureFp.That(obj, condicion, "mensaje")` |
 | Comprobar no nulo / no vacío | `EnsureFp.NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace` |
-| Validar cada elemento de una colección | `coleccion.Projection(x => x.Validate())` |
+| Validar cada elemento de una colección | `coleccion.Traverse(x => x.Validate())` |
 | Validar con atributos `[Required]`, `[Range]`… | [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) |
 | Validar con reglas `AbstractValidator<T>` | [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) |
 | Reglas reutilizables por tipo de dato | [`ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) |
@@ -526,4 +526,4 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 - [`Bind` y `BindMulti` — cortocircuito y acumulación](../docs/Bind/3_Bind.md)
 - [`Map` — transformar el valor válido](../docs/Map/1_Map.md)
 - [`Match` — convertir el resultado en respuesta](../docs/Match/1_Match.md)
-- [`Projection` — validar colecciones enteras](../docs/loops/Bucles.md)
+- [`Traverse` — validar colecciones enteras](../docs/loops/Collections.md)

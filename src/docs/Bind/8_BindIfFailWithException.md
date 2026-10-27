@@ -426,7 +426,7 @@ var r2 = "El importe no puede ser negativo".ToMlResultFail<Factura>()
 - [`7_BindIfFailWithValue.md`](7_BindIfFailWithValue.md) — recuperación usando el valor de entrada.
 - [`9_BindIfFailWithoutException.md`](9_BindIfFailWithoutException.md) — el caso complementario: actuar solo si **no** hay excepción.
 - [`3_Bind.md`](3_Bind.md) — el encadenamiento básico y `TryBind`, origen habitual de `Details["Ex"]`.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `GetException<TException>`, `MergeErrorsDetailsIfFail`.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException`, `GetException<TException>`, `MergeErrorsDetailsIfFail`.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — claves convencionales `Ex`, `Ex2`, `Value` y factorías de `MlErrorDetails`.
 - [`../ExecSelf/5_ExecSelfIfFailWithException.md`](../ExecSelf/5_ExecSelfIfFailWithException.md) — el mismo filtro, pero solo para efectos laterales.
 - [`../Map/6_MapIfFailWithException.md`](../Map/6_MapIfFailWithException.md) — cuando la recuperación no puede fallar.

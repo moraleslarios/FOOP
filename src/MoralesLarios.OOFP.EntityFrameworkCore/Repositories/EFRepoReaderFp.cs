@@ -24,7 +24,7 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
         var result = EnsureFp.NotNull(pk, "The object array pk cannot be null")
                                 .TryMap (x => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
                                 .TryMap (x => _repoReader!.Find(pk))
-                                .TryBind(x => x.NullToFailed(notFoundErrorDetails));
+                                .TryBind(x => x.FailIfNull(notFoundErrorDetails));
         return result;
     }
 
@@ -37,7 +37,7 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
         var result = await EnsureFp.NotNullAsync(pk, "The object array pk cannot be null")
                                     .TryMapAsync (x => EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty"))
                                     .TryMapAsync (x => _repoReader!.FindAsync(token, pk))
-                                    .TryBindAsync(x => x.NullToFailedAsync(notFoundErrorDetails));
+                                    .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
         return result;
     }
 
@@ -49,7 +49,7 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
                                 .TryMap (x => _repoReader!.FirstOrDefault(filter))
-                                .TryBind(x => x.NullToFailed(notFoundErrorDetails));
+                                .TryBind(x => x.FailIfNull(notFoundErrorDetails));
         return result;
     }
 
@@ -62,7 +62,7 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
                                     .TryMapAsync (x => _repoReader!.FirstOrDefaultAsync(filter, token))
-                                    .TryBindAsync(x => x.NullToFailedAsync(notFoundErrorDetails));
+                                    .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
         return result;
     }
 
@@ -75,7 +75,7 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
                                 .TryMap (x => _repoReader!.LastOrDefault(filter))
-                                .TryBind(x => x.NullToFailed(notFoundErrorDetails));
+                                .TryBind(x => x.FailIfNull(notFoundErrorDetails));
 
         return result;
     }
@@ -89,7 +89,7 @@ public class EFRepoReaderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCo
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
                                     .TryMapAsync (x => _repoReader!.LastOrDefaultAsync(filter, token))
-                                    .TryBindAsync(x => x.NullToFailedAsync(notFoundErrorDetails));
+                                    .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
 
         return result;
     }

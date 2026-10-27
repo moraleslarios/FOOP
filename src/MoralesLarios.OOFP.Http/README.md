@@ -728,7 +728,7 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
     **web** (`camelCase`, insensible a mayúsculas). Funciona por casualidad, porque la lectura es
     insensible; pero si el servidor espera `camelCase` estricto, el `POST`/`PUT` fallará. No hay forma de
     inyectar un `JsonSerializerOptions`.
-11. **`Path.Combine` para construir las URL de los mensajes de log.** En Windows produce
+11. **`Path.CombineAll` para construir las URL de los mensajes de log.** En Windows produce
     `https://host\pruebas`. Solo afecta a los logs, no a la petición real, pero ensucia la traza.
 12. **Erratas en nombres públicos:** el genérico `TItem` (falta la `e` de *Enumerable*) en
     `PostGetPaginationAsync`, el genérico `K` en vez de `TResult` en `PostAsync<T, K>`, y la palabra
@@ -1034,7 +1034,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 | Salir a un tipo concreto (`string`, `IActionResult`…) | `Match` / `MatchAsync` | [`Match`](../docs/Match/1_Match.md) |
 | Efecto lateral (log, métrica) sin romper la cadena | `ExecSelfIfValid` / `ExecSelfIfFail` | [`ExecSelf`](../docs/ExecSelf/2_ExecSelfIfValid.md) |
 | Validar antes de llamar | `EnsureFp.NotNull`, `EnsureFp.That` | [`EnsureFp`](../docs/EnsureFp/EnsureFp.md) |
-| Recorrer una colección haciendo N llamadas | `Projection*` / `MergeErrorsIfExists` | [`Bucles`](../docs/loops/Bucles.md) |
+| Recorrer una colección haciendo N llamadas | `Traverse*` / `MergeErrorsIfExists` | [`Bucles`](../docs/loops/Collections.md) |
 
 ---
 
@@ -1156,7 +1156,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 - [`ExecSelfIfValid`](../docs/ExecSelf/2_ExecSelfIfValid.md) — logs y métricas sin
   romper la cadena.
 - [`EnsureFp`](../docs/EnsureFp/EnsureFp.md) — validaciones previas a la llamada.
-- [Bucles y colecciones](../docs/loops/Bucles.md) — N peticiones y fusión de errores.
+- [Bucles y colecciones](../docs/loops/Collections.md) — N peticiones y fusión de errores.
 
 > ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`,
 > `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`,

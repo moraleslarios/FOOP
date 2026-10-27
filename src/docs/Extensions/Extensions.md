@@ -422,7 +422,7 @@ public class TarifaService
     public Task<MlResult<TarifaDto>> ObtenerAsync(int id)
         => EnsureFp.ThatAsync(id, id > 0, "El identificador debe ser positivo")
                    .BindAsync(i => _repo.BuscarAsync(i)
-                                        .NullToFailedAsync($"No existe la tarifa {i}"))
+                                        .FailIfNullAsync($"No existe la tarifa {i}"))
                    // MapAsync espera Func<T, Task<TResult>>: ToAsync ajusta la firma
                    .MapAsync(t => t.ToDto().ToAsync())
                    .BindAsync(dto => dto.Vigente
@@ -590,4 +590,4 @@ var errores = dto.ValidateObject();
 - [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — efectos laterales, donde `ToFuncTask` es más útil
 - [`MapIfFailWithValue`](../Map/5_MapIfFailWithValue.md) — uso de `ValueMetadataKey`
 - [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) — uso de `ExceptionMetadataKey`
-- [`Bucles y proyecciones`](../loops/Bucles.md) — recorrido de colecciones
+- [`Bucles y proyecciones`](../loops/Collections.md) — recorrido de colecciones

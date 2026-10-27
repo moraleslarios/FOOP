@@ -85,7 +85,7 @@ return MlErrorDetails.FromErrorMessageWithValue("El pedido no es válido", pedid
                       .ToMlResultFail<PedidoValidado>();
 ```
 
-Recuerda cómo se implementa `AddValueDetailIfFail` (verificado en `MlResultActions.cs`):
+Recuerda cómo se implementa `AddValueDetailIfFail` (verificado en `MlResultExtensions.cs`):
 
 ```csharp
 public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, string errorKey, object errorValue)
@@ -502,7 +502,7 @@ producción.**
 - [`1_Map.md`](1_Map.md) — la operación base.
 - [`../Bind/7_BindIfFailWithValue.md`](../Bind/7_BindIfFailWithValue.md) — la versión que sí puede volver a fallar.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — efectos laterales con el valor recuperado.
-- [`../Types/MlResultActions.md`](../core-types/MlResultActions.md) — `AddValueDetailIfFail` y compañía.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetMetadataValue<T>`, `AddValueIfFail`.
+- [`../Types/MlResultExtensions.md`](../core-types/MlResultExtensions.md) — `AddValueDetailIfFail` y compañía.
+- [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetMetadataValue<T>`, `AddValueIfFail`.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlErrorDetails`.
-- [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.
+- [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la familia `Map`.

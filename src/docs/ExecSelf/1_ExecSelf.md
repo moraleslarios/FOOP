@@ -60,7 +60,7 @@ que no habría rastro en el log. Eso es lo que hace a `ExecSelf` seguro y fácil
 
 ## Familias de la región `ExecSelf`
 
-El archivo `Types/MlResultActionsExecSelf.cs` contiene estas familias:
+El archivo `Types/MlResultExecSelfExtensions.cs` contiene estas familias:
 
 | Familia | Se ejecuta cuando… | Recibe el delegado |
 | --- | --- | --- |
@@ -73,7 +73,7 @@ El archivo `Types/MlResultActionsExecSelf.cs` contiene estas familias:
 | `ExecSelfIfFailWithoutException` | Fallido y **no** hay excepción (error de negocio puro) | `MlErrorDetails` |
 
 Cada familia tiene su versión `*Async` y su versión `Try*` / `Try*Async`. El recuento exacto de
-sobrecargas está en [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md).
+sobrecargas está en [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md).
 
 ---
 
@@ -402,7 +402,7 @@ Una tubería con un `ExecSelf` entre cada paso se vuelve ilegible. Instrumenta l
 - [`4_ExecSelfIfFailWithValue.md`](4_ExecSelfIfFailWithValue.md) — recuperar el valor adjunto al fallo.
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — fallos con excepción.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — fallos de negocio puros.
-- [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia completa con el recuento de sobrecargas.
+- [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md) — referencia completa con el recuento de sobrecargas.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError` y `MlErrorDetails`.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir de la tubería.
 - [`../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md`](../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md) — la familia `BindSaveValueInDetailsIfFailedFuncResult`, que antes se documentaba aquí por error.

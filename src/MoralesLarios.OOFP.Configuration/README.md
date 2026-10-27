@@ -473,7 +473,7 @@ public MlResult<ConfigProxy> LeerConfigProxy()
               .Map (user => new ConfigProxy(usar, url, user))));
 ```
 
-> 💡 Este anidamiento es la forma clásica; con `MlResult` también puedes usar `Fusion`/`Join` del núcleo para acumular **todos** los errores en lugar de parar en el primero. Ver [`MlResultActions`](../docs/loops/Bucles.md).
+> 💡 Este anidamiento es la forma clásica; con `MlResult` también puedes usar `Fusion`/`Join` del núcleo para acumular **todos** los errores en lugar de parar en el primero. Ver [`MlResultExtensions`](../docs/loops/Collections.md).
 
 ### Ejemplo 3 — Validación al arrancar (patrón recomendado)
 

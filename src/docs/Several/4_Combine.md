@@ -3,9 +3,9 @@
 ## Índice
 
 1. [Introducción](#introducción)
-2. [⚠️ Lo primero: `Combine` NO acumula errores](#️-lo-primero-combine-no-acumula-errores)
+2. [⚠️ Lo primero: `CombineAll` NO acumula errores](#️-lo-primero-combine-no-acumula-errores)
 3. [El problema que resuelve: el infierno de los `Bind` anidados](#el-problema-que-resuelve-el-infierno-de-los-bind-anidados)
-4. [Las tres familias de `Combine`](#las-tres-familias-de-combine)
+4. [Las tres familias de `CombineAll`](#las-tres-familias-de-combine)
 5. [Familia A: `MlResult<T>` + valor(es) sueltos](#familia-a-mlresultt--valores-sueltos)
 6. [Familia B: valor/tupla + `MlResult<T>`](#familia-b-valortupla--mlresultt)
 7. [Familia C: valor/tupla + valor (sin `MlResult`)](#familia-c-valortupla--valor-sin-mlresult)
@@ -22,7 +22,7 @@
 
 ## Introducción
 
-`Combine` sirve para **arrastrar varios valores a la vez por el carril**, agrupándolos en
+`CombineAll` sirve para **arrastrar varios valores a la vez por el carril**, agrupándolos en
 una tupla de C#. Es la respuesta al problema clásico de la programación funcional: cuando
 el paso 5 de una tubería necesita el resultado del paso 1, del 2 y del 4.
 
@@ -39,14 +39,14 @@ return ObtenerCliente(id)
 
 ---
 
-## ⚠️ Lo primero: `Combine` NO acumula errores
+## ⚠️ Lo primero: `CombineAll` NO acumula errores
 
 Es el malentendido más frecuente con este método. En otras librerías funcionales, un
-`Combine`/`Apply`/`Zip` recoge **todos** los errores de todos los operandos. **Aquí no.**
+`CombineAll`/`Apply`/`Zip` recoge **todos** los errores de todos los operandos. **Aquí no.**
 
 ```csharp
 // Implementación real, sin adornos
-public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(
+public static MlResult<(TResult1 value1, TResult2 value2)> CombineAll<TResult1, TResult2>(
         this MlResult<TResult1> source, TResult2 otherValue)
     => source.Match(
            valid: x            => MlResult<(TResult1, TResult2)>.Valid((x, otherValue)),
@@ -61,17 +61,17 @@ Lo que hace es **exactamente**:
 | El `MlResult` operando es válido | `Valid` con la tupla ampliada |
 | El `MlResult` operando es fallido | `Fail` con **los errores de ese operando y nada más** |
 
-🔑 **`Combine` es un cortocircuito, como `Bind`.** Solo hay un `MlResult` en juego en cada
+🔑 **`CombineAll` es un cortocircuito, como `Bind`.** Solo hay un `MlResult` en juego en cada
 llamada; el otro operando es un valor normal. Por tanto no hay nada que "acumular".
 
 ```csharp
 // ❌ Expectativa equivocada: esperar los dos errores
 var a = MlResult<int>.Fail("Error A");
-var r = a.Combine(otroValor);            // solo contiene "Error A" — correcto, solo hay uno
+var r = a.CombineAll(otroValor);            // solo contiene "Error A" — correcto, solo hay uno
 
 // ⚠️ Y aquí, aunque haya dos MlResult, tampoco se acumulan:
 var b = MlResult<string>.Fail("Error B");
-var r2 = a.Combine(b);                   // ⚠️ NO compila como esperas: 'b' entra como TResult2
+var r2 = a.CombineAll(b);                   // ⚠️ NO compila como esperas: 'b' entra como TResult2
                                          //    → MlResult<(int, MlResult<string>)>
 ```
 
@@ -79,7 +79,7 @@ var r2 = a.Combine(b);                   // ⚠️ NO compila como esperas: 'b' 
 otras herramientas:
 
 - Recoger los errores de cada validación y fusionarlos con `MlErrorDetails.FromErrorsDetails(...)`
-- Los métodos de la carpeta [`Bucle`](../loops/Bucles.md), que acumulan errores por elemento
+- Los métodos de la carpeta [`Bucle`](../loops/Collections.md), que acumulan errores por elemento
 - `MergeErrorsDetailsIfFail(...)` para arrastrar los errores previos al añadir uno nuevo
 
 ---
@@ -91,42 +91,42 @@ tardío necesita datos de varios pasos previos, tienes tres opciones:
 
 1. **Anidar `Bind`** — el "callback hell" funcional: la indentación crece sin control.
 2. **Crear un DTO intermedio** por cada combinación de datos — mucho código ceremonial.
-3. **Usar `Combine`** — arrastrar una tupla que crece paso a paso.
+3. **Usar `CombineAll`** — arrastrar una tupla que crece paso a paso.
 
-`Combine` es la opción pragmática: no necesitas declarar tipos y la tubería se mantiene
+`CombineAll` es la opción pragmática: no necesitas declarar tipos y la tubería se mantiene
 plana.
 
 ```csharp
 // La tupla crece: 1 → 2 → 3 → 4 elementos
 MlResult<Cliente>                                    paso1 = ObtenerCliente(id);
-MlResult<(Cliente, Tarifa)>                          paso2 = paso1.Combine(tarifa);
-MlResult<(Cliente, Tarifa, Descuento)>               paso3 = paso2.Combine(descuento);
-MlResult<(Cliente, Tarifa, Descuento, Impuestos)>    paso4 = paso3.Combine(impuestos);
+MlResult<(Cliente, Tarifa)>                          paso2 = paso1.CombineAll(tarifa);
+MlResult<(Cliente, Tarifa, Descuento)>               paso3 = paso2.CombineAll(descuento);
+MlResult<(Cliente, Tarifa, Descuento, Impuestos)>    paso4 = paso3.CombineAll(impuestos);
 ```
 
 ---
 
-## Las tres familias de `Combine`
+## Las tres familias de `CombineAll`
 
 El código fuente define tres grupos distintos, según **qué lado lleva el `MlResult`**:
 
 | Familia | Firma característica | Qué hace | Puede fallar |
 |---------|---------------------|----------|--------------|
-| **A** | `MlResult<T1>.Combine(valorOTupla)` | Añade 1 a 7 valores sueltos al resultado | Sí, si `source` falla |
-| **B** | `valorOTupla.Combine(MlResult<Tn>)` | Añade el valor de un `MlResult` a una tupla existente | Sí, si el `MlResult` falla |
-| **C** | `valorOTupla.Combine(valor)` | Construye la tupla y la marca válida | **Nunca falla** |
+| **A** | `MlResult<T1>.CombineAll(valorOTupla)` | Añade 1 a 7 valores sueltos al resultado | Sí, si `source` falla |
+| **B** | `valorOTupla.CombineAll(MlResult<Tn>)` | Añade el valor de un `MlResult` a una tupla existente | Sí, si el `MlResult` falla |
+| **C** | `valorOTupla.CombineAll(valor)` | Construye la tupla y la marca válida | **Nunca falla** |
 
 Las tres llegan hasta **8 elementos** en la tupla.
 
 ```csharp
 // A: parto de un MlResult y añado valores ya disponibles
-MlResult<(Cliente, Tarifa)> a = clienteResult.Combine(tarifaYaObtenida);
+MlResult<(Cliente, Tarifa)> a = clienteResult.CombineAll(tarifaYaObtenida);
 
 // B: parto de una tupla de valores y añado un MlResult
-MlResult<(Cliente, Tarifa)> b = cliente.Combine(tarifaResult);
+MlResult<(Cliente, Tarifa)> b = cliente.CombineAll(tarifaResult);
 
 // C: solo agrupo valores, sin ningún MlResult implicado
-MlResult<(Cliente, Tarifa)> c = cliente.Combine(tarifa);   // siempre Valid
+MlResult<(Cliente, Tarifa)> c = cliente.CombineAll(tarifa);   // siempre Valid
 ```
 
 ---
@@ -138,11 +138,11 @@ un valor (o una tupla de valores) que ya tienes a mano.
 
 ```csharp
 // 2 elementos: el segundo operando es un valor suelto
-public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(
+public static MlResult<(TResult1 value1, TResult2 value2)> CombineAll<TResult1, TResult2>(
         this MlResult<TResult1> source, TResult2 otherValue)
 
 // 3 a 8 elementos: el segundo operando es una TUPLA de valores
-public static MlResult<(TResult1, TResult2, TResult3)> Combine<TResult1, TResult2, TResult3>(
+public static MlResult<(TResult1, TResult2, TResult3)> CombineAll<TResult1, TResult2, TResult3>(
         this MlResult<TResult1> source, (TResult2 value1, TResult3 value2) values)
 ```
 
@@ -151,12 +151,12 @@ una lista de argumentos. Se añaden **todos de golpe** al valor del `MlResult`:
 
 ```csharp
 // ✅ Añade DOS valores de una vez → tupla de 3
-MlResult<(Cliente, Tarifa, Descuento)> r = clienteResult.Combine((tarifa, descuento));
+MlResult<(Cliente, Tarifa, Descuento)> r = clienteResult.CombineAll((tarifa, descuento));
 
 // ✅ Equivalente encadenando (nótese: aquí entra en juego la familia B/C)
 MlResult<(Cliente, Tarifa, Descuento)> r2 = clienteResult
-        .Combine(tarifa)                      // familia A, 2 elementos
-        .Bind(t => t.Combine(descuento));     // familia C sobre la tupla
+        .CombineAll(tarifa)                      // familia A, 2 elementos
+        .Bind(t => t.CombineAll(descuento));     // familia C sobre la tupla
 ```
 
 **Nombres de los campos:** solo la sobrecarga de 2 elementos declara nombres
@@ -165,14 +165,14 @@ accedes con `Item1`, `Item2`, `Item3`…
 
 ```csharp
 // 2 elementos: nombres disponibles
-clienteResult.Combine(tarifa).Map(t => $"{t.value1.Nombre} — {t.value2.Codigo}");
+clienteResult.CombineAll(tarifa).Map(t => $"{t.value1.Nombre} — {t.value2.Codigo}");
 
 // 3+ elementos: solo Item1, Item2, Item3…
-clienteResult.Combine((tarifa, descuento))
+clienteResult.CombineAll((tarifa, descuento))
              .Map(t => $"{t.Item1.Nombre} — {t.Item2.Codigo} — {t.Item3.Porcentaje}");
 
 // 💡 Truco: deconstruye para dar nombres legibles
-clienteResult.Combine((tarifa, descuento))
+clienteResult.CombineAll((tarifa, descuento))
              .Map(t =>
              {
                  var (cliente, tar, desc) = t;
@@ -189,7 +189,7 @@ tupla de valores válidos y quieres añadirle el resultado de una operación que
 
 ```csharp
 // valor + MlResult → tupla de 2
-public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TResult2>(
+public static MlResult<(TResult1 value1, TResult2 value2)> CombineAll<TResult1, TResult2>(
         this TResult1 source, MlResult<TResult2> mlResultValue)
     => mlResultValue.Match(
            valid: x            => MlResult<(TResult1, TResult2)>.Valid((source, x)),
@@ -197,7 +197,7 @@ public static MlResult<(TResult1 value1, TResult2 value2)> Combine<TResult1, TRe
        );
 
 // tupla de 2 + MlResult → tupla de 3  (y así hasta 8)
-public static MlResult<(TResult1 value1, TResult2 value2, TResult3 value3)> Combine<TResult1, TResult2, TResult3>(
+public static MlResult<(TResult1 value1, TResult2 value2, TResult3 value3)> CombineAll<TResult1, TResult2, TResult3>(
         this (TResult1 value1, TResult2 value2) source, MlResult<TResult3> mlResultValue)
 ```
 
@@ -205,8 +205,8 @@ Uso típico dentro de un `Bind`, cuando el valor que falta viene de una consulta
 
 ```csharp
 var resultado = clienteResult
-        .Bind(cliente => cliente.Combine(ObtenerTarifa(cliente.TarifaId)))       // (Cliente, Tarifa)
-        .Bind(t       => t.Combine(ObtenerDescuento(t.value1.Id)))               // (Cliente, Tarifa, Descuento)
+        .Bind(cliente => cliente.CombineAll(ObtenerTarifa(cliente.TarifaId)))       // (Cliente, Tarifa)
+        .Bind(t       => t.CombineAll(ObtenerDescuento(t.value1.Id)))               // (Cliente, Tarifa, Descuento)
         .Map(t => Calcular(t.Item1, t.Item2, t.Item3));
 ```
 
@@ -221,11 +221,11 @@ Estas sobrecargas **nunca fallan**: se limitan a construir la tupla y envolverla
 resultado válido.
 
 ```csharp
-public static MlResult<(TResult1, TResult2)> Combine<TResult1, TResult2>(
+public static MlResult<(TResult1, TResult2)> CombineAll<TResult1, TResult2>(
         this TResult1 source, TResult2 value)
     => (source, value).ToMlResultValid();
 
-public static MlResult<(TResult1, TResult2, TResult3)> Combine<TResult1, TResult2, TResult3>(
+public static MlResult<(TResult1, TResult2, TResult3)> CombineAll<TResult1, TResult2, TResult3>(
         this (TResult1 value1, TResult2 value2) source, TResult3 newValue)
     => (source.value1, source.value2, newValue).ToMlResultValid();
 // … hasta 8 elementos
@@ -235,7 +235,7 @@ Sirven para **ampliar una tupla dentro de un `Bind`** sin ceremonia:
 
 ```csharp
 // Dentro del carril: la tupla crece de 2 a 3 elementos
-var r = paresResult.Bind(t => t.Combine(nuevoValor));   // familia C, siempre Valid
+var r = paresResult.Bind(t => t.CombineAll(nuevoValor));   // familia C, siempre Valid
 ```
 
 ⚠️ Estas sobrecargas devuelven tuplas **sin nombres** (`Item1`, `Item2`…), igual que la
@@ -245,7 +245,7 @@ familia A de 3+ elementos.
 
 ## ⚠️ Particularidades reales del código fuente
 
-**1. `Combine` cortocircuita, no acumula.** Ya explicado arriba: es el punto más
+**1. `CombineAll` cortocircuita, no acumula.** Ya explicado arriba: es el punto más
 importante.
 
 **2. Los nombres de los campos de la tupla son inconsistentes entre familias.**
@@ -262,10 +262,10 @@ asimetría y ganar legibilidad.
 
 **3. Algunas sobrecargas asíncronas de la familia B devuelven tipos nullable.**
 Concretamente las que parten de una tupla:
-`Task<MlResult<(...)>?>`. Igual que en `EmptyToFailed`, **nunca devuelven `null`**; es una
+`Task<MlResult<(...)>?>`. Igual que en `FailIfEmpty`, **nunca devuelven `null`**; es una
 anotación heredada. La propia librería usa `.ToAsync()!` internamente.
 
-**4. No existe `TryCombine`.** `Combine` no invoca delegados de usuario, así que no hay
+**4. No existe `TryCombine`.** `CombineAll` no invoca delegados de usuario, así que no hay
 excepciones que capturar.
 
 **5. Los valores del segundo operando se evalúan siempre.**
@@ -274,13 +274,13 @@ Como son valores y no delegados, se calculan **antes** de la llamada, incluso si
 
 ```csharp
 // ⚠️ ConsultaCostosa() se ejecuta aunque clienteResult sea Fail
-var r = clienteResult.Combine(ConsultaCostosa());
+var r = clienteResult.CombineAll(ConsultaCostosa());
 
 // ✅ Si el valor es costoso, obtenlo dentro de un Bind (que sí cortocircuita)
-var r = clienteResult.Bind(c => c.Combine(ConsultaCostosa()));
+var r = clienteResult.Bind(c => c.CombineAll(ConsultaCostosa()));
 ```
 
-Esta es la razón principal para preferir el patrón `Bind(x => x.Combine(...))` (familias B
+Esta es la razón principal para preferir el patrón `Bind(x => x.CombineAll(...))` (familias B
 y C) frente a la familia A cuando el segundo operando implique trabajo real.
 
 **6. El límite es 8 elementos.** Si necesitas más, es señal de que deberías introducir un
@@ -294,16 +294,16 @@ Cada sobrecarga síncrona tiene dos hermanas asíncronas:
 
 | Patrón | Naturaleza |
 |--------|-----------|
-| `CombineAsync(this MlResult<T> source, valor)` | Envoltura: `source.Combine(valor).ToAsync()` |
-| `CombineAsync(this Task<MlResult<T>> sourceAsync, valor)` | **Espera el origen** |
-| `CombineAsync(this T source, MlResult<Tn>)` | Envoltura |
-| `CombineAsync(this T source, Task<MlResult<Tn>>)` | **Espera el `MlResult`** |
+| `CombineAllAsync(this MlResult<T> source, valor)` | Envoltura: `source.CombineAll(valor).ToAsync()` |
+| `CombineAllAsync(this Task<MlResult<T>> sourceAsync, valor)` | **Espera el origen** |
+| `CombineAllAsync(this T source, MlResult<Tn>)` | Envoltura |
+| `CombineAllAsync(this T source, Task<MlResult<Tn>>)` | **Espera el `MlResult`** |
 
 ```csharp
 // Encadenamiento asíncrono completo
 var resultado = await ObtenerClienteAsync(id)
-                      .CombineAsync(tarifaYaObtenida)                 // Task<MlResult<...>> + valor
-                      .BindAsync(async t => await t.CombineAsync(ObtenerDescuentoAsync(t.value1.Id)))
+                      .CombineAllAsync(tarifaYaObtenida)                 // Task<MlResult<...>> + valor
+                      .BindAsync(async t => await t.CombineAllAsync(ObtenerDescuentoAsync(t.value1.Id)))
                       .MapAsync(t => Calcular(t.Item1, t.Item2, t.Item3).ToAsync());
 ```
 
@@ -314,7 +314,7 @@ tendría sentido.
 
 ## Apéndice: `Do`, el operador de escape
 
-En el mismo archivo del código fuente, junto a `Combine`, vive un método pequeño pero
+En el mismo archivo del código fuente, junto a `CombineAll`, vive un método pequeño pero
 llamativo:
 
 ```csharp
@@ -347,12 +347,12 @@ resultado completo, típicamente porque va a decidir por sí misma cómo tratar 
 ```csharp
 // Insertar una política propia en medio de la tubería
 var r = ObtenerCliente(id)
-            .Do(res => _politicaReintentos.Aplicar(res))     // ve el MlResult completo
+            .Pipe(res => _politicaReintentos.Aplicar(res))     // ve el MlResult completo
             .Map(c => c.ToDto());
 
 // ⚠️ La tercera sobrecarga pasa el Task SIN esperar: tu delegado decide cuándo hacer await
 var r = await ObtenerClienteAsync(id)
-                  .DoAsync(async tarea => await _politica.AplicarAsync(tarea));
+                  .PipeAsync(async tarea => await _politica.AplicarAsync(tarea));
 ```
 
 💡 **Cuándo usarlo:** casi nunca. Si tu intención es reaccionar al fallo, usa
@@ -366,12 +366,12 @@ integrar funciones externas cuya firma ya trabaja con `MlResult<T>`.
 
 | Necesito… | Uso |
 |-----------|-----|
-| Arrastrar 2–8 valores por el carril | `Combine` |
-| Añadir un valor ya disponible a un `MlResult` | Familia A: `resultado.Combine(valor)` |
-| Añadir el resultado de una consulta a una tupla | Familia B: `.Bind(t => t.Combine(consulta()))` |
-| Ampliar una tupla con un valor seguro | Familia C: `.Bind(t => t.Combine(valor))` |
+| Arrastrar 2–8 valores por el carril | `CombineAll` |
+| Añadir un valor ya disponible a un `MlResult` | Familia A: `resultado.CombineAll(valor)` |
+| Añadir el resultado de una consulta a una tupla | Familia B: `.Bind(t => t.CombineAll(consulta()))` |
+| Ampliar una tupla con un valor seguro | Familia C: `.Bind(t => t.CombineAll(valor))` |
 | Evitar que el segundo operando se evalúe si hay fallo | Envuelve en `Bind` (familias B/C) |
-| **Acumular** los errores de varias validaciones | [`Bucles`](../loops/Bucles.md), `MlErrorDetails.FromErrorsDetails` |
+| **Acumular** los errores de varias validaciones | [`Bucles`](../loops/Collections.md), `MlErrorDetails.FromErrorsDetails` |
 | Más de 8 valores | Define un `record` propio |
 | Transformar el valor | [`Map`](../Map/1_Map.md) |
 | Encadenar una operación que puede fallar | [`Bind`](../Bind/3_Bind.md) |
@@ -389,15 +389,15 @@ public class CalculadoraPrecio
     public async Task<MlResult<PrecioFinal>> CalcularAsync(int clienteId, int articuloId, int cantidad)
         => await EnsureFp.That(cantidad, cantidad > 0, "La cantidad debe ser positiva")
                          .BindAsync(_ => _clientes.ObtenerAsync(clienteId)
-                                                  .NullToFailedAsync($"Cliente {clienteId} no encontrado"))
+                                                  .FailIfNullAsync($"Cliente {clienteId} no encontrado"))
                          // (Cliente, Articulo)
-                         .BindAsync(async cliente => cliente.Combine(
+                         .BindAsync(async cliente => cliente.CombineAll(
                                         await _articulos.ObtenerAsync(articuloId)
-                                                        .NullToFailedAsync($"Artículo {articuloId} no encontrado")))
+                                                        .FailIfNullAsync($"Artículo {articuloId} no encontrado")))
                          // (Cliente, Articulo, Tarifa)
-                         .BindAsync(async t => await t.CombineAsync(_tarifas.VigenteAsync(t.value1.TarifaId)))
+                         .BindAsync(async t => await t.CombineAllAsync(_tarifas.VigenteAsync(t.value1.TarifaId)))
                          // (Cliente, Articulo, Tarifa, Impuesto)
-                         .BindAsync(async t => await t.CombineAsync(_impuestos.ParaPaisAsync(t.value1.Pais)))
+                         .BindAsync(async t => await t.CombineAllAsync(_impuestos.ParaPaisAsync(t.value1.Pais)))
                          .MapAsync(t =>
                          {
                              var (cliente, articulo, tarifa, impuesto) = t;
@@ -425,7 +425,7 @@ public async Task<MlResult<Informe>> GenerarAsync(int ejercicio, string departam
 
     // Familia A con tupla: los tres valores ya están resueltos
     return (await tVentas)
-                .Combine((await tGastos, await tPlantilla))          // (Ventas, Gastos, Plantilla)
+                .CombineAll((await tGastos, await tPlantilla))          // (Ventas, Gastos, Plantilla)
                 .MapEnsure(t => t.Item1.Any(), "No hay ventas registradas en el ejercicio")
                 .Map(t =>
                 {
@@ -447,12 +447,12 @@ así que su evaluación anticipada es deseada.
 
 ```csharp
 public MlResult<AltaCliente> Validar(AltaClienteDto dto)
-    => dto.NullToFailed("Los datos de alta son obligatorios")
+    => dto.FailIfNull("Los datos de alta son obligatorios")
           .Bind(d => ValidarNif(d.Nif)
-                        .Combine(d))                                 // (Nif, AltaClienteDto)
+                        .CombineAll(d))                                 // (Nif, AltaClienteDto)
           .Bind(t => ValidarEmail(t.value2.Email)
                         .Map(email => (t.value1, email, t.value2)))  // (Nif, Email, Dto)
-          .Bind(t => t.Item3.Direccion.NullToFailed("La dirección es obligatoria")
+          .Bind(t => t.Item3.Direccion.FailIfNull("La dirección es obligatoria")
                         .Map(dir => (t.Item1, t.Item2, dir)))        // (Nif, Email, Direccion)
           .Map(t =>
           {
@@ -478,7 +478,7 @@ private MlResult<Pedido> AplicarPoliticaLegada(MlResult<Pedido> resultado)
 // Do la inserta en la tubería sin adaptadores
 public MlResult<PedidoDto> Procesar(int id)
     => ObtenerPedido(id)
-            .Do(AplicarPoliticaLegada)
+            .Pipe(AplicarPoliticaLegada)
             .Map(p => p.ToDto());
 ```
 
@@ -486,27 +486,27 @@ public MlResult<PedidoDto> Procesar(int id)
 
 ```csharp
 // ❌ Esperar que Combine acumule errores de dos validaciones
-var r = ValidarNif(nif).Combine(ValidarEmail(email));
+var r = ValidarNif(nif).CombineAll(ValidarEmail(email));
 //      ⚠️ El segundo operando entra como VALOR: MlResult<(Nif, MlResult<Email>)>
 
 // ✅ Encadena y decide, o acumula explícitamente
 var r = ValidarNif(nif).Bind(n => ValidarEmail(email).Map(e => (Nif: n, Email: e)));
 
 // ❌ Consulta costosa evaluada aunque el carril ya haya fallado
-var r = clienteResult.Combine(ConsultaCostosa());
+var r = clienteResult.CombineAll(ConsultaCostosa());
 
 // ✅ Dentro de Bind: solo se ejecuta si el carril sigue válido
-var r = clienteResult.Bind(c => c.Combine(ConsultaCostosa()));
+var r = clienteResult.Bind(c => c.CombineAll(ConsultaCostosa()));
 
 // ❌ Tuplas de 8 elementos con acceso por Item7, Item8…
-var r = a.Combine((b, c, d, e, f, g, h)).Map(t => Calcular(t.Item1, t.Item2, /* … */ t.Item8));
+var r = a.CombineAll((b, c, d, e, f, g, h)).Map(t => Calcular(t.Item1, t.Item2, /* … */ t.Item8));
 
 // ✅ Define un tipo con nombres
 record ContextoCalculo(Cliente Cliente, Tarifa Tarifa, /* … */);
 var r = a.Bind(cliente => ConstruirContexto(cliente)).Map(Calcular);
 
 // ❌ Usar Do para observar el resultado
-var r = resultado.Do(res => { _log.LogInformation("{R}", res); return res; });
+var r = resultado.Pipe(res => { _log.LogInformation("{R}", res); return res; });
 
 // ✅ ExecSelf está hecho para eso
 var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
@@ -517,10 +517,10 @@ var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
 
 ## Mejores Prácticas
 
-1. **No esperes acumulación de errores.** `Combine` cortocircuita como `Bind`. Para
-   acumular, usa los métodos de [`Bucle`](../loops/Bucles.md) o fusiona
+1. **No esperes acumulación de errores.** `CombineAll` cortocircuita como `Bind`. Para
+   acumular, usa los métodos de [`Bucle`](../loops/Collections.md) o fusiona
    `MlErrorDetails` a mano.
-2. **Prefiere el patrón `Bind(t => t.Combine(...))`** cuando el valor añadido implique una
+2. **Prefiere el patrón `Bind(t => t.CombineAll(...))`** cuando el valor añadido implique una
    consulta o un cálculo: así se respeta el cortocircuito.
 3. **Deconstruye siempre la tupla** (`var (a, b, c) = t;`) al consumirla: evita depender de
    `Item1`/`value1` y documenta el código.
@@ -540,7 +540,7 @@ var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
 
 ## Resumen
 
-- `Combine` agrupa de **2 a 8 valores en una tupla** que viaja por el carril, evitando
+- `CombineAll` agrupa de **2 a 8 valores en una tupla** que viaja por el carril, evitando
   anidar `Bind`.
 - ⚠️ **No acumula errores**: cortocircuita como `Bind`. En cada llamada solo interviene un
   `MlResult`.
@@ -560,12 +560,12 @@ var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
 
 ## Ver también
 
-- [`EmptyToFailed`](1_EmptyToFailed.md) — fallar si una colección viene vacía
-- [`NullToFailed`](2_NullToFailed.md) — fallar si un objeto es `null`
-- [`BoolToResult`](3_BoolToResult.md) — construir un `MlResult` desde una condición
+- [`FailIfEmpty`](1_EmptyToFailed.md) — fallar si una colección viene vacía
+- [`FailIfNull`](2_FailIfNull.md) — fallar si un objeto es `null`
+- [`FailIfFalse`](3_BoolToResult.md) — construir un `MlResult` desde una condición
 - [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que pueden fallar
 - [`Map`](../Map/1_Map.md) — transformar el valor del carril
-- [`Bucles y proyecciones`](../loops/Bucles.md) — recorrer colecciones acumulando errores
+- [`Bucles y proyecciones`](../loops/Collections.md) — recorrer colecciones acumulando errores
 - [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — observar sin alterar el carril
 - [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlErrorDetails` y la fusión de errores
 - [`Transformations`](../Transformations/Transformations.md) — `ToMlResultValid`, `ToAsync`

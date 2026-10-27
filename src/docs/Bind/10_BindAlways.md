@@ -274,7 +274,7 @@ public record ResumenLote(int LoteId, int Procesadas, int Rechazadas,
 public MlResult<ResumenLote> Ejecutar(int loteId)
     => _repo.LeerLineas(loteId)
             .Bind(lineas => ValidarLote(lineas))
-            .Bind(lineas => lineas.Projection(ProcesarLinea))   // procesa todas
+            .Bind(lineas => lineas.Traverse(ProcesarLinea))   // procesa todas
             .BindAlways(
                 funcValidAlways: procesadas => new ResumenLote(
                                                     LoteId     : loteId,
@@ -379,4 +379,4 @@ var r = GuardarPedido(pedido)
 - [`../Match/2_MatchAll.md`](../Match/2_MatchAll.md) — el `Match` sin parámetros, hermano gemelo de la forma A.
 - [`../Map/8_MapAlways.md`](../Map/8_MapAlways.md) — la versión para funciones que no pueden fallar.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — observar ambas ramas sin alterar el resultado.
-- [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — mapa completo de la clase.
+- [`../Types/MlResultBindExtensions.md`](../core-types/MlResultBindExtensions.md) — mapa completo de la clase.

@@ -58,7 +58,7 @@ Un `MlResult<T>` fallido llega sin excepción cuando se ha construido a partir d
 | `EnsureFp.That(valor, condicion, "mensaje")` | No |
 | `EnsureFp.NotNull(valor, "mensaje")` | No |
 | `MapEnsure(x => x.Importe > 0, "mensaje")` | No |
-| `BoolToResult(condicion, "mensaje")` | No |
+| `FailIfFalse(condicion, "mensaje")` | No |
 | Fusión de errores de validación (`MergeErrorsIfExists`) | No |
 | `TryBind` / `TryMap` / `TryMatch` que capturan una excepción | **Sí** |
 | `MlResult.Fail<T>("mensaje", exception)` | **Sí** |
@@ -245,7 +245,7 @@ private static MlResult<Cliente> ValidarAsync(ClienteDto dto)
 ```
 
 > 💡 `MergeErrorsIfExists` produce fallos **sin excepción**, así que todos los errores de validación
-> caen limpiamente en esta rama. Ver [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md).
+> caen limpiamente en esta rama. Ver [`../Types/MlResultCollections.md`](../core-types/MlResultCollections.md).
 
 ---
 
@@ -299,7 +299,7 @@ Para recuperar un fallo de negocio, usa
 - El delegado recibe únicamente `MlErrorDetails`.
 - Es el complemento disjunto de `ExecSelfIfFailWithException`; juntos cubren todos los fallos.
 - Los fallos sin excepción los generan `ToMlResultFail`, `MlResult.Fail(mensaje)`, `EnsureFp.*`,
-  `MapEnsure`, `BoolToResult` y `MergeErrorsIfExists`.
+  `MapEnsure`, `FailIfFalse` y `MergeErrorsIfExists`.
 - ⚠️ **No existe `TryExecSelfIfFailWithoutException`**: solo hay 1 sobrecarga síncrona y 4 asíncronas.
 - No recupera el resultado: para eso están `MapIfFailWithoutException` y `BindIfFailWithoutException`.
 
@@ -311,6 +311,6 @@ Para recuperar un fallo de negocio, usa
 - [`4_ExecSelfIfFailWithValue.md`](4_ExecSelfIfFailWithValue.md) — el valor adjunto al fallo.
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — el complemento exacto de este documento.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y las claves convencionales.
-- [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia y recuento de sobrecargas.
+- [`../Types/MlResultExecSelfExtensions.md`](../core-types/MlResultExecSelfExtensions.md) — referencia y recuento de sobrecargas.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — generar fallos de negocio sin excepciones.
 - [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) y [`../Map/7_MapIfFailWithoutException.md`](../Map/7_MapIfFailWithoutException.md) — cuando sí quieres recuperar.
