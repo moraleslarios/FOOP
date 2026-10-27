@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Types;
-public static class MlResultConversions
+public static partial class MlResultConversions
 {
 
 
@@ -97,7 +97,7 @@ public static class MlResultConversions
     //    }
     //    catch (Exception ex)
     //    {
-    //        string message = BuildErrorMessage(errorMessageBuilder, ex);
+    //        string message = FormatErrorMessage(errorMessageBuilder, ex);
 
     //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
     //                                               Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -133,7 +133,7 @@ public static class MlResultConversions
         }
         catch (Exception ex)
         {
-            string message = BuildErrorMessage(errorMessageBuilder, ex);
+            string message = FormatErrorMessage(errorMessageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -161,7 +161,7 @@ public static class MlResultConversions
         }
         catch (Exception ex)
         {
-            string message = BuildErrorMessage(messageBuilder, ex);
+            string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -185,7 +185,7 @@ public static class MlResultConversions
     //    }
     //    catch (Exception ex)
     //    {
-    //        string message = BuildErrorMessage(errorMessageBuilder, ex);
+    //        string message = FormatErrorMessage(errorMessageBuilder, ex);
 
     //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
     //                                    Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -219,7 +219,7 @@ public static class MlResultConversions
         }
         catch (Exception ex)
         {
-            string message = BuildErrorMessage(errorMessageBuilder, ex);
+            string message = FormatErrorMessage(errorMessageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -247,7 +247,7 @@ public static class MlResultConversions
         }
         catch (Exception ex)
         {
-            string message = BuildErrorMessage(messageBuilder, ex);
+            string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -341,7 +341,7 @@ public static class MlResultConversions
     //    }
     //    catch (Exception ex)
     //    {
-    //        string msg = BuildErrorMessage(errorMessageBuilder, ex);
+    //        string msg = FormatErrorMessage(errorMessageBuilder, ex);
 
     //        result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
     //                                     Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -402,7 +402,7 @@ public static class MlResultConversions
         }
         catch (Exception ex)
         {
-            string message = BuildErrorMessage(messageBuilder, ex);
+            string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -446,7 +446,7 @@ public static class MlResultConversions
         }
         catch (Exception ex)
         {
-            string message = BuildErrorMessage(messageBuilder, ex);
+            string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -544,10 +544,10 @@ public static class MlResultConversions
 
         
 
-    public static string BuildErrorMessage(string errorMessage, Exception ex)
+    public static string FormatErrorMessage(string errorMessage, Exception ex)
         => string.IsNullOrWhiteSpace(errorMessage) ? DEFAULT_EX_ERROR_MESSAGE(ex) : errorMessage;
 
-    public static string BuildErrorMessage(Func<Exception, string> messageBuilder, Exception ex)
+    public static string FormatErrorMessage(Func<Exception, string> messageBuilder, Exception ex)
         => messageBuilder != null ? messageBuilder(ex) : DEFAULT_EX_ERROR_MESSAGE(ex);
 
 
@@ -696,7 +696,7 @@ public static class MlResultConversions
         }
         catch (Exception ex)
         {
-            string msg = BuildErrorMessage(errorMessageBuilder, ex);
+            string msg = FormatErrorMessage(errorMessageBuilder, ex);
 
             result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
                                          Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
@@ -736,7 +736,7 @@ public static class MlResultConversions
         {
 
 
-            string msg = BuildErrorMessage(errorMessageBuilder, ex);
+            string msg = FormatErrorMessage(errorMessageBuilder, ex);
 
             result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
                                          Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });

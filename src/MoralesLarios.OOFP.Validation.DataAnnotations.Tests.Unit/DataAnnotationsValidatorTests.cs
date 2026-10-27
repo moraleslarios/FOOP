@@ -4,14 +4,14 @@
 
 namespace MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit;
 
-public class DataannotationsValidatorTests
+public class DataAnnotationsValidatorTests
 {
     [Fact]
     public async Task ValidateAsync_object_null_returns_fail()
     {
         User? source = null;
 
-        MlResult<User> result = await DataannotationsValidator.ValidateAsync(source!);
+        MlResult<User> result = await DataAnnotationsValidator.ValidateAsync(source!);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -21,7 +21,7 @@ public class DataannotationsValidatorTests
     {
         Task<User>? sourceAsync = Task.FromResult<User?>(null);
 
-        MlResult<User> result = await DataannotationsValidator.ValidateAsync(sourceAsync!);
+        MlResult<User> result = await DataAnnotationsValidator.ValidateAsync(sourceAsync!);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -31,7 +31,7 @@ public class DataannotationsValidatorTests
     {
         IEnumerable<User>? source = null;
 
-        MlResult<IEnumerable<User>> result = await DataannotationsValidator.ValidateAsync(source!);
+        MlResult<IEnumerable<User>> result = await DataAnnotationsValidator.ValidateAsync(source!);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -41,7 +41,7 @@ public class DataannotationsValidatorTests
     {
         Task<IEnumerable<User>>? sourceAsync = Task.FromResult<IEnumerable<User>?>(null);
 
-        MlResult<IEnumerable<User>> result = await DataannotationsValidator.ValidateAsync(sourceAsync!);
+        MlResult<IEnumerable<User>> result = await DataAnnotationsValidator.ValidateAsync(sourceAsync!);
 
         result.IsFailure.Should().BeTrue();
     }

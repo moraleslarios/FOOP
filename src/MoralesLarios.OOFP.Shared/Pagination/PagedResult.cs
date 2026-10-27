@@ -1,16 +1,16 @@
 ﻿using MoralesLarios.OOFP.ValueObjects;
 
 namespace MoralesLarios.OOFP.Shared.Pagination;
-public record PaginationResultInfo<T>(                         IEnumerable<T> Items, 
+public record PagedResult<T>(                         IEnumerable<T> Items, 
                                       [Range(0, int.MaxValue)] int            PageNumber,
                                       [Range(0, int.MinValue)] int            PageSize, 
                                       [Range(0, int.MinValue)] int            TotalCount) 
-    : PaginationInfo(PageNumber, PageSize)
+    : PageRequest(PageNumber, PageSize)
 {
-    public static implicit operator PaginationResultInfo<T>((IEnumerable<T> items, 
+    public static implicit operator PagedResult<T>((IEnumerable<T> items, 
                                                              int            pageNumber, 
                                                              int            pageSize, 
                                                              int            totalCount) value)
-        => new PaginationResultInfo<T>(value.items, value.pageNumber, value.pageSize, value.totalCount);
+        => new PagedResult<T>(value.items, value.pageNumber, value.pageSize, value.totalCount);
 
 }

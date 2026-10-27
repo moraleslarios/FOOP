@@ -82,7 +82,7 @@ Referencias de proyecto:
 | Proyecto referenciado | Para qué |
 |---|---|
 | `MoralesLarios.OOFP` | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind`, `Map`, `MapEnsure` |
-| `MoralesLarios.OOFP.Shared` | `PaginationInfo` (resultado de `GetHeaderPaginationInfo`) |
+| `MoralesLarios.OOFP.Shared` | `PageRequest` (resultado de `GetHeaderPaginationInfo`) |
 | `MoralesLarios.OOFP.ValueObjects` | `MemberName`, `NotEmptyString`, `IntNonNegative` (tipos de las cabeceras) |
 
 > ⚠️ **Aviso sobre el paquete NuGet.** El proyecto compila contra `net8.0` pero referencia `Microsoft.AspNetCore.Mvc.Core` **2.1.0**, un paquete de la era .NET Core 2.1. En una aplicación ASP.NET Core moderna eso genera duplicidad de ensamblados y advertencias de resolución: lo correcto sería `<FrameworkReference Include="Microsoft.AspNetCore.App" />`. Ver [Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente).
@@ -426,7 +426,7 @@ public static MlResult<IntNonNegative> GetHeaderPageSize  (this HttpRequest sour
 
 // Combinaciones
 public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetHeaderPageInfo(this HttpRequest source);
-public static MlResult<PaginationInfo> GetHeaderPaginationInfo(this HttpRequest source);
+public static MlResult<PageRequest> GetHeaderPaginationInfo(this HttpRequest source);
 ```
 
 *(todos tienen su variante `…Async` que devuelve `Task<MlResult<…>>`)*
@@ -438,13 +438,13 @@ public static MlResult<PaginationInfo> GetHeaderPaginationInfo(this HttpRequest 
 | `GetHeaderPageNumber` | `IntNonNegative` | `X-Page-Number` |
 | `GetHeaderPageSize` | `IntNonNegative` | `X-Page-Size` |
 | `GetHeaderPageInfo` | tupla `(PageNumber, PageSize)` | ambas |
-| `GetHeaderPaginationInfo` | `PaginationInfo` | ambas |
+| `GetHeaderPaginationInfo` | `PageRequest` | ambas |
 
 **Ejemplo — endpoint paginado que lee la paginación de las cabeceras:**
 ```csharp
 [HttpGet]
 public Task<IActionResult> All()
-    => Request.GetHeaderPaginationInfo()                       // MlResult<PaginationInfo>
+    => Request.GetHeaderPaginationInfo()                       // MlResult<PageRequest>
               .BindAsync(pag => _repo.TryAllPaginationAsync(pag.PageNumber, pag.PageSize))
               .ToGetPdActionResultAsync();
 ```
@@ -463,7 +463,7 @@ public Task<IActionResult> Informe()
 
 > ⚠️ Los nombres `"X-Page-Number"` y `"X-Page-Size"` están **incrustados como literales** dentro de los métodos y no se exponen como constantes públicas, así que tu cliente HTTP tiene que replicarlos a mano. Además, los mensajes de fallo están redactados en inglés y no son configurables.
 
-> 💡 `PaginationInfo` (de `MoralesLarios.OOFP.Shared`) **normaliza** los valores en el constructor: `PageNumber` se eleva a un mínimo de 1 y `PageSize` se recorta al rango `[1, 1000]`. Así que un `X-Page-Size: 999999` no tumba el servidor: se convierte en 1000.
+> 💡 `PageRequest` (de `MoralesLarios.OOFP.Shared`) **normaliza** los valores en el constructor: `PageNumber` se eleva a un mínimo de 1 y `PageSize` se recorta al rango `[1, 1000]`. Así que un `X-Page-Size: 999999` no tumba el servidor: se convierte en 1000.
 
 ---
 
@@ -812,7 +812,7 @@ return resultado.ToGetPdActionResult();
 | Leer solo el número de página | `Request.GetHeaderPageNumber()` |
 | Leer solo el tamaño de página | `Request.GetHeaderPageSize()` |
 | Leer ambas como tupla | `Request.GetHeaderPageInfo()` |
-| Leer ambas como `PaginationInfo` normalizado | `Request.GetHeaderPaginationInfo()` |
+| Leer ambas como `PageRequest` normalizado | `Request.GetHeaderPaginationInfo()` |
 | Que un error de negocio salga con su código real | Genera el error con `MlProblemsDetails.*` en la capa de servicio |
 | Migrar código antiguo | Sustituye `ToRepo*ActionResult` por su equivalente `*Pd*` |
 
@@ -842,9 +842,9 @@ return resultado.ToGetPdActionResult();
 
 11. **Documenta los códigos posibles con `[ProducesResponseType]`.** Como el controlador devuelve `IActionResult`, Swagger no puede inferir nada: decláralo explícitamente.
 
-12. **Registra antes de traducir.** Encadena `LogMlResultFinalAsync` (proyecto `Extensions.Loggers`) *antes* del `ToXxxPdActionResultAsync`, para que el log conserve el `MlErrorDetails` completo y no solo el `ProblemDetails` recortado.
+12. **Registra antes de traducir.** Encadena `LogCompletedResultAsync` (proyecto `Extensions.Loggers`) *antes* del `ToXxxPdActionResultAsync`, para que el log conserve el `MlErrorDetails` completo y no solo el `ProblemDetails` recortado.
 
-13. **Cuida el `PageSize`.** `PaginationInfo` lo recorta a `[1, 1000]` silenciosamente: si tu cliente pide 5000 y recibe 1000, no habrá ningún error que lo avise.
+13. **Cuida el `PageSize`.** `PageRequest` lo recorta a `[1, 1000]` silenciosamente: si tu cliente pide 5000 y recibe 1000, no habrá ningún error que lo avise.
 
 14. **Añade `Instance` cuando puedas.** Ninguna fábrica lo rellena; si lo necesitas (muy útil para correlacionar incidencias), añádelo con un *middleware* o un filtro propio.
 
@@ -878,7 +878,7 @@ return resultado.ToGetPdActionResult();
 - [📄 `MoralesLarios.OOFP.AspNetCore.Controllers`](../MoralesLarios.OOFP.AspNetCore.Controllers/README.md) — controladores base genéricos que ya usan estas extensiones
 - [📄 `MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) — repositorios funcionales que alimentan los servicios
 - [📄 `MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `MemberName`, `NotEmptyString`, `IntNonNegative` usados por las cabeceras
-- [📄 `MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PaginationInfo` y `PaginationResultInfo`
+- [📄 `MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PageRequest` y `PagedResult`
 - [📄 `MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — produce los `ValidationResult` que consume `MlActionResults.BadRequest`
 - [📄 `MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — registro dentro del raíl antes de traducir a HTTP
 

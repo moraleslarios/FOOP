@@ -8,7 +8,7 @@
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MoralesLarios.OOFP.Logging;
-public static class GeneralExtensionLoggers
+public static partial class MlResultLogExtensions
 {
 
 
@@ -163,7 +163,7 @@ public static class GeneralExtensionLoggers
 
 
 
-    public static MlResult<T> LogMlResultFinal<T>(this MlResult<T>                   source,
+    public static MlResult<T> LogCompletedResult<T>(this MlResult<T>                   source,
                                                        ILogger                       logger,
                                                        Func<T, string>               validBuildMessage,
                                                        Func<MlErrorDetails, string> failBuildMessage)
@@ -171,31 +171,31 @@ public static class GeneralExtensionLoggers
                               (LogLevel.Information, validBuildMessage),
                               (LogLevel.Error      , failBuildMessage));
 
-    public static Task<MlResult<T>> LogMlResultFinalAsync<T>(this MlResult<T>                   source,
+    public static Task<MlResult<T>> LogCompletedResultAsync<T>(this MlResult<T>                   source,
                                                                   ILogger                       logger,
                                                                   Func<T, string>               validBuildMessage,
                                                                   Func<MlErrorDetails, string> failBuildMessage)
-        => source.LogMlResultFinal(logger, validBuildMessage, failBuildMessage).ToAsync();
+        => source.LogCompletedResult(logger, validBuildMessage, failBuildMessage).ToAsync();
 
-    public static async Task<MlResult<T>> LogMlResultFinalAsync<T>(this Task<MlResult<T>>             sourceAsync,
+    public static async Task<MlResult<T>> LogCompletedResultAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                         ILogger                       logger,
                                                                         Func<T, string>               validBuildMessage,
                                                                         Func<MlErrorDetails, string> failBuildMessage)
-        => await (await sourceAsync).LogMlResultFinalAsync(logger, validBuildMessage, failBuildMessage);
+        => await (await sourceAsync).LogCompletedResultAsync(logger, validBuildMessage, failBuildMessage);
 
-    public static MlResult<T> LogMlResultFinal<T>(this MlResult<T>  source,
+    public static MlResult<T> LogCompletedResult<T>(this MlResult<T>  source,
                                                        ILogger      logger,
                                                        string       validMessage,
                                                        string       failMessage)
-        => source.LogMlResultFinal(logger,
+        => source.LogCompletedResult(logger,
                                    _ => validMessage,
                                    _ => failMessage);
 
-    public static async Task<MlResult<T>> LogMlResultFinal<T>(this Task<MlResult<T>>  sourceAsync,
+    public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>>  sourceAsync,
                                                                    ILogger            logger,
                                                                    string             validMessage,
                                                                    string             failMessage)
-        => await sourceAsync.LogMlResultFinalAsync(logger, _ => validMessage, _ => failMessage);
+        => await sourceAsync.LogCompletedResultAsync(logger, _ => validMessage, _ => failMessage);
 
 
 

@@ -119,9 +119,9 @@ indentado) dentro de `MlErrorDetails`.
 | `Microsoft.Extensions.Http` | `IHttpClientFactory`, `AddHttpClient(name, configure)` y el pool de `HttpMessageHandler`. |
 | `MoralesLarios.OOFP` (núcleo) | `MlResult<T>`, `Bind/Map/TryMap/ExecSelf`, `EnsureFp`, `EmptyValue`. |
 | `MoralesLarios.OOFP.Logging` | `LogMlResultInformationAsync`, `MyMethodFinalLogAsync` (logging ferroviario). |
-| `MoralesLarios.OOFP.Shared` | `PaginationResultInfo<T>` (resultado paginado). |
+| `MoralesLarios.OOFP.Shared` | `PagedResult<T>` (resultado paginado). |
 | `MoralesLarios.OOFP.ValueObjects` | `ServiceKey` (nombre del cliente), `MemberName`, `NotEmptyString`, `IntNonNegative`. |
-| `MoralesLarios.OOFP.Validation.DataAnnotations` | `DataannotationsValidator.ValidateAsync(parameters)` sobre los records de parámetros. |
+| `MoralesLarios.OOFP.Validation.DataAnnotations` | `DataAnnotationsValidator.ValidateAsync(parameters)` sobre los records de parámetros. |
 
 > ⚠️ Ten en cuenta que `Microsoft.Extensions.Http` está en la versión **9.0.6** mientras el
 > `TargetFramework` es **net8.0**. Funciona (el paquete es compatible hacia atrás), pero conviene alinear
@@ -234,7 +234,7 @@ public interface IHttpClientFactoryManager
                                                      Dictionary<string, string> headers = null!,
                                                      CancellationToken ct = default);
 
-    Task<MlResult<PaginationResultInfo<TItem>>>
+    Task<MlResult<PagedResult<TItem>>>
         PostGetPaginationAsync<TRequest, TItem>(
             CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default);
 
@@ -256,7 +256,7 @@ public interface IHttpClientFactoryManager
 | `PostAsync<T>(key, item, url, …)` | `POST` | `T` | `MlResult<T>` | Envía y **espera del servidor el mismo tipo** `T`. |
 | `PostAsync<T, K>(key, item, url, …)` | `POST` | `T` | `MlResult<K>` | Variante *duplex*: envía `T`, recibe `K`. |
 | `PostGetAsync<T, TResult>(key, item, url, …)` | `POST` | `T` | `MlResult<TResult>` | Idéntico a `PostAsync<T, K>`; nombre alternativo para consultas que viajan en el cuerpo. |
-| `PostGetPaginationAsync<TRequest, TItem>(parameters, ct)` | `POST` | `TRequest` | `MlResult<PaginationResultInfo<…>>` | Valida el record con *Data Annotations*, añade `X-Page-Number`/`X-Page-Size` y deserializa el sobre paginado. |
+| `PostGetPaginationAsync<TRequest, TItem>(parameters, ct)` | `POST` | `TRequest` | `MlResult<PagedResult<…>>` | Valida el record con *Data Annotations*, añade `X-Page-Number`/`X-Page-Size` y deserializa el sobre paginado. |
 | `PutAsync<T>(key, item, url, …)` | `PUT` | `T` | `MlResult<Empty>` | No lee el cuerpo de respuesta: solo confirma éxito. |
 | `DeleteAsync<T>(key, item, url, …)` | `DELETE` | `T` | `MlResult<Empty>` | ⚠️ `DELETE` **con cuerpo**: muchos proxies lo descartan. |
 | `DeleteByIdAsync<T>(key, url, …)` | `DELETE` | ninguno | `MlResult<Empty>` | La `url` es un `NotEmptyString`, así que un id vacío falla antes de salir a la red. El genérico `T` **solo se usa para el texto del log**. |
@@ -570,7 +570,7 @@ var page = await _manager.GetPaginationAsync<IEnumerable<PruebasDto>>(p2);
 `GetPaginationAsync` y `PostGetPaginationAsync` **empiezan** validando el record:
 
 ```csharp
-await DataannotationsValidator.ValidateAsync(parameters)
+await DataAnnotationsValidator.ValidateAsync(parameters)
         .TryMapAsync(_ => _httpClientFactory.CreateClient(parameters.HttpClientFactoryKey))
         …
 ```
@@ -904,12 +904,12 @@ MlResult<UsuarioResponse> creado =
 ```csharp
 public class PruebasPagedService(HttpClientFactoryManager _manager)   // ← clase concreta, no la interfaz
 {
-    public Task<MlResult<PaginationResultInfo<PruebasDto>>> PaginaAsync(int pagina, int tamano)
+    public Task<MlResult<PagedResult<PruebasDto>>> PaginaAsync(int pagina, int tamano)
     {
         CallRequestPaginationParamsInfo parametros =
             ("pruebas/paged", "PruebasClient", pagina, tamano, null, CancellationToken.None);
 
-        return _manager.GetPaginationAsync<PaginationResultInfo<PruebasDto>>(parametros);
+        return _manager.GetPaginationAsync<PagedResult<PruebasDto>>(parametros);
     }
 }
 ```
@@ -1021,7 +1021,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 | Actualizar sin leer respuesta | `PutAsync<T>` | `MlResult<Empty>` |
 | Borrar enviando la entidad | `DeleteAsync<T>` | `MlResult<Empty>` |
 | Borrar por id | `DeleteByIdAsync<T>` | `MlResult<Empty>` |
-| Página de resultados | `PostGetPaginationAsync<TRequest, TItem>` | `MlResult<PaginationResultInfo<…>>` |
+| Página de resultados | `PostGetPaginationAsync<TRequest, TItem>` | `MlResult<PagedResult<…>>` |
 | El `HttpClient` en bruto | `CreateHttpClient` | `MlResult<HttpClient>` (**síncrono**) |
 
 ### ¿Cómo consumo el `MlResult` que me devuelven?
@@ -1136,12 +1136,12 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
   `IActionResult` / `ProblemDetails` y lectura de `X-Page-Number` / `X-Page-Size`.
 - [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — capa de servicio
   genérica del lado servidor.
-- [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PaginationResultInfo<T>` y
-  `PaginationInfo`, el sobre de los resultados paginados.
+- [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PagedResult<T>` y
+  `PageRequest`, el sobre de los resultados paginados.
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `ServiceKey`, `MemberName`,
   `NotEmptyString` e `IntNonNegative`, los tipos que blindan los parámetros.
 - [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) —
-  `DataannotationsValidator`, que valida los records de parámetros antes de salir a la red.
+  `DataAnnotationsValidator`, que valida los records de parámetros antes de salir a la red.
 - [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — el logging
   ferroviario que ves en las tuberías.
 

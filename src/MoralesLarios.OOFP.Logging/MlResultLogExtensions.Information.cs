@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.Logging;
-public static class GeneralExtensionLoggersInformation
+public static partial class MlResultLogExtensions
 {
 
 

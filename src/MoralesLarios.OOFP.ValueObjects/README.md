@@ -683,7 +683,7 @@ Esta librería es la base de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObje
 ### Proyectos relacionados
 
 - [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) — value objects de rutas y ficheros (`FilePath`, `DirectoryPath`)
-- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validación funcional con `MlValidableFp<T>`
+- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validación funcional con `MlSelfValidatable<T>`
 - [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — validación por atributos
 - [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — integración con FluentValidation
 - [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — usa `IntNonNegative` en la paginación

@@ -9,7 +9,7 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
 {
 
 
-    public virtual MlResult<PaginationResultInfo<T>> TryAllPagination(PaginationInfo              paginationInfo,
+    public virtual MlResult<PagedResult<T>> TryAllPagination(PageRequest              paginationInfo,
                                                                       OrderBy                     orderBy           = OrderBy.Ascending,
                                                                       Expression<Func<T, object>> orderByField = null!)
     {
@@ -23,7 +23,7 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
     }
 
 
-    public virtual async Task<MlResult<PaginationResultInfo<T>>> TryAllPaginationAsync(PaginationInfo              paginationInfo,
+    public virtual async Task<MlResult<PagedResult<T>>> TryAllPaginationAsync(PageRequest              paginationInfo,
                                                                                       OrderBy                     orderBy      = OrderBy.Ascending,
                                                                                       Expression<Func<T, object>> orderByField = null!,
                                                                                       CancellationToken ct                     = default!)
@@ -40,7 +40,7 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
 
 
 
-    public virtual MlResult<PaginationResultInfo<T>> TryGetDataPagination(PaginationInfo              paginationInfo,
+    public virtual MlResult<PagedResult<T>> TryGetDataPagination(PageRequest              paginationInfo,
                                                                           OrderBy                     orderBy           = OrderBy.Ascending,
                                                                           Expression<Func<T, object>> orderByField    = null!,
                                                                           Expression<Func<T, bool  >> filter          = null!)
@@ -54,7 +54,7 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
         return result;
     }
 
-    public virtual async Task<MlResult<PaginationResultInfo<T>>> TryGetDataPaginationAsync(PaginationInfo              paginationInfo,
+    public virtual async Task<MlResult<PagedResult<T>>> TryGetDataPaginationAsync(PageRequest              paginationInfo,
                                                                                           OrderBy                     orderBy      = OrderBy.Ascending,
                                                                                           Expression<Func<T, object>> orderByField = null!,
                                                                                           Expression<Func<T, bool  >> filter       = null!,
@@ -81,7 +81,7 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
 
 
 
-    protected virtual MlResult<PaginationResultInfo<T>> TryGetInternalData(int pageNumber, 
+    protected virtual MlResult<PagedResult<T>> TryGetInternalData(int pageNumber, 
                                                                            int pageSize,
                                                                            OrderBy                     orderBy      = OrderBy.Ascending,
                                                                            Expression<Func<T, bool  >> filter       = null!,
@@ -98,11 +98,11 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
                                                 Count = GetContext().Set<T>().Count(), 
                                                 Items = items 
                                              })
-                        .Map   (pagInfo => new PaginationResultInfo<T>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
+                        .Map   (pagInfo => new PagedResult<T>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
         return result;
     }
 
-    protected virtual async Task<MlResult<PaginationResultInfo<T>>> TryGetInternalDataAsync(int                         pageNumber, 
+    protected virtual async Task<MlResult<PagedResult<T>>> TryGetInternalDataAsync(int                         pageNumber, 
                                                                                             int                         pageSize,
                                                                                             OrderBy                     orderBy      = OrderBy.Ascending,
                                                                                             Expression<Func<T, bool  >> filter       = null!,
@@ -121,7 +121,7 @@ public class EFRepoReaderPaginationFp<T, TContext>(TContext dbContext) : EFRepoR
                                                       Count = GetContext().Set<T>().Where(filter!).Count(), 
                                                       Items = items 
                                                   })
-                        .MapAsync   (pagInfo => new PaginationResultInfo<T>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
+                        .MapAsync   (pagInfo => new PagedResult<T>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
         return result;
     }
 

@@ -6,10 +6,10 @@ using System.ComponentModel.DataAnnotations;
 
 
 namespace MoralesLarios.OOFP.Validation.DataAnnotations.Helpers;
-public static class Extensions
+public static partial class Extensions
 {
 
-    public static IEnumerable<ValidationResult> ValidateObject(this object source)
+    public static IEnumerable<ValidationResult> ValidateDataAnnotations(this object source)
     {
         ValidationContext valContext = new ValidationContext(source, null, null);
         var result     = new List<ValidationResult>();
@@ -19,34 +19,34 @@ public static class Extensions
     } 
 
 
-    public static MlResult<T> ValidateWithDataannotations<T>(this T source)
+    public static MlResult<T> ValidateWithDataAnnotations<T>(this T source)
     {
-        var result = source!.ValidateObject().ToMlResultValid()
+        var result = source!.ValidateDataAnnotations().ToMlResultValid()
                                 .Map ( valResults => valResults.Select(x => x.ErrorMessage))
                                 .Bind( errors     => errors.Any() ? errors!.ToMlResultFail<T>() : source.ToMlResultValid<T>());
         return result;
 
     }
 
-    public static Task<MlResult<T>> ValidateWithDataannotationsAsync<T>(this T source)
-        => source!.ValidateWithDataannotations().ToAsync();
+    public static Task<MlResult<T>> ValidateWithDataAnnotationsAsync<T>(this T source)
+        => source!.ValidateWithDataAnnotations().ToAsync();
 
-    public static async Task<MlResult<T>> ValidateWithDataannotationsAsync<T>(this Task<T> sourceAsync)
-        => await (await sourceAsync).ValidateWithDataannotationsAsync();
+    public static async Task<MlResult<T>> ValidateWithDataAnnotationsAsync<T>(this Task<T> sourceAsync)
+        => await (await sourceAsync).ValidateWithDataAnnotationsAsync();
 
 
-    public static MlResult<IEnumerable<T>> ValidateWithDataannotations<T>(this IEnumerable<T> source)
+    public static MlResult<IEnumerable<T>> ValidateWithDataAnnotations<T>(this IEnumerable<T> source)
     {
-        var result = source.Select(x => x.ValidateWithDataannotations())
+        var result = source.Select(x => x.ValidateWithDataAnnotations())
                             .MergeErrorsIfExists();
         return result;
     }
 
-    public static Task<MlResult<IEnumerable<T>>> ValidateWithDataannotationsAsync<T>(this IEnumerable<T> source)
-        => source.ValidateWithDataannotations().ToAsync();
+    public static Task<MlResult<IEnumerable<T>>> ValidateWithDataAnnotationsAsync<T>(this IEnumerable<T> source)
+        => source.ValidateWithDataAnnotations().ToAsync();
 
-    public static async Task<MlResult<IEnumerable<T>>> ValidateWithDataannotationsAsync<T>(this Task<IEnumerable<T>> sourceAsync)
-        => await (await sourceAsync).ValidateWithDataannotationsAsync();
+    public static async Task<MlResult<IEnumerable<T>>> ValidateWithDataAnnotationsAsync<T>(this Task<IEnumerable<T>> sourceAsync)
+        => await (await sourceAsync).ValidateWithDataAnnotationsAsync();
 
 
 

@@ -34,7 +34,7 @@ public class MlResultConversionsTests
     {
         var ex = new InvalidOperationException("boom");
 
-        string result = MlResultConversions.BuildErrorMessage("custom-message", ex);
+        string result = MlResultConversions.FormatErrorMessage("custom-message", ex);
 
         result.Should().Be("custom-message");
     }
@@ -44,7 +44,7 @@ public class MlResultConversionsTests
     {
         var ex = new InvalidOperationException("boom");
 
-        string result = MlResultConversions.BuildErrorMessage((string)null!, ex);
+        string result = MlResultConversions.FormatErrorMessage((string)null!, ex);
         string expected = DEFAULT_EX_ERROR_MESSAGE(ex);
 
         result.Should().Be(expected);

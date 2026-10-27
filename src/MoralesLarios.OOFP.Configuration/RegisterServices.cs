@@ -7,14 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 using MoralesLarios.OOFP.Configuration.Config;
 
 namespace MoralesLarios.OOFP.Configuration;
-public static class RegisterServices
+public static partial class RegisterServices
 {
 
 
-    public static IServiceCollection AddMlUtilitiesConfig(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddMlConfigurationReader(this IServiceCollection services, IConfiguration configuration)
     {
         
-        services.AddTransient<IMlConfigManager>(x => new MlConfigManager(configuration));
+        services.AddTransient<IMlConfigurationReader>(x => new MlConfigurationReader(configuration));
 
         return services;
     }

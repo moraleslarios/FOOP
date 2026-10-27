@@ -1,6 +1,6 @@
 ﻿namespace MoralesLarios.OOFP.FileSystem;
 
-public interface IWrapperIO
+public interface IMlFileSystem
 {
     MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr);
 

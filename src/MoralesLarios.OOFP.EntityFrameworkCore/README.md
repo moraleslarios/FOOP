@@ -83,7 +83,7 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 |---|---|---|
 | `Microsoft.EntityFrameworkCore` | 8.0.3 | `DbContext`, `DbSet<T>`, `ToListAsync` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `EnsureFp`, `TryMap`, `FailIfNull` |
-| [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | `PaginationInfo`, `PaginationResultInfo<T>` |
+| [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | `PageRequest`, `PagedResult<T>` |
 | [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | — | `IntNonNegative` (conversiones de paginación) |
 
 Destino: **`net8.0`**. Versión del paquete: **1.0.14**.
@@ -94,7 +94,7 @@ Destino: **`net8.0`**. Versión del paquete: **1.0.14**.
 using MoralesLarios.OOFP.EntityFrameworkCore;              // AddTransientOOFPRepos, …
 using MoralesLarios.OOFP.EntityFrameworkCore.Repositories;        // IEFRepoFp<T>, EFRepoFp<T, TContext>
 using MoralesLarios.OOFP.EntityFrameworkCore.Enums;        // OrderBy
-using MoralesLarios.OOFP.Shared.Pagination;      // PaginationInfo, PaginationResultInfo<T>
+using MoralesLarios.OOFP.Shared.Pagination;      // PageRequest, PagedResult<T>
 ```
 
 ---
@@ -421,18 +421,18 @@ No añaden métodos: solo combinan. Las clases `EFRepoWriterFp` y `EFRepoFp` son
 ## Paginación: `IEFPaginatorFp<T>`
 
 ```csharp
-MlResult<PaginationResultInfo<T>>       TryAllPagination         (PaginationInfo paginationInfo,
+MlResult<PagedResult<T>>       TryAllPagination         (PageRequest paginationInfo,
                                                                   OrderBy orderBy = OrderBy.Ascending,
                                                                   Expression<Func<T, object>> orderByField = null!);
-Task<MlResult<PaginationResultInfo<T>>> TryAllPaginationAsync    (…, CancellationToken ct = default!);
-MlResult<PaginationResultInfo<T>>       TryGetDataPagination     (…, Expression<Func<T, bool>> filter = null!);
-Task<MlResult<PaginationResultInfo<T>>> TryGetDataPaginationAsync(…, CancellationToken ct = default!);
+Task<MlResult<PagedResult<T>>> TryAllPaginationAsync    (…, CancellationToken ct = default!);
+MlResult<PagedResult<T>>       TryGetDataPagination     (…, Expression<Func<T, bool>> filter = null!);
+Task<MlResult<PagedResult<T>>> TryGetDataPaginationAsync(…, CancellationToken ct = default!);
 ```
 
 ### Los tipos de paginación
 
 ```csharp
-public record PaginationInfo(int PageNumber, int PageSize)
+public record PageRequest(int PageNumber, int PageSize)
 {
     private const int MaxPageSize = 1000;
 
@@ -440,11 +440,11 @@ public record PaginationInfo(int PageNumber, int PageSize)
     public int PageSize   { get; init; } = Math.Clamp(PageSize, 1, 1000);   // 🔑 entre 1 y 1000
 }
 
-public record PaginationResultInfo<T>(IEnumerable<T> Items, int PageNumber, int PageSize, int TotalCount)
-    : PaginationInfo(PageNumber, PageSize);
+public record PagedResult<T>(IEnumerable<T> Items, int PageNumber, int PageSize, int TotalCount)
+    : PageRequest(PageNumber, PageSize);
 ```
 
-> 💡 **`PaginationInfo` se autocorrige**: `PageNumber = 0` pasa a `1`, `PageSize = 5000` se recorta a `1000`. **Nunca falla por valores fuera de rango**, los normaliza en silencio.
+> 💡 **`PageRequest` se autocorrige**: `PageNumber = 0` pasa a `1`, `PageSize = 5000` se recorta a `1000`. **Nunca falla por valores fuera de rango**, los normaliza en silencio.
 
 > 💡 **Conversión implícita desde tupla**, muy cómoda:
 > ```csharp
@@ -594,7 +594,7 @@ public T LastOrDefault(Expression<Func<T, bool>> filter)
 > ```csharp
 > // ✅ Solo trae una fila
 > var ultimo = await repo.TryGetDataPaginationAsync(
->                             new PaginationInfo(1, 1),
+>                             new PageRequest(1, 1),
 >                             OrderBy.Descending,
 >                             x => x.FechaEntrada,
 >                             x => x.Bodega == "X",
@@ -691,10 +691,10 @@ A diferencia de todos los demás repos funcionales, este **accede al `DbContext`
 
 > 💡 **Es en realidad una ventaja**: al no pasar por el motor interno, evita el bug del `OrderBy` tras `Skip` descrito en el punto 5. Pero significa que `EFRepoReaderPagination` (OOP) **queda registrado y sin usar**.
 
-### 10. ⚠️ `IntNonNegative` en `PaginationInfo` con anotaciones incorrectas
+### 10. ⚠️ `IntNonNegative` en `PageRequest` con anotaciones incorrectas
 
 ```csharp
-public record PaginationInfo([property: Range(0, int.MinValue)] int PageNumber,   // ⚠️ Range(0, -2147483648)
+public record PageRequest([property: Range(0, int.MinValue)] int PageNumber,   // ⚠️ Range(0, -2147483648)
                              [property: Range(0, int.MinValue)] int PageSize)
 ```
 
@@ -824,7 +824,7 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 ### Ejemplo 5 — Paginación correcta
 
 ```csharp
-public Task<MlResult<PaginationResultInfo<Vino>>> PaginaAsync(
+public Task<MlResult<PagedResult<Vino>>> PaginaAsync(
         int pagina, int tamanyo, string? bodega, CancellationToken ct)
     => _vinos.TryGetDataPaginationAsync(
                  paginationInfo: (pagina, tamanyo),                       // 🔑 tupla implícita
@@ -1017,7 +1017,7 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — 🔑 `PaginationInfo` y `PaginationResultInfo<T>`
+- [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — 🔑 `PageRequest` y `PagedResult<T>`
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `IntNonNegative` y las conversiones de paginación
 - [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validar la entidad antes de persistirla
 - [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — validación con FluentValidation

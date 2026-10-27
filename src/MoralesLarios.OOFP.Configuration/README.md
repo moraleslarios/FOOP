@@ -1,6 +1,6 @@
 # MoralesLarios.OOFP.Configuration — Configuración como `MlResult<T>`
 
-Proyecto **muy pequeño y muy concreto**: una única abstracción, [`IMlConfigManager`](#imlconfigmanager), que envuelve `IConfiguration` para que **leer una clave de configuración devuelva un `MlResult<T>` en lugar de un `null` silencioso**.
+Proyecto **muy pequeño y muy concreto**: una única abstracción, [`IMlConfigurationReader`](#imlconfigmanager), que envuelve `IConfiguration` para que **leer una clave de configuración devuelva un `MlResult<T>` en lugar de un `null` silencioso**.
 
 Es la puerta de entrada de la configuración al raíl funcional: si la clave no existe, no obtienes `null` ni una excepción a los diez minutos, obtienes un `Fail` con un mensaje que dice exactamente qué clave falta.
 
@@ -12,7 +12,7 @@ Es la puerta de entrada de la configuración al raíl funcional: si la clave no 
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Registro en el contenedor](#registro-en-el-contenedor)
-5. [`IMlConfigManager`](#imlconfigmanager)
+5. [`IMlConfigurationReader`](#imlconfigmanager)
 6. [Los tres métodos de lectura](#los-tres-métodos-de-lectura)
 7. [Las dos formas de personalizar el error](#las-dos-formas-de-personalizar-el-error)
 8. [Cómo funciona internamente](#cómo-funciona-internamente)
@@ -50,10 +50,10 @@ public class ServicioApi
 
 El mensaje que verás será `Value cannot be null. (Parameter 'requestUri')`. **Nada indica que el problema real es una clave ausente en `appsettings.json`.**
 
-✅ **Con `IMlConfigManager`:**
+✅ **Con `IMlConfigurationReader`:**
 
 ```csharp
-public class ServicioApi(IMlConfigManager _config, HttpClient _http)
+public class ServicioApi(IMlConfigurationReader _config, HttpClient _http)
 {
     public Task<MlResult<Respuesta>> Llamar()
         => _config.ReadAppSettingKey<string>("Api:Url")
@@ -81,7 +81,7 @@ Destino: **`net8.0`**. Versión del paquete: **1.0.2**. Genera paquete NuGet al 
 
 ```csharp
 using MoralesLarios.OOFP.Configuration;          // RegisterServices
-using MoralesLarios.OOFP.Configuration.Config;   // IMlConfigManager
+using MoralesLarios.OOFP.Configuration.Config;   // IMlConfigurationReader
 ```
 
 > ⚠️ **Las dependencias son 9.0.2 pero el destino es `net8.0`.** Funciona (los paquetes 9.x soportan `net8.0`), pero si tu aplicación fija las de la versión 8.x tendrás que resolver la unificación de versiones.
@@ -93,10 +93,10 @@ using MoralesLarios.OOFP.Configuration.Config;   // IMlConfigManager
 ```
 MoralesLarios.OOFP.Configuration/
 ├── GlobalUsings.cs
-├── RegisterServices.cs              → AddMlUtilitiesConfig
+├── RegisterServices.cs              → AddMlConfigurationReader
 └── Config/
-    ├── IMlConfigManager.cs          → la abstracción (6 métodos)
-    └── MlConfigManager.cs           → la implementación sobre IConfiguration
+    ├── IMlConfigurationReader.cs          → la abstracción (6 métodos)
+    └── MlConfigurationReader.cs           → la implementación sobre IConfiguration
 ```
 
 **Tres ficheros de código. Eso es todo el proyecto.**
@@ -108,10 +108,10 @@ MoralesLarios.OOFP.Configuration/
 ## Registro en el contenedor
 
 ```csharp
-public static IServiceCollection AddMlUtilitiesConfig(this IServiceCollection services,
+public static IServiceCollection AddMlConfigurationReader(this IServiceCollection services,
                                                           IConfiguration      configuration)
 {
-    services.AddTransient<IMlConfigManager>(x => new MlConfigManager(configuration));
+    services.AddTransient<IMlConfigurationReader>(x => new MlConfigurationReader(configuration));
     return services;
 }
 ```
@@ -121,7 +121,7 @@ En una aplicación ASP.NET Core:
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMlUtilitiesConfig(builder.Configuration);   // 🔑
+builder.Services.AddMlConfigurationReader(builder.Configuration);   // 🔑
 ```
 
 En un test con `Xunit.DependencyInjection` (así lo hace el proyecto de pruebas):
@@ -133,20 +133,20 @@ public class Startup
         new ConfigurationBuilder().AddJsonFile("appsettings.test.json").Build();
 
     public void ConfigureServices(IServiceCollection services)
-        => services.AddMlUtilitiesConfig(_configuration);
+        => services.AddMlConfigurationReader(_configuration);
 }
 ```
 
-> ⚠️ **Se registra como `Transient`**, y la lambda **captura la `IConfiguration` que le pasas**, no la resuelve del contenedor. Si en tu aplicación recargas la configuración o registras una `IConfiguration` distinta después, `MlConfigManager` seguirá usando la que capturó aquí.
+> ⚠️ **Se registra como `Transient`**, y la lambda **captura la `IConfiguration` que le pasas**, no la resuelve del contenedor. Si en tu aplicación recargas la configuración o registras una `IConfiguration` distinta después, `MlConfigurationReader` seguirá usando la que capturó aquí.
 
 > 💡 Un `Singleton` habría sido más eficiente (la clase no tiene estado mutable), pero `Transient` es inofensivo: crear el objeto es trivial.
 
 ---
 
-## `IMlConfigManager`
+## `IMlConfigurationReader`
 
 ```csharp
-public interface IMlConfigManager
+public interface IMlConfigurationReader
 {
     MlResult<T>      ReadAppSettingKey<T>    (string appSettingKey      , MlErrorDetails errorsDetails = null!);
     MlResult<object> ReadAppSettingKey       (string appSettingKey      , MlErrorDetails errorsDetails = null!);
@@ -163,7 +163,7 @@ public interface IMlConfigManager
 Implementación con constructor primario (C# 12):
 
 ```csharp
-public class MlConfigManager(IConfiguration configuration) : IMlConfigManager
+public class MlConfigurationReader(IConfiguration configuration) : IMlConfigurationReader
 ```
 
 ---
@@ -293,7 +293,7 @@ ReadAppSettingKey       → configSearch = key => _configuration[key]!
 
 ## Claves anidadas
 
-`IConfiguration` usa `:` como separador de niveles, y `IMlConfigManager` lo hereda tal cual.
+`IConfiguration` usa `:` como separador de niveles, y `IMlConfigurationReader` lo hereda tal cual.
 
 Dado este `appsettings.json`:
 
@@ -453,7 +453,7 @@ La lectura ocurre **cuando llamas al método**, no al iniciar la aplicación. Un
 using MoralesLarios.OOFP.Types;
 using MoralesLarios.OOFP.Configuration.Config;
 
-public class ClienteApi(IMlConfigManager _config, HttpClient _http)
+public class ClienteApi(IMlConfigurationReader _config, HttpClient _http)
 {
     public Task<MlResult<Pedido>> ObtenerPedido(int id)
         => _config.ReadAppSettingKey<string>("Api:BaseUrl", "Falta 'Api:BaseUrl' en la configuración")
@@ -483,7 +483,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var config = scope.ServiceProvider.GetRequiredService<IMlConfigManager>();
+    var config = scope.ServiceProvider.GetRequiredService<IMlConfigurationReader>();
 
     var comprobacion = config.ReadConnectionStringKey("DemoDb")
                              .Bind(_ => config.ReadAppSettingKey<string>("Api:BaseUrl"))
@@ -502,9 +502,9 @@ app.Run();
 ### Ejemplo 4 — Cadena de conexión + `DbContext`
 
 ```csharp
-builder.Services.AddMlUtilitiesConfig(builder.Configuration);
+builder.Services.AddMlConfigurationReader(builder.Configuration);
 
-var configManager = new MlConfigManager(builder.Configuration);
+var configManager = new MlConfigurationReader(builder.Configuration);
 
 configManager.ReadConnectionStringKey("DemoDb", "Falta la cadena de conexión 'DemoDb'")
              .ExecSelf(cs => builder.Services.AddDbContext<DemoDbContext>(o => o.UseSqlServer(cs)))
@@ -596,19 +596,19 @@ foreach (var item in items) { /* usa urlResult.Value */ }
 8. **Para configuración compleja y jerárquica, sigue usando `IOptions<T>`**: este proyecto es para claves sueltas.
 9. **No metas secretos en `appsettings.json`**: usa el gestor de secretos o variables de entorno (funcionan igual a través de `IConfiguration`).
 10. **Combina con [`Extensions.Loggers`](../MoralesLarios.OOFP.Logging/README.md)** para dejar traza de qué clave faltaba.
-11. **Registra `AddMlUtilitiesConfig` una sola vez** y pásale la `IConfiguration` definitiva: la lambda la captura.
-12. **Depende de `IMlConfigManager`, no de `MlConfigManager`**: facilita los tests con dobles.
+11. **Registra `AddMlConfigurationReader` una sola vez** y pásale la `IConfiguration` definitiva: la lambda la captura.
+12. **Depende de `IMlConfigurationReader`, no de `MlConfigurationReader`**: facilita los tests con dobles.
 
 ---
 
 ## Resumen
 
-- Proyecto **minimalista**: tres ficheros de código y una única abstracción, `IMlConfigManager`.
+- Proyecto **minimalista**: tres ficheros de código y una única abstracción, `IMlConfigurationReader`.
 - Convierte la lectura de configuración en una operación del raíl funcional: **si la clave falta, obtienes un `Fail` con el nombre de la clave**, no un `null` silencioso.
 - **Tres operaciones**: `ReadAppSettingKey<T>` (con conversión), `ReadAppSettingKey` (crudo, `object`) y `ReadConnectionStringKey`.
 - **Dos formas de describir el error** para cada una: `MlErrorDetails` o `string`. Sin ninguna, se usa un mensaje por defecto en inglés.
 - Internamente todo pasa por una única tubería: `EnsureFp.NotNullEmptyOrWhitespace(clave)` → `Map(lectura)` → `MapEnsure(valor is not null)`.
-- Registro: `services.AddMlUtilitiesConfig(configuration)` (como `Transient`, capturando la `IConfiguration`).
+- Registro: `services.AddMlConfigurationReader(configuration)` (como `Transient`, capturando la `IConfiguration`).
 - ⚠️ **El riesgo principal**: con tipos valor no anulables (`int`, `bool`), una clave ausente devuelve `Valid` con el valor por defecto. **Usa siempre `int?`, `bool?`.**
 - ⚠️ Otros límites: una conversión inválida **lanza excepción**, una cadena vacía se considera **valor válido**, el mensaje de clave inválida tiene erratas (`"Tkey … white"`) y **no es personalizable**, y **no hay binding de secciones a objetos**.
 

@@ -144,12 +144,12 @@ var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"...")
                     .TryMapAsync( _     => dto.Adapt<TEntity>())
                     .BindAsync  (bdData => _repo.TryAddAsync(bdData, token: ct))
                     .MapAsync   (bdData => bdData.Adapt<TDto>())
-                    .LogMlResultFinalAsync(logger           : _logger,
+                    .LogCompletedResultAsync(logger           : _logger,
                                            validBuildMessage: x      => ...,
                                            failBuildMessage : errors => ...);
 ```
 
-Observa: `.BindAsync  `, `.TryMapAsync`, `.MapAsync   `, `.LogMlResultFinalAsync` � todas terminan con `(` en la misma columna.
+Observa: `.BindAsync  `, `.TryMapAsync`, `.MapAsync   `, `.LogCompletedResultAsync` � todas terminan con `(` en la misma columna.
 
 ### 4.1. Alineaci�n interna del receptor cuando varias lambdas llaman al **mismo m�todo**
 
@@ -167,7 +167,7 @@ var result = await _logger.LogMlResultInformationAsync($"CleanAllWithHisto inici
                           .TryBindAsync( _     => _serviceDerivadosOtcLoader    .RemoveDataAndCreateHistoricalAsync(ct))
                           .TryBindAsync( _     => _serviceCol_ValLoader         .RemoveDataAndCreateHistoricalAsync(ct))
                           .MapAsync    (items => items)
-                          .LogMlResultFinalAsync(logger           : _logger,
+                          .LogCompletedResultAsync(logger           : _logger,
                                                  validBuildMessage: items         => $"... ejecutado, {items} registros archivados",
                                                  failBuildMessage : errorsDetails => $"... Error: {errorsDetails.ToErrorsDetailsDescription()}");
 ```
@@ -194,7 +194,7 @@ Cuando se invoca un m�todo con **dos o m�s** argumentos con nombre en multil
 - Los **valores** (lo que hay tras `: `) **no se alinean en columna** entre s�, simplemente arrancan tras el espacio.
 
 ```csharp
-.LogMlResultFinalAsync(logger           : _logger,
+.LogCompletedResultAsync(logger           : _logger,
                        validBuildMessage: x      => ...,
                        failBuildMessage : errors => ...);
 ```
@@ -225,7 +225,7 @@ var result = await _logger.LogMlResultInformationAsync("Creando un nuevo Col Val
                                                                               url                 : "api/RegulatoryIntakeEtl/FeeSchedule",
                                                                               itemBody            : item,
                                                                               ct                  : cancellationToken))
-                          .LogMlResultFinalDescriptionAsync(_logger, nameof(CreateDataAsync));
+                          .LogCompletedResultDescriptionAsync(_logger, nameof(CreateDataAsync));
 ```
 
 Observa:
@@ -372,7 +372,7 @@ public Task<MlResult<TDto>> CreateAsync(TDto                          dto,
                         .TryMapAsync( _     => dto.Adapt<TEntity>())
                         .BindAsync  (bdData => _repo.TryAddAsync(bdData, token: ct))
                         .MapAsync   (bdData => bdData.Adapt<TDto>())
-                        .LogMlResultFinalAsync(logger           : _logger,
+                        .LogCompletedResultAsync(logger           : _logger,
                                                validBuildMessage: x      => ...,
                                                failBuildMessage : errors => ...);
     return result;
@@ -383,7 +383,7 @@ Incorrecto (cadena fluent muy sangrada **con** l�nea en blanco antes del `retu
 
 ```csharp
                         .MapAsync   (bdData => bdData.Adapt<TDto>())
-                        .LogMlResultFinalAsync(...);
+                        .LogCompletedResultAsync(...);
                                                                           // ? l�nea en blanco sobrante
     return result;
 ```

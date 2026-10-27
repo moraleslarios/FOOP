@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.FileSystem;
 
-public class WrapperIO : IWrapperIO
+public class MlFileSystem : IMlFileSystem
 {
 
     public MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr)

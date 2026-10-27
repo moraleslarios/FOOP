@@ -1,6 +1,6 @@
 # MoralesLarios.OOFP.Validation — el contrato de los objetos auto-validables
 
-Proyecto **mínimo y deliberadamente vacío de implementación**: contiene un único tipo, `MlValidableFp<T>`, que define el contrato común *"este objeto sabe validarse a sí mismo y devuelve un [`MlResult<T>`](../docs/core-types/MlResult.md)"*.
+Proyecto **mínimo y deliberadamente vacío de implementación**: contiene un único tipo, `MlSelfValidatable<T>`, que define el contrato común *"este objeto sabe validarse a sí mismo y devuelve un [`MlResult<T>`](../docs/core-types/MlResult.md)"*.
 
 Su valor no está en el código que trae (son cuatro líneas), sino en **unificar la forma de validar en toda la solución**: da igual si por debajo usas `if`s a mano, DataAnnotations o FluentValidation — desde fuera, todo objeto validable se comporta igual y encadena igual.
 
@@ -10,7 +10,7 @@ Su valor no está en el código que trae (son cuatro líneas), sino en **unifica
 
 1. [¿Qué problema resuelve?](#qué-problema-resuelve)
 2. [Instalación y dependencias](#instalación-y-dependencias)
-3. [`MlValidableFp<T>` — la clase base completa](#mlvalidablefpt--la-clase-base-completa)
+3. [`MlSelfValidatable<T>` — la clase base completa](#mlvalidablefpt--la-clase-base-completa)
 4. [Las tres reglas del contrato](#las-tres-reglas-del-contrato)
 5. [Cómo implementar `Validate()`](#cómo-implementar-validate)
 6. [Las tres estrategias de acumulación de errores](#las-tres-estrategias-de-acumulación-de-errores)
@@ -38,7 +38,7 @@ try { ValidadorPago.Comprobar(dto.Pago); }               // esta lanza
 catch (ValidationException ex) { return BadRequest(ex.Message); }
 ```
 
-✅ **Con `MlValidableFp<T>`:**
+✅ **Con `MlSelfValidatable<T>`:**
 ```csharp
 // Todas las validaciones devuelven MlResult<T>, así que se encadenan igual
 public IActionResult Crear(CrearUsuarioRequest dto)
@@ -71,14 +71,14 @@ No requiere registro en el contenedor de dependencias.
 
 ---
 
-## `MlValidableFp<T>` — la clase base completa
+## `MlSelfValidatable<T>` — la clase base completa
 
 Este es **el proyecto entero**, literalmente:
 
 ```csharp
 namespace MoralesLarios.OOFP.Validation;
 
-public abstract class MlValidableFp<T>
+public abstract class MlSelfValidatable<T>
     where T : class
 {
     public abstract MlResult<T> Validate();
@@ -95,11 +95,11 @@ public abstract class MlValidableFp<T>
 El patrón de uso es **autorreferencial** (*self-referential generic*): la clase se pasa a sí misma como parámetro genérico.
 
 ```csharp
-public class CrearUsuarioRequest : MlValidableFp<CrearUsuarioRequest>
+public class CrearUsuarioRequest : MlSelfValidatable<CrearUsuarioRequest>
 //                                              ^^^^^^^^^^^^^^^^^^^ el propio tipo
 ```
 
-> ⚠️ **El compilador no obliga a que `T` sea la clase que hereda.** Nada impide escribir `class A : MlValidableFp<B>`. Es una convención, no una garantía: respétala siempre para que `Validate()` devuelva el tipo que el llamante espera.
+> ⚠️ **El compilador no obliga a que `T` sea la clase que hereda.** Nada impide escribir `class A : MlSelfValidatable<B>`. Es una convención, no una garantía: respétala siempre para que `Validate()` devuelva el tipo que el llamante espera.
 
 ---
 
@@ -148,7 +148,7 @@ Hay tres estilos, de menos a más recomendable según el número de reglas.
 ### Estilo 1 — Ternario, para una sola regla
 
 ```csharp
-public class Etiqueta : MlValidableFp<Etiqueta>
+public class Etiqueta : MlSelfValidatable<Etiqueta>
 {
     public string Texto { get; init; } = string.Empty;
 
@@ -162,7 +162,7 @@ public class Etiqueta : MlValidableFp<Etiqueta>
 ### Estilo 2 — `EnsureFp` + `Bind`, cortocircuitado (para en el primer error)
 
 ```csharp
-public class CrearUsuarioRequest : MlValidableFp<CrearUsuarioRequest>
+public class CrearUsuarioRequest : MlSelfValidatable<CrearUsuarioRequest>
 {
     public string Email  { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
@@ -184,7 +184,7 @@ public class CrearUsuarioRequest : MlValidableFp<CrearUsuarioRequest>
 ```csharp
 using MoralesLarios.OOFP.ValueObjects;
 
-public class CrearUsuarioRequest : MlValidableFp<CrearUsuarioRequest>
+public class CrearUsuarioRequest : MlSelfValidatable<CrearUsuarioRequest>
 {
     public string Email  { get; init; } = string.Empty;
     public string Nombre { get; init; } = string.Empty;
@@ -247,12 +247,12 @@ Más detalle en la documentación de [`Bind` y `BindMulti`](../docs/Bind/3_Bind.
 ### 1. Es una clase abstracta, no una interfaz
 
 ```csharp
-public abstract class MlValidableFp<T> where T : class
+public abstract class MlSelfValidatable<T> where T : class
 ```
 
 Consecuencias prácticas:
 
-- **Consume la única posición de clase base.** Un DTO que ya herede de otra clase (por ejemplo una base con auditoría) **no puede** heredar de `MlValidableFp<T>`.
+- **Consume la única posición de clase base.** Un DTO que ya herede de otra clase (por ejemplo una base con auditoría) **no puede** heredar de `MlSelfValidatable<T>`.
 - **No sirve para `record struct` ni `struct`** (por `where T : class`). Los `record` de referencia sí valen, pero recuerda que un `record` que hereda de una clase abstracta pierde parte de la comodidad sintáctica.
 - **No hay `IMlValidableFp<T>`.** Si necesitas validar tipos que ya tienen clase base, la alternativa es declarar tu propio método `Validate()` con la misma firma y documentarlo, o usar una interfaz propia; el resto de la solución no exige el tipo base, solo el patrón.
 
@@ -277,11 +277,11 @@ No hay filtro, interceptor ni middleware automático. **Si no invocas `Validate(
 
 > ⚠️ **No hay `ValidateAsync()`.** El contrato es síncrono a propósito: `Validate()` solo debe mirar el propio objeto, y eso nunca necesita `await`. Las validaciones asíncronas (unicidad en base de datos, llamadas a otro servicio) van **después**, encadenadas con `BindAsync` en el servicio.
 
-> ⚠️ **No hay validación en cascada automática.** Si tu DTO contiene otros `MlValidableFp<>`, tienes que llamarlos explícitamente (ver [Ejemplo 3](#ejemplo-3--validación-en-cascada-de-objetos-anidados)).
+> ⚠️ **No hay validación en cascada automática.** Si tu DTO contiene otros `MlSelfValidatable<>`, tienes que llamarlos explícitamente (ver [Ejemplo 3](#ejemplo-3--validación-en-cascada-de-objetos-anidados)).
 
 > ⚠️ **No existen** `IsValid`, `Errors`, `TryValidate`, `ValidateAndThrow`, `Validator`, ni atributos de ningún tipo. El único miembro es `Validate()`.
 
-> ⚠️ **No hay integración automática con ASP.NET Core.** El `ModelState` y los `ValidationAttribute` de MVC siguen funcionando por su cuenta; `MlValidableFp<T>` es un mecanismo paralelo y explícito.
+> ⚠️ **No hay integración automática con ASP.NET Core.** El `ModelState` y los `ValidationAttribute` de MVC siguen funcionando por su cuenta; `MlSelfValidatable<T>` es un mecanismo paralelo y explícito.
 
 > ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
@@ -296,7 +296,7 @@ using MoralesLarios.OOFP.Types;
 using MoralesLarios.OOFP.Validation;
 using MoralesLarios.OOFP.Helpers;
 
-public class CrearClienteRequest : MlValidableFp<CrearClienteRequest>
+public class CrearClienteRequest : MlSelfValidatable<CrearClienteRequest>
 {
     public string  Nombre    { get; init; } = string.Empty;
     public string  Email     { get; init; } = string.Empty;
@@ -352,7 +352,7 @@ public class ServicioClientes
 No es automática: hay que orquestarla. Para una colección, `Traverse` valida todos los elementos y fusiona los errores.
 
 ```csharp
-public class LineaPedido : MlValidableFp<LineaPedido>
+public class LineaPedido : MlSelfValidatable<LineaPedido>
 {
     public int     ProductoId { get; init; }
     public int     Cantidad   { get; init; }
@@ -362,7 +362,7 @@ public class LineaPedido : MlValidableFp<LineaPedido>
              .Bind(l => EnsureFp.That(l, l.Cantidad > 0, $"La cantidad del producto {l.ProductoId} debe ser mayor que 0"));
 }
 
-public class Pedido : MlValidableFp<Pedido>
+public class Pedido : MlSelfValidatable<Pedido>
 {
     public int                    ClienteId { get; init; }
     public List<LineaPedido>      Lineas    { get; init; } = new();
@@ -437,10 +437,10 @@ dto.Validate().Bind(Guardar);
 
 
 // ❌ MAL: parámetro genérico que no es la propia clase
-public class Pedido : MlValidableFp<Cliente> { … }     // compila, pero rompe la convención
+public class Pedido : MlSelfValidatable<Cliente> { … }     // compila, pero rompe la convención
 
 // ✅ BIEN
-public class Pedido : MlValidableFp<Pedido> { … }
+public class Pedido : MlSelfValidatable<Pedido> { … }
 
 
 // ❌ MAL: BindMulti con reglas que dependen de una anterior
@@ -461,7 +461,7 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 
 | Necesito… | Uso |
 |---|---|
-| Un contrato uniforme de validación | Heredar de `MlValidableFp<T>` |
+| Un contrato uniforme de validación | Heredar de `MlSelfValidatable<T>` |
 | Parar en el primer error | `Bind` entre comprobaciones |
 | Devolver todos los errores de un formulario | `BindMulti` |
 | Comprobar una condición suelta | `EnsureFp.That(obj, condicion, "mensaje")` |
@@ -476,7 +476,7 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 
 ## Mejores prácticas
 
-1. **Usa siempre el patrón autorreferencial**: `class X : MlValidableFp<X>`.
+1. **Usa siempre el patrón autorreferencial**: `class X : MlSelfValidatable<X>`.
 2. **Devuelve `this` en el caso válido**, para que la cadena siga con el objeto validado.
 3. **Mantén `Validate()` pura**: sin I/O, sin mutación, sin excepciones, sin dependencias inyectadas.
 4. **Reparte responsabilidades**: formato y coherencia interna en `Validate()`; unicidad y reglas de negocio con estado externo, en el servicio.
@@ -493,9 +493,9 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 
 ## Resumen
 
-- `MoralesLarios.OOFP.Validation` contiene **un único tipo**: `public abstract class MlValidableFp<T> where T : class`, con **un único miembro**: `public abstract MlResult<T> Validate()`.
+- `MoralesLarios.OOFP.Validation` contiene **un único tipo**: `public abstract class MlSelfValidatable<T> where T : class`, con **un único miembro**: `public abstract MlResult<T> Validate()`.
 - Su función es **normalizar la validación**: todo objeto validable falla igual y encadena igual que el resto de la solución.
-- Se usa con el patrón autorreferencial `class X : MlValidableFp<X>` y devolviendo `this` cuando es válido.
+- Se usa con el patrón autorreferencial `class X : MlSelfValidatable<X>` y devolviendo `this` cuando es válido.
 - **Cortocircuito con `Bind`**, **acumulación con `BindMulti`**: la elección depende de si el error lo lee un humano o un proceso.
 - `Validate()` debe ser **pura y síncrona**; las reglas que necesitan la base de datos se encadenan después con `BindAsync`.
 - Es la base de [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) y [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md), que aportan los motores de reglas.

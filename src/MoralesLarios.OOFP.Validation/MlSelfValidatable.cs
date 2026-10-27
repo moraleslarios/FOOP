@@ -5,7 +5,7 @@
 using MoralesLarios.OOFP.Types;
 
 namespace MoralesLarios.OOFP.Validation;
-public abstract class MlValidableFp<T>
+public abstract class MlSelfValidatable<T>
     where T : class
 {
 

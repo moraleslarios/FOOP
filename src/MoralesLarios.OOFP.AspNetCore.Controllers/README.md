@@ -593,7 +593,7 @@ Con eso, cualquier controlador que herede de las clases base ya resuelve su `IGe
 
 8. **`DELETE` con cuerpo (`[FromBody]`).** Las sobrecargas `DeleteAsync(TDto dto, …)` y `PutAsync(TDto dto, …)` sin ruta reciben el DTO por el cuerpo. Muchos proxies, CDNs y clientes HTTP descartan el cuerpo de un `DELETE`; úsalas con precaución o prefiere las variantes con `{id}`.
 
-9. **`GetAllAsync` no pagina.** Llama a `_genServiceFp.AllAsync(ct)`, que trae la tabla completa. Para paginar necesitas un endpoint propio con `PaginationInfo` y las cabeceras de `MlRequestWebExtensions`.
+9. **`GetAllAsync` no pagina.** Llama a `_genServiceFp.AllAsync(ct)`, que trae la tabla completa. Para paginar necesitas un endpoint propio con `PageRequest` y las cabeceras de `MlRequestWebExtensions`.
 
 10. **Ningún `[ProducesResponseType]`.** Como todas las acciones devuelven `Task<IActionResult>`, Swagger no puede inferir ni el tipo de éxito ni los códigos posibles: tu OpenAPI saldrá vacío de esquemas salvo que los declares en la clase derivada.
 
@@ -617,7 +617,7 @@ Con eso, cualquier controlador que herede de las clases base ya resuelve su `IGe
 
 ## ⚠️ Lo que NO incluye
 
-- ❌ **Paginación** en `GetAllAsync` → usa `PaginationInfo` de [`Internals`](../MoralesLarios.OOFP.Shared/README.md) y las cabeceras de [`WebApi`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
+- ❌ **Paginación** en `GetAllAsync` → usa `PageRequest` de [`Internals`](../MoralesLarios.OOFP.Shared/README.md) y las cabeceras de [`WebApi`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
 - ❌ **Filtrado, ordenación o búsqueda** → añade endpoints propios llamando al repositorio de [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
 - ❌ **Autenticación ni autorización** → aplica `[Authorize]` en tus clases derivadas.
 - ❌ **Caché HTTP e invalidación** → eso lo cubre `MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching`.
@@ -854,7 +854,7 @@ public class UsersController(IGenServiceFp<User, UserDto> svc,
 {
     /// <summary>Lee X-Page-Number y X-Page-Size de las cabeceras.</summary>
     [HttpGet("paged")]
-    [ProducesResponseType(typeof(PaginationResultInfo<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPagedAsync(CancellationToken ct = default)
         => await Request.GetHeaderPaginationInfoAsync()
                         .MapIfFailAsync(errors => MlProblemsDetails.BadRequestError(
@@ -978,7 +978,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 | Paginar | Endpoint propio con `GetHeaderPaginationInfo` + `IEFRepoReaderPaginationFp<T>` |
 | Proteger la API | `[Authorize]` en la derivada o política global |
 | Documentar en Swagger | `[ProducesResponseType]` + `IOperationFilter` para `PkParameterAttribute` |
-| Validar el DTO | `ValidateObject()` / `MlValidableFp<T>` antes del `BindAsync` al servicio |
+| Validar el DTO | `ValidateObject()` / `MlSelfValidatable<T>` antes del `BindAsync` al servicio |
 | Que un "no existe" devuelva `404` | Que el servicio use `MlProblemsDetails.NotFoundError()` (así lo hacen ya las bases) |
 | Traducir mensajes de error al español | `MapIfFail` / `MapIfFailAsync` antes de la extensión `To*ActionResult*` |
 
@@ -1058,7 +1058,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 - 📄 [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md) — de dónde salen `MlActionResults`, `MlResultWebExtensionsPlus` y `MlRequestWebExtensions`.
 - 📄 [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — `IGenServiceFp<,>` y `MlProblemsDetails`: **aquí se deciden los códigos de estado**.
 - 📄 [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) — los repositorios funcionales que sostienen todo lo anterior.
-- 📄 [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PaginationInfo` y `PaginationResultInfo<T>` para tus endpoints paginados.
+- 📄 [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PageRequest` y `PagedResult<T>` para tus endpoints paginados.
 - 📄 [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — validación de DTOs en el raíl.
 - 📄 [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — alternativa con FluentValidation.
 

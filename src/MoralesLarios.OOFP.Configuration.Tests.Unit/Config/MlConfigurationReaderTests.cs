@@ -5,9 +5,9 @@
 
 
 namespace MoralesLarios.OOFP.Configuration.Tests.Unit.Config;
-public class MlConfigManagerTests(IMlConfigManager sut)
+public class MlConfigurationReaderTests(IMlConfigurationReader sut)
 {
-    private readonly IMlConfigManager _sut = sut;
+    private readonly IMlConfigurationReader _sut = sut;
 
 
     [Fact]

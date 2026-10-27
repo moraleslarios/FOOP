@@ -10,11 +10,11 @@ public class ExtensionsTests
 
 
     [Fact]
-    public void ValidateWithDataannotations_objectValid_return_valid()
+    public void ValidateWithDataAnnotations_objectValid_return_valid()
     {
         User source = new("user", DateTime.Now, "password", "password");
 
-        MlResult<User> result = source.ValidateWithDataannotations();
+        MlResult<User> result = source.ValidateWithDataAnnotations();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -22,18 +22,18 @@ public class ExtensionsTests
 
 
     [Fact]
-    public void ValidateWithDataannotations_objectFail_return_fail()
+    public void ValidateWithDataAnnotations_objectFail_return_fail()
     {
         User source = new("", DateTime.Now, "", "password");
 
-        MlResult<User> result = source.ValidateWithDataannotations();
+        MlResult<User> result = source.ValidateWithDataAnnotations();
 
         result.IsFailure.Should().BeTrue();
     }
 
 
     [Fact]
-    public void ValidateWithDataannotationsAsync_colec_AllValid_return_valid()
+    public void ValidateWithDataAnnotationsAsync_colec_AllValid_return_valid()
     {
         IEnumerable<User> source = new List<User>
         {
@@ -41,13 +41,13 @@ public class ExtensionsTests
             new("user2", DateTime.Now, "password", "password")
         };
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
+        MlResult<IEnumerable<User>> result = source.ValidateWithDataAnnotations();
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void ValidateWithDataannotationsAsync_colec_AllFail_return_Fail()
+    public void ValidateWithDataAnnotationsAsync_colec_AllFail_return_Fail()
     {
         IEnumerable<User> source = new List<User>
         {
@@ -55,13 +55,13 @@ public class ExtensionsTests
             new("user2", DateTime.Now, "password", "password_diferewt2")
         };
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
+        MlResult<IEnumerable<User>> result = source.ValidateWithDataAnnotations();
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void ValidateWithDataannotationsAsync_colec_AllFail_return_2_errors()
+    public void ValidateWithDataAnnotationsAsync_colec_AllFail_return_2_errors()
     {
         IEnumerable<User> source = new List<User>
         {
@@ -69,7 +69,7 @@ public class ExtensionsTests
             new("user2", DateTime.Now, "password", "password_diferewt2")
         };
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
+        MlResult<IEnumerable<User>> result = source.ValidateWithDataAnnotations();
 
         var resultErrors = result.GetFailureDetailsOrThrow().Errors.Count();
 
@@ -77,7 +77,7 @@ public class ExtensionsTests
     }
 
     [Fact]
-    public void ValidateWithDataannotationsAsync_colec_fail_1_element_return_Fail()
+    public void ValidateWithDataAnnotationsAsync_colec_fail_1_element_return_Fail()
     {
         IEnumerable<User> source = new List<User>
         {
@@ -85,13 +85,13 @@ public class ExtensionsTests
             new("user2", DateTime.Now, "password", "password")
         };
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
+        MlResult<IEnumerable<User>> result = source.ValidateWithDataAnnotations();
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void ValidateWithDataannotationsAsync_colec_fail_1_element_return_1_errors()
+    public void ValidateWithDataAnnotationsAsync_colec_fail_1_element_return_1_errors()
     {
         IEnumerable<User> source = new List<User>
         {
@@ -99,7 +99,7 @@ public class ExtensionsTests
             new("user2", DateTime.Now, "password", "password")
         };
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithDataannotations();
+        MlResult<IEnumerable<User>> result = source.ValidateWithDataAnnotations();
 
         var resultErrors = result.GetFailureDetailsOrThrow().Errors.Count();
 

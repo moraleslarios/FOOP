@@ -77,24 +77,24 @@ public class EFRepoPaginationFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(
 
 
 
-    public virtual MlResult<PaginationResultInfo<T>> TryAllPagination(PaginationInfo              paginationInfo, 
+    public virtual MlResult<PagedResult<T>> TryAllPagination(PageRequest              paginationInfo, 
                                                                       OrderBy                     orderBy      = OrderBy.Ascending, 
                                                                       Expression<Func<T, object>> orderByField = null!)
          => _repoReaderPaginatorFp.TryAllPagination(paginationInfo, orderBy, orderByField);
 
-    public virtual Task<MlResult<PaginationResultInfo<T>>> TryAllPaginationAsync(PaginationInfo              paginationInfo, 
+    public virtual Task<MlResult<PagedResult<T>>> TryAllPaginationAsync(PageRequest              paginationInfo, 
                                                                                  OrderBy                     orderBy      = OrderBy.Ascending, 
                                                                                  Expression<Func<T, object>> orderByField = null!,
                                                                                  CancellationToken ct                     = default!)
          => _repoReaderPaginatorFp.TryAllPaginationAsync(paginationInfo, orderBy, orderByField, ct);
 
-    public virtual MlResult<PaginationResultInfo<T>> TryGetDataPagination(PaginationInfo              paginationInfo, 
+    public virtual MlResult<PagedResult<T>> TryGetDataPagination(PageRequest              paginationInfo, 
                                                                           OrderBy                     orderBy      = OrderBy.Ascending, 
                                                                           Expression<Func<T, object>> orderByField = null, 
                                                                           Expression<Func<T, bool>>   filter       = null!)
          => _repoReaderPaginatorFp.TryGetDataPagination(paginationInfo, orderBy, orderByField, filter);
 
-    public virtual Task<MlResult<PaginationResultInfo<T>>> TryGetDataPaginationAsync(PaginationInfo paginationInfo, 
+    public virtual Task<MlResult<PagedResult<T>>> TryGetDataPaginationAsync(PageRequest paginationInfo, 
                                                                                      OrderBy                     orderBy      = OrderBy.Ascending, 
                                                                                      Expression<Func<T, object>> orderByField = null!, 
                                                                                      Expression<Func<T, bool>>   filter       = null!,

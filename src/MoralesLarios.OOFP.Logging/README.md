@@ -15,7 +15,7 @@ Es el equivalente funcional del "punto de observación": no transforma, no valid
 5. [Familia 1 — `LogMlResult` con `LogLevel` explícito](#familia-1--logmlresult-con-loglevel-explícito)
 6. [Familia 2 — `LogMlResultIfValid` / `LogMlResultIfFail`](#familia-2--logmlresultifvalid--logmlresultiffail)
 7. [Familia 3 — Filtrado por contenido de `Details`](#familia-3--filtrado-por-contenido-de-details)
-8. [Familia 4 — `LogMlResultFinal` y `LogGeneralErrorIfFail`](#familia-4--logmlresultfinal-y-loggeneralerroriffail)
+8. [Familia 4 — `LogCompletedResult` y `LogGeneralErrorIfFail`](#familia-4--logmlresultfinal-y-loggeneralerroriffail)
 9. [Familia 5 — Los seis ficheros por nivel](#familia-5--los-seis-ficheros-por-nivel)
 10. [Familia 6 — `MyMethodFinalLog`](#familia-6--mymethodfinallog)
 11. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
@@ -64,7 +64,7 @@ public Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
     => dto.Validate()
           .LogMlResultWarningIfFail(_logger, e => $"Validación fallida: {e.GetErrorsSummary()}")
           .BindAsync(v => _repo.AddAsync(Mapear(v)))
-          .LogMlResultFinalAsync(_logger,
+          .LogCompletedResultAsync(_logger,
                                  validBuildMessage: p => $"Pedido {p.Id} creado",
                                  failBuildMessage : e => $"Error al crear pedido: {e.GetErrorsSummary()}");
 ```
@@ -98,13 +98,13 @@ using MoralesLarios.OOFP.Logging;   // 🔑 todas las extensiones viven aquí
 ```
 MoralesLarios.OOFP.Logging/
 ├── GlobalUsings.cs
-├── GeneralExtensionLoggers.cs               → núcleo: LogLevel como parámetro
-├── GeneralExtensionLoggersTrace.cs          → nivel Trace fijado
-├── GeneralExtensionLoggersDebug.cs          → nivel Debug fijado
-├── GeneralExtensionLoggersInformation.cs    → nivel Information fijado
-├── GeneralExtensionLoggersWarning.cs        → nivel Warning fijado
-├── GeneralExtensionLoggersError.cs          → nivel Error fijado
-├── GeneralExtensionLoggersCritical.cs       → nivel Critical fijado
+├── MlResultLogExtensions.cs               → núcleo: LogLevel como parámetro
+├── MlResultLogExtensions.cs          → nivel Trace fijado
+├── MlResultLogExtensions.cs          → nivel Debug fijado
+├── MlResultLogExtensions.cs    → nivel Information fijado
+├── MlResultLogExtensions.cs        → nivel Warning fijado
+├── MlResultLogExtensions.cs          → nivel Error fijado
+├── MlResultLogExtensions.cs       → nivel Critical fijado
 └── Extensions.cs                            → MyMethodFinalLog (atajo de más alto nivel)
 ```
 
@@ -113,11 +113,11 @@ Todo son **clases estáticas con métodos de extensión**. La arquitectura es un
 ```
 Extensions.MyMethodFinalLog                    ← atajo con mensajes prefabricados
         ↓
-GeneralExtensionLoggers.LogMlResultFinal        ← Information si válido / Error si fallo
+MlResultLogExtensions.LogCompletedResult        ← Information si válido / Error si fallo
         ↓
 GeneralExtensionLoggersXxx.LogMlResultXxx…      ← LogLevel fijado por fichero
         ↓
-GeneralExtensionLoggers.LogMlResult…            ← LogLevel como parámetro
+MlResultLogExtensions.LogMlResult…            ← LogLevel como parámetro
         ↓
 ILogger.Log(logLevel, message)                  ← la API estándar de .NET
 ```
@@ -190,7 +190,7 @@ resultado.LogMlResult(_logger,
 
 ## Familia 1 — `LogMlResult` con `LogLevel` explícito
 
-En `GeneralExtensionLoggers.cs`. El nivel es siempre un parámetro.
+En `MlResultLogExtensions.cs`. El nivel es siempre un parámetro.
 
 | Firma | Cuándo registra |
 |---|---|
@@ -290,12 +290,12 @@ source.LogMlResultIfFailWithValue<Pedido, int>(_logger, LogLevel.Error,
 
 ---
 
-## Familia 4 — `LogMlResultFinal` y `LogGeneralErrorIfFail`
+## Familia 4 — `LogCompletedResult` y `LogGeneralErrorIfFail`
 
-### `LogMlResultFinal` — la convención "éxito = Information, fallo = Error"
+### `LogCompletedResult` — la convención "éxito = Information, fallo = Error"
 
 ```csharp
-public static MlResult<T> LogMlResultFinal<T>(this MlResult<T>                   source,
+public static MlResult<T> LogCompletedResult<T>(this MlResult<T>                   source,
                                                    ILogger                       logger,
                                                    Func<T, string>               validBuildMessage,
                                                    Func<MlErrorDetails, string> failBuildMessage)
@@ -307,7 +307,7 @@ public static MlResult<T> LogMlResultFinal<T>(this MlResult<T>                  
 Es el método que querrás **al cerrar un caso de uso**: un único log que dice cómo terminó todo.
 
 ```csharp
-await pipeline.LogMlResultFinalAsync(_logger,
+await pipeline.LogCompletedResultAsync(_logger,
         validBuildMessage: p => $"Pedido {p.Id} creado correctamente",
         failBuildMessage : e => $"No se pudo crear el pedido: {e.GetErrorsSummary()}");
 ```
@@ -343,12 +343,12 @@ public static MlResult<T> LogMlResultError<T>(this MlResult<T> source, ILogger l
 
 | Fichero | Prefijo de los métodos | `LogLevel` |
 |---|---|---|
-| `GeneralExtensionLoggersTrace.cs` | `LogMlResultTrace…` | `Trace` |
-| `GeneralExtensionLoggersDebug.cs` | `LogMlResultDebug…` | `Debug` |
-| `GeneralExtensionLoggersInformation.cs` | `LogMlResultInformation…` | `Information` |
-| `GeneralExtensionLoggersWarning.cs` | `LogMlResultWarning…` | `Warning` |
-| `GeneralExtensionLoggersError.cs` | `LogMlResultError…` | `Error` |
-| `GeneralExtensionLoggersCritical.cs` | `LogMlResultCritical…` | `Critical` |
+| `MlResultLogExtensions.cs` | `LogMlResultTrace…` | `Trace` |
+| `MlResultLogExtensions.cs` | `LogMlResultDebug…` | `Debug` |
+| `MlResultLogExtensions.cs` | `LogMlResultInformation…` | `Information` |
+| `MlResultLogExtensions.cs` | `LogMlResultWarning…` | `Warning` |
+| `MlResultLogExtensions.cs` | `LogMlResultError…` | `Error` |
+| `MlResultLogExtensions.cs` | `LogMlResultCritical…` | `Critical` |
 
 Y dentro de cada fichero, estas variantes (sustituye `Xxx` por el nivel):
 
@@ -368,7 +368,7 @@ Todas tienen su pareja `…Async`.
 
 > 💡 **Usa siempre las versiones por nivel** en código de aplicación: `LogMlResultWarningIfFail(_logger, "…")` se lee mucho mejor que `LogMlResultIfFail(_logger, LogLevel.Warning, "…")`. Reserva las de `LogLevel` explícito para cuando el nivel sea una variable.
 
-> ⚠️ **`LogMlResultFinal` y `LogGeneralErrorIfFail` solo existen en `GeneralExtensionLoggers.cs`**, no tienen versión por nivel (no la necesitan: ya llevan el nivel decidido).
+> ⚠️ **`LogCompletedResult` y `LogGeneralErrorIfFail` solo existen en `MlResultLogExtensions.cs`**, no tienen versión por nivel (no la necesitan: ya llevan el nivel decidido).
 
 ---
 
@@ -380,7 +380,7 @@ En `Extensions.cs`. Es el atajo de más alto nivel: **tú solo dices qué estaba
 public static MlResult<T> MyMethodFinalLog<T>(this MlResult<T> source,
                                                    ILogger     logger,
                                                    string      methodActionDesc)
-    => source.LogMlResultFinal(logger,
+    => source.LogCompletedResult(logger,
             validBuildMessage: item   => $"{methodActionDesc} done correctly.",
             failBuildMessage : errors => $"Error when {methodActionDesc} Error: {errors.ToErrorsDetailsDescription()}");
 ```
@@ -397,7 +397,7 @@ return await _repo.AddAsync(pedido)
 | `MyMethodFinalLog(logger, methodActionDesc)` | Versión síncrona |
 | `MyMethodFinalLogAsync(logger, methodActionDesc)` | Sobre `Task<MlResult<T>>` |
 
-> ⚠️ **Los mensajes están en inglés y son fijos.** Si tu aplicación registra en español, o si el formato no te sirve, usa `LogMlResultFinal` directamente. El nombre (`MyMethodFinalLog`) delata que es una plantilla personal del autor más que una API pensada para consumo general.
+> ⚠️ **Los mensajes están en inglés y son fijos.** Si tu aplicación registra en español, o si el formato no te sirve, usa `LogCompletedResult` directamente. El nombre (`MyMethodFinalLog`) delata que es una plantilla personal del autor más que una API pensada para consumo general.
 
 > 💡 Nótese que usa `ToErrorsDetailsDescription()` (errores **y** detalles), mientras que `LogGeneralErrorIfFail` usa `GetErrorsSummary()` (solo los mensajes). El primero es más verboso y más útil para diagnóstico.
 
@@ -442,24 +442,24 @@ source.LogMlResult(_logger, LogLevel.Information,
                    validBuildMessage: x => $"OK {x}", …);
 ```
 
-En cambio, la sobrecarga con **tuplas** y `LogMlResultFinal` sí usan `validBuildMessage` bien escrito. **Si usas argumentos con nombre, confía en IntelliSense** en lugar de en la memoria.
+En cambio, la sobrecarga con **tuplas** y `LogCompletedResult` sí usan `validBuildMessage` bien escrito. **Si usas argumentos con nombre, confía en IntelliSense** en lugar de en la memoria.
 
 ### 2. Hay una sobrecarga `async` que no se llama `Async`
 
 ```csharp
-public static async Task<MlResult<T>> LogMlResultFinal<T>(this Task<MlResult<T>> sourceAsync,
+public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>> sourceAsync,
                                                                ILogger           logger,
                                                                string            validMessage,
                                                                string            failMessage)
 ```
 
-Recibe una `Task<MlResult<T>>` y es `async`, pero **se llama `LogMlResultFinal`, sin sufijo `Async`**. Funciona correctamente; solo rompe la convención de nombres del resto del proyecto.
+Recibe una `Task<MlResult<T>>` y es `async`, pero **se llama `LogCompletedResult`, sin sufijo `Async`**. Funciona correctamente; solo rompe la convención de nombres del resto del proyecto.
 
-### 3. `GeneralExtensionLoggersTrace.cs` tiene una región mal etiquetada
+### 3. `MlResultLogExtensions.cs` tiene una región mal etiquetada
 
 La primera región del fichero de `Trace` se llama `#region LogMlResultCritical` (copia-pega desde el fichero de `Critical`). **Los métodos sí usan `LogLevel.Trace`**: solo el comentario está equivocado. No afecta al comportamiento.
 
-### 4. `GeneralExtensionLoggers.cs` arrastra un `using` inútil
+### 4. `MlResultLogExtensions.cs` arrastra un `using` inútil
 
 ```csharp
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -512,7 +512,7 @@ El mensaje llega **ya interpolado**, como una cadena plana. Ver [Lo que NO inclu
 
 > ⚠️ **No comprueba `logger.IsEnabled(logLevel)`.** El mensaje se construye siempre que se entre en la rama correspondiente, incluso si el nivel está filtrado y el texto se va a descartar. Para `Trace`/`Debug` en bucles muy calientes, esto cuesta.
 
-> ⚠️ **No existe `LogMlResultFinal` ni `LogGeneralErrorIfFail` por nivel** (`LogMlResultErrorFinal`, etc.).
+> ⚠️ **No existe `LogCompletedResult` ni `LogGeneralErrorIfFail` por nivel** (`LogMlResultErrorFinal`, etc.).
 
 > ⚠️ **No hay `IfValidWithValue`** ni variantes de filtrado por contenido en la rama válida: el filtrado por `Details` solo aplica a fallos.
 
@@ -540,7 +540,7 @@ public class ServicioPedidos
               .LogMlResultWarningIfFail (_logger, e => $"DTO inválido: {e.GetErrorsSummary()}")
               .Map                      (Mapear)
               .BindAsync                (p => _repo.AddAsync(p))
-              .LogMlResultFinalAsync    (_logger,
+              .LogCompletedResultAsync    (_logger,
                                          validBuildMessage: p => $"Pedido {p.Id} creado",
                                          failBuildMessage : e => $"No se pudo crear el pedido: {e.GetErrorsSummary()}");
 }
@@ -589,7 +589,7 @@ resultado.LogMlResult(_logger,
         failBuildMessage : (LogLevel.Information, e => $"Caché no disponible, se recalcula: {e.GetErrorsSummary()}"));
 ```
 
-> 💡 Aquí el "fallo" no es grave (un fallo de caché), así que se registra en `Information` y no en `Error`. Con `LogMlResultFinal` no podrías hacerlo, porque fija `Error`.
+> 💡 Aquí el "fallo" no es grave (un fallo de caché), así que se registra en `Information` y no en `Error`. Con `LogCompletedResult` no podrías hacerlo, porque fija `Error`.
 
 ### Ejemplo 5 — Log dentro de un bucle sobre una colección
 
@@ -664,7 +664,7 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 | Necesito… | Uso |
 |---|---|
 | Registrar todos los fallos con el mínimo código | `LogGeneralErrorIfFailAsync(_logger)` |
-| Un único log de cierre de caso de uso | `LogMlResultFinalAsync(_logger, funcValid, funcFail)` |
+| Un único log de cierre de caso de uso | `LogCompletedResultAsync(_logger, funcValid, funcFail)` |
 | Lo mismo con mensajes prefabricados (en inglés) | `MyMethodFinalLogAsync(_logger, "doing X")` |
 | Registrar solo cuando va bien | `LogMlResultXxxIfValid(_logger, …)` |
 | Registrar solo cuando falla | `LogMlResultXxxIfFail(_logger, …)` |
@@ -680,7 +680,7 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 ## Mejores prácticas
 
 1. **Prefiere las extensiones por nivel** (`LogMlResultWarningIfFail`) sobre las de `LogLevel` explícito: se leen mejor.
-2. **Un `LogMlResultFinal` por caso de uso**, no uno por paso: evita el ruido.
+2. **Un `LogCompletedResult` por caso de uso**, no uno por paso: evita el ruido.
 3. **`LogGeneralErrorIfFailAsync` en repositorios y servicios de infraestructura**: coste cero, cobertura total de fallos.
 4. **Usa `Func` en lugar de cadenas ya formateadas**: así el texto solo se construye si esa rama se ejecuta.
 5. **Mantén los `Func` triviales y a prueba de nulos**: una excepción dentro rompe la cadena de verdad.
@@ -698,12 +698,12 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 ## Resumen
 
 - Permite **registrar trazas en medio de un pipeline funcional sin romperlo**: cada método devuelve el `MlResult<T>` recibido, intacto.
-- Arquitectura en pirámide: `MyMethodFinalLog` → `LogMlResultFinal` → métodos por nivel → `LogMlResult` con `LogLevel` → `ILogger.Log`.
+- Arquitectura en pirámide: `MyMethodFinalLog` → `LogCompletedResult` → métodos por nivel → `LogMlResult` con `LogLevel` → `ILogger.Log`.
 - **Seis ficheros por nivel** (`Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`), cada uno con el mismo catálogo: variante general, `IfValid`, `IfFail`, `IfFailWithValue`, `IfFailWithException`, `IfFailWithoutException`, y todas sus parejas `Async`.
 - Lo más distintivo: **filtrar el log según el contenido de `Details`**, lo que permite separar errores técnicos de errores de negocio sin un solo `if`.
-- Atajos de alto nivel: **`LogGeneralErrorIfFail`** (una línea, registra los fallos en `Error`) y **`LogMlResultFinal`** (`Information` si va bien, `Error` si falla).
+- Atajos de alto nivel: **`LogGeneralErrorIfFail`** (una línea, registra los fallos en `Error`) y **`LogCompletedResult`** (`Information` si va bien, `Error` si falla).
 - ⚠️ Límites importantes: **no hay logging estructurado**, **no se pasa la `Exception` al logger** (ni stack trace), **no se comprueba `IsEnabled`**, y las excepciones dentro de tus `Func` **no están protegidas**.
-- ⚠️ Erratas del código: el parámetro **`validBuilMessage`** (sin `d`) en algunas sobrecargas, una sobrecarga `async` llamada **`LogMlResultFinal`** sin sufijo, y una región mal etiquetada en el fichero de `Trace`.
+- ⚠️ Erratas del código: el parámetro **`validBuilMessage`** (sin `d`) en algunas sobrecargas, una sobrecarga `async` llamada **`LogCompletedResult`** sin sufijo, y una región mal etiquetada en el fichero de `Trace`.
 
 ---
 
@@ -718,7 +718,7 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 ### Proyectos relacionados
 
 - [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) — repositorios funcionales donde encadenar los logs
-- [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos, punto natural para `LogMlResultFinal`
+- [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos, punto natural para `LogCompletedResult`
 - [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md) — conversión de `MlResult` en respuestas HTTP
 - [`MoralesLarios.OOFP.Http`](../MoralesLarios.OOFP.Http/README.md) — llamadas HTTP funcionales, otro buen sitio para trazar
 - [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validación cuyos fallos conviene registrar en `Warning`

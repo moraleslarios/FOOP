@@ -168,8 +168,8 @@ Es la pieza que permite que un repositorio de EF Core, un servicio de aplicació
 1. [¿Qué problema resuelve?](#qué-problema-resuelve)
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
-4. [`PaginationInfo` — la petición de página](#paginationinfo--la-petición-de-página)
-5. [`PaginationResultInfo<T>` — la respuesta paginada](#paginationresultinfot--la-respuesta-paginada)
+4. [`PageRequest` — la petición de página](#paginationinfo--la-petición-de-página)
+5. [`PagedResult<T>` — la respuesta paginada](#paginationresultinfot--la-respuesta-paginada)
 6. [Conversiones implícitas desde tuplas](#conversiones-implícitas-desde-tuplas)
 7. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 8. [⚠️ Lo que estos tipos NO incluyen](#️-lo-que-estos-tipos-no-incluyen)
@@ -205,7 +205,7 @@ var totalCount = await CountAsync();       // dos viajes, dos verdades
 
 ```csharp
 // Un único parámetro que YA viene normalizado y es imposible de construir mal.
-Task<MlResult<PaginationResultInfo<User>>> GetPageAsync(PaginationInfo pagination);
+Task<MlResult<PagedResult<User>>> GetPageAsync(PageRequest pagination);
 
 // La llamada es una tupla: legible y sin ceremonia.
 var resultado = await repo.GetPageAsync((pageNumber: 2, pageSize: 20));
@@ -213,7 +213,7 @@ var resultado = await repo.GetPageAsync((pageNumber: 2, pageSize: 20));
 // Y la respuesta viaja completa: datos + posición + total, en un solo objeto.
 ```
 
-> 💡 **La idea de fondo**: `Internals` no valida "reglas de negocio", **normaliza**. Un `PaginationInfo` recién construido es siempre coherente, así que ninguna capa posterior necesita volver a comprobarlo. Es el mismo espíritu que los [value objects](../MoralesLarios.OOFP.ValueObjects/README.md): *estados imposibles, imposibles de representar*.
+> 💡 **La idea de fondo**: `Internals` no valida "reglas de negocio", **normaliza**. Un `PageRequest` recién construido es siempre coherente, así que ninguna capa posterior necesita volver a comprobarlo. Es el mismo espíritu que los [value objects](../MoralesLarios.OOFP.ValueObjects/README.md): *estados imposibles, imposibles de representar*.
 
 ---
 
@@ -242,15 +242,15 @@ using MoralesLarios.OOFP.Shared.Pagination;
 MoralesLarios.OOFP.Shared/
 ├── GlobalUsings.cs
 └── Info/
-    ├── PaginationInfo.cs          → PaginationInfo
-    └── PaginationResultInfo.cs    → PaginationResultInfo<T>
+    ├── PageRequest.cs          → PageRequest
+    └── PagedResult.cs    → PagedResult<T>
 ```
 
 Solo **dos tipos**, ambos `record`. La librería es deliberadamente mínima: cuanto menos contenga, más proyectos pueden depender de ella sin arrastrar peso.
 
 ---
 
-## `PaginationInfo` — la petición de página
+## `PageRequest` — la petición de página
 
 Representa **lo que pide el cliente**: qué página quiere y de cuántos elementos.
 
@@ -259,7 +259,7 @@ Representa **lo que pide el cliente**: qué página quiere y de cuántos element
 ```csharp
 namespace MoralesLarios.OOFP.Shared.Pagination;
 
-public record PaginationInfo([property: Range(0, int.MinValue)] int PageNumber,
+public record PageRequest([property: Range(0, int.MinValue)] int PageNumber,
                             [property: Range(0, int.MinValue)] int PageSize)
 {
     private const int MaxPageSize = 1000;
@@ -267,11 +267,11 @@ public record PaginationInfo([property: Range(0, int.MinValue)] int PageNumber,
     public int PageNumber { get; init; } = Math.Max(1, PageNumber);
     public int PageSize   { get; init; } = Math.Clamp(PageSize, 1, MaxPageSize);
 
-    public static implicit operator PaginationInfo((int pageNumber, int pageSize) value)
-        => new PaginationInfo(value.pageNumber, value.pageSize);
+    public static implicit operator PageRequest((int pageNumber, int pageSize) value)
+        => new PageRequest(value.pageNumber, value.pageSize);
 
-    public static implicit operator PaginationInfo((IntNonNegative pageNumber, IntNonNegative pageSize) value)
-        => new PaginationInfo(value.pageNumber, value.pageSize);
+    public static implicit operator PageRequest((IntNonNegative pageNumber, IntNonNegative pageSize) value)
+        => new PageRequest(value.pageNumber, value.pageSize);
 }
 ```
 
@@ -287,11 +287,11 @@ El record **redeclara** sus propiedades para no usar los valores crudos del cons
 **Nunca lanza excepción**: siempre "corrige" en silencio.
 
 ```csharp
-var p1 = new PaginationInfo(0,     20);      // → PageNumber = 1,   PageSize = 20
-var p2 = new PaginationInfo(-7,    20);      // → PageNumber = 1,   PageSize = 20
-var p3 = new PaginationInfo(3,      0);      // → PageNumber = 3,   PageSize = 1
-var p4 = new PaginationInfo(3,  50_000);     // → PageNumber = 3,   PageSize = 1000  ← tope
-var p5 = new PaginationInfo(3,   1000);      // → PageNumber = 3,   PageSize = 1000  ← límite exacto, se respeta
+var p1 = new PageRequest(0,     20);      // → PageNumber = 1,   PageSize = 20
+var p2 = new PageRequest(-7,    20);      // → PageNumber = 1,   PageSize = 20
+var p3 = new PageRequest(3,      0);      // → PageNumber = 3,   PageSize = 1
+var p4 = new PageRequest(3,  50_000);     // → PageNumber = 3,   PageSize = 1000  ← tope
+var p5 = new PageRequest(3,   1000);      // → PageNumber = 3,   PageSize = 1000  ← límite exacto, se respeta
 ```
 
 > 💡 **`MaxPageSize` es `private const` = 1000** y no es configurable. Si necesitas otro tope, envuelve el tipo en tu propia validación antes de construirlo (por ejemplo con [`EnsureFp`](../docs/EnsureFp/EnsureFp.md)).
@@ -307,24 +307,24 @@ var query = origen.Skip((pagination.PageNumber - 1) * pagination.PageSize)
 
 ---
 
-## `PaginationResultInfo<T>` — la respuesta paginada
+## `PagedResult<T>` — la respuesta paginada
 
 Representa **lo que se devuelve**: los elementos de esa página más el contexto necesario para que el consumidor pueda pintar un paginador.
 
 ### Firma real
 
 ```csharp
-public record PaginationResultInfo<T>(                         IEnumerable<T> Items,
+public record PagedResult<T>(                         IEnumerable<T> Items,
                                       [Range(0, int.MaxValue)] int            PageNumber,
                                       [Range(0, int.MinValue)] int            PageSize,
                                       [Range(0, int.MinValue)] int            TotalCount)
-    : PaginationInfo(PageNumber, PageSize)
+    : PageRequest(PageNumber, PageSize)
 {
-    public static implicit operator PaginationResultInfo<T>((IEnumerable<T> items,
+    public static implicit operator PagedResult<T>((IEnumerable<T> items,
                                                             int            pageNumber,
                                                             int            pageSize,
                                                             int            totalCount) value)
-        => new PaginationResultInfo<T>(value.items, value.pageNumber, value.pageSize, value.totalCount);
+        => new PagedResult<T>(value.items, value.pageNumber, value.pageSize, value.totalCount);
 }
 ```
 
@@ -334,10 +334,10 @@ public record PaginationResultInfo<T>(                         IEnumerable<T> It
 |---|---|---|
 | `Items` | Propio | Los elementos **de esta página**, no la colección completa. |
 | `TotalCount` | Propio | Total de registros que existen **sin paginar**. Sirve para calcular el número de páginas. |
-| `PageNumber` | **Heredado** de `PaginationInfo` | Llega ya normalizado (`Math.Max(1, …)`). |
-| `PageSize` | **Heredado** de `PaginationInfo` | Llega ya normalizado (`Math.Clamp(…, 1, 1000)`). |
+| `PageNumber` | **Heredado** de `PageRequest` | Llega ya normalizado (`Math.Max(1, …)`). |
+| `PageSize` | **Heredado** de `PageRequest` | Llega ya normalizado (`Math.Clamp(…, 1, 1000)`). |
 
-> 🔑 **Detalle clave**: como `PageNumber` y `PageSize` se pasan al constructor base, `PaginationResultInfo<T>` **hereda gratis la normalización**. No hay dos comportamientos distintos entre la petición y la respuesta.
+> 🔑 **Detalle clave**: como `PageNumber` y `PageSize` se pasan al constructor base, `PagedResult<T>` **hereda gratis la normalización**. No hay dos comportamientos distintos entre la petición y la respuesta.
 
 ### Cálculos derivados que tendrás que hacer tú
 
@@ -346,13 +346,13 @@ El tipo es un contenedor puro; no ofrece propiedades calculadas. Si las necesita
 ```csharp
 public static class PaginationResultInfoExtensions
 {
-    public static int TotalPages<T>(this PaginationResultInfo<T> source)
+    public static int TotalPages<T>(this PagedResult<T> source)
         => (int)Math.Ceiling(source.TotalCount / (double)source.PageSize);
 
-    public static bool HasPreviousPage<T>(this PaginationResultInfo<T> source)
+    public static bool HasPreviousPage<T>(this PagedResult<T> source)
         => source.PageNumber > 1;
 
-    public static bool HasNextPage<T>(this PaginationResultInfo<T> source)
+    public static bool HasNextPage<T>(this PagedResult<T> source)
         => source.PageNumber < source.TotalPages();
 }
 ```
@@ -365,21 +365,21 @@ Las tres conversiones implícitas existen para que **las llamadas queden legible
 
 | Desde | Hacia | Definido en |
 |---|---|---|
-| `(int pageNumber, int pageSize)` | `PaginationInfo` | `PaginationInfo` |
-| `(IntNonNegative pageNumber, IntNonNegative pageSize)` | `PaginationInfo` | `PaginationInfo` |
-| `(IEnumerable<T> items, int pageNumber, int pageSize, int totalCount)` | `PaginationResultInfo<T>` | `PaginationResultInfo<T>` |
+| `(int pageNumber, int pageSize)` | `PageRequest` | `PageRequest` |
+| `(IntNonNegative pageNumber, IntNonNegative pageSize)` | `PageRequest` | `PageRequest` |
+| `(IEnumerable<T> items, int pageNumber, int pageSize, int totalCount)` | `PagedResult<T>` | `PagedResult<T>` |
 
 ```csharp
 // 1) Tupla de enteros → petición
-PaginationInfo peticion = (pageNumber: 2, pageSize: 20);
+PageRequest peticion = (pageNumber: 2, pageSize: 20);
 
 // 2) Tupla de value objects → petición (ya validados en origen)
 IntNonNegative pagina  = 2;
 IntNonNegative tamanyo = 20;
-PaginationInfo peticionVO = (pagina, tamanyo);
+PageRequest peticionVO = (pagina, tamanyo);
 
 // 3) Tupla de 4 elementos → respuesta
-PaginationResultInfo<User> respuesta = (usuariosDeLaPagina, 2, 20, 350);
+PagedResult<User> respuesta = (usuariosDeLaPagina, 2, 20, 350);
 ```
 
 > 💡 **Nombra los elementos de la tupla** (`pageNumber:`, `pageSize:`) cuando ambos sean `int`. Es la única defensa real contra el clásico error de invertir el orden: `(20, 2)` compila igual de bien que `(2, 20)`, pero significa algo muy distinto.
@@ -401,7 +401,7 @@ Aparecen escritos como `Range(0, int.MinValue)`, es decir **mínimo 0 y máximo 
 `PageNumber` y `PageSize` se sanean; **`TotalCount` no**. Se acepta tal cual, incluso negativo:
 
 ```csharp
-PaginationResultInfo<string> raro = (new[] { "a" }, 1, 20, -5);   // TotalCount = -5, se acepta
+PagedResult<string> raro = (new[] { "a" }, 1, 20, -5);   // TotalCount = -5, se acepta
 ```
 
 Si `TotalCount` viene de un `CountAsync()` esto nunca ocurre, pero si lo calculas a mano, asegúralo tú.
@@ -412,12 +412,12 @@ No hay comprobación de nulidad. Para una página vacía **usa una colección va
 
 ```csharp
 // ✅ Página sin resultados, pero segura de recorrer
-PaginationResultInfo<User> vacia = (Enumerable.Empty<User>(), 1, 20, 0);
+PagedResult<User> vacia = (Enumerable.Empty<User>(), 1, 20, 0);
 ```
 
 ### 4. Igualdad de `record` sobre `IEnumerable<T>`
 
-`PaginationResultInfo<T>` es un `record`, así que su `Equals` compara `Items` **por referencia** (no elemento a elemento, porque `IEnumerable<T>` no implementa igualdad estructural). Dos respuestas con los mismos elementos en listas distintas **no serán iguales**.
+`PagedResult<T>` es un `record`, así que su `Equals` compara `Items` **por referencia** (no elemento a elemento, porque `IEnumerable<T>` no implementa igualdad estructural). Dos respuestas con los mismos elementos en listas distintas **no serán iguales**.
 
 ---
 
@@ -425,7 +425,7 @@ PaginationResultInfo<User> vacia = (Enumerable.Empty<User>(), 1, 20, 0);
 
 Para evitar buscar miembros que no existen:
 
-> ⚠️ **No existen** en `PaginationInfo` ni en `PaginationResultInfo<T>`: `TotalPages`, `HasNextPage`, `HasPreviousPage`, `IsFirstPage`, `IsLastPage`, `Skip`, `Take`, `Offset`, ni ningún método `Validate()`. Tampoco hay conversión implícita hacia `MlResult<T>`. Son **records de datos**, no objetos con comportamiento.
+> ⚠️ **No existen** en `PageRequest` ni en `PagedResult<T>`: `TotalPages`, `HasNextPage`, `HasPreviousPage`, `IsFirstPage`, `IsLastPage`, `Skip`, `Take`, `Offset`, ni ningún método `Validate()`. Tampoco hay conversión implícita hacia `MlResult<T>`. Son **records de datos**, no objetos con comportamiento.
 
 Si necesitas esas ayudas, créalas como extensiones en tu propio proyecto (ver el ejemplo de la sección anterior).
 
@@ -438,7 +438,7 @@ Si necesitas esas ayudas, créalas como extensiones en tu propio proyecto (ver e
 ```csharp
 using MoralesLarios.OOFP.Shared.Pagination;
 
-public static PaginationResultInfo<T> Paginar<T>(IEnumerable<T> origen, PaginationInfo pagination)
+public static PagedResult<T> Paginar<T>(IEnumerable<T> origen, PageRequest pagination)
 {
     var lista = origen as IList<T> ?? origen.ToList();
 
@@ -446,7 +446,7 @@ public static PaginationResultInfo<T> Paginar<T>(IEnumerable<T> origen, Paginati
                       .Take(pagination.PageSize)
                       .ToList();
 
-    // Tupla → PaginationResultInfo<T> por conversión implícita
+    // Tupla → PagedResult<T> por conversión implícita
     return (pagina, pagination.PageNumber, pagination.PageSize, lista.Count);
 }
 
@@ -465,7 +465,7 @@ Aquí se ve por qué `Internals` es una librería aparte: el repositorio la usa 
 using MoralesLarios.OOFP.Shared.Pagination;
 using MoralesLarios.OOFP.Types;
 
-public async Task<MlResult<PaginationResultInfo<UserDto>>> ObtenerPaginaAsync(PaginationInfo pagination)
+public async Task<MlResult<PagedResult<UserDto>>> ObtenerPaginaAsync(PageRequest pagination)
 {
     var total = await _context.Users.CountAsync();
 
@@ -476,7 +476,7 @@ public async Task<MlResult<PaginationResultInfo<UserDto>>> ObtenerPaginaAsync(Pa
                               .Select(u => new UserDto(u.Id, u.Name))
                               .ToListAsync();
 
-    PaginationResultInfo<UserDto> resultado = (items, pagination.PageNumber, pagination.PageSize, total);
+    PagedResult<UserDto> resultado = (items, pagination.PageNumber, pagination.PageSize, total);
 
     return resultado.ToMlResultValid();
 }
@@ -490,8 +490,8 @@ El caso donde la normalización brilla: la entrada viene de la query string, es 
 [HttpGet]
 public async Task<IActionResult> Get([FromQuery] int page = 1, [FromQuery] int size = 20)
 {
-    // Aunque llegue ?page=-3&size=999999, PaginationInfo lo deja en (1, 1000).
-    PaginationInfo pagination = (pageNumber: page, pageSize: size);
+    // Aunque llegue ?page=-3&size=999999, PageRequest lo deja en (1, 1000).
+    PageRequest pagination = (pageNumber: page, pageSize: size);
 
     var resultado = await _service.ObtenerPaginaAsync(pagination);
 
@@ -515,11 +515,11 @@ public async Task<IActionResult> Get([FromQuery] int page = 1, [FromQuery] int s
 ```csharp
 using MoralesLarios.OOFP.Types;
 
-public async Task<MlResult<PaginationResultInfo<UserDto>>> BuscarAsync(string filtro, int page, int size)
+public async Task<MlResult<PagedResult<UserDto>>> BuscarAsync(string filtro, int page, int size)
     => await EnsureFp.NotNullEmptyOrWhitespace(filtro, "El filtro de búsqueda es obligatorio")
                      .MapAsync(async f =>
                      {
-                         PaginationInfo pagination = (pageNumber: page, pageSize: size);
+                         PageRequest pagination = (pageNumber: page, pageSize: size);
                          return (filtro: f, pagination);
                      })
                      .BindAsync(async x => await _repo.BuscarPaginadoAsync(x.filtro, x.pagination))
@@ -531,26 +531,26 @@ public async Task<MlResult<PaginationResultInfo<UserDto>>> BuscarAsync(string fi
 
 ```csharp
 // ❌ MAL: volver a validar lo que el tipo ya garantiza
-PaginationInfo p = (page, size);
+PageRequest p = (page, size);
 if (p.PageNumber < 1)   p = p with { PageNumber = 1 };      // imposible: ya es ≥ 1
 if (p.PageSize  > 1000) p = p with { PageSize  = 1000 };    // imposible: ya está limitado
 
 // ✅ BIEN: confiar en la normalización
-PaginationInfo p = (pageNumber: page, pageSize: size);
+PageRequest p = (pageNumber: page, pageSize: size);
 
 
 // ❌ MAL: tupla posicional ambigua — fácil invertir los valores
-PaginationInfo p = (20, 2);          // ¿página 20 de 2 en 2? Probablemente no era la intención
+PageRequest p = (20, 2);          // ¿página 20 de 2 en 2? Probablemente no era la intención
 
 // ✅ BIEN: tupla con nombres
-PaginationInfo p = (pageNumber: 2, pageSize: 20);
+PageRequest p = (pageNumber: 2, pageSize: 20);
 
 
 // ❌ MAL: devolver null en Items para una página vacía
-PaginationResultInfo<User> r = (null!, 1, 20, 0);           // reventará al recorrer
+PagedResult<User> r = (null!, 1, 20, 0);           // reventará al recorrer
 
 // ✅ BIEN: colección vacía
-PaginationResultInfo<User> r = (Enumerable.Empty<User>(), 1, 20, 0);
+PagedResult<User> r = (Enumerable.Empty<User>(), 1, 20, 0);
 
 
 // ❌ MAL: apoyarse en los atributos [Range] como si validaran
@@ -573,25 +573,25 @@ using MoralesLarios.OOFP.Shared.Pagination;
 
 | Necesito… | Uso |
 |---|---|
-| Recibir "qué página quiero" desde una API o un servicio | `PaginationInfo` (o directamente una tupla `(pageNumber:, pageSize:)`) |
-| Devolver los elementos de una página **con su contexto** | `PaginationResultInfo<T>` |
-| Que un `?pageSize=999999` no tumbe la base de datos | Nada extra: `PaginationInfo` lo limita a 1000 |
+| Recibir "qué página quiero" desde una API o un servicio | `PageRequest` (o directamente una tupla `(pageNumber:, pageSize:)`) |
+| Devolver los elementos de una página **con su contexto** | `PagedResult<T>` |
+| Que un `?pageSize=999999` no tumbe la base de datos | Nada extra: `PageRequest` lo limita a 1000 |
 | Partir de valores ya validados como no negativos | Conversión implícita desde `(IntNonNegative, IntNonNegative)` |
 | `TotalPages`, `HasNextPage`, etc. | Métodos de extensión propios (no existen en la librería) |
-| Un tope de página distinto de 1000 | Validación propia con `EnsureFp` antes de construir el `PaginationInfo` |
+| Un tope de página distinto de 1000 | Validación propia con `EnsureFp` antes de construir el `PageRequest` |
 
 ---
 
 ## Mejores prácticas
 
 1. **Importa `MoralesLarios.OOFP.Shared.Pagination`**, no `MoralesLarios.OOFP.Shared`. Es el fallo de arranque más habitual.
-2. **Acepta `PaginationInfo` en las firmas públicas**, no dos `int` sueltos. Así la normalización ocurre una sola vez, en el borde de la aplicación.
+2. **Acepta `PageRequest` en las firmas públicas**, no dos `int` sueltos. Así la normalización ocurre una sola vez, en el borde de la aplicación.
 3. **Nombra siempre los elementos de la tupla** (`pageNumber:`, `pageSize:`). Evita invertir valores sin que el compilador se queje.
 4. **No repitas comprobaciones** de `PageNumber`/`PageSize` aguas abajo: el tipo ya las garantiza.
 5. **No confíes en los `[Range]`** de estos records (definen un rango vacío). La garantía real es `Math.Max`/`Math.Clamp`.
 6. **Devuelve colecciones vacías, nunca `null`**, en `Items`.
 7. **Calcula `TotalCount` con el mismo filtro** que los `Items`, o el paginador de la interfaz mentirá.
-8. **Envuelve el resultado en `MlResult<T>`** (`MlResult<PaginationResultInfo<T>>`) para que el error de consulta viaje por el mismo canal que el resto de la aplicación.
+8. **Envuelve el resultado en `MlResult<T>`** (`MlResult<PagedResult<T>>`) para que el error de consulta viaje por el mismo canal que el resto de la aplicación.
 9. **Materializa `Items`** (`ToList()`) antes de construir el resultado si la fuente es un `IQueryable` diferido: evitarás que la consulta se ejecute varias veces al leer `Items` más de una vez.
 
 ---
@@ -600,8 +600,8 @@ using MoralesLarios.OOFP.Shared.Pagination;
 
 `MoralesLarios.OOFP.Shared` es la librería más pequeña del ecosistema y, precisamente por eso, una de las más usadas: define **el vocabulario común de la paginación**.
 
-- **`PaginationInfo`** → la petición. `PageNumber` mínimo 1; `PageSize` acotado entre 1 y 1000. **Nunca lanza; siempre normaliza.**
-- **`PaginationResultInfo<T>`** → la respuesta. Añade `Items` y `TotalCount`, y **hereda la normalización** del tipo base.
+- **`PageRequest`** → la petición. `PageNumber` mínimo 1; `PageSize` acotado entre 1 y 1000. **Nunca lanza; siempre normaliza.**
+- **`PagedResult<T>`** → la respuesta. Añade `Items` y `TotalCount`, y **hereda la normalización** del tipo base.
 - **Conversiones implícitas desde tuplas** para que las llamadas queden legibles.
 - **Sin lógica de negocio, sin propiedades calculadas, sin dependencias pesadas**: solo el contrato.
 

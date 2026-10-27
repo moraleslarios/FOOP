@@ -6,13 +6,13 @@ using MoralesLarios.OOFP.Validation.FluentValidation.Helpers;
 
 namespace MoralesLarios.OOFP.Validation.FluentValidation;
 
-public static class FluentValidationsValidator
+public static class FluentValidationValidator
 {
     public static MlResult<T> Validate<T, TValidator>(T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new()
         => EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
-                   .Bind(_ => source.ValidateWithFluentValidations<T, TValidator>());
+                   .Bind(_ => source.ValidateWithFluentValidation<T, TValidator>());
 
     public static Task<MlResult<T>> ValidateAsync<T, TValidator>(T source)
         where T          : class
@@ -29,7 +29,7 @@ public static class FluentValidationsValidator
         where TValidator : AbstractValidator<T>, new()
         => EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
                    .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} must not be empty"))
-                   .Bind(_ => source.ValidateWithFluentValidations<T, TValidator>());
+                   .Bind(_ => source.ValidateWithFluentValidation<T, TValidator>());
 
     public static Task<MlResult<IEnumerable<T>>> ValidateAsync<T, TValidator>(IEnumerable<T> source)
         where T          : class

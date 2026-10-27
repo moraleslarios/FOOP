@@ -29,7 +29,7 @@ public class HttpClientFactoryManager(IHttpClientFactory                _httpCli
 
     public virtual async Task<MlResult<T>> GetPaginationAsync<T>(CallRequestPaginationParamsInfo parameters, CancellationToken ct = default)
     {
-        var result = await DataannotationsValidator.ValidateAsync(parameters)
+        var result = await DataAnnotationsValidator.ValidateAsync(parameters)
                                     .TryMapAsync         ( _     => _httpClientFactory.CreateClient(parameters.HttpClientFactoryKey))
                                     .ExecSelfIfValidAsync(client => InternalLogUrlPagination(_logger, 
                                                                                              client.BaseAddress?.ToString()!, 
@@ -66,14 +66,14 @@ public class HttpClientFactoryManager(IHttpClientFactory                _httpCli
 
 
 
-    public virtual async Task<MlResult<PaginationResultInfo<TItem>>> PostGetPaginationAsync<TRequest, TItem>(CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default!)
+    public virtual async Task<MlResult<PagedResult<TItem>>> PostGetPaginationAsync<TRequest, TItem>(CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default!)
     {
-        var result = await DataannotationsValidator.ValidateAsync(parameters)
+        var result = await DataAnnotationsValidator.ValidateAsync(parameters)
                                     .TryMapAsync         ( _     => _httpClientFactory.CreateClient(parameters.HttpClientFactoryKey))
                                     .ExecSelfIfValidAsync(client => _logger.LogInformation($"Consultando datos paginados a la url {Path.Combine(client.BaseAddress?.ToString() ?? string.Empty, parameters.Url ?? string.Empty)}. PageNumber {parameters.PageNumber}, PageSize {parameters.PageSize}"))
                                             .LogMlResultInformationAsync(_logger, $"Añadiendo información a las cabeceras del httpClient: PageNumber {parameters.PageNumber}, PageSize {parameters.PageSize}")
                                     .BindAsync   (client => client.SetHeaderPageInfoAsync(parameters.PageNumber, parameters.PageSize))
-                                    .TryBindAsync(client => InternalPostGetAsync<TRequest, PaginationResultInfo<TItem>>(parameters, client, nameof(PostGetPaginationAsync)));
+                                    .TryBindAsync(client => InternalPostGetAsync<TRequest, PagedResult<TItem>>(parameters, client, nameof(PostGetPaginationAsync)));
         return result!;
     }
 

@@ -19,7 +19,7 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddMlUtilitiesConfig(_configuration);
+        services.AddMlConfigurationReader(_configuration);
     }
 }
 

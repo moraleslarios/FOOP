@@ -81,16 +81,16 @@ public static class MlRequestWebExtensions
 
 
 
-    public static MlResult<PaginationInfo> GetHeaderPaginationInfo(this HttpRequest request)
+    public static MlResult<PageRequest> GetHeaderPaginationInfo(this HttpRequest request)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind(_ => GetHeaderPageNumber(request)
                                                             .CreateCompleteMlResult(GetHeaderPageSize(request)))
-                                .Map(paginationInfo => new PaginationInfo(paginationInfo.Item1, paginationInfo.Item2));
+                                .Map(paginationInfo => new PageRequest(paginationInfo.Item1, paginationInfo.Item2));
         return result;
     }
 
-    public static Task<MlResult<PaginationInfo>> GetHeaderPaginationInfoAsync(this HttpRequest request)
+    public static Task<MlResult<PageRequest>> GetHeaderPaginationInfoAsync(this HttpRequest request)
         => request.GetHeaderPaginationInfo().ToAsync();
 
 

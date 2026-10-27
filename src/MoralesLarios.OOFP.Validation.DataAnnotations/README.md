@@ -11,11 +11,11 @@ Permite reutilizar las anotaciones que ya tienen tus DTOs — sin reescribir reg
 1. [¿Qué problema resuelve?](#qué-problema-resuelve)
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
-4. [`DataannotationsValidator` — la fachada estática](#dataannotationsvalidator--la-fachada-estática)
+4. [`DataAnnotationsValidator` — la fachada estática](#dataannotationsvalidator--la-fachada-estática)
 5. [`Helpers.Extensions` — los métodos de extensión](#helpersextensions--los-métodos-de-extensión)
 6. [Cómo se convierten los errores](#cómo-se-convierten-los-errores)
 7. [Objetos individuales vs. colecciones](#objetos-individuales-vs-colecciones)
-8. [Combinación con `MlValidableFp<T>`](#combinación-con-mlvalidablefpt)
+8. [Combinación con `MlSelfValidatable<T>`](#combinación-con-mlvalidablefpt)
 9. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 10. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
 11. [Ejemplos prácticos](#ejemplos-prácticos)
@@ -49,7 +49,7 @@ return Ok(creado);
 ✅ **Con este proyecto:**
 
 ```csharp
-return DataannotationsValidator.Validate(dto)
+return DataAnnotationsValidator.Validate(dto)
     .Bind(v => _servicio.Crear(v))
     .Match(valid: creado  => Ok(creado),
            fail : errores => BadRequest(errores.GetErrorMessages()));
@@ -69,7 +69,7 @@ Y de paso: `validateAllProperties: true` ya viene puesto, así que **no se te ol
 | `System.ComponentModel.DataAnnotations` | Parte del framework: atributos y `Validator` |
 
 ```csharp
-using MoralesLarios.OOFP.Validation.DataAnnotations;          // DataannotationsValidator
+using MoralesLarios.OOFP.Validation.DataAnnotations;          // DataAnnotationsValidator
 using MoralesLarios.OOFP.Validation.DataAnnotations.Helpers;  // métodos de extensión
 using System.ComponentModel.DataAnnotations;                  // los atributos en tus DTOs
 ```
@@ -82,27 +82,27 @@ No requiere registro en el contenedor de dependencias: **todo es estático**.
 
 ```
 MoralesLarios.OOFP.Validation.DataAnnotations/
-├── DataannotationsValidator.cs        → fachada estática (6 sobrecargas de Validate/ValidateAsync)
+├── DataAnnotationsValidator.cs        → fachada estática (6 sobrecargas de Validate/ValidateAsync)
 └── Helpers/
     └── Extensions.cs                  → 7 métodos de extensión (el motor real)
 ```
 
-Solo hay **dos ficheros de código** y una relación muy simple: `DataannotationsValidator` es una fachada que añade comprobaciones previas y delega en los métodos de extensión.
+Solo hay **dos ficheros de código** y una relación muy simple: `DataAnnotationsValidator` es una fachada que añade comprobaciones previas y delega en los métodos de extensión.
 
 ```
-DataannotationsValidator.Validate(x)
+DataAnnotationsValidator.Validate(x)
    └─ EnsureFp.NotNull(x, …)
-        └─ x.ValidateWithDataannotations()
-             └─ x.ValidateObject()
+        └─ x.ValidateWithDataAnnotations()
+             └─ x.ValidateDataAnnotations()
                   └─ Validator.TryValidateObject(x, ctx, resultados, true)
 ```
 
 ---
 
-## `DataannotationsValidator` — la fachada estática
+## `DataAnnotationsValidator` — la fachada estática
 
 ```csharp
-public static class DataannotationsValidator
+public static class DataAnnotationsValidator
 {
     public static MlResult<T>                    Validate     <T>(T source);
     public static Task<MlResult<T>>              ValidateAsync<T>(T source);
@@ -128,15 +128,15 @@ Implementación real de las dos sobrecargas síncronas:
 ```csharp
 public static MlResult<T> Validate<T>(T source)
     => EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
-         .Bind(_ => source.ValidateWithDataannotations());
+         .Bind(_ => source.ValidateWithDataAnnotations());
 
 public static MlResult<IEnumerable<T>> Validate<T>(IEnumerable<T> source)
     => EnsureFp.NotNull (source, $"{nameof(source)} must not be null")
          .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} must not be empty"))
-         .Bind(_ => source.ValidateWithDataannotations());
+         .Bind(_ => source.ValidateWithDataAnnotations());
 ```
 
-> ⚠️ **Una colección vacía se considera error** (`"source no be empty"`). Si en tu caso una lista vacía es legítima, **no uses esta sobrecarga**: llama directamente a la extensión `source.ValidateWithDataannotations()`.
+> ⚠️ **Una colección vacía se considera error** (`"source no be empty"`). Si en tu caso una lista vacía es legítima, **no uses esta sobrecarga**: llama directamente a la extensión `source.ValidateWithDataAnnotations()`.
 
 ---
 
@@ -157,33 +157,33 @@ public static class Extensions
     }
 
     // 2. Objeto individual → MlResult<T>
-    public static MlResult<T> ValidateWithDataannotations<T>(this T source)
-        => source!.ValidateObject().ToMlResultValid()
+    public static MlResult<T> ValidateWithDataAnnotations<T>(this T source)
+        => source!.ValidateDataAnnotations().ToMlResultValid()
                   .Map (valResults => valResults.Select(x => x.ErrorMessage))
                   .Bind(errors     => errors.Any() ? errors!.ToMlResultFail<T>()
                                                    : source.ToMlResultValid<T>());
 
-    public static Task<MlResult<T>> ValidateWithDataannotationsAsync<T>(this T source);
-    public static Task<MlResult<T>> ValidateWithDataannotationsAsync<T>(this Task<T> sourceAsync);
+    public static Task<MlResult<T>> ValidateWithDataAnnotationsAsync<T>(this T source);
+    public static Task<MlResult<T>> ValidateWithDataAnnotationsAsync<T>(this Task<T> sourceAsync);
 
     // 3. Colección → MlResult<IEnumerable<T>>, acumulando errores de TODOS los elementos
-    public static MlResult<IEnumerable<T>> ValidateWithDataannotations<T>(this IEnumerable<T> source)
-        => source.Select(x => x.ValidateWithDataannotations())
+    public static MlResult<IEnumerable<T>> ValidateWithDataAnnotations<T>(this IEnumerable<T> source)
+        => source.Select(x => x.ValidateWithDataAnnotations())
                  .MergeErrorsIfExists();
 
-    public static Task<MlResult<IEnumerable<T>>> ValidateWithDataannotationsAsync<T>(this IEnumerable<T> source);
-    public static Task<MlResult<IEnumerable<T>>> ValidateWithDataannotationsAsync<T>(this Task<IEnumerable<T>> sourceAsync);
+    public static Task<MlResult<IEnumerable<T>>> ValidateWithDataAnnotationsAsync<T>(this IEnumerable<T> source);
+    public static Task<MlResult<IEnumerable<T>>> ValidateWithDataAnnotationsAsync<T>(this Task<IEnumerable<T>> sourceAsync);
 }
 ```
 
 | Método | Devuelve | Notas |
 |---|---|---|
-| `ValidateObject(this object)` | `IEnumerable<ValidationResult>` | Vacío = válido. **No** devuelve `bool` |
-| `ValidateWithDataannotations<T>(this T)` | `MlResult<T>` | Válido ⇒ devuelve **el propio objeto** |
-| `ValidateWithDataannotations<T>(this IEnumerable<T>)` | `MlResult<IEnumerable<T>>` | Acumula errores de todos los elementos |
+| `ValidateDataAnnotations(this object)` | `IEnumerable<ValidationResult>` | Vacío = válido. **No** devuelve `bool` |
+| `ValidateWithDataAnnotations<T>(this T)` | `MlResult<T>` | Válido ⇒ devuelve **el propio objeto** |
+| `ValidateWithDataAnnotations<T>(this IEnumerable<T>)` | `MlResult<IEnumerable<T>>` | Acumula errores de todos los elementos |
 | `…Async` (×4) | `Task<…>` | Solo envuelven; **no** hay validación asíncrona real |
 
-> 💡 **`ValidateObject` es útil por sí solo** cuando quieres los `ValidationResult` completos (con `MemberNames`, para pintar errores junto a cada campo del formulario). `ValidateWithDataannotations` se queda solo con `ErrorMessage`.
+> 💡 **`ValidateDataAnnotations` es útil por sí solo** cuando quieres los `ValidationResult` completos (con `MemberNames`, para pintar errores junto a cada campo del formulario). `ValidateWithDataAnnotations` se queda solo con `ErrorMessage`.
 
 ---
 
@@ -205,7 +205,7 @@ Por tanto, dentro de un mismo objeto **todos los atributos se evalúan y todos l
 
 ```csharp
 var resultado = new CrearUsuarioDto { Email = "sin-arroba", Nombre = "" }
-                    .ValidateWithDataannotations();
+                    .ValidateWithDataAnnotations();
 
 resultado.Match(
     valid: dto     => "ok",
@@ -226,7 +226,7 @@ resultado.Match(
 | Firma | `MlResult<T>` | `MlResult<IEnumerable<T>>` |
 | Errores dentro de un objeto | Todos, acumulados | Todos, acumulados |
 | Errores entre objetos | — | Todos, fusionados con [`MergeErrorsIfExists`](../docs/loops/Collections.md) |
-| Vacío / `null` | `null` ⇒ `Fail` (solo en `DataannotationsValidator`) | `null` o vacío ⇒ `Fail` (solo en `DataannotationsValidator`) |
+| Vacío / `null` | `null` ⇒ `Fail` (solo en `DataAnnotationsValidator`) | `null` o vacío ⇒ `Fail` (solo en `DataAnnotationsValidator`) |
 
 `MergeErrorsIfExists` recorre la secuencia de `MlResult<T>`, y:
 
@@ -241,7 +241,7 @@ var filas = new[]
     new FilaImportacion { Codigo = "C3", Cantidad = -1 },   // cantidad negativa
 };
 
-filas.ValidateWithDataannotations()
+filas.ValidateWithDataAnnotations()
      .Match(valid: ok      => $"{ok.Count()} filas válidas",
             fail : errores => $"{errores.Errors.Count()} errores: {errores.GetErrorsSummary()}");
 // → "2 errores: …"
@@ -251,16 +251,16 @@ filas.ValidateWithDataannotations()
 
 ---
 
-## Combinación con `MlValidableFp<T>`
+## Combinación con `MlSelfValidatable<T>`
 
-Este proyecto **no obliga** a heredar de [`MlValidableFp<T>`](../MoralesLarios.OOFP.Validation/README.md) — funciona con cualquier clase. Pero la combinación de ambos es el patrón más potente: **atributos para lo declarativo, código para lo que los atributos no saben expresar**.
+Este proyecto **no obliga** a heredar de [`MlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md) — funciona con cualquier clase. Pero la combinación de ambos es el patrón más potente: **atributos para lo declarativo, código para lo que los atributos no saben expresar**.
 
 ```csharp
 using MoralesLarios.OOFP.Validation;
 using MoralesLarios.OOFP.Validation.DataAnnotations.Helpers;
 using System.ComponentModel.DataAnnotations;
 
-public class ReservaRequest : MlValidableFp<ReservaRequest>
+public class ReservaRequest : MlSelfValidatable<ReservaRequest>
 {
     [Required(ErrorMessage = "El nombre del titular es obligatorio")]
     [StringLength(80, ErrorMessage = "El titular no puede superar los 80 caracteres")]
@@ -277,7 +277,7 @@ public class ReservaRequest : MlValidableFp<ReservaRequest>
     public DateTime Salida  { get; init; }
 
     public override MlResult<ReservaRequest> Validate()
-        => this.ValidateWithDataannotations()                        // 1. lo declarativo
+        => this.ValidateWithDataAnnotations()                        // 1. lo declarativo
                .Bind(r => EnsureFp.That(r, r.Salida > r.Entrada,     // 2. lo que los atributos no pueden
                                         "La fecha de salida debe ser posterior a la de entrada"))
                .Bind(r => EnsureFp.That(r, (r.Salida - r.Entrada).TotalDays <= 30,
@@ -296,20 +296,20 @@ public class ReservaRequest : MlValidableFp<ReservaRequest>
 ```csharp
 // SÍ comprueba
 public static MlResult<T> Validate<T>(T source)
-    => EnsureFp.NotNull(source, …).Bind(_ => source.ValidateWithDataannotations());
+    => EnsureFp.NotNull(source, …).Bind(_ => source.ValidateWithDataAnnotations());
 
 // NO comprueba: va directo a la extensión
 public static Task<MlResult<T>> ValidateAsync<T>(T source)
-    => source.ValidateWithDataannotations().ToAsync();
+    => source.ValidateWithDataAnnotations().ToAsync();
 ```
 
-Consecuencia: `DataannotationsValidator.ValidateAsync<T>(null)` **lanza `NullReferenceException`** en lugar de devolver un `Fail`, porque la extensión hace `source!.ValidateObject()` con el operador `!` (perdón del compilador, no comprobación).
+Consecuencia: `DataAnnotationsValidator.ValidateAsync<T>(null)` **lanza `NullReferenceException`** en lugar de devolver un `Fail`, porque la extensión hace `source!.ValidateDataAnnotations()` con el operador `!` (perdón del compilador, no comprobación).
 
 **Recomendación:** si el valor puede ser nulo, usa la versión síncrona `Validate` y envuélvela tú, o encadena `EnsureFp.NotNull` antes:
 
 ```csharp
 await EnsureFp.NotNull(dto, "El DTO no puede ser nulo")
-              .BindAsync(async d => await DataannotationsValidator.ValidateAsync(d));
+              .BindAsync(async d => await DataAnnotationsValidator.ValidateAsync(d));
 ```
 
 ### 2. Los métodos `Async` no son asíncronos de verdad
@@ -317,18 +317,18 @@ await EnsureFp.NotNull(dto, "El DTO no puede ser nulo")
 Todos terminan en `.ToAsync()`, que es `Task.FromResult(...)`. **No hay ninguna operación de E/S**: existen únicamente para que encajen en cadenas `async` sin romperlas. No aportan paralelismo ni evitan bloqueos.
 
 ```csharp
-public static Task<MlResult<T>> ValidateWithDataannotationsAsync<T>(this T source)
-    => source!.ValidateWithDataannotations().ToAsync();       // Task.FromResult
+public static Task<MlResult<T>> ValidateWithDataAnnotationsAsync<T>(this T source)
+    => source!.ValidateWithDataAnnotations().ToAsync();       // Task.FromResult
 ```
 
 ### 3. `ValidateObject` colisiona con el homónimo del núcleo
 
-El núcleo `MoralesLarios.OOFP` ya define `ValidateObject(this object)` en `MoralesLarios.OOFP.Helpers.Extensions`. Si importas **los dos namespaces** en el mismo fichero, el compilador dará **error de ambigüedad** (`CS0121`).
+El núcleo `MoralesLarios.OOFP` ya define `ValidateDataAnnotations(this object)` en `MoralesLarios.OOFP.Helpers.Extensions`. Si importas **los dos namespaces** en el mismo fichero, el compilador dará **error de ambigüedad** (`CS0121`).
 
 **Solución:** invócalo con nombre completo cuando haya conflicto, o no importes uno de los dos namespaces en ese fichero:
 
 ```csharp
-var resultados = MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateObject(dto);
+var resultados = MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateDataAnnotations(dto);
 ```
 
 ### 4. El resultado booleano de `TryValidateObject` se descarta
@@ -394,7 +394,7 @@ public class CrearProductoDto
 public class ServicioProductos
 {
     public Task<MlResult<Producto>> Crear(CrearProductoDto dto)
-        => DataannotationsValidator.Validate(dto)
+        => DataAnnotationsValidator.Validate(dto)
                .BindAsync(async v => await _repo.AddAsync(Mapear(v)));
 }
 ```
@@ -404,7 +404,7 @@ public class ServicioProductos
 ```csharp
 public MlResult<CrearProductoDto> ValidarSeguro(CrearProductoDto? dto)
     => EnsureFp.NotNull(dto, "No se ha recibido el cuerpo de la petición")
-         .Bind(d => d.ValidateWithDataannotations());
+         .Bind(d => d.ValidateWithDataAnnotations());
 ```
 
 Así el usuario nunca ve el `"source no be null"` interno.
@@ -423,10 +423,10 @@ public class PedidoDto
 }
 
 public static MlResult<PedidoDto> ValidarPedido(PedidoDto dto)
-    => dto.ValidateWithDataannotations()                     // solo el nivel superficial
-          .Bind(p => p.Envio!.ValidateWithDataannotations()  // el anidado, a mano
+    => dto.ValidateWithDataAnnotations()                     // solo el nivel superficial
+          .Bind(p => p.Envio!.ValidateWithDataAnnotations()  // el anidado, a mano
                             .Map(_ => p))
-          .Bind(p => p.Lineas.ValidateWithDataannotations()  // la colección interna, a mano
+          .Bind(p => p.Lineas.ValidateWithDataAnnotations()  // la colección interna, a mano
                             .Map(_ => p));
 ```
 
@@ -438,7 +438,7 @@ public static MlResult<PedidoDto> ValidarPedido(PedidoDto dto)
 
 ```csharp
 public static MlResult<IEnumerable<FilaCsv>> ValidarFichero(List<FilaCsv> filas)
-    => filas.Select((fila, i) => fila.ValidateWithDataannotations()
+    => filas.Select((fila, i) => fila.ValidateWithDataAnnotations()
                                      .AddMlErrorDetailIfFail("fila", i + 2))   // +2: cabecera + base 1
             .MergeErrorsIfExists();
 
@@ -459,7 +459,7 @@ resultado.Match(
 ```csharp
 // El DTO llega de un cliente HTTP y hay que validarlo antes de procesarlo
 public Task<MlResult<TarifaDto>> ObtenerTarifaValidada(int id)
-    => DataannotationsValidator.ValidateAsync(_cliente.GetTarifaAsync(id));
+    => DataAnnotationsValidator.ValidateAsync(_cliente.GetTarifaAsync(id));
     //                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ Task<TarifaDto>
 ```
 
@@ -468,7 +468,7 @@ public Task<MlResult<TarifaDto>> ObtenerTarifaValidada(int id)
 ```csharp
 public async Task<MlResult<TarifaDto>> ObtenerTarifaValidada(int id)
     => await EnsureFp.NotNull(await _cliente.GetTarifaAsync(id), $"No existe la tarifa {id}")
-                     .BindAsync(async t => await t.ValidateWithDataannotationsAsync());
+                     .BindAsync(async t => await t.ValidateWithDataAnnotationsAsync());
 ```
 
 ### Ejemplo 6 — ❌ Qué no hacer / ✅ qué hacer
@@ -477,17 +477,17 @@ public async Task<MlResult<TarifaDto>> ObtenerTarifaValidada(int id)
 // ❌ MAL: importar los dos namespaces con ValidateObject → CS0121 ambiguo
 using MoralesLarios.OOFP.Helpers.Extensions;
 using MoralesLarios.OOFP.Validation.DataAnnotations.Helpers;
-var r = dto.ValidateObject();          // 💥 error de compilación
+var r = dto.ValidateDataAnnotations();          // 💥 error de compilación
 
 // ✅ BIEN: usa el método de alto nivel, que no colisiona
-var r = dto.ValidateWithDataannotations();
+var r = dto.ValidateWithDataAnnotations();
 
 
 // ❌ MAL: pasar null a la sobrecarga async
-await DataannotationsValidator.ValidateAsync<Dto>(null!);     // 💥 NullReferenceException
+await DataAnnotationsValidator.ValidateAsync<Dto>(null!);     // 💥 NullReferenceException
 
 // ✅ BIEN
-await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithDataannotationsAsync());
+await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithDataAnnotationsAsync());
 ```
 
 ---
@@ -496,14 +496,14 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 
 | Necesito… | Uso |
 |---|---|
-| Validar un DTO con atributos, con control de `null` | `DataannotationsValidator.Validate(dto)` |
-| Validar un DTO sin comprobar `null` | `dto.ValidateWithDataannotations()` |
-| Validar una lista exigiendo que no esté vacía | `DataannotationsValidator.Validate(lista)` |
-| Validar una lista que puede estar vacía | `lista.ValidateWithDataannotations()` |
-| Validar lo que devuelve una `Task` | `DataannotationsValidator.ValidateAsync(tarea)` |
-| Obtener los `ValidationResult` completos (con `MemberNames`) | `dto.ValidateObject()` |
+| Validar un DTO con atributos, con control de `null` | `DataAnnotationsValidator.Validate(dto)` |
+| Validar un DTO sin comprobar `null` | `dto.ValidateWithDataAnnotations()` |
+| Validar una lista exigiendo que no esté vacía | `DataAnnotationsValidator.Validate(lista)` |
+| Validar una lista que puede estar vacía | `lista.ValidateWithDataAnnotations()` |
+| Validar lo que devuelve una `Task` | `DataAnnotationsValidator.ValidateAsync(tarea)` |
+| Obtener los `ValidationResult` completos (con `MemberNames`) | `dto.ValidateDataAnnotations()` |
 | Saber a qué elemento pertenece cada error | `Select((x,i) => …AddMlErrorDetailIfFail("fila", i))` + `MergeErrorsIfExists()` |
-| Reglas entre varios campos | `MlValidableFp<T>.Validate()` + `EnsureFp.That` |
+| Reglas entre varios campos | `MlSelfValidatable<T>.Validate()` + `EnsureFp.That` |
 | Reglas complejas, condicionales o con dependencias | [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) |
 | Reglas reutilizables por tipo de dato | [`ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) |
 
@@ -511,14 +511,14 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 
 ## Mejores prácticas
 
-1. **Usa `DataannotationsValidator.Validate` en los bordes** (entrada de un servicio, lectura de un fichero) y las extensiones en el interior, donde ya sabes que el objeto no es nulo.
+1. **Usa `DataAnnotationsValidator.Validate` en los bordes** (entrada de un servicio, lectura de un fichero) y las extensiones en el interior, donde ya sabes que el objeto no es nulo.
 2. **Personaliza siempre `ErrorMessage`** e incluye el nombre del campo en el texto: el `MemberNames` se pierde en la conversión a `MlError`.
 3. **Escribe los mensajes en el idioma del usuario final**, no en el del código.
 4. **Nunca dejes escapar `"source no be null"` / `"source no be empty"`**: comprueba tú los nulos con tus propios mensajes.
 5. **Valida los objetos anidados explícitamente**: el motor no baja de nivel.
 6. **No importes a la vez** `MoralesLarios.OOFP.Helpers.Extensions` y `…Dataannotations.Helpers` en el mismo fichero si vas a usar `ValidateObject`.
 7. **No confíes en las sobrecargas `Async` para valores que puedan ser nulos**: no comprueban nada.
-8. **Combina atributos con `MlValidableFp<T>`**: declarativo para el campo, código para las relaciones entre campos.
+8. **Combina atributos con `MlSelfValidatable<T>`**: declarativo para el campo, código para las relaciones entre campos.
 9. **No dupliques la validación con la automática de MVC**: elige un mecanismo por proyecto y sé coherente.
 10. **Añade contexto con `AddMlErrorDetailIfFail`** (índice de fila, identificador, fichero) cuando el error deba diagnosticarse en logs.
 11. **No uses atributos personalizados con servicios inyectados**: aquí el `ValidationContext` no tiene `IServiceProvider`.
@@ -529,11 +529,11 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 ## Resumen
 
 - Adapta `System.ComponentModel.DataAnnotations` al modelo funcional: los atributos siguen igual, pero el resultado es un **`MlResult<T>` encadenable**.
-- Dos piezas: **`DataannotationsValidator`** (fachada estática, 6 sobrecargas, comprueba `null`/vacío en las síncronas) y **`Helpers.Extensions`** (7 métodos de extensión, el motor real).
+- Dos piezas: **`DataAnnotationsValidator`** (fachada estática, 6 sobrecargas, comprueba `null`/vacío en las síncronas) y **`Helpers.Extensions`** (7 métodos de extensión, el motor real).
 - `validateAllProperties: true` viene fijado: **todos los atributos se evalúan** y **todos los errores se devuelven** juntos, sin cortocircuito.
 - Para colecciones, `MergeErrorsIfExists` **acumula** los errores de todos los elementos (pero pierde el índice: añádelo con `AddMlErrorDetailIfFail`).
 - ⚠️ Las sobrecargas `Async` **no comprueban `null`** y **no son asíncronas de verdad**; `ValidateObject` **colisiona** con el homónimo del núcleo; **no valida objetos anidados**; el `ValidationContext` **no tiene `IServiceProvider`**.
-- Encaja perfectamente con [`MlValidableFp<T>`](../MoralesLarios.OOFP.Validation/README.md): atributos para lo declarativo, `Validate()` para las reglas entre campos.
+- Encaja perfectamente con [`MlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md): atributos para lo declarativo, `Validate()` para las reglas entre campos.
 
 ---
 
@@ -547,7 +547,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — el contrato base `MlValidableFp<T>`
+- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — el contrato base `MlSelfValidatable<T>`
 - [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — alternativa con reglas fluidas
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — reglas encapsuladas en tipos
 - [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos donde encadenar la validación

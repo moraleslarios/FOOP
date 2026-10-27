@@ -19,7 +19,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying all records of the table corresponding to dto {typeof(TDto).Name}")
                             .BindAsync( _     => _repo.TryAllAsync(ct))
                             .MapAsync (bdData => bdData.Adapt<IEnumerable<TDto>>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null  ? $"Found {x.Count()} of table {typeof(TDto).Name}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null  ? $"An error occurred while querying the {typeof(TDto).Name} table. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -49,7 +49,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                                                                     token               : ct,
                                                                     pk                  : pk))
                             .MapAsync (vinoBd => vinoBd?.Adapt<TDto>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
                                                                                     ? (validMessageBuilder is null
                                                                                             ? $"The query to the {typeof(TDto).Name} table for the pk {pk.GetPkValues()} completed successfully"
@@ -74,7 +74,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                             .TryMapAsync( _     => dto.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryAddAsync(bdData, token: ct))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was created successfully in the table corresponding to dto {typeof(TDto).Name}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while creating a new record in the table corresponding to dto {typeof(TDto).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -110,7 +110,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                                                                         token               : ct,
                                                                         pk                  : pk))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was updated successfully in the table corresponding to dto {typeof(TDto).Name}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while updating a record in the table corresponding to dto {typeof(TDto).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -131,7 +131,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                             .TryMapAsync( _     => dto.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryUpdateAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was updated successfully in the table corresponding to dto {typeof(TDto).Name}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while updating a record in the table corresponding to dto {typeof(TDto).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -158,7 +158,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                                                                       pk                  : pk))
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to dto {typeof(TDto).Name}",
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while deleting a record in the table corresponding to dto {typeof(TDto).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -175,7 +175,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                             .MapAsync   ( _     => dto.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to dto {typeof(TDto).Name}",
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while deleting a record in the table corresponding to dto {typeof(TDto).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -217,7 +217,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying all records of the table corresponding to dto {typeof(TResponse).Name}")
                             .BindAsync( _     => _repo.TryAllAsync(ct))
                             .MapAsync (bdData => bdData.Adapt<IEnumerable<TResponse>>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null  ? $"Found {x.Count()} of table {typeof(TResponse).Name}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null  ? $"An error occurred while querying the {typeof(TResponse).Name} table. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -249,7 +249,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                                                                     token               : ct,
                                                                     pk                  : pk))
                             .MapAsync (vinoBd => vinoBd?.Adapt<TResponse>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
                                                                                     ? (validMessageBuilder is null
                                                                                             ? $"The query to the {typeof(TResponse).Name} table for the pk {pk.GetPkValues()} completed successfully"
@@ -274,7 +274,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                             .TryMapAsync( _     => dtoRequest.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryAddAsync(bdData, token: ct))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
-                            .LogMlResultFinalAsync(logger            : _logger,
+                            .LogCompletedResultAsync(logger            : _logger,
                                                    validBuildMessage : x      => validMessageBuilder is null ? $"The record was created successfully in the table corresponding to {DtosDescType}" : validMessageBuilder(x),
                                                    failBuildMessage  : errors => failMessageBuilder  is null ? $"An error occurred while creating a new record in the table corresponding to {DtosDescType}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -310,7 +310,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                                                                         token               : ct,
                                                                         pk                  : pk))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was updated successfully in the table corresponding to {DtosDescType}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while updating a record in the table corresponding to {DtosDescType}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -331,7 +331,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                             .TryMapAsync( _     => dtoRequest.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryUpdateAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was updated successfully in the table corresponding to {DtosDescType}" : validMessageBuilder(x),
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while updating a record in the table corresponding to {DtosDescType}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -358,7 +358,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                                                                       pk                  : pk))
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to dto {typeof(TResponse).Name}",
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while deleting a record in the table corresponding to dto {typeof(TResponse).Name}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;
@@ -375,7 +375,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                             .MapAsync   ( _     => dtoRequest.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
-                            .LogMlResultFinalAsync(logger           : _logger,
+                            .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to {DtosDescType}",
                                                    failBuildMessage : errors => failMessageBuilder  is null ? $"An error occurred while deleting a record in the table corresponding to {DtosDescType}. Error: {errors.ToString()}" : failMessageBuilder(errors));
         return result;

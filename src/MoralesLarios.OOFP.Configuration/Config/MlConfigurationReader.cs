@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.Configuration.Config;
-public class MlConfigManager(IConfiguration configuration) : IMlConfigManager
+public class MlConfigurationReader(IConfiguration configuration) : IMlConfigurationReader
 {
     private readonly IConfiguration _configuration = configuration;
 

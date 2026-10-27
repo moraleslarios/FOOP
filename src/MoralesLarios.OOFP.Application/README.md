@@ -91,7 +91,7 @@ public class VinosController(IGenServiceFp<Vino, VinoDto> _service)
 | `Mapster` | 7.4.0 | 🔑 `Adapt<T>()`, el mapeo entidad ⇄ DTO |
 | `Microsoft.Extensions.Configuration.Abstractions` | 9.0.6 | ⚠️ Declarada pero **no se usa** |
 | [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) | — | 🔑 `IEFRepoFp<TEntity>`, `GetPkValues` |
-| [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) | — | 🔑 `LogMlResultInformationAsync`, `LogMlResultFinalAsync` |
+| [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) | — | 🔑 `LogMlResultInformationAsync`, `LogCompletedResultAsync` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | Tipos internos compartidos |
 
 Destino: **`net8.0`**. Versión del paquete: **1.0.10**.
@@ -159,7 +159,7 @@ public virtual Task<MlResult<TDto>> CreateAsync(TDto dto, CancellationToken ct =
                         .TryMapAsync( _     => dto.Adapt<TEntity>())     // 3️⃣ DTO → entidad
                         .BindAsync  (bdData => _repo.TryAddAsync(bdData, token: ct))  // 4️⃣ persistencia
                         .MapAsync   (bdData => bdData.Adapt<TDto>())     // 5️⃣ entidad → DTO
-                        .LogMlResultFinalAsync(logger: _logger,          // 6️⃣ traza de salida
+                        .LogCompletedResultAsync(logger: _logger,          // 6️⃣ traza de salida
                                                validBuildMessage: …,
                                                failBuildMessage : …);
     return result;
@@ -905,7 +905,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 ### Proyectos relacionados
 
 - [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) — 🔑 el repositorio que consume este servicio
-- [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — 🔑 `LogMlResultInformationAsync`, `LogMlResultFinalAsync`
+- [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — 🔑 `LogMlResultInformationAsync`, `LogCompletedResultAsync`
 - [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md) — convierte el `MlResult` y el `ProblemDetails` en respuesta HTTP
 - [`MoralesLarios.OOFP.AspNetCore.Controllers`](../MoralesLarios.OOFP.AspNetCore.Controllers/README.md) — controladores base que usan este servicio
 - [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validar el DTO antes de llamar al servicio

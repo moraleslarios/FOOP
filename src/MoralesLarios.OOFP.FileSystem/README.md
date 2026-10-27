@@ -12,7 +12,7 @@ Su valor no está en la cantidad de operaciones que cubre —cubre muy pocas—,
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Registro en el contenedor](#registro-en-el-contenedor)
-5. [`IWrapperIO` — los tres métodos](#iwrapperio--los-tres-métodos)
+5. [`IMlFileSystem` — los tres métodos](#iwrapperio--los-tres-métodos)
 6. [El patrón: validar la ruta, luego actuar](#el-patrón-validar-la-ruta-luego-actuar)
 7. [Relación con `ValueObjects.IO`](#relación-con-valueobjectsio)
 8. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
@@ -50,7 +50,7 @@ catch (UnauthorizedAccessException ex){ /* … */ }
 catch (IOException ex)                { /* … */ }
 ```
 
-✅ **Con `IWrapperIO`:**
+✅ **Con `IMlFileSystem`:**
 
 ```csharp
 public MlResult<Informe> Procesar(string ruta)
@@ -60,7 +60,7 @@ public MlResult<Informe> Procesar(string ruta)
 
 Si el fichero no existe, obtienes un `Fail` con el mensaje `"C:\tmp\x.txt not exists"`. **Sin `try`, sin `catch`, y el error se compone con el resto del pipeline.**
 
-> 💡 **La ventaja añadida es la testabilidad**: al depender de `IWrapperIO` en lugar de los métodos estáticos de `File`, puedes sustituirlo por un doble en los tests unitarios y no tocar el sistema de ficheros.
+> 💡 **La ventaja añadida es la testabilidad**: al depender de `IMlFileSystem` en lugar de los métodos estáticos de `File`, puedes sustituirlo por un doble en los tests unitarios y no tocar el sistema de ficheros.
 
 ---
 
@@ -75,7 +75,7 @@ Si el fichero no existe, obtienes un `Fail` con el mensaje `"C:\tmp\x.txt not ex
 Destino: **`net8.0`**. Versión del paquete: **1.0.0**.
 
 ```csharp
-using MoralesLarios.OOFP.FileSystem;              // IWrapperIO, AddOOFPIO
+using MoralesLarios.OOFP.FileSystem;              // IMlFileSystem, AddOOFPIO
 using MoralesLarios.OOFP.ValueObjects.FileSystem; // ExistingFilePath (aparece en las firmas)
 ```
 
@@ -88,8 +88,8 @@ using MoralesLarios.OOFP.ValueObjects.FileSystem; // ExistingFilePath (aparece e
 ```
 MoralesLarios.OOFP.FileSystem/
 ├── GlobalUsing.cs           ← ⚠️ en singular, no "GlobalUsings.cs"
-├── IWrapperIO.cs            → la interfaz (3 métodos)
-├── WrapperIO.cs             → la implementación
+├── IMlFileSystem.cs            → la interfaz (3 métodos)
+├── MlFileSystem.cs             → la implementación
 └── RegisterServices.cs      → AddOOFPIO
 ```
 
@@ -102,7 +102,7 @@ MoralesLarios.OOFP.FileSystem/
 ```csharp
 public static IServiceCollection AddOOFPIO(this IServiceCollection services)
 {
-    services.AddSingleton<IWrapperIO, WrapperIO>();
+    services.AddSingleton<IMlFileSystem, MlFileSystem>();
     return services;
 }
 ```
@@ -111,16 +111,16 @@ public static IServiceCollection AddOOFPIO(this IServiceCollection services)
 builder.Services.AddOOFPIO();
 ```
 
-> 💡 **`Singleton` es la elección correcta**: `WrapperIO` no tiene estado, ni campos, ni constructor. Una única instancia sirve para toda la aplicación.
+> 💡 **`Singleton` es la elección correcta**: `MlFileSystem` no tiene estado, ni campos, ni constructor. Una única instancia sirve para toda la aplicación.
 
-> ⚠️ **El nombre del método rompe la convención del resto de la solución.** Aquí es `AddOOFPIO()`, mientras que en los demás proyectos es `AddMl…` (`AddMlUtilitiesConfig`, `AddMlEFCore…`). No hay `AddMlIO`.
+> ⚠️ **El nombre del método rompe la convención del resto de la solución.** Aquí es `AddOOFPIO()`, mientras que en los demás proyectos es `AddMl…` (`AddMlConfigurationReader`, `AddMlEFCore…`). No hay `AddMlIO`.
 
 ---
 
-## `IWrapperIO` — los tres métodos
+## `IMlFileSystem` — los tres métodos
 
 ```csharp
-public interface IWrapperIO
+public interface IMlFileSystem
 {
     MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr);
     MlResult<string>                  ReadAllText   (string filePathStr);
@@ -199,7 +199,7 @@ public class ExistingFilePath : NotEmptyString
 | `FromString` | Lanza `ArgumentNullException` si no existe | Idem |
 | `ByString` | Devuelve `MlResult` | Idem |
 
-> ⚠️ **`FromString` lanza, `ByString` devuelve `MlResult`.** `WrapperIO` usa `ByString` para validar (seguro) pero `FromString` dentro de `EnumerateFiles` (ver [Particularidades](#️-particularidades-reales-del-código-fuente)).
+> ⚠️ **`FromString` lanza, `ByString` devuelve `MlResult`.** `MlFileSystem` usa `ByString` para validar (seguro) pero `FromString` dentro de `EnumerateFiles` (ver [Particularidades](#️-particularidades-reales-del-código-fuente)).
 
 > ⚠️ **El mensaje de error es idéntico** para fichero y directorio (`"X not exists"`), así que **no distingue si esperabas un fichero o una carpeta**. Personalízalo si el mensaje va a llegar a un usuario.
 
@@ -297,7 +297,7 @@ Entre `t0` y `t1` el fichero puede desaparecer. Es el clásico problema *time-of
 
 En el resto de la solución es `GlobalUsings.cs`. Detalle cosmético, sin efecto.
 
-### 7. `WrapperIO` no tiene constructor ni estado
+### 7. `MlFileSystem` no tiene constructor ni estado
 
 Los tres métodos podrían ser estáticos. La interfaz existe **exclusivamente para permitir la sustitución en tests**, lo cual es una razón perfectamente válida.
 
@@ -342,14 +342,14 @@ Como la superficie es tan reducida, es probable que necesites más operaciones. 
 using MoralesLarios.OOFP.Types;
 using MoralesLarios.OOFP.ValueObjects.FileSystem;
 
-public interface IWrapperIOExtendido : IWrapperIO
+public interface IWrapperIOExtendido : IMlFileSystem
 {
     MlResult<string>              WriteAllText   (string filePathStr, string contenido);
     Task<MlResult<string>>        ReadAllTextAsync(string filePathStr);
     MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr, string patron);
 }
 
-public class WrapperIOExtendido : WrapperIO, IWrapperIOExtendido
+public class WrapperIOExtendido : MlFileSystem, IWrapperIOExtendido
 {
     // ✅ Escritura: valida el DIRECTORIO padre, no el fichero (aún no existe)
     public MlResult<string> WriteAllText(string filePathStr, string contenido)
@@ -383,7 +383,7 @@ public class WrapperIOExtendido : WrapperIO, IWrapperIOExtendido
 ### Ejemplo 1 — Leer y parsear un fichero de configuración
 
 ```csharp
-public class ProcesadorInformes(IWrapperIO _io)
+public class ProcesadorInformes(IMlFileSystem _io)
 {
     public MlResult<Informe> Procesar(string ruta)
         => _io.ReadAllText(ruta)
@@ -410,7 +410,7 @@ public MlResult<IEnumerable<Registro>> ProcesarCarpeta(string carpeta)
 ### Ejemplo 3 — Combinado con `Utilities` para leer la ruta de configuración
 
 ```csharp
-public class ImportadorFicheros(IMlConfigManager _config, IWrapperIO _io)
+public class ImportadorFicheros(IMlConfigurationReader _config, IMlFileSystem _io)
 {
     public MlResult<IEnumerable<ExistingFilePath>> ListarPendientes()
         => _config.ReadAppSettingKey<string>("Rutas:RutaFicheros",
@@ -420,7 +420,7 @@ public class ImportadorFicheros(IMlConfigManager _config, IWrapperIO _io)
 }
 ```
 
-> 💡 El `BindEnsure` es necesario porque `IMlConfigManager` **acepta cadenas vacías como valor válido** (ver [`Utilities`](../MoralesLarios.OOFP.Configuration/README.md)), y una ruta vacía haría fallar `ExistingDirectoryPath` con un mensaje menos claro.
+> 💡 El `BindEnsure` es necesario porque `IMlConfigurationReader` **acepta cadenas vacías como valor válido** (ver [`Utilities`](../MoralesLarios.OOFP.Configuration/README.md)), y una ruta vacía haría fallar `ExistingDirectoryPath` con un mensaje menos claro.
 
 ### Ejemplo 4 — Con logging
 
@@ -438,7 +438,7 @@ public MlResult<string> LeerConTraza(string ruta)
 ```csharp
 public class ProcesadorInformesTests
 {
-    private sealed class WrapperIOFalso(string contenido) : IWrapperIO
+    private sealed class WrapperIOFalso(string contenido) : IMlFileSystem
     {
         public MlResult<string> ReadAllText(string filePathStr) => contenido;
 
@@ -461,7 +461,7 @@ public class ProcesadorInformesTests
 }
 ```
 
-> 💡 **Este es el motivo principal para usar `IWrapperIO`** en lugar de `File` directamente: el test no toca el sistema de ficheros.
+> 💡 **Este es el motivo principal para usar `IMlFileSystem`** en lugar de `File` directamente: el test no toca el sistema de ficheros.
 
 ### Ejemplo 6 — ❌ Qué no hacer / ✅ qué hacer
 
@@ -515,7 +515,7 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 1. **Materializa siempre los `IEnumerable`** que devuelven `ReadAllLines` y `EnumerateFiles`: son perezosos y las excepciones escapan del raíl.
 2. **Envuelve en `TryMap` si necesitas cubrir algo más que "no existe"**: permisos, bloqueos y rutas largas siguen lanzando.
 3. **`ReadAllText` es el método más seguro**: es el único que lee de forma inmediata.
-4. **Depende de `IWrapperIO`, no de `WrapperIO`**: es la razón de ser de la interfaz (tests sin disco).
+4. **Depende de `IMlFileSystem`, no de `MlFileSystem`**: es la razón de ser de la interfaz (tests sin disco).
 5. **Extiende con tu propio wrapper** si necesitas escritura o asincronía; el patrón es de tres líneas.
 6. **Al escribir, valida el directorio padre** (`ExistingDirectoryPath`), no el fichero destino: aún no existe.
 7. **Combina con [`Utilities`](../MoralesLarios.OOFP.Configuration/README.md)** para leer las rutas de configuración, y añade `BindEnsure` contra rutas vacías.
@@ -529,7 +529,7 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 
 ## Resumen
 
-- El proyecto **más pequeño de la solución**: tres ficheros y una interfaz, `IWrapperIO`, con **tres métodos de solo lectura**.
+- El proyecto **más pequeño de la solución**: tres ficheros y una interfaz, `IMlFileSystem`, con **tres métodos de solo lectura**.
 - El patrón que aplica: **validar la ruta con un objeto de valor** (`ExistingFilePath` / `ExistingDirectoryPath`) y **solo entonces** ejecutar la operación de `System.IO`, gracias al cortocircuito del `Map`.
 - `EnumerateFiles` devuelve **`ExistingFilePath`**, no `string`: el tipo transporta la garantía de existencia.
 - Registro: `services.AddOOFPIO()` como `Singleton`. ⚠️ El nombre **rompe la convención `AddMl…`** del resto de la solución.

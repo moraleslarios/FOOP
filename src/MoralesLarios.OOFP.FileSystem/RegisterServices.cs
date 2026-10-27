@@ -11,7 +11,7 @@ public static class RegisterServices
 
     public static IServiceCollection AddOOFPIO(this IServiceCollection services)
     {
-        services.AddSingleton<IWrapperIO, WrapperIO>();
+        services.AddSingleton<IMlFileSystem, MlFileSystem>();
 
         return services;
     }

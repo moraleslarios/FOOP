@@ -1,0 +1,30 @@
+{
+  "id": "fase5-6-niveles4-5",
+  "level": 4,
+  "renames": [
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Validation", "name": "MlValidableFp", "new": "MlSelfValidatable", "bridge": false, "note": "Validatable (no Validable); Fp sobraba (no hay version no-Fp). Pasar a interfaz = cambio de contrato" },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Validation.DataAnnotations", "name": "DataannotationsValidator", "new": "DataAnnotationsValidator", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Validation.DataAnnotations", "type": "MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions", "name": "ValidateObject", "new": "ValidateDataAnnotations", "bridge": true, "note": "Colisionaba con ValidateObject del nucleo (CS0121)" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Validation.DataAnnotations", "match": "^ValidateWithDataannotations", "replace": "ValidateWithDataAnnotations", "bridge": true, "note": "Derivado: DataAnnotations con A mayuscula" },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Validation.FluentValidation", "name": "FluentValidationsValidator", "new": "FluentValidationValidator", "bridge": false, "note": "La biblioteca se llama FluentValidation, en singular" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Validation.FluentValidation", "match": "^ValidateWithFluentValidations", "replace": "ValidateWithFluentValidation", "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Core", "type": "MoralesLarios.OOFP.Types.MlResultConversions", "name": "BuildErrorMessage", "new": "FormatErrorMessage", "bridge": true, "note": "Solo formatea una cadena" },
+
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit", "match": "^Dataannotations", "replace": "DataAnnotations", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Validation.FluentValidation.Tests.Unit", "match": "^FluentValidations", "replace": "FluentValidation", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit", "match": "Dataannotations", "replace": "DataAnnotations", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Validation.FluentValidation.Tests.Unit", "match": "FluentValidations", "replace": "FluentValidation", "bridge": false },
+
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Shared", "name": "PaginationInfo",       "new": "PageRequest",  "bridge": false, "note": "Lo que pide el cliente; Info no distingue nada" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.Shared", "name": "PaginationResultInfo", "new": "PagedResult",  "bridge": false, "note": "Nombre de facto en .NET; pareja de PageRequest" },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Configuration", "name": "IMlConfigManager", "new": "IMlConfigurationReader", "bridge": false, "note": "Manager es sufijo vacio; la interfaz solo lee" },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Configuration", "name": "MlConfigManager",  "new": "MlConfigurationReader",  "bridge": false, "note": "Derivado" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Configuration", "name": "AddMlUtilitiesConfig", "new": "AddMlConfigurationReader", "bridge": true, "note": "Derivado: el proyecto ya no se llama Utilities" },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.FileSystem", "name": "IWrapperIO", "new": "IMlFileSystem", "bridge": false, "note": "Derivado: IO -> FileSystem; Wrapper es sufijo vacio" },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.FileSystem", "name": "WrapperIO",  "new": "MlFileSystem",  "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Logging", "match": "^LogMlResultFinal", "replace": "LogCompletedResult", "bridge": true, "note": "Final no decia nada al llamador" },
+
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.Configuration.Tests.Unit", "match": "ConfigManager", "replace": "ConfigurationReader", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.Configuration.Tests.Unit", "match": "ConfigManager", "replace": "ConfigurationReader", "bridge": false }
+  ]
+}

@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.Validation.DataAnnotations;
 
-public static class DataannotationsValidator
+public static class DataAnnotationsValidator
 {
 
     public static MlResult<T> Validate<T>(T source) => ValidateSource(source);
@@ -33,7 +33,7 @@ public static class DataannotationsValidator
     private static MlResult<T> ValidateSource<T>(T source)
     {
         var result = EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
-                                .Bind(_ => source.ValidateWithDataannotations());
+                                .Bind(_ => source.ValidateWithDataAnnotations());
 
         return result;
     }
@@ -42,7 +42,7 @@ public static class DataannotationsValidator
     {
         var result = EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
                                 .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} must not be empty"))
-                                .Bind(_ => source.ValidateWithDataannotations());
+                                .Bind(_ => source.ValidateWithDataAnnotations());
         return result;
     }
 }

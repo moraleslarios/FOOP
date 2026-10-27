@@ -5,7 +5,7 @@
 using System.Net.Http.Headers;
 
 namespace MoralesLarios.OOFP.Logging;
-public static class GeneralExtensionLoggersCritical
+public static partial class MlResultLogExtensions
 {
 
 

@@ -1,7 +1,7 @@
 ﻿
 namespace MoralesLarios.OOFP.Configuration.Config;
 
-public interface IMlConfigManager
+public interface IMlConfigurationReader
 {
     MlResult<T> ReadAppSettingKey<T>(string appSettingKey, MlErrorDetails errorsDetails = null!);
     MlResult<object> ReadAppSettingKey(string appSettingKey, MlErrorDetails errorsDetails = null!);

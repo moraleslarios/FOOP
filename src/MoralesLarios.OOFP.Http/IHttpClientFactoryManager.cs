@@ -12,7 +12,7 @@ public interface IHttpClientFactoryManager
                                                      string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
                                                      Dictionary<string, string> headers = null!,
                                                      CancellationToken          ct      = default);
-    Task<MlResult<PaginationResultInfo<TItem>>> PostGetPaginationAsync<TRequest, TItem>(CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default);
+    Task<MlResult<PagedResult<TItem>>> PostGetPaginationAsync<TRequest, TItem>(CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default);
     MlResult<HttpClient> CreateHttpClient(ServiceKey httpClientFactoryKey);
     Task<MlResult<T>> GetAsync<T>(ServiceKey httpClientFactoryKey, string url = "", Dictionary<string, string> headers = null, CancellationToken ct = default);
     Task<MlResult<T>> PostAsync<T>(ServiceKey httpClientFactoryKey, T itemBody, string url = null!, Dictionary<string, string> headers = null!, CancellationToken ct = default);

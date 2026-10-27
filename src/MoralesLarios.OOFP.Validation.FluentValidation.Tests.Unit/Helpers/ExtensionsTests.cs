@@ -11,11 +11,11 @@ public class ExtensionsTests
 
 
     [Fact]
-    public void ValidateWithFluentValidations_objectValid_return_valid()
+    public void ValidateWithFluentValidation_objectValid_return_valid()
     {
         User source = new("user", DateTime.Now, "password", "password");
 
-        MlResult<User> result = source.ValidateWithFluentValidations<User, UserValidator>();
+        MlResult<User> result = source.ValidateWithFluentValidation<User, UserValidator>();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -23,11 +23,11 @@ public class ExtensionsTests
 
 
     [Fact]
-    public void ValidateWithFluentValidations_objectFail_return_fail()
+    public void ValidateWithFluentValidation_objectFail_return_fail()
     {
         User source = new("", DateTime.Now, "", "password");
 
-        MlResult<User> result = source.ValidateWithFluentValidations<User, UserValidator>();
+        MlResult<User> result = source.ValidateWithFluentValidation<User, UserValidator>();
 
         result.IsFailure.Should().BeTrue();
     }
@@ -44,138 +44,138 @@ public class ExtensionsTests
     }
 
     [Fact]
-    public void ValidateWithFluentValidations_collectionValid_return_valid()
+    public void ValidateWithFluentValidation_collectionValid_return_valid()
     {
         IEnumerable<User> source = [
             new("user", DateTime.Now, "password", "password"),
             new("other", DateTime.Now, "password", "password")
         ];
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
+        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidation<User, UserValidator>();
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void ValidateWithFluentValidations_collectionWithInvalidItem_return_fail()
+    public void ValidateWithFluentValidation_collectionWithInvalidItem_return_fail()
     {
         IEnumerable<User> source = [
             new("user", DateTime.Now, "password", "password"),
             new("", DateTime.Now, "password", "password")
         ];
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
+        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidation<User, UserValidator>();
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void ValidateWithFluentValidations_collectionWithTwoInvalidItems_returnsTwoErrors()
+    public void ValidateWithFluentValidation_collectionWithTwoInvalidItems_returnsTwoErrors()
     {
         IEnumerable<User> source = [
             new("a", DateTime.Now, "password", "password"),
             new("b", DateTime.Now, "password", "password")
         ];
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
+        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidation<User, UserValidator>();
 
         result.IsFailure.Should().BeTrue();
         result.GetFailureDetailsOrThrow().Errors.Count().Should().Be(2);
     }
 
     [Fact]
-    public void ValidateWithFluentValidations_collectionWithOneInvalidItem_returnsOneError()
+    public void ValidateWithFluentValidation_collectionWithOneInvalidItem_returnsOneError()
     {
         IEnumerable<User> source = [
             new("a", DateTime.Now, "password", "password"),
             new("user", DateTime.Now, "password", "password")
         ];
 
-        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidations<User, UserValidator>();
+        MlResult<IEnumerable<User>> result = source.ValidateWithFluentValidation<User, UserValidator>();
 
         result.IsFailure.Should().BeTrue();
         result.GetFailureDetailsOrThrow().Errors.Count().Should().Be(1);
     }
 
     [Fact]
-    public async Task ValidateWithFluentValidationsAsync_taskObject_return_valid()
+    public async Task ValidateWithFluentValidationAsync_taskObject_return_valid()
     {
         Task<User> sourceAsync = Task.FromResult(new User("user", DateTime.Now, "password", "password"));
 
-        MlResult<User> result = await sourceAsync.ValidateWithFluentValidationsAsync<User, UserValidator>();
+        MlResult<User> result = await sourceAsync.ValidateWithFluentValidationAsync<User, UserValidator>();
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public async Task ValidateWithFluentValidationsAsync_taskCollection_return_fail()
+    public async Task ValidateWithFluentValidationAsync_taskCollection_return_fail()
     {
         Task<IEnumerable<User>> sourceAsync = Task.FromResult<IEnumerable<User>>([
             new("", DateTime.Now, "password", "password")
         ]);
 
-        MlResult<IEnumerable<User>> result = await sourceAsync.ValidateWithFluentValidationsAsync<User, UserValidator>();
+        MlResult<IEnumerable<User>> result = await sourceAsync.ValidateWithFluentValidationAsync<User, UserValidator>();
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void FluentValidationsValidator_nullObject_return_fail()
+    public void FluentValidationValidator_nullObject_return_fail()
     {
         User? source = null;
 
-        MlResult<User> result = FluentValidationsValidator.Validate<User, UserValidator>(source!);
+        MlResult<User> result = FluentValidationValidator.Validate<User, UserValidator>(source!);
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void FluentValidationsValidator_emptyCollection_return_fail()
+    public void FluentValidationValidator_emptyCollection_return_fail()
     {
         IEnumerable<User> source = [];
 
-        MlResult<IEnumerable<User>> result = FluentValidationsValidator.Validate<User, UserValidator>(source);
+        MlResult<IEnumerable<User>> result = FluentValidationValidator.Validate<User, UserValidator>(source);
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public async Task FluentValidationsValidator_asyncDirectObject_return_fail()
+    public async Task FluentValidationValidator_asyncDirectObject_return_fail()
     {
         User source = new("", DateTime.Now, "password", "password");
 
-        MlResult<User> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(source);
+        MlResult<User> result = await FluentValidationValidator.ValidateAsync<User, UserValidator>(source);
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public async Task FluentValidationsValidator_asyncDirectCollection_return_valid()
+    public async Task FluentValidationValidator_asyncDirectCollection_return_valid()
     {
         IEnumerable<User> source = [new("user", DateTime.Now, "password", "password")];
 
-        MlResult<IEnumerable<User>> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(source);
+        MlResult<IEnumerable<User>> result = await FluentValidationValidator.ValidateAsync<User, UserValidator>(source);
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public async Task FluentValidationsValidator_asyncObject_return_valid()
+    public async Task FluentValidationValidator_asyncObject_return_valid()
     {
-        MlResult<User> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(
+        MlResult<User> result = await FluentValidationValidator.ValidateAsync<User, UserValidator>(
             Task.FromResult(new User("user", DateTime.Now, "password", "password")));
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public async Task FluentValidationsValidator_asyncCollectionWithInvalidItem_return_fail()
+    public async Task FluentValidationValidator_asyncCollectionWithInvalidItem_return_fail()
     {
         Task<IEnumerable<User>> sourceAsync = Task.FromResult<IEnumerable<User>>([
             new("", DateTime.Now, "password", "password")
         ]);
 
-        MlResult<IEnumerable<User>> result = await FluentValidationsValidator.ValidateAsync<User, UserValidator>(sourceAsync);
+        MlResult<IEnumerable<User>> result = await FluentValidationValidator.ValidateAsync<User, UserValidator>(sourceAsync);
 
         result.IsFailure.Should().BeTrue();
     }
