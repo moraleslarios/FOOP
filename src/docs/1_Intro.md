@@ -483,7 +483,7 @@ usuario *todos* los problemas de una vez, tienes tres herramientas:
 | Herramienta | Cuándo |
 | --- | --- |
 | `Combine` | Varios `MlResult` de **tipos distintos** ya calculados. |
-| `FusionErrosIfExists` | Una **colección** de `MlResult<T>` ya calculada. |
+| `MergeErrorsIfExists` | Una **colección** de `MlResult<T>` ya calculada. |
 | `TryBindBuild` | Construir un objeto ejecutando **todas** las funciones de sus campos. |
 
 ```csharp
@@ -730,7 +730,7 @@ private MlResult<AltaClienteDto> Validar(AltaClienteDto d)
         EnsureFp.That(d.Email, d.Email?.Contains('@') == true, "El email no tiene formato válido")
     ];
 
-    return validaciones.FusionErrosIfExists().Map(_ => d);
+    return validaciones.MergeErrorsIfExists().Map(_ => d);
 }
 ```
 
@@ -808,7 +808,7 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 | 8 | [`8_BindIfFailWithException.md`](Bind/8_BindIfFailWithException.md) | Recuperar en función de la excepción capturada |
 | 9 | [`9_BindIfFailWithoutException.md`](Bind/9_BindIfFailWithoutException.md) | Distinguir fallos de negocio de fallos técnicos |
 | 10 | [`10_BindAlways.md`](Bind/10_BindAlways.md) | `BindAlways`: ejecutar en ambas ramas |
-| 11 | [`11_BindSaveValueInDetailsIfFaildFuncResultAsync.md`](Bind/11_BindSaveValueInDetailsIfFaildFuncResultAsync.md) | Guardar el valor de entrada en `Details` al fallar |
+| 11 | [`11_BindSaveValueInDetailsIfFailedFuncResultAsync.md`](Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md) | Guardar el valor de entrada en `Details` al fallar |
 
 #### `Map` — transformar el valor sin salir del carril
 

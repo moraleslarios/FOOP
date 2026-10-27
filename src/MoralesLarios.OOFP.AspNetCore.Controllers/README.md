@@ -225,12 +225,12 @@ Es el método más interesante porque muestra el patrón completo:
 ```csharp
 [HttpGet("id-str/{id}", Name = $"[controller]_[action]")]
 public virtual async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!)
-    => await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
+    => await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
                      .TryMapAsync(_ => id.ConverterTo(typeof(TPk)),
                                   ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                      .MatchAsync(
                           fail      : _     => MlActionResults.NotFound(
-                                                   detail: $"Path {id} not exists or is diferent type to PK of '{typeof(TPk).Name}' was not found."),
+                                                   detail: $"Path {id} not exists or is of a different type than PK of '{typeof(TPk).Name}' was not found."),
                           validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(
                                                    notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                                    ct                  : ct,
@@ -486,7 +486,7 @@ Convierte un `string` al tipo indicado usando un `switch` sobre `Type.FullName`.
 Comportamiento:
 
 - `value == null` → devuelve `null`.
-- Tipo no contemplado (`Guid`, `DateOnly`, `TimeOnly`, `enum`…) → `FormatException` con el mensaje *"The type {0} is not soported"* (sí, con la errata).
+- Tipo no contemplado (`Guid`, `DateOnly`, `TimeOnly`, `enum`…) → `FormatException` con el mensaje *"The type {0} is not supported"* (sí, con la errata).
 - Cadena no parseable → la excepción del `Parse` correspondiente (`FormatException`, `OverflowException`…).
 
 En los controladores siempre se invoca dentro de un `TryMapAsync`, por lo que la excepción nunca escapa: se convierte en un `MlResult` fallido.
@@ -563,7 +563,7 @@ builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddScopedOOFPRepos<User, AppDbContext>();
 
 // 3) Servicios genéricos (MoralesLarios.OOFP.Application)
-builder.Services.AddScopedtGenServicesFpWithoutReposGeneral();   // ⚠️ la errata "Scopedt" es real
+builder.Services.AddScopedCrudServicesFpWithoutRepositories();   // ⚠️ la errata "Scopedt" es real
 
 // 4) MVC
 builder.Services.AddControllers();
@@ -639,7 +639,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddScopedOOFPRepos<User, AppDbContext>();
-builder.Services.AddScopedtGenServicesFpWithoutReposGeneral();
+builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -915,7 +915,7 @@ builder.Services.AddWebControllers();
 
 // ✅ registra lo que de verdad hace falta
 builder.Services.AddScopedOOFPRepos<User, AppDbContext>();
-builder.Services.AddScopedtGenServicesFpWithoutReposGeneral();
+builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 builder.Services.AddControllers();
 ```
 
@@ -1022,7 +1022,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 
 12. **No expones los mensajes de error tal cual** si tu API es pública: reescríbelos con `MapIfFail` para no filtrar textos internos en inglés defectuoso.
 
-13. **No llames a `AddWebControllers()`**: está vacío. Registra `AddScopedOOFPRepos<,>` y `AddScopedtGenServicesFpWithoutReposGeneral()`.
+13. **No llames a `AddWebControllers()`**: está vacío. Registra `AddScopedOOFPRepos<,>` y `AddScopedCrudServicesFpWithoutRepositories()`.
 
 14. **Añade un endpoint paginado** en cuanto una tabla pueda crecer: `GetAllAsync` trae la tabla completa.
 

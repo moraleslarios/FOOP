@@ -4,23 +4,23 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringBetweenLength : ValueObject<NotEmptyString>
+public partial class StringBetweenLength : ValueObject<NotEmptyString>
 {
-    protected StringBetweenLength(NotEmptyString value, int minLenght, int maxLenght) : base(value)
+    protected StringBetweenLength(NotEmptyString value, int minLength, int maxLength) : base(value)
     {
-        if ( ! IsValid(value, minLenght, maxLenght)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, minLenght, maxLenght));
+        if ( ! IsValid(value, minLength, maxLength)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, minLength, maxLength));
     }
 
 
-    public static string BuildErrorMessage(string value, int minLenght, int maxLenght) => $"{value} must be between {minLenght} and {maxLenght}";
-    public static bool IsValid(string value, int minLenght, int maxLenght) => value.Length >= minLenght && value.Length <= maxLenght;
+    public static string BuildErrorMessage(string value, int minLength, int maxLength) => $"{value} must be between {minLength} and {maxLength}";
+    public static bool IsValid(string value, int minLength, int maxLength) => value.Length >= minLength && value.Length <= maxLength;
 
-    public static StringBetweenLength FromStringLenght(string value, int minLenght, int maxLenght) => new StringBetweenLength(value, minLenght, maxLenght);
+    public static StringBetweenLength FromStringLength(string value, int minLength, int maxLength) => new StringBetweenLength(value, minLength, maxLength);
 
-    public static MlResult<StringBetweenLength> ByStringLength(string value, int minLenght, int maxLenght, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<StringBetweenLength> ByStringLength(string value, int minLength, int maxLength, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
-                            .Bind( _ => EnsureFp.That(value, IsValid(value, minLenght, maxLenght), errorsDetails ?? BuildErrorMessage(value, minLenght, maxLenght)))
-                            .Map ( _ => new StringBetweenLength(value, minLenght, maxLenght));
+                            .Bind( _ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? BuildErrorMessage(value, minLength, maxLength)))
+                            .Map ( _ => new StringBetweenLength(value, minLength, maxLength));
 
     public static implicit operator string         (StringBetweenLength valueObject) => valueObject.Value;
     public static implicit operator StringBetweenLength((string value, int minLenght, int maxLenght) tupleValues) => new StringBetweenLength(tupleValues.value, 

@@ -21,7 +21,7 @@ public class IntBetweenTests
 
 
     [Fact]
-    public void IntBetween_ValueLessThanMinLenght_ReturnsFail()
+    public void IntBetween_ValueLessThanMinLength_ReturnsFail()
     {
         var value = 2;
         var minLength   = 4;
@@ -33,7 +33,7 @@ public class IntBetweenTests
     }
 
     [Fact]
-    public void IntBetween_ValueMoreThanMaxLenght_ReturnsFail()
+    public void IntBetween_ValueMoreThanMaxLength_ReturnsFail()
     {
         var value = 16;
         var minLength   = 4;

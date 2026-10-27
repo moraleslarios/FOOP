@@ -33,7 +33,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     [HttpGet("id-str/{ids}", Name = $"[controller]_[action]")]
     public virtual async Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} isn't null")
+        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
                                     .TryMapAsync( _ => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
                                     .MatchAsync(
                                                     fail       : _    => MlActionResults.NotFound(detail: $"Row with ids: {ids} not found."),
@@ -71,7 +71,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
                                                                  [FromBody]    TDto              dto,
                                                                                CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} isn't null")
+        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
                                     .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.UpdateProblemDetailsAsync(dto                 : dto,
                                                                                                   notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
@@ -103,7 +103,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     [HttpDelete("{ids}")]
     public virtual async Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} isn't null")
+        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
                                     .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
@@ -191,7 +191,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
     [HttpGet("id-str/{ids}", Name = $"[controller]_[action]")]
     public virtual async Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} isn't null")
+        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
                                     .TryMapAsync( _ => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
                                     .MatchAsync(
                                                     fail       : _    => MlActionResults.NotFound(detail: $"Row with ids: {ids} not found."),
@@ -229,7 +229,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
                                                                  [FromBody]    TRequest          dto,
                                                                                CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} isn't null")
+        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
                                     .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.UpdateProblemDetailsAsync(dtoRequest          : dto,
                                                                                                   notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
@@ -261,7 +261,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
     [HttpDelete("{ids}")]
     public virtual async Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} isn't null")
+        var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
                                     .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                                                                                   ct                  : ct, 

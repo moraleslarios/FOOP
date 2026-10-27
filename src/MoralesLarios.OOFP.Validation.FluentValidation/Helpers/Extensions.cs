@@ -39,7 +39,7 @@ public static class Extensions
         where T          : class
         where TValidator : AbstractValidator<T>, new()
             => source.Select(item => item.ValidateWithFluentValidations<T, TValidator>())
-                     .FusionErrosIfExists();
+                     .MergeErrorsIfExists();
 
     public static Task<MlResult<IEnumerable<T>>> ValidateWithFluentValidationsAsync<T, TValidator>(this IEnumerable<T> source)
         where T          : class

@@ -335,10 +335,17 @@ internal static class Runner
                     PropertyDeclarationSyntax pd => BridgeProperty(pd, newName),
                     _ => null
                 };
-                if (bridge is not null) list.Add(bridge);
+                if (bridge is not null) list.Add(StripTrivia(bridge));
             }
         }
         return list;
+    }
+
+    private static MemberDeclarationSyntax StripTrivia(MemberDeclarationSyntax node)
+    {
+        var trivia = node.DescendantTrivia(descendIntoTrivia: false)
+                         .Where(t => !t.IsKind(SyntaxKind.WhitespaceTrivia) && !t.IsKind(SyntaxKind.EndOfLineTrivia));
+        return node.ReplaceTrivia(trivia, (_, _) => ElasticSpace);
     }
 
     private static bool IsPublicApi(INamedTypeSymbol t)
@@ -415,9 +422,16 @@ internal static class Runner
         var compilation = (await project.GetCompilationAsync())!;
         var type        = AllTypes(compilation.Assembly.GlobalNamespace).First(t => FullName(t) == FullName(originalType));
 
+        // Todo lo que depende de los arboles de sintaxis se resuelve ANTES de EnsurePartialAsync, que los invalida.
+        var hasExisting = bridgeDocs.TryGetValue(typeKey, out var existingId) || TryFindExistingBridgeDoc(solution, type, out existingId);
+        var firstDecl   = type.DeclaringSyntaxReferences.First(r => !(solution.GetDocument(r.SyntaxTree)?.FilePath ?? "").EndsWith(".Obsolete.cs", StringComparison.OrdinalIgnoreCase));
+        var sourceDoc   = solution.GetDocument(firstDecl.SyntaxTree)!;
+        var sourceRoot  = (CompilationUnitSyntax)(await firstDecl.SyntaxTree.GetRootAsync());
+        var typeSyntax  = (TypeDeclarationSyntax)(await firstDecl.GetSyntaxAsync());
+
         solution = await EnsurePartialAsync(solution, type);
 
-        if (bridgeDocs.TryGetValue(typeKey, out var existingId) || TryFindExistingBridgeDoc(solution, type, out existingId))
+        if (hasExisting)
         {
             var doc  = solution.GetDocument(existingId)!;
             var root = (CompilationUnitSyntax)(await doc.GetSyntaxRootAsync())!;
@@ -426,11 +440,6 @@ internal static class Runner
             bridgeDocs[typeKey] = existingId;
             return solution.WithDocumentSyntaxRoot(existingId, root.NormalizeWhitespace(eol: "\r\n"));
         }
-
-        var firstDecl   = type.DeclaringSyntaxReferences.First();
-        var sourceDoc   = solution.GetDocument(firstDecl.SyntaxTree)!;
-        var sourceRoot  = (CompilationUnitSyntax)(await firstDecl.SyntaxTree.GetRootAsync());
-        var typeSyntax  = (TypeDeclarationSyntax)(await firstDecl.GetSyntaxAsync());
 
         TypeDeclarationSyntax shell = typeSyntax switch
         {

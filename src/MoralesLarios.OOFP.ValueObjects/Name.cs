@@ -4,23 +4,23 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class Name : StringMinLength
+public partial class Name : StringMinLength
 
 {
-    public static int MinLenght => 3;
+    public static int MinLength => 3;
 
-    private Name(string value) : base(value, MinLenght)
+    private Name(string value) : base(value, MinLength)
     {
     }
 
 
-    public static string BuildErrorMessage(string value) => StringMinLength.BuildErrorMessage(value, MinLenght);
+    public static string BuildErrorMessage(string value) => StringMinLength.BuildErrorMessage(value, MinLength);
     public static new bool IsValid(string value, int length) => value.Length >= length;
 
     public static Name FromString(string value) => new Name(value);
 
     public static MlResult<Name> ByString(string value, MlErrorsDetails errorsDetails = null!)
-        => StringMinLength.ByStringLength(value, MinLenght, errorsDetails)  
+        => StringMinLength.ByStringLength(value, MinLength, errorsDetails)  
                             .Map ( _ => new Name(value));
 
     public static implicit operator string(Name   valueObject) => valueObject.Value;

@@ -62,7 +62,7 @@ public static class Extensions
 
                     break;
 
-                default: throw new FormatException(string.Format("The type {0} is not soported", fullNameTipe));
+                default: throw new FormatException(string.Format("The type {0} is not supported", fullNameTipe));
             }
 
         }
@@ -89,7 +89,7 @@ public static class Extensions
 
         if (DateTime.TryParseExact(value, formats, culture, DateTimeStyles.None, out result)) return result;
             
-        throw new FormatException(string.Format("The type {0} is not soported", typeof(DateTime)));
+        throw new FormatException(string.Format("The type {0} is not supported", typeof(DateTime)));
     }
 
 

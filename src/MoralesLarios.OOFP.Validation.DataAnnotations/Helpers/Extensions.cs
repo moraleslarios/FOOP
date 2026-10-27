@@ -38,7 +38,7 @@ public static class Extensions
     public static MlResult<IEnumerable<T>> ValidateWithDataannotations<T>(this IEnumerable<T> source)
     {
         var result = source.Select(x => x.ValidateWithDataannotations())
-                            .FusionErrosIfExists();
+                            .MergeErrorsIfExists();
         return result;
     }
 

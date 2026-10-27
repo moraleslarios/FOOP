@@ -94,22 +94,22 @@ public class MlResultChangeReturnResultTests
 
 
     [Fact]
-    public void ChangeReturnResultAlwaisValid_validSource_return_validValue()
+    public void ChangeReturnResultAlwaysValid_validSource_return_validValue()
     {
         MlResult<int> partialResult = 1;
 
-        MlResult<string> result = partialResult.ChangeReturnResultAlwaisValid(validValue: "valid", failValidValue : "valid2");
+        MlResult<string> result = partialResult.ChangeReturnResultAlwaysValid(validValue: "valid", failValidValue : "valid2");
         MlResult<string> expected = "valid";
 
         result.ToString().Should().Be(expected.ToString());
     }
 
     [Fact]
-    public void ChangeReturnResultAlwaisValid_failSource_return_failValidValue()
+    public void ChangeReturnResultAlwaysValid_failSource_return_failValidValue()
     {
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
 
-        MlResult<string> result = partialResult.ChangeReturnResultAlwaisValid(validValue: "valid", failValidValue : "valid2");
+        MlResult<string> result = partialResult.ChangeReturnResultAlwaysValid(validValue: "valid", failValidValue : "valid2");
         MlResult<string> expected = "valid2";
 
         result.ToString().Should().Be(expected.ToString());
@@ -117,22 +117,22 @@ public class MlResultChangeReturnResultTests
 
 
     [Fact]
-    public async Task ChangeReturnResultAlwaisValidAsync_validSource_return_validValue()
+    public async Task ChangeReturnResultAlwaysValidAsync_validSource_return_validValue()
     {
         MlResult<int> partialResult = 1;
 
-        MlResult<string> result = await partialResult.ChangeReturnResultAlwaisValidAsync(validValue: "valid", failValidValue : "valid2");
+        MlResult<string> result = await partialResult.ChangeReturnResultAlwaysValidAsync(validValue: "valid", failValidValue : "valid2");
         MlResult<string> expected = "valid";
 
         result.ToString().Should().Be(expected.ToString());
     }
 
     [Fact]
-    public async Task ChangeReturnResultAlwaisValidAsync_sourceAsync_failSource_return_failValidValue()
+    public async Task ChangeReturnResultAlwaysValidAsync_sourceAsync_failSource_return_failValidValue()
     {
         Task<MlResult<int>> partialResultAsync = "Error".ToMlResultFailAsync<int>();
 
-        MlResult<string> result = await partialResultAsync.ChangeReturnResultAlwaisValidAsync(validValue: "valid", failValidValue : "valid2");
+        MlResult<string> result = await partialResultAsync.ChangeReturnResultAlwaysValidAsync(validValue: "valid", failValidValue : "valid2");
         MlResult<string> expected = "valid2";
 
         result.ToString().Should().Be(expected.ToString());
@@ -149,22 +149,22 @@ public class MlResultChangeReturnResultTests
 
 
     [Fact]
-    public void ChangeReturnResultAlwaisFail_validSource_return_validFailValue()
+    public void ChangeReturnResultAlwaysFail_validSource_return_validFailValue()
     {
         MlResult<int> partialResult = 1;
 
-        MlResult<string> result = partialResult.ChangeReturnResultAlwaisFail<int, string>(validFailValue: "valid", failValue : "valid2");
+        MlResult<string> result = partialResult.ChangeReturnResultAlwaysFail<int, string>(validFailValue: "valid", failValue : "valid2");
         MlResult<string> expected = "valid".ToMlResultFail<string>();
 
         result.ToString().Should().Be(expected.ToString());
     }
 
     [Fact]
-    public void ChangeReturnResultAlwaisFail_failSource_return_failValue()
+    public void ChangeReturnResultAlwaysFail_failSource_return_failValue()
     {
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
 
-        MlResult<string> result = partialResult.ChangeReturnResultAlwaisFail<int, string>(validFailValue: "valid", failValue : "valid2");
+        MlResult<string> result = partialResult.ChangeReturnResultAlwaysFail<int, string>(validFailValue: "valid", failValue : "valid2");
         MlResult<string> expected = "valid2".ToMlResultFail<string>();
 
         result.ToString().Should().Be(expected.ToString());
@@ -172,22 +172,22 @@ public class MlResultChangeReturnResultTests
 
 
     [Fact]
-    public async Task ChangeReturnResultAlwaisFailAsync_validSource_return_validFailValue()
+    public async Task ChangeReturnResultAlwaysFailAsync_validSource_return_validFailValue()
     {
         MlResult<int> partialResult = 1;
 
-        MlResult<string> result = await partialResult.ChangeReturnResultAlwaisFailAsync<int, string>(validFailValue: "valid", failValue : "valid2");
+        MlResult<string> result = await partialResult.ChangeReturnResultAlwaysFailAsync<int, string>(validFailValue: "valid", failValue : "valid2");
         MlResult<string> expected = "valid".ToMlResultFail<string>();
 
         result.ToString().Should().Be(expected.ToString());
     }
 
     [Fact]
-    public async Task ChangeReturnResultAlwaisFailAsync_sourceAsync_failSource_return_failValue()
+    public async Task ChangeReturnResultAlwaysFailAsync_sourceAsync_failSource_return_failValue()
     {
         Task<MlResult<int>> partialResultAsync = "Error".ToMlResultFailAsync<int>();
 
-        MlResult<string> result = await partialResultAsync.ChangeReturnResultAlwaisFailAsync<int, string>(validFailValue: "valid", failValue : "valid2");
+        MlResult<string> result = await partialResultAsync.ChangeReturnResultAlwaysFailAsync<int, string>(validFailValue: "valid", failValue : "valid2");
         MlResult<string> expected = "valid2".ToMlResultFail<string>();
 
         result.ToString().Should().Be(expected.ToString());

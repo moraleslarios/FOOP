@@ -41,8 +41,8 @@ entrada **tipada y segura** a ese diccionario.
 | --- | --- |
 | `MergeErrorsDetailsIfFail<T>(this MlResult<T>, MlResult<T> other)` | Si alguno falla, une los errores y detalles de ambos. |
 | `MergeErrorsDetailsIfFailAsync<T>(...)` (4) | Versiones asíncronas. |
-| `MergeErrorsDetailsIfFailDiferentTypes<T, T2>(...)` | Igual, pero permitiendo que los dos resultados sean de **tipos distintos**. El resultado conserva el tipo `T`. |
-| `MergeErrorsDetailsIfFailDiferentTypesAsync<T, T2>(...)` (4) | Versiones asíncronas. |
+| `MergeErrorsDetailsIfFailDifferentTypes<T, T2>(...)` | Igual, pero permitiendo que los dos resultados sean de **tipos distintos**. El resultado conserva el tipo `T`. |
+| `MergeErrorsDetailsIfFailDifferentTypesAsync<T, T2>(...)` (4) | Versiones asíncronas. |
 
 > 📝 El nombre `DiferentTypes` está escrito así en el código fuente (con una sola `f`); se documenta
 > tal cual para que puedas buscarlo.
@@ -154,7 +154,7 @@ MlResult<Direccion> direccion = ValidarDireccion(dto.Direccion);
 
 // El resultado conserva el tipo Cliente, pero acumula los errores de ambos.
 MlResult<Cliente> validado = cliente
-    .MergeErrorsDetailsIfFailDiferentTypes(direccion);
+    .MergeErrorsDetailsIfFailDifferentTypes(direccion);
 
 // Si ambos fallan, el usuario ve TODOS los problemas de una sola vez:
 // - El nombre es obligatorio

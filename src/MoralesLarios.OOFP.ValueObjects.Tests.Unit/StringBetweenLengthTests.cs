@@ -52,7 +52,7 @@ public class StringBetweenLengthTests
     }
 
     [Fact]
-    public void StringBetweenLength_ValueLessThanMinLenght_ReturnsFail()
+    public void StringBetweenLength_ValueLessThanMinLength_ReturnsFail()
     {
         var validString = "XX";
         var minLength   = 4;
@@ -64,7 +64,7 @@ public class StringBetweenLengthTests
     }
 
     [Fact]
-    public void StringBetweenLength_ValueMoreThanMaxLenght_ReturnsFail()
+    public void StringBetweenLength_ValueMoreThanMaxLength_ReturnsFail()
     {
         var validString = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
         var minLength   = 4;

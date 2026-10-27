@@ -405,4 +405,4 @@ Una tubería con un `ExecSelf` entre cada paso se vuelve ilegible. Instrumenta l
 - [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia completa con el recuento de sobrecargas.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError` y `MlErrorsDetails`.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir de la tubería.
-- [`../Bind/11_BindSaveValueInDetailsIfFaildFuncResultAsync.md`](../Bind/11_BindSaveValueInDetailsIfFaildFuncResultAsync.md) — la familia `BindSaveValueInDetailsIfFaildFuncResult`, que antes se documentaba aquí por error.
+- [`../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md`](../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md) — la familia `BindSaveValueInDetailsIfFailedFuncResult`, que antes se documentaba aquí por error.

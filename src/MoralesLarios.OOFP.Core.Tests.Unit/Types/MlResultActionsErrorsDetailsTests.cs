@@ -132,7 +132,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> secondary = "Error".ToMlResultFail<string>();
 
-        MlResult<int> result = partialResult.MergeErrorsDetailsIfFailDiferentTypes(secondary);
+        MlResult<int> result = partialResult.MergeErrorsDetailsIfFailDifferentTypes(secondary);
 
         result.ToString().Should().Be(partialResult.ToString());
     }
@@ -144,7 +144,7 @@ public class MlResultActionsErrorsDetailsTests
 
         MlResult<string> secondary = "hola";
 
-        MlResult<int> result = partialResult.MergeErrorsDetailsIfFailDiferentTypes(secondary);
+        MlResult<int> result = partialResult.MergeErrorsDetailsIfFailDifferentTypes(secondary);
 
         result.ToString().Should().Be(partialResult.ToString());
     }
@@ -304,12 +304,12 @@ public class MlResultActionsErrorsDetailsTests
     }
 
     [Fact]
-    public async Task MergeErrorsDetailsIfFailDiferentTypesAsync_sourceSync_secondaryAsync_return_fail_with_merged_errors()
+    public async Task MergeErrorsDetailsIfFailDifferentTypesAsync_sourceSync_secondaryAsync_return_fail_with_merged_errors()
     {
         MlResult<int> source = "Error1".ToMlResultFail<int>();
         Task<MlResult<string>> secondaryAsync = "Error2".ToMlResultFailAsync<string>();
 
-        MlResult<int> result = await source.MergeErrorsDetailsIfFailDiferentTypesAsync(secondaryAsync);
+        MlResult<int> result = await source.MergeErrorsDetailsIfFailDifferentTypesAsync(secondaryAsync);
 
         result.ToString().Should().Be((new[] { "Error1", "Error2" }).ToMlResultFail<int>().ToString());
     }

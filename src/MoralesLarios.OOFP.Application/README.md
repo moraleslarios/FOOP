@@ -64,7 +64,7 @@ public async Task<VinoDto> CreateAsync(VinoDto dto, CancellationToken ct)
 
 ```csharp
 // No escribes nada: el servicio genérico ya lo hace
-services.AddScopedtGenServicesFpWithoutReposGeneral();
+services.AddScopedCrudServicesFpWithoutRepositories();
 
 // Y lo usas directamente
 public class VinosController(IGenServiceFp<Vino, VinoDto> _service)
@@ -393,12 +393,12 @@ Seis extensiones, tres ciclos de vida × dos modos:
 ```csharp
 // Modo simple: IGenServiceFp<,>
 services.AddTransientGenServicesFpWithoutReposGeneral();
-services.AddScopedtGenServicesFpWithoutReposGeneral();      // ⚠️ "Scopedt", con t
+services.AddScopedCrudServicesFpWithoutRepositories();      // ⚠️ "Scopedt", con t
 services.AddSingletonGenServicesFpWithoutReposGeneral();
 
 // Modo duplex: IGenServiceFp<,,>
 services.AddTransientGenServicesDuplexFpWithoutReposGeneral();
-services.AddScopedtGenServicesDuplexFpWithoutReposGeneral(); // ⚠️ "Scopedt", con t
+services.AddScopedCrudServicesDuplexFpWithoutRepositories(); // ⚠️ "Scopedt", con t
 services.AddSingletonGenServicesDuplexFpWithoutReposGeneral();
 ```
 
@@ -421,7 +421,7 @@ builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddScopedOOFPRepos<Vino, AppDbContext>();
 
 // 2️⃣ El servicio genérico, una sola vez
-builder.Services.AddScopedtGenServicesFpWithoutReposGeneral();
+builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 ```
 
 > 🔑 **El registro de repositorios es por entidad; el del servicio, una sola vez.** El servicio genérico resuelve `IEFRepoFp<TEntity>` por constructor, así que si olvidas el `AddScopedOOFPRepos<TEntity, TContext>()` la inyección del servicio fallará al resolverse.
@@ -655,8 +655,8 @@ builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddScopedOOFPRepos<Vino, AppDbContext>();
 
 // Servicios genéricos: una sola vez cada modo
-builder.Services.AddScopedtGenServicesFpWithoutReposGeneral();        // ⚠️ "Scopedt"
-builder.Services.AddScopedtGenServicesDuplexFpWithoutReposGeneral();
+builder.Services.AddScopedCrudServicesFpWithoutRepositories();        // ⚠️ "Scopedt"
+builder.Services.AddScopedCrudServicesDuplexFpWithoutRepositories();
 
 var app = builder.Build();
 ```
@@ -770,7 +770,7 @@ MlProblemsDetails.CreateProblemDetails(
 services.AddSingletonGenServicesFpWithoutReposGeneral();
 
 // ✅ BIEN
-services.AddScopedtGenServicesFpWithoutReposGeneral();
+services.AddScopedCrudServicesFpWithoutRepositories();
 ```
 
 **Obtener un 404 de verdad:**
@@ -858,7 +858,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 | Añadir reglas de negocio | Heredar de `GenServiceFp<,>` y sobrescribir el método |
 | Paginar, filtrar o proyectar | ❌ No disponible: usa `IEFRepoPaginationFp<T>` directamente |
 | Validar | ❌ No lo hace: usa [`Validation`](../MoralesLarios.OOFP.Validation/README.md) antes |
-| Registrar | `AddScopedtGenServicesFpWithoutReposGeneral()` ✅ (con la errata) |
+| Registrar | `AddScopedCrudServicesFpWithoutRepositories()` ✅ (con la errata) |
 
 ---
 

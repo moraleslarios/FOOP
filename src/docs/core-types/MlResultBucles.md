@@ -9,7 +9,7 @@ Operaciones funcionales sobre colecciones con semántica `MlResult`. Permiten tr
 - Variante *while* (`ProjectionWhile*`) para detener el procesamiento en el primer error.
 - Versiones asíncronas secuenciales (`ProjectionAsync*`) para fuentes y transformaciones síncronas o asíncronas.
 - Versiones paralelas (`ProjectionParallelAsync*`) para lanzar todas las transformaciones asíncronas con `Task.WhenAll`.
-- Métodos de fusión (`FusionFailErros*`, `FusionErrosIfExists*`) para combinar errores de varios `MlResult<T>`.
+- Métodos de fusión (`MergeFailureErrors*`, `MergeErrorsIfExists*`) para combinar errores de varios `MlResult<T>`.
 
 ## Familias de métodos
 
@@ -215,10 +215,10 @@ Son los mismos que usan internamente las proyecciones para consolidar sus errore
 
 | Método | Sobrecargas | Comportamiento |
 | --- | --- | --- |
-| `FusionFailErros<T>(this IEnumerable<MlResult<T>>)` | 1 | Fusiona los errores de los elementos fallidos. Asume que **hay** al menos un fallo. |
-| `FusionFailErrosAsync<T>(...)` | 2 | Versiones asíncronas (fuente `Task<...>` y/o resultado asíncrono). |
-| `FusionErrosIfExists<T>(this IEnumerable<MlResult<T>>)` | 1 | Si hay errores, los fusiona; si no, devuelve `Valid` con todos los valores. **Es el que usarás casi siempre.** |
-| `FusionErrosIfExistsAsync<T>(...)` | 2 | Versiones asíncronas. |
+| `MergeFailureErrors<T>(this IEnumerable<MlResult<T>>)` | 1 | Fusiona los errores de los elementos fallidos. Asume que **hay** al menos un fallo. |
+| `MergeFailureErrorsAsync<T>(...)` | 2 | Versiones asíncronas (fuente `Task<...>` y/o resultado asíncrono). |
+| `MergeErrorsIfExists<T>(this IEnumerable<MlResult<T>>)` | 1 | Si hay errores, los fusiona; si no, devuelve `Valid` con todos los valores. **Es el que usarás casi siempre.** |
+| `MergeErrorsIfExistsAsync<T>(...)` | 2 | Versiones asíncronas. |
 | `VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>>)` | 1 | Comprueba la colección y devuelve todos los valores solo si ninguno falla. |
 
 ```csharp
@@ -229,7 +229,7 @@ IEnumerable<MlResult<int>> partialResults = [
 ];
 
 // Fail con los dos mensajes de error fusionados.
-MlResult<IEnumerable<int>> result = partialResults.FusionErrosIfExists();
+MlResult<IEnumerable<int>> result = partialResults.MergeErrorsIfExists();
 ```
 
 Caso de uso realista: consolidar validaciones independientes que ya se han ejecutado.
@@ -247,7 +247,7 @@ public MlResult<IEnumerable<Regla>> ValidarReglas(Configuracion config)
 
     // El usuario ve TODOS los problemas de configuración de una sola vez,
     // no solo el primero.
-    return validaciones.FusionErrosIfExists();
+    return validaciones.MergeErrorsIfExists();
 }
 ```
 
@@ -257,18 +257,18 @@ Y su equivalente asíncrono, cuando las validaciones consultan servicios:
 IEnumerable<Task<MlResult<Regla>>> tareas = reglas.Select(_validador.ComprobarAsync);
 
 MlResult<IEnumerable<Regla>> resultado = await Task.WhenAll(tareas)
-                                                   .FusionErrosIfExistsAsync();
+                                                   .MergeErrorsIfExistsAsync();
 ```
 
-### `FusionFailErros` frente a `FusionErrosIfExists`
+### `MergeFailureErrors` frente a `MergeErrorsIfExists`
 
-- `FusionErrosIfExists` es **seguro en cualquier caso**: si no hay fallos devuelve `Valid`.
-- `FusionFailErros` está pensado para la rama en la que **ya sabes** que hay fallos (por ejemplo, dentro
+- `MergeErrorsIfExists` es **seguro en cualquier caso**: si no hay fallos devuelve `Valid`.
+- `MergeFailureErrors` está pensado para la rama en la que **ya sabes** que hay fallos (por ejemplo, dentro
   de un `if (resultados.Any(r => r.IsFail))`). Es lo que usan las proyecciones internamente.
 - `VerifiedEnumerableResultData` expresa la misma idea desde la perspectiva de la **verificación**: "dame
   los datos solo si la colección entera es correcta".
 
-En código de aplicación, empieza siempre por `FusionErrosIfExists`.
+En código de aplicación, empieza siempre por `MergeErrorsIfExists`.
 
 ## Cuándo usar cada método
 
@@ -281,7 +281,7 @@ En código de aplicación, empieza siempre por `FusionErrosIfExists`.
 | Detener en el primer error con operaciones asíncronas | `ProjectionWhileAsync` |
 | Ejecutar transformaciones asíncronas independientes en paralelo | `ProjectionParallelAsync` |
 | Procesar todo lo posible y reportar los elementos rechazados | `ProjectionSplit` / `ProjectionSplitAsync` |
-| Fusionar una colección ya calculada de `MlResult<T>` | `FusionErrosIfExists` o `VerifiedEnumerableResultData` |
+| Fusionar una colección ya calculada de `MlResult<T>` | `MergeErrorsIfExists` o `VerifiedEnumerableResultData` |
 
 ## Enlace de detalle
 

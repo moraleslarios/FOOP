@@ -1383,7 +1383,7 @@ public static class MlResultActionsMap
                             fail : errorsDetails => errorsDetails.GetDetailException().Match(
                                                                                                 fail : _  => errorsDetails.ToMlResultFail<TReturn>(),
                                                                                                 valid: ex => funcFail.TryToMlResult(ex, errorMessageBuilder)
-                                                                                                                                  .MergeErrorsDetailsIfFailDiferentTypes(source)
+                                                                                                                                  .MergeErrorsDetailsIfFailDifferentTypes(source)
                                                                                             ),
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
@@ -1415,7 +1415,7 @@ public static class MlResultActionsMap
                             failAsync : errorsDetails => errorsDetails.GetDetailExceptionAsync().MatchAsync(
                                                                                                 failAsync :       _  =>              errorsDetails.ToMlResultFailAsync<TReturn>(),
                                                                                                 validAsync: async ex => await (await funcFailAsync(ex)).ToMlResultValidAsync()
-                                                                                                                                                                    .MergeErrorsDetailsIfFailDiferentTypesAsync(sourceAsync)
+                                                                                                                                                                    .MergeErrorsDetailsIfFailDifferentTypesAsync(sourceAsync)
                                                                                             ),
                             validAsync:  x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
@@ -1616,7 +1616,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                             fail : errorsDetails => errorsDetails.GetDetailException<TException>().Match(
                                                                                                             fail : _  => errorsDetails.ToMlResultFail<TReturn>(),
                                                                                                             valid: ex => funcFail.TryToMlResult(ex, errorMessageBuilder)
-                                                                                                                                              .MergeErrorsDetailsIfFailDiferentTypes(source)
+                                                                                                                                              .MergeErrorsDetailsIfFailDifferentTypes(source)
                                                                                                         ),
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
@@ -1652,7 +1652,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                             failAsync : errorsDetails => errorsDetails.GetDetailExceptionAsync<TException>().MatchAsync(
                                                                                                                             failAsync :       _  =>              errorsDetails.ToMlResultFailAsync<TReturn>(),
                                                                                                                             validAsync: async ex => await (await funcFailAsync(ex)).ToMlResultValidAsync()
-                                                                                                                                                                                                .MergeErrorsDetailsIfFailDiferentTypesAsync(sourceAsync)
+                                                                                                                                                                                                .MergeErrorsDetailsIfFailDifferentTypesAsync(sourceAsync)
                                                                                                                         ),
                             validAsync:  x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
@@ -1844,7 +1844,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                             fail : errorsDetails => errorsDetails.GetDetailException().Match(
                                                                                                 fail : _ => errorsDetails.ToMlResultFail<TReturn>(),
                                                                                                 valid: _ => funcFail.TryToMlResult(errorsDetails, errorMessageBuilder)
-                                                                                                                                  .MergeErrorsDetailsIfFailDiferentTypes(source)
+                                                                                                                                  .MergeErrorsDetailsIfFailDifferentTypes(source)
                                                                                             ),
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
@@ -1876,7 +1876,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                             failAsync : errorsDetails => errorsDetails.GetDetailExceptionAsync().MatchAsync(
                                                                                                 failAsync :       _ =>              errorsDetails.ToMlResultFailAsync<TReturn>(),
                                                                                                 validAsync: async _ => await (await funcFailAsync(errorsDetails)).ToMlResultValidAsync()
-                                                                                                                                                                    .MergeErrorsDetailsIfFailDiferentTypesAsync(sourceAsync)
+                                                                                                                                                                    .MergeErrorsDetailsIfFailDifferentTypesAsync(sourceAsync)
                                                                                             ),
                             validAsync:  x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
@@ -2078,7 +2078,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                             fail : errorsDetails => errorsDetails.GetDetailException<TException>().Match(
                                                                                                             fail : _ => errorsDetails.ToMlResultFail<TReturn>(),
                                                                                                             valid: _ => funcFail.TryToMlResult(errorsDetails, errorMessageBuilder)
-                                                                                                                                              .MergeErrorsDetailsIfFailDiferentTypes(source)
+                                                                                                                                              .MergeErrorsDetailsIfFailDifferentTypes(source)
                                                                                                         ),
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
@@ -2114,7 +2114,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                             failAsync : errorsDetails => errorsDetails.GetDetailExceptionAsync<TException>().MatchAsync(
                                                                                                                             failAsync :       _ =>              errorsDetails.ToMlResultFailAsync<TReturn>(),
                                                                                                                             validAsync: async _ => await (await funcFailAsync(errorsDetails)).ToMlResultValidAsync()
-                                                                                                                                                                                                .MergeErrorsDetailsIfFailDiferentTypesAsync(sourceAsync)
+                                                                                                                                                                                                .MergeErrorsDetailsIfFailDifferentTypesAsync(sourceAsync)
                                                                                                                         ),
                             validAsync:  x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );

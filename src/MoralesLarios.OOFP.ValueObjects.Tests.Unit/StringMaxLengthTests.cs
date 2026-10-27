@@ -8,7 +8,7 @@ public class StringMaxLengthTests
 {
 
     [Fact]
-    public void StringMaxLength_ValueLessThanLenght_ReturnsValid()
+    public void StringMaxLength_ValueLessThanLength_ReturnsValid()
     {
         var validString = "Hello";
         var maxLength   = 10;
@@ -30,7 +30,7 @@ public class StringMaxLengthTests
     }
 
     [Fact]
-    public void StringMaxLength_ValueLessThanLenght_ReturnsFail()
+    public void StringMaxLength_ValueLessThanLength_ReturnsFail()
     {
         var validString = "XX";
         var maxLength   = 1;

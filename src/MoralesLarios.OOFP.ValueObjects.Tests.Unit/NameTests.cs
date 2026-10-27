@@ -7,7 +7,7 @@ namespace MoralesLarios.OOFP.ValueObjects.Tests.Unit;
 public class NameTests
 {
     [Fact]
-    public void Name_ValueLessThanLenght_ReturnsValid()
+    public void Name_ValueLessThanLength_ReturnsValid()
     {
         var validString = "Hello";
 
@@ -27,7 +27,7 @@ public class NameTests
     }
 
     [Fact]
-    public void Name_ValueLessThanLenght_ReturnsFail()
+    public void Name_ValueLessThanLength_ReturnsFail()
     {
         var validString = "XX";
 

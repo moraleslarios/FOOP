@@ -158,7 +158,7 @@ MlResult<Cotizacion> cotizacion = await ObtenerCotizacionAsync(divisa)
 ### `ExecSelfIfFailWithValue`: registrar la entrada que provocó el fallo
 
 Requiere que un paso anterior haya guardado el valor en `Details["Value"]` (por ejemplo con
-`AddValueIfFail` o `BindSaveValueInDetailsIfFaildFuncResult`):
+`AddValueIfFail` o `BindSaveValueInDetailsIfFailedFuncResult`):
 
 ```csharp
 MlResult<Precio> precio = CalcularPrecio(articulo)

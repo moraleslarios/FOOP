@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringMaxLength : ValueObject<NotEmptyString>
+public partial class StringMaxLength : ValueObject<NotEmptyString>
 {
     protected StringMaxLength(NotEmptyString value, int length) : base(value)
     {
@@ -12,15 +12,15 @@ public class StringMaxLength : ValueObject<NotEmptyString>
     }
 
 
-    public static string BuildErrorMessage(string value, int lenght) => $"{value} cannot be longer than {lenght} characters";
+    public static string BuildErrorMessage(string value, int length) => $"{value} cannot be longer than {length} characters";
     public static bool IsValid(string value, int length) => value.Length < length;
 
-    public static StringMaxLength FromStringLenght(string value, int lenght) => new StringMaxLength(value, lenght);
+    public static StringMaxLength FromStringLength(string value, int length) => new StringMaxLength(value, length);
 
-    public static MlResult<StringMaxLength> ByStringLength(string value, int lenght, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<StringMaxLength> ByStringLength(string value, int length, MlErrorsDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
-                            .Bind( _ => EnsureFp.That(value, IsValid(value, lenght), errorsDetails ?? BuildErrorMessage(value, lenght)))
-                            .Map ( _ => new StringMaxLength(value, lenght));
+                            .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
+                            .Map ( _ => new StringMaxLength(value, length));
 
     public static implicit operator string         (StringMaxLength valueObject) => valueObject.Value;
     public static implicit operator StringMaxLength((string value, int length) tupleValues) => new StringMaxLength(tupleValues.value, tupleValues.length);

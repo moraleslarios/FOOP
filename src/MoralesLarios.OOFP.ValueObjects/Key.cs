@@ -4,21 +4,21 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class Key : StringMinLength
+public partial class Key : StringMinLength
 {
-    public static int MinLenght => 1;
+    public static int MinLength => 1;
 
-    private Key(string value) : base(value, MinLenght)
+    private Key(string value) : base(value, MinLength)
     {
     }
 
-    public static string BuildErrorMessage(string value) => StringMinLength.BuildErrorMessage(value, MinLenght);
+    public static string BuildErrorMessage(string value) => StringMinLength.BuildErrorMessage(value, MinLength);
     public static new bool IsValid(string value, int length) => value.Length >= length;
 
     public static Key FromString(string value) => new Key(value);
 
     public static MlResult<Key> ByString(string value, MlErrorsDetails errorsDetails = null!)
-        => StringMinLength.ByStringLength(value, MinLenght, errorsDetails)
+        => StringMinLength.ByStringLength(value, MinLength, errorsDetails)
                             .Map(_ => new Key(value));
 
     public static implicit operator string(Key   valueObject) => valueObject.Value;

@@ -234,8 +234,8 @@ public interface IHttpClientFactoryManager
                                                      Dictionary<string, string> headers = null!,
                                                      CancellationToken ct = default);
 
-    Task<MlResult<PaginationResultInfo<TEnumrableResponse>>>
-        PostGetPaginationAsync<TRequest, TEnumrableResponse>(
+    Task<MlResult<PaginationResultInfo<TItem>>>
+        PostGetPaginationAsync<TRequest, TItem>(
             CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default);
 
     Task<MlResult<Empty>> PutAsync       <T>(Key httpClientFactoryKey, T itemBody, string url = null!,
@@ -256,7 +256,7 @@ public interface IHttpClientFactoryManager
 | `PostAsync<T>(key, item, url, …)` | `POST` | `T` | `MlResult<T>` | Envía y **espera del servidor el mismo tipo** `T`. |
 | `PostAsync<T, K>(key, item, url, …)` | `POST` | `T` | `MlResult<K>` | Variante *duplex*: envía `T`, recibe `K`. |
 | `PostGetAsync<T, TResult>(key, item, url, …)` | `POST` | `T` | `MlResult<TResult>` | Idéntico a `PostAsync<T, K>`; nombre alternativo para consultas que viajan en el cuerpo. |
-| `PostGetPaginationAsync<TRequest, TEnumrableResponse>(parameters, ct)` | `POST` | `TRequest` | `MlResult<PaginationResultInfo<…>>` | Valida el record con *Data Annotations*, añade `X-Page-Number`/`X-Page-Size` y deserializa el sobre paginado. |
+| `PostGetPaginationAsync<TRequest, TItem>(parameters, ct)` | `POST` | `TRequest` | `MlResult<PaginationResultInfo<…>>` | Valida el record con *Data Annotations*, añade `X-Page-Number`/`X-Page-Size` y deserializa el sobre paginado. |
 | `PutAsync<T>(key, item, url, …)` | `PUT` | `T` | `MlResult<Empty>` | No lee el cuerpo de respuesta: solo confirma éxito. |
 | `DeleteAsync<T>(key, item, url, …)` | `DELETE` | `T` | `MlResult<Empty>` | ⚠️ `DELETE` **con cuerpo**: muchos proxies lo descartan. |
 | `DeleteByIdAsync<T>(key, url, …)` | `DELETE` | ninguno | `MlResult<Empty>` | La `url` es un `NotEmptyString`, así que un id vacío falla antes de salir a la red. El genérico `T` **solo se usa para el texto del log**. |
@@ -545,7 +545,7 @@ public record CallRequestPaginationParamsInfo<TRequest>(
 | `CallRequestParamsInfo` | — | `Url`, `HttpClientFactoryKey`, `Headers`, `CancellationToken` | `HttpClientFactoryManager.GetAsync<T>(parameters, ct)`. |
 | `CallRequestParamsInfo<TRequest>` | — | `RequestBody` con `[Required]` | `InternalPostGetAsync` (protegido). |
 | `CallRequestPaginationParamsInfo` | `CallRequestParamsInfo` | `PageNumber`, `PageSize` | `GetPaginationAsync<T>(parameters, ct)`. |
-| `CallRequestPaginationParamsInfo<TRequest>` | `CallRequestParamsInfo<TRequest>` | `PageNumber`, `PageSize` | `PostGetPaginationAsync<TRequest, TEnumrableResponse>`. |
+| `CallRequestPaginationParamsInfo<TRequest>` | `CallRequestParamsInfo<TRequest>` | `PageNumber`, `PageSize` | `PostGetPaginationAsync<TRequest, TItem>`. |
 
 ### Construcción desde tupla (conversión implícita)
 
@@ -730,9 +730,9 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
     inyectar un `JsonSerializerOptions`.
 11. **`Path.Combine` para construir las URL de los mensajes de log.** En Windows produce
     `https://host\pruebas`. Solo afecta a los logs, no a la petición real, pero ensucia la traza.
-12. **Erratas en nombres públicos:** el genérico `TEnumrableResponse` (falta la `e` de *Enumerable*) en
+12. **Erratas en nombres públicos:** el genérico `TItem` (falta la `e` de *Enumerable*) en
     `PostGetPaginationAsync`, el genérico `K` en vez de `TResult` en `PostAsync<T, K>`, y la palabra
-    `BaseAdress` en los comentarios de la interfaz pública.
+    `BaseAddress` en los comentarios de la interfaz pública.
 13. **Anotaciones de nulabilidad inconsistentes**: unos parámetros usan `= null!` y otros `= null`
     (`GetAsync<T>`, `PostAsync<T, K>`), lo que genera avisos distintos según el método.
 14. **Sobrecarga `PostGetAsync` comentada** dentro de `IHttpClientFactoryManager` (la que recibía
@@ -1021,7 +1021,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 | Actualizar sin leer respuesta | `PutAsync<T>` | `MlResult<Empty>` |
 | Borrar enviando la entidad | `DeleteAsync<T>` | `MlResult<Empty>` |
 | Borrar por id | `DeleteByIdAsync<T>` | `MlResult<Empty>` |
-| Página de resultados | `PostGetPaginationAsync<TRequest, TEnumrableResponse>` | `MlResult<PaginationResultInfo<…>>` |
+| Página de resultados | `PostGetPaginationAsync<TRequest, TItem>` | `MlResult<PaginationResultInfo<…>>` |
 | El `HttpClient` en bruto | `CreateHttpClient` | `MlResult<HttpClient>` (**síncrono**) |
 
 ### ¿Cómo consumo el `MlResult` que me devuelven?
@@ -1034,7 +1034,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 | Salir a un tipo concreto (`string`, `IActionResult`…) | `Match` / `MatchAsync` | [`Match`](../docs/Match/1_Match.md) |
 | Efecto lateral (log, métrica) sin romper la cadena | `ExecSelfIfValid` / `ExecSelfIfFail` | [`ExecSelf`](../docs/ExecSelf/2_ExecSelfIfValid.md) |
 | Validar antes de llamar | `EnsureFp.NotNull`, `EnsureFp.That` | [`EnsureFp`](../docs/EnsureFp/EnsureFp.md) |
-| Recorrer una colección haciendo N llamadas | `Projection*` / `FusionErrosIfExists` | [`Bucles`](../docs/loops/Bucles.md) |
+| Recorrer una colección haciendo N llamadas | `Projection*` / `MergeErrorsIfExists` | [`Bucles`](../docs/loops/Bucles.md) |
 
 ---
 

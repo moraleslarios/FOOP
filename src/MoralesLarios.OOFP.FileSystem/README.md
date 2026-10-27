@@ -402,7 +402,7 @@ public MlResult<IEnumerable<Registro>> ProcesarCarpeta(string carpeta)
                   $"Error al enumerar la carpeta '{carpeta}'")
           .Bind(ficheros => ficheros.Where(f => f.Value.EndsWith(".csv"))
                                     .Select(f => _io.ReadAllText(f).Map(Parsear))
-                                    .FusionErrosIfExists());
+                                    .MergeErrorsIfExists());
 ```
 
 > 💡 El `TryMap` con `ToList()` es **imprescindible aquí**: evita la condición de carrera de la enumeración perezosa.
@@ -564,4 +564,4 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 - [`TryMap` — capturar excepciones en el raíl](../docs/Map/1_Map.md) 🔑 imprescindible aquí
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`EnsureFp` — validaciones de guarda](../docs/EnsureFp/EnsureFp.md)
-- [`FusionErrosIfExists` — procesar colecciones acumulando errores](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` — procesar colecciones acumulando errores](../docs/loops/Bucles.md)

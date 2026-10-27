@@ -374,7 +374,7 @@ var r = GuardarPedido(pedido)
 
 - [`3_Bind.md`](3_Bind.md) — el encadenamiento condicional básico.
 - [`6_BindIfFail.md`](6_BindIfFail.md) — actuar solo cuando ha fallado.
-- [`11_BindSaveValueInDetailsIfFaildFuncResultAsync.md`](11_BindSaveValueInDetailsIfFaildFuncResultAsync.md) — conservar el valor de entrada al fallar.
+- [`11_BindSaveValueInDetailsIfFailedFuncResultAsync.md`](11_BindSaveValueInDetailsIfFailedFuncResultAsync.md) — conservar el valor de entrada al fallar.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir del mundo `MlResult` con un valor crudo.
 - [`../Match/2_MatchAll.md`](../Match/2_MatchAll.md) — el `Match` sin parámetros, hermano gemelo de la forma A.
 - [`../Map/8_MapAlways.md`](../Map/8_MapAlways.md) — la versión para funciones que no pueden fallar.

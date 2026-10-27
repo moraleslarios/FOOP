@@ -100,7 +100,7 @@ malas prácticas a evitar. **Si estás aprendiendo, empieza por aquí.**
 | [`8_BindIfFailWithException`](../Bind/8_BindIfFailWithException.md) | Recuperar según la excepción capturada |
 | [`9_BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md) | Fallos de negocio vs. fallos técnicos |
 | [`10_BindAlways`](../Bind/10_BindAlways.md) | Ejecutar en ambas ramas |
-| [`11_BindSaveValueInDetails…`](../Bind/11_BindSaveValueInDetailsIfFaildFuncResultAsync.md) | Guardar la entrada en `Details` al fallar |
+| [`11_BindSaveValueInDetails…`](../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md) | Guardar la entrada en `Details` al fallar |
 
 ### `Map` — transformar el valor sin salir del carril
 

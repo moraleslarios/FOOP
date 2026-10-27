@@ -32,7 +32,7 @@ public static class DataannotationsValidator
 
     private static MlResult<T> ValidateSource<T>(T source)
     {
-        var result = EnsureFp.NotNull(source, $"{nameof(source)} no be null")
+        var result = EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
                                 .Bind(_ => source.ValidateWithDataannotations());
 
         return result;
@@ -40,8 +40,8 @@ public static class DataannotationsValidator
 
     private static MlResult<IEnumerable<T>> ValidateSource<T>(IEnumerable<T> source)
     {
-        var result = EnsureFp.NotNull(source, $"{nameof(source)} no be null")
-                                .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} no be empty"))
+        var result = EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
+                                .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} must not be empty"))
                                 .Bind(_ => source.ValidateWithDataannotations());
         return result;
     }

@@ -600,7 +600,7 @@ public MlResult<IEnumerable<Fila>> ProcesarFichero(IEnumerable<Fila> filas)
                     .AddMlErrorDetailIfFail("fila", i + 1)
                     .LogMlResultWarningIfFail(_logger,
                         e => $"Fila {i + 1} descartada: {e.ToErrorsDescription()}"))
-            .FusionErrosIfExists();
+            .MergeErrorsIfExists();
 ```
 
 > ⚠️ Con miles de filas esto genera miles de trazas. Considera registrar solo el resumen final, o usar `LogMlResultTraceIfFail` para poder filtrarlas por configuración.
@@ -730,4 +730,4 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 - [`Match` — la base del log condicional](../docs/Match/1_Match.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`ExecSelf` — efectos secundarios sin cambiar el resultado](../docs/ExecSelf/1_ExecSelf.md)
-- [`FusionErrosIfExists` y bucles funcionales](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Bucles.md)

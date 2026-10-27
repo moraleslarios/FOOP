@@ -193,7 +193,7 @@ MlResult<Configuracion> config = LeerConfiguracion(rutaFichero)
 ### `MapIfFailWithValue`: recuperar usando la entrada que provocó el fallo
 
 Cuando un paso anterior guardó el valor de entrada en `Details["Value"]` (por ejemplo mediante
-`AddValueIfFail` o `BindSaveValueInDetailsIfFaildFuncResult`), puedes usarlo para construir la
+`AddValueIfFail` o `BindSaveValueInDetailsIfFailedFuncResult`), puedes usarlo para construir la
 respuesta de degradación:
 
 ```csharp

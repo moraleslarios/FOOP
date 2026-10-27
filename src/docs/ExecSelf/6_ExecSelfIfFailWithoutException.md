@@ -59,7 +59,7 @@ Un `MlResult<T>` fallido llega sin excepción cuando se ha construido a partir d
 | `EnsureFp.NotNull(valor, "mensaje")` | No |
 | `MapEnsure(x => x.Importe > 0, "mensaje")` | No |
 | `BoolToResult(condicion, "mensaje")` | No |
-| Fusión de errores de validación (`FusionErrosIfExists`) | No |
+| Fusión de errores de validación (`MergeErrorsIfExists`) | No |
 | `TryBind` / `TryMap` / `TryMatch` que capturan una excepción | **Sí** |
 | `MlResult.Fail<T>("mensaje", exception)` | **Sí** |
 
@@ -240,11 +240,11 @@ private static MlResult<Cliente> ValidarAsync(ClienteDto dto)
            EnsureFp.That(dto.Email, e => e.Contains('@'), "El email no es válido").ToResult(),
            EnsureFp.That(dto.Edad,  e => e >= 18,         "Debes ser mayor de edad").ToResult()
        }
-       .FusionErrosIfExists()                 // Acumula TODOS los mensajes, sin excepciones
+       .MergeErrorsIfExists()                 // Acumula TODOS los mensajes, sin excepciones
        .Map(_ => Cliente.Desde(dto));
 ```
 
-> 💡 `FusionErrosIfExists` produce fallos **sin excepción**, así que todos los errores de validación
+> 💡 `MergeErrorsIfExists` produce fallos **sin excepción**, así que todos los errores de validación
 > caen limpiamente en esta rama. Ver [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md).
 
 ---
@@ -299,7 +299,7 @@ Para recuperar un fallo de negocio, usa
 - El delegado recibe únicamente `MlErrorsDetails`.
 - Es el complemento disjunto de `ExecSelfIfFailWithException`; juntos cubren todos los fallos.
 - Los fallos sin excepción los generan `ToMlResultFail`, `MlResult.Fail(mensaje)`, `EnsureFp.*`,
-  `MapEnsure`, `BoolToResult` y `FusionErrosIfExists`.
+  `MapEnsure`, `BoolToResult` y `MergeErrorsIfExists`.
 - ⚠️ **No existe `TryExecSelfIfFailWithoutException`**: solo hay 1 sobrecarga síncrona y 4 asíncronas.
 - No recupera el resultado: para eso están `MapIfFailWithoutException` y `BindIfFailWithoutException`.
 

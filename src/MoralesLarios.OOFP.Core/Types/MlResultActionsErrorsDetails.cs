@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Types;
 
-public static class MlResultActionsErrorsDetails
+public static partial class MlResultActionsErrorsDetails
 {
 
     public static MlResult<T> GetDetail<T>(this MlErrorsDetails source, string key)
@@ -57,7 +57,7 @@ public static class MlResultActionsErrorsDetails
                                                                                 Task<MlResult<T>> secondaryAsync)
         => source.MergeErrorsDetailsIfFail(await secondaryAsync);
 
-    public static MlResult<T> MergeErrorsDetailsIfFailDiferentTypes<T,T2>(this MlResult<T > source,
+    public static MlResult<T> MergeErrorsDetailsIfFailDifferentTypes<T,T2>(this MlResult<T > source,
                                                                                MlResult<T2> secondary)
         => source.Match(
                                     fail : errorDetails => secondary.Match(
@@ -67,7 +67,7 @@ public static class MlResultActionsErrorsDetails
                                     valid: _ => source
                                 );
 
-    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T,T2>(this MlResult<T > source,
+    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDifferentTypesAsync<T,T2>(this MlResult<T > source,
                                                                                                 MlResult<T2> secondary)
         => await source.MatchAsync(
                                     failAsync : errorDetails => secondary.MatchAsync(
@@ -77,17 +77,17 @@ public static class MlResultActionsErrorsDetails
                                     validAsync: _ => source.ToAsync()
                                 );
 
-    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T,T2>(this Task<MlResult<T>> sourceAsync,
+    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDifferentTypesAsync<T,T2>(this Task<MlResult<T>> sourceAsync,
                                                                                                 MlResult<T2>      secondary)
-        => (await sourceAsync).MergeErrorsDetailsIfFailDiferentTypes(secondary);
+        => (await sourceAsync).MergeErrorsDetailsIfFailDifferentTypes(secondary);
 
-    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T,T2>(this Task<MlResult<T>>  sourceAsync,
+    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDifferentTypesAsync<T,T2>(this Task<MlResult<T>>  sourceAsync,
                                                                                                 Task<MlResult<T2>> secondaryAsync)
-        => (await sourceAsync).MergeErrorsDetailsIfFailDiferentTypes(await secondaryAsync);
+        => (await sourceAsync).MergeErrorsDetailsIfFailDifferentTypes(await secondaryAsync);
 
-    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T,T2>(this MlResult<T>       source,
+    public static async Task<MlResult<T>> MergeErrorsDetailsIfFailDifferentTypesAsync<T,T2>(this MlResult<T>       source,
                                                                                                  Task<MlResult<T2>> secondaryAsync)
-        => source.MergeErrorsDetailsIfFailDiferentTypes(await secondaryAsync);
+        => source.MergeErrorsDetailsIfFailDifferentTypes(await secondaryAsync);
 
 
     public static MlResult<T> GetDetailValue<T>(this MlErrorsDetails source)

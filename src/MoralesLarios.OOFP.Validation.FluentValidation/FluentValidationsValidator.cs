@@ -11,7 +11,7 @@ public static class FluentValidationsValidator
     public static MlResult<T> Validate<T, TValidator>(T source)
         where T          : class
         where TValidator : AbstractValidator<T>, new()
-        => EnsureFp.NotNull(source, $"{nameof(source)} no be null")
+        => EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
                    .Bind(_ => source.ValidateWithFluentValidations<T, TValidator>());
 
     public static Task<MlResult<T>> ValidateAsync<T, TValidator>(T source)
@@ -27,8 +27,8 @@ public static class FluentValidationsValidator
     public static MlResult<IEnumerable<T>> Validate<T, TValidator>(IEnumerable<T> source)
         where T          : class
         where TValidator : AbstractValidator<T>, new()
-        => EnsureFp.NotNull(source, $"{nameof(source)} no be null")
-                   .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} no be empty"))
+        => EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
+                   .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} must not be empty"))
                    .Bind(_ => source.ValidateWithFluentValidations<T, TValidator>());
 
     public static Task<MlResult<IEnumerable<T>>> ValidateAsync<T, TValidator>(IEnumerable<T> source)

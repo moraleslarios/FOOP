@@ -9,7 +9,7 @@
 5. [`ProjectionWhile` — parar en el primer fallo](#projectionwhile--parar-en-el-primer-fallo)
 6. [`ProjectionParallelAsync` — concurrencia real](#projectionparallelasync--concurrencia-real)
 7. [`ProjectionSplit` — separar aciertos de fallos](#projectionsplit--separar-aciertos-de-fallos)
-8. [Los agregadores: `FusionFailErros`, `FusionErrosIfExists`, `VerifiedEnumerableResultData`](#los-agregadores-fusionfailerros-fusionerrosifexists-verifiedenumerableresultdata)
+8. [Los agregadores: `MergeFailureErrors`, `MergeErrorsIfExists`, `VerifiedEnumerableResultData`](#los-agregadores-fusionfailerros-fusionerrosifexists-verifiedenumerableresultdata)
 9. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
 11. [Ejemplos Prácticos](#ejemplos-prácticos)
@@ -98,7 +98,7 @@ public static MlResult<IEnumerable<TResult>> Projection<T, TResult>(this IEnumer
                             var partialData = x.Select(completeFuncTransform).ToList();
 
                             var result = partialData.Any(x => x.IsFail) ?
-                                         FusionFailErros(partialData)   :
+                                         MergeFailureErrors(partialData)   :
                                          MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
 
                             return result;
@@ -110,7 +110,7 @@ public static MlResult<IEnumerable<TResult>> Projection<T, TResult>(this IEnumer
 🔑 **Comportamiento:** ejecuta la transformación sobre **todos** los elementos (nótese el
 `.ToList()`, que fuerza la evaluación), y solo después decide:
 
-- Si **algún** elemento falló → `FusionFailErros` fusiona **todos** los errores.
+- Si **algún** elemento falló → `MergeFailureErrors` fusiona **todos** los errores.
 - Si todos son válidos → resultado válido con la colección transformada.
 
 ```csharp
@@ -161,7 +161,7 @@ public static MlResult<IEnumerable<TResult>> ProjectionWhile<T, TResult>(this IE
                             }
 
                             var result = partialData.Any(x => x.IsFail) ?
-                                         FusionFailErros(partialData) :
+                                         MergeFailureErrors(partialData) :
                                          MlResult<IEnumerable<TResult>>.Valid(partialData.Select(x => x.Value));
 
                             return result;
@@ -222,7 +222,7 @@ public static async Task<MlResult<IEnumerable<TResult>>> ProjectionParallelAsync
                             List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
 
                             var result = partialData.Any(x => x.IsFail) ?
-                                         FusionFailErros(partialData) :
+                                         MergeFailureErrors(partialData) :
                                          await MlResult<IEnumerable<TResult>>.ValidAsync(partialData.Select(x => x.Value));
 
                             return result;
@@ -350,7 +350,7 @@ versión paralela de `ProjectionSplit`.
 
 ---
 
-## Los agregadores: `FusionFailErros`, `FusionErrosIfExists`, `VerifiedEnumerableResultData`
+## Los agregadores: `MergeFailureErrors`, `MergeErrorsIfExists`, `VerifiedEnumerableResultData`
 
 Estos tres métodos operan directamente sobre `IEnumerable<MlResult<T>>` y son la maquinaria
 interna de las proyecciones. También puedes usarlos tú.
@@ -360,7 +360,7 @@ interna de las proyecciones. También puedes usarlos tú.
 ```csharp
 public static MlResult<IEnumerable<T>> VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>> source)
     => source.Any(x => x.IsFail) ?
-       FusionFailErros(source)   :
+       MergeFailureErrors(source)   :
        MlResult<IEnumerable<T>>.Valid(source.Select(x => x.Value));
 ```
 
@@ -376,10 +376,10 @@ MlResult<IEnumerable<Linea>> r = resultados.VerifiedEnumerableResultData();
 ⚠️ Enumera `source` **dos veces** (`Any` y `Select`). Materializa con `.ToList()` si es una
 consulta diferida.
 
-### `FusionErrosIfExists` — equivalente seguro
+### `MergeErrorsIfExists` — equivalente seguro
 
 ```csharp
-public static MlResult<IEnumerable<T>> FusionErrosIfExists<T>(this IEnumerable<MlResult<T>> source)
+public static MlResult<IEnumerable<T>> MergeErrorsIfExists<T>(this IEnumerable<MlResult<T>> source)
 {
     var partialResult = source.Where(x => x.IsFail).ToList();
 
@@ -398,10 +398,10 @@ Hace lo mismo que `VerifiedEnumerableResultData` pero usando `SecureValidValue()
 `.Value`, y **maneja correctamente el caso "ninguno falló"**. Es la opción más robusta de las
 tres.
 
-### `FusionFailErros` — ⚠️ tiene un bug: exige que haya fallos
+### `MergeFailureErrors` — ⚠️ tiene un bug: exige que haya fallos
 
 ```csharp
-public static MlResult<IEnumerable<T>> FusionFailErros<T>(this IEnumerable<MlResult<T>> source)
+public static MlResult<IEnumerable<T>> MergeFailureErrors<T>(this IEnumerable<MlResult<T>> source)
 {
     var partialResult = source.Where(x => x.IsFail).ToList();
 
@@ -417,23 +417,23 @@ public static MlResult<IEnumerable<T>> FusionFailErros<T>(this IEnumerable<MlRes
 `MlResult.Fail(...)` se construye y se descarta, y la ejecución continúa hasta
 `partialResult.First()`, que **lanza `InvalidOperationException`** sobre una lista vacía.
 
-🔑 **Consecuencia práctica:** **nunca llames a `FusionFailErros` directamente** salvo que
+🔑 **Consecuencia práctica:** **nunca llames a `MergeFailureErrors` directamente** salvo que
 estés seguro de que hay al menos un fallo. Las proyecciones internas lo hacen bien (siempre
 comprueban `Any(x => x.IsFail)` antes), pero tú no tienes por qué acordarte.
 
 ```csharp
 // ❌ Si todos los resultados son válidos, LANZA InvalidOperationException
-var r = resultados.FusionFailErros();
+var r = resultados.MergeFailureErrors();
 
 // ✅ Usa cualquiera de estos dos, que sí manejan el caso vacío
 var r = resultados.VerifiedEnumerableResultData();
-var r = resultados.FusionErrosIfExists();
+var r = resultados.MergeErrorsIfExists();
 ```
 
 Los tres tienen variantes `*Async` (envolturas `.ToAsync()` y sobrecargas desde
 `Task<IEnumerable<MlResult<T>>>`.
 
-💡 Nótese la errata en el nombre: **`FusionFailErros`**, sin la `e` de "Errors". Está así en
+💡 Nótese la errata en el nombre: **`MergeFailureErrors`**, sin la `e` de "Errors". Está así en
 la API pública.
 
 ---
@@ -461,14 +461,14 @@ elementos van al diccionario `fails`.
 `ArgumentException` con elementos duplicados** (ojo con los `record`, cuya igualdad es
 estructural).
 
-**8. ⚠️ `FusionFailErros` tiene un bug**: falta el `return` en el caso "no hay fallos", así
+**8. ⚠️ `MergeFailureErrors` tiene un bug**: falta el `return` en el caso "no hay fallos", así
 que **lanza `InvalidOperationException`** si se lo llamas con una colección sin fallos. Usa
-`VerifiedEnumerableResultData` o `FusionErrosIfExists`.
+`VerifiedEnumerableResultData` o `MergeErrorsIfExists`.
 
 **9. `VerifiedEnumerableResultData` enumera la colección dos veces** (`Any` + `Select`).
 Materializa las consultas diferidas.
 
-**10. Erratas en los nombres públicos:** `FusionFailErros` y `FusionErrosIfExists` (falta
+**10. Erratas en los nombres públicos:** `MergeFailureErrors` y `MergeErrorsIfExists` (falta
 una `e` en "Errors" en ambos). Están así en la API.
 
 **11. Hay mucho código comentado** en el archivo (versiones antiguas con
@@ -490,8 +490,8 @@ paralela.
 | Procesar lo bueno e informar de lo malo | `ProjectionSplit` |
 | Mensajes con el número de línea | Sobrecarga con `Func<T, int, ...>` |
 | Ya tengo un `IEnumerable<MlResult<T>>` | `VerifiedEnumerableResultData` |
-| Lo mismo, con manejo robusto del caso vacío | `FusionErrosIfExists` |
-| Fusionar errores de una colección con fallos garantizados | `FusionFailErros` (⚠️ lanza si no hay fallos) |
+| Lo mismo, con manejo robusto del caso vacío | `MergeErrorsIfExists` |
+| Fusionar errores de una colección con fallos garantizados | `MergeFailureErrors` (⚠️ lanza si no hay fallos) |
 | Rechazar una colección vacía | [`EmptyToFailed`](../Several/1_EmptyToFailed.md) |
 
 ---
@@ -614,12 +614,12 @@ IEnumerable<MlResult<Linea>> inutil = crudas.Select(Validar);
 MlResult<IEnumerable<Linea>> util = crudas.Projection(Validar);
 
 
-// ❌ FusionFailErros sin garantía de fallos: LANZA InvalidOperationException
-var r = resultados.FusionFailErros();
+// ❌ MergeFailureErrors sin garantía de fallos: LANZA InvalidOperationException
+var r = resultados.MergeFailureErrors();
 
 // ✅ Manejan bien el caso "todos válidos"
 var r = resultados.VerifiedEnumerableResultData();
-var r = resultados.FusionErrosIfExists();
+var r = resultados.MergeErrorsIfExists();
 
 
 // ❌ ProjectionSplit con records duplicados: ArgumentException en ToDictionary
@@ -673,8 +673,8 @@ var r = _db.Pedidos.Where(p => p.Abierto).ToList().Projection(Validar);
    suele pasarse por alto.
 3. **Da una clave única explícita a `ProjectionSplit`** (por ejemplo con el índice) para
    evitar `ArgumentException` por duplicados.
-4. **Nunca llames a `FusionFailErros` directamente**: usa `VerifiedEnumerableResultData` o
-   `FusionErrosIfExists`, que manejan el caso vacío.
+4. **Nunca llames a `MergeFailureErrors` directamente**: usa `VerifiedEnumerableResultData` o
+   `MergeErrorsIfExists`, que manejan el caso vacío.
 5. **Trocea las colecciones antes de `ProjectionParallelAsync`** (`Chunk(20)`, `Chunk(50)`):
    no hay límite de concurrencia interno.
 6. **Envuelve los delegados asíncronos con `TryToMlResultAsync`** dentro de las proyecciones
@@ -707,8 +707,8 @@ var r = _db.Pedidos.Where(p => p.Abierto).ToList().Projection(Validar);
   ⚠️ Descarta los `null` en silencio y **lanza con elementos duplicados** (usa una clave
   única).
 - ⚠️ **`ProjectionAsync` con delegado asíncrono es SECUENCIAL**, no paralelo.
-- **`VerifiedEnumerableResultData`** y **`FusionErrosIfExists`** son los agregadores seguros.
-- ⚠️⚠️ **`FusionFailErros` tiene un bug** (falta un `return`): **lanza
+- **`VerifiedEnumerableResultData`** y **`MergeErrorsIfExists`** son los agregadores seguros.
+- ⚠️⚠️ **`MergeFailureErrors` tiene un bug** (falta un `return`): **lanza
   `InvalidOperationException`** si la colección no tiene fallos. No lo llames directamente.
 - Todas las variantes tienen **sobrecarga con índice**, muy útil para mensajes con número de
   línea.

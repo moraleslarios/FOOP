@@ -24,9 +24,9 @@ funcional) o **en un cruce** de la misma (para juntar ramas independientes).
 | `DoAsync` | 2 | Versión asíncrona de `Do`. |
 
 > ⚠️ **Corrección respecto a versiones anteriores de esta documentación:** los métodos
-> `CreateCompleteMlResult` y `FusionErrosIfExists` **no pertenecen a esta clase**.
+> `CreateCompleteMlResult` y `MergeErrorsIfExists` **no pertenecen a esta clase**.
 > - `CreateCompleteMlResult` está en [`MlResultActions`](MlResultActions.md).
-> - `FusionErrosIfExists` y `FusionFailErros` están en [`MlResultBucles`](MlResultBucles.md).
+> - `MergeErrorsIfExists` y `MergeFailureErrors` están en [`MlResultBucles`](MlResultBucles.md).
 
 ---
 
@@ -151,5 +151,5 @@ MlResult<Informe> informeAsync = await ObtenerDatosAsync(rango)
 ## Ver también
 
 - [`MlResultActions`](MlResultActions.md) — `CreateCompleteMlResult`, `SecureValidValue`, etc.
-- [`MlResultBucles`](MlResultBucles.md) — `Projection*`, `FusionFailErros`, `FusionErrosIfExists`.
+- [`MlResultBucles`](MlResultBucles.md) — `Projection*`, `MergeFailureErrors`, `MergeErrorsIfExists`.
 - [`MlResultTransformations`](MlResultTransformations.md) — conversiones `ToMlResult*` / `TryToMlResult*`.

@@ -21,7 +21,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = 0;
 
-        MlResult<string> result = partialResult.BindSaveValueInDetailsIfFaildFuncResult(BindTestMethod);
+        MlResult<string> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethod);
 
         MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { "Value", 0 } });
 
@@ -35,7 +35,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = 1;
 
-        MlResult<string> result = partialResult.BindSaveValueInDetailsIfFaildFuncResult(BindTestMethod);
+        MlResult<string> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethod);
 
         result.IsValid.Should().BeTrue();
     }
@@ -47,7 +47,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = "Fail".ToMlResultFail<int>();
 
-        MlResult<string> result = partialResult.BindSaveValueInDetailsIfFaildFuncResult(BindTestMethod);
+        MlResult<string> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethod);
 
         result.Should().BeEquivalentTo(partialResult);
     }
@@ -59,7 +59,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = 0;
 
-        MlResult<string> result = await partialResult.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAsync);
+        MlResult<string> result = await partialResult.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAsync);
 
         MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { "Value", 0 } });
 
@@ -73,7 +73,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = 1;
 
-        MlResult<string> result = await partialResult.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAsync);
+        MlResult<string> result = await partialResult.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAsync);
 
         MlResult<string> expected = "Not OK";
 
@@ -87,7 +87,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = "Fail".ToMlResultFail<int>();
 
-        MlResult<string> result = await partialResult.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAsync);
+        MlResult<string> result = await partialResult.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAsync);
 
         result.Should().BeEquivalentTo(partialResult);
     }
@@ -99,7 +99,7 @@ public class MlResultActionsBindTests
 
         Task<MlResult<int>> partialResultAsync = MlResult.Valid(0).ToAsync();
 
-        MlResult<string> result = await partialResultAsync.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAsync);
+        MlResult<string> result = await partialResultAsync.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAsync);
 
         MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { "Value", 0 } });
 
@@ -113,7 +113,7 @@ public class MlResultActionsBindTests
 
         Task<MlResult<int>> partialResultAsync = MlResult.Valid(1).ToAsync();
 
-        MlResult<string> result = await partialResultAsync.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAsync);
+        MlResult<string> result = await partialResultAsync.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAsync);
 
         MlResult<string> expected = "Not OK";
 
@@ -127,7 +127,7 @@ public class MlResultActionsBindTests
 
         Task<MlResult<int>> partialResultResultAsync = "Fail".ToMlResultFailAsync<int>();
 
-        MlResult<string> result = await partialResultResultAsync.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAsync);
+        MlResult<string> result = await partialResultResultAsync.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAsync);
 
         result.Should().BeEquivalentTo(await partialResultResultAsync);
     }
@@ -138,7 +138,7 @@ public class MlResultActionsBindTests
 
     //    Task<MlResult<int>> partialResultResultAsync = "Fail".ToMlResultFailAsync<int>();
 
-    //    MlResult<string> result = await partialResultResultAsync.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAIntThrowExceptionAsync);
+    //    MlResult<string> result = await partialResultResultAsync.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAIntThrowExceptionAsync);
 
     //    result.Should().BeEquivalentTo(await partialResultResultAsync);
     //}
@@ -149,7 +149,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResultResult = "Fail".ToMlResultFail<int>();
 
-        MlResult<string> result = partialResultResult.TryBindSaveValueInDetailsIfFaildFuncResult(BindTestMethodStringThrowException, _ => "Error forced !!!!");
+        MlResult<string> result = partialResultResult.TryBindSaveValueInDetailsIfFailedFuncResult(BindTestMethodStringThrowException, _ => "Error forced !!!!");
 
         result.Should().BeEquivalentTo(partialResultResult);
     }
@@ -160,7 +160,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResultResult = 0;
 
-        MlResult<string> result = partialResultResult.TryBindSaveValueInDetailsIfFaildFuncResult(BindTestMethodStringThrowException, _ => "Error forced !!!!");
+        MlResult<string> result = partialResultResult.TryBindSaveValueInDetailsIfFailedFuncResult(BindTestMethodStringThrowException, _ => "Error forced !!!!");
 
         result.IsFail.Should().BeTrue();
     }
@@ -393,7 +393,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = 0;
 
-        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFaildFuncResult(BindTestMethodInt)
+        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethodInt)
                                                 .BindIfFailWithValue(x => x * 2);
 
         MlResult<int> expected = 0;
@@ -408,7 +408,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = 1;
 
-        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFaildFuncResult(BindTestMethodInt)
+        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethodInt)
                                                 .BindIfFailWithValue(x => x * 2);
 
         MlResult<int> expected = 1;
@@ -423,7 +423,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
 
-        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFaildFuncResult(BindTestMethodInt)
+        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethodInt)
                                                 .BindIfFailWithValue(x => x * 2);
 
         result.IsFail.Should().BeTrue();
@@ -435,7 +435,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
 
-        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFaildFuncResult(BindTestMethodInt)
+        MlResult<int> result = partialResult.BindSaveValueInDetailsIfFailedFuncResult(BindTestMethodInt)
                                                 .BindIfFailWithValue(x => x * 2);
 
         int errorsCount = 0;
@@ -461,7 +461,7 @@ public class MlResultActionsBindTests
 
         MlResult<int> partialResult = 0;
 
-        MlResult<int> result = await partialResult.BindSaveValueInDetailsIfFaildFuncResultAsync(BindTestMethodAIntsync)
+        MlResult<int> result = await partialResult.BindSaveValueInDetailsIfFailedFuncResultAsync(BindTestMethodAIntsync)
                                                      .BindIfFailWithValueAsync(x => (x + 1).ToMlResultValidAsync());
 
         MlResult<int> expected = 1;

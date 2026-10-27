@@ -17,7 +17,7 @@ MlResult<Confirmacion> r = guardado.ChangeReturnResult(new Confirmacion("OK"));
 ```
 
 > ⚠️ **Ojo con la ortografía del código fuente:** las familias "siempre" están escritas como
-> **`Alwais`**, no `Always`: `ChangeReturnResultAlwaisValid`, `ChangeReturnResultAlwaisFail`. Se
+> **`Alwais`**, no `Always`: `ChangeReturnResultAlwaysValid`, `ChangeReturnResultAlwaysFail`. Se
 > documentan tal cual para que los encuentres al escribir código.
 
 ---
@@ -28,10 +28,10 @@ MlResult<Confirmacion> r = guardado.ChangeReturnResult(new Confirmacion("OK"));
 | --- | --- | --- | --- |
 | `ChangeReturnResult` | 4 | Siempre | Conserva el estado; solo cambia el tipo `T` → `TReturn`. |
 | `ChangeReturnResultAsync` | 5 | Siempre | Versiones asíncronas. |
-| `ChangeReturnResultAlwaisValid` | 1 | Siempre | Devuelve **válido** sea cual sea el estado de origen. |
-| `ChangeReturnResultAlwaisValidAsync` | 2 | Siempre | Versiones asíncronas. |
-| `ChangeReturnResultAlwaisFail` | 4 | Siempre | Devuelve **fallido** sea cual sea el estado de origen. |
-| `ChangeReturnResultAlwaisFailAsync` | 8 | Siempre | Versiones asíncronas. |
+| `ChangeReturnResultAlwaysValid` | 1 | Siempre | Devuelve **válido** sea cual sea el estado de origen. |
+| `ChangeReturnResultAlwaysValidAsync` | 2 | Siempre | Versiones asíncronas. |
+| `ChangeReturnResultAlwaysFail` | 4 | Siempre | Devuelve **fallido** sea cual sea el estado de origen. |
+| `ChangeReturnResultAlwaysFailAsync` | 8 | Siempre | Versiones asíncronas. |
 | `ChangeReturnResultIfValid` | 1 | Solo si es válido | Cambia el tipo; si era fallido, propaga el fallo. |
 | `ChangeReturnResultIfValidAsync` | 2 | Solo si es válido | Versiones asíncronas. |
 | `ChangeReturnResultIfValidToFail` | 4 | Solo si es válido | **Convierte un éxito en fallo** (reglas de negocio invertidas). |
@@ -144,7 +144,7 @@ Usa `ChangeReturnResultIfFailToValid` cuando el motivo del fallo **da igual**; u
 
 ---
 
-## `ChangeReturnResultAlwaisValid` y `ChangeReturnResultAlwaisFail`
+## `ChangeReturnResultAlwaysValid` y `ChangeReturnResultAlwaysFail`
 
 Descartan por completo el estado de origen.
 
@@ -153,7 +153,7 @@ Descartan por completo el estado de origen.
 ```csharp
 // Operación "best effort": la limpieza de caché nunca debe romper la petición.
 MlResult<Unit> resultado = _cache.Invalidar(clave)
-    .ChangeReturnResultAlwaisValid(Unit.Value);
+    .ChangeReturnResultAlwaysValid(Unit.Value);
 ```
 
 ### `AlwaisFail`
@@ -162,7 +162,7 @@ MlResult<Unit> resultado = _cache.Invalidar(clave)
 // Un endpoint deshabilitado temporalmente: hagas lo que hagas, falla.
 public MlResult<Informe> GenerarInforme(Filtro filtro)
     => Validar(filtro)
-           .ChangeReturnResultAlwaisFail<Filtro, Informe>(
+           .ChangeReturnResultAlwaysFail<Filtro, Informe>(
                "La generación de informes está deshabilitada por mantenimiento");
 ```
 
@@ -185,7 +185,7 @@ Es útil también en **pruebas** y en *feature flags*, donde quieres forzar una 
 | Que un éxito se convierta en error | `ChangeReturnResultIfValidToFail` |
 | Un valor por defecto si falla, sin mirar el error | `ChangeReturnResultIfFailToValid` |
 | Un valor por defecto **calculado a partir** del error | [`MapIfFail`](MlResultActionsMap.md) |
-| Ignorar el estado y devolver siempre válido / fallido | `ChangeReturnResultAlwaisValid` / `...AlwaisFail` |
+| Ignorar el estado y devolver siempre válido / fallido | `ChangeReturnResultAlwaysValid` / `...AlwaisFail` |
 | Salir de `MlResult` con un valor concreto | [`Match`](MlResultActionsMatch.md) |
 
 ---

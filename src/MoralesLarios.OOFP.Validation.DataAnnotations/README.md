@@ -127,12 +127,12 @@ Implementación real de las dos sobrecargas síncronas:
 
 ```csharp
 public static MlResult<T> Validate<T>(T source)
-    => EnsureFp.NotNull(source, $"{nameof(source)} no be null")
+    => EnsureFp.NotNull(source, $"{nameof(source)} must not be null")
          .Bind(_ => source.ValidateWithDataannotations());
 
 public static MlResult<IEnumerable<T>> Validate<T>(IEnumerable<T> source)
-    => EnsureFp.NotNull (source, $"{nameof(source)} no be null")
-         .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} no be empty"))
+    => EnsureFp.NotNull (source, $"{nameof(source)} must not be null")
+         .Bind(_ => EnsureFp.NotEmpty(source, $"{nameof(source)} must not be empty"))
          .Bind(_ => source.ValidateWithDataannotations());
 ```
 
@@ -169,7 +169,7 @@ public static class Extensions
     // 3. Colección → MlResult<IEnumerable<T>>, acumulando errores de TODOS los elementos
     public static MlResult<IEnumerable<T>> ValidateWithDataannotations<T>(this IEnumerable<T> source)
         => source.Select(x => x.ValidateWithDataannotations())
-                 .FusionErrosIfExists();
+                 .MergeErrorsIfExists();
 
     public static Task<MlResult<IEnumerable<T>>> ValidateWithDataannotationsAsync<T>(this IEnumerable<T> source);
     public static Task<MlResult<IEnumerable<T>>> ValidateWithDataannotationsAsync<T>(this Task<IEnumerable<T>> sourceAsync);
@@ -225,10 +225,10 @@ resultado.Match(
 |---|---|---|
 | Firma | `MlResult<T>` | `MlResult<IEnumerable<T>>` |
 | Errores dentro de un objeto | Todos, acumulados | Todos, acumulados |
-| Errores entre objetos | — | Todos, fusionados con [`FusionErrosIfExists`](../docs/loops/Bucles.md) |
+| Errores entre objetos | — | Todos, fusionados con [`MergeErrorsIfExists`](../docs/loops/Bucles.md) |
 | Vacío / `null` | `null` ⇒ `Fail` (solo en `DataannotationsValidator`) | `null` o vacío ⇒ `Fail` (solo en `DataannotationsValidator`) |
 
-`FusionErrosIfExists` recorre la secuencia de `MlResult<T>`, y:
+`MergeErrorsIfExists` recorre la secuencia de `MlResult<T>`, y:
 
 - si **ninguno** falla, devuelve `Valid` con la colección de valores;
 - si **alguno** falla, devuelve `Fail` con **todos** los errores de **todos** los elementos fusionados en un único `MlErrorsDetails`.
@@ -434,13 +434,13 @@ public static MlResult<PedidoDto> ValidarPedido(PedidoDto dto)
 
 ### Ejemplo 4 — Saber qué fila falló en una importación
 
-`FusionErrosIfExists` pierde el índice, así que enriquecemos cada error con su posición:
+`MergeErrorsIfExists` pierde el índice, así que enriquecemos cada error con su posición:
 
 ```csharp
 public static MlResult<IEnumerable<FilaCsv>> ValidarFichero(List<FilaCsv> filas)
     => filas.Select((fila, i) => fila.ValidateWithDataannotations()
                                      .AddMlErrorDetailIfFail("fila", i + 2))   // +2: cabecera + base 1
-            .FusionErrosIfExists();
+            .MergeErrorsIfExists();
 
 // Y al consumirlo
 resultado.Match(
@@ -502,7 +502,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 | Validar una lista que puede estar vacía | `lista.ValidateWithDataannotations()` |
 | Validar lo que devuelve una `Task` | `DataannotationsValidator.ValidateAsync(tarea)` |
 | Obtener los `ValidationResult` completos (con `MemberNames`) | `dto.ValidateObject()` |
-| Saber a qué elemento pertenece cada error | `Select((x,i) => …AddMlErrorDetailIfFail("fila", i))` + `FusionErrosIfExists()` |
+| Saber a qué elemento pertenece cada error | `Select((x,i) => …AddMlErrorDetailIfFail("fila", i))` + `MergeErrorsIfExists()` |
 | Reglas entre varios campos | `MlValidableFp<T>.Validate()` + `EnsureFp.That` |
 | Reglas complejas, condicionales o con dependencias | [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) |
 | Reglas reutilizables por tipo de dato | [`ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) |
@@ -531,7 +531,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 - Adapta `System.ComponentModel.DataAnnotations` al modelo funcional: los atributos siguen igual, pero el resultado es un **`MlResult<T>` encadenable**.
 - Dos piezas: **`DataannotationsValidator`** (fachada estática, 6 sobrecargas, comprueba `null`/vacío en las síncronas) y **`Helpers.Extensions`** (7 métodos de extensión, el motor real).
 - `validateAllProperties: true` viene fijado: **todos los atributos se evalúan** y **todos los errores se devuelven** juntos, sin cortocircuito.
-- Para colecciones, `FusionErrosIfExists` **acumula** los errores de todos los elementos (pero pierde el índice: añádelo con `AddMlErrorDetailIfFail`).
+- Para colecciones, `MergeErrorsIfExists` **acumula** los errores de todos los elementos (pero pierde el índice: añádelo con `AddMlErrorDetailIfFail`).
 - ⚠️ Las sobrecargas `Async` **no comprueban `null`** y **no son asíncronas de verdad**; `ValidateObject` **colisiona** con el homónimo del núcleo; **no valida objetos anidados**; el `ValidationContext` **no tiene `IServiceProvider`**.
 - Encaja perfectamente con [`MlValidableFp<T>`](../MoralesLarios.OOFP.Validation/README.md): atributos para lo declarativo, `Validate()` para las reglas entre campos.
 
@@ -561,4 +561,4 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` — transformar el valor válido](../docs/Map/1_Map.md)
 - [`Match` — convertir el resultado en respuesta](../docs/Match/1_Match.md)
-- [`FusionErrosIfExists` y bucles funcionales](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Bucles.md)

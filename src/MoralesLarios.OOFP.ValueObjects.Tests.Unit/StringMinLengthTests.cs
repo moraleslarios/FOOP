@@ -7,7 +7,7 @@ namespace MoralesLarios.OOFP.ValueObjects.Tests.Unit;
 public class StringMinLengthTests
 {
     [Fact]
-    public void StringMinLength_ValueLessThanLenght_ReturnsValid()
+    public void StringMinLength_ValueLessThanLength_ReturnsValid()
     {
         var validString = "Hello";
         var maxLength   = 2;
@@ -29,7 +29,7 @@ public class StringMinLengthTests
     }
 
     [Fact]
-    public void StringMinLength_ValueLessThanLenght_ReturnsFail()
+    public void StringMinLength_ValueLessThanLength_ReturnsFail()
     {
         var validString = "XX";
         var maxLength   = 5;

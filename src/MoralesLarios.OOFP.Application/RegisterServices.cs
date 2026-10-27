@@ -8,7 +8,7 @@ namespace MoralesLarios.OOFP.Application;
 
 
 
-public static class RegisterServices
+public static partial class RegisterServices
 {
     //public static IServiceCollection AddWebServices(this IServiceCollection services, IConfiguration configuration )
     //{
@@ -27,7 +27,7 @@ public static class RegisterServices
         return services;
     }
 
-    public static IServiceCollection AddScopedtGenServicesFpWithoutReposGeneral(this IServiceCollection services)
+    public static IServiceCollection AddScopedCrudServicesFpWithoutRepositories(this IServiceCollection services)
     {
 
         services.AddScoped(typeof(IGenServiceFp<, >), typeof(GenServiceFp<, >));
@@ -51,7 +51,7 @@ public static class RegisterServices
         return services;
     }
 
-    public static IServiceCollection AddScopedtGenServicesDuplexFpWithoutReposGeneral(this IServiceCollection services)
+    public static IServiceCollection AddScopedCrudServicesDuplexFpWithoutRepositories(this IServiceCollection services)
     {
 
         services.AddScoped(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));

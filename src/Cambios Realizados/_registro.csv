@@ -39,3 +39,104 @@ fase1-nivel0;0;Carpeta;Http;;HttpClients/ParamsInfo/;Http/Requests/;0;;Namespace
 fase1-nivel0;0;Carpeta;Shared;;Internals/Info/;Shared/Pagination/;0;;Namespace ...Internals.Info -> ...Shared.Pagination
 fase1-nivel0;0;Fichero;Application;;WebServices/Services/GenService.cs;(eliminado);0;;Fichero vacio (0 bytes)
 fase1-nivel0;0;Fichero;EntityFrameworkCore;;EFCore/Helpers/Constants.cs;(eliminado);0;;Clase vacia sin uso
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsBind;BindSaveValueInDetailsIfFaildFuncResult;BindSaveValueInDetailsIfFailedFuncResult;1;8;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsBind;BindSaveValueInDetailsIfFaildFuncResultAsync;BindSaveValueInDetailsIfFailedFuncResultAsync;4;9;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsBind;TryBindSaveValueInDetailsIfFaildFuncResult;TryBindSaveValueInDetailsIfFailedFuncResult;2;7;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsBind;TryBindSaveValueInDetailsIfFaildFuncResultAsync;TryBindSaveValueInDetailsIfFailedFuncResultAsync;8;2;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsErrorsDetails;MergeErrorsDetailsIfFailDiferentTypes;MergeErrorsDetailsIfFailDifferentTypes;1;13;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsErrorsDetails;MergeErrorsDetailsIfFailDiferentTypesAsync;MergeErrorsDetailsIfFailDifferentTypesAsync;4;9;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultChangeReturnResult;ChangeReturnResultAlwaisValid;ChangeReturnResultAlwaysValid;1;2;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultChangeReturnResult;ChangeReturnResultAlwaisValidAsync;ChangeReturnResultAlwaysValidAsync;2;2;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultChangeReturnResult;ChangeReturnResultAlwaisFail;ChangeReturnResultAlwaysFail;4;5;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultChangeReturnResult;ChangeReturnResultAlwaisFailAsync;ChangeReturnResultAlwaysFailAsync;8;8;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultBucles;FusionFailErros;MergeFailureErrors;1;27;Errata + Fusion no es verbo ingles (nombre final del Nivel 2)
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultBucles;FusionFailErrosAsync;MergeFailureErrorsAsync;2;5;Errata + Fusion no es verbo ingles (nombre final del Nivel 2)
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultBucles;FusionErrosIfExists;MergeErrorsIfExists;1;3;Errata + Fusion no es verbo ingles
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultBucles;FusionErrosIfExistsAsync;MergeErrorsIfExistsAsync;2;1;Errata + Fusion no es verbo ingles
+fase2-nivel1-erratas;1;member;MoralesLarios.OOFP.Core.Tests.Unit;*;Faild;Failed;0;0;SIN COINCIDENCIAS
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultActionsErrorsDetailsTests;MergeErrorsDetailsIfFailDiferentTypesAsync_sourceSync_secondaryAsync_return_fail_with_merged_errors;MergeErrorsDetailsIfFailDifferentTypesAsync_sourceSync_secondaryAsync_return_fail_with_merged_errors;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisValid_validSource_return_validValue;ChangeReturnResultAlwaysValid_validSource_return_validValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisValid_failSource_return_failValidValue;ChangeReturnResultAlwaysValid_failSource_return_failValidValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisValidAsync_validSource_return_validValue;ChangeReturnResultAlwaysValidAsync_validSource_return_validValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisValidAsync_sourceAsync_failSource_return_failValidValue;ChangeReturnResultAlwaysValidAsync_sourceAsync_failSource_return_failValidValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisFail_validSource_return_validFailValue;ChangeReturnResultAlwaysFail_validSource_return_validFailValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisFail_failSource_return_failValue;ChangeReturnResultAlwaysFail_failSource_return_failValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisFailAsync_validSource_return_validFailValue;ChangeReturnResultAlwaysFailAsync_validSource_return_validFailValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultChangeReturnResultTests;ChangeReturnResultAlwaisFailAsync_sourceAsync_failSource_return_failValue;ChangeReturnResultAlwaysFailAsync_sourceAsync_failSource_return_failValue;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultBuclesTests;FusionFailErros_when_source_has_3_fails_return_fail_with_the_3_errorMessages;MergeFailureErrors_when_source_has_3_fails_return_fail_with_the_3_errorMessages;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultBuclesTests;FusionFailErros_when_source_has_validsAndFails_return_fail_onlyWith_failsErrorMessages;MergeFailureErrors_when_source_has_validsAndFails_return_fail_onlyWith_failsErrorMessages;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultBuclesTests;FusionFailErros_when_source_hasNoFails_notThrows_and_return_fail;MergeFailureErrors_when_source_hasNoFails_notThrows_and_return_fail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultBuclesTests;FusionFailErros_when_source_isEmpty_notThrows_and_return_fail_with_noElementsMessage;MergeFailureErrors_when_source_isEmpty_notThrows_and_return_fail_with_noElementsMessage;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.MlResultBuclesTests;FusionFailErros_when_source_hasNoFails_should_return_fail_with_noElementsMessage;MergeFailureErrors_when_source_hasNoFails_should_return_fail_with_noElementsMessage;0;0;
+fase2-nivel1-erratas;1;member;MoralesLarios.OOFP.Core.Tests.Unit;*;FusionErrosIfExists;MergeErrorsIfExists;0;0;SIN COINCIDENCIAS
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween;FromIntLenght;FromIntLength;1;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntLessThan;FromIntLenght;FromIntLength;1;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntMoreThan;FromIntLenght;FromIntLength;1;0;
+fase2-nivel1-erratas;1;Propiedad;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.Key;MinLenght;MinLength;1;3;
+fase2-nivel1-erratas;1;Propiedad;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.Name;MinLenght;MinLength;1;3;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength;FromStringLenght;FromStringLength;1;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMaxLength;FromStringLenght;FromStringLength;1;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMinLength;FromStringLenght;FromStringLength;1;0;
+fase2-nivel1-erratas;1;member;MoralesLarios.OOFP.ValueObjects;*;lenght;length;0;0;SIN COINCIDENCIAS
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.IntBetween(int, int, int);minLenght;minLength;0;2;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.IntBetween(int, int, int);maxLenght;maxLength;0;2;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.BuildErrorMessage(int, int, int);minLenght;minLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.BuildErrorMessage(int, int, int);maxLenght;maxLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.IsValid(int, int, int);minLenght;minLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.IsValid(int, int, int);maxLenght;maxLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.FromIntLength(int, int, int);minLenght;minLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.FromIntLength(int, int, int);maxLenght;maxLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.ByIntLength(int, int, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);minLenght;minLength;0;3;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntBetween.ByIntLength(int, int, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);maxLenght;maxLength;0;3;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.StringBetweenLength(MoralesLarios.OOFP.ValueObjects.NotEmptyString, int, int);minLenght;minLength;0;2;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.StringBetweenLength(MoralesLarios.OOFP.ValueObjects.NotEmptyString, int, int);maxLenght;maxLength;0;2;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.BuildErrorMessage(string, int, int);minLenght;minLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.BuildErrorMessage(string, int, int);maxLenght;maxLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.IsValid(string, int, int);minLenght;minLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.IsValid(string, int, int);maxLenght;maxLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.FromStringLength(string, int, int);minLenght;minLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.FromStringLength(string, int, int);maxLenght;maxLength;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.ByStringLength(string, int, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);minLenght;minLength;0;3;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringBetweenLength.ByStringLength(string, int, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);maxLenght;maxLength;0;3;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntLessThan.BuildErrorMessage(int, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntLessThan.FromIntLength(int, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntLessThan.ByIntLength(int, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);lenght;length;0;3;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntMoreThan.BuildErrorMessage(int, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntMoreThan.FromIntLength(int, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.IntMoreThan.ByIntLength(int, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);lenght;length;0;3;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMaxLength.BuildErrorMessage(string, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMaxLength.FromStringLength(string, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMaxLength.ByStringLength(string, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);lenght;length;0;3;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMinLength.BuildErrorMessage(string, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMinLength.FromStringLength(string, int);lenght;length;0;1;
+fase2-nivel1-erratas;1;Parametro;MoralesLarios.OOFP.ValueObjects;MoralesLarios.OOFP.ValueObjects.StringMinLength.ByStringLength(string, int, MoralesLarios.OOFP.Types.Errors.MlErrorsDetails);lenght;length;0;3;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.AgeTests;Age_ValueMoreThanLenght_ReturnsValid;Age_ValueMoreThanLength_ReturnsValid;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.AgeTests;Age_ValueMoreThanLenght_ReturnsFail;Age_ValueMoreThanLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.IntBetweenTests;IntBetween_ValueLessThanMinLenght_ReturnsFail;IntBetween_ValueLessThanMinLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.IntBetweenTests;IntBetween_ValueMoreThanMaxLenght_ReturnsFail;IntBetween_ValueMoreThanMaxLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.IntLessThanTests;IntLessThan_ValueLessThanLenght_ReturnsValid;IntLessThan_ValueLessThanLength_ReturnsValid;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.IntLessThanTests;IntLessThan_ValueLessThanLenght_ReturnsFail;IntLessThan_ValueLessThanLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.IntMoreThanTests;IntMoreThan_ValueMoreThanLenght_ReturnsValid;IntMoreThan_ValueMoreThanLength_ReturnsValid;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.IntMoreThanTests;IntMoreThan_ValueMoreThanLenght_ReturnsFail;IntMoreThan_ValueMoreThanLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.NameTests;Name_ValueLessThanLenght_ReturnsValid;Name_ValueLessThanLength_ReturnsValid;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.NameTests;Name_ValueLessThanLenght_ReturnsFail;Name_ValueLessThanLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.StringBetweenLengthTests;StringBetweenLength_ValueLessThanMinLenght_ReturnsFail;StringBetweenLength_ValueLessThanMinLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.StringBetweenLengthTests;StringBetweenLength_ValueMoreThanMaxLenght_ReturnsFail;StringBetweenLength_ValueMoreThanMaxLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.StringMaxLengthTests;StringMaxLength_ValueLessThanLenght_ReturnsValid;StringMaxLength_ValueLessThanLength_ReturnsValid;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.StringMaxLengthTests;StringMaxLength_ValueLessThanLenght_ReturnsFail;StringMaxLength_ValueLessThanLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.StringMinLengthTests;StringMinLength_ValueLessThanLenght_ReturnsValid;StringMinLength_ValueLessThanLength_ReturnsValid;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects.Tests.Unit;MoralesLarios.OOFP.ValueObjects.Tests.Unit.StringMinLengthTests;StringMinLength_ValueLessThanLenght_ReturnsFail;StringMinLength_ValueLessThanLength_ReturnsFail;0;0;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Application;MoralesLarios.OOFP.Application.RegisterServices;AddScopedtGenServicesFpWithoutReposGeneral;AddScopedCrudServicesFpWithoutRepositories;1;1;
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.Application;MoralesLarios.OOFP.Application.RegisterServices;AddScopedtGenServicesDuplexFpWithoutReposGeneral;AddScopedCrudServicesDuplexFpWithoutRepositories;1;0;
+fase2-nivel1-erratas;1;member;MoralesLarios.OOFP.Application.Tests.Unit;*;Scopedt;Scoped;0;0;SIN COINCIDENCIAS
+fase2-nivel1-erratas;1;Generico;MoralesLarios.OOFP.Http;MoralesLarios.OOFP.Http.HttpClientFactoryManager.PostGetPaginationAsync<TRequest, TEnumrableResponse>(MoralesLarios.OOFP.Http.Requests.CallRequestPaginationParamsInfo<TRequest>, System.Threading.CancellationToken);TEnumrableResponse;TItem;0;2;
+fase2-nivel1-erratas;1;Generico;MoralesLarios.OOFP.Http;MoralesLarios.OOFP.Http.IHttpClientFactoryManager.PostGetPaginationAsync<TRequest, TEnumrableResponse>(MoralesLarios.OOFP.Http.Requests.CallRequestPaginationParamsInfo<TRequest>, System.Threading.CancellationToken);TEnumrableResponse;TItem;0;1;
+fase2-nivel1-erratas;1;Texto;MoralesLarios.OOFP.AspNetCore.Controllers;Helpers/Extensions.cs;"The type {0} is not soported";"The type {0} is not supported";0;3;Mensaje visible en el cuerpo del error HTTP
+fase2-nivel1-erratas;1;Texto;MoralesLarios.OOFP.AspNetCore.Controllers;SimpleMl*ControllerBase;"... or is diferent type to PK of ...";"... or is of a different type than PK of ...";0;3;Mensaje visible (404)
+fase2-nivel1-erratas;1;Texto;MoralesLarios.OOFP.Validation.*;*Validator.cs;"{x} no be null";"{x} must not be null";0;6;
+fase2-nivel1-erratas;1;Texto;MoralesLarios.OOFP.Validation.*;*Validator.cs;"{x} no be empty";"{x} must not be empty";0;3;
+fase2-nivel1-erratas;1;Texto;MoralesLarios.OOFP.AspNetCore.Controllers;SimpleMl*ControllerBase;"{x} isn't null";"{x} must not be null";0;13;El mensaje anterior afirmaba lo contrario de lo ocurrido
+fase2-nivel1-erratas;1;Comentario;MoralesLarios.OOFP.Http;HttpClientFactoryManager;BaseAdress;BaseAddress;0;10;Solo aparecia en comentarios
+fase2-nivel1-erratas;1;Metodo;MoralesLarios.OOFP.ValueObjects;Id (Id.cs excluido de la compilacion);Bydouble / Fromdouble;ByDouble / FromDouble;0;2;Codigo muerto: <Compile Remove="Id.cs" />
+fase2-nivel1-erratas;1;Documento;docs;Bind;11_BindSaveValueInDetailsIfFaildFuncResultAsync.md;11_BindSaveValueInDetailsIfFailedFuncResultAsync.md;0;0;
+fase2-nivel1-erratas;1;Metodo;-;-;TryMapIAsyncf;TryMapIfAsync;0;0;Ya corregido en la revision Map/Bind (commit 1f5f910)

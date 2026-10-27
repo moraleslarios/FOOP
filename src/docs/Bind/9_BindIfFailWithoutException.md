@@ -57,7 +57,7 @@ El criterio es puramente mecánico: **un fallo «no tiene excepción» cuando su
 | `MlErrorsDetails.FromErrorMessageWithException(msg, ex)` | Sí | ❌ No |
 | Un fallo de negocio **fusionado** con otro que sí traía excepción | Sí | ❌ No |
 
-> 📌 La última fila es la trampa habitual: `MergeErrorsDetailsIfFail` y `FusionErrosIfExists` combinan los diccionarios `Details`, así que basta con que **uno** de los fallos fusionados trajera una excepción para que el resultado se considere «técnico».
+> 📌 La última fila es la trampa habitual: `MergeErrorsDetailsIfFail` y `MergeErrorsIfExists` combinan los diccionarios `Details`, así que basta con que **uno** de los fallos fusionados trajera una excepción para que el resultado se considere «técnico».
 
 ---
 
@@ -284,7 +284,7 @@ public async Task<IActionResult> Crear([FromBody] PedidoDto dto)
 
 2. **Pon primero la mitad técnica.** `TryBindIfFailWithException(...)` seguido de `BindIfFailWithoutException(...)` cubre todos los fallos sin solaparse y se lee como una política explícita.
 
-3. **Cuidado con las fusiones de errores.** `MergeErrorsDetailsIfFail` y `FusionErrosIfExists` mezclan los `Details`: un solo fallo con excepción convierte todo el conjunto en «técnico». Si necesitas conservar la clasificación, decide antes de fusionar.
+3. **Cuidado con las fusiones de errores.** `MergeErrorsDetailsIfFail` y `MergeErrorsIfExists` mezclan los `Details`: un solo fallo con excepción convierte todo el conjunto en «técnico». Si necesitas conservar la clasificación, decide antes de fusionar.
 
 4. **Aprovecha que `func` puede devolver un fallo.** No estás obligado a recuperar: es el punto perfecto para traducir mensajes internos a mensajes de usuario sin tocar los errores técnicos.
 

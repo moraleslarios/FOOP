@@ -22,11 +22,11 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     [HttpGet("id-str/{id}", Name = $"[controller]_[action]")]
     public virtual async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
+        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
 
                                     .MatchAsync(
-                                                    fail      : _     => MlActionResults.NotFound(detail: $"Path {id} not exists or is diferent type to PK of '{typeof(TPk).Name}' was not found."),
+                                                    fail      : _     => MlActionResults.NotFound(detail: $"Path {id} not exists or is of a different type than PK of '{typeof(TPk).Name}' was not found."),
                                                     validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(), 
                                                                                                                     ct                  : ct, 
                                                                                                                     pk                  : idObj)
@@ -46,7 +46,7 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     [HttpPut("{id}")]
     public virtual async Task<IActionResult> PutAsync(string id, [FromBody] TDto dto, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
+        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.UpdateProblemDetailsAsync(dto                 : dto,
                                                                                                   notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
@@ -68,7 +68,7 @@ public class SimpleMlControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, T
     [HttpDelete("{id}")]
     public virtual async Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
+        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
@@ -116,11 +116,11 @@ public class SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServi
     [HttpGet("id-str/{id}", Name = $"[controller]_[action]")]
     public virtual async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
+        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
 
                                     .MatchAsync(
-                                                    fail      : _     => MlActionResults.NotFound(detail: $"Path {id} not exists or is diferent type to PK of '{typeof(TPk).Name}' was not found."),
+                                                    fail      : _     => MlActionResults.NotFound(detail: $"Path {id} not exists or is of a different type than PK of '{typeof(TPk).Name}' was not found."),
                                                     validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(), 
                                                                                                                     ct                  : ct, 
                                                                                                                     pk                  : idObj)
@@ -140,7 +140,7 @@ public class SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServi
     [HttpPut("{id}")]
     public virtual async Task<IActionResult> PutAsync(string id, [FromBody] TRequest dto, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
+        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.UpdateProblemDetailsAsync(dtoRequest          : dto,
                                                                                                   notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
@@ -162,7 +162,7 @@ public class SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServi
     [HttpDelete("{id}")]
     public virtual async Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default!)
     {
-        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} isn't null")
+        var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
                                     .TryMapAsync( _    => id.ConverterTo(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                                                                                   ct                  : ct, 

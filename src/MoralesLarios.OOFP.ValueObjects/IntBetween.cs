@@ -4,23 +4,23 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class IntBetween : ValueObject<int>
+public partial class IntBetween : ValueObject<int>
 {
-    protected IntBetween(int value, int minLenght, int maxLenght) : base(value)
+    protected IntBetween(int value, int minLength, int maxLength) : base(value)
     {
-        if ( ! IsValid(value, minLenght, maxLenght)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, minLenght, maxLenght));
+        if ( ! IsValid(value, minLength, maxLength)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, minLength, maxLength));
     }
 
-    public static string BuildErrorMessage(int value, int minLenght, int maxLenght) => $"{value} must be between {minLenght} and {maxLenght}";
-    public static bool IsValid(int value, int minLenght, int maxLenght) => value > minLenght && value < maxLenght;
+    public static string BuildErrorMessage(int value, int minLength, int maxLength) => $"{value} must be between {minLength} and {maxLength}";
+    public static bool IsValid(int value, int minLength, int maxLength) => value > minLength && value < maxLength;
 
 
-    public static IntBetween FromIntLenght(int value, int minLenght, int maxLenght) => new IntBetween(value, minLenght, maxLenght);
+    public static IntBetween FromIntLength(int value, int minLength, int maxLength) => new IntBetween(value, minLength, maxLength);
 
-    public static MlResult<IntBetween> ByIntLength(int value, int minLenght, int maxLenght, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<IntBetween> ByIntLength(int value, int minLength, int maxLength, MlErrorsDetails errorsDetails = null!)
         => MlResult.Empty()
-                    .Bind( _ => EnsureFp.That(value, IsValid(value, minLenght, maxLenght), errorsDetails ?? BuildErrorMessage(value, minLenght, maxLenght)))
-                    .Map ( _ => new IntBetween(value, minLenght, maxLenght));
+                    .Bind( _ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? BuildErrorMessage(value, minLength, maxLength)))
+                    .Map ( _ => new IntBetween(value, minLength, maxLength));
 
     public static implicit operator int (IntBetween valueObject) => valueObject.Value;
     public static implicit operator IntBetween ((int value, int minLenght, int maxLenght) tupleValues) => new IntBetween(tupleValues.value, 

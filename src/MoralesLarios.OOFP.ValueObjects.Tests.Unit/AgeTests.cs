@@ -7,7 +7,7 @@ namespace MoralesLarios.OOFP.ValueObjects.Tests.Unit;
 public class AgeTests
 {
     [Fact]
-    public void Age_ValueMoreThanLenght_ReturnsValid()
+    public void Age_ValueMoreThanLength_ReturnsValid()
     {
         var value     = 8;
 
@@ -17,7 +17,7 @@ public class AgeTests
     }
 
     [Fact]
-    public void Age_ValueMoreThanLenght_ReturnsFail()
+    public void Age_ValueMoreThanLength_ReturnsFail()
     {
         var value     = -1;
 

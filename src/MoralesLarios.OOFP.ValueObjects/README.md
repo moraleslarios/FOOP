@@ -112,10 +112,10 @@ El nombre del método `By…` depende del tipo primitivo de origen. Merece la pe
 |---|---|---|
 | `NotEmptyString`, `Name`, `Key`, `Mail`, `Endpoint` | `ByString(value, errorsDetails?)` | `FromString(value)` |
 | `RegexValue` | `ByRegex(value, pattern, errorsDetails?)` | `FromRegex(value, pattern)` |
-| `StringMinLength`, `StringMaxLength` | `ByStringLength(value, length, errorsDetails?)` | `FromStringLenght(value, lenght)` |
-| `StringBetweenLength` | `ByStringLength(value, min, max, errorsDetails?)` | `FromStringLenght(value, min, max)` |
-| `IntMoreThan`, `IntLessThan` | `ByIntLength(value, lenght, errorsDetails?)` | `FromIntLenght(value, lenght)` |
-| `IntBetween` | `ByIntLength(value, min, max, errorsDetails?)` | `FromIntLenght(value, min, max)` |
+| `StringMinLength`, `StringMaxLength` | `ByStringLength(value, length, errorsDetails?)` | `FromStringLength(value, length)` |
+| `StringBetweenLength` | `ByStringLength(value, min, max, errorsDetails?)` | `FromStringLength(value, min, max)` |
+| `IntMoreThan`, `IntLessThan` | `ByIntLength(value, length, errorsDetails?)` | `FromIntLength(value, length)` |
+| `IntBetween` | `ByIntLength(value, min, max, errorsDetails?)` | `FromIntLength(value, min, max)` |
 | `IntNotNegative`, `Age`, `IdLite` | `ByInt(value, errorsDetails?)` | `FromInt(value)` |
 | `DecimalMoreThan`, `DecimalLessThan` | `ByDecimalLength(value, length, errorsDetails?)` | `FromDecimalLength(value, length)` |
 | `DecimalBetween` | `ByDecimalLength(value, min, max, errorsDetails?)` | `FromDecimalLength(value, min, max)` |
@@ -127,7 +127,7 @@ El nombre del método `By…` depende del tipo primitivo de origen. Merece la pe
 | `StringAsInt`, `StringAsLong`, … | `ByString(value)` *(sin `errorsDetails`)* | `FromString(value)` |
 | `Empty`, `Void` | — | `Create()` |
 
-> ⚠️ Ojo con los nombres: `Id` usa **`Bydouble` / `Fromdouble`** en minúscula (así está en el código fuente), y `FromIntLenght` / `FromStringLenght` llevan la errata *"Lenght"*. Son los nombres reales, hay que escribirlos tal cual.
+> ⚠️ Ojo con los nombres: `Id` usa **`Bydouble` / `Fromdouble`** en minúscula (así está en el código fuente), y `FromIntLength` / `FromStringLength` llevan la errata *"Lenght"*. Son los nombres reales, hay que escribirlos tal cual.
 
 ### Personalizar el mensaje de error
 
@@ -286,8 +286,8 @@ public static MlResult<Mail> ByString(string value, MlErrorsDetails errorsDetail
 | `StringMinLength` | `value.Length >= length` | Mínimo **inclusivo** |
 | `StringMaxLength` | `value.Length < length` | Máximo **exclusivo** ⚠️ |
 | `StringBetweenLength` | `Length > min && Length < max` | **Ambos extremos exclusivos** ⚠️ |
-| `Key` | `StringMinLength` con `MinLenght = 1` | Claves de caché, identificadores textuales |
-| `Name` | `StringMinLength` con `MinLenght = 3` | Nombres de persona, etiquetas |
+| `Key` | `StringMinLength` con `MinLength = 1` | Claves de caché, identificadores textuales |
+| `Name` | `StringMinLength` con `MinLength = 3` | Nombres de persona, etiquetas |
 | `RegexValue` | `Regex.IsMatch(value, pattern)` | Expone `Pattern`; base de `Mail` y `Endpoint` |
 | `Mail` | Patrón `^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$` | Constante pública `Mail.EndpointPattern` |
 | `Endpoint` | Patrón `^https://[A-Za-z0-9.-]+(?::[1-9][0-9]{0,4})?$` | **Solo `https`**, host + puerto opcional, **sin ruta** |
@@ -367,9 +367,9 @@ Los tipos paramétricos (`MoreThan`, `LessThan`, `Between`, `MinLength`…) no p
 
 ```csharp
 IntMoreThan          positivo = (value: 5,        length: 0);
-IntBetween           nota     = (value: 7,        minLenght: 0,  maxLenght: 11);
+IntBetween           nota     = (value: 7,        minLength: 0,  maxLength: 11);
 StringMinLength      titulo   = (value: "Hola",   length: 3);
-StringBetweenLength  alias    = (value: "pepe",   minLenght: 2,  maxLenght: 20);
+StringBetweenLength  alias    = (value: "pepe",   minLength: 2,  maxLength: 20);
 RegexValue           codigo   = (value: "AB-123", pattern: @"^[A-Z]{2}-\d{3}$");
 ```
 
@@ -418,7 +418,7 @@ Lo mismo con `IntBetween`: para el rango 1..10 inclusive hay que pedir `(value, 
 ### 4. `StringBetweenLength.BuildErrorMessage` invierte los límites en el texto
 
 ```csharp
-=> $"{value} must be between {maxLenght} and {minLenght}";   // ← max primero
+=> $"{value} must be between {maxLength} and {minLength}";   // ← max primero
 ```
 
 El mensaje dirá *"must be between 20 and 2"*. Si el mensaje se muestra al usuario, **pasa tu propio `errorsDetails`**.
@@ -426,7 +426,7 @@ El mensaje dirá *"must be between 20 and 2"*. Si el mensaje se muestra al usuar
 ### 5. `Key.IsValid` y `Name.IsValid` ignoran el parámetro `length`
 
 ```csharp
-public static new bool IsValid(string value, int length) => StringMinLength.IsValid(value, MinLenght);
+public static new bool IsValid(string value, int length) => StringMinLength.IsValid(value, MinLength);
 ```
 
 Pasan su constante interna (`1` para `Key`, `3` para `Name`) y descartan lo que le pases. Es coherente con el propósito del tipo, pero la firma engaña: **el segundo argumento no tiene efecto**.

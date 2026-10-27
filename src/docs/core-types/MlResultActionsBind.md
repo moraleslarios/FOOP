@@ -54,9 +54,9 @@ MlResult<T> → (T → MlResult<TReturn>) → MlResult<TReturn>
 | `BindAlways` | 2 | Ejecuta la función **siempre**, ignorando el estado del origen (válido o fallido). |
 | `BindAlwaysAsync` | 4 + 8 | Versiones asíncronas de las dos formas de `BindAlways`. |
 | `TryBindAlways` / `TryBindAlwaysAsync` | 4 / 16 | Idem con captura de excepciones. |
-| `BindSaveValueInDetailsIfFaildFuncResult` | 1 | Si la función encadenada falla, guarda el **valor de entrada** en `Details["Value"]`. |
-| `BindSaveValueInDetailsIfFaildFuncResultAsync` | 4 | Versiones asíncronas. |
-| `TryBindSaveValueInDetailsIfFaildFuncResult` / `...Async` | 2 / 8 | Idem con captura de excepciones. |
+| `BindSaveValueInDetailsIfFailedFuncResult` | 1 | Si la función encadenada falla, guarda el **valor de entrada** en `Details["Value"]`. |
+| `BindSaveValueInDetailsIfFailedFuncResultAsync` | 4 | Versiones asíncronas. |
+| `TryBindSaveValueInDetailsIfFailedFuncResult` / `...Async` | 2 / 8 | Idem con captura de excepciones. |
 | `TryBindBuild` | 3 | Construye una instancia de `TResult` invocando **N funciones** que producen cada argumento del constructor. |
 | `TryBindBuildSyncAsync` / `TryBindBuildAsync` | 6 / 3 | Versiones asíncronas de `TryBindBuild`. |
 | `TryBindBuildWhile` | 3 | Como `TryBindBuild`, pero **corta en el primer fallo** (`breakInError = true`). |
@@ -144,13 +144,13 @@ MlResult<Customer> result = customerResult.BindMulti(
     c => ValidateAddress(c));
 ```
 
-### `BindSaveValueInDetailsIfFaildFuncResult`: conservar la entrada del fallo
+### `BindSaveValueInDetailsIfFailedFuncResult`: conservar la entrada del fallo
 
 Muy útil para diagnóstico: si el paso encadenado falla, el valor que se le pasó queda guardado en `Details["Value"]`.
 
 ```csharp
 MlResult<PaymentReceipt> result = orderResult
-    .BindSaveValueInDetailsIfFaildFuncResult(order => paymentGateway.Charge(order));
+    .BindSaveValueInDetailsIfFailedFuncResult(order => paymentGateway.Charge(order));
 
 // Más adelante, al tratar el error:
 result.ExecSelfIfFailWithValue<PaymentReceipt, Order>(
@@ -256,4 +256,4 @@ Existen sobrecargas para tuplas de 2, 3, 4 y más elementos, y sus equivalentes 
 - [`BindIfFailWithException`](../Bind/8_BindIfFailWithException.md)
 - [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md)
 - [`BindAlways`](../Bind/10_BindAlways.md)
-- [`BindSaveValueInDetailsIfFaildFuncResultAsync`](../Bind/11_BindSaveValueInDetailsIfFaildFuncResultAsync.md)
+- [`BindSaveValueInDetailsIfFailedFuncResultAsync`](../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md)

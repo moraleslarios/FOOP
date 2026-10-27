@@ -56,7 +56,7 @@ public static MlResult<TReturn> BindMulti<T, TReturn>(this   MlResult<T>        
         valid: value  => value.ToMlResultValid()
                               .Map(x => funcs.Select(func => func(value)).ToList())
                               .Bind(resultData => resultData.Any(x => x.IsFail)
-                                                     ? resultData.FusionFailErros().SecureFailErrorsDetails()
+                                                     ? resultData.MergeFailureErrors().SecureFailErrorsDetails()
                                                      : returnFunc(value)));
 ```
 
@@ -65,7 +65,7 @@ Los tres pasos, en orden:
 1. **Si `source` es fallido**, no se ejecuta nada y los errores se propagan tal cual.
 2. **Si es válido**, se ejecutan **todas** las funciones de `funcs` sobre el mismo `value`
    (`funcs.Select(func => func(value)).ToList()` — el `ToList()` fuerza la evaluación completa).
-3. Si **alguna** falló, se llama a [`FusionFailErros()`](../core-types/MlResultBucles.md) para reunir todos
+3. Si **alguna** falló, se llama a [`MergeFailureErrors()`](../core-types/MlResultBucles.md) para reunir todos
    los errores en uno solo. Si **ninguna** falló, se ejecuta `returnFunc(value)`.
 
 | Estado de entrada | Resultado de `funcs` | ¿Se ejecuta `returnFunc`? | Resultado final |
@@ -321,7 +321,7 @@ ensuciar cada validador.
 ## Resumen
 
 - `BindMulti` ejecuta **todas** las funciones que le pasas sobre el mismo valor y **acumula** sus
-  errores con `FusionFailErros()`.
+  errores con `MergeFailureErrors()`.
 - `returnFunc` solo se ejecuta **si ninguna** de las funciones falló.
 - Si `source` ya venía fallido, no se ejecuta absolutamente nada.
 - Tres formas: `returnFunc` con solo el valor, con el valor **y** los resultados, o con un tipo
@@ -334,7 +334,7 @@ ensuciar cada validador.
 
 - [`3_Bind.md`](3_Bind.md) — el encadenamiento con cortocircuito.
 - [`5_BindIf.md`](5_BindIf.md) — ejecución condicional de un único paso.
-- [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md) — `FusionFailErros` y `FusionErrosIfExists`, la fusión de errores en detalle.
+- [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md) — `MergeFailureErrors` y `MergeErrorsIfExists`, la fusión de errores en detalle.
 - [`../Several/4_Combine.md`](../Several/4_Combine.md) — combinar varios resultados en una tupla.
 - [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — referencia con todas las sobrecargas.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — construir validaciones concisas.

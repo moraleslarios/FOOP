@@ -8,7 +8,7 @@ public class IntLessThanTests
 {
 
     [Fact]
-    public void IntLessThan_ValueLessThanLenght_ReturnsValid()
+    public void IntLessThan_ValueLessThanLength_ReturnsValid()
     {
         var value     = 5;
         var minLenght = 8;
@@ -19,7 +19,7 @@ public class IntLessThanTests
     }
 
     [Fact]
-    public void IntLessThan_ValueLessThanLenght_ReturnsFail()
+    public void IntLessThan_ValueLessThanLength_ReturnsFail()
     {
         var value     = 5;
         var minLenght = 2;

@@ -386,14 +386,14 @@ RuleFor(x => x.Email).NotEmpty().WithMessage("El campo {PropertyName} es obligat
 
 ### Ejemplo 3 — Validar una colección acumulando todos los errores
 
-Las extensiones solo trabajan con un objeto. Para una colección, combina con [`FusionErrosIfExists`](../docs/loops/Bucles.md):
+Las extensiones solo trabajan con un objeto. Para una colección, combina con [`MergeErrorsIfExists`](../docs/loops/Bucles.md):
 
 ```csharp
 public static MlResult<IEnumerable<FilaCsv>> ValidarFichero(List<FilaCsv> filas)
     => filas.Select((fila, i) =>
                 fila.ValidateWitHFluentValidations<FilaCsv, FilaCsvValidator>()
                     .AddMlErrorDetailIfFail("fila", i + 2))     // +2: cabecera + base 1
-            .FusionErrosIfExists();
+            .MergeErrorsIfExists();
 ```
 
 > 💡 `AddMlErrorDetailIfFail` guarda el índice en `Details`, así los logs sí saben qué fila falló aunque el mensaje no lo diga. Recupéralo con `ToDetailsDescription()`.
@@ -539,7 +539,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 | Lo mismo dentro de una cadena `async` | `…Async<T, TValidator>()` |
 | Que el consumidor no sepa qué motor uso | `MlValidableFp<T>.Validate()` delegando en la extensión |
 | Comprobar antes que el objeto no es nulo | `EnsureFp.NotNull(dto, "…").Bind(d => d.ValidateWitH…)` |
-| Validar una lista acumulando errores | `Select(...).AddMlErrorDetailIfFail("fila", i)` + `FusionErrosIfExists()` |
+| Validar una lista acumulando errores | `Select(...).AddMlErrorDetailIfFail("fila", i)` + `MergeErrorsIfExists()` |
 | Validador con dependencias del contenedor | Resolverlo por DI + conversión manual (Ejemplo 6) |
 | Reglas asíncronas (`MustAsync`) | `await validador.ValidateAsync(dto)` + conversión manual (Ejemplo 7) |
 | Validar cientos de miles de objetos | Un validador reutilizado + conversión manual |
@@ -603,4 +603,4 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` y `TryMap` — transformar el valor válido](../docs/Map/1_Map.md)
 - [`Match` — convertir el resultado en respuesta](../docs/Match/1_Match.md)
-- [`FusionErrosIfExists` y bucles funcionales](../docs/loops/Bucles.md)
+- [`MergeErrorsIfExists` y bucles funcionales](../docs/loops/Bucles.md)

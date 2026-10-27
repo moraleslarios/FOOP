@@ -1489,16 +1489,16 @@ Fíjate en que la clave del diccionario es **el elemento original**, no un índi
 
 > Requisito: el tipo `T` de la colección debe ser `notnull`, porque se usa como clave del diccionario. Los elementos nulos de la colección de origen se descartan.
 
-### `FusionFailErros` y `FusionErrosIfExists`
+### `MergeFailureErrors` y `MergeErrorsIfExists`
 
 Estos dos métodos trabajan sobre una colección que **ya es** `IEnumerable<MlResult<T>>` —es decir, cuando tú mismo has generado los resultados y sólo necesitas consolidarlos en uno. Son las piezas que usan internamente los métodos `Projection*`, pero resultan muy útiles por separado.
 
 | Método | Si hay fallos | Si no hay fallos |
 |--------|---------------|------------------|
-| `FusionFailErros` | devuelve `fail` con **todos** los errores fusionados | (se usa sabiendo que hay fallos) |
-| `FusionErrosIfExists` | devuelve `fail` con **todos** los errores fusionados | devuelve `valid` con **todos** los valores |
+| `MergeFailureErrors` | devuelve `fail` con **todos** los errores fusionados | (se usa sabiendo que hay fallos) |
+| `MergeErrorsIfExists` | devuelve `fail` con **todos** los errores fusionados | devuelve `valid` con **todos** los valores |
 
-`FusionErrosIfExists` es el que se usa habitualmente en código de aplicación, porque cubre los dos casos:
+`MergeErrorsIfExists` es el que se usa habitualmente en código de aplicación, porque cubre los dos casos:
 
 ```csharp
 var results = new[]
@@ -1508,7 +1508,7 @@ var results = new[]
     MlResult<int>.Fail("error 2")
 };
 
-var merged = results.FusionErrosIfExists();
+var merged = results.MergeErrorsIfExists();
 // → fail con "error 1" y "error 2" fusionados en un único MlErrorsDetails.
 ```
 
@@ -1529,14 +1529,14 @@ public MlResult<Pedido> ValidarPedido(Pedido pedido)
     }
     .Select(r => r.Map(_ => pedido));                 // homogeneizamos el tipo a MlResult<Pedido>
 
-    return validaciones.FusionErrosIfExists()         // MlResult<IEnumerable<Pedido>>
+    return validaciones.MergeErrorsIfExists()         // MlResult<IEnumerable<Pedido>>
                        .Map(_ => pedido);             // volvemos al pedido original
 }
 
 // Si falla el cliente y el total, el error contiene los dos mensajes, no sólo el primero.
 ```
 
-Y una nota práctica sobre la elección entre familias: cuando las validaciones **se aplican al mismo objeto**, `BindMulti` (sección 4) suele ser más directo; `FusionErrosIfExists` brilla cuando los resultados **provienen de sitios distintos** (varias consultas, varios servicios, un bucle propio) y hay que consolidarlos.
+Y una nota práctica sobre la elección entre familias: cuando las validaciones **se aplican al mismo objeto**, `BindMulti` (sección 4) suele ser más directo; `MergeErrorsIfExists` brilla cuando los resultados **provienen de sitios distintos** (varias consultas, varios servicios, un bucle propio) y hay que consolidarlos.
 
 ### Guía rápida de decisión
 
@@ -1553,11 +1553,11 @@ var c = await skus.ProjectionParallelAsync(ConsultarPrecioAsync);
 // Tolerante: guarda lo bueno, informa de lo malo → ProjectionSplit
 var d = registros.ProjectionSplit(Convertir);
 
-// Consolidar resultados que ya tengo → FusionErrosIfExists
-var e = resultadosSueltos.FusionErrosIfExists();
+// Consolidar resultados que ya tengo → MergeErrorsIfExists
+var e = resultadosSueltos.MergeErrorsIfExists();
 ```
 
-Todas las variantes disponen de su versión `*Async` (`ProjectionAsync`, `ProjectionWhileAsync`, `ProjectionSplitAsync`, `FusionFailErrosAsync`, `FusionErrosIfExistsAsync`) y aceptan tanto una colección síncrona como un `Task<IEnumerable<T>>` de entrada, de modo que encajan sin fricción en cualquier punto de una cadena asíncrona.
+Todas las variantes disponen de su versión `*Async` (`ProjectionAsync`, `ProjectionWhileAsync`, `ProjectionSplitAsync`, `MergeFailureErrorsAsync`, `MergeErrorsIfExistsAsync`) y aceptan tanto una colección síncrona como un `Task<IEnumerable<T>>` de entrada, de modo que encajan sin fricción en cualquier punto de una cadena asíncrona.
 
 ---
 
@@ -1795,7 +1795,7 @@ Esta tabla resume, en una sola vista, la decisión que hay que tomar en cada pun
 | Procesar una colección parando al primer fallo | `MlResultBucles` | `ProjectionWhile` |
 | Procesar una colección con I/O en paralelo | `MlResultBucles` | `ProjectionParallelAsync` |
 | Procesar una colección tolerante a fallos parciales | `MlResultBucles` | `ProjectionSplit` |
-| Consolidar resultados ya obtenidos | `MlResultBucles` | `FusionErrosIfExists` |
+| Consolidar resultados ya obtenidos | `MlResultBucles` | `MergeErrorsIfExists` |
 | Reutilizar delegados o métodos existentes | `MlResultTransformations` | `ToMlResult`, `TryToMlResultAsync` |
 | Cerrar el flujo y devolver una respuesta | `Match` | `Match`, `MatchAsync` |
 
@@ -1844,7 +1844,7 @@ filosofía, convención de nombres y el
   [`8_BindIfFailWithException`](../docs/Bind/8_BindIfFailWithException.md) ·
   [`9_BindIfFailWithoutException`](../docs/Bind/9_BindIfFailWithoutException.md)
 - [`10_BindAlways`](../docs/Bind/10_BindAlways.md) ·
-  [`11_BindSaveValueInDetails…`](../docs/Bind/11_BindSaveValueInDetailsIfFaildFuncResultAsync.md)
+  [`11_BindSaveValueInDetails…`](../docs/Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md)
 
 **`Map` — transformar el valor sin salir del carril**
 

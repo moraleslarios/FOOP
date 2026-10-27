@@ -597,10 +597,10 @@ public class MlResultBuclesTests
     #region FusionFailErros
 
 
-    // Comprobación de la incidencia reportada: "FusionFailErros pierde errores por un return que falta".
+    // Comprobación de la incidencia reportada: "MergeFailureErrors pierde errores por un return que falta".
     // Este test PASA: la fusión de 3 fallos devuelve los 3 mensajes. El return final SÍ existe.
     [Fact]
-    public void FusionFailErros_when_source_has_3_fails_return_fail_with_the_3_errorMessages()
+    public void MergeFailureErrors_when_source_has_3_fails_return_fail_with_the_3_errorMessages()
     {
         IEnumerable<MlResult<int>> source =
         [
@@ -609,7 +609,7 @@ public class MlResultBuclesTests
             "Error 3".ToMlResultFail<int>()
         ];
 
-        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+        MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
         result.IsFail.Should().BeTrue();
         result.SecureFailErrorsDetails()
@@ -620,7 +620,7 @@ public class MlResultBuclesTests
 
     // Sólo se fusionan los elementos en fallo, los válidos se ignoran.
     [Fact]
-    public void FusionFailErros_when_source_has_validsAndFails_return_fail_onlyWith_failsErrorMessages()
+    public void MergeFailureErrors_when_source_has_validsAndFails_return_fail_onlyWith_failsErrorMessages()
     {
         IEnumerable<MlResult<int>> source =
         [
@@ -630,7 +630,7 @@ public class MlResultBuclesTests
             "Error 4".ToMlResultFail<int>()
         ];
 
-        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+        MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
         result.IsFail.Should().BeTrue();
         result.SecureFailErrorsDetails()
@@ -644,27 +644,27 @@ public class MlResultBuclesTests
     // ahora SÍ devuelve el fallo, por lo que no se llega a partialResult.First()
     // y no se lanza InvalidOperationException.
     [Fact]
-    public void FusionFailErros_when_source_hasNoFails_notThrows_and_return_fail()
+    public void MergeFailureErrors_when_source_hasNoFails_notThrows_and_return_fail()
     {
         IEnumerable<MlResult<int>> source = [1.ToMlResultValid(), 2.ToMlResultValid()];
 
-        Action act = () => source.FusionFailErros();
+        Action act = () => source.MergeFailureErrors();
 
         act.Should().NotThrow();
-        source.FusionFailErros().IsFail.Should().BeTrue();
+        source.MergeFailureErrors().IsFail.Should().BeTrue();
     }
 
 
     [Fact]
-    public void FusionFailErros_when_source_isEmpty_notThrows_and_return_fail_with_noElementsMessage()
+    public void MergeFailureErrors_when_source_isEmpty_notThrows_and_return_fail_with_noElementsMessage()
     {
         IEnumerable<MlResult<int>> source = [];
 
-        Action act = () => source.FusionFailErros();
+        Action act = () => source.MergeFailureErrors();
 
         act.Should().NotThrow();
 
-        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+        MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
         result.IsFail.Should().BeTrue();
         result.SecureFailErrorsDetails()
@@ -675,11 +675,11 @@ public class MlResultBuclesTests
 
     // Comportamiento correcto tras el arreglo del return que faltaba.
     [Fact]
-    public void FusionFailErros_when_source_hasNoFails_should_return_fail_with_noElementsMessage()
+    public void MergeFailureErrors_when_source_hasNoFails_should_return_fail_with_noElementsMessage()
     {
         IEnumerable<MlResult<int>> source = [1.ToMlResultValid(), 2.ToMlResultValid()];
 
-        MlResult<IEnumerable<int>> result = source.FusionFailErros();
+        MlResult<IEnumerable<int>> result = source.MergeFailureErrors();
 
         result.IsFail.Should().BeTrue();
         result.SecureFailErrorsDetails()
