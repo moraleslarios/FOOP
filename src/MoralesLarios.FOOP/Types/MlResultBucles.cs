@@ -704,6 +704,74 @@ public static class MlResultBucles
 
 
 
+
+    public static MlResult<(IEnumerable<ProyectSplitValidInfo<TKey, TResult>> valids, IEnumerable<ProyectSplitFailInfo<TKey>> fails)> ProjectionSplitPlus<TKey, TResult>(this IEnumerable<TKey> source,
+                                                                                                                                                                              Func<TKey, MlResult<TResult>> completeFuncTransform)
+        where TKey : notnull
+    {
+        var result = EnsureFp.NotNull(completeFuncTransform, "completeFuncTransform cannot be null")
+                                .Map(x =>
+                                {
+                                    var partialData = source.Where(z => z is not null)
+                                                            .Select(z => (z, completeFuncTransform(z))).ToList();
+                                    var partialResult = (valids: partialData.Where(x => x.Item2.IsValid)
+                                                                            .Select(x => new ProyectSplitValidInfo<TKey, TResult>(x.Item1, x.Item2.SecureValidValue())),
+                                                         fails: partialData.Where(x => x.Item2.IsFail)
+                                                                            .Select(x => new ProyectSplitFailInfo<TKey>(x.Item1, x.Item2.SecureFailErrorsDetails())));
+                                    return partialResult;
+                                });
+        return result;
+    }
+
+
+    public static Task<MlResult<(IEnumerable<ProyectSplitValidInfo<TKey, TResult>> valids, IEnumerable<ProyectSplitFailInfo<TKey>> fails)>> ProjectionSplitPlusAsync<TKey, TResult>(this IEnumerable<TKey>             source,
+                                                                                                                                                                                         Func<TKey, MlResult<TResult>> completeFuncTransform)
+        where TKey : notnull
+        => source.ProjectionSplitPlus(completeFuncTransform).ToAsync();
+
+
+    public static async Task<MlResult<(IEnumerable<ProyectSplitValidInfo<TKey, TResult>> valids, IEnumerable<ProyectSplitFailInfo<TKey>> fails)>> ProjectionSplitPlusAsync<TKey, TResult>(this Task<IEnumerable<TKey>>       sourceAsync,
+                                                                                                                                                                                               Func<TKey, MlResult<TResult>> completeFuncTransform)
+        where TKey : notnull
+        => await (await sourceAsync).ProjectionSplitPlusAsync(completeFuncTransform);
+
+
+    public static Task<MlResult<(IEnumerable<ProyectSplitValidInfo<TKey, TResult>> valids, IEnumerable<ProyectSplitFailInfo<TKey>> fails)>> ProjectionSplitPlusAsync<TKey, TResult>(this IEnumerable<TKey>                   source,
+                                                                                                                                                                                         Func<TKey, Task<MlResult<TResult>>> completeFuncTransformAsync)
+        where TKey : notnull
+    {
+        var result = EnsureFp.NotNull(completeFuncTransformAsync, "completeFuncTransformAsync cannot be null")
+                            .MapAsync(async x =>
+                            {
+                                var partialData = new List<(TKey item, MlResult<TResult> result)>();
+
+                                foreach (var item in source.Where(z => z is not null))
+                                {
+                                    var funcResult = await completeFuncTransformAsync(item);
+                                    partialData.Add((item, funcResult));
+                                }
+
+                                var partialResult = (valids: partialData.Where(x => x.result.IsValid)
+                                                                        .Select(x => new ProyectSplitValidInfo<TKey, TResult>(x.item, x.result.SecureValidValue())),
+                                                     fails: partialData.Where(x => x.result.IsFail)
+                                                                        .Select(x => new ProyectSplitFailInfo<TKey>(x.item, x.result.SecureFailErrorsDetails())));
+
+                                return partialResult;
+                            });
+        return result;
+    }
+
+
+    public static async Task<MlResult<(IEnumerable<ProyectSplitValidInfo<TKey, TResult>> valids, IEnumerable<ProyectSplitFailInfo<TKey>> fails)>> ProjectionSplitPlusAsync<TKey, TResult>(this Task<IEnumerable<TKey>>             sourceAsync,
+                                                                                                                                                                                               Func<TKey, Task<MlResult<TResult>>> completeFuncTransformAsync)
+        where TKey : notnull
+        => await (await sourceAsync).ProjectionSplitPlusAsync(completeFuncTransformAsync);
+
+
+
+
+
+
     public static MlResult<IEnumerable<T>> FusionFailErros<T>(this IEnumerable<MlResult<T>> source)
     {
         var partialResult = source.Where(x => x.IsFail).ToList();
@@ -770,3 +838,7 @@ public static class MlResultBucles
 
 }
 
+
+public record ProyectSplitValidInfo<TKey, TResult>(TKey Key, TResult Value);
+
+public record ProyectSplitFailInfo<TKey>(TKey Key, MlErrorsDetails Errors);

@@ -426,6 +426,174 @@ public class MlResultBuclesTests
     }
 
 
+
+
+    [Fact]
+    public void ProjectionSplitPlus_when_completeFuncTransform_isNull_return_fail()
+    {
+        List<string> colec = ["uno", "dos", "tres"];
+
+        Func<string, MlResult<int>> completeFuncTransform = null!;
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
+
+        result.IsFail.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ProjectionSplitPlus_when_sourceContainsElmentsNull_thisElements_NotEvaluated_return_valid_withoutthisElements()
+    {
+        List<string> colec = ["uno", null!, "tres"];
+
+        Func<string, MlResult<int>> completeFuncTransform = x => x.Length.ToMlResultValid<int>();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
+
+        result.IsValid.Should().BeTrue();
+
+        result.SecureValidValue().valids.Count().Should().Be(2);
+    }
+
+    [Fact]
+    public void ProjectionSplitPlus_when_allSourceValues_completeFuncTransform_areValid_return_valid_with_allElements()
+    {
+        List<string> colec = ["uno", "dos", "tres"];
+
+        Func<string, MlResult<int>> completeFuncTransform = x => x.Length.ToMlResultValid<int>();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
+
+        result.IsValid.Should().BeTrue();
+
+        result.SecureValidValue().valids.Count().Should().Be(3);
+        result.SecureValidValue().fails .Count().Should().Be(0);
+    }
+
+    [Fact]
+    public void ProjectionSplitPlus_when_allSourceValues_completeFuncTransform_areFail_return_valid_with_allElements()
+    {
+        List<string> colec = ["uno", "dos", "tres"];
+
+        Func<string, MlResult<int>> completeFuncTransform = x => $"Error {x}".ToMlResultFail<int>();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = colec.ProjectionSplitPlus(completeFuncTransform);
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(0);
+        result.SecureValidValue().fails .Count().Should().Be(3);
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_source_when_allSourceValues_completeFuncTransform_areValid_return_valid_with_allElements()
+    {
+        List<string> colec = ["uno", "dos", "tres"];
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colec.ProjectionSplitPlusAsync(x => x.Length.ToMlResultValid<int>());
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(3);
+        result.SecureValidValue().fails.Count().Should().Be(0);
+        result.SecureValidValue().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
+        result.SecureValidValue().valids.Single(x => x.Key == "dos").Value.Should().Be(3);
+        result.SecureValidValue().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_source_when_allSourceValues_completeFuncTransform_areFail_return_valid_with_allFails()
+    {
+        List<string> colec = ["uno", "dos", "tres"];
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colec.ProjectionSplitPlusAsync(x => $"Error {x}".ToMlResultFail<int>());
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(0);
+        result.SecureValidValue().fails.Count().Should().Be(3);
+        result.SecureValidValue().fails.Single(x => x.Key == "uno").Errors.ToString().Should().Contain("Error uno");
+        result.SecureValidValue().fails.Single(x => x.Key == "dos").Errors.ToString().Should().Contain("Error dos");
+        result.SecureValidValue().fails.Single(x => x.Key == "tres").Errors.ToString().Should().Contain("Error tres");
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_sourceAsync_syncTransform_when_allSourceValues_areValid_return_valid_with_allElements()
+    {
+        Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres"]).ToAsync();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => x.Length.ToMlResultValid<int>());
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(3);
+        result.SecureValidValue().fails.Count().Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_sourceAsync_asyncTransform_when_allSourceValues_areValid_return_valid_with_allElements()
+    {
+        Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres"]).ToAsync();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => Task.FromResult(x.Length.ToMlResultValid<int>()));
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(3);
+        result.SecureValidValue().fails.Count().Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_sourceAsync_asyncTransform_when_allSourceValues_areFail_return_valid_with_allFails()
+    {
+        Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres"]).ToAsync();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => Task.FromResult($"Error {x}".ToMlResultFail<int>()));
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(0);
+        result.SecureValidValue().fails.Count().Should().Be(3);
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_sourceAsync_when_sourceContainsElementsNull_theseElements_NotEvaluated_return_valid_withoutThoseElements()
+    {
+        Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", null!, "tres"]).ToAsync();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => x.Length.ToMlResultValid<int>());
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(2);
+        result.SecureValidValue().fails.Count().Should().Be(0);
+        result.SecureValidValue().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
+        result.SecureValidValue().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_sourceAsync_syncTransform_when_mixedValidAndFail_return_valid_with_splitValues()
+    {
+        Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres", "cuatro"]).ToAsync();
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(x => x == "dos" || x == "cuatro"
+            ? $"Error {x}".ToMlResultFail<int>()
+            : x.Length.ToMlResultValid<int>());
+
+        result.IsValid.Should().BeTrue();
+        result.SecureValidValue().valids.Count().Should().Be(2);
+        result.SecureValidValue().fails.Count().Should().Be(2);
+        result.SecureValidValue().valids.Single(x => x.Key == "uno").Value.Should().Be(3);
+        result.SecureValidValue().valids.Single(x => x.Key == "tres").Value.Should().Be(4);
+        result.SecureValidValue().fails.Single(x => x.Key == "dos").Errors.ToString().Should().Contain("Error dos");
+        result.SecureValidValue().fails.Single(x => x.Key == "cuatro").Errors.ToString().Should().Contain("Error cuatro");
+    }
+
+    [Fact]
+    public async Task ProjectionSplitPlusAsync_sourceAsync_asyncTransform_when_transformIsNull_return_fail()
+    {
+        Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres"]).ToAsync();
+
+        Func<string, Task<MlResult<int>>> completeFuncTransformAsync = null!;
+
+        MlResult<(IEnumerable<ProyectSplitValidInfo<string, int>> valids, IEnumerable<ProyectSplitFailInfo<string>> fails)> result = await colecAsync.ProjectionSplitPlusAsync(completeFuncTransformAsync);
+
+        result.IsFail.Should().BeTrue();
+    }
+
+
     #region FusionFailErros
 
 
