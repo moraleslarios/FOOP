@@ -6,7 +6,7 @@ namespace MoralesLarios.OOFP.ValueObjects;
 
 public partial class DoubleNonNegative : DoubleMoreThan
 {
-    public static double MinAllowedValue { get; private set; } =  0;
+    private const double MinAllowedValue = 0;
 
     protected DoubleNonNegative(double value) : base(value, MinAllowedValue - 1)
     {

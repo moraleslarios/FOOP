@@ -159,9 +159,9 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                                             .CombineAll(request))
                                     .ExecSelfIfValidAsync(tuple    => _logger.LogMlResultInformationAsync($"Haciendo Delete a la url {Path.Combine(tuple.Item1.BaseAddress?.ToString() ?? string.Empty, url ?? string.Empty)}"))
                                     .TryMapAsync         (tuple    => tuple.Item1.SendAsync(tuple.Item2, ct))
-                                    .BindAsync           (response => response.IsSuccessStatusCode
+                                    .BindAsync           (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : response.ToResponseErrorsDescription().ToMlResultFail<HttpResponseMessage>())
+                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync         ( _       => EmptyValue.Create())
                                             .MyMethodFinalLogAsync(_logger, $"{nameof(DeleteByIdAsync)}<{typeof(T).Name}");
 
@@ -199,9 +199,9 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                                     client.BaseAddress?.ToString()!,
                                                                                     url))
                                     .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
-                                    .BindAsync           (response => response.IsSuccessStatusCode
+                                    .BindAsync           (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : response.ToResponseErrorsDescription().ToMlResultFail<HttpResponseMessage>())
+                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     //.ExecSelfIfValidAsync(actionValid: response => response.Dispose())
                                     .TryMapAsync(response => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: ct))
                                             .MyMethodFinalLogAsync(_logger, $"{nameof(InternalHttpActionAsync)}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
@@ -217,9 +217,9 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
 
                                     .TryMapAsync( _       => client.PostAsJsonAsync(parameters.Url, parameters.RequestBody, parameters.CancellationToken))
-                                    .BindAsync  (response => response.IsSuccessStatusCode
+                                    .BindAsync  (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : response.ToResponseErrorsDescription().ToMlResultFail<HttpResponseMessage>())
+                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync(response => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: parameters.CancellationToken))
                                             .MyMethodFinalLogAsync(_logger, $"{methodName}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
         return result;
@@ -235,9 +235,9 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                     .TryMapAsync         ( _       => _httpClientFactory.CreateClient(clientName))
                                     .ExecSelfIfValidAsync(client   => _logger.LogMlResultInformationAsync($"Haciendo post a la url {Path.Combine(client.BaseAddress?.ToString() ?? string.Empty, url ?? string.Empty)}"))
                                     .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
-                                    .BindAsync           (response => response.IsSuccessStatusCode
+                                    .BindAsync           (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : response.ToResponseErrorsDescription().ToMlResultFail<HttpResponseMessage>())
+                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync         (response => response.Content.ReadFromJsonAsync<T>(cancellationToken: ct))
                                             .MyMethodFinalLogAsync(_logger, $"{nameof(PostAsync)}<{typeof(T).Name}");
 
@@ -254,9 +254,9 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                     .TryMapAsync         ( _       => _httpClientFactory.CreateClient(clientName))
                                     .ExecSelfIfValidAsync(client   => _logger.LogMlResultInformationAsync($"Haciendo {action} a la url {Path.Combine(client.BaseAddress?.ToString() ?? string.Empty, url ?? string.Empty)}"))
                                     .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
-                                    .BindAsync           (response => response.IsSuccessStatusCode
+                                    .BindAsync           (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : response.ToResponseErrorsDescription().ToMlResultFail<HttpResponseMessage>())
+                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .MapAsync            ( _       => EmptyValue.Create().ToAsync())
                                             .MyMethodFinalLogAsync(_logger, $"{nameof(ActionEmptyAsync)}<{typeof(T).Name}");
 

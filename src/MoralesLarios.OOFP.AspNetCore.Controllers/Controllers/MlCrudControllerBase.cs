@@ -5,7 +5,7 @@
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.Controllers;
 
 [ApiController]
-public class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TDto> _genServiceFp) : ControllerBase
+public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TDto> _genServiceFp) : ControllerBase
     where TEntity : class
     where TDto    : class
 {
@@ -98,7 +98,7 @@ public class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TD
 
 
 [ApiController]
-public class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp) : ControllerBase
+public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp) : ControllerBase
     where TEntity   : class
     where TRequest  : class
     where TResponse : class

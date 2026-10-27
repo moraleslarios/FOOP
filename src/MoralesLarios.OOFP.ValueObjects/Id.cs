@@ -8,7 +8,7 @@ public class Id : DoubleMoreThan
 {
 	private static double Limit => 0;
 
-	public Id(double value) : base(value, Limit)
+	protected Id(double value) : base(value, Limit)
 	{
 		if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), BuildErrorMessage(value));
 	}

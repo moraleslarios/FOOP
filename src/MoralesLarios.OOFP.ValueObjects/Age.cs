@@ -8,7 +8,7 @@ public partial class Age : IntMoreThan
 {
     private static int Limit => -1;
 
-    public Age(int value) : base(value, Limit)
+    protected Age(int value) : base(value, Limit)
     {
         if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), FormatErrorMessage(value));
     }

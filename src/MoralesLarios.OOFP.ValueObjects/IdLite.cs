@@ -8,7 +8,7 @@ public partial class IdLite : IntMoreThan
 {
     private static int Limit => 0;
 
-    public IdLite(int value) : base(value, Limit)
+    protected IdLite(int value) : base(value, Limit)
     {
         if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), BuildErrorMessIdLite(value));
     }

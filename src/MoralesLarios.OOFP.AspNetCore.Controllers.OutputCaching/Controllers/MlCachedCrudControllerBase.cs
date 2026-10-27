@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers;
 
-public class MlCachedCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
+public abstract class MlCachedCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
                                                              IOutputCacheStore            _outputCacheStore)
         : MlCrudControllerBase<TEntity, TDto, TPk>(_genServiceFp)
     where TEntity : class
@@ -79,7 +79,7 @@ public class MlCachedCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEnti
 
 
 
-public class MlCachedCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+public abstract class MlCachedCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
                                                                             IOutputCacheStore                           _outputCacheStore)
         : MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(_genServiceFp)
     where TEntity   : class

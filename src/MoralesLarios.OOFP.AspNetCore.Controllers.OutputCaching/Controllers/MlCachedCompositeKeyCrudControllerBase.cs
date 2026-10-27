@@ -2,7 +2,7 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers;
 
-public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
+public abstract class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
                                                                Func<TEntity, object[]>      _keySelector,
                                                                IOutputCacheStore            _outputCacheStore)
         : MlCompositeKeyCrudControllerBase<TEntity, TDto>(_genServiceFp, _keySelector)
@@ -77,7 +77,7 @@ public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceF
 
 
 
-public class MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+public abstract class MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
                                                                               Func<TEntity, object[]>                     _keySelector,
                                                                               IOutputCacheStore                           _outputCacheStore)
         : MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _keySelector)

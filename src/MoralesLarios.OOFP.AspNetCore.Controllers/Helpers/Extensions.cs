@@ -76,9 +76,7 @@ public static partial class Extensions
     {
         DateTime result = DateTime.MinValue;
 
-        if (DateTime.TryParse(value, out result)) return result;
-
-        var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+        if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) return result;
 
         string[] formats = {"M/d/yyyy h:mm:ss tt", "M/d/yyyy h:mm tt",
                                 "MM/dd/yyyy hh:mm:ss", "M/d/yyyy h:mm:ss",
@@ -87,8 +85,8 @@ public static partial class Extensions
                                 "MM/dd/yyyy hh:mm", "M/dd/yyyy hh:mm",
                                 "yyyyMMdd", "MMddyyyy", "dd/MM/yyyy", "ddMMyyyy"};
 
-        if (DateTime.TryParseExact(value, formats, culture, DateTimeStyles.None, out result)) return result;
-            
+        if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) return result;
+
         throw new FormatException(string.Format("The type {0} is not supported", typeof(DateTime)));
     }
 

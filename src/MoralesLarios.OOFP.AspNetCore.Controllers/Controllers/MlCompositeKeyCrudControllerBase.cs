@@ -1,7 +1,7 @@
 ﻿namespace MoralesLarios.OOFP.AspNetCore.Controllers.Controllers;
 
 [ApiController]
-public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
+public abstract class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
                                                             Func<TEntity, object[]>      _keySelector) : ControllerBase
         where TEntity : class
         where TDto    : class
@@ -159,7 +159,7 @@ public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEnt
 
 
 [ApiController]
-public class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+public abstract class MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
                                                                            Func<TEntity, object[]>                     _keySelector) : ControllerBase
         where TEntity   : class
         where TRequest  : class

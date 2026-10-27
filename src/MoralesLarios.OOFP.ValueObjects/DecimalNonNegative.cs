@@ -6,7 +6,7 @@ namespace MoralesLarios.OOFP.ValueObjects;
 
 public partial class DecimalNonNegative : DecimalMoreThan
 {
-    public static decimal MinAllowedValue { get; private set; } =  0m;
+    private const decimal MinAllowedValue = 0m;
 
     protected DecimalNonNegative(decimal value) : base(value, MinAllowedValue - 1)
     {
