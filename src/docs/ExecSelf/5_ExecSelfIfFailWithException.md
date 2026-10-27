@@ -23,21 +23,21 @@ En una tubería de `MlResult<T>` conviven dos clases de fallo muy distintas:
 | **Técnico** | Una excepción capturada | `SqlException`, `TimeoutException` | `LogError` con *stack trace*, alerta, métrica |
 
 `ExecSelfIfFailWithException` ejecuta una acción **solo cuando el fallo es técnico**, es decir, cuando
-hay una excepción guardada en `MlErrorsDetails.Details` bajo la clave convencional `"Ex"`
+hay una excepción guardada en `MlErrorDetails.Metadata` bajo la clave convencional `"Ex"`
 (`Constants.ExceptionMetadataKey`), y te la entrega ya tipada como `Exception`:
 
 ```csharp
 resultado.ExecSelfIfFailWithException((errores, ex) =>
-    _log.LogError(ex, "Fallo técnico: {E}", errores.ToErrorsDescription()));
+    _log.LogError(ex, "Fallo técnico: {E}", errores.GetErrorsSummary()));
 ```
 
 Si el resultado es válido, o es fallido pero **sin** excepción, la acción **no se ejecuta** y el
 resultado se propaga intacto. Su complemento exacto es
 [`ExecSelfIfFailWithoutException`](6_ExecSelfIfFailWithoutException.md).
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** las propiedades `Exception`, `HasException`,
-> `AllErrors`, `FirstErrorMessage` ni `HasValue`. La excepción se obtiene con `GetDetailException()`
+> `AllErrors`, `FirstErrorMessage` ni `HasValue`. La excepción se obtiene con `GetException()`
 > —que devuelve `MlResult<Exception>`— o directamente a través de esta familia de métodos.
 
 ---
@@ -51,7 +51,7 @@ capturar una excepción.
 | --- | --- |
 | `TryBind`, `TryMap`, `TryMatch`, `TryExecSelf*`… | La excepción capturada en `Details["Ex"]` |
 | `MlResult.Fail<T>(mensaje, exception)` | Idem, de forma explícita |
-| `MlErrorsDetails.FromErrorMessageWithException(mensaje, ex)` | Idem |
+| `MlErrorDetails.FromErrorMessageWithException(mensaje, ex)` | Idem |
 | `AppendExDetails(this Dictionary<string, object>, Exception)` | Añade `Ex`, y si ya existe, `Ex2`, `Ex3`… |
 
 Es decir: si en tu tubería hay un `TryBindAsync` y salta una `SqlException`, el fallo resultante ya
@@ -68,7 +68,7 @@ var resultado = ObtenerCliente(id)
 
 > 📌 Cuando se acumulan varias excepciones, las claves son `Ex`, `Ex2`, `Ex3`… Esta familia trabaja
 > con la principal (`"Ex"`). Para obtener una de un tipo concreto usa
-> `errores.GetDetailException<SqlException>()`.
+> `errores.GetException<SqlException>()`.
 
 ---
 
@@ -78,17 +78,17 @@ var resultado = ObtenerCliente(id)
 // Síncrono
 public static MlResult<T> ExecSelfIfFailWithException<T>(
         this MlResult<T>                    source,
-        Action<MlErrorsDetails, Exception>  actionFailWithException)
+        Action<MlErrorDetails, Exception>  actionFailWithException)
 
 // Con captura de excepciones en el propio efecto secundario
 public static MlResult<T> TryExecSelfIfFailWithException<T>(
         this MlResult<T>                    source,
-        Action<MlErrorsDetails, Exception>  actionFailWithException,
+        Action<MlErrorDetails, Exception>  actionFailWithException,
         Func<Exception, string>             errorMessageBuilder)
 
 public static MlResult<T> TryExecSelfIfFailWithException<T>(
         this MlResult<T>                    source,
-        Action<MlErrorsDetails, Exception>  actionFailWithException,
+        Action<MlErrorDetails, Exception>  actionFailWithException,
         string                              exceptionAditionalMessage = null!)
 ```
 
@@ -109,10 +109,10 @@ genérico: el tipo de la excepción es siempre `Exception`.
 
 | Fuente | Delegado | Método |
 | --- | --- | --- |
-| `MlResult<T>` | `Action<MlErrorsDetails, Exception>` | `ExecSelfIfFailWithException` |
-| `MlResult<T>` | `Func<MlErrorsDetails, Exception, Task>` | `ExecSelfIfFailWithExceptionAsync` |
-| `Task<MlResult<T>>` | `Action<MlErrorsDetails, Exception>` | `ExecSelfIfFailWithExceptionAsync` |
-| `Task<MlResult<T>>` | `Func<MlErrorsDetails, Exception, Task>` | `ExecSelfIfFailWithExceptionAsync` |
+| `MlResult<T>` | `Action<MlErrorDetails, Exception>` | `ExecSelfIfFailWithException` |
+| `MlResult<T>` | `Func<MlErrorDetails, Exception, Task>` | `ExecSelfIfFailWithExceptionAsync` |
+| `Task<MlResult<T>>` | `Action<MlErrorDetails, Exception>` | `ExecSelfIfFailWithExceptionAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorDetails, Exception, Task>` | `ExecSelfIfFailWithExceptionAsync` |
 
 Y las 8 sobrecargas de `TryExecSelfIfFailWithExceptionAsync` (4 combinaciones × 2 formas de indicar
 el mensaje de error).
@@ -156,7 +156,7 @@ public class ServicioPedidos
             .ExecSelfIfFailWithoutExceptionAsync(errores =>
             {
                 _log.LogWarning("Pedido {Id} no confirmable: {E}",
-                                pedidoId, errores.ToErrorsDescription());
+                                pedidoId, errores.GetErrorsSummary());
                 _metricas.Incrementar("pedidos.rechazado_negocio");
                 return Task.CompletedTask;
             });
@@ -215,7 +215,7 @@ public async Task<IActionResult> Confirmar(Guid id)
         .MatchAsync(
             valid: p       => Task.FromResult<IActionResult>(Ok(p)),
             fail:  errores => Task.FromResult<IActionResult>(
-                errores.GetDetailException().Match(
+                errores.GetException().Match(
                     valid: ex => ex switch
                     {
                         TimeoutException            => StatusCode(504, "El servicio tardó demasiado"),
@@ -224,7 +224,7 @@ public async Task<IActionResult> Confirmar(Guid id)
                         _                           => StatusCode(500, "Error interno")
                     },
                     // Sin excepción → es un fallo de negocio: 400 con los mensajes.
-                    fail: _ => BadRequest(errores.ToErrorsMessages()))));
+                    fail: _ => BadRequest(errores.GetErrorMessages()))));
 }
 ```
 
@@ -244,7 +244,7 @@ public Task<MlResult<Informe>> GenerarAsync(Peticion peticion)
                 TipoExcepcion = ex.GetType().FullName!,
                 Mensaje     = ex.Message,
                 Pila        = ex.StackTrace,
-                Contexto    = errores.ToDetailsDescription(),   // Todo el diccionario Details
+                Contexto    = errores.GetMetadataSummary(),   // Todo el diccionario Details
                 Momento     = DateTimeOffset.UtcNow
             }),
             ex => $"El informe falló y además no se pudo enviar la telemetría: {ex.Message}");
@@ -276,7 +276,7 @@ fallo el tratamiento que merece.
 
 Un `ValidationException` capturado por un `TryMap` acabará en `Details["Ex"]` aunque
 conceptualmente sea un fallo de negocio. Si necesitas más finura, filtra por tipo dentro del
-delegado o usa `GetDetailException<TConcreta>()`.
+delegado o usa `GetException<TConcreta>()`.
 
 ### 4. `Try*` solo cuando el fallo del efecto importe
 
@@ -295,13 +295,13 @@ Esta familia **observa**. Para recuperar según la excepción, usa
 
 | Método | Se ejecuta si… | El delegado recibe | ¿Cambia el resultado? |
 | --- | --- | --- | :---: |
-| `ExecSelfIfFail` | Es fallido (siempre) | `MlErrorsDetails` | No |
-| **`ExecSelfIfFailWithException`** | **Fallido y hay `Details["Ex"]`** | **`MlErrorsDetails`, `Exception`** | **No** |
-| `ExecSelfIfFailWithoutException` | Fallido y **sin** `Details["Ex"]` | `MlErrorsDetails` | No |
-| `ExecSelfIfFailWithValue` | Fallido y hay `Details["Value"]` | `MlErrorsDetails`, `TValue` | No |
-| `TryExecSelfIfFailWithException` | Fallido y hay excepción | `MlErrorsDetails`, `Exception` | Solo si el delegado lanza |
-| `MapIfFailWithException` | Fallido y hay excepción | `MlErrorsDetails`, `Exception` | **Sí**: devuelve un valor |
-| `BindIfFailWithException` | Fallido y hay excepción | `MlErrorsDetails`, `Exception` | **Sí**: devuelve otro `MlResult` |
+| `ExecSelfIfFail` | Es fallido (siempre) | `MlErrorDetails` | No |
+| **`ExecSelfIfFailWithException`** | **Fallido y hay `Details["Ex"]`** | **`MlErrorDetails`, `Exception`** | **No** |
+| `ExecSelfIfFailWithoutException` | Fallido y **sin** `Details["Ex"]` | `MlErrorDetails` | No |
+| `ExecSelfIfFailWithValue` | Fallido y hay `Details["Value"]` | `MlErrorDetails`, `TValue` | No |
+| `TryExecSelfIfFailWithException` | Fallido y hay excepción | `MlErrorDetails`, `Exception` | Solo si el delegado lanza |
+| `MapIfFailWithException` | Fallido y hay excepción | `MlErrorDetails`, `Exception` | **Sí**: devuelve un valor |
+| `BindIfFailWithException` | Fallido y hay excepción | `MlErrorDetails`, `Exception` | **Sí**: devuelve otro `MlResult` |
 
 ---
 
@@ -323,7 +323,7 @@ Esta familia **observa**. Para recuperar según la excepción, usa
 - [`3_ExecSelfIfFail.md`](3_ExecSelfIfFail.md) — efectos ante cualquier fallo.
 - [`4_ExecSelfIfFailWithValue.md`](4_ExecSelfIfFailWithValue.md) — el valor adjunto al fallo.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — el complemento exacto de este documento.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y las claves convencionales.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailException()`, `GetDetailException<T>()`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y las claves convencionales.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException()`, `GetException<T>()`.
 - [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia y recuento de sobrecargas.
 - [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) y [`../Map/6_MapIfFailWithException.md`](../Map/6_MapIfFailWithException.md) — cuando sí quieres recuperar.

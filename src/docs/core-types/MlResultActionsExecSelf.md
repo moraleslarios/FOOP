@@ -23,7 +23,7 @@ puedes insertar y quitar `ExecSelf` sin que el resto de la cadena cambie ni un t
 // Insertar trazas no altera el tipo ni el flujo:
 MlResult<Pedido> pedido = ObtenerPedido(id)
     .ExecSelfIfValid(p => _log.LogInformation("Pedido {Id} recuperado", p.Id))
-    .ExecSelfIfFail (e => _log.LogWarning("Fallo al recuperar el pedido {Id}: {Errores}", id, e.ToErrorsDescription()));
+    .ExecSelfIfFail (e => _log.LogWarning("Fallo al recuperar el pedido {Id}: {Errores}", id, e.GetErrorsSummary()));
 ```
 
 ---
@@ -41,7 +41,7 @@ MlResult<Pedido> pedido = ObtenerPedido(id)
 | `ExecSelfIfValid` | 1 | Solo si `IsSuccess`. Recibe el valor. |
 | `ExecSelfIfValidAsync` | 4 | Versiones asíncronas. |
 | `TryExecSelfIfValid` / `TryExecSelfIfValidAsync` | 2 / 8 | Idem con captura de excepciones. |
-| `ExecSelfIfFail` | 1 | Solo si `IsFailure`. Recibe el `MlErrorsDetails`. |
+| `ExecSelfIfFail` | 1 | Solo si `IsFailure`. Recibe el `MlErrorDetails`. |
 | `ExecSelfIfFailAsync` | 4 | Versiones asíncronas. |
 | `ExecSelfFailAsync` | 2 | Variante asíncrona con nombre abreviado (sin `If`). |
 | `TryExecSelfFail` | 2 | Versión síncrona con captura de excepciones. |
@@ -92,7 +92,7 @@ dos acciones del mismo aspecto:
 MlResult<Pedido> pedido = ProcesarPedido(comanda)
     .ExecSelf(actionValid: p => _log.LogInformation("Pedido {Id} procesado por {Total} €", p.Id, p.Total),
               actionFail : e => _log.LogError("Error procesando la comanda {Ref}: {Errores}",
-                                              comanda.Referencia, e.ToErrorsDescription()));
+                                              comanda.Referencia, e.GetErrorsSummary()));
 ```
 
 ### `ExecSelfAsync`: instrumentación asíncrona
@@ -100,7 +100,7 @@ MlResult<Pedido> pedido = ProcesarPedido(comanda)
 ```csharp
 MlResult<Pedido> pedido = await ProcesarPedidoAsync(comanda)
     .ExecSelfAsync(actionValidAsync: async p => await _metricas.IncrementarAsync("pedidos.ok", p.Total),
-                   actionFailAsync : async e => await _alertas.NotificarAsync("pedidos.error", e.ToErrorsMessages()));
+                   actionFailAsync : async e => await _alertas.NotificarAsync("pedidos.error", e.GetErrorMessages()));
 ```
 
 ### `ExecSelfIfValid` / `ExecSelfIfFail`: una sola rama
@@ -110,7 +110,7 @@ Cuando solo te interesa un lado, estas variantes son más legibles que pasar una
 ```csharp
 MlResult<Factura> factura = EmitirFactura(pedido)
     .ExecSelfIfValid(f => _cache.Invalidar($"facturas:{f.ClienteId}"))
-    .ExecSelfIfFail (e => _log.LogWarning("Factura no emitida: {Errores}", e.ToErrorsDescription()));
+    .ExecSelfIfFail (e => _log.LogWarning("Factura no emitida: {Errores}", e.GetErrorsSummary()));
 ```
 
 ### `ExecSelfIf`: efecto condicional sobre el valor
@@ -130,7 +130,7 @@ excepción se convierte en `Fail` y queda registrada en `Details["Ex"]`.
 
 ```csharp
 MlResult<Pedido> pedido = ProcesarPedido(comanda)
-    .TryExecSelfFail(actionFail         : e  => _ficheroAuditoria.Escribir(e.ToErrorsDescription()),
+    .TryExecSelfFail(actionFail         : e  => _ficheroAuditoria.Escribir(e.GetErrorsSummary()),
                      errorMessageBuilder: ex => $"No se pudo auditar el fallo del pedido: {ex.Message}");
 ```
 
@@ -186,7 +186,7 @@ public async Task<IActionResult> ConfirmarPedidoAsync(int pedidoId)
                               errorMessageBuilder: ex => $"Error al confirmar el pedido {pedidoId}: {ex.Message}")
         .ExecSelfIfValidAsync(async p => await _notificaciones.EnviarConfirmacionAsync(p))
         .MatchAsync          (valid: p       => Ok(new { p.Id, p.Estado }),
-                              fail : errores => BadRequest(errores.ToErrorsMessages()));
+                              fail : errores => BadRequest(errores.GetErrorMessages()));
 }
 ```
 
@@ -209,4 +209,4 @@ funcionando igual: la instrumentación es completamente ortogonal a la lógica.
 - [`MlResultActionsMap`](MlResultActionsMap.md) — transformar el valor válido.
 - [`MlResultActionsBind`](MlResultActionsBind.md) — encadenar operaciones que pueden fallar.
 - [`MlResultActionsMatch`](MlResultActionsMatch.md) — salir de la tubería.
-- [`MlErrorsDetails`](MlResultErrors.md) — el objeto de error que reciben las acciones `fail`.
+- [`MlErrorDetails`](MlResultErrors.md) — el objeto de error que reciben las acciones `fail`.

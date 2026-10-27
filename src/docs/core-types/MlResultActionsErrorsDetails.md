@@ -1,8 +1,8 @@
 # `MlResultActionsErrorsDetails` (`Types/MlResultActionsErrorsDetails.cs`)
 
-Extensiones para **leer y fusionar** el contenido del diccionario `Details` de un `MlErrorsDetails`.
+Extensiones para **leer y fusionar** el contenido del diccionario `Details` de un `MlErrorDetails`.
 
-Recuerda que `MlErrorsDetails` solo tiene dos propiedades, `Errors` y `Details`. Todo lo demás
+Recuerda que `MlErrorDetails` solo tiene dos propiedades, `Errors` y `Details`. Todo lo demás
 (excepciones, valores originales, metadatos) vive en `Details` bajo claves. Esta clase es la puerta de
 entrada **tipada y segura** a ese diccionario.
 
@@ -19,14 +19,14 @@ entrada **tipada y segura** a ese diccionario.
 
 | Método | Devuelve | Descripción |
 | --- | --- | --- |
-| `GetDetail<T>(this MlErrorsDetails, string key)` | `MlResult<T>` | Valor de una clave arbitraria, tipado. |
+| `GetDetail<T>(this MlErrorDetails, string key)` | `MlResult<T>` | Valor de una clave arbitraria, tipado. |
 | `GetDetailAsync<T>(...)` | `Task<MlResult<T>>` | Versión asíncrona. |
-| `GetDetailValue<T>(this MlErrorsDetails)` | `MlResult<T>` | Valor guardado bajo la clave convencional `"Value"`. |
-| `GetDetailValueAsync<T>(...)` (2) | `Task<MlResult<T>>` | Versiones asíncronas. |
-| `GetDetailException(this MlErrorsDetails)` | `MlResult<Exception>` | Excepción guardada bajo `"Ex"`. |
-| `GetDetailExceptionAsync(...)` (2) | `Task<MlResult<Exception>>` | Versiones asíncronas. |
-| `GetDetailException<T>(this MlErrorsDetails) where T : Exception` | `MlResult<T>` | Excepción **tipada**; falla si el tipo real no coincide. |
-| `GetDetailException<T>Async(...)` (2) | `Task<MlResult<T>>` | Versiones asíncronas. |
+| `GetMetadataValue<T>(this MlErrorDetails)` | `MlResult<T>` | Valor guardado bajo la clave convencional `"Value"`. |
+| `GetMetadataValueAsync<T>(...)` (2) | `Task<MlResult<T>>` | Versiones asíncronas. |
+| `GetException(this MlErrorDetails)` | `MlResult<Exception>` | Excepción guardada bajo `"Ex"`. |
+| `GetExceptionAsync(...)` (2) | `Task<MlResult<Exception>>` | Versiones asíncronas. |
+| `GetException<T>(this MlErrorDetails) where T : Exception` | `MlResult<T>` | Excepción **tipada**; falla si el tipo real no coincide. |
+| `GetException<T>Async(...)` (2) | `Task<MlResult<T>>` | Versiones asíncronas. |
 
 ### Escritura de detalles
 
@@ -62,33 +62,33 @@ Definidas en `Helpers/Constants.cs` y usadas por toda la librería:
 
 ## Ejemplo 1: distinguir error técnico de error de negocio
 
-`GetDetailException` es la forma canónica de saber **qué** excepción se produjo, no solo que se produjo:
+`GetException` es la forma canónica de saber **qué** excepción se produjo, no solo que se produjo:
 
 ```csharp
-public IActionResult TraducirError(MlErrorsDetails errores)
+public IActionResult TraducirError(MlErrorDetails errores)
 {
-    return errores.GetDetailException().Match(
+    return errores.GetException().Match(
         // Había una excepción: es un fallo técnico.
         valid: ex => ex switch
         {
-            TimeoutException        => StatusCode(504, new { errores = errores.ToErrorsMessages() }),
-            HttpRequestException    => StatusCode(502, new { errores = errores.ToErrorsMessages() }),
-            UnauthorizedAccessException => StatusCode(403, new { errores = errores.ToErrorsMessages() }),
-            _                       => StatusCode(500, new { errores = errores.ToErrorsMessages() })
+            TimeoutException        => StatusCode(504, new { errores = errores.GetErrorMessages() }),
+            HttpRequestException    => StatusCode(502, new { errores = errores.GetErrorMessages() }),
+            UnauthorizedAccessException => StatusCode(403, new { errores = errores.GetErrorMessages() }),
+            _                       => StatusCode(500, new { errores = errores.GetErrorMessages() })
         },
         // No había excepción: es un error de validación o de reglas de negocio.
-        fail: _ => BadRequest(new { errores = errores.ToErrorsMessages() }));
+        fail: _ => BadRequest(new { errores = errores.GetErrorMessages() }));
 }
 ```
 
-### Versión tipada: `GetDetailException<T>`
+### Versión tipada: `GetException<T>`
 
 Cuando solo te interesa **un** tipo concreto de excepción, la sobrecarga genérica evita el `switch` y
 falla limpiamente si la excepción es de otra clase:
 
 ```csharp
 // ¿Fue concretamente un timeout? Si fue otra cosa (o no hubo excepción), obtenemos Fail.
-MlResult<TimeoutException> timeout = errores.GetDetailException<TimeoutException>();
+MlResult<TimeoutException> timeout = errores.GetException<TimeoutException>();
 
 bool debeReintentar = timeout.IsSuccess;
 ```
@@ -109,10 +109,10 @@ public MlResult<ClienteImportado> Importar(LineaCsv linea)
           .Bind(GuardarCliente);
 
 // Más tarde, al construir el informe de errores:
-public string DescribirFallo(MlErrorsDetails errores)
-    => errores.GetDetailValue<LineaCsv>().Match(
-           valid: l => $"Línea {l.Numero}: {string.Join(';', l.Campos)} → {errores.ToErrorsDescription()}",
-           fail : _ => $"Error sin línea asociada → {errores.ToErrorsDescription()}");
+public string DescribirFallo(MlErrorDetails errores)
+    => errores.GetMetadataValue<LineaCsv>().Match(
+           valid: l => $"Línea {l.Numero}: {string.Join(';', l.Campos)} → {errores.GetErrorsSummary()}",
+           fail : _ => $"Error sin línea asociada → {errores.GetErrorsSummary()}");
 ```
 
 ---
@@ -192,18 +192,18 @@ public async Task<IActionResult> ProcesarPagoAsync(PagoDto dto)
         .ExecSelfIfFailAsync(errores =>
         {
             // 1) ¿Excepción técnica?
-            errores.GetDetailException().ExecSelfIfValid(ex =>
+            errores.GetException().ExecSelfIfValid(ex =>
                 _log.LogError(ex, "Fallo técnico procesando el pago"));
 
             // 2) ¿Tenemos el DTO original para reintentar?
-            errores.GetDetailValue<PagoDto>().ExecSelfIfValid(p =>
+            errores.GetMetadataValue<PagoDto>().ExecSelfIfValid(p =>
                 _colaReintentos.Encolar(p));
         })
         .MatchAsync(
             valid: recibo  => Ok(recibo),
-            fail : errores => errores.GetDetailException<TimeoutException>().IsSuccess
+            fail : errores => errores.GetException<TimeoutException>().IsSuccess
                                   ? Accepted(new { mensaje = "Pago encolado para reintento" })
-                                  : BadRequest(new { errores = errores.ToErrorsMessages() }));
+                                  : BadRequest(new { errores = errores.GetErrorMessages() }));
 }
 ```
 
@@ -211,7 +211,7 @@ public async Task<IActionResult> ProcesarPagoAsync(PagoDto dto)
 
 ## Ver también
 
-- [`MlResultErrors`](MlResultErrors.md) — `MlError`, `MlErrorsDetails` y `MlErrorsDetailsActions`.
+- [`MlResultErrors`](MlResultErrors.md) — `MlError`, `MlErrorDetails` y `MlErrorDetailsActions`.
 - [`MlResultActions`](MlResultActions.md) — `AddMlErrorDetailIfFail`, `AddValueDetailIfFail`.
 - [`MlResultActionsMap`](MlResultActionsMap.md) — `MapIfFailWithException`, `MapIfFailWithValue`.
 - [`MlResultActionsBind`](MlResultActionsBind.md) — `BindIfFailWithException`, `BindIfFailWithValue`.

@@ -8,7 +8,7 @@ public partial record MlResult
     public static MlResult<T> Valid<T>(T t) => new(t);
 
     public static MlResult<T> Fail<T>(params MlError[]            errors)        => new(errors);
-    public static MlResult<T> Fail<T>(       MlErrorsDetails      errorsDetails) => new(errorsDetails);
+    public static MlResult<T> Fail<T>(       MlErrorDetails      errorsDetails) => new(errorsDetails);
     public static MlResult<T> Fail<T>(       IEnumerable<MlError> errors       ) => new(errors);
 
     public static MlResult<T> Fail<T>(MlError              error                                         ) => new(error);
@@ -36,7 +36,7 @@ public partial record MlResult
 public partial record MlResult<T>
 {
     internal protected T               SuccessValue         { get; init; }
-    internal protected MlErrorsDetails FailureDetails { get; init; }
+    internal protected MlErrorDetails FailureDetails { get; init; }
 
     public bool IsSuccess { get; init; }
     public bool IsFailure => ! IsSuccess;
@@ -46,10 +46,10 @@ public partial record MlResult<T>
     public static MlResult<T> Discard => _ ;
 
 
-    internal MlResult(T                    t                                                        ) => (SuccessValue, FailureDetails, IsSuccess) = (t       , new MlErrorsDetails()                                    , true );
-    internal MlResult(MlErrorsDetails                                         errorsDetails         ) => (SuccessValue, FailureDetails, IsSuccess) = (default!, errorsDetails                                            , false);
-    internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorsDetails(errors, details)                     , false);
-    internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorsDetails(new List<MlError> { error }, details), false);
+    internal MlResult(T                    t                                                        ) => (SuccessValue, FailureDetails, IsSuccess) = (t       , new MlErrorDetails()                                    , true );
+    internal MlResult(MlErrorDetails                                         errorsDetails         ) => (SuccessValue, FailureDetails, IsSuccess) = (default!, errorsDetails                                            , false);
+    internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorDetails(errors, details)                     , false);
+    internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorDetails(new List<MlError> { error }, details), false);
 
 
 
@@ -57,7 +57,7 @@ public partial record MlResult<T>
 
     public static MlResult<T> Fail(params MlError[]            errors       ) => new(errors);
     public static MlResult<T> Fail(       IEnumerable<MlError> errors       ) => new(errors);
-    public static MlResult<T> Fail(       MlErrorsDetails      errorsDetails) => new(errorsDetails);
+    public static MlResult<T> Fail(       MlErrorDetails      errorsDetails) => new(errorsDetails);
     public static MlResult<T> Fail(       MlError              error        ) => new(error);
 
     public static MlResult<T> Fail(IEnumerable<MlError> errors, Dictionary<string, object> details    ) => new(errors, details);
@@ -72,7 +72,7 @@ public partial record MlResult<T>
 
     public static Task<MlResult<T>> FailAsync(params MlError[]            errors       ) => MlResult<T>.Fail(errors       ).ToAsync();
     public static Task<MlResult<T>> FailAsync(       IEnumerable<MlError> errors       ) => MlResult<T>.Fail(errors       ).ToAsync();
-    public static Task<MlResult<T>> FailAsync(       MlErrorsDetails      errorsDetails) => MlResult<T>.Fail(errorsDetails).ToAsync();
+    public static Task<MlResult<T>> FailAsync(       MlErrorDetails      errorsDetails) => MlResult<T>.Fail(errorsDetails).ToAsync();
     public static Task<MlResult<T>> FailAsync(       MlError              error        ) => MlResult<T>.Fail(error        ).ToAsync();
 
     public static Task<MlResult<T>> FailAsync(IEnumerable<MlError> errors, Dictionary<string, object> details    ) => MlResult<T>.Fail(errors, details).ToAsync();
@@ -88,7 +88,7 @@ public partial record MlResult<T>
 
     public static implicit operator MlResult<T>(T t) => Valid(t);
 
-    public static implicit operator MlResult<T>(MlErrorsDetails errorsDetails) => Fail(errorsDetails);
+    public static implicit operator MlResult<T>(MlErrorDetails errorsDetails) => Fail(errorsDetails);
 
     public static implicit operator MlResult<T>(List<MlError> errors) => Fail(errors.AsEnumerable());
     public static implicit operator MlResult<T>(MlError[]     errors) => Fail(errors);

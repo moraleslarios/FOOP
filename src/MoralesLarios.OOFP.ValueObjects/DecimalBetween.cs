@@ -16,7 +16,7 @@ public class DecimalBetween : ValueObject<decimal>
 
     public static DecimalBetween FromDecimalLength(decimal value, decimal minLength, decimal maxLength) => new DecimalBetween(value, minLength, maxLength);
 
-    public static MlResult<DecimalBetween> ByDecimalLength(decimal value, decimal minLength, decimal maxLength, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<DecimalBetween> ByDecimalLength(decimal value, decimal minLength, decimal maxLength, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                    .Bind( _ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? BuildErrorMessage(value, minLength, maxLength)))
                    .Map ( _ => new DecimalBetween(value, minLength, maxLength));

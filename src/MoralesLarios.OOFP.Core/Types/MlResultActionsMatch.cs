@@ -11,34 +11,34 @@ public static class MlResultActionsMatch
 
     public static TReturn Match<T, TReturn>(this MlResult<T>                    source,
                                                  Func<T              , TReturn> valid,
-                                                 Func<MlErrorsDetails, TReturn> fail)
+                                                 Func<MlErrorDetails, TReturn> fail)
         => source.IsSuccess ? valid(source.SuccessValue) : fail(source.FailureDetails);
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                          source,
                                                                   Func<T              , Task<TReturn>> validAsync,
-                                                                  Func<MlErrorsDetails, Task<TReturn>> failAsync)
+                                                                  Func<MlErrorDetails, Task<TReturn>> failAsync)
         => source.IsSuccess ? await validAsync(source.SuccessValue) : await failAsync(source.FailureDetails);
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                          source,
                                                                   Func<T              ,      TReturn>  valid,
-                                                                  Func<MlErrorsDetails, Task<TReturn>> failAsync)
+                                                                  Func<MlErrorDetails, Task<TReturn>> failAsync)
         => source.IsSuccess ? valid(source.SuccessValue) : await failAsync(source.FailureDetails);
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                          source,
                                                                   Func<T              , Task<TReturn>> validAsync,
-                                                                  Func<MlErrorsDetails,      TReturn>  fail)
+                                                                  Func<MlErrorDetails,      TReturn>  fail)
         => source.IsSuccess ? await validAsync(source.SuccessValue) : fail(source.FailureDetails);
 
     public static Task<TReturn> MatchAsync<T, TReturn>(this MlResult<T>                    source,
                                                             Func<T              , TReturn> valid,
-                                                            Func<MlErrorsDetails, TReturn> fail)
+                                                            Func<MlErrorDetails, TReturn> fail)
         => source.Match(valid, fail).ToAsync();
 
 
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                   Func<T              , Task<TReturn>> validAsync,
-                                                                  Func<MlErrorsDetails, Task<TReturn>> failAsync)
+                                                                  Func<MlErrorDetails, Task<TReturn>> failAsync)
     {
         var partialResult = (await sourceAsync);
 
@@ -49,7 +49,7 @@ public static class MlResultActionsMatch
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                   Func<T              ,      TReturn>  valid,
-                                                                  Func<MlErrorsDetails, Task<TReturn>> failAsync)
+                                                                  Func<MlErrorDetails, Task<TReturn>> failAsync)
     {
         var partialResult = (await sourceAsync);
 
@@ -60,7 +60,7 @@ public static class MlResultActionsMatch
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                   Func<T              , Task<TReturn>> validAsync,
-                                                                  Func<MlErrorsDetails,      TReturn>  fail)
+                                                                  Func<MlErrorDetails,      TReturn>  fail)
     {
         var partialResult = (await sourceAsync);
 
@@ -71,7 +71,7 @@ public static class MlResultActionsMatch
 
     public static async Task<TReturn> MatchAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                   Func<T              , TReturn> valid,
-                                                                  Func<MlErrorsDetails, TReturn> fail)
+                                                                  Func<MlErrorDetails, TReturn> fail)
         => (await sourceAsync).Match(valid, fail);
 
 
@@ -89,7 +89,7 @@ public static class MlResultActionsMatch
 
     public static MlResult<TResult> TryMatch<T, TResult>(this MlResult<T>                    source, 
                                                               Func<T,TResult>                valid,
-                                                              Func<MlErrorsDetails, TResult> fail,
+                                                              Func<MlErrorDetails, TResult> fail,
                                                               Func<Exception, string>        errorMessageBuilder)
         => source.Match(valid: value        => valid.TryToMlResult(value       , errorMessageBuilder),
                         fail : errorDetails => fail .TryToMlResult(errorDetails, errorMessageBuilder));
@@ -97,7 +97,7 @@ public static class MlResultActionsMatch
 
     public static MlResult<TResult> TryMatch<T, TResult>(this MlResult<T>                    source, 
                                                               Func<T,TResult>                valid,
-                                                              Func<MlErrorsDetails, TResult> fail,
+                                                              Func<MlErrorDetails, TResult> fail,
                                                               string                         errorMessage = null!)
         => source.TryMatch(valid, fail, _ => errorMessage);
 
@@ -105,14 +105,14 @@ public static class MlResultActionsMatch
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                          source, 
                                                                          Func<T,Task<TResult>>                validAsync,
-                                                                         Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                         Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                          Func<Exception, string>              errorMessageBuilder)
         => source.MatchAsync(validAsync: value        => validAsync.TryToMlResultAsync(value       , errorMessageBuilder),
                              failAsync : errorDetails => failAsync .TryToMlResultAsync(errorDetails, errorMessageBuilder));
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                          source, 
                                                                          Func<T,Task<TResult>>                validAsync,
-                                                                         Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                         Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                          string                               errorMessage = null!)
         => source.TryMatchAsync(validAsync, failAsync, _ => errorMessage);
 
@@ -121,7 +121,7 @@ public static class MlResultActionsMatch
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                    source, 
                                                                          Func<T,Task<TResult>>          validAsync,
-                                                                         Func<MlErrorsDetails, TResult> fail,
+                                                                         Func<MlErrorDetails, TResult> fail,
                                                                          Func<Exception, string>        errorMessageBuilder)
         => source.MatchAsync(validAsync: value        => validAsync.TryToMlResultAsync(value       , errorMessageBuilder),
                              failAsync : errorDetails => fail      .TryToMlResult     (errorDetails, errorMessageBuilder).ToAsync());
@@ -129,33 +129,33 @@ public static class MlResultActionsMatch
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                    source, 
                                                                          Func<T,Task<TResult>>          validAsync,
-                                                                         Func<MlErrorsDetails, TResult> fail,
+                                                                         Func<MlErrorDetails, TResult> fail,
                                                                          string                         errorMessage = null!)
         => source.TryMatchAsync(validAsync, fail, _ => errorMessage);
 
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                          source, 
                                                                          Func<T,TResult>                      valid,
-                                                                         Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                         Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                          Func<Exception, string>              errorMessageBuilder)
         => source.MatchAsync(validAsync: value        => valid     .TryToMlResult     (value       , errorMessageBuilder).ToAsync(),
                              failAsync : errorDetails => failAsync .TryToMlResultAsync(errorDetails, errorMessageBuilder));
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                          source, 
                                                                          Func<T,TResult>                      valid,
-                                                                         Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                         Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                          string                               errorMessage = null!)
         => source.TryMatchAsync(valid, failAsync, _ => errorMessage);
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>              source,
                                                                          Func<T, TResult>         valid,
-                                                                         Func<MlErrorsDetails, TResult> fail,
+                                                                         Func<MlErrorDetails, TResult> fail,
                                                                          Func<Exception, string>  errorMessageBuilder)
         => source.TryMatch(valid, fail, errorMessageBuilder).ToAsync();
 
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>              source,
                                                                          Func<T, TResult>         valid,
-                                                                         Func<MlErrorsDetails, TResult> fail,
+                                                                         Func<MlErrorDetails, TResult> fail,
                                                                          string                    errorMessage = null!)
         => source.TryMatchAsync(valid, fail, _ => errorMessage);
 
@@ -164,49 +164,49 @@ public static class MlResultActionsMatch
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>                    sourceAsync, 
                                                                                Func<T,Task<TResult>>                validAsync,
-                                                                               Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                               Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                                Func<Exception, string>              errorMessageBuilder)
         => await (await sourceAsync).TryMatchAsync(validAsync, failAsync, errorMessageBuilder);
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>                    sourceAsync, 
                                                                                Func<T,Task<TResult>>                validAsync,
-                                                                               Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                               Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                                string                               errorMessage = null!)
         => await (await sourceAsync).TryMatchAsync(validAsync, failAsync, errorMessage);
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>              sourceAsync, 
                                                                                Func<T,Task<TResult>>          validAsync,
-                                                                               Func<MlErrorsDetails, TResult> fail,
+                                                                               Func<MlErrorDetails, TResult> fail,
                                                                                Func<Exception, string>        errorMessageBuilder)
         => await (await sourceAsync).TryMatchAsync(validAsync, fail, errorMessageBuilder);
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>              sourceAsync, 
                                                                                Func<T,Task<TResult>>          validAsync,
-                                                                               Func<MlErrorsDetails, TResult> fail,
+                                                                               Func<MlErrorDetails, TResult> fail,
                                                                                string                         errorMessage = null!)
         => await (await sourceAsync).TryMatchAsync(validAsync, fail, errorMessage);
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>                    sourceAsync,
                                                                                Func<T, TResult>                     valid,
-                                                                               Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                               Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                                Func<Exception, string>              errorMessageBuilder)
         => await (await sourceAsync).TryMatchAsync(valid, failAsync, errorMessageBuilder);
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>                    sourceAsync,
                                                                                Func<T, TResult>                     valid,
-                                                                               Func<MlErrorsDetails, Task<TResult>> failAsync,
+                                                                               Func<MlErrorDetails, Task<TResult>> failAsync,
                                                                                string                               errorMessage = null!)
         => await (await sourceAsync).TryMatchAsync(valid, failAsync, errorMessage);
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>              sourceAsync,
                                                                                Func<T, TResult>               valid,
-                                                                               Func<MlErrorsDetails, TResult> fail,
+                                                                               Func<MlErrorDetails, TResult> fail,
                                                                                Func<Exception, string>        errorMessageBuilder)
         => (await sourceAsync).TryMatch(valid, fail,errorMessageBuilder);
 
     public async static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this Task<MlResult<T>>              sourceAsync,
                                                                                Func<T, TResult>               valid,
-                                                                               Func<MlErrorsDetails, TResult> fail,
+                                                                               Func<MlErrorDetails, TResult> fail,
                                                                                string                         errorMessage = null!)
         => (await sourceAsync).TryMatch(valid, fail, errorMessage);
 

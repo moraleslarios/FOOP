@@ -17,7 +17,7 @@ public partial class StringBetweenLength : ValueObject<NotEmptyString>
 
     public static StringBetweenLength FromStringLength(string value, int minLength, int maxLength) => new StringBetweenLength(value, minLength, maxLength);
 
-    public static MlResult<StringBetweenLength> ByStringLength(string value, int minLength, int maxLength, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<StringBetweenLength> ByStringLength(string value, int minLength, int maxLength, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
                             .Bind( _ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? BuildErrorMessage(value, minLength, maxLength)))
                             .Map ( _ => new StringBetweenLength(value, minLength, maxLength));

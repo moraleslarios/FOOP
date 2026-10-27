@@ -36,7 +36,7 @@ var respuesta = resultado.BindAlways(
                     funcFailAlways : errores => ConstruirRespuestaError(errores));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`; para llegar al valor original, `GetDetailValue<T>()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`; para llegar al valor original, `GetMetadataValue<T>()`.
 
 ---
 
@@ -72,7 +72,7 @@ public static MlResult<TReturn> BindAlways<T, TReturn>(this MlResult<T>         
 // FORMA B
 public static MlResult<TResult> BindAlways<T, TResult>(this MlResult<T>                              source,
                                                             Func<T              , MlResult<TResult>> funcValidAlways,
-                                                            Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways)
+                                                            Func<MlErrorDetails, MlResult<TResult>> funcFailAlways)
     => source.Match(
             valid: funcValidAlways,
             fail : funcFailAlways);
@@ -98,7 +98,7 @@ La forma B, en cambio, es **exactamente `Match` con las dos ramas devolviendo `M
 // tanto si el refresco funcionó como si no.
 MlResult<int> elementosEnCache = RefrescarCache()
                                     .ExecSelfIfFail(e => _log.LogWarning("Refresco fallido: {E}",
-                                                                        e.ToErrorsMessages()))
+                                                                        e.GetErrorMessages()))
                                     .BindAlways(() => ContarElementosEnCache());
 ```
 
@@ -119,11 +119,11 @@ public MlResult<RespuestaApi> Procesar(SolicitudDto dto)
                                                         r.FechaProceso).ToMlResultValid(),
              funcFailAlways : errores => RespuestaApi.Error(
                                                 codigo  : ClasificarCodigo(errores),
-                                                mensajes: errores.ToErrorsMessages())
+                                                mensajes: errores.GetErrorMessages())
                                             .ToMlResultValid());
 
-private static string ClasificarCodigo(MlErrorsDetails errores)
-    => errores.GetDetailException()
+private static string ClasificarCodigo(MlErrorDetails errores)
+    => errores.GetException()
               .Match(valid: _ => "ERROR_TECNICO",
                      fail : _ => "ERROR_NEGOCIO");
 ```
@@ -160,7 +160,7 @@ var r = Procesar(dto).BindAlways(() => { _log.LogInformation("Fin"); return Unit
 // ✅ ExecSelf conserva el resultado
 var r = Procesar(dto).ExecSelf(
             actionValid: p => _log.LogInformation("Procesado {Id}", p.Id),
-            actionFail : e => _log.LogWarning("Fallo: {E}", e.ToErrorsMessages()));
+            actionFail : e => _log.LogWarning("Fallo: {E}", e.GetErrorMessages()));
 ```
 
 ---
@@ -203,7 +203,7 @@ public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T>      
                                                                string                  errorMessage = null!);
 ```
 
-Internamente usan `funcAlways.TryToMlResult(errorMessageBuilder)`, así que la excepción capturada queda en `Details["Ex"]` y podrás clasificarla después con `GetDetailException()`.
+Internamente usan `funcAlways.TryToMlResult(errorMessageBuilder)`, así que la excepción capturada queda en `Details["Ex"]` y podrás clasificarla después con `GetException()`.
 
 ```csharp
 var resumen = ProcesarLote(lineas)
@@ -250,17 +250,17 @@ public async Task<IActionResult> Crear([FromBody] PedidoDto dto)
             },
             funcFailAlwaysAsync: async errores =>
             {
-                await _auditoria.RegistrarAsync(errores.ToDetailsDescription());
+                await _auditoria.RegistrarAsync(errores.GetMetadataSummary());
 
-                IActionResult respuesta = errores.GetDetailException()
+                IActionResult respuesta = errores.GetException()
                     .Match(valid: _ => StatusCode(500, "Error interno"),
-                           fail : _ => BadRequest(errores.ToErrorsMessages()));
+                           fail : _ => BadRequest(errores.GetErrorMessages()));
 
                 return respuesta.ToMlResultValid();
             })
         .MatchAsync(
             valid: respuesta => respuesta,
-            fail : errores   => StatusCode(500, errores.ToErrorsDescription()));
+            fail : errores   => StatusCode(500, errores.GetErrorsSummary()));
 ```
 
 El `MatchAsync` final solo se dispara si alguna de las dos ramas de convergencia falló a su vez (por ejemplo, si el publicador de eventos devolvió un fallo).
@@ -289,7 +289,7 @@ public MlResult<ResumenLote> Ejecutar(int loteId)
                                                     Procesadas : 0,
                                                     Rechazadas : errores.Errors.Count(),
                                                     Completado : false,
-                                                    Incidencias: errores.ToErrorsMessages())
+                                                    Incidencias: errores.GetErrorMessages())
                                                 .ToMlResultValid());
 ```
 
@@ -306,7 +306,7 @@ public MlResult<EstadoSincronizacion> Sincronizar()
          .ExecSelf(
             actionValid: aplicados => _log.LogInformation("Aplicados {N} cambios", aplicados.Count),
             actionFail : errores   => _log.LogError("Sincronización fallida: {E}",
-                                                   errores.ToDetailsDescription()))
+                                                   errores.GetMetadataSummary()))
 
          // 2) Y solo entonces se descarta el resultado anterior a favor del estado real
          .TryBindAlways(() => _repo.LeerEstadoSincronizacion(),

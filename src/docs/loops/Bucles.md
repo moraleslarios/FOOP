@@ -33,10 +33,10 @@ MlResult<IEnumerable<Linea>> r = lineasCrudas.Projection(ValidarLinea);
 
 if (r.IsFailure)
     // Contiene los errores de todas las líneas defectuosas, no solo de la primera
-    _log.LogWarning(r.FailureDetails.ToErrorsDescription());
+    _log.LogWarning(r.FailureDetails.GetErrorsSummary());
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -119,7 +119,7 @@ var lineas = new[] { "10;ABC", "xx;DEF", "30;GHI", "yy;JKL" };
 var r = lineas.Projection((linea, i) => ParsearLinea(linea, i));
 
 // r.IsFailure == true, y ErrorsDetails contiene los errores de las líneas 2 Y 4
-Console.WriteLine(r.FailureDetails.ToErrorsDescription());
+Console.WriteLine(r.FailureDetails.GetErrorsSummary());
 // → "Línea 2: cantidad ilegible 'xx'" + "Línea 4: cantidad ilegible 'yy'"
 ```
 
@@ -274,7 +274,7 @@ var r = await articulos.ProjectionParallelAsync(async a =>
 ## `ProjectionSplit` — separar aciertos de fallos
 
 ```csharp
-public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>
+public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>
     ProjectionSplit<T, TResult>(this IEnumerable<T> source, Func<T, MlResult<TResult>> completeFuncTransform)
     where T : notnull
 {
@@ -307,7 +307,7 @@ var (procesados, rechazados) = r.GetValueOrThrow();
 _log.LogInformation("{Ok} procesados, {Ko} rechazados", procesados.Count, rechazados.Count);
 
 foreach (var (pedido, errores) in rechazados)
-    _log.LogWarning("Pedido {Id}: {Errores}", pedido.Id, errores.ToErrorsDescription());
+    _log.LogWarning("Pedido {Id}: {Errores}", pedido.Id, errores.GetErrorsSummary());
 
 await GuardarAsync(procesados.Values);   // ← guarda solo los buenos
 ```
@@ -386,7 +386,7 @@ public static MlResult<IEnumerable<T>> MergeErrorsIfExists<T>(this IEnumerable<M
     if (!partialResult.Any())
         return MlResult<IEnumerable<T>>.Valid(source.Select(x => x.GetValueOrThrow()));
 
-    MlErrorsDetails result = partialResult.First().FailureDetails;
+    MlErrorDetails result = partialResult.First().FailureDetails;
     foreach (var item in partialResult.Skip(1))
         result = result.Merge(item.FailureDetails);
 
@@ -408,7 +408,7 @@ public static MlResult<IEnumerable<T>> MergeFailureErrors<T>(this IEnumerable<Ml
     if (!partialResult.Any()) MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
     //                        ↑ ⚠️ FALTA EL 'return': el resultado se descarta
 
-    MlErrorsDetails result = partialResult.First().FailureDetails;   // ⚠️ lanza si está vacío
+    MlErrorDetails result = partialResult.First().FailureDetails;   // ⚠️ lanza si está vacío
     // …
 }
 ```
@@ -589,12 +589,12 @@ public class ProcesadorNominas
 
             foreach (var (clave, errores) in fallidas)
                 _log.LogWarning("Nómina de {Clave} no calculada: {Errores}",
-                                clave.Id, errores.ToErrorsDescription());
+                                clave.Id, errores.GetErrorsSummary());
 
             return new InformeNomina(
                 Calculadas: correctas.Values.ToList(),
                 Incidencias: fallidas.Select(f => new Incidencia(f.Key.Empleado.Nif,
-                                                                f.Value.ToErrorsMessages())).ToList());
+                                                                f.Value.GetErrorMessages())).ToList());
         });
     }
 }
@@ -719,7 +719,7 @@ var r = _db.Pedidos.Where(p => p.Abierto).ToList().Projection(Validar);
 
 - [`EmptyToFailed`](../Several/1_EmptyToFailed.md) — rechazar colecciones vacías antes de proyectar
 - [`Combine`](../Several/4_Combine.md) — ⚠️ **no** acumula errores, a diferencia de `Projection`
-- [`MlResultErrors`](../core-types/MlResultErrors.md) — `Merge`, `ToErrorsDescription`, `ToErrorsMessages`
+- [`MlResultErrors`](../core-types/MlResultErrors.md) — `Merge`, `GetErrorsSummary`, `GetErrorMessages`
 - [`Transformations`](../Transformations/Transformations.md) — `TryToMlResultAsync`, `GetValueOrThrow`
 - [`Bind`](../Bind/3_Bind.md) — el cortocircuito de un solo valor
 - [`Map`](../Map/1_Map.md) — transformación de un solo valor

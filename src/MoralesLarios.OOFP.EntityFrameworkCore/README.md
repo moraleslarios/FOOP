@@ -281,19 +281,19 @@ public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCon
 
 ```csharp
 MlResult<T>       TryFind      (params object[] pk);
-MlResult<T>       TryFind      (MlErrorsDetails notFoundErrorDetails, params object[] pk);
+MlResult<T>       TryFind      (MlErrorDetails notFoundErrorDetails, params object[] pk);
 Task<MlResult<T>> TryFindAsync (CancellationToken token = default, params object[] pk);
-Task<MlResult<T>> TryFindAsync (MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+Task<MlResult<T>> TryFindAsync (MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
 
 MlResult<T>       TryFirst     (Expression<Func<T, bool>> filter);
-MlResult<T>       TryFirst     (Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails);
+MlResult<T>       TryFirst     (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
 Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
-Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default);
+Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
 
 MlResult<T>       TryLast      (Expression<Func<T, bool>> filter);
-MlResult<T>       TryLast      (Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails);
+MlResult<T>       TryLast      (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
 Task<MlResult<T>> TryLastAsync (Expression<Func<T, bool>> filter, CancellationToken token = default);
-Task<MlResult<T>> TryLastAsync (Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default);
+Task<MlResult<T>> TryLastAsync (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
 
 MlResult<IEnumerable<T>>       TryGetData     (Expression<Func<T, bool>> filter);
 Task<MlResult<IEnumerable<T>>> TryGetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
@@ -312,7 +312,7 @@ Task<MlResult<IEnumerable<T>>> TryAllAsync    (CancellationToken token = default
 Implementación de `TryFind` (muestra el patrón completo):
 
 ```csharp
-public virtual MlResult<T> TryFind(MlErrorsDetails notFoundErrorDetails, params object[] pk)
+public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] pk)
     => EnsureFp.NotNull(pk, "The object array pk cannot be null")
                .TryMap (x => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
                .TryMap (x => _repoReader!.Find(pk))
@@ -355,17 +355,17 @@ Valida que el argumento no sea nulo y delega. **Cada llamada hace `SaveChanges` 
 ```csharp
 MlResult<T>                    TryUpdate          (T item);
 MlResult<T>                    TryUpdate          (T item, params object[] pk);
-MlResult<T>                    TryUpdate          (T item, MlErrorsDetails notFoundErrorDetails, params object[] pk);
+MlResult<T>                    TryUpdate          (T item, MlErrorDetails notFoundErrorDetails, params object[] pk);
 Task<MlResult<T>>              TryUpdateAsync     (T item, CancellationToken token = default);
 Task<MlResult<T>>              TryUpdateAsync     (T item, CancellationToken token = default, params object[] pk);
-Task<MlResult<T>>              TryUpdateAsync     (T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+Task<MlResult<T>>              TryUpdateAsync     (T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
 MlResult<IEnumerable<T>>       TryUpdateRange     (IEnumerable<T> items);
 Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 ```
 
 **Dos comportamientos distintos según pases `pk` o no:**
 ```csharp
-public MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, params object[] pk)
+public MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] pk)
     => EnsureFp.NotNull  (item, "The entity item to update cannot be null")
                .Bind  ( _  => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
                .Bind  ( pk => notFoundErrorDetails is null
@@ -385,10 +385,10 @@ public MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, param
 ```csharp
 MlResult<T>                    TryRemove          (T item);
 MlResult<T>                    TryRemove          (params object[] pk);
-MlResult<T>                    TryRemove          (MlErrorsDetails notFoundErrorDetails, params object[] pk);
+MlResult<T>                    TryRemove          (MlErrorDetails notFoundErrorDetails, params object[] pk);
 Task<MlResult<T>>              TryRemoveAsync     (T item, CancellationToken token = default);
 Task<MlResult<T>>              TryRemoveAsync     (CancellationToken token = default, params object[] pk);
-Task<MlResult<T>>              TryRemoveAsync     (MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+Task<MlResult<T>>              TryRemoveAsync     (MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
 MlResult<IEnumerable<T>>       TryRemoveRange     (IEnumerable<T> items);
 Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 ```
@@ -400,7 +400,7 @@ Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, Cancell
 .TryMap( bdItem => _internalRepoDeleter!.Remove(bdItem));   // ✅ borra la entidad de la BD
 ```
 
-> ⚠️ **`TryRemove(params object[] pk)` puede confundirse con `TryRemove(T item)`** si tu entidad es un `object[]`, caso raro pero posible. Y ojo: `TryRemove(MlErrorsDetails, params object[])` frente a `TryRemove(params object[])` se resuelven por el primer argumento, así que un `string` como primera clave podría convertirse implícitamente en `MlErrorsDetails`. **Con PK de tipo `string`, usa siempre la sobrecarga explícita con mensaje.**
+> ⚠️ **`TryRemove(params object[] pk)` puede confundirse con `TryRemove(T item)`** si tu entidad es un `object[]`, caso raro pero posible. Y ojo: `TryRemove(MlErrorDetails, params object[])` frente a `TryRemove(params object[])` se resuelven por el primer argumento, así que un `string` como primera clave podría convertirse implícitamente en `MlErrorDetails`. **Con PK de tipo `string`, usa siempre la sobrecarga explícita con mensaje.**
 
 ---
 
@@ -470,17 +470,17 @@ public static IQueryable<T> PrivateOrderBy<T>(this IQueryable<T> source,
 
 ## Mensajes de error personalizados
 
-Todos los métodos de "búsqueda" tienen una sobrecarga con `MlErrorsDetails`, que acepta conversión implícita desde `string`:
+Todos los métodos de "búsqueda" tienen una sobrecarga con `MlErrorDetails`, que acepta conversión implícita desde `string`:
 
 ```csharp
 // Mensaje por defecto: "42 values not found data in Vino"
 await repo.TryFindAsync(ct, 42);
 
-// Mensaje propio (string → MlErrorsDetails implícito)
+// Mensaje propio (string → MlErrorDetails implícito)
 await repo.TryFindAsync($"No existe el vino con id {42}", ct, 42);
 
 // Con detalles adicionales
-await repo.TryFindAsync(MlErrorsDetails.FromErrorMessageWithValue(42, "Vino inexistente"), ct, 42);
+await repo.TryFindAsync(MlErrorDetails.FromErrorMessageWithValue(42, "Vino inexistente"), ct, 42);
 ```
 
 Los mensajes por defecto vienen de `GetPkValues`:
@@ -848,7 +848,7 @@ public class AltaVinosService(IVinosRepo _repo, IValidator<Vino> _validator, ILo
         => _validator.MlValidate(vino)
                      .BindAsync(v => _repo.TryAddAsync(v, ct))
                      .LogMlResultInformationIfValidAsync(_logger, v => $"Vino {v.Id} creado")
-                     .LogMlResultErrorIfFailAsync       (_logger, e => $"Error al crear vino: {e.ToErrorsDescription()}");
+                     .LogMlResultErrorIfFailAsync       (_logger, e => $"Error al crear vino: {e.GetErrorsSummary()}");
 }
 ```
 
@@ -983,7 +983,7 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 5. **Al paginar, pasa siempre `orderByField` y un `filter` no nulo.**
 6. **Evita `TryLast`/`TryLastAsync`**: materializa toda la consulta. Ordena descendente y toma el primero.
 7. **Para modificar, recupera y actualiza la misma instancia** (`TryFind` → modificar → `TryUpdate(v)` sin `pk`).
-8. **Personaliza los `MlErrorsDetails`** si el mensaje va a llegar al usuario: los de serie están en inglés e incluyen el nombre del tipo.
+8. **Personaliza los `MlErrorDetails`** si el mensaje va a llegar al usuario: los de serie están en inglés e incluyen el nombre del tipo.
 9. **Segrega las interfaces**: inyecta `IEFRepoReaderFp<T>` donde solo consultes.
 10. **Declara una interfaz por entidad** (`IVinosRepo : IEFRepoPaginationFp<Vino>`) para poder ampliarla sin romper llamadas.
 11. **Si necesitas atomicidad, usa una transacción explícita** con `GetContext().Database.BeginTransaction()`.
@@ -1028,7 +1028,7 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md)
 - [`TryMap` y `TryBind` — capturar excepciones en el raíl](../docs/Map/1_Map.md) 🔑 la base del proyecto
 - [`EnsureFp` — validaciones de guarda](../docs/EnsureFp/EnsureFp.md) 🔑 `NotNull`, `NotEmpty`
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)

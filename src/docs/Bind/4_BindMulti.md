@@ -36,10 +36,10 @@ var r = dto.ToMlResultValid()
                d => ValidarTelefono(d));
 ```
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
-> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `FirstErrorMessage` ni `HasValue`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -211,7 +211,7 @@ public IActionResult Crear(ClienteDto dto)
     => _servicio.Registrar(dto)
         .Match<Cliente, IActionResult>(
             valid: c       => CreatedAtAction(nameof(Obtener), new { id = c.Id }, c),
-            fail:  errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
+            fail:  errores => BadRequest(new { errores = errores.GetErrorMessages() }));
 ```
 
 Respuesta típica con tres campos mal:
@@ -262,7 +262,7 @@ public async Task<MlResult<Reserva>> ReservarAsync(ReservaDto dto)
             .ExecSelfIfFailAsync(errores =>
             {
                 _log.LogWarning("Reserva rechazada por {N} motivo(s):\n{Detalle}",
-                                errores.Errors.Count(), errores.ToErrorsDescription());
+                                errores.Errors.Count(), errores.GetErrorsSummary());
                 return Task.CompletedTask;
             });
 ```

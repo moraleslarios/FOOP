@@ -643,7 +643,7 @@ public static partial class MlResultBucles
 
 
 
-    public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)> ProjectionSplit<T, TResult>(this IEnumerable<T>             source,
+    public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)> ProjectionSplit<T, TResult>(this IEnumerable<T>             source,
                                                                                                                                    Func<T, MlResult<TResult>> completeFuncTransform)
         where T : notnull
     {
@@ -661,19 +661,19 @@ public static partial class MlResultBucles
     }
 
 
-    public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this IEnumerable<T>             source,
+    public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> ProjectionSplitAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                                                                               Func<T, MlResult<TResult>> completeFuncTransform)
         where T : notnull
         => source.ProjectionSplit(completeFuncTransform).ToAsync();
 
 
-    public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this Task<IEnumerable<T>>       sourceAsync,
+    public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> ProjectionSplitAsync<T, TResult>(this Task<IEnumerable<T>>       sourceAsync,
                                                                                                                                                     Func<T, MlResult<TResult>> completeFuncTransform)
         where T : notnull
         => await (await sourceAsync).ProjectionSplitAsync(completeFuncTransform);
 
 
-    public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this IEnumerable<T>                   source,
+    public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> ProjectionSplitAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                                                               Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
         where T : notnull
     {
@@ -697,7 +697,7 @@ public static partial class MlResultBucles
     }
 
 
-    public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorsDetails> fails)>> ProjectionSplitAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
+    public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> ProjectionSplitAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                                                                     Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
         where T : notnull
         => await (await sourceAsync).ProjectionSplitAsync(completeFuncTransformAsync);
@@ -778,7 +778,7 @@ public static partial class MlResultBucles
 
         if ( ! partialResult.Any()) return MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
 
-        MlErrorsDetails result = partialResult.First().FailureDetails;
+        MlErrorDetails result = partialResult.First().FailureDetails;
 
         foreach (var item in partialResult.Skip(1))
         {
@@ -807,7 +807,7 @@ public static partial class MlResultBucles
             return MlResult<IEnumerable<T>>.Valid(source.Select(x => x.GetValueOrThrow()));
         }
 
-        MlErrorsDetails result = partialResult.First().FailureDetails;
+        MlErrorDetails result = partialResult.First().FailureDetails;
 
         foreach (var item in partialResult.Skip(1))
         {
@@ -841,4 +841,4 @@ public static partial class MlResultBucles
 
 public record ProyectSplitValidInfo<TKey, TResult>(TKey Key, TResult Value);
 
-public record ProyectSplitFailInfo<TKey>(TKey Key, MlErrorsDetails Errors);
+public record ProyectSplitFailInfo<TKey>(TKey Key, MlErrorDetails Errors);

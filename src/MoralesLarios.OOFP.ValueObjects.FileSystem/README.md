@@ -58,7 +58,7 @@ public string LeerConfiguracion(ExistsFile ruta) => File.ReadAllText(ruta);
 ExistsFile.ByString(rutaDelUsuario, "El fichero de configuración indicado no existe")
           .Map(LeerConfiguracion)
           .Match(valid: texto   => Procesar(texto),
-                 fail : errores => Registrar(errores.ToErrorsMessages()));
+                 fail : errores => Registrar(errores.GetErrorMessages()));
 ```
 
 > 💡 **La clave**: cuando un método recibe `ExistsFile`, ya no puede fallar por *"fichero no encontrado"* en su primera línea. La comprobación ocurrió antes, en el punto donde había contexto para dar un buen mensaje de error.
@@ -70,7 +70,7 @@ ExistsFile.ByString(rutaDelUsuario, "El fichero de configuración indicado no ex
 | Dependencia | Para qué |
 |---|---|
 | [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | Clases base `RegexValue` y `NotEmptyString` |
-| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) (transitiva) | `MlResult<T>`, `MlErrorsDetails`, [`EnsureFp`](../docs/EnsureFp/EnsureFp.md) |
+| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) (transitiva) | `MlResult<T>`, `MlErrorDetails`, [`EnsureFp`](../docs/EnsureFp/EnsureFp.md) |
 | `System.IO` | `File.Exists`, `Directory.Exists` |
 
 ```csharp
@@ -145,7 +145,7 @@ public class MlFile : RegexValue
     public static bool   IsValid(string value);
 
     public static MlFile           FromString(string value);                                          // lanza
-    public static MlResult<MlFile> ByString  (string value, MlErrorsDetails errorsDetails = null!);   // funcional
+    public static MlResult<MlFile> ByString  (string value, MlErrorDetails errorsDetails = null!);   // funcional
 
     public static implicit operator string(MlFile valueObject);
     public static implicit operator MlFile(string value);          // lanza si es inválida
@@ -184,7 +184,7 @@ MlResult<MlFile> destino = MlFile.ByString(rutaConfigurada,
 
 destino.Map(ruta => { File.WriteAllText(ruta, contenido); return ruta; })
        .Match(valid: ruta    => Console.WriteLine($"Informe escrito en {ruta}"),
-              fail : errores => Console.WriteLine(errores.ToErrorsDescription()));
+              fail : errores => Console.WriteLine(errores.GetErrorsSummary()));
 ```
 
 ---
@@ -202,7 +202,7 @@ public class MlDirectory : RegexValue
     public static bool   IsValid(string value);
 
     public static MlDirectory           FromString(string value);
-    public static MlResult<MlDirectory> ByString  (string value, MlErrorsDetails errorsDetails = null!);
+    public static MlResult<MlDirectory> ByString  (string value, MlErrorDetails errorsDetails = null!);
 
     public static implicit operator string     (MlDirectory valueObject);
     public static implicit operator MlDirectory(string      value);
@@ -248,7 +248,7 @@ public class ExistsFile : NotEmptyString
     public new static bool   IsValid(string pathStr);             // File.Exists(pathStr)
 
     public new static ExistsFile           FromString(string pathStr);
-    public new static MlResult<ExistsFile> ByString  (string pathStr, MlErrorsDetails errorsDetails = null!);
+    public new static MlResult<ExistsFile> ByString  (string pathStr, MlErrorDetails errorsDetails = null!);
 
     public static implicit operator string    (ExistsFile pathStrObject);
     public static implicit operator ExistsFile(string     pathStr);
@@ -289,7 +289,7 @@ public class ExistDirectory : NotEmptyString
     public new static bool   IsValid(string directoryStr);             // Directory.Exists(directoryStr)
 
     public new static ExistDirectory           FromString(string directoryStr);
-    public new static MlResult<ExistDirectory> ByString  (string directoryStr, MlErrorsDetails errorsDetails = null!);
+    public new static MlResult<ExistDirectory> ByString  (string directoryStr, MlErrorDetails errorsDetails = null!);
 
     public static implicit operator string        (ExistDirectory directoryStrObject);
     public static implicit operator ExistDirectory(string         directoryStr);
@@ -335,7 +335,7 @@ Es correcto para uso normal, pero **no esperes polimorfismo**: si tienes una var
 ### 3. `ByString` de los tipos `Exist*` tiene los paréntesis desplazados
 
 ```csharp
-public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorsDetails errorsDetails = null!)
+public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorDetails errorsDetails = null!)
     => NotEmptyString.ByString(pathStr)
                      .Bind( _ => EnsureFp.That(pathStr, IsValid(pathStr), errorsDetails ?? BuildErrorMessage(pathStr))
                      .Map ( _ => new ExistsFile(pathStr)));      // ← el Map está DENTRO del Bind
@@ -367,7 +367,7 @@ El patrón no limita la longitud. Una ruta de 400 caracteres puede pasar la vali
 
 > ⚠️ **No hay normalización de rutas.** El valor se guarda tal cual se recibe: `C:\datos\a.txt` y `C:/datos/a.txt` producen **dos objetos distintos y no iguales**, aunque apunten al mismo fichero. Si necesitas comparar rutas, normaliza antes con `Path.GetFullPath(...)`.
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -392,7 +392,7 @@ public static MlResult<RutasApp> ValidarRutas(IConfiguration config)
 ValidarRutas(builder.Configuration)
     .Match(valid: rutas   => builder.Services.AddSingleton(rutas),
            fail : errores => throw new InvalidOperationException(
-                                 $"Configuración de rutas inválida: {errores.ToErrorsDescription()}"));
+                                 $"Configuración de rutas inválida: {errores.GetErrorsSummary()}"));
 ```
 
 > 💡 Fíjate en la mezcla intencionada: la carpeta de **entrada** y la **plantilla** deben existir (`Exist*`), pero la de **salida** solo necesita ser una ruta válida, porque la crearemos nosotros.
@@ -533,7 +533,7 @@ var f = ExistsFile.ByString(Request.Form["ruta"], "El fichero indicado no está 
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
 - [`EnsureFp` — el motor de validación de los `By…`](../docs/EnsureFp/EnsureFp.md)
 - [`Bind` — encadenar formato + existencia](../docs/Bind/3_Bind.md)
 - [`Map` y `TryMap` — transformar protegiendo la E/S](../docs/Map/1_Map.md)

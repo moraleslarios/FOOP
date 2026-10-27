@@ -8,7 +8,7 @@ namespace MoralesLarios.OOFP.Application;
 
 public static class MlProblemsDetails
 {
-    public static MlErrorsDetails CreateProblemDetails(int                        statusCode, 
+    public static MlErrorDetails CreateProblemDetails(int                        statusCode, 
                                                        string                     title      = null!, 
                                                        string                     detail     = null!, 
                                                        string                     type       = null!, 
@@ -31,7 +31,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails BadRequestError(string                     title      = null!, 
+    public static MlErrorDetails BadRequestError(string                     title      = null!, 
                                                   string                     detail     = null!, 
                                                   string                     type       = null!, 
                                                   Dictionary<string, object> errors     = null!)
@@ -53,7 +53,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails BadRequestError(string                        title             = null!, 
+    public static MlErrorDetails BadRequestError(string                        title             = null!, 
                                                   string                        detail            = null!, 
                                                   string                        type              = null!, 
                                                   IEnumerable<ValidationResult> validationResults = null!)
@@ -68,7 +68,7 @@ public static class MlProblemsDetails
         return BadRequestError(title, detail, type, errors);
     }
 
-    public static MlErrorsDetails UnauthorizedError(string                     title      = null!, 
+    public static MlErrorDetails UnauthorizedError(string                     title      = null!, 
                                                     string                     detail     = null!, 
                                                     string                     type       = null!, 
                                                     Dictionary<string, object> errors     = null!)
@@ -90,7 +90,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails ForbiddenError(string                     title      = null!, 
+    public static MlErrorDetails ForbiddenError(string                     title      = null!, 
                                                  string                     detail     = null!, 
                                                  string                     type       = null!, 
                                                  Dictionary<string, object> errors     = null!)
@@ -112,7 +112,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails NotFoundError(string                     title      = null!, 
+    public static MlErrorDetails NotFoundError(string                     title      = null!, 
                                                 string                     detail     = null!, 
                                                 string                     type       = null!, 
                                                 Dictionary<string, object> errors     = null!)
@@ -134,7 +134,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails MethodNotAllowedError(string                     title      = null!, 
+    public static MlErrorDetails MethodNotAllowedError(string                     title      = null!, 
                                                         string                     detail     = null!, 
                                                         string                     type       = null!, 
                                                         Dictionary<string, object> errors     = null!)
@@ -156,7 +156,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails ConflictError(string                     title      = null!, 
+    public static MlErrorDetails ConflictError(string                     title      = null!, 
                                                 string                     detail     = null!, 
                                                 string                     type       = null!, 
                                                 Dictionary<string, object> errors     = null!)
@@ -178,7 +178,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails UnprocessableContentError(string                     title      = null!, 
+    public static MlErrorDetails UnprocessableContentError(string                     title      = null!, 
                                                            string                     detail     = null!, 
                                                            string                     type       = null!, 
                                                            Dictionary<string, object> errors     = null!)
@@ -200,7 +200,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails TooManyRequestsError(string                     title      = null!, 
+    public static MlErrorDetails TooManyRequestsError(string                     title      = null!, 
                                                        string                     detail     = null!, 
                                                        string                     type       = null!, 
                                                        Dictionary<string, object> errors     = null!)
@@ -222,7 +222,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails InternalServerError(string                     title      = null!, 
+    public static MlErrorDetails InternalServerError(string                     title      = null!, 
                                                       string                     detail     = null!, 
                                                       string                     type       = null!, 
                                                       Dictionary<string, object> errors     = null!)
@@ -244,7 +244,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails NotImplementedError(string                     title      = null!, 
+    public static MlErrorDetails NotImplementedError(string                     title      = null!, 
                                                       string                     detail     = null!, 
                                                       string                     type       = null!, 
                                                       Dictionary<string, object> errors     = null!)
@@ -266,7 +266,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails BadGatewayError(string                     title      = null!, 
+    public static MlErrorDetails BadGatewayError(string                     title      = null!, 
                                                   string                     detail     = null!, 
                                                   string                     type       = null!, 
                                                   Dictionary<string, object> errors     = null!)
@@ -288,7 +288,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails ServiceUnavailableError(string                     title      = null!, 
+    public static MlErrorDetails ServiceUnavailableError(string                     title      = null!, 
                                                           string                     detail     = null!, 
                                                           string                     type       = null!, 
                                                           Dictionary<string, object> errors     = null!)
@@ -310,7 +310,7 @@ public static class MlProblemsDetails
         return result;
     }
 
-    public static MlErrorsDetails GatewayTimeoutError(string                     title      = null!, 
+    public static MlErrorDetails GatewayTimeoutError(string                     title      = null!, 
                                                       string                     detail     = null!, 
                                                       string                     type       = null!, 
                                                       Dictionary<string, object> errors     = null!)

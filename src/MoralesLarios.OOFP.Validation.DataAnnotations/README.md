@@ -52,7 +52,7 @@ return Ok(creado);
 return DataannotationsValidator.Validate(dto)
     .Bind(v => _servicio.Crear(v))
     .Match(valid: creado  => Ok(creado),
-           fail : errores => BadRequest(errores.ToErrorsMessages()));
+           fail : errores => BadRequest(errores.GetErrorMessages()));
 ```
 
 > 💡 **La ganancia no es escribir menos líneas**, es que la validación por atributos **entra en el mismo raíl** que el resto del caso de uso: se encadena con `Bind`, se acumula con el resto de errores y se traduce a HTTP en un único `Match`.
@@ -209,13 +209,13 @@ var resultado = new CrearUsuarioDto { Email = "sin-arroba", Nombre = "" }
 
 resultado.Match(
     valid: dto     => "ok",
-    fail : errores => string.Join(" | ", errores.ToErrorsMessages()));
+    fail : errores => string.Join(" | ", errores.GetErrorMessages()));
 // → "El campo Email no es una dirección de correo válida | El campo Nombre es obligatorio"
 ```
 
 > ⚠️ **Se pierde el `MemberNames`.** El `MlError` solo guarda el `Message`, así que **no sabrás a qué propiedad corresponde cada error** salvo que el propio mensaje lo diga. Si necesitas asociar error ↔ campo, personaliza los mensajes con el nombre del campo o usa `ValidateObject` directamente.
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -231,7 +231,7 @@ resultado.Match(
 `MergeErrorsIfExists` recorre la secuencia de `MlResult<T>`, y:
 
 - si **ninguno** falla, devuelve `Valid` con la colección de valores;
-- si **alguno** falla, devuelve `Fail` con **todos** los errores de **todos** los elementos fusionados en un único `MlErrorsDetails`.
+- si **alguno** falla, devuelve `Fail` con **todos** los errores de **todos** los elementos fusionados en un único `MlErrorDetails`.
 
 ```csharp
 var filas = new[]
@@ -243,7 +243,7 @@ var filas = new[]
 
 filas.ValidateWithDataannotations()
      .Match(valid: ok      => $"{ok.Count()} filas válidas",
-            fail : errores => $"{errores.Errors.Count()} errores: {errores.ToErrorsDescription()}");
+            fail : errores => $"{errores.Errors.Count()} errores: {errores.GetErrorsSummary()}");
 // → "2 errores: …"
 ```
 
@@ -447,8 +447,8 @@ resultado.Match(
     valid: ok      => Ok($"{ok.Count()} filas importadas"),
     fail : errores => BadRequest(new
     {
-        mensajes = errores.ToErrorsMessages(),
-        detalles = errores.ToDetailsDescription()
+        mensajes = errores.GetErrorMessages(),
+        detalles = errores.GetMetadataSummary()
     }));
 ```
 
@@ -556,7 +556,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
 - [`EnsureFp` — comprobaciones que devuelven `MlResult`](../docs/EnsureFp/EnsureFp.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` — transformar el valor válido](../docs/Map/1_Map.md)

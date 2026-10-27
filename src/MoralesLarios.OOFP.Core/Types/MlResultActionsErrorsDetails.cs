@@ -9,18 +9,18 @@ namespace MoralesLarios.OOFP.Types;
 public static partial class MlResultActionsErrorsDetails
 {
 
-    public static MlResult<T> GetDetail<T>(this MlErrorsDetails source, string key)
+    public static MlResult<T> GetDetail<T>(this MlErrorDetails source, string key)
     {
-        if ( ! source.Details.ContainsKey(key)) return source.AddError($"The key {key} does not exist in the details");
+        if ( ! source.Metadata.ContainsKey(key)) return source.AddError($"The key {key} does not exist in the details");
         
-        var result = source.Details[key] is T value 
+        var result = source.Metadata[key] is T value 
                             ? MlResult<T>.Valid(value) 
                             : source.AddError($"The key {key} does not contain a value of type {typeof(T).Name}");
 
         return result;
     }
 
-    public static async Task<MlResult<T>> GetDetailAsync<T>(this Task<MlErrorsDetails> sourceAsync, string key)
+    public static async Task<MlResult<T>> GetDetailAsync<T>(this Task<MlErrorDetails> sourceAsync, string key)
         => (await sourceAsync).GetDetail<T>(key);
 
 
@@ -90,11 +90,11 @@ public static partial class MlResultActionsErrorsDetails
         => source.MergeErrorsDetailsIfFailDifferentTypes(await secondaryAsync);
 
 
-    public static MlResult<T> GetDetailValue<T>(this MlErrorsDetails source)
+    public static MlResult<T> GetMetadataValue<T>(this MlErrorDetails source)
     {
-        if ( ! source.Details.ContainsKey(ValueMetadataKey)) return source.AddError($"The key {ValueMetadataKey} does not exist in the details");  //MlResult<T>.Fail($"The key {ValueMetadataKey} does not exist in the details");
+        if ( ! source.Metadata.ContainsKey(ValueMetadataKey)) return source.AddError($"The key {ValueMetadataKey} does not exist in the details");  //MlResult<T>.Fail($"The key {ValueMetadataKey} does not exist in the details");
         
-        var result = source.Details[ValueMetadataKey] is T value 
+        var result = source.Metadata[ValueMetadataKey] is T value 
                             ? MlResult<T>.Valid(value) 
                             : source.AddError($"The key {ValueMetadataKey} does not contain a value of type {typeof(T).Name}");
 
@@ -105,7 +105,7 @@ public static partial class MlResultActionsErrorsDetails
     public static MlResult<T> AddValueIfFail<T, TValue>(this MlResult<T> source,
                                                              TValue      value)
         => source.Match(
-                            fail : errorsDetails => errorsDetails.AddDetailValue(value),
+                            fail : errorsDetails => errorsDetails.AddValueMetadata(value),
                             valid: _             => source
                         );
 
@@ -117,7 +117,7 @@ public static partial class MlResultActionsErrorsDetails
                                                                               TValue            value)
     {
         var result = await sourceAsync.MatchAsync(
-                                                    failAsync : errorsDetails => errorsDetails.AddDetailValue(value).ToMlResultFailAsync<T>(),
+                                                    failAsync : errorsDetails => errorsDetails.AddValueMetadata(value).ToMlResultFailAsync<T>(),
                                                     validAsync: _             => sourceAsync
                                                 );
         return result;
@@ -125,17 +125,17 @@ public static partial class MlResultActionsErrorsDetails
 
 
 
-    public static Task<MlResult<T>> GetDetailValueAsync<T>(this MlErrorsDetails source) => source.GetDetailValue<T>().ToAsync();
+    public static Task<MlResult<T>> GetMetadataValueAsync<T>(this MlErrorDetails source) => source.GetMetadataValue<T>().ToAsync();
 
-    public static async Task<MlResult<T>> GetDetailValueAsync<T>(this Task<MlErrorsDetails> sourceAsync)
-        => (await sourceAsync).GetDetailValue<T>();
+    public static async Task<MlResult<T>> GetMetadataValueAsync<T>(this Task<MlErrorDetails> sourceAsync)
+        => (await sourceAsync).GetMetadataValue<T>();
 
 
-    public static MlResult<T> GetDetailException<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey);
-    public static Task<MlResult<T>> GetDetailExceptionAsync<T>(this MlErrorsDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey).ToAsync();
-    public static async Task<MlResult<T>> GetDetailExceptionAsync<T>(this Task<MlErrorsDetails> sourceAsync) where T : Exception => (await sourceAsync).GetDetailException<T>();
-    public static MlResult<Exception> GetDetailException(this MlErrorsDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey);
-    public static Task<MlResult<Exception>> GetDetailExceptionAsync(this MlErrorsDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey).ToAsync();
-    public static async Task<MlResult<Exception>> GetDetailExceptionAsync(this Task<MlErrorsDetails> sourceAsync) => (await sourceAsync).GetDetailException();
+    public static MlResult<T> GetException<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey);
+    public static Task<MlResult<T>> GetExceptionAsync<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey).ToAsync();
+    public static async Task<MlResult<T>> GetExceptionAsync<T>(this Task<MlErrorDetails> sourceAsync) where T : Exception => (await sourceAsync).GetException<T>();
+    public static MlResult<Exception> GetException(this MlErrorDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey);
+    public static Task<MlResult<Exception>> GetExceptionAsync(this MlErrorDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey).ToAsync();
+    public static async Task<MlResult<Exception>> GetExceptionAsync(this Task<MlErrorDetails> sourceAsync) => (await sourceAsync).GetException();
 }
 

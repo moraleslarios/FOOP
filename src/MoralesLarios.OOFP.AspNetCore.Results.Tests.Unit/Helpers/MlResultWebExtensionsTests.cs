@@ -20,7 +20,7 @@ public class MlResultWebExtensionsTests
     public void ToRepoGetActionResult_withErrorNotFound_returnsNotFound()
     {
         MlResult<DummyEntity> partialResult =
-            MlErrorsDetails.FromErrorMessageDetails("Error", new Dictionary<string, object> { { "NotFound", 1 } });
+            MlErrorDetails.FromErrorMessageDetails("Error", new Dictionary<string, object> { { "NotFound", 1 } });
 
         ControllerBase controller = TestControllerFactory.Create(); // If extension method needs controller (adjust as needed)
 
@@ -34,7 +34,7 @@ public class MlResultWebExtensionsTests
     public void ToRepoGetActionResult_withoutErrorNotFound_returnsDistinctNotFound()
     {
         MlResult<DummyEntity> partialResult =
-            MlErrorsDetails.FromErrorMessageDetails("Error", new Dictionary<string, object> { { "XXX", 1 } });
+            MlErrorDetails.FromErrorMessageDetails("Error", new Dictionary<string, object> { { "XXX", 1 } });
 
         ControllerBase controller = TestControllerFactory.Create(); // If extension method needs controller (adjust as needed)
 
@@ -66,7 +66,7 @@ public class MlResultWebExtensionsTests
     [Fact]
     public void ToSimpleRepoPostActionResult_whenNotFoundFail_returnsNotFound()
     {
-        MlResult<DummyEntity> source = MlErrorsDetails.FromErrorMessageDetails(
+        MlResult<DummyEntity> source = MlErrorDetails.FromErrorMessageDetails(
             "not found", new Dictionary<string, object> { { "NotFound", 1 } });
 
         IActionResult result = source.ToSimpleRepoPostActionResult(TestControllerFactory.Create());

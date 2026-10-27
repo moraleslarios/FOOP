@@ -25,7 +25,7 @@ public class MlResultActionsBindMapFixesTests
         => message.ToMlResultFail<int>();
 
     private static MlResult<int> FailSourceWithException(Exception ex)
-        => MlResult<int>.Fail(MlErrorsDetails.FromErrorMessageWithException(ex.Message, ex));
+        => MlResult<int>.Fail(MlErrorDetails.FromErrorMessageWithException(ex.Message, ex));
 
     /// <summary>
     /// Fuente asincrona que cuenta cuantas veces se ha materializado la Task subyacente.

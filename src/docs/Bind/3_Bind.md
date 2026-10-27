@@ -54,10 +54,10 @@ public MlResult<Factura> Emitir(int pedidoId)
         .Bind(tarifa  => EmitirFactura(pedido, activo, tarifa)))));
 ```
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
-> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `FirstErrorMessage` ni `HasValue`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -100,7 +100,7 @@ public static MlResult<TReturn> Bind<T, TReturn>(this MlResult<T>            sou
 
 Léelo con calma: **`Bind` es `Match` con la rama de fallo ya escrita por ti**. Si es válido, aplica la
 función; si no, convierte los errores en el nuevo `MlResult<TReturn>` mediante la conversión implícita
-de `MlErrorsDetails`.
+de `MlErrorDetails`.
 
 **Comportamiento**:
 
@@ -229,7 +229,7 @@ public class ServicioPedidos
                 .ExecSelfIfValidAsync(p => _log.LogInformation("Pedido {Id} creado", p.Id))
                 .ExecSelfIfFailAsync(e =>
                 {
-                    _log.LogWarning("Alta rechazada: {E}", e.ToErrorsDescription());
+                    _log.LogWarning("Alta rechazada: {E}", e.GetErrorsSummary());
                     return Task.CompletedTask;
                 });
 
@@ -311,9 +311,9 @@ public async Task<IActionResult> Crear(PedidoDto dto)
                 valid: p       => Task.FromResult<IActionResult>(
                                       CreatedAtAction(nameof(Obtener), new { id = p.Id }, p)),
                 fail:  errores => Task.FromResult<IActionResult>(
-                                      errores.GetDetailException().Match(
+                                      errores.GetException().Match(
                                           valid: _ => StatusCode(500, "Error interno"),
-                                          fail:  _ => BadRequest(errores.ToErrorsMessages()))));
+                                          fail:  _ => BadRequest(errores.GetErrorMessages()))));
 ```
 
 Fallo con excepción → **500** (avería nuestra). Fallo sin excepción → **400** (el cliente puede
@@ -340,7 +340,7 @@ Usar `TryBind` en todas partes «por si acaso» oculta errores de programación 
 var cliente = resultado.Value;
 
 // ✅
-resultado.Match(valid: c => Ok(c), fail: e => NotFound(e.ToErrorsMessages()));
+resultado.Match(valid: c => Ok(c), fail: e => NotFound(e.GetErrorMessages()));
 ```
 
 ### 4. Aprovecha las conversiones implícitas
@@ -368,7 +368,7 @@ orden.
 | `Map` | Válido | `T` | `TReturn` (se envuelve) | No |
 | `BindIf` | Válido y cumple condición | `T` | `MlResult<TReturn>` | No |
 | `BindMulti` | Válido (ejecuta **todas** las funciones) | `T` | `MlResult<TReturn>` | No |
-| [`BindIfFail`](6_BindIfFail.md) | **Fallido** | `MlErrorsDetails` | `MlResult<T>` | **Sí** |
+| [`BindIfFail`](6_BindIfFail.md) | **Fallido** | `MlErrorDetails` | `MlResult<T>` | **Sí** |
 | [`BindAlways`](10_BindAlways.md) | Siempre | — o ambas ramas | `MlResult<TReturn>` | Sí |
 | `ExecSelf` | Según variante | Según variante | El **mismo** resultado | No |
 | `Match` | Siempre | Ambas ramas | `TReturn` **crudo** | Sale de la tubería |

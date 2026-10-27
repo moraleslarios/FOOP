@@ -15,7 +15,7 @@ public class Endpoint : RegexValue
 
     public static Endpoint FromString(string value) => new Endpoint(value);
 
-    public static MlResult<Endpoint> ByString(string value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<Endpoint> ByString(string value, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
                             .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                             .Map (_ => new Endpoint(value));

@@ -15,7 +15,7 @@ public partial class IntLessThan : ValueObject<int>
     public static bool IsValid(int value, int length) => value < length;
 
     public static IntLessThan FromIntLength(int value, int length) => new IntLessThan(value, length);
-    public static MlResult<IntLessThan> ByIntLength(int value, int length, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<IntLessThan> ByIntLength(int value, int length, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
                     .Map ( _ => new IntLessThan(value, length));

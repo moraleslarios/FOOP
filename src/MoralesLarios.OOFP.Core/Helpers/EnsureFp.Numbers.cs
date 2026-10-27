@@ -26,7 +26,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor es estrictamente mayor que <paramref name="limit"/>.
     /// </summary>
-    public static MlResult<T> GreaterThan<T>(T value, T limit, MlErrorsDetails errorsDetails)
+    public static MlResult<T> GreaterThan<T>(T value, T limit, MlErrorDetails errorsDetails)
         where T : IComparable<T>
         => That(value, Compare(value, limit) > 0, errorsDetails);
 
@@ -58,7 +58,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor es mayor o igual que <paramref name="limit"/>.
     /// </summary>
-    public static MlResult<T> GreaterOrEqual<T>(T value, T limit, MlErrorsDetails errorsDetails)
+    public static MlResult<T> GreaterOrEqual<T>(T value, T limit, MlErrorDetails errorsDetails)
         where T : IComparable<T>
         => That(value, Compare(value, limit) >= 0, errorsDetails);
 
@@ -90,7 +90,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor es estrictamente menor que <paramref name="limit"/>.
     /// </summary>
-    public static MlResult<T> LessThan<T>(T value, T limit, MlErrorsDetails errorsDetails)
+    public static MlResult<T> LessThan<T>(T value, T limit, MlErrorDetails errorsDetails)
         where T : IComparable<T>
         => That(value, Compare(value, limit) < 0, errorsDetails);
 
@@ -122,7 +122,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor es menor o igual que <paramref name="limit"/>.
     /// </summary>
-    public static MlResult<T> LessOrEqual<T>(T value, T limit, MlErrorsDetails errorsDetails)
+    public static MlResult<T> LessOrEqual<T>(T value, T limit, MlErrorDetails errorsDetails)
         where T : IComparable<T>
         => That(value, Compare(value, limit) <= 0, errorsDetails);
 
@@ -154,7 +154,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor está entre <paramref name="min"/> y <paramref name="max"/>, ambos incluidos.
     /// </summary>
-    public static MlResult<T> InRange<T>(T value, T min, T max, MlErrorsDetails errorsDetails)
+    public static MlResult<T> InRange<T>(T value, T min, T max, MlErrorDetails errorsDetails)
         where T : IComparable<T>
         => That(value, IsInRange(value, min, max), errorsDetails);
 
@@ -178,7 +178,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor NO está entre <paramref name="min"/> y <paramref name="max"/>, ambos incluidos.
     /// </summary>
-    public static MlResult<T> OutOfRange<T>(T value, T min, T max, MlErrorsDetails errorsDetails)
+    public static MlResult<T> OutOfRange<T>(T value, T min, T max, MlErrorDetails errorsDetails)
         where T : IComparable<T>
         => That(value, value is not null && ! IsInRange(value, min, max), errorsDetails);
 
@@ -209,7 +209,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor es estrictamente mayor que cero.
     /// </summary>
-    public static MlResult<T> Positive<T>(T value, MlErrorsDetails errorsDetails)
+    public static MlResult<T> Positive<T>(T value, MlErrorDetails errorsDetails)
         where T : INumber<T>
         => That(value, value is not null && value > T.Zero, errorsDetails);
 
@@ -231,7 +231,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor no es negativo (cero incluido).
     /// </summary>
-    public static MlResult<T> NotNegative<T>(T value, MlErrorsDetails errorsDetails)
+    public static MlResult<T> NotNegative<T>(T value, MlErrorDetails errorsDetails)
         where T : INumber<T>
         => That(value, value is not null && value >= T.Zero, errorsDetails);
 
@@ -253,7 +253,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor es estrictamente menor que cero.
     /// </summary>
-    public static MlResult<T> Negative<T>(T value, MlErrorsDetails errorsDetails)
+    public static MlResult<T> Negative<T>(T value, MlErrorDetails errorsDetails)
         where T : INumber<T>
         => That(value, value is not null && value < T.Zero, errorsDetails);
 
@@ -275,7 +275,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor es distinto de cero.
     /// </summary>
-    public static MlResult<T> NotZero<T>(T value, MlErrorsDetails errorsDetails)
+    public static MlResult<T> NotZero<T>(T value, MlErrorDetails errorsDetails)
         where T : INumber<T>
         => That(value, value is not null && value != T.Zero, errorsDetails);
 

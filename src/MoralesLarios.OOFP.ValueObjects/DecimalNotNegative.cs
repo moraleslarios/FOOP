@@ -18,7 +18,7 @@ public class DecimalNotNegative : DecimalMoreThan
 
 
     public static DecimalNotNegative FromDecimal(decimal value) => new DecimalNotNegative(value);
-    public static MlResult<DecimalNotNegative> ByDecimal(decimal value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<DecimalNotNegative> ByDecimal(decimal value, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                     .Map ( _ => new DecimalNotNegative(value));

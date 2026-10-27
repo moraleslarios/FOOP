@@ -117,7 +117,7 @@ MlResult<Pedido> validado = _repo.BuscarBloqueo(pedidoId)
 ```
 
 Las 4 sobrecargas permiten dar el error como `string`, `MlError`, colección de mensajes o
-`MlErrorsDetails`, y también como `Func<T, ...>` para incluir datos del valor válido en el mensaje
+`MlErrorDetails`, y también como `Func<T, ...>` para incluir datos del valor válido en el mensaje
 (como en el ejemplo del bloqueo).
 
 ---
@@ -136,7 +136,7 @@ MlResult<Preferencias> prefs = _repo.ObtenerPreferencias(usuarioId)
 | Alternativa | Diferencia |
 | --- | --- |
 | `ChangeReturnResultIfFailToValid` | Valor fijo o fábrica sin parámetros; ignora los errores. |
-| [`MapIfFail`](MlResultActionsMap.md) | Recibe el `MlErrorsDetails` y puede usarlo para decidir el valor. |
+| [`MapIfFail`](MlResultActionsMap.md) | Recibe el `MlErrorDetails` y puede usarlo para decidir el valor. |
 | [`BindIfFail`](MlResultActionsBind.md) | Igual, pero el reemplazo puede volver a fallar. |
 
 Usa `ChangeReturnResultIfFailToValid` cuando el motivo del fallo **da igual**; usa `MapIfFail` o
@@ -208,7 +208,7 @@ public async Task<IActionResult> RegistrarUsuarioAsync(RegistroDto dto)
         // 4) El envío del correo de bienvenida no debe tumbar el registro.
         .ExecSelfIfValidAsync(async c => await _correo.EnviarBienvenidaAsync(c.Email))
         .MatchAsync(valid: c       => Created($"/usuarios/{c.Email}", c),
-                    fail : errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
+                    fail : errores => BadRequest(new { errores = errores.GetErrorMessages() }));
 }
 ```
 

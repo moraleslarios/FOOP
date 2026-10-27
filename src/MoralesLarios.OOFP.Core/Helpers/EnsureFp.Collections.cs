@@ -29,7 +29,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la colección no es nula ni vacía, devolviendo el tipo concreto de la colección.
     /// </summary>
-    public static MlResult<TCollection> NotEmptyCollection<TCollection, T>(TCollection value, MlErrorsDetails errorsDetails)
+    public static MlResult<TCollection> NotEmptyCollection<TCollection, T>(TCollection value, MlErrorDetails errorsDetails)
         where TCollection : IEnumerable<T>
         => That(value, value is not null && value.Any(), errorsDetails);
 
@@ -54,7 +54,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la colección contiene exactamente <paramref name="expectedCount"/> elementos.
     /// </summary>
-    public static MlResult<IEnumerable<T>> CountExactly<T>(IEnumerable<T> value, int expectedCount, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> CountExactly<T>(IEnumerable<T> value, int expectedCount, MlErrorDetails errorsDetails)
         => CountRule(value, expectedCount, expectedCount, errorsDetails);
 
     /// <summary>
@@ -82,7 +82,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la colección contiene al menos <paramref name="minCount"/> elementos.
     /// </summary>
-    public static MlResult<IEnumerable<T>> CountAtLeast<T>(IEnumerable<T> value, int minCount, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> CountAtLeast<T>(IEnumerable<T> value, int minCount, MlErrorDetails errorsDetails)
         => CountRule(value, minCount, int.MaxValue, errorsDetails);
 
     /// <summary>
@@ -110,7 +110,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la colección contiene como máximo <paramref name="maxCount"/> elementos.
     /// </summary>
-    public static MlResult<IEnumerable<T>> CountAtMost<T>(IEnumerable<T> value, int maxCount, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> CountAtMost<T>(IEnumerable<T> value, int maxCount, MlErrorDetails errorsDetails)
         => CountRule(value, 0, maxCount, errorsDetails);
 
     /// <summary>
@@ -138,7 +138,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el número de elementos está entre <paramref name="minCount"/> y <paramref name="maxCount"/>, ambos incluidos.
     /// </summary>
-    public static MlResult<IEnumerable<T>> CountBetween<T>(IEnumerable<T> value, int minCount, int maxCount, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> CountBetween<T>(IEnumerable<T> value, int minCount, int maxCount, MlErrorDetails errorsDetails)
         => CountRule(value, minCount, maxCount, errorsDetails);
 
     /// <summary>
@@ -174,7 +174,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que todos los elementos cumplen el predicado.
     /// </summary>
-    public static MlResult<IEnumerable<T>> AllMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> AllMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, MlErrorDetails errorsDetails)
     {
         var materialized = Materialize(value);
 
@@ -216,7 +216,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que ningún elemento cumple el predicado.
     /// </summary>
-    public static MlResult<IEnumerable<T>> NoneMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> NoneMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, MlErrorDetails errorsDetails)
     {
         var materialized = Materialize(value);
 
@@ -258,7 +258,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que al menos un elemento cumple el predicado.
     /// </summary>
-    public static MlResult<IEnumerable<T>> AnyMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> AnyMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, MlErrorDetails errorsDetails)
     {
         var materialized = Materialize(value);
 
@@ -297,7 +297,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la colección no contiene elementos duplicados.
     /// </summary>
-    public static MlResult<IEnumerable<T>> NoDuplicates<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails, IEqualityComparer<T>? comparer = null)
+    public static MlResult<IEnumerable<T>> NoDuplicates<T>(IEnumerable<T> value, MlErrorDetails errorsDetails, IEqualityComparer<T>? comparer = null)
     {
         var materialized = Materialize(value);
 
@@ -332,7 +332,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la colección no contiene elementos nulos.
     /// </summary>
-    public static MlResult<IEnumerable<T>> NoNullItems<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails)
+    public static MlResult<IEnumerable<T>> NoNullItems<T>(IEnumerable<T> value, MlErrorDetails errorsDetails)
     {
         var materialized = Materialize(value);
 
@@ -372,7 +372,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la colección contiene el elemento indicado.
     /// </summary>
-    public static MlResult<IEnumerable<T>> ContainsItem<T>(IEnumerable<T> value, T item, MlErrorsDetails errorsDetails, IEqualityComparer<T>? comparer = null)
+    public static MlResult<IEnumerable<T>> ContainsItem<T>(IEnumerable<T> value, T item, MlErrorDetails errorsDetails, IEqualityComparer<T>? comparer = null)
     {
         var materialized = Materialize(value);
 
@@ -422,7 +422,7 @@ public static partial class EnsureFp
                                     errorMessage);
     }
 
-    private static MlResult<IEnumerable<T>> CountRule<T>(IEnumerable<T> value, int minCount, int maxCount, MlErrorsDetails errorsDetails)
+    private static MlResult<IEnumerable<T>> CountRule<T>(IEnumerable<T> value, int minCount, int maxCount, MlErrorDetails errorsDetails)
     {
         var materialized = Materialize(value);
 

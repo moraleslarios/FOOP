@@ -149,7 +149,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> result = partialResult.TryExecSelfIfFailWithValue<int, int>(value => internalResult += value / 0);
 
         bool hasException = result.Match(
-                                            fail : errorDetails => errorDetails.HasExceptionDetails(),
+                                            fail : errorDetails => errorDetails.ContainsException(),
                                             valid: _            => false
                                         );
 
@@ -454,7 +454,7 @@ public class MlResultActionsExecSelfTests
         MlResult<int> result = partialResult.TryExecSelfIfFailWithException(exception => throw new DivideByZeroException(), "miErrorControlado");
 
         bool hasException = result.Match(
-                                            fail : errorDetails => errorDetails.HasExceptionDetails(),
+                                            fail : errorDetails => errorDetails.ContainsException(),
                                             valid: _            => false
                                         );
 
@@ -478,7 +478,7 @@ public class MlResultActionsExecSelfTests
                                                                              ex => $"Error controlado: {ex.Message}");
 
         bool hasException = result.Match(
-                                            fail : errorDetails => errorDetails.HasExceptionDetails(),
+                                            fail : errorDetails => errorDetails.ContainsException(),
                                             valid: _            => false
                                         );
 

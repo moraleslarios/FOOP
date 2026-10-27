@@ -33,7 +33,7 @@ escriben mal de la misma forma:
 | Fichero existente | `if (!File.Exists(p)) throw …` | rompe la cadena funcional |
 
 Este bloque las expresa como reglas `MlResult<T>` con las tres variantes habituales (`string`,
-`MlErrorsDetails` y `*Arg`).
+`MlErrorDetails` y `*Arg`).
 
 ---
 
@@ -41,12 +41,12 @@ Este bloque las expresa como reglas `MlResult<T>` con las tres variantes habitua
 
 ```csharp
 public static MlResult<Guid> NotEmptyGuid(Guid value, string errorMessage);
-public static MlResult<Guid> NotEmptyGuid(Guid value, MlErrorsDetails errorsDetails);
+public static MlResult<Guid> NotEmptyGuid(Guid value, MlErrorDetails errorsDetails);
 public static MlResult<Guid> NotEmptyGuidArg(Guid value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 
 public static MlResult<Guid> NotNullNotEmptyGuid(Guid? value, string errorMessage);
-public static MlResult<Guid> NotNullNotEmptyGuid(Guid? value, MlErrorsDetails errorsDetails);
+public static MlResult<Guid> NotNullNotEmptyGuid(Guid? value, MlErrorDetails errorsDetails);
 public static MlResult<Guid> NotNullNotEmptyGuidArg(Guid? value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 ```
@@ -77,7 +77,7 @@ pierde el nombre del parámetro original.
 
 ```csharp
 public static MlResult<TEnum> IsDefined<TEnum>(TEnum value, string errorMessage)           where TEnum : struct, Enum;
-public static MlResult<TEnum> IsDefined<TEnum>(TEnum value, MlErrorsDetails errorsDetails) where TEnum : struct, Enum;
+public static MlResult<TEnum> IsDefined<TEnum>(TEnum value, MlErrorDetails errorsDetails) where TEnum : struct, Enum;
 public static MlResult<TEnum> IsDefinedArg<TEnum>(TEnum value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null) where TEnum : struct, Enum;
 ```
@@ -123,7 +123,7 @@ Hay sobrecargas para los tres tipos de fecha modernos de .NET:
 public static MlResult<DateTime>       InFuture(DateTime value, string errorMessage);
 public static MlResult<DateTimeOffset> InFuture(DateTimeOffset value, string errorMessage);
 public static MlResult<DateOnly>       InFuture(DateOnly value, string errorMessage);
-// … con MlErrorsDetails y con las variantes InFutureArg / InPastArg para los tres tipos.
+// … con MlErrorDetails y con las variantes InFutureArg / InPastArg para los tres tipos.
 ```
 
 La elección de referencia para `DateTime` la resuelve el helper privado `NowFor(DateTime)`. Es la
@@ -156,7 +156,7 @@ var r = GreaterOrEqual(fecha, DateOnly.FromDateTime(DateTime.Today),
 
 ```csharp
 public static MlResult<T> NotDefault<T>(T value, string errorMessage);
-public static MlResult<T> NotDefault<T>(T value, MlErrorsDetails errorsDetails);
+public static MlResult<T> NotDefault<T>(T value, MlErrorDetails errorsDetails);
 public static MlResult<T> NotDefaultArg<T>(T value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 ```
@@ -191,12 +191,12 @@ Es especialmente útil con estructuras deserializadas, donde un campo ausente en
 
 ```csharp
 public static MlResult<Uri> IsAbsoluteUri(Uri value, string errorMessage);
-public static MlResult<Uri> IsAbsoluteUri(Uri value, MlErrorsDetails errorsDetails);
+public static MlResult<Uri> IsAbsoluteUri(Uri value, MlErrorDetails errorsDetails);
 public static MlResult<Uri> IsAbsoluteUriArg(Uri value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 
 public static MlResult<Uri> IsValidUri(string value, string errorMessage,           UriKind uriKind = UriKind.Absolute);
-public static MlResult<Uri> IsValidUri(string value, MlErrorsDetails errorsDetails, UriKind uriKind = UriKind.Absolute);
+public static MlResult<Uri> IsValidUri(string value, MlErrorDetails errorsDetails, UriKind uriKind = UriKind.Absolute);
 public static MlResult<Uri> IsValidUriArg(string value, UriKind uriKind = UriKind.Absolute,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 ```
@@ -246,7 +246,7 @@ public MlResult<HttpResponseMessage> Llamar(string url) =>
 
 ```csharp
 public static MlResult<string> IsValidEmail(string value, string errorMessage);
-public static MlResult<string> IsValidEmail(string value, MlErrorsDetails errorsDetails);
+public static MlResult<string> IsValidEmail(string value, MlErrorDetails errorsDetails);
 public static MlResult<string> IsValidEmailArg(string value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 ```
@@ -278,12 +278,12 @@ Este enfoque es más fiable y más rápido que cualquier regex casera, y no tien
 
 ```csharp
 public static MlResult<string> FileExists(string value, string errorMessage);
-public static MlResult<string> FileExists(string value, MlErrorsDetails errorsDetails);
+public static MlResult<string> FileExists(string value, MlErrorDetails errorsDetails);
 public static MlResult<string> FileExistsArg(string value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 
 public static MlResult<string> DirectoryExists(string value, string errorMessage);
-public static MlResult<string> DirectoryExists(string value, MlErrorsDetails errorsDetails);
+public static MlResult<string> DirectoryExists(string value, MlErrorDetails errorsDetails);
 public static MlResult<string> DirectoryExistsArg(string value,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 ```

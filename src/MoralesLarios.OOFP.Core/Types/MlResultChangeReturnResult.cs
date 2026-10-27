@@ -12,7 +12,7 @@ public static partial class MlResultChangeReturnResult
 
     public static MlResult<TReturn> ChangeReturnResult<T, TReturn>(this MlResult<T>     source,
                                                                         TReturn         validValue,
-                                                                        MlErrorsDetails failValue)
+                                                                        MlErrorDetails failValue)
         => source.Match(
                             valid: x      => validValue.ToMlResultValid(),
                             fail : errors => failValue.ToMlResultFail<TReturn>()
@@ -36,7 +36,7 @@ public static partial class MlResultChangeReturnResult
 
     public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this MlResult<T>     source,
                                                                                          TReturn         validValue,
-                                                                                         MlErrorsDetails failValue)
+                                                                                         MlErrorDetails failValue)
         => await source.MatchAsync(
                                         validAsync: x      => validValue.ToMlResultValidAsync(),
                                         failAsync : errors => failValue.ToMlResultFailAsync<TReturn>()
@@ -44,7 +44,7 @@ public static partial class MlResultChangeReturnResult
 
     public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
                                                                                          TReturn           validValue,
-                                                                                         MlErrorsDetails   failValue)
+                                                                                         MlErrorDetails   failValue)
         => (await sourceAsync).Match(
                                         valid: x      => validValue.ToMlResultValid(),
                                         fail : errors => failValue.ToMlResultFail<TReturn>()
@@ -110,8 +110,8 @@ public static partial class MlResultChangeReturnResult
 
 
     public static MlResult<TReturn> ChangeReturnResultAlwaysFail<T, TReturn>(this MlResult<T>     source,
-                                                                                  MlErrorsDetails validFailValue,
-                                                                                  MlErrorsDetails failValue)
+                                                                                  MlErrorDetails validFailValue,
+                                                                                  MlErrorDetails failValue)
         => source.Match(
                             valid: x      => validFailValue.ToMlResultFail<TReturn>(),
                             fail : errors => failValue     .ToMlResultFail<TReturn>()
@@ -136,8 +136,8 @@ public static partial class MlResultChangeReturnResult
 
 
     public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this MlResult<T>     source,
-                                                                                                   MlErrorsDetails validFailValue,
-                                                                                                   MlErrorsDetails failValue)
+                                                                                                   MlErrorDetails validFailValue,
+                                                                                                   MlErrorDetails failValue)
         => await source.MatchAsync(
                                         validAsync: x      => validFailValue.ToMlResultFailAsync<TReturn>(),
                                         failAsync : errors => failValue     .ToMlResultFailAsync<TReturn>()
@@ -161,8 +161,8 @@ public static partial class MlResultChangeReturnResult
 
 
     public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this Task<MlResult<T>>     sourceAsync,
-                                                                                  MlErrorsDetails validFailValue,
-                                                                                  MlErrorsDetails failValue)
+                                                                                  MlErrorDetails validFailValue,
+                                                                                  MlErrorDetails failValue)
         => (await sourceAsync).Match(
                                         valid: x      => validFailValue.ToMlResultFail<TReturn>(),
                                         fail : errors => failValue     .ToMlResultFail<TReturn>()
@@ -225,7 +225,7 @@ public static partial class MlResultChangeReturnResult
 
 
     public static MlResult<T> ChangeReturnResultIfValidToFail<T>(this MlResult<T>     source,
-                                                                      MlErrorsDetails returnFailValue)
+                                                                      MlErrorDetails returnFailValue)
         => source.Match(
                             valid: x      => returnFailValue.ToMlResultFail<T>(),
                             fail : errors => errors.ToMlResultFail<T>()
@@ -246,7 +246,7 @@ public static partial class MlResultChangeReturnResult
 
 
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this MlResult<T>     source,
-                                                                                       MlErrorsDetails returnFailValue)
+                                                                                       MlErrorDetails returnFailValue)
         => await source.MatchAsync(
                             validAsync: x      => returnFailValue.ToMlResultFailAsync<T>(),
                             failAsync : errors => errors         .ToMlResultFailAsync<T>()
@@ -267,7 +267,7 @@ public static partial class MlResultChangeReturnResult
 
 
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this Task<MlResult<T>> sourceAsync,
-                                                                                       MlErrorsDetails   returnFailValue)
+                                                                                       MlErrorDetails   returnFailValue)
         => (await sourceAsync).Match(
                                         valid: x      => returnFailValue.ToMlResultFail<T>(),
                                         fail : errors => errors.ToMlResultFail<T>()

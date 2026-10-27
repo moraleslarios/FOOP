@@ -21,7 +21,7 @@ esa constante vive aquí y no repetida en cada uno.
 
 ## 1. Por qué existe este proyecto
 
-El caso que motivó su creación fue un bug real: el diccionario `Details` de `MlErrorsDetails`
+El caso que motivó su creación fue un bug real: el diccionario `Details` de `MlErrorDetails`
 se usaba como canal de transporte entre capas, pero **la clave se escribía a mano en cada
 extremo**. Un proyecto guardaba el `ProblemDetails` bajo una clave y otro lo leía bajo otra,
 de modo que el consumidor no encontraba nada y un **404 se degradaba silenciosamente a 500**.
@@ -31,11 +31,11 @@ repetido. Sí puede detectarlo cuando es una **constante única y compartida**:
 
 ```csharp
 // ❌ Antes: cada proyecto escribía su propio literal
-details.AddDetail("NotFound", problemDetails);        // capa de servicios
-var pd = details.GetDetailValue<ProblemDetails>();    // capa web buscaba "ProblemsDetails"
+details.AddMetadataOrThrow("NotFound", problemDetails);        // capa de servicios
+var pd = details.GetMetadataValue<ProblemDetails>();    // capa web buscaba "ProblemsDetails"
 
 // ✅ Ahora: una sola fuente de verdad
-details.AddDetail(WebErrorDetailsKeys.ProblemsDetails, problemDetails);
+details.AddMetadataOrThrow(WebErrorDetailsKeys.ProblemsDetails, problemDetails);
 ```
 
 Además, este proyecto permite que dos proyectos compartan vocabulario **sin que uno tenga que
@@ -75,20 +75,20 @@ public static class WebErrorDetailsKeys
 
 | Constante | Valor | Para qué sirve |
 |-----------|-------|----------------|
-| `ProblemsDetails` | `"ProblemsDetails"` | Clave bajo la que se guarda en `MlErrorsDetails.Details` el `ProblemDetails` (RFC 7807) que la capa web debe devolver tal cual, preservando el código de estado HTTP original. |
+| `ProblemsDetails` | `"ProblemsDetails"` | Clave bajo la que se guarda en `MlErrorDetails.Metadata` el `ProblemDetails` (RFC 7807) que la capa web debe devolver tal cual, preservando el código de estado HTTP original. |
 
 ### Quién la escribe y quién la lee
 
 ```mermaid
 flowchart LR
-    A["WebServices<br/>BuildNotFoundPkError"] -->|"AddDetail(ProblemsDetails, pd)"| B["MlErrorsDetails.Details"]
-    B -->|"GetDetailValue&lt;ProblemDetails&gt;()"| C["WebApi<br/>GetProblemDetails"]
+    A["WebServices<br/>BuildNotFoundPkError"] -->|"AddMetadataOrThrow(ProblemsDetails, pd)"| B["MlErrorDetails.Metadata"]
+    B -->|"GetMetadataValue&lt;ProblemDetails&gt;()"| C["WebApi<br/>GetProblemDetails"]
     C --> D["404 Not Found"]
 ```
 
 - **Escritura** — `MoralesLarios.OOFP.Application\Helpers\Extensions.cs`, al construir el error
   de «entidad no encontrada por clave primaria».
-- **Lectura** — `MoralesLarios.OOFP.AspNetCore.Results\Helpers\MlErrorsDetailsExtensions.cs`, al traducir un
+- **Lectura** — `MoralesLarios.OOFP.AspNetCore.Results\Helpers\MlErrorDetailsExtensions.cs`, al traducir un
   `MlResult` en fallo a un `IActionResult`.
 
 > 🔑 **Regla:** nunca escribas el literal `"ProblemsDetails"` en tu código. Usa siempre la
@@ -149,7 +149,7 @@ Pasos:
 - 📘 [README del núcleo `MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md)
 - 📘 [MoralesLarios.OOFP.Application](../MoralesLarios.OOFP.Application/README.md) — productor de la clave
 - 📘 [MoralesLarios.OOFP.AspNetCore.Results](../MoralesLarios.OOFP.AspNetCore.Results/README.md) — consumidor de la clave
-- 📘 [Modelo de errores: `MlErrorsDetails` y su diccionario `Details`](../docs/core-types/MlResultErrors.md)
+- 📘 [Modelo de errores: `MlErrorDetails` y su diccionario `Details`](../docs/core-types/MlResultErrors.md)
 
 ---
 
@@ -504,7 +504,7 @@ public async Task<IActionResult> Get([FromQuery] int page = 1, [FromQuery] int s
             r.TotalCount,
             TotalPages = (int)Math.Ceiling(r.TotalCount / (double)r.PageSize)
         }),
-        fail: errores => BadRequest(errores.ToErrorsMessages()));
+        fail: errores => BadRequest(errores.GetErrorMessages()));
 }
 ```
 
@@ -524,7 +524,7 @@ public async Task<MlResult<PaginationResultInfo<UserDto>>> BuscarAsync(string fi
                      })
                      .BindAsync(async x => await _repo.BuscarPaginadoAsync(x.filtro, x.pagination))
                      .ExecSelfIfFailAsync(async errores =>
-                         _logger.LogWarning("Búsqueda fallida: {Errores}", errores.ToErrorsDescription()));
+                         _logger.LogWarning("Búsqueda fallida: {Errores}", errores.GetErrorsSummary()));
 ```
 
 ### Ejemplo 5 — ❌ Qué no hacer / ✅ qué hacer

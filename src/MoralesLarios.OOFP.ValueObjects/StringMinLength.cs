@@ -17,7 +17,7 @@ public partial class StringMinLength : ValueObject<NotEmptyString>
 
     public static StringMinLength FromStringLength(string value, int length) => new StringMinLength(value, length);
 
-    public static MlResult<StringMinLength> ByStringLength(string value, int length, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<StringMinLength> ByStringLength(string value, int length, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
                             .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
                             .Map ( _ => new StringMinLength(value, length));

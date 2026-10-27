@@ -17,7 +17,7 @@ public partial class IntBetween : ValueObject<int>
 
     public static IntBetween FromIntLength(int value, int minLength, int maxLength) => new IntBetween(value, minLength, maxLength);
 
-    public static MlResult<IntBetween> ByIntLength(int value, int minLength, int maxLength, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<IntBetween> ByIntLength(int value, int minLength, int maxLength, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? BuildErrorMessage(value, minLength, maxLength)))
                     .Map ( _ => new IntBetween(value, minLength, maxLength));

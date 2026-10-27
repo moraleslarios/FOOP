@@ -752,7 +752,7 @@ public override async Task<IActionResult> DeleteAsync(string id, CancellationTok
                      .TryMapAsync(_  => id.ConverterTo(typeof(int)),
                                   ex => $"'{id}' no es un identificador válido: {ex.Message}")
                      .MapIfFailAsync(errors => MlProblemsDetails.BadRequestError(
-                                                   detail: errors.ToErrorsDescription()))
+                                                   detail: errors.GetErrorsSummary()))
                      .BindAsync(pk => svc.DeleteProblemDetailsAsync(
                                             notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                             ct: ct, pk: pk))
@@ -807,7 +807,7 @@ public class DocumentsController(IGenServiceFp<Document, DocumentDto> svc)
                          .TryMapAsync(_  => Guid.Parse(id),
                                       ex => $"'{id}' no es un GUID válido: {ex.Message}")
                          .MapIfFailAsync(errors => MlProblemsDetails.BadRequestError(
-                                                       detail: errors.ToErrorsDescription()))
+                                                       detail: errors.GetErrorsSummary()))
                          .BindAsync(pk => svc.FindByIdProblemsDetailsAsync(
                                                  notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
                                                  ct: ct, pk: pk))
@@ -858,7 +858,7 @@ public class UsersController(IGenServiceFp<User, UserDto> svc,
     public async Task<IActionResult> GetPagedAsync(CancellationToken ct = default)
         => await Request.GetHeaderPaginationInfoAsync()
                         .MapIfFailAsync(errors => MlProblemsDetails.BadRequestError(
-                                                      detail: errors.ToErrorsDescription()))
+                                                      detail: errors.GetErrorsSummary()))
                         .BindAsync(pag => repoPag.TryGetInternalDataAsync(pag, ct: ct))
                         .ToGetPdActionResultAsync();
 }
@@ -925,7 +925,7 @@ builder.Services.AddControllers();
 // (el fallo de conversión no lleva el detalle "ProblemsDetails")
 
 // ✅ reclasifica el error explícitamente (ver Ejemplo 5)
-.MapIfFailAsync(errors => MlProblemsDetails.BadRequestError(detail: errors.ToErrorsDescription()))
+.MapIfFailAsync(errors => MlProblemsDetails.BadRequestError(detail: errors.GetErrorsSummary()))
 ```
 
 **Enviar fechas dependientes de la cultura:**
@@ -1065,7 +1065,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 ### Documentación del núcleo útil aquí
 
 - 📄 [`MlResult<T>`](../docs/core-types/MlResult.md) — el tipo que atraviesa todas las capas.
-- 📄 [`MlErrorsDetails`](../docs/core-types/MlResultErrors.md) — cómo se transportan los errores y sus detalles.
+- 📄 [`MlErrorDetails`](../docs/core-types/MlResultErrors.md) — cómo se transportan los errores y sus detalles.
 - 📄 [`EnsureFp`](../docs/EnsureFp/EnsureFp.md) — las guardas que usan los controladores (`NotNullAsync`).
 - 📄 [`Bind`](../docs/Bind/3_Bind.md) — encadenar operaciones que pueden fallar.
 - 📄 [`Map`](../docs/Map/1_Map.md) y [`TryMap`](../docs/Map/1_Map.md) — transformar el valor y capturar excepciones.

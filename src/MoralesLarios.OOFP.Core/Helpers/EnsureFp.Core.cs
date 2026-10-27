@@ -26,7 +26,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Evalúa la condición y, sólo si falla, construye los detalles de error.
     /// </summary>
-    public static MlResult<T> That<T>(T value, bool condition, Func<MlErrorsDetails> errorsDetailsBuilder)
+    public static MlResult<T> That<T>(T value, bool condition, Func<MlErrorDetails> errorsDetailsBuilder)
         => condition
                 ? MlResult<T>.Valid(value)
                 : (errorsDetailsBuilder is null
@@ -43,13 +43,13 @@ public static partial class EnsureFp
     public static MlResult<T> That<T>(T value, Func<T, bool> predicate, string errorMessage)
         => That(value, EvaluatePredicate(value, predicate), errorMessage);
 
-    public static MlResult<T> That<T>(T value, Func<T, bool> predicate, MlErrorsDetails errorsDetails)
+    public static MlResult<T> That<T>(T value, Func<T, bool> predicate, MlErrorDetails errorsDetails)
         => That(value, EvaluatePredicate(value, predicate), errorsDetails);
 
     public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<string> errorMessageBuilder)
         => That(value, EvaluatePredicate(value, predicate), errorMessageBuilder);
 
-    public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<MlErrorsDetails> errorsDetailsBuilder)
+    public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<MlErrorDetails> errorsDetailsBuilder)
         => That(value, EvaluatePredicate(value, predicate), errorsDetailsBuilder);
 
     /// <summary>
@@ -61,9 +61,9 @@ public static partial class EnsureFp
     /// <summary>
     /// Evalúa el predicado sobre el valor y construye los detalles de error a partir del propio valor.
     /// </summary>
-    public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<T, MlErrorsDetails> errorsDetailsBuilder)
+    public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<T, MlErrorDetails> errorsDetailsBuilder)
         => That(value, EvaluatePredicate(value, predicate), () => errorsDetailsBuilder is null
-                                                                        ? MlErrorsDetails.FromErrorMessage(EnsureFpMessages.NotValid(null))
+                                                                        ? MlErrorDetails.FromErrorMessage(EnsureFpMessages.NotValid(null))
                                                                         : errorsDetailsBuilder(value));
 
     #endregion
@@ -84,7 +84,7 @@ public static partial class EnsureFp
     /// </summary>
     public static MlResult<T> TryThat<T>(T                        value,
                                          Func<T, bool>            predicate,
-                                         MlErrorsDetails          errorsDetails,
+                                         MlErrorDetails          errorsDetails,
                                          [CallerArgumentExpression(nameof(value))] string? paramName = null)
     {
         if (predicate is null) return MlResult<T>.Fail(EnsureFpMessages.NotValid(paramName));
@@ -185,9 +185,9 @@ public static partial class EnsureFp
     private static MlResult<T> BuildGuard<T>(T value, bool condition, string errorMessage, string? paramName)
         => condition
                 ? MlResult<T>.Valid(value)
-                : MlErrorsDetails.FromErrorMessage(errorMessage)
-                                 .AddDetail(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
-                                 .AddDetail<object>(ValueMetadataKey, value!)
+                : MlErrorDetails.FromErrorMessage(errorMessage)
+                                 .AddMetadataOrThrow(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
+                                 .AddMetadataOrThrow<object>(ValueMetadataKey, value!)
                                  .ToMlResultFail<T>();
 
     private static MlResult<T> BuildExceptionFail<T>(string?                 paramName,
@@ -198,8 +198,8 @@ public static partial class EnsureFp
                             ? EnsureFpMessages.PredicateException(paramName, ex)
                             : errorMessageBuilder(ex) ?? EnsureFpMessages.PredicateException(paramName, ex);
 
-        return MlErrorsDetails.FromErrorMessage(message)
-                              .AddDetail(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
+        return MlErrorDetails.FromErrorMessage(message)
+                              .AddMetadataOrThrow(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
                               .AppendExDetailsToMlDetails(ex)
                               .ToMlResultFail<T>();
     }
@@ -216,12 +216,12 @@ public static partial class EnsureFp
     {
         if (condition) return MlResult<T>.Valid(value);
 
-        var errorsDetails = MlErrorsDetails.FromErrorMessage(errorMessage)
-                                           .AddDetail(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
-                                           .AddDetail<object>(ValueMetadataKey, value!);
+        var errorsDetails = MlErrorDetails.FromErrorMessage(errorMessage)
+                                           .AddMetadataOrThrow(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
+                                           .AddMetadataOrThrow<object>(ValueMetadataKey, value!);
 
         foreach (var (key, detailValue) in extraDetails ?? Array.Empty<(string, object)>())
-            errorsDetails = errorsDetails.AddDetail(key, detailValue);
+            errorsDetails = errorsDetails.AddMetadataOrThrow(key, detailValue);
 
         return errorsDetails.ToMlResultFail<T>();
     }

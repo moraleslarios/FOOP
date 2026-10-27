@@ -29,7 +29,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Espera el valor y comprueba el predicado síncrono sobre él.
     /// </summary>
-    public static async Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, bool> predicate, MlErrorsDetails errorsDetails)
+    public static async Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, bool> predicate, MlErrorDetails errorsDetails)
     {
         var value = await SecureAwait(valueAsync);
 
@@ -45,7 +45,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Espera el valor y comprueba la condición ya evaluada.
     /// </summary>
-    public static async Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, bool condition, MlErrorsDetails errorsDetails)
+    public static async Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, bool condition, MlErrorDetails errorsDetails)
         => That(await SecureAwait(valueAsync), condition, errorsDetails);
 
     #endregion
@@ -61,7 +61,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba un predicado asíncrono sobre el valor.
     /// </summary>
-    public static async Task<MlResult<T>> ThatAsync<T>(T value, Func<T, Task<bool>> predicateAsync, MlErrorsDetails errorsDetails)
+    public static async Task<MlResult<T>> ThatAsync<T>(T value, Func<T, Task<bool>> predicateAsync, MlErrorDetails errorsDetails)
         => That(value, await EvaluatePredicateAsync(value, predicateAsync), errorsDetails);
 
     /// <summary>
@@ -77,7 +77,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Espera el valor y comprueba un predicado asíncrono sobre él.
     /// </summary>
-    public static async Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, Task<bool>> predicateAsync, MlErrorsDetails errorsDetails)
+    public static async Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, Task<bool>> predicateAsync, MlErrorDetails errorsDetails)
     {
         var value = await SecureAwait(valueAsync);
 
@@ -104,7 +104,7 @@ public static partial class EnsureFp
     /// </summary>
     public static async Task<MlResult<T>> ThatAsync<T>(T value,
                                                        Func<T, CancellationToken, Task<bool>> predicateAsync,
-                                                       MlErrorsDetails errorsDetails,
+                                                       MlErrorDetails errorsDetails,
                                                        CancellationToken cancellationToken = default)
     {
         if (predicateAsync is null) return That(value, false, errorsDetails);
@@ -170,7 +170,7 @@ public static partial class EnsureFp
     /// </summary>
     public static async Task<MlResult<T>> TryThatAsync<T>(T value,
                                                           Func<T, Task<bool>> predicateAsync,
-                                                          MlErrorsDetails errorsDetails,
+                                                          MlErrorDetails errorsDetails,
                                                           [CallerArgumentExpression(nameof(value))] string? paramName = null)
     {
         try
@@ -218,7 +218,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Espera el valor y comprueba que no es nulo.
     /// </summary>
-    public static async Task<MlResult<T>> NotNullAsync<T>(Task<T> valueAsync, MlErrorsDetails errorsDetails)
+    public static async Task<MlResult<T>> NotNullAsync<T>(Task<T> valueAsync, MlErrorDetails errorsDetails)
         => NotNull(await SecureAwait(valueAsync), errorsDetails);
 
     /// <summary>
@@ -241,7 +241,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Espera la colección y comprueba que no es nula ni vacía.
     /// </summary>
-    public static async Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(Task<IEnumerable<T>> valueAsync, MlErrorsDetails errorsDetails)
+    public static async Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(Task<IEnumerable<T>> valueAsync, MlErrorDetails errorsDetails)
         => NotEmpty(await SecureAwait(valueAsync), errorsDetails);
 
     /// <summary>
@@ -264,7 +264,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Espera la cadena y comprueba que no es nula, vacía ni compuesta solo por espacios en blanco.
     /// </summary>
-    public static async Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(Task<string> valueAsync, MlErrorsDetails errorsDetails)
+    public static async Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(Task<string> valueAsync, MlErrorDetails errorsDetails)
         => NotNullEmptyOrWhitespace(await SecureAwait(valueAsync), errorsDetails);
 
     /// <summary>

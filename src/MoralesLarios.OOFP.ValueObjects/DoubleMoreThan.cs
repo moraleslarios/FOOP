@@ -15,7 +15,7 @@ public class DoubleMoreThan : ValueObject<double>
     public static bool IsValid(double value, double length) => value > length;
 
     public static DoubleMoreThan FromDoubleLength(double value, double length) => new DoubleMoreThan(value, length);
-    public static MlResult<DoubleMoreThan> ByDoubleLength(double value, double length, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<DoubleMoreThan> ByDoubleLength(double value, double length, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                    .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
                    .Map ( _ => new DoubleMoreThan(value, length));

@@ -32,7 +32,7 @@ public class EnsureFpCollectionsTests
         var result = EnsureFp.NotEmptyCollectionArg<string[], string>(items);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("items");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("items");
     }
 
     #endregion
@@ -77,8 +77,8 @@ public class EnsureFpCollectionsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details[PARAM_NAME_KEY].Should().Be("lines");
-        details.Details[EXPECTED_KEY].Should().Be(5);
+        details.Metadata[PARAM_NAME_KEY].Should().Be("lines");
+        details.Metadata[EXPECTED_KEY].Should().Be(5);
     }
 
     [Fact]
@@ -104,8 +104,8 @@ public class EnsureFpCollectionsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details[PARAM_NAME_KEY].Should().Be("numbers");
-        details.Details[FAILED_INDEXES_KEY].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
+        details.Metadata[PARAM_NAME_KEY].Should().Be("numbers");
+        details.Metadata[FAILED_INDEXES_KEY].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
     }
 
     [Fact]
@@ -155,8 +155,8 @@ public class EnsureFpCollectionsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details[PARAM_NAME_KEY].Should().Be("names");
-        details.Details[FAILED_INDEXES_KEY].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
+        details.Metadata[PARAM_NAME_KEY].Should().Be("names");
+        details.Metadata[FAILED_INDEXES_KEY].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
     }
 
     [Fact]

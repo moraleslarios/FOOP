@@ -17,7 +17,7 @@ public partial class Key : StringMinLength
 
     public static Key FromString(string value) => new Key(value);
 
-    public static MlResult<Key> ByString(string value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<Key> ByString(string value, MlErrorDetails errorsDetails = null!)
         => StringMinLength.ByStringLength(value, MinLength, errorsDetails)
                             .Map(_ => new Key(value));
 

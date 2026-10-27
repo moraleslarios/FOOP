@@ -4,14 +4,14 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 
-public static class MlErrorsDetailsExtensions
+public static class MlErrorDetailsExtensions
 {
-    public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorsDetails source)
+    public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorDetails source)
     {
         var result = MlResult.Empty()
-                                .MapEnsure( _  => source.HasKeyDetails(ProblemsDetails),
+                                .MapEnsure( _  => source.ContainsMetadata(ProblemsDetails),
                                             _  => "The MlErrorsDetails does not have details.")
-                                .Map      ( _  => source.Details[ProblemsDetails])
+                                .Map      ( _  => source.Metadata[ProblemsDetails])
                                 .MapEnsure(obj => obj is not null, 
                                             _  => "The details ProblemsDetails key has a null object.")
                                 .Bind     (obj => obj.ToProblemsDetailsInfo() );

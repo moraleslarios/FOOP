@@ -19,7 +19,7 @@ public partial class Name : StringMinLength
 
     public static Name FromString(string value) => new Name(value);
 
-    public static MlResult<Name> ByString(string value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<Name> ByString(string value, MlErrorDetails errorsDetails = null!)
         => StringMinLength.ByStringLength(value, MinLength, errorsDetails)  
                             .Map ( _ => new Name(value));
 

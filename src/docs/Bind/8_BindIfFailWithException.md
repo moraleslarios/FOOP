@@ -21,13 +21,13 @@
 
 Hay fallos que se tratan igual sea cual sea su causa, y hay fallos cuya reacción correcta **depende de la excepción concreta** que los provocó: un `TimeoutException` merece un reintento, un `HttpRequestException` con 503 merece un *fallback*, y un `ArgumentException` no merece ninguno de los dos porque es un error de programación.
 
-Con `BindIfFail` solo recibes el `MlErrorsDetails`, y para averiguar la causa técnica tendrías que rebuscar dentro de los detalles a mano:
+Con `BindIfFail` solo recibes el `MlErrorDetails`, y para averiguar la causa técnica tendrías que rebuscar dentro de los detalles a mano:
 
 ```csharp
 // ❌ Rebuscando la excepción a mano dentro del fallo
 resultado.BindIfFail(errores =>
 {
-    var resultadoEx = errores.GetDetailException();
+    var resultadoEx = errores.GetException();
 
     if (resultadoEx.IsFailure) return errores;                  // no había excepción
 
@@ -52,7 +52,7 @@ resultado.BindIfFailWithException(ex => ex switch
 });
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`; para llegar al valor original, `GetDetailValue<T>()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`; para llegar al valor original, `GetMetadataValue<T>()`.
 
 ---
 
@@ -79,7 +79,7 @@ try
 }
 catch (Exception ex)
 {
-    return MlErrorsDetails.FromErrorMessageWithException("Fallo consultando la API", ex)
+    return MlErrorDetails.FromErrorMessageWithException("Fallo consultando la API", ex)
                           .ToMlResultFail<Respuesta>();
 }
 ```
@@ -87,7 +87,7 @@ catch (Exception ex)
 | Origen del fallo | ¿Lleva `Details["Ex"]`? | ¿Se ejecuta tu función? |
 |---|---|---|
 | `TryBind` / `TryMap` / `TryBindIfFail`… que capturó una excepción | Sí | ✅ Sí |
-| `MlErrorsDetails.FromErrorMessageWithException(...)` | Sí | ✅ Sí |
+| `MlErrorDetails.FromErrorMessageWithException(...)` | Sí | ✅ Sí |
 | `"mensaje".ToMlResultFail<T>()` (fallo de negocio) | No | ❌ No |
 | `MapEnsure` / `EnsureFp.That(...)` (validación) | No | ❌ No |
 
@@ -118,7 +118,7 @@ IActionResult respuesta = ObtenerTarifaRemota(id)
                 .BindIfFailWithException(
                         funcValid: tarifa => Ok(tarifa).ToMlResultValid<IActionResult>(),
                         funcFail : ex     => StatusCode(502, ex.Message).ToMlResultValid<IActionResult>())
-                .Match(valid: r => r, fail: e => (IActionResult)BadRequest(e.ToErrorsMessages()));
+                .Match(valid: r => r, fail: e => (IActionResult)BadRequest(e.GetErrorMessages()));
 ```
 
 ---
@@ -130,7 +130,7 @@ IActionResult respuesta = ObtenerTarifaRemota(id)
 public static MlResult<T> BindIfFailWithException<T>(this MlResult<T>                  source,
                                                           Func<Exception, MlResult<T>> funcException)
     => source.Match(
-            fail : errorsDetails => errorsDetails.GetDetailException().Match(
+            fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : _ => source,          // ← sin excepción: devuelve el fallo intacto
                                             valid:      funcException),
             valid: value         => value);
@@ -140,7 +140,7 @@ public static MlResult<TReturn> BindIfFailWithException<T, TReturn>(this MlResul
                                                                          Func<T        , MlResult<TReturn>> funcValid,
                                                                          Func<Exception, MlResult<TReturn>> funcFail)
     => source.Match(
-            fail : errorsDetails => errorsDetails.GetDetailException().Match(
+            fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : _ => errorsDetails.ToMlResultFail<TReturn>(),
                                             valid:      funcFail),
             valid: funcValid);
@@ -151,13 +151,13 @@ public static MlResult<TReturn> BindIfFailWithException<T, TReturn, TException>(
                                                                                      Func<TException, MlResult<TReturn>> funcFail)
     where TException : Exception
     => source.Match(
-            fail : errorsDetails => errorsDetails.GetDetailException<TException>().Match(
+            fail : errorsDetails => errorsDetails.GetException<TException>().Match(
                                             fail : _ => errorsDetails.ToMlResultFail<TReturn>(),
                                             valid:      funcFail),
             valid: funcValid);
 ```
 
-🔑 El patrón interno es siempre el mismo: **`GetDetailException()` devuelve un `MlResult<Exception>`**, y sobre él se hace un segundo `Match`. Ese doble `Match` es lo que garantiza que tu función de recuperación no se ejecute nunca con una excepción inexistente.
+🔑 El patrón interno es siempre el mismo: **`GetException()` devuelve un `MlResult<Exception>`**, y sobre él se hace un segundo `Match`. Ese doble `Match` es lo que garantiza que tu función de recuperación no se ejecute nunca con una excepción inexistente.
 
 | Estado de entrada | `Details["Ex"]` | Resultado |
 |---|---|---|
@@ -178,7 +178,7 @@ El propio código fuente lo documenta con un comentario, y merece la pena repeti
 | Quién lo pone | Tú, con `AddValueIfFail(...)` | Automáticamente cualquier método `Try*` |
 | Si el dato **no está** | Añade un error nuevo al fallo que ya venía | **Devuelve el fallo exactamente como llegó** |
 
-> 📌 Es decir: `BindIfFailWithException` es *silencioso* cuando no encuentra excepción. No te avisará de que tu función no se ha ejecutado. Si sospechas que ese es tu caso, diagnostica con `errores.ToDetailsDescription()`.
+> 📌 Es decir: `BindIfFailWithException` es *silencioso* cuando no encuentra excepción. No te avisará de que tu función no se ha ejecutado. Si sospechas que ese es tu caso, diagnostica con `errores.GetMetadataSummary()`.
 
 ---
 
@@ -188,9 +188,9 @@ Existe una familia gemela con el sufijo **`Error`**. La condición de disparo es
 
 ```csharp
 public static MlResult<T> BindIfFailWithExceptionError<T>(this MlResult<T>                   source,
-                                                               Func<MlErrorsDetails, MlResult<T>> funcFail)
+                                                               Func<MlErrorDetails, MlResult<T>> funcFail)
     => source.Match(
-            fail : errorsDetails => errorsDetails.GetDetailException().Match(
+            fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : _ => source,
                                             valid: _ => funcFail(errorsDetails)),   // ← recibe los detalles completos
             valid: value         => value);
@@ -199,14 +199,14 @@ public static MlResult<T> BindIfFailWithExceptionError<T>(this MlResult<T>      
 | | Recibe | Cuándo usarla |
 |---|---|---|
 | `BindIfFailWithException` | `Exception` | Te basta con la causa técnica. |
-| `BindIfFailWithExceptionError` | `MlErrorsDetails` completo | Necesitas también los mensajes de error acumulados, otras claves de `Details`, o quieres reenviar el fallo enriquecido. |
+| `BindIfFailWithExceptionError` | `MlErrorDetails` completo | Necesitas también los mensajes de error acumulados, otras claves de `Details`, o quieres reenviar el fallo enriquecido. |
 
 ```csharp
 // Solo reacciona a fallos técnicos, pero conserva TODO el contexto acumulado
 var resultado = await ProcesarPagoAsync(dto)
                         .BindIfFailWithExceptionErrorAsync(async errores =>
                         {
-                            await _auditoria.RegistrarIncidenciaAsync(errores.ToDetailsDescription());
+                            await _auditoria.RegistrarIncidenciaAsync(errores.GetMetadataSummary());
                             return await EncolarParaReintentoAsync(dto);
                         });
 ```
@@ -234,7 +234,7 @@ public async Task<MlResult<Tarifa>> ObtenerAsync(int id)
                         async ex => await _cache.LeerAsync(id))
                  .ExecSelfIfFailAsync(errores =>
                         _log.LogWarning("Tarifa {Id} no disponible: {Errores}",
-                                        id, errores.ToErrorsDescription()));
+                                        id, errores.GetErrorsSummary()));
 ```
 
 > 💡 Cuando pasas un delegado síncrono a una sobrecarga asíncrona, la librería lo adapta internamente con `func.ToFuncTask()`. No necesitas envolverlo tú en `Task.FromResult`.
@@ -304,7 +304,7 @@ public class ServicioTarifas
              // 3) Cualquier otro fallo se registra pero no se recupera
              .ExecSelfIfFail(errores =>
                     _log.LogError("Tarifa {Id} irrecuperable: {Detalle}",
-                                  id, errores.ToDetailsDescription()));
+                                  id, errores.GetMetadataSummary()));
 }
 ```
 
@@ -325,7 +325,7 @@ public async Task<IActionResult> Obtener(int id)
                       .MatchAsync(
                             valid: respuesta => respuesta,
                             // Sin excepción ⇒ fallo de negocio ⇒ 400
-                            fail : errores   => BadRequest(errores.ToErrorsMessages()));
+                            fail : errores   => BadRequest(errores.GetErrorMessages()));
 
 private static Task<MlResult<IActionResult>> TraducirAsync(Exception ex)
     => (ex switch
@@ -351,7 +351,7 @@ public async Task<MlResult<Confirmacion>> EnviarAsync(Pedido pedido, int intento
                 {
                     // El contexto completo va al log, no solo la excepción
                     _log.LogWarning("Intento fallido para el pedido {Id}. Contexto: {Ctx}",
-                                    pedido.Id, errores.ToDetailsDescription());
+                                    pedido.Id, errores.GetMetadataSummary());
 
                     if (intentos <= 1)
                         return errores.AddErrorMessage("Agotados todos los reintentos")
@@ -379,10 +379,10 @@ var r1 = "El importe no puede ser negativo".ToMlResultFail<Factura>()
 
 // ✅ Compruébalo antes de dar por buena la recuperación
 r1.ExecSelfIfFail(errores =>
-    errores.GetDetailException()
+    errores.GetException()
            .Match(valid: ex => _log.LogError(ex, "Fallo técnico"),
                   fail : _  => _log.LogWarning("Fallo de negocio: {M}",
-                                               errores.ToErrorsMessages())));
+                                               errores.GetErrorMessages())));
 
 // ✅ Si quieres reaccionar a AMBOS tipos de fallo, usa BindIfFail
 var r2 = "El importe no puede ser negativo".ToMlResultFail<Factura>()
@@ -414,7 +414,7 @@ var r2 = "El importe no puede ser negativo".ToMlResultFail<Factura>()
 - `BindIfFailWithException` ejecuta tu función de recuperación **solo si el fallo lleva una excepción** en `Details["Ex"]`, y te la entrega ya extraída.
 - Tiene **cuatro formas**: recuperación simple `<T>`, recuperación filtrada `<T, TException>`, ambos caminos `<T, TReturn>` y ambos caminos filtrados `<T, TReturn, TException>`.
 - A diferencia de `BindIfFailWithValue`, cuando **no hay** excepción **devuelve el fallo intacto**: no añade ningún error nuevo, pero tampoco te avisa.
-- La familia gemela `BindIfFailWithExceptionError` se dispara con la misma condición pero recibe el `MlErrorsDetails` completo.
+- La familia gemela `BindIfFailWithExceptionError` se dispara con la misma condición pero recibe el `MlErrorDetails` completo.
 - Las variantes `Try*` protegen el propio camino de recuperación; la nueva excepción se acumula como `Details["Ex2"]`.
 - La presencia o ausencia de excepción es un clasificador natural: **excepción ⇒ error técnico (5xx)**, **sin excepción ⇒ error de negocio (4xx)**.
 
@@ -426,7 +426,7 @@ var r2 = "El importe no puede ser negativo".ToMlResultFail<Factura>()
 - [`7_BindIfFailWithValue.md`](7_BindIfFailWithValue.md) — recuperación usando el valor de entrada.
 - [`9_BindIfFailWithoutException.md`](9_BindIfFailWithoutException.md) — el caso complementario: actuar solo si **no** hay excepción.
 - [`3_Bind.md`](3_Bind.md) — el encadenamiento básico y `TryBind`, origen habitual de `Details["Ex"]`.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailException`, `GetDetailException<TException>`, `MergeErrorsDetailsIfFail`.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — claves convencionales `Ex`, `Ex2`, `Value` y factorías de `MlErrorsDetails`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `GetException<TException>`, `MergeErrorsDetailsIfFail`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — claves convencionales `Ex`, `Ex2`, `Value` y factorías de `MlErrorDetails`.
 - [`../ExecSelf/5_ExecSelfIfFailWithException.md`](../ExecSelf/5_ExecSelfIfFailWithException.md) — el mismo filtro, pero solo para efectos laterales.
 - [`../Map/6_MapIfFailWithException.md`](../Map/6_MapIfFailWithException.md) — cuando la recuperación no puede fallar.

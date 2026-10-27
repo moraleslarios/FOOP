@@ -36,7 +36,7 @@ y devuelve un `MlResult<TReturn>` **nuevo**, desligado del estado anterior.
 
 | Sobrecarga | Firma | Devuelve |
 | --- | --- | --- |
-| Clásica (dos ramas) | `Match<T, TReturn>(Func<T, TReturn> valid, Func<MlErrorsDetails, TReturn> fail)` | `TReturn` **crudo** (sale del `MlResult`) |
+| Clásica (dos ramas) | `Match<T, TReturn>(Func<T, TReturn> valid, Func<MlErrorDetails, TReturn> fail)` | `TReturn` **crudo** (sale del `MlResult`) |
 | *match-all* | `Match<T, TReturn>(Func<TReturn> funcAll)` | `MlResult<TReturn>` (**sigue** en la tubería) |
 
 El compilador resuelve una u otra según el número de delegados que le pases, así que no hay ambigüedad
@@ -111,7 +111,7 @@ MlResult<string> cierre = resultado.Match(() => "Proceso finalizado");
 MlResult<Acuse> acuse = await _importador.ImportarAsync(fichero)
         // Dejamos rastro del fallo ANTES de perderlo.
         .ExecSelfIfFailAsync(er => _log.LogWarning("Importación fallida: {E}",
-                                                  er.ToErrorsDescription()))
+                                                  er.GetErrorsSummary()))
         // Y cerramos siempre igual: el cliente recibe un acuse de recepción.
         .MatchAsync(() => new Acuse(fichero.Nombre, _reloj.Ahora));
 ```
@@ -182,7 +182,7 @@ public static MlResult<TReturn> TryMatch<T, TReturn>(
 **Comportamiento**:
 - Ejecuta `funcAll()` incondicionalmente.
 - Si lanza una excepción, devuelve un `MlResult<TReturn>` fallido **con la excepción guardada** en
-  `Details["Ex"]`, recuperable después con `GetDetailException()`.
+  `Details["Ex"]`, recuperable después con `GetException()`.
 - Si termina bien, devuelve un `MlResult<TReturn>` válido.
 
 **Detalle de implementación relevante**: internamente conserva los errores previos cuando `source` venía
@@ -238,7 +238,7 @@ public class ServicioPedidos
             // 1. Antes de perder el contexto, registramos qué pasó realmente.
             .ExecSelfIfValidAsync(p  => _log.LogInformation("Pedido {Id} procesado", p.Id))
             .ExecSelfIfFailAsync (er => _log.LogWarning("Pedido rechazado: {E}",
-                                                       er.ToErrorsDescription()))
+                                                       er.GetErrorsSummary()))
 
             // 2. Sea cual sea el estado, creamos SIEMPRE el registro de auditoría
             //    y devolvemos su Id. TryMatch protege la escritura en base de datos.
@@ -261,7 +261,7 @@ public Task<MlResult<InformeLote>> EjecutarLoteAsync(IEnumerable<Factura> factur
     facturas.ProjectionAsync(_emisor.EmitirAsync)      // Task<MlResult<IEnumerable<Emision>>>
 
         // Guardamos el detalle del fallo por si el informe lo necesita.
-        .ExecSelfIfFailAsync(er => _incidencias.Anotar(er.ToErrorsDescription()))
+        .ExecSelfIfFailAsync(er => _incidencias.Anotar(er.GetErrorsSummary()))
 
         // El informe se genera SIEMPRE: si el lote falló, describe el fallo.
         .MatchAsync(async () => await _informes.GenerarCierreLoteAsync(_reloj.Ahora));
@@ -273,7 +273,7 @@ public Task<MlResult<InformeLote>> EjecutarLoteAsync(IEnumerable<Factura> factur
 > ```csharp
 > InformeLote informe = resultadoLote.Match(
 >     valid: emisiones => InformeLote.Correcto(emisiones.Count()),
->     fail : errores   => InformeLote.ConErrores(errores.ToErrorsMessages()));
+>     fail : errores   => InformeLote.ConErrores(errores.GetErrorMessages()));
 > ```
 
 ### Ejemplo 3: Reinicio de contexto para una operación independiente
@@ -288,7 +288,7 @@ public async Task<MlResult<int>> SincronizarYLimpiarAsync()
 
         // Nos interesa saberlo, pero no debe impedir la limpieza.
         .ExecSelfIfFailAsync(er => _log.LogError("Sincronización fallida: {E}",
-                                                er.ToErrorsDescription()))
+                                                er.GetErrorsSummary()))
 
         // Contexto nuevo: devolvemos el número de ficheros temporales eliminados,
         // con independencia de cómo terminara la sincronización.
@@ -307,7 +307,7 @@ MlResult<Acuse> resultado = await _proceso.EjecutarAsync(dto);
 
 MlResult<Acuse> conHistorial = resultado
         // Guardamos la descripción del fallo en una clave propia...
-        .MapIfFail(er => Acuse.Rechazado(er.ToErrorsDescription()))
+        .MapIfFail(er => Acuse.Rechazado(er.GetErrorsSummary()))
         // ...y ahora el "reset" ya no destruye información.
         .Match(() => Acuse.Cerrado(_reloj.Ahora));
 ```
@@ -333,7 +333,7 @@ MlResult<Acuse> conHistorial = resultado
 // Clásica: recibe el estado, DEVUELVE UN VALOR CRUDO (sale del MlResult).
 IActionResult respuesta = resultado.Match(
     valid: dto     => Ok(dto),
-    fail : errores => BadRequest(errores.ToErrorsMessages()))
+    fail : errores => BadRequest(errores.GetErrorMessages()))
 
 // match-all: ignora el estado, DEVUELVE UN MlResult (sigue en la tubería).
 MlResult<string> cierre = resultado.Match(() => "Finalizado");
@@ -393,12 +393,12 @@ MlResult<Pedido> resultado = ProcesarPedido(dto);
 // 1. Quiero devolver una respuesta HTTP → clásica.
 IActionResult http = resultado.Match(
     valid: p  => Ok(p.ToDto()),
-    fail : er => BadRequest(er.ToErrorsMessages()))
+    fail : er => BadRequest(er.GetErrorMessages()))
 
 // 2. Quiero registrar sin cambiar nada → ExecSelf.
 MlResult<Pedido> igual = resultado
         .ExecSelfIfValid(p  => _log.LogInformation("OK {Id}", p.Id))
-        .ExecSelfIfFail (er => _log.LogWarning("KO {E}", er.ToErrorsDescription()))
+        .ExecSelfIfFail (er => _log.LogWarning("KO {E}", er.GetErrorsSummary()))
 
 // 3. Quiero cerrar con un acuse común → match-all.
 MlResult<Acuse> acuse = resultado.Match(() => new Acuse(_reloj.Ahora));

@@ -9,14 +9,14 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit.Helpers;
 
-public class MlErrorsDetailsExtensionsTests
+public class MlErrorDetailsExtensionsTests
 {
 
 
     [Fact]
     public void GetProblemDetails_Has_not_details_return_fail()
     {
-        MlErrorsDetails source = "error without details";
+        MlErrorDetails source = "error without details";
 
         MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
 
@@ -27,7 +27,7 @@ public class MlErrorsDetailsExtensionsTests
     [Fact]
     public void GetProblemDetails_Has_not_problemsDetailsKey_return_fail()
     {
-        MlErrorsDetails source = ("error without problems details", new Dictionary<string, object>());
+        MlErrorDetails source = ("error without problems details", new Dictionary<string, object>());
 
         MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
 
@@ -37,7 +37,7 @@ public class MlErrorsDetailsExtensionsTests
     [Fact]
     public void GetProblemDetails_Has_problemsDetailsKey_return_valid()
     {
-        MlErrorsDetails source = ("Bad request",
+        MlErrorDetails source = ("Bad request",
                       new Dictionary<string, object>
                       {
                           { "ProblemsDetails", new
@@ -60,7 +60,7 @@ public class MlErrorsDetailsExtensionsTests
     [Fact]
     public void GetProblemDetails_Has_problemsDetailsKey_return_coorectData()
     {
-        MlErrorsDetails source = ("Bad request",
+        MlErrorDetails source = ("Bad request",
                       new Dictionary<string, object>
                       {
                           { "ProblemsDetails", new

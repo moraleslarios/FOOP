@@ -37,24 +37,24 @@ Por eso `ExecSelf` se puede insertar en **cualquier punto** de una tubería sin 
 var resultado = await ValidarPedidoAsync(dto)
     .ExecSelfIfValidAsync(p  => _log.LogInformation("Pedido {Id} validado", p.Id))
     .BindAsync(p             => ReservarStockAsync(p))
-    .ExecSelfIfFailAsync(er  => _log.LogWarning("Reserva falló: {E}", er.ToErrorsDescription()))
+    .ExecSelfIfFailAsync(er  => _log.LogWarning("Reserva falló: {E}", er.GetErrorsSummary()))
     .BindAsync(p             => CobrarAsync(p));
 ```
 
 Si quitases las dos llamadas a `ExecSelf*`, el resultado final sería **idéntico**. Solo cambiaría
 que no habría rastro en el log. Eso es lo que hace a `ExecSelf` seguro y fácil de razonar.
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone dos propiedades: `Errors`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone dos propiedades: `Errors`
 > (`IEnumerable<MlError>`) y `Details` (`Dictionary<string, object>`). **No existen** `AllErrors`,
 > `FirstErrorMessage`, `Exception` ni `HasValue`. Para consultarlo:
 >
 > | Necesitas | Usa |
 > | --- | --- |
-> | Array de mensajes | `errores.ToErrorsMessages()` |
-> | Un texto con todos los errores | `errores.ToErrorsDescription()` |
+> | Array de mensajes | `errores.GetErrorMessages()` |
+> | Un texto con todos los errores | `errores.GetErrorsSummary()` |
 > | El primer mensaje | `errores.Errors.First().Message` |
-> | La excepción capturada por un `Try*` | `errores.GetDetailException()` → `MlResult<Exception>` |
-> | Un dato adjunto | `errores.GetDetailValue<T>()` / `errores.GetDetail<T>("clave")` |
+> | La excepción capturada por un `Try*` | `errores.GetException()` → `MlResult<Exception>` |
+> | Un dato adjunto | `errores.GetMetadataValue<T>()` / `errores.GetDetail<T>("clave")` |
 
 ---
 
@@ -64,13 +64,13 @@ El archivo `Types/MlResultActionsExecSelf.cs` contiene estas familias:
 
 | Familia | Se ejecuta cuando… | Recibe el delegado |
 | --- | --- | --- |
-| `ExecSelf` | **Siempre** (dos delegados, uno por rama) | `T` / `MlErrorsDetails` |
+| `ExecSelf` | **Siempre** (dos delegados, uno por rama) | `T` / `MlErrorDetails` |
 | `ExecSelfIf` | Según un predicado | `T` |
 | `ExecSelfIfValid` | Solo si es válido | `T` |
-| `ExecSelfIfFail` | Solo si es fallido | `MlErrorsDetails` |
-| `ExecSelfIfFailWithValue` | Fallido **y** hay un valor adjunto en `Details["Value"]` | `MlErrorsDetails`, `TValue` |
-| `ExecSelfIfFailWithException` | Fallido **y** hay una excepción en `Details["Ex"]` | `MlErrorsDetails`, `Exception` |
-| `ExecSelfIfFailWithoutException` | Fallido y **no** hay excepción (error de negocio puro) | `MlErrorsDetails` |
+| `ExecSelfIfFail` | Solo si es fallido | `MlErrorDetails` |
+| `ExecSelfIfFailWithValue` | Fallido **y** hay un valor adjunto en `Details["Value"]` | `MlErrorDetails`, `TValue` |
+| `ExecSelfIfFailWithException` | Fallido **y** hay una excepción en `Details["Ex"]` | `MlErrorDetails`, `Exception` |
+| `ExecSelfIfFailWithoutException` | Fallido y **no** hay excepción (error de negocio puro) | `MlErrorDetails` |
 
 Cada familia tiene su versión `*Async` y su versión `Try*` / `Try*Async`. El recuento exacto de
 sobrecargas está en [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md).
@@ -84,7 +84,7 @@ sobrecargas está en [`../Types/MlResultActionsExecSelf.md`](../core-types/MlRes
 ```csharp
 public static MlResult<T> ExecSelf<T>(this MlResult<T>        source,
                                       Action<T>               actionValid,
-                                      Action<MlErrorsDetails> actionFail)
+                                      Action<MlErrorDetails> actionFail)
 ```
 
 Siempre se ejecuta **uno** de los dos. Es el equivalente a `Match` pero sin salir de la tubería:
@@ -126,7 +126,7 @@ Son la forma más habitual: solo te interesa una rama.
 var resultado = ObtenerCliente(id)
     .ExecSelfIfValid(c       => _cache.Guardar(c.Id, c))
     .ExecSelfIfFail (errores => _log.LogWarning("Cliente {Id} no disponible: {E}",
-                                                id, errores.ToErrorsDescription()));
+                                                id, errores.GetErrorsSummary()));
 ```
 
 ### `ExecSelfIfFailWithException` frente a `ExecSelfIfFailWithoutException`
@@ -147,7 +147,7 @@ var resultado = await ConsultarProveedorAsync(peticion)
     // Fallo de negocio: sin excepción. Nivel Warning, sin alerta.
     .ExecSelfIfFailWithoutExceptionAsync(async errores =>
     {
-        _log.LogWarning("Petición rechazada: {E}", errores.ToErrorsDescription());
+        _log.LogWarning("Petición rechazada: {E}", errores.GetErrorsSummary());
         await Task.CompletedTask;
     });
 ```
@@ -161,7 +161,7 @@ esta familia te lo entrega ya tipado:
 var resultado = ImportarLinea(linea)
     .AddValueIfFail(linea)                                  // Adjunta la línea al fallo
     .ExecSelfIfFailWithValue<Resultado, LineaCsv>((errores, l) =>
-        _log.LogWarning("Línea {N} rechazada: {E}", l.Numero, errores.ToErrorsDescription()));
+        _log.LogWarning("Línea {N} rechazada: {E}", l.Numero, errores.GetErrorsSummary()));
 ```
 
 ### `ExecSelfIf` — condicional
@@ -206,7 +206,7 @@ Hay una sobrecarga para cada combinación de fuente (`MlResult<T>` o `Task<MlRes
 var resultado = await ObtenerPedidoAsync(id)
     .ExecSelfIfValidAsync(async p  => await _bus.PublicarAsync(new PedidoLeido(p.Id)))
     .BindAsync           (async p  => await ValidarAsync(p))
-    .ExecSelfIfFailAsync (async er => await _alertas.EnviarAsync(er.ToErrorsDescription()));
+    .ExecSelfIfFailAsync (async er => await _alertas.EnviarAsync(er.GetErrorsSummary()));
 ```
 
 ---
@@ -263,7 +263,7 @@ public class ServicioPedidos
             // Fallo de negocio: log de advertencia, sin ruido de excepciones.
             .ExecSelfIfFailWithoutExceptionAsync(errores =>
                 _log.LogWarning("Pedido {Id} rechazado: {E}",
-                                pedidoId, errores.ToErrorsDescription()))
+                                pedidoId, errores.GetErrorsSummary()))
 
             // Siempre: cerramos la métrica de duración.
             .ExecSelfAsync(r => _metricas.Registrar(
@@ -293,7 +293,7 @@ public Task<MlResult<Transferencia>> TransferirAsync(SolicitudTransferencia soli
                 Importe   = solicitud.Importe,
                 Correcto  = resultado.IsSuccess,
                 Detalle   = resultado.Match(valid: t       => $"Ref: {t.Referencia}",
-                                            fail : errores => errores.ToErrorsDescription()),
+                                            fail : errores => errores.GetErrorsSummary()),
                 Momento   = DateTime.UtcNow
             });
         });
@@ -333,7 +333,7 @@ Cuanto más concreta sea la variante, menos `if` habrá dentro del delegado:
 resultado.ExecSelf(r => { if (r.IsFailure) _log.LogWarning("Error"); });
 
 // ✅ La variante ya expresa la condición.
-resultado.ExecSelfIfFail(errores => _log.LogWarning("Error: {E}", errores.ToErrorsDescription()));
+resultado.ExecSelfIfFail(errores => _log.LogWarning("Error: {E}", errores.GetErrorsSummary()));
 ```
 
 ### 2. `ExecSelf` no es para transformar
@@ -373,10 +373,10 @@ Una tubería con un `ExecSelf` entre cada paso se vuelve ilegible. Instrumenta l
 | --- | --- | --- | :---: |
 | `Bind` | `T` | `MlResult<TReturn>` | Sí |
 | `Map` | `T` | `MlResult<TReturn>` | Sí (el tipo) |
-| `MapIfFail` | `MlErrorsDetails` | `MlResult<T>` | Sí (recupera) |
-| `ExecSelf*` | `T` y/o `MlErrorsDetails` | **El mismo `MlResult<T>`** | **No** |
-| `TryExecSelf*` | `T` y/o `MlErrorsDetails` | `MlResult<T>` | Solo si el delegado lanza |
-| `Match` | `T` y `MlErrorsDetails` | `TReturn` crudo | Sale de la tubería |
+| `MapIfFail` | `MlErrorDetails` | `MlResult<T>` | Sí (recupera) |
+| `ExecSelf*` | `T` y/o `MlErrorDetails` | **El mismo `MlResult<T>`** | **No** |
+| `TryExecSelf*` | `T` y/o `MlErrorDetails` | `MlResult<T>` | Solo si el delegado lanza |
+| `Match` | `T` y `MlErrorDetails` | `TReturn` crudo | Sale de la tubería |
 
 ---
 
@@ -392,8 +392,8 @@ Una tubería con un `ExecSelf` entre cada paso se vuelve ilegible. Instrumenta l
 - ⚠️ El método síncrono es `TryExecSelfFail` (no `TryExecSelfIfFail`) y **no existe**
   `TryExecSelfIfFailWithoutException`.
 - Los nombres del estado son `IsSuccess` / `IsFailure`.
-- `MlErrorsDetails` solo tiene `Errors` y `Details`: consúltalo con `ToErrorsMessages()`,
-  `ToErrorsDescription()`, `GetDetailException()` y `GetDetailValue<T>()`.
+- `MlErrorDetails` solo tiene `Errors` y `Details`: consúltalo con `GetErrorMessages()`,
+  `GetErrorsSummary()`, `GetException()` y `GetMetadataValue<T>()`.
 
 ## Ver también
 
@@ -403,6 +403,6 @@ Una tubería con un `ExecSelf` entre cada paso se vuelve ilegible. Instrumenta l
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — fallos con excepción.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — fallos de negocio puros.
 - [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia completa con el recuento de sobrecargas.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError` y `MlErrorsDetails`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError` y `MlErrorDetails`.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir de la tubería.
 - [`../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md`](../Bind/11_BindSaveValueInDetailsIfFailedFuncResultAsync.md) — la familia `BindSaveValueInDetailsIfFailedFuncResult`, que antes se documentaba aquí por error.

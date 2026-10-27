@@ -40,10 +40,10 @@ var resultado = ObtenerCliente(id)
 `BindIf` **no evalúa la condición si el resultado ya venía fallido**: como todos los `Bind`, el fallo
 cortocircuita y se propaga intacto.
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
-> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `FirstErrorMessage` ni `HasValue`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -169,7 +169,7 @@ var resultado = documento
 
 // Recuperar la excepción original más adelante:
 resultado.ExecSelfIfFail(errores =>
-    errores.GetDetailException()
+    errores.GetException()
            .ExecSelfIfValid(ex => _log.LogError(ex, "Fallo de parseo")));
 ```
 
@@ -271,7 +271,7 @@ public async Task<MlResult<Liquidacion>> LiquidarAsync(int contratoId)
         .ExecSelfIfFailAsync(errores =>
         {
             _log.LogWarning("Liquidación {Id} fallida: {Detalle}",
-                            contratoId, errores.ToErrorsDescription());
+                            contratoId, errores.GetErrorsSummary());
             return Task.CompletedTask;
         });
 ```
@@ -303,9 +303,9 @@ public IActionResult Importar(IFormFile fichero)
     => _servicio.ImportarExtracto(Fichero.Desde(fichero))
         .Match<IReadOnlyList<Movimiento>, IActionResult>(
             valid: movs    => Ok(new { importados = movs.Count }),
-            fail : errores => errores.GetDetailException()
-                                     .Match(valid: _ => StatusCode(500, errores.ToErrorsMessages()),
-                                            fail : _ => BadRequest(errores.ToErrorsMessages())));
+            fail : errores => errores.GetException()
+                                     .Match(valid: _ => StatusCode(500, errores.GetErrorMessages()),
+                                            fail : _ => BadRequest(errores.GetErrorMessages())));
 ```
 
 ---
@@ -356,7 +356,7 @@ llamadas a librerías externas, ficheros, red y bases de datos.
 - `condition` es un `Func<T, bool>` puro y síncrono; los datos externos se traen antes.
 - Sobrecargas: `BindIf` (2), `BindIfAsync` (11), `TryBindIf` (3), `TryBindIfAsync` (24).
 - `TryBindIf` captura las excepciones de las ramas y las guarda en `Details["Ex"]`, recuperables con
-  `GetDetailException()`.
+  `GetException()`.
 
 ## Ver también
 

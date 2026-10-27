@@ -34,7 +34,7 @@ public class EnsureFpAsyncTests
     [Fact]
     public async Task ThatAsync_withAsyncSourceAndErrorsDetails_return_Fail()
     {
-        var errorsDetails = MlErrorsDetails.FromErrorMessage("detalle");
+        var errorsDetails = MlErrorDetails.FromErrorMessage("detalle");
 
         var result = await EnsureFp.ThatAsync(Task.FromResult(1), x => x > 5, errorsDetails);
 
@@ -118,8 +118,8 @@ public class EnsureFpAsyncTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details[PARAM_NAME_KEY].Should().Be("quantity");
-        details.Details[ValueMetadataKey].Should().Be(1);
+        details.Metadata[PARAM_NAME_KEY].Should().Be("quantity");
+        details.Metadata[ValueMetadataKey].Should().Be(1);
     }
 
     [Fact]
@@ -146,8 +146,8 @@ public class EnsureFpAsyncTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details.Should().ContainKey(ExceptionMetadataKey);
-        details.Details[PARAM_NAME_KEY].Should().Be("myValue");
+        details.Metadata.Should().ContainKey(ExceptionMetadataKey);
+        details.Metadata[PARAM_NAME_KEY].Should().Be("myValue");
     }
 
     [Fact]
@@ -172,12 +172,12 @@ public class EnsureFpAsyncTests
     [Fact]
     public async Task TryThatAsync_withErrorsDetailsAndException_captureException()
     {
-        var errorsDetails = MlErrorsDetails.FromErrorMessage("detalle");
+        var errorsDetails = MlErrorDetails.FromErrorMessage("detalle");
 
         var result = await EnsureFp.TryThatAsync<int>(5, x => throw new InvalidOperationException("boom"), errorsDetails);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details.Should().ContainKey(ExceptionMetadataKey);
+        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(ExceptionMetadataKey);
     }
 
     #endregion
@@ -208,7 +208,7 @@ public class EnsureFpAsyncTests
         var result = await EnsureFp.NotNullArgAsync(customerAsync);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("customerAsync");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("customerAsync");
     }
 
     [Fact]
@@ -227,7 +227,7 @@ public class EnsureFpAsyncTests
         var result = await EnsureFp.NotEmptyArgAsync(itemsAsync);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("itemsAsync");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("itemsAsync");
     }
 
     [Theory]
@@ -249,7 +249,7 @@ public class EnsureFpAsyncTests
         var result = await EnsureFp.NotNullEmptyOrWhitespaceArgAsync(nameAsync);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("nameAsync");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("nameAsync");
     }
 
     [Fact]

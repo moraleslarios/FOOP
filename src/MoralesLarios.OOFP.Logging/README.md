@@ -41,14 +41,14 @@ public async Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
     var validado = dto.Validate();
     if (validado.IsFailure)
     {
-        _logger.LogWarning($"Validación fallida: {validado.FailureDetails.ToErrorsDescription()}");
+        _logger.LogWarning($"Validación fallida: {validado.FailureDetails.GetErrorsSummary()}");
         return validado.ToMlResultFail<Pedido>();       // hay que reconstruir el Fail
     }
 
     var guardado = await _repo.AddAsync(Mapear(validado.Value));
     if (guardado.IsFailure)
     {
-        _logger.LogError($"Error al guardar: {guardado.FailureDetails.ToErrorsDescription()}");
+        _logger.LogError($"Error al guardar: {guardado.FailureDetails.GetErrorsSummary()}");
         return guardado;
     }
 
@@ -62,11 +62,11 @@ public async Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
 ```csharp
 public Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
     => dto.Validate()
-          .LogMlResultWarningIfFail(_logger, e => $"Validación fallida: {e.ToErrorsDescription()}")
+          .LogMlResultWarningIfFail(_logger, e => $"Validación fallida: {e.GetErrorsSummary()}")
           .BindAsync(v => _repo.AddAsync(Mapear(v)))
           .LogMlResultFinalAsync(_logger,
                                  validBuildMessage: p => $"Pedido {p.Id} creado",
-                                 failBuildMessage : e => $"Error al crear pedido: {e.ToErrorsDescription()}");
+                                 failBuildMessage : e => $"Error al crear pedido: {e.GetErrorsSummary()}");
 ```
 
 > 💡 **La clave**: el log es **un eslabón transparente**. No cambia el tipo, no cambia el valor, no cambia el estado. Puedes insertarlo o quitarlo de cualquier punto de la cadena sin tocar nada más.
@@ -78,7 +78,7 @@ public Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
 | Dependencia | Para qué |
 |---|---|
 | `Microsoft.Extensions.Logging.Abstractions` (8.0.1) | `ILogger`, `LogLevel` |
-| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorsDetails`, `Match`, `Bind` |
+| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind` |
 
 Destino: **`net8.0`**. Versión del paquete: **1.0.9**.
 
@@ -148,7 +148,7 @@ public static MlResult<T> LogMlResult<T>(this MlResult<T>                   sour
                                               ILogger                       logger,
                                               LogLevel                      logLevel,
                                               Func<T, string>               validBuilMessage = null!,
-                                              Func<MlErrorsDetails, string> failBuildMessage = null!)
+                                              Func<MlErrorDetails, string> failBuildMessage = null!)
 {
     source.Match(
         valid: x      => validBuilMessage != null ? logger.LogMlResult(logLevel, validBuilMessage(x))      : null!,
@@ -167,7 +167,7 @@ Tres propiedades que se cumplen en **todo** el proyecto:
 | **Los `Func` se evalúan solo en su rama** | Si el resultado es válido, `failBuildMessage` **no se ejecuta** ⇒ no hay coste de formateo |
 | **Un `Func` a `null` ⇒ no se registra nada** | Así se implementan las variantes `IfValid` / `IfFail` |
 
-> 💡 **La evaluación diferida es importante para el rendimiento**: `e => $"Error: {e.ToErrorsDescription()}"` solo construye la cadena si realmente hay fallo.
+> 💡 **La evaluación diferida es importante para el rendimiento**: `e => $"Error: {e.GetErrorsSummary()}"` solo construye la cadena si realmente hay fallo.
 
 Además existe la variante que registra **cada rama en un nivel distinto** usando tuplas:
 
@@ -175,13 +175,13 @@ Además existe la variante que registra **cada rama en un nivel distinto** usand
 public static MlResult<T> LogMlResult<T>(this MlResult<T> source,
                                               ILogger     logger,
                                               (LogLevel logLevel, Func<T              , string> buildMessage) validBuildMessage,
-                                              (LogLevel logLevel, Func<MlErrorsDetails, string> buildMessage) failBuildMessage);
+                                              (LogLevel logLevel, Func<MlErrorDetails, string> buildMessage) failBuildMessage);
 ```
 
 ```csharp
 resultado.LogMlResult(_logger,
                       validBuildMessage: (LogLevel.Debug, p => $"Pedido {p.Id} procesado"),
-                      failBuildMessage : (LogLevel.Error, e => $"Fallo: {e.ToErrorsDescription()}"));
+                      failBuildMessage : (LogLevel.Error, e => $"Fallo: {e.GetErrorsSummary()}"));
 ```
 
 > ⚠️ **Ojo con el nombre del parámetro**: en la sobrecarga con `Func` y `LogLevel` suelto se llama **`validBuilMessage`** (le falta la `d` de "Build"), mientras que en la sobrecarga con tuplas se llama **`validBuildMessage`** (correcto). Si usas argumentos con nombre, tienes que respetar la errata en unas y no en otras. Ver [Particularidades](#️-particularidades-reales-del-código-fuente).
@@ -215,7 +215,7 @@ source.LogMlResultIfValid(logger, logLevel, x => $"Creado el id {x.Id}");
 
 // Solo si es fallo
 source.LogMlResultIfFail(logger, logLevel, "La operación no se pudo completar");
-source.LogMlResultIfFail(logger, logLevel, e => $"Fallo: {e.ToErrorsDescription()}");
+source.LogMlResultIfFail(logger, logLevel, e => $"Fallo: {e.GetErrorsSummary()}");
 ```
 
 Internamente son un `Match` que en la rama contraria devuelve `source` sin llamar al logger:
@@ -231,7 +231,7 @@ Internamente son un `Match` que en la rama contraria devuelve `source` sin llama
 
 ## Familia 3 — Filtrado por contenido de `Details`
 
-Estas tres familias son las más específicas de la biblioteca: **deciden si registrar según lo que haya en [`MlErrorsDetails.Details`](../docs/core-types/MlResultErrors.md)**.
+Estas tres familias son las más específicas de la biblioteca: **deciden si registrar según lo que haya en [`MlErrorDetails.Metadata`](../docs/core-types/MlResultErrors.md)**.
 
 ### `LogMlResultIfFailWithException` — solo si el fallo trae excepción
 
@@ -239,15 +239,15 @@ Estas tres familias son las más específicas de la biblioteca: **deciden si reg
 public static MlResult<T> LogMlResultIfFailWithException<T>(this MlResult<T>                   source,
                                                                  ILogger                       logger,
                                                                  LogLevel                      logLevel,
-                                                                 Func<MlErrorsDetails, string> failBuildMessage)
+                                                                 Func<MlErrorDetails, string> failBuildMessage)
     => source.Match(
             valid: x             => source,
-            fail : errorsDetails => errorsDetails.GetDetailException()
+            fail : errorsDetails => errorsDetails.GetException()
                                         .Bind(_ => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails)))
         );
 ```
 
-Como `GetDetailException()` devuelve `Fail` cuando **no** hay excepción registrada, el `Bind` no se ejecuta y **no se registra nada**.
+Como `GetException()` devuelve `Fail` cuando **no** hay excepción registrada, el `Bind` no se ejecuta y **no se registra nada**.
 
 > 💡 **Uso típico**: separar errores técnicos (excepción capturada por un `TryMap`) de errores de negocio (una validación incumplida). Los primeros merecen `LogLevel.Error` con la excepción; los segundos, `LogLevel.Warning` sin ruido.
 
@@ -255,23 +255,23 @@ Existe además una sobrecarga que **te da la excepción** en el constructor del 
 
 ```csharp
 source.LogMlResultIfFailWithException(_logger, LogLevel.Error,
-        (errores, ex) => $"Fallo técnico: {errores.ToErrorsDescription()} | {ex.GetType().Name}: {ex.Message}");
+        (errores, ex) => $"Fallo técnico: {errores.GetErrorsSummary()} | {ex.GetType().Name}: {ex.Message}");
 ```
 
 ### `LogMlResultIfFailWithoutException` — solo si el fallo **no** trae excepción
 
-El complementario exacto. Usa `BindIfFail`, así que registra cuando `GetDetailException()` falla:
+El complementario exacto. Usa `BindIfFail`, así que registra cuando `GetException()` falla:
 
 ```csharp
 source.LogMlResultIfFailWithoutException(_logger, LogLevel.Warning,
-        e => $"Error de negocio: {e.ToErrorsDescription()}");
+        e => $"Error de negocio: {e.GetErrorsSummary()}");
 ```
 
 > 💡 **Combinando las dos** obtienes una clasificación completa sin un solo `if`:
 > ```csharp
 > resultado
 >     .LogMlResultIfFailWithException   (_logger, LogLevel.Error  , (e, ex) => $"Técnico: {ex.Message}")
->     .LogMlResultIfFailWithoutException(_logger, LogLevel.Warning, e       => $"Negocio: {e.ToErrorsDescription()}");
+>     .LogMlResultIfFailWithoutException(_logger, LogLevel.Warning, e       => $"Negocio: {e.GetErrorsSummary()}");
 > ```
 
 ### `LogMlResultIfFailWithValue` — solo si el fallo arrastra un valor
@@ -281,11 +281,11 @@ Cuando el `Fail` conserva el valor original en los detalles (patrón habitual de
 ```csharp
 // El valor debe ser del mismo tipo T
 source.LogMlResultIfFailWithValue(_logger, LogLevel.Error,
-        e => $"Falló procesando el elemento: {e.ToErrorsDescription()}");
+        e => $"Falló procesando el elemento: {e.GetErrorsSummary()}");
 
 // O de un tipo distinto, y lo recibes en el mensaje
 source.LogMlResultIfFailWithValue<Pedido, int>(_logger, LogLevel.Error,
-        (errores, idFila) => $"Falló la fila {idFila}: {errores.ToErrorsDescription()}");
+        (errores, idFila) => $"Falló la fila {idFila}: {errores.GetErrorsSummary()}");
 ```
 
 ---
@@ -298,7 +298,7 @@ source.LogMlResultIfFailWithValue<Pedido, int>(_logger, LogLevel.Error,
 public static MlResult<T> LogMlResultFinal<T>(this MlResult<T>                   source,
                                                    ILogger                       logger,
                                                    Func<T, string>               validBuildMessage,
-                                                   Func<MlErrorsDetails, string> failBuildMessage)
+                                                   Func<MlErrorDetails, string> failBuildMessage)
     => source.LogMlResult(logger,
                           (LogLevel.Information, validBuildMessage),
                           (LogLevel.Error      , failBuildMessage));
@@ -309,7 +309,7 @@ Es el método que querrás **al cerrar un caso de uso**: un único log que dice 
 ```csharp
 await pipeline.LogMlResultFinalAsync(_logger,
         validBuildMessage: p => $"Pedido {p.Id} creado correctamente",
-        failBuildMessage : e => $"No se pudo crear el pedido: {e.ToErrorsDescription()}");
+        failBuildMessage : e => $"No se pudo crear el pedido: {e.GetErrorsSummary()}");
 ```
 
 También acepta cadenas fijas en lugar de `Func`.
@@ -318,7 +318,7 @@ También acepta cadenas fijas en lugar de `Func`.
 
 ```csharp
 public static MlResult<T> LogGeneralErrorIfFail<T>(this MlResult<T> source, ILogger logger)
-    => source.LogMlResultErrorIfFail(logger, failBuildMessage: errorDetals => errorDetals.ToErrorsDescription());
+    => source.LogMlResultErrorIfFail(logger, failBuildMessage: errorDetals => errorDetals.GetErrorsSummary());
 ```
 
 Sin mensaje, sin nivel, sin `Func`: **registra la descripción de los errores en `LogLevel.Error` si algo falló, y nada si fue bien.**
@@ -399,7 +399,7 @@ return await _repo.AddAsync(pedido)
 
 > ⚠️ **Los mensajes están en inglés y son fijos.** Si tu aplicación registra en español, o si el formato no te sirve, usa `LogMlResultFinal` directamente. El nombre (`MyMethodFinalLog`) delata que es una plantilla personal del autor más que una API pensada para consumo general.
 
-> 💡 Nótese que usa `ToErrorsDetailsDescription()` (errores **y** detalles), mientras que `LogGeneralErrorIfFail` usa `ToErrorsDescription()` (solo los mensajes). El primero es más verboso y más útil para diagnóstico.
+> 💡 Nótese que usa `ToErrorsDetailsDescription()` (errores **y** detalles), mientras que `LogGeneralErrorIfFail` usa `GetErrorsSummary()` (solo los mensajes). El primero es más verboso y más útil para diagnóstico.
 
 ---
 
@@ -537,12 +537,12 @@ public class ServicioPedidos
     public Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
         => dto.Validate()
               .LogMlResultDebugIfValid  (_logger, d => $"DTO válido para cliente {d.ClienteId}")
-              .LogMlResultWarningIfFail (_logger, e => $"DTO inválido: {e.ToErrorsDescription()}")
+              .LogMlResultWarningIfFail (_logger, e => $"DTO inválido: {e.GetErrorsSummary()}")
               .Map                      (Mapear)
               .BindAsync                (p => _repo.AddAsync(p))
               .LogMlResultFinalAsync    (_logger,
                                          validBuildMessage: p => $"Pedido {p.Id} creado",
-                                         failBuildMessage : e => $"No se pudo crear el pedido: {e.ToErrorsDescription()}");
+                                         failBuildMessage : e => $"No se pudo crear el pedido: {e.GetErrorsSummary()}");
 }
 ```
 
@@ -557,7 +557,7 @@ public Task<MlResult<Factura>> Emitir(int pedidoId)
                                      $"{ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}")
             .LogMlResultIfFailWithoutExceptionAsync(_logger, LogLevel.Warning,
                     errores => $"No se pudo emitir la factura del pedido {pedidoId}: " +
-                               errores.ToErrorsDescription());
+                               errores.GetErrorsSummary());
 ```
 
 > 💡 Como las dos condiciones son mutuamente excluyentes, **solo se registra una** de las dos trazas. El stack trace se incluye a mano porque la biblioteca no lo pasa al logger.
@@ -586,7 +586,7 @@ public class ClientesRepo
 ```csharp
 resultado.LogMlResult(_logger,
         validBuildMessage: (LogLevel.Trace      , x => $"Caché resuelta: {x.Clave}"),
-        failBuildMessage : (LogLevel.Information, e => $"Caché no disponible, se recalcula: {e.ToErrorsDescription()}"));
+        failBuildMessage : (LogLevel.Information, e => $"Caché no disponible, se recalcula: {e.GetErrorsSummary()}"));
 ```
 
 > 💡 Aquí el "fallo" no es grave (un fallo de caché), así que se registra en `Information` y no en `Error`. Con `LogMlResultFinal` no podrías hacerlo, porque fija `Error`.
@@ -599,7 +599,7 @@ public MlResult<IEnumerable<Fila>> ProcesarFichero(IEnumerable<Fila> filas)
                 Procesar(fila)
                     .AddMlErrorDetailIfFail("fila", i + 1)
                     .LogMlResultWarningIfFail(_logger,
-                        e => $"Fila {i + 1} descartada: {e.ToErrorsDescription()}"))
+                        e => $"Fila {i + 1} descartada: {e.GetErrorsSummary()}"))
             .MergeErrorsIfExists();
 ```
 
@@ -650,7 +650,7 @@ source.LogMlResultIfFailWithException(_logger, LogLevel.Error,
 
 // ❌ MAL: partir la cadena para registrar
 var r = await pipeline;
-if (r.IsFailure) _logger.LogError(r.FailureDetails.ToErrorsDescription());
+if (r.IsFailure) _logger.LogError(r.FailureDetails.GetErrorsSummary());
 return r;
 
 // ✅ BIEN: log transparente
@@ -689,8 +689,8 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 8. **No abuses en bucles grandes**: no se comprueba `IsEnabled`, así que el mensaje se construye igualmente.
 9. **Si necesitas logging estructurado de verdad**, llama a `ILogger` directamente en un `ExecSelf`/`Match` en lugar de usar estas extensiones.
 10. **Decide un idioma para las trazas** y sé coherente: recuerda que `MyMethodFinalLog` fuerza inglés.
-11. **`ToErrorsDescription()` para trazas de negocio, `ToErrorsDetailsDescription()` para diagnóstico técnico** (el segundo incluye los `Details`).
-12. **No registres información sensible**: los `MlErrorsDetails` pueden arrastrar el valor de entrada completo (`…WithValue`).
+11. **`GetErrorsSummary()` para trazas de negocio, `ToErrorsDetailsDescription()` para diagnóstico técnico** (el segundo incluye los `Details`).
+12. **No registres información sensible**: los `MlErrorDetails` pueden arrastrar el valor de entrada completo (`…WithValue`).
 13. **Confía en IntelliSense para los nombres de parámetros**: hay erratas (`validBuilMessage`) y una sobrecarga `async` sin sufijo `Async`.
 
 ---
@@ -726,7 +726,7 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — errores, detalles, `GetDetailException`, `GetDetailValue`](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — errores, detalles, `GetException`, `GetMetadataValue`](../docs/core-types/MlResultErrors.md)
 - [`Match` — la base del log condicional](../docs/Match/1_Match.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`ExecSelf` — efectos secundarios sin cambiar el resultado](../docs/ExecSelf/1_ExecSelf.md)

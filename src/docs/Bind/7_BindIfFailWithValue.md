@@ -32,10 +32,10 @@ error** y lo pasa a tu función de recuperación.
 .BindIfFailWithValue(pedidoOriginal => ReintentarConCorreccion(pedidoOriginal));
 ```
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
-> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `FirstErrorMessage` ni `HasValue`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -61,17 +61,17 @@ var resultado = ObtenerPedido(id)          // MlResult<Pedido> válido
         RegistrarPedidoPendiente(dto));
 ```
 
-📌 Sin el paso ① el `GetDetailValue<T>()` interno fallará, y `BindIfFailWithValue` devolverá un fallo
+📌 Sin el paso ① el `GetMetadataValue<T>()` interno fallará, y `BindIfFailWithValue` devolverá un fallo
 indicando que no hay valor en los detalles. **No es un error silencioso, pero tampoco es lo que
 esperabas.**
 
 💡 Alternativa habitual: muchas operaciones de la librería (por ejemplo las que fallan tras haber
-tenido un valor) ya lo rellenan mediante `MlErrorsDetails.FromErrorMessageWithValue(mensaje, valor)`.
+tenido un valor) ya lo rellenan mediante `MlErrorDetails.FromErrorMessageWithValue(mensaje, valor)`.
 Si tú construyes el fallo a mano, usa esa factoría:
 
 ```csharp
 return MlResult<Registro>.Fail(
-    MlErrorsDetails.FromErrorMessageWithValue("La línea no cumple el formato", lineaCsv));
+    MlErrorDetails.FromErrorMessageWithValue("La línea no cumple el formato", lineaCsv));
 ```
 
 ---
@@ -109,7 +109,7 @@ MlResult<Resultado> r2 = importarRegistro(linea)
 public static MlResult<T> BindIfFailWithValue<T>(this MlResult<T>          source,
                                                       Func<T, MlResult<T>> funcValue)
     => source.Match(
-        fail : errorsDetails => errorsDetails.GetDetailValue<T>().Bind(funcValue),
+        fail : errorsDetails => errorsDetails.GetMetadataValue<T>().Bind(funcValue),
         valid: value         => value);
 ```
 
@@ -120,11 +120,11 @@ public static MlResult<TReturn> BindIfFailWithValue<T, TValue, TReturn>(this MlR
                                                                              Func<T     , MlResult<TReturn>> funcValid,
                                                                              Func<TValue, MlResult<TReturn>> funcFail)
     => source.Match(
-        fail : errorsDetails => errorsDetails.GetDetailValue<TValue>().Bind(value => funcFail(value)),
+        fail : errorsDetails => errorsDetails.GetMetadataValue<TValue>().Bind(value => funcFail(value)),
         valid: value         => funcValid(value));
 ```
 
-Fíjate en el patrón: **`GetDetailValue<TValue>()` devuelve un `MlResult<TValue>`**, y sobre él se aplica
+Fíjate en el patrón: **`GetMetadataValue<TValue>()` devuelve un `MlResult<TValue>`**, y sobre él se aplica
 `.Bind(...)`. Es decir, la recuperación se encadena de forma segura: si no hay valor, `Bind` no ejecuta
 tu función.
 
@@ -136,7 +136,7 @@ tu función.
 | --- | --- |
 | Resultado válido | Se ignora todo lo demás: forma A devuelve el valor, forma B ejecuta `funcValid` |
 | Fallido **con** `Details["Value"]` del tipo esperado | Se ejecuta tu función de recuperación con ese valor |
-| Fallido **sin** `Details["Value"]` | `GetDetailValue<TValue>()` falla → **tu función NO se ejecuta** y se devuelve ese fallo |
+| Fallido **sin** `Details["Value"]` | `GetMetadataValue<TValue>()` falla → **tu función NO se ejecuta** y se devuelve ese fallo |
 | Fallido con `Details["Value"]` de **otro tipo** | Igual que el caso anterior: el casting falla y tu función no se ejecuta |
 
 ⚠️ Este último punto es la trampa clásica: si guardas un `PedidoDto` y luego recuperas
@@ -146,7 +146,7 @@ Para diagnosticarlo puedes inspeccionar los detalles antes:
 
 ```csharp
 resultado.ExecSelfIfFail(errores =>
-    _log.LogDebug("¿Hay valor en los detalles? {Detalle}", errores.ToDetailsDescription()));
+    _log.LogDebug("¿Hay valor en los detalles? {Detalle}", errores.GetMetadataSummary()));
 ```
 
 ---
@@ -170,7 +170,7 @@ public Task<MlResult<Envio>> ProcesarAsync(EnvioDto dto)
             funcFailAsync : d   => EncolarParaRevisionManualAsync(d));
 ```
 
-La versión asíncrona usa `GetDetailValueAsync<TValue>()` internamente, con la misma semántica.
+La versión asíncrona usa `GetMetadataValueAsync<TValue>()` internamente, con la misma semántica.
 
 ---
 
@@ -287,7 +287,7 @@ public async Task<MlResult<Notificacion>> EnviarAsync(NotificacionDto dto)
 
         .ExecSelfIfFailAsync(errores =>
         {
-            _log.LogWarning("Envío fallido: {Detalle}", errores.ToErrorsDescription());
+            _log.LogWarning("Envío fallido: {Detalle}", errores.GetErrorsSummary());
             return Task.CompletedTask;
         });
 ```
@@ -315,7 +315,7 @@ Y si dudas de si el valor está o no, compruébalo explícitamente:
 
 ```csharp
 resultado.ExecSelfIfFail(errores =>
-    errores.GetDetailValue<Cliente>()
+    errores.GetMetadataValue<Cliente>()
            .Match(valid: c => _log.LogInformation("Valor recuperado: {Id}", c.Id),
                   fail : _ => _log.LogWarning("Falta AddValueIfFail en la tubería")));
 ```
@@ -363,10 +363,10 @@ a lo largo de la tubería, usa una **tupla** o un objeto de contexto en el camin
 - `BindIfFailWithValue` actúa **solo en el camino fallido** y recupera de `Details["Value"]` el valor que
   provocó (o precedió a) el fallo.
 - 🔑 **Requiere que alguien haya guardado ese valor antes**, normalmente con `AddValueIfFail` o con la
-  factoría `MlErrorsDetails.FromErrorMessageWithValue`.
+  factoría `MlErrorDetails.FromErrorMessageWithValue`.
 - Dos formas: **A** (`funcValue`, mismo tipo) y **B** (`funcValid` + `funcFail`, con `TValue` y `TReturn`
   independientes).
-- Internamente hace `errorsDetails.GetDetailValue<TValue>().Bind(...)`: si el valor no está o el tipo no
+- Internamente hace `errorsDetails.GetMetadataValue<TValue>().Bind(...)`: si el valor no está o el tipo no
   coincide, **tu función no se ejecuta** y se devuelve ese fallo.
 - Sobrecargas: `BindIfFailWithValue` (2), `Async` (12), `TryBindIfFailWithValue` (4), `Try...Async` (24).
 - Casos típicos: archivar líneas rechazadas, reintentar con corrección, encolar para revisión manual.
@@ -376,8 +376,8 @@ a lo largo de la tubería, usa una **tupla** o un objeto de contexto en el camin
 - [`6_BindIfFail.md`](6_BindIfFail.md) — recuperación sin necesitar el valor original.
 - [`8_BindIfFailWithException.md`](8_BindIfFailWithException.md) — recuperación solo ante excepciones.
 - [`9_BindIfFailWithoutException.md`](9_BindIfFailWithoutException.md) — recuperación solo ante fallos de negocio.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetDetailValue<T>` y el resto del acceso a detalles.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la clave `ValueMetadataKey` y las factorías de `MlErrorsDetails`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetMetadataValue<T>` y el resto del acceso a detalles.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la clave `ValueMetadataKey` y las factorías de `MlErrorDetails`.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — la versión que solo observa, sin transformar.
 - [`../Map/5_MapIfFailWithValue.md`](../Map/5_MapIfFailWithValue.md) — la versión con función que no puede fallar.
 - [`../Types/MlResultActionsBind.md`](../core-types/MlResultActionsBind.md) — referencia con todas las sobrecargas.

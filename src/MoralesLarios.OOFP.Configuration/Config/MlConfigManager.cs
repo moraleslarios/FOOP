@@ -8,15 +8,15 @@ public class MlConfigManager(IConfiguration configuration) : IMlConfigManager
     private readonly IConfiguration _configuration = configuration;
 
     public MlResult<string> ReadConnectionStringKey(string          connectionStringKey,
-                                                    MlErrorsDetails errorsDetails = null!)
+                                                    MlErrorDetails errorsDetails = null!)
         => ReadConfigKey(connectionStringKey, _configuration.GetConnectionString, errorsDetails)!;
 
     public MlResult<T> ReadAppSettingKey<T>(string          appSettingKey,
-                                            MlErrorsDetails errorsDetails = null!)
+                                            MlErrorDetails errorsDetails = null!)
         => ReadConfigKey<T>(appSettingKey, key => _configuration.GetValue<T>(key)!, errorsDetails);
 
     public MlResult<object> ReadAppSettingKey(string          appSettingKey,
-                                              MlErrorsDetails errorsDetails = null!)
+                                              MlErrorDetails errorsDetails = null!)
         => ReadConfigKey<object>(appSettingKey, key => _configuration[key]!, errorsDetails);
 
 
@@ -38,7 +38,7 @@ public class MlConfigManager(IConfiguration configuration) : IMlConfigManager
 
     private MlResult<T> ReadConfigKey<T>(string          configKey, 
                                          Func<string, T> configSearch,
-                                         MlErrorsDetails errorsDetails = null!)
+                                         MlErrorDetails errorsDetails = null!)
     {
         var result = EnsureFp.NotNullEmptyOrWhitespace(configKey, "Tkey cannot be null white or empty")
                                 .Map ( _               => configSearch(configKey))
@@ -51,7 +51,7 @@ public class MlConfigManager(IConfiguration configuration) : IMlConfigManager
     private MlResult<T> ReadConfigKey<T>(string          configKey, 
                                          Func<string, T> configSearch,
                                          string          errorMessage)
-        => ReadConfigKey(configKey, configSearch, MlErrorsDetails.FromErrorMessage(errorMessage));
+        => ReadConfigKey(configKey, configSearch, MlErrorDetails.FromErrorMessage(errorMessage));
 
 
 }

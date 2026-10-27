@@ -29,7 +29,7 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
 
     public virtual MlResult<T> TryUpdate(T item, params object[] pk) => TryUpdate(item, null!, pk);
 
-    public MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, params object[] pk)
+    public MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] pk)
     {
         var result = EnsureFp.NotNull  (item, "The entity item to update cannot be null")
                                 .Bind  ( _  => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
@@ -58,7 +58,7 @@ public class EFRepoUpdaterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
         return result;
     }
 
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
     {
         var result = await EnsureFp.NotNullAsync( item, "The entity item to update cannot be null")
                                     .BindAsync  ( _  => EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty"))

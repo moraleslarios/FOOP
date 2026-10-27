@@ -35,7 +35,7 @@ return ObtenerCliente(id)
                     .Map(impuestos => Calcular(cliente, tarifa, descuento, impuestos)))));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -78,7 +78,7 @@ var r2 = a.Combine(b);                   // ⚠️ NO compila como esperas: 'b' 
 **Si necesitas acumular errores de varias validaciones independientes**, la librería ofrece
 otras herramientas:
 
-- Recoger los errores de cada validación y fusionarlos con `MlErrorsDetails.FromErrorsDetails(...)`
+- Recoger los errores de cada validación y fusionarlos con `MlErrorDetails.FromErrorsDetails(...)`
 - Los métodos de la carpeta [`Bucle`](../loops/Bucles.md), que acumulan errores por elemento
 - `MergeErrorsDetailsIfFail(...)` para arrastrar los errores previos al añadir uno nuevo
 
@@ -371,7 +371,7 @@ integrar funciones externas cuya firma ya trabaja con `MlResult<T>`.
 | Añadir el resultado de una consulta a una tupla | Familia B: `.Bind(t => t.Combine(consulta()))` |
 | Ampliar una tupla con un valor seguro | Familia C: `.Bind(t => t.Combine(valor))` |
 | Evitar que el segundo operando se evalúe si hay fallo | Envuelve en `Bind` (familias B/C) |
-| **Acumular** los errores de varias validaciones | [`Bucles`](../loops/Bucles.md), `MlErrorsDetails.FromErrorsDetails` |
+| **Acumular** los errores de varias validaciones | [`Bucles`](../loops/Bucles.md), `MlErrorDetails.FromErrorsDetails` |
 | Más de 8 valores | Define un `record` propio |
 | Transformar el valor | [`Map`](../Map/1_Map.md) |
 | Encadenar una operación que puede fallar | [`Bind`](../Bind/3_Bind.md) |
@@ -436,7 +436,7 @@ public async Task<MlResult<Informe>> GenerarAsync(int ejercicio, string departam
                                        plantilla);
                 })
                 .ExecSelfIfFail(err => _log.LogWarning("Informe no generado: {Desc}",
-                                                       err.ToErrorsDescription()));
+                                                       err.GetErrorsSummary()));
 }
 ```
 
@@ -471,7 +471,7 @@ siguiente). Es un buen recordatorio de por qué conviene deconstruir.
 private MlResult<Pedido> AplicarPoliticaLegada(MlResult<Pedido> resultado)
     => resultado.Match(
            valid: p   => p.Total > 10_000 ? MarcarParaRevision(p) : p.ToMlResultValid(),
-           fail : err => err.HasKeyDetails("Transitorio")
+           fail : err => err.ContainsMetadata("Transitorio")
                              ? ReintentarUnaVez()
                              : err.ToMlResultFail<Pedido>());
 
@@ -510,7 +510,7 @@ var r = resultado.Do(res => { _log.LogInformation("{R}", res); return res; });
 
 // ✅ ExecSelf está hecho para eso
 var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
-                           e => _log.LogWarning("KO {E}", e.ToErrorsDescription()));
+                           e => _log.LogWarning("KO {E}", e.GetErrorsSummary()));
 ```
 
 ---
@@ -519,7 +519,7 @@ var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
 
 1. **No esperes acumulación de errores.** `Combine` cortocircuita como `Bind`. Para
    acumular, usa los métodos de [`Bucle`](../loops/Bucles.md) o fusiona
-   `MlErrorsDetails` a mano.
+   `MlErrorDetails` a mano.
 2. **Prefiere el patrón `Bind(t => t.Combine(...))`** cuando el valor añadido implique una
    consulta o un cálculo: así se respeta el cortocircuito.
 3. **Deconstruye siempre la tupla** (`var (a, b, c) = t;`) al consumirla: evita depender de
@@ -567,5 +567,5 @@ var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
 - [`Map`](../Map/1_Map.md) — transformar el valor del carril
 - [`Bucles y proyecciones`](../loops/Bucles.md) — recorrer colecciones acumulando errores
 - [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — observar sin alterar el carril
-- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlErrorsDetails` y la fusión de errores
+- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlErrorDetails` y la fusión de errores
 - [`Transformations`](../Transformations/Transformations.md) — `ToMlResultValid`, `ToAsync`

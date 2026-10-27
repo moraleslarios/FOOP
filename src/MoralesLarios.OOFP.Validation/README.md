@@ -45,7 +45,7 @@ public IActionResult Crear(CrearUsuarioRequest dto)
     => dto.Validate()
           .Bind(v => _servicio.Crear(v))
           .Match(valid: creado  => Ok(creado),
-                 fail : errores => BadRequest(errores.ToErrorsMessages()));
+                 fail : errores => BadRequest(errores.GetErrorMessages()));
 ```
 
 > 💡 **La idea de fondo**: la validación deja de ser un *paso previo con su propio protocolo de error* y se convierte en **el primer eslabón del mismo raíl** que el resto del caso de uso. `Validate()` devuelve lo mismo que devuelve el repositorio, que el servicio y que el cliente HTTP: un `MlResult<T>`.
@@ -58,7 +58,7 @@ Además, al ser el objeto quien se valida, **la regla vive junto al dato**: no h
 
 | Dependencia | Para qué |
 |---|---|
-| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorsDetails` y todos los operadores |
+| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorDetails` y todos los operadores |
 
 Es la única dependencia. **Este proyecto no referencia DataAnnotations ni FluentValidation**: son las librerías satélite las que dependen de él, nunca al contrario.
 
@@ -283,7 +283,7 @@ No hay filtro, interceptor ni middleware automático. **Si no invocas `Validate(
 
 > ⚠️ **No hay integración automática con ASP.NET Core.** El `ModelState` y los `ValidationAttribute` de MVC siguen funcionando por su cuenta; `MlValidableFp<T>` es un mecanismo paralelo y explícito.
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -323,7 +323,7 @@ public IActionResult Crear(CrearClienteRequest dto)
     => dto.Validate()
           .Bind(v => _servicio.Crear(v))
           .Match(valid: creado  => CreatedAtAction(nameof(Obtener), new { creado.Id }, creado),
-                 fail : errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
+                 fail : errores => BadRequest(new { errores = errores.GetErrorMessages() }));
 ```
 
 ### Ejemplo 2 — Separar validación de formato (síncrona) de validación de negocio (asíncrona)
@@ -379,7 +379,7 @@ public class Pedido : MlValidableFp<Pedido>
 }
 ```
 
-> 💡 [`Projection`](../docs/loops/Bucles.md) recorre la colección, valida cada elemento y **fusiona todos los errores** en un único `MlErrorsDetails`: el usuario ve de golpe qué líneas están mal.
+> 💡 [`Projection`](../docs/loops/Bucles.md) recorre la colección, valida cada elemento y **fusiona todos los errores** en un único `MlErrorDetails`: el usuario ve de golpe qué líneas están mal.
 
 ### Ejemplo 4 — Añadir contexto al error para diagnóstico
 
@@ -395,7 +395,7 @@ resultado.Match(
     valid: fila    => Procesar(fila),
     fail : errores => _logger.LogWarning("Fila inválida: {Msg} | {Detalles}",
                                          errores.Errors.First().Message,
-                                         errores.ToDetailsDescription()));
+                                         errores.GetMetadataSummary()));
 ```
 
 ### Ejemplo 5 — ❌ Qué no hacer / ✅ qué hacer
@@ -516,12 +516,12 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 - [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — validación con FluentValidation
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — reglas reutilizables encapsuladas en tipos
 - [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos donde encadenar la validación
-- [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md) — conversión de `MlErrorsDetails` a respuestas HTTP
+- [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md) — conversión de `MlErrorDetails` a respuestas HTTP
 
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
 - [`EnsureFp` — comprobaciones que devuelven `MlResult`](../docs/EnsureFp/EnsureFp.md)
 - [`Bind` y `BindMulti` — cortocircuito y acumulación](../docs/Bind/3_Bind.md)
 - [`Map` — transformar el valor válido](../docs/Map/1_Map.md)

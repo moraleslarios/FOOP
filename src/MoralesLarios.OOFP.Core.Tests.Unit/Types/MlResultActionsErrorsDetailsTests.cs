@@ -11,7 +11,7 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public void GetDetail_keyNotExist_return_fail()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
@@ -26,7 +26,7 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public void GetDetail_keyExist_return_valid()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
@@ -42,7 +42,7 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public void GetDetail_keyExist_diferentTypeOfT_return_fail()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", 7m }
@@ -57,14 +57,14 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public void GetDetailValue_keyExist_return_valid()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
 
-        MlResult<string> result = errors1.GetDetailValue<string>();
+        MlResult<string> result = errors1.GetMetadataValue<string>();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -73,14 +73,14 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public void GetDetailValue_keyNotExist_return_fail()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
 
-        MlResult<string> result = errors1.GetDetailValue<string>();
+        MlResult<string> result = errors1.GetMetadataValue<string>();
 
         result.IsFailure.Should().BeTrue();
     }
@@ -93,7 +93,7 @@ public class MlResultActionsErrorsDetailsTests
 
         var data = await partialResult.CompleteWithDetailsValueIfFailAsync(69)
                                             .BindIfFailAsync(errorsDetails => errorsDetails
-                                                                                    .GetDetailValueAsync<int>());
+                                                                                    .GetMetadataValueAsync<int>());
         data.Should().NotBeNull();
     }
 
@@ -188,7 +188,7 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public void MergeErrorsDetails_secondaryValid_return_source()
     {
-        MlErrorsDetails source = ("miError", new Dictionary<string, object> 
+        MlErrorDetails source = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
@@ -212,7 +212,7 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public void MergeErrorsDetails_secondaryfail_return_failMergeErrorsDetails()
     {
-        MlErrorsDetails source = ("miError", new Dictionary<string, object> 
+        MlErrorDetails source = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
@@ -243,7 +243,7 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public async Task GetDetailAsync_sourceAsync_keyExist_return_valid()
     {
-        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        Task<MlErrorDetails> errorsAsync = MlErrorDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
             { "key1", "value1" }
         }).ToAsync();
@@ -256,12 +256,12 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public async Task GetDetailValueAsync_sourceAsync_keyExist_return_valid()
     {
-        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        Task<MlErrorDetails> errorsAsync = MlErrorDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
             { ValueMetadataKey, 69 }
         }).ToAsync();
 
-        MlResult<int> result = await errorsAsync.GetDetailValueAsync<int>();
+        MlResult<int> result = await errorsAsync.GetMetadataValueAsync<int>();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -269,12 +269,12 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public async Task GetDetailExceptionAsync_generic_sourceAsync_keyExist_return_valid()
     {
-        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        Task<MlErrorDetails> errorsAsync = MlErrorDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
             { ExceptionMetadataKey, new InvalidOperationException("oops") }
         }).ToAsync();
 
-        MlResult<InvalidOperationException> result = await errorsAsync.GetDetailExceptionAsync<InvalidOperationException>();
+        MlResult<InvalidOperationException> result = await errorsAsync.GetExceptionAsync<InvalidOperationException>();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -282,12 +282,12 @@ public class MlResultActionsErrorsDetailsTests
     [Fact]
     public async Task GetDetailExceptionAsync_sourceAsync_keyExist_return_valid()
     {
-        Task<MlErrorsDetails> errorsAsync = MlErrorsDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
+        Task<MlErrorDetails> errorsAsync = MlErrorDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
             { ExceptionMetadataKey, new InvalidOperationException("oops") }
         }).ToAsync();
 
-        MlResult<Exception> result = await errorsAsync.GetDetailExceptionAsync();
+        MlResult<Exception> result = await errorsAsync.GetExceptionAsync();
 
         result.IsSuccess.Should().BeTrue();
     }

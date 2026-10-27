@@ -17,7 +17,7 @@ public class ExistsFile : NotEmptyString
 
     public new static ExistsFile FromString(string pathStr) => new ExistsFile(pathStr);
 
-    public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorsDetails errorsDetails = null!)
+    public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(pathStr)
                             .Bind( _ => EnsureFp.That(pathStr, IsValid(pathStr), errorsDetails ?? BuildErrorMessage(pathStr)))
                             .Map ( _ => new ExistsFile(pathStr));

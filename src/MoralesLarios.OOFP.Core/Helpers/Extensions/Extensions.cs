@@ -73,7 +73,7 @@ public static class Extensions
 
     public static Func<T, Task<TResult>> ToFuncTask<T, TResult>(this Func<T, TResult> func) => x => func(x).ToAsync();
 
-    public static Func<MlErrorsDetails, Task<TResult>> ToFuncTask<TResult>(this Func<MlErrorsDetails, TResult> func) => errorsDetails => func(errorsDetails).ToAsync();
+    public static Func<MlErrorDetails, Task<TResult>> ToFuncTask<TResult>(this Func<MlErrorDetails, TResult> func) => errorsDetails => func(errorsDetails).ToAsync();
 
     public static Func<T, Task> ToFuncTask<T>(this Action<T> action)
     {
@@ -84,7 +84,7 @@ public static class Extensions
         };
     }
 
-    public static Func<MlErrorsDetails, Task> ToFuncTask(this Action<MlErrorsDetails> action)
+    public static Func<MlErrorDetails, Task> ToFuncTask(this Action<MlErrorDetails> action)
     {
         return errorsDetails =>
         {

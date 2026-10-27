@@ -361,7 +361,7 @@ public class MlResultActionsSeveralTests
     {
         Task<string?> sourceAsync = ((string?)"value").ToAsync();
 
-        MlResult<string?> result = await sourceAsync.NullToFailedAsync(MlErrorsDetails.FromErrorMessage("Error"));
+        MlResult<string?> result = await sourceAsync.NullToFailedAsync(MlErrorDetails.FromErrorMessage("Error"));
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -381,7 +381,7 @@ public class MlResultActionsSeveralTests
     {
         Task<int> sourceAsync = 10.ToAsync();
 
-        MlResult<int> result = await sourceAsync.BoolToResultAsync(condition: true, errorsDetails: MlErrorsDetails.FromErrorMessage("Error"));
+        MlResult<int> result = await sourceAsync.BoolToResultAsync(condition: true, errorsDetails: MlErrorDetails.FromErrorMessage("Error"));
 
         result.IsSuccess.Should().BeTrue();
     }

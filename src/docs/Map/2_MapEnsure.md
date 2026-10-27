@@ -37,7 +37,7 @@ MlResult<Pedido> r = ObtenerPedido(id)
                         .MapEnsure(p => p.Total > 0,        "El importe del pedido no es válido");
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`.
 
 ---
 
@@ -59,12 +59,12 @@ Esa firma `MlResult<T> → MlResult<T>` es lo que permite apilar tantas validaci
 
 ## Firmas reales e implementación
 
-El método real, del que dependen todos los demás, es el que recibe un **constructor** de `MlErrorsDetails`:
+El método real, del que dependen todos los demás, es el que recibe un **constructor** de `MlErrorDetails`:
 
 ```csharp
 public static MlResult<T> MapEnsure<T>(this MlResult<T>              source,
                                             Func<T, bool>            ensureFunc,
-                                            Func<T, MlErrorsDetails> errorDetailsResultBuilder)
+                                            Func<T, MlErrorDetails> errorDetailsResultBuilder)
 {
     var result = source.Match(
                                  valid: x      => ensureFunc(x) ? x : errorDetailsResultBuilder(x),
@@ -75,25 +75,25 @@ public static MlResult<T> MapEnsure<T>(this MlResult<T>              source,
 }
 ```
 
-Observa cómo el operador ternario devuelve **dos tipos distintos** (`T` y `MlErrorsDetails`) y ambos acaban siendo un `MlResult<T>` gracias a las conversiones implícitas de la biblioteca. Es un buen ejemplo de lo compacto que resulta el tipo.
+Observa cómo el operador ternario devuelve **dos tipos distintos** (`T` y `MlErrorDetails`) y ambos acaban siendo un `MlResult<T>` gracias a las conversiones implícitas de la biblioteca. Es un buen ejemplo de lo compacto que resulta el tipo.
 
 Las otras tres sobrecargas son azúcar sintáctico sobre esta:
 
 ```csharp
 // 1) Detalles de error fijos
 public static MlResult<T> MapEnsure<T>(this MlResult<T> source, Func<T, bool> ensureFunc,
-                                            MlErrorsDetails errorDetailsResult)
+                                            MlErrorDetails errorDetailsResult)
     => source.MapEnsure(ensureFunc, _ => errorDetailsResult);
 
 // 2) Mensaje de texto fijo — la más usada
 public static MlResult<T> MapEnsure<T>(this MlResult<T> source, Func<T, bool> ensureFunc,
                                             string errorMessageResult)
-    => source.MapEnsure(ensureFunc, errorMessageResult.ToMlErrorsDetails());
+    => source.MapEnsure(ensureFunc, errorMessageResult.ToMlErrorDetails());
 
 // 3) Mensaje construido a partir del valor
 public static MlResult<T> MapEnsure<T>(this MlResult<T> source, Func<T, bool> ensureFunc,
                                             Func<T, string> errorMessageResultBuilder)
-    => source.MapEnsure(ensureFunc, x => errorMessageResultBuilder(x).ToMlErrorsDetails());
+    => source.MapEnsure(ensureFunc, x => errorMessageResultBuilder(x).ToMlErrorDetails());
 ```
 
 | Estado de entrada | `ensureFunc(x)` | Resultado |
@@ -112,14 +112,14 @@ Elegir bien la sobrecarga marca la diferencia entre un mensaje inútil y un mens
 |---|---|---|
 | `string` | Regla fija, sin datos variables | `.MapEnsure(p => p.Total > 0, "El importe debe ser positivo")` |
 | `Func<T, string>` | Quieres incluir el valor real en el mensaje | `.MapEnsure(p => p.Total > 0, p => $"Importe no válido: {p.Total:C}")` |
-| `MlErrorsDetails` | Error compartido y reutilizable en varios sitios | `.MapEnsure(p => p.Total > 0, ErroresPedido.ImporteNoValido)` |
-| `Func<T, MlErrorsDetails>` | Necesitas adjuntar **detalles** además del mensaje | ver abajo |
+| `MlErrorDetails` | Error compartido y reutilizable en varios sitios | `.MapEnsure(p => p.Total > 0, ErroresPedido.ImporteNoValido)` |
+| `Func<T, MlErrorDetails>` | Necesitas adjuntar **detalles** además del mensaje | ver abajo |
 
-La cuarta es la más potente, porque te permite dejar el valor conflictivo en los detalles para que lo recojan después `GetDetailValue<T>()` o [`BindIfFailWithValue`](../Bind/7_BindIfFailWithValue.md):
+La cuarta es la más potente, porque te permite dejar el valor conflictivo en los detalles para que lo recojan después `GetMetadataValue<T>()` o [`BindIfFailWithValue`](../Bind/7_BindIfFailWithValue.md):
 
 ```csharp
 .MapEnsure(p => p.Total > 0,
-           p => MlErrorsDetails.FromErrorMessageWithValue(
+           p => MlErrorDetails.FromErrorMessageWithValue(
                     $"El importe del pedido {p.Numero} no es válido", p))
 ```
 
@@ -129,7 +129,7 @@ Y también permite acumular varios mensajes en un único fallo:
 .MapEnsure(p => p.EsCoherente,
            p => new[] { $"El pedido {p.Numero} es incoherente",
                         $"Suma de líneas: {p.SumaLineas:C}",
-                        $"Total declarado: {p.Total:C}" }.ToMlErrorsDetails())
+                        $"Total declarado: {p.Total:C}" }.ToMlErrorDetails())
 ```
 
 ---
@@ -197,8 +197,8 @@ EnsureFp.NotNullEmptyOrWhitespace(nif, "El NIF es obligatorio")   // string → 
 
 | Origen | Formas de error disponibles |
 |---|---|
-| `MlResult<T>` | `MlErrorsDetails`, `Func<T, MlErrorsDetails>`, `string`, `Func<T, string>` |
-| `Task<MlResult<T>>` | `MlErrorsDetails`, `Func<T, MlErrorsDetails>`, `string`, `Func<T, string>` |
+| `MlResult<T>` | `MlErrorDetails`, `Func<T, MlErrorDetails>`, `string`, `Func<T, string>` |
+| `Task<MlResult<T>>` | `MlErrorDetails`, `Func<T, MlErrorDetails>`, `string`, `Func<T, string>` |
 
 ```csharp
 public static async Task<MlResult<T>> MapEnsureAsync<T>(this Task<MlResult<T>> sourceAsync,
@@ -261,7 +261,7 @@ public MlResult<Cliente> ValidarAlta(AltaClienteDto dto)
 
         // Reglas de negocio al final, con detalles enriquecidos
         .MapEnsure(d => d.LimiteCredito >= 0,
-                   d => MlErrorsDetails.FromErrorMessageWithValue(
+                   d => MlErrorDetails.FromErrorMessageWithValue(
                             $"El límite de crédito no puede ser negativo ({d.LimiteCredito:C})", d))
         .MapEnsure(d => d.Email is null || d.Email.Contains('@'),
                    d => $"El correo '{d.Email}' no tiene un formato válido")
@@ -295,21 +295,21 @@ Este uso —validar la **salida**, no solo la entrada— es una de las mejores d
 
 ### Ejemplo 3: Errores reutilizables en un catálogo
 
-Cuando las mismas reglas se validan en varios sitios, centraliza los errores con la sobrecarga de `MlErrorsDetails`.
+Cuando las mismas reglas se validan en varios sitios, centraliza los errores con la sobrecarga de `MlErrorDetails`.
 
 ```csharp
 public static class ErroresFactura
 {
-    public static readonly MlErrorsDetails SinLineas =
-        MlErrorsDetails.FromErrorMessage("La factura debe tener al menos una línea");
+    public static readonly MlErrorDetails SinLineas =
+        MlErrorDetails.FromErrorMessage("La factura debe tener al menos una línea");
 
-    public static readonly MlErrorsDetails YaContabilizada =
-        MlErrorsDetails.FromErrorMessage("La factura ya está contabilizada y no admite cambios");
+    public static readonly MlErrorDetails YaContabilizada =
+        MlErrorDetails.FromErrorMessage("La factura ya está contabilizada y no admite cambios");
 
-    public static MlErrorsDetails DescuadreDe(Factura f)
+    public static MlErrorDetails DescuadreDe(Factura f)
         => new[] { $"La factura {f.Numero} está descuadrada",
                    $"Base + IVA: {f.Base + f.Iva:C}",
-                   $"Total declarado: {f.Total:C}" }.ToMlErrorsDetails();
+                   $"Total declarado: {f.Total:C}" }.ToMlErrorDetails();
 }
 
 public MlResult<Factura> ValidarParaContabilizar(Factura f)
@@ -339,10 +339,10 @@ public async Task<IActionResult> ConfirmarAsync(int id)
 
         .MatchAsync(
             valid: confirmado => Ok(new { confirmado.Numero, confirmado.FechaConfirmacion }),
-            fail : errores    => errores.GetDetailException()
+            fail : errores    => errores.GetException()
                                         .Match(
                                             valid: _ => StatusCode(500, new { error = "Error interno" }),
-                                            fail : _ => BadRequest(new { errores = errores.ToErrorsMessages() })));
+                                            fail : _ => BadRequest(new { errores = errores.GetErrorMessages() })));
 ```
 
 ---
@@ -371,7 +371,7 @@ public async Task<IActionResult> ConfirmarAsync(int id)
 
 6. **Si necesitas todos los errores, no uses `MapEnsure`.** Cambia a [`BindMulti`](../Bind/4_BindMulti.md), que acumula.
 
-7. **Centraliza los errores repetidos** en un catálogo estático con la sobrecarga de `MlErrorsDetails`.
+7. **Centraliza los errores repetidos** en un catálogo estático con la sobrecarga de `MlErrorDetails`.
 
 8. **No confundas validar con bifurcar.** Si el «fallo» es en realidad un camino alternativo legítimo, lo que quieres es [`BindIf`](../Bind/5_BindIf.md).
 
@@ -382,8 +382,8 @@ public async Task<IActionResult> ConfirmarAsync(int id)
 - `MapEnsure` valida el valor **sin transformarlo**: la firma es `MlResult<T> → MlResult<T>`.
 - Si el predicado se cumple, el valor pasa intacto; si no, se convierte en el fallo que tú construyas.
 - Si el resultado **ya venía fallido**, el predicado **no se evalúa**.
-- Hay **4 sobrecargas síncronas** (`MlErrorsDetails`, `Func<T, MlErrorsDetails>`, `string`, `Func<T, string>`) y **8 asíncronas** (las 4 × 2 tipos de origen).
-- El método base es el que recibe `Func<T, MlErrorsDetails>`; los demás delegan en él.
+- Hay **4 sobrecargas síncronas** (`MlErrorDetails`, `Func<T, MlErrorDetails>`, `string`, `Func<T, string>`) y **8 asíncronas** (las 4 × 2 tipos de origen).
+- El método base es el que recibe `Func<T, MlErrorDetails>`; los demás delegan en él.
 - El encadenamiento es de **cortocircuito**: devuelve el primer error. Para acumular, usa [`BindMulti`](../Bind/4_BindMulti.md).
 - **No existe `TryMapEnsure`** ni predicados asíncronos: el predicado debe ser puro y síncrono.
 - En el fuente hay un `MapEquals` comentado que **no forma parte de la API**.
@@ -398,5 +398,5 @@ public async Task<IActionResult> ConfirmarAsync(int id)
 - [`../Bind/5_BindIf.md`](../Bind/5_BindIf.md) — bifurcar según una condición.
 - [`../Bind/4_BindMulti.md`](../Bind/4_BindMulti.md) — acumular todos los errores de validación.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — entrar en el mundo `MlResult` validando.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — construir `MlErrorsDetails` con detalles.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — construir `MlErrorDetails` con detalles.
 - [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la clase.

@@ -40,7 +40,7 @@ Func<string, Cliente> parsear = Legacy.ParsearCliente;
 MlResult<Cliente> r = parsear.TryToMlResult(linea, ex => $"Línea ilegible: {ex.Message}");
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -83,15 +83,15 @@ Esta es la familia más numerosa. Todas las sobrecargas construyen un `MlResult<
 partir de distintas representaciones del error:
 
 ```csharp
-public static MlResult<T> ToMlResultFail<T>(this MlErrorsDetails      source) => source;
+public static MlResult<T> ToMlResultFail<T>(this MlErrorDetails      source) => source;
 public static MlResult<T> ToMlResultFail<T>(this MlError              source) => source;
 public static MlResult<T> ToMlResultFail<T>(this string               source) => MlError.FromErrorMessage(source).ToMlResultFail<T>();
 public static MlResult<T> ToMlResultFail<T>(this List<MlError>        source) => source;
-public static MlResult<T> ToMlResultFail<T>(this List<string>         source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
+public static MlResult<T> ToMlResultFail<T>(this List<string>         source) => MlErrorDetails.FromErrorsMessagesDetails(source);
 public static MlResult<T> ToMlResultFail<T>(this MlError[]            source) => source;
-public static MlResult<T> ToMlResultFail<T>(this string[]             source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
-public static MlResult<T> ToMlResultFail<T>(this IEnumerable<MlError> source) => new MlErrorsDetails(source);
-public static MlResult<T> ToMlResultFail<T>(this IEnumerable<string>  source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
+public static MlResult<T> ToMlResultFail<T>(this string[]             source) => MlErrorDetails.FromErrorsMessagesDetails(source);
+public static MlResult<T> ToMlResultFail<T>(this IEnumerable<MlError> source) => new MlErrorDetails(source);
+public static MlResult<T> ToMlResultFail<T>(this IEnumerable<string>  source) => MlErrorDetails.FromErrorsMessagesDetails(source);
 // … más las cuatro sobrecargas de TUPLA (error + Details)
 ```
 
@@ -99,7 +99,7 @@ public static MlResult<T> ToMlResultFail<T>(this IEnumerable<string>  source) =>
 
 | Origen | Uso típico |
 |--------|-----------|
-| `MlErrorsDetails` | Propagar errores ya construidos |
+| `MlErrorDetails` | Propagar errores ya construidos |
 | `MlError` | Error de catálogo |
 | `string` | El caso más habitual |
 | `List<MlError>` / `MlError[]` / `IEnumerable<MlError>` | Varios errores de catálogo |
@@ -110,7 +110,7 @@ public static MlResult<T> ToMlResultFail<T>(this IEnumerable<string>  source) =>
 | `(string, Dictionary<string,object>)` | Un mensaje + diagnóstico |
 
 🔑 **Las sobrecargas de tupla son muy cómodas** y suelen pasar desapercibidas: permiten
-adjuntar `Details` sin llamar explícitamente a `MlErrorsDetails.FromErrorMessageDetails`:
+adjuntar `Details` sin llamar explícitamente a `MlErrorDetails.FromErrorMessageDetails`:
 
 ```csharp
 // Con tupla: conciso
@@ -118,7 +118,7 @@ return ("El pedido no existe", new Dictionary<string, object> { ["PedidoId"] = i
            .ToMlResultFail<Pedido>();
 
 // Equivalente explícito
-return MlErrorsDetails.FromErrorMessageDetails("El pedido no existe",
+return MlErrorDetails.FromErrorMessageDetails("El pedido no existe",
            new Dictionary<string, object> { ["PedidoId"] = id, ["NoEncontrado"] = true })
        .ToMlResultFail<Pedido>();
 ```
@@ -177,7 +177,7 @@ Cuando se captura una excepción, el resultado se construye así:
 ```csharp
 string message = BuildErrorMessage(errorMessageBuilder, ex);
 
-var errorDetails = new MlErrorsDetails(
+var errorDetails = new MlErrorDetails(
         Errors : new List<MlError> { new MlError(message) },
         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
@@ -185,7 +185,7 @@ return errorDetails.ToMlResultFail<T>();
 ```
 
 🔑 **La excepción se guarda en `Details`** bajo la clave `ExceptionMetadataKey`. Por eso puedes
-recuperarla después con `GetDetailException()`, y por eso funcionan
+recuperarla después con `GetException()`, y por eso funcionan
 [`MapIfFailWithException`](../Map/6_MapIfFailWithException.md) y
 [`BindIfFailWithException`](../Bind/8_BindIfFailWithException.md).
 
@@ -225,8 +225,8 @@ ejecutar un efecto lateral cuando el carril ya viene roto, sin perder los errore
 originales.
 
 ```csharp
-public static MlResult<T> TryToMlResultErrors<T>(this Action<MlErrorsDetails> source,
-                                                      MlErrorsDetails         errorsDetails,
+public static MlResult<T> TryToMlResultErrors<T>(this Action<MlErrorDetails> source,
+                                                      MlErrorDetails         errorsDetails,
                                                       Func<Exception, string> errorMessageBuilder = null!)
 {
     try
@@ -253,14 +253,14 @@ un fallo en la telemetría no puede ocultar el fallo de negocio.
 
 ```csharp
 // Uso interno típico (lo verás en ExecSelf/Bind/Map con Try*)
-Action<MlErrorsDetails> notificar = err => _alertas.Enviar(err.ToErrorsDescription());
+Action<MlErrorDetails> notificar = err => _alertas.Enviar(err.GetErrorsSummary());
 
 var resultado = notificar.TryToMlResultErrors<Pedido>(erroresOriginales,
                             ex => $"Además, falló la notificación: {ex.Message}");
 ```
 
 También existen `TryToMlResultErrors<T>(this Action source, …)` y las versiones asíncronas
-`TryToMlResultErrorsAsync` con `Func<MlErrorsDetails, Task>` y `Func<Task>`.
+`TryToMlResultErrorsAsync` con `Func<MlErrorDetails, Task>` y `Func<Task>`.
 
 ---
 
@@ -403,7 +403,7 @@ más concisa de adjuntar `Details`.
 `IsSuccess` antes de llamarlo.
 
 **5. La excepción capturada se guarda en `Details[ExceptionMetadataKey]`.** Recupérala con
-`GetDetailException()`, nunca accediendo a `Details` a mano.
+`GetException()`, nunca accediendo a `Details` a mano.
 
 **6. `TryToMlResultErrors` siempre devuelve `Fail`** y **nunca pierde los errores
 originales**, incluso si la acción lanza (los amplía con `AppendExErrorDetail`).
@@ -445,7 +445,7 @@ nombres.
 | Pasar al mundo `object` | `.ToMlResultObject()` |
 | Volver del mundo `object` con seguridad | `.FromMlResultObject<T>()` |
 | Rechazar un `null` | [`NullToFailed`](../Several/2_NullToFailed.md) |
-| Recuperar la excepción de un fallo | `GetDetailException()` |
+| Recuperar la excepción de un fallo | `GetException()` |
 
 ---
 
@@ -585,7 +585,7 @@ var r = validacion.Match(valid: c   => Procesar(c),
 
 
 // ❌ Leer la excepción accediendo a Details a mano
-var ex = (Exception)resultado.FailureDetails.Details["Ex"];   // la clave real es ExceptionMetadataKey = "Ex"
+var ex = (Exception)resultado.FailureDetails.Metadata["Ex"];   // la clave real es ExceptionMetadataKey = "Ex"
 
 // ✅ Usa el accesor oficial
 resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
@@ -630,7 +630,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
   sobre la que se construyen todos los demás operadores.
 - **`ToMlResultValid<T>`** mete un valor en el carril aprovechando la conversión implícita.
   ⚠️ **No comprueba `null`.**
-- **`ToMlResultFail<T>`** tiene **14 sobrecargas** (`MlErrorsDetails`, `MlError`, `string`,
+- **`ToMlResultFail<T>`** tiene **14 sobrecargas** (`MlErrorDetails`, `MlError`, `string`,
   listas, arrays, `IEnumerable` y **4 formas de tupla con `Details`**), todas con gemela
   `*Async`. El genérico `<T>` es obligatorio.
 - **`TryToMlResult`** envuelve delegados y acciones que lanzan; guarda la excepción en
@@ -651,7 +651,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
 ## Ver también
 
 - [`MlResult`](../core-types/MlResult.md) — el tipo central y sus conversiones implícitas
-- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorsDetails`, `AppendExErrorDetail`
+- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails`, `AppendExErrorDetail`
 - [`Extensions`](../Extensions/Extensions.md) — `ToAsync` y otras utilidades transversales
 - [`NullToFailed`](../Several/2_NullToFailed.md) — rechazar valores nulos al entrar
 - [`TryMap`](../Map/1_Map.md) y [`TryBind`](../Bind/3_Bind.md) — captura de excepciones dentro del carril

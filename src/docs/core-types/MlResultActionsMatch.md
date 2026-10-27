@@ -11,7 +11,7 @@
 | Estado de `source` | Función ejecutada |
 | --- | --- |
 | `IsSuccess == true` | `valid(value)` — recibe el valor válido. |
-| `IsFailure == true` | `fail(errorsDetails)` — recibe el `MlErrorsDetails` completo. |
+| `IsFailure == true` | `fail(errorsDetails)` — recibe el `MlErrorDetails` completo. |
 
 Es **exhaustivo por construcción**: el compilador te obliga a proporcionar las dos funciones, así
 que es imposible olvidar el tratamiento del error.
@@ -30,7 +30,7 @@ una tubería y devolver, por ejemplo, un `IActionResult`, un `string` o un `bool
 ```csharp
 TReturn Match<T, TReturn>(this MlResult<T> source,
                           Func<T, TReturn>               valid,
-                          Func<MlErrorsDetails, TReturn> fail);
+                          Func<MlErrorDetails, TReturn> fail);
 ```
 
 ### Región `MatchAll` — una sola función, sin parámetros
@@ -86,7 +86,7 @@ Nombres de los parámetros (útiles para invocación con argumentos nombrados, m
 public IActionResult ObtenerCliente(int id)
     => _servicio.ObtenerCliente(id)
                 .Match(valid: cliente => Ok(cliente),
-                       fail : errores => NotFound(errores.ToErrorsMessages()));
+                       fail : errores => NotFound(errores.GetErrorMessages()));
 ```
 
 Usar **argumentos nombrados** (`valid:` / `fail:`) es la práctica recomendada: hace el código
@@ -101,7 +101,7 @@ bool sePudoGuardar = GuardarPedido(pedido)
 
 string mensaje = GuardarPedido(pedido)
     .Match(valid: id      => $"Pedido {id} creado correctamente.",
-           fail : errores => $"No se pudo crear el pedido: {errores.ToErrorsDescription()}");
+           fail : errores => $"No se pudo crear el pedido: {errores.GetErrorsSummary()}");
 ```
 
 ### `MatchAsync`: origen y delegados asíncronos
@@ -111,7 +111,7 @@ public async Task<IActionResult> ActualizarAsync(int id, ClienteDto dto)
     => await _servicio.ActualizarAsync(id, dto)          // Task<MlResult<Cliente>>
                       .MatchAsync(validAsync: async c       => Ok(await _mapper.MapAsync(c)),
                                   failAsync : async errores => { await _log.RegistrarAsync(errores);
-                                                                 return BadRequest(errores.ToErrorsMessages()); });
+                                                                 return BadRequest(errores.GetErrorMessages()); });
 ```
 
 También puedes mezclar: una rama síncrona y otra asíncrona.
@@ -131,7 +131,7 @@ cultura…), `TryMatch` envuelve el resultado en un `MlResult` en lugar de propa
 ```csharp
 MlResult<string> json = ObtenerCliente(id)
     .TryMatch(valid              : c       => JsonSerializer.Serialize(c),
-              fail               : errores => JsonSerializer.Serialize(new { errores = errores.ToErrorsMessages() }),
+              fail               : errores => JsonSerializer.Serialize(new { errores = errores.GetErrorMessages() }),
               errorMessageBuilder: ex      => $"Error al serializar la respuesta del cliente {id}: {ex.Message}");
 
 // json.IsFailure == true si alguno de los dos serializadores lanzó excepción.
@@ -160,7 +160,7 @@ var cliente = resultado.Value;
 if (resultado.IsSuccess) { /* ... */ } else { /* ... */ }
 
 // ✅ Match: exhaustivo, conciso y sin acceso al estado interno.
-var respuesta = resultado.Match(valid: c => Ok(c), fail: e => BadRequest(e.ToErrorsMessages()));
+var respuesta = resultado.Match(valid: c => Ok(c), fail: e => BadRequest(e.GetErrorMessages()));
 ```
 
 ---
@@ -186,4 +186,4 @@ var respuesta = resultado.Match(valid: c => Ok(c), fail: e => BadRequest(e.ToErr
 ## Ver también
 
 - [`MlResult<T>`](MlResult.md) — el tipo sobre el que opera `Match`.
-- [`MlErrorsDetails`](MlResultErrors.md) — lo que recibe la rama `fail`.
+- [`MlErrorDetails`](MlResultErrors.md) — lo que recibe la rama `fail`.

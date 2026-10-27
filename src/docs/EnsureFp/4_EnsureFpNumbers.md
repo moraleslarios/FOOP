@@ -27,7 +27,7 @@ Este bloque las expresa una sola vez y de forma genérica, sin duplicar código 
 `long`, `decimal`, `double`, `short`, `byte`, `BigInteger`…) y sin conversiones ni *boxing*.
 
 Como el resto de `EnsureFp`, cada regla tiene sus tres variantes: mensaje `string`,
-`MlErrorsDetails` y `*Arg` con mensaje automático
+`MlErrorDetails` y `*Arg` con mensaje automático
 (ver [la convención de las tres variantes](1_EnsureFpCore.md#la-convención-de-las-tres-variantes)).
 
 ---
@@ -58,7 +58,7 @@ var r4 = Positive(importe, "El importe debe ser positivo.");                    
 
 ```csharp
 public static MlResult<T> GreaterThan<T>(T value, T limit, string errorMessage)          where T : IComparable<T>;
-public static MlResult<T> GreaterThan<T>(T value, T limit, MlErrorsDetails errorsDetails) where T : IComparable<T>;
+public static MlResult<T> GreaterThan<T>(T value, T limit, MlErrorDetails errorsDetails) where T : IComparable<T>;
 public static MlResult<T> GreaterThanArg<T>(T value, T limit,
                                             [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IComparable<T>;
 
@@ -93,7 +93,7 @@ errores «por uno» (*off-by-one*): «al menos 1 unidad» es `GreaterOrEqual(can
 
 ```csharp
 public static MlResult<T> InRange<T>(T value, T min, T max, string errorMessage)           where T : IComparable<T>;
-public static MlResult<T> InRange<T>(T value, T min, T max, MlErrorsDetails errorsDetails) where T : IComparable<T>;
+public static MlResult<T> InRange<T>(T value, T min, T max, MlErrorDetails errorsDetails) where T : IComparable<T>;
 public static MlResult<T> InRangeArg<T>(T value, T min, T max,
                                         [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IComparable<T>;
 
@@ -139,7 +139,7 @@ public static MlResult<T> NotNegative<T>(T value, string errorMessage) where T :
 public static MlResult<T> Negative<T>(T value, string errorMessage)    where T : INumber<T>;   // value < 0
 public static MlResult<T> NotZero<T>(T value, string errorMessage)     where T : INumber<T>;   // value != 0
 
-// Cada una con su sobrecarga MlErrorsDetails y su variante *Arg.
+// Cada una con su sobrecarga MlErrorDetails y su variante *Arg.
 ```
 
 | Regla | Condición | ¿Acepta 0? | Uso típico |
@@ -181,8 +181,8 @@ if (resultado.IsFailure)
 {
     var detalles = resultado.GetFailureDetailsOrThrow();
 
-    detalles.ToErrorsMessages();        // "'edad' debe estar entre 18 y 120 (actual: 15)."
-    detalles.ToDetailsDescription();    // ParamName = edad, Value = 15, Expected = 18..120
+    detalles.GetErrorMessages();        // "'edad' debe estar entre 18 y 120 (actual: 15)."
+    detalles.GetMetadataSummary();    // ParamName = edad, Value = 15, Expected = 18..120
 }
 ```
 
@@ -192,8 +192,8 @@ Esto permite construir respuestas HTTP estructuradas sin analizar el texto del m
 fail: e => BadRequest(new ProblemDetails
 {
     Title  = "Parámetro fuera de rango",
-    Detail = e.ToErrorsMessages(),
-    Extensions = { ["detalles"] = e.Details }   // incluye ParamName, Value y Expected
+    Detail = e.GetErrorMessages(),
+    Extensions = { ["detalles"] = e.Metadata }   // incluye ParamName, Value y Expected
 });
 ```
 

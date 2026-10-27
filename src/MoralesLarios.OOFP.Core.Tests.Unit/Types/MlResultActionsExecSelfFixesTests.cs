@@ -96,8 +96,8 @@ public class MlResultActionsExecSelfFixesTests
     {
         var partialResult = FailWithoutException();
 
-        MlErrorsDetails syncErrors  = null!;
-        MlErrorsDetails asyncErrors = null!;
+        MlErrorDetails syncErrors  = null!;
+        MlErrorDetails asyncErrors = null!;
 
         partialResult.ExecSelfIfFailWithoutException(errorsDetails => syncErrors = errorsDetails);
 
@@ -127,7 +127,7 @@ public class MlResultActionsExecSelfFixesTests
     {
         var partialResult = FailWithoutException();
 
-        MlErrorsDetails asyncErrors = null!;
+        MlErrorDetails asyncErrors = null!;
 
         await partialResult.ExecSelfIfFailWithoutExceptionAsync(async errorsDetails =>
         {
@@ -153,7 +153,7 @@ public class MlResultActionsExecSelfFixesTests
     {
         var partialResult = FailWithoutException().ToAsync();
 
-        MlErrorsDetails asyncErrors = null!;
+        MlErrorDetails asyncErrors = null!;
 
         var result = await partialResult.ExecSelfIfFailWithoutExceptionAsync(async errorsDetails =>
         {

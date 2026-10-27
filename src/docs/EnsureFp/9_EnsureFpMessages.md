@@ -180,7 +180,7 @@ que resulta decisivo cuando el valor llega de un JSON externo.
 ## 4. Claves de detalle
 
 Además del mensaje, los fallos de `EnsureFp` adjuntan información estructurada en el diccionario
-`Details` del `MlErrorsDetails`. Las claves están declaradas como constantes en
+`Details` del `MlErrorDetails`. Las claves están declaradas como constantes en
 `Helpers/Constants.cs`, que es un `global using static` del proyecto: **puedes usarlas directamente
 por su nombre**.
 
@@ -213,18 +213,18 @@ public static string DEFAULT_EX_ERROR_MESSAGE(Exception ex) => …;
 
 ## 5. Cómo leer los detalles de un fallo
 
-Un aviso importante: **`MlErrorsDetails` solo expone dos propiedades públicas**, `Errors` y
+Un aviso importante: **`MlErrorDetails` solo expone dos propiedades públicas**, `Errors` y
 `Details`. No hay una propiedad `Message`. Para leer la información se usan los métodos de extensión
-de `MlErrorsDetailsActions`:
+de `MlErrorDetailsActions`:
 
 | Método | Devuelve |
 |---|---|
-| `ToErrorsMessages()` | todos los mensajes concatenados |
-| `ToErrorsDescription()` | descripción legible del conjunto de errores |
+| `GetErrorMessages()` | todos los mensajes concatenados |
+| `GetErrorsSummary()` | descripción legible del conjunto de errores |
 | `Errors.First().Message` | el primer mensaje, si solo esperas uno |
-| `GetDetailValue<T>()` | el valor guardado en `Details`, tipado |
-| `GetDetailException()` | la excepción guardada bajo la clave `Ex` |
-| `ToDetailsDescription()` | volcado legible de todo el diccionario de detalles |
+| `GetMetadataValue<T>()` | el valor guardado en `Details`, tipado |
+| `GetException()` | la excepción guardada bajo la clave `Ex` |
+| `GetMetadataSummary()` | volcado legible de todo el diccionario de detalles |
 
 ```csharp
 var resultado = MaxLengthArg(nombre, 10);
@@ -233,21 +233,21 @@ if (resultado.IsFailure)
 {
     var d = resultado.GetFailureDetailsOrThrow();
 
-    var mensaje  = d.ToErrorsMessages();
+    var mensaje  = d.GetErrorMessages();
     // "'nombre' debe tener como máximo 10 caracteres (actual: 27)."
 
-    var param    = d.Details[PARAM_NAME_KEY];      // "nombre"
-    var valor    = d.Details[ValueMetadataKey];           // "Un nombre demasiado largo..."
-    var esperado = d.Details[EXPECTED_KEY];        // 10
+    var param    = d.Metadata[PARAM_NAME_KEY];      // "nombre"
+    var valor    = d.Metadata[ValueMetadataKey];           // "Un nombre demasiado largo..."
+    var esperado = d.Metadata[EXPECTED_KEY];        // 10
 
-    var volcado  = d.ToDetailsDescription();       // todo el diccionario, para el log
+    var volcado  = d.GetMetadataSummary();       // todo el diccionario, para el log
 }
 ```
 
 Acceso seguro cuando no sabes si la clave existe:
 
 ```csharp
-if (d.Details.TryGetValue(FAILED_INDEXES_KEY, out var raw) && raw is IEnumerable<int> indices)
+if (d.Metadata.TryGetValue(FAILED_INDEXES_KEY, out var raw) && raw is IEnumerable<int> indices)
     logger.LogWarning("Posiciones inválidas: {Indices}", string.Join(", ", indices));
 ```
 
@@ -265,28 +265,28 @@ public async Task<IActionResult> Crear(CrearPedidoDto dto, CancellationToken ct)
             valid: p => CreatedAtAction(nameof(Obtener), new { id = p.Id }, p),
             fail:  e => Responder(e));
 
-private IActionResult Responder(MlErrorsDetails e)
+private IActionResult Responder(MlErrorDetails e)
 {
     // 1. Fallo técnico: el predicado lanzó una excepción → 503
-    if (e.Details.ContainsKey(ExceptionMetadataKey))
+    if (e.Metadata.ContainsKey(ExceptionMetadataKey))
     {
-        logger.LogError(e.GetDetailException(), "Fallo técnico validando la petición");
+        logger.LogError(e.GetException(), "Fallo técnico validando la petición");
         return StatusCode(StatusCodes.Status503ServiceUnavailable,
                           "Servicio temporalmente no disponible.");
     }
 
     // 2. Recurso inexistente → 404
-    if (e.Details.ContainsKey(NOT_FOUND_KEY))
-        return NotFound(e.ToErrorsMessages());
+    if (e.Metadata.ContainsKey(NOT_FOUND_KEY))
+        return NotFound(e.GetErrorMessages());
 
     // 3. Validación de entrada → 400 con el nombre del campo
     var problema = new ValidationProblemDetails
     {
         Title  = "La petición contiene datos no válidos.",
-        Detail = e.ToErrorsMessages()
+        Detail = e.GetErrorMessages()
     };
 
-    if (e.Details.TryGetValue(PARAM_NAME_KEY, out var campo) && campo is string nombre)
+    if (e.Metadata.TryGetValue(PARAM_NAME_KEY, out var campo) && campo is string nombre)
         problema.Errors[nombre] = e.Errors.Select(x => x.Message).ToArray();
 
     return BadRequest(problema);
@@ -298,9 +298,9 @@ Y con las reglas de colección, el detalle `FailedIndexes` permite señalar **fi
 ```csharp
 fail: e =>
 {
-    var indices = e.GetDetailValue<IEnumerable<int>>();
+    var indices = e.GetMetadataValue<IEnumerable<int>>();
     var filas   = indices is null ? "" : string.Join(", ", indices.Select(i => i + 1));
-    return BadRequest($"{e.ToErrorsMessages()} Filas afectadas: {filas}");
+    return BadRequest($"{e.GetErrorMessages()} Filas afectadas: {filas}");
 }
 ```
 
@@ -346,12 +346,12 @@ que **nunca se produce una `NullReferenceException` al generar un mensaje**.
 3. **Nunca analices el texto del mensaje para tomar decisiones.** Usa las claves de `Details`
    (`ParamName`, `Expected`, `Ex`, `FailedIndexes`).
 4. **Usa las constantes, no los literales.** `Details[PARAM_NAME_KEY]`, no `Details["ParamName"]`.
-5. **Registra `ToDetailsDescription()` en el log** y devuelve `ToErrorsMessages()` al cliente: todo el
+5. **Registra `GetMetadataSummary()` en el log** y devuelve `GetErrorMessages()` al cliente: todo el
    contexto queda en el servidor y el cliente recibe solo lo necesario.
-6. **Rescata la excepción con `GetDetailException()`** en los fallos de `TryThat`/`TryThatAsync` para
+6. **Rescata la excepción con `GetException()`** en los fallos de `TryThat`/`TryThatAsync` para
    no perder la traza.
 7. **Si necesitas internacionalización**, no toques `EnsureFpMessages`: usa las sobrecargas con
-   `string` o `MlErrorsDetails` y pasa el texto ya traducido.
+   `string` o `MlErrorDetails` y pasa el texto ya traducido.
 8. **Comprueba `ParamName` en los tests** además del mensaje: es más estable frente a cambios de
    redacción.
 
@@ -367,5 +367,5 @@ que **nunca se produce una `NullReferenceException` al generar un mensaje**.
 - [5. Colecciones](5_EnsureFpCollections.md)
 - [6. Tipos concretos](6_EnsureFpTypes.md)
 - [8. Variantes asíncronas](8_EnsureFpAsync.md)
-- [`MlResultErrors`: anatomía de `MlErrorsDetails`](../core-types/MlResultErrors.md)
+- [`MlResultErrors`: anatomía de `MlErrorDetails`](../core-types/MlResultErrors.md)
 - [`MlResultActionsErrorsDetails`: métodos sobre los detalles](../core-types/MlResultActionsErrorsDetails.md)

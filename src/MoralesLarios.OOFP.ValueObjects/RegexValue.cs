@@ -26,7 +26,7 @@ public class RegexValue : ValueObject<NotEmptyString>
 
     public static RegexValue FromRegex(string value, string pattern) => new RegexValue(NotEmptyString.FromString(value), pattern);
 
-    public static MlResult<RegexValue> ByRegex(string value, string pattern, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<RegexValue> ByRegex(string value, string pattern, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
             .Bind( _ => EnsureFp.That(value, IsValid(value, pattern), errorsDetails ?? BuildErrorMessage(value, pattern)))
             .Map ( _ => new RegexValue(value, pattern));

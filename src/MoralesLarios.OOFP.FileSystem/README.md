@@ -184,7 +184,7 @@ public class ExistsFile : NotEmptyString
     public new static bool   IsValid          (string pathStr) => File.Exists(pathStr);
     public new static string BuildErrorMessage(string pathStr) => $"{pathStr} not exists";
 
-    public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorsDetails errorsDetails = null!)
+    public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(pathStr)
                          .Bind(_ => EnsureFp.That(pathStr, IsValid(pathStr),
                                                   errorsDetails ?? BuildErrorMessage(pathStr))
@@ -328,7 +328,7 @@ Podría ser un cuerpo de expresión (`=>`). Es solo estilo.
 
 > ⚠️ **No hay streams.** No hay forma de procesar un fichero grande sin cargarlo (bueno, `ReadLines` lo permite, pero con los riesgos ya descritos).
 
-> ⚠️ **No hay personalización del mensaje de error.** Los métodos no aceptan `MlErrorsDetails`, aunque `ExistsFile.ByString` sí lo soporta. **La capacidad existe en el objeto de valor pero no se expone en el wrapper.**
+> ⚠️ **No hay personalización del mensaje de error.** Los métodos no aceptan `MlErrorDetails`, aunque `ExistsFile.ByString` sí lo soporta. **La capacidad existe en el objeto de valor pero no se expone en el wrapper.**
 
 > ⚠️ **No hay tests.** No existe un proyecto `MoralesLarios.OOFP.FileSystem.Tests`.
 
@@ -430,7 +430,7 @@ using MoralesLarios.OOFP.Logging;
 public MlResult<string> LeerConTraza(string ruta)
     => _io.ReadAllText(ruta)
           .LogMlResultDebugIfValid(_logger, t => $"Leído '{ruta}' ({t.Length} caracteres)")
-          .LogMlResultErrorIfFail (_logger, e => $"No se pudo leer '{ruta}': {e.ToErrorsDescription()}");
+          .LogMlResultErrorIfFail (_logger, e => $"No se pudo leer '{ruta}': {e.GetErrorsSummary()}");
 ```
 
 ### Ejemplo 5 — Sustituir en tests sin tocar disco
@@ -559,7 +559,7 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md)
 - [`Map` — transformación con cortocircuito](../docs/Map/1_Map.md)
 - [`TryMap` — capturar excepciones en el raíl](../docs/Map/1_Map.md) 🔑 imprescindible aquí
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)

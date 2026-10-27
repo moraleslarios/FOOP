@@ -267,7 +267,7 @@ public class MlResultBuclesTests
 
         Func<string, MlResult<int>> completeFuncTransform = null!;
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -279,7 +279,7 @@ public class MlResultBuclesTests
 
         Func<string, MlResult<int>> completeFuncTransform = x => x.Length.ToMlResultValid<int>();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
         result.IsSuccess.Should().BeTrue();
 
@@ -293,7 +293,7 @@ public class MlResultBuclesTests
 
         Func<string, MlResult<int>> completeFuncTransform = x => x.Length.ToMlResultValid<int>();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
         result.IsSuccess.Should().BeTrue();
 
@@ -308,7 +308,7 @@ public class MlResultBuclesTests
 
         Func<string, MlResult<int>> completeFuncTransform = x => $"Error {x}".ToMlResultFail<int>();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = colec.ProjectionSplit(completeFuncTransform);
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().valids.Count.Should().Be(0);
@@ -320,7 +320,7 @@ public class MlResultBuclesTests
     {
         List<string> colec = ["uno", "dos", "tres"];
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colec.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colec.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().valids.Count.Should().Be(3);
@@ -335,7 +335,7 @@ public class MlResultBuclesTests
     {
         List<string> colec = ["uno", "dos", "tres"];
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colec.ProjectionSplitAsync(x => $"Error {x}".ToMlResultFail<int>());
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colec.ProjectionSplitAsync(x => $"Error {x}".ToMlResultFail<int>());
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().valids.Count.Should().Be(0);
@@ -350,7 +350,7 @@ public class MlResultBuclesTests
     {
         Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres"]).ToAsync();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().valids.Count.Should().Be(3);
@@ -362,7 +362,7 @@ public class MlResultBuclesTests
     {
         Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres"]).ToAsync();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => Task.FromResult(x.Length.ToMlResultValid<int>()));
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => Task.FromResult(x.Length.ToMlResultValid<int>()));
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().valids.Count.Should().Be(3);
@@ -374,7 +374,7 @@ public class MlResultBuclesTests
     {
         Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres"]).ToAsync();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => Task.FromResult($"Error {x}".ToMlResultFail<int>()));
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => Task.FromResult($"Error {x}".ToMlResultFail<int>()));
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().valids.Count.Should().Be(0);
@@ -386,7 +386,7 @@ public class MlResultBuclesTests
     {
         Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", null!, "tres"]).ToAsync();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x.Length.ToMlResultValid<int>());
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().valids.Count.Should().Be(2);
@@ -400,7 +400,7 @@ public class MlResultBuclesTests
     {
         Task<IEnumerable<string>> colecAsync = ((IEnumerable<string>)["uno", "dos", "tres", "cuatro"]).ToAsync();
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x == "dos" || x == "cuatro"
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colecAsync.ProjectionSplitAsync(x => x == "dos" || x == "cuatro"
             ? $"Error {x}".ToMlResultFail<int>()
             : x.Length.ToMlResultValid<int>());
 
@@ -420,7 +420,7 @@ public class MlResultBuclesTests
 
         Func<string, Task<MlResult<int>>> completeFuncTransformAsync = null!;
 
-        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorsDetails> fails)> result = await colecAsync.ProjectionSplitAsync(completeFuncTransformAsync);
+        MlResult<(Dictionary<string, int> valids, Dictionary<string, MlErrorDetails> fails)> result = await colecAsync.ProjectionSplitAsync(completeFuncTransformAsync);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -613,7 +613,7 @@ public class MlResultBuclesTests
 
         result.IsFailure.Should().BeTrue();
         result.GetFailureDetailsOrThrow()
-              .ToErrorsMessages()
+              .GetErrorMessages()
               .Should().BeEquivalentTo(new[] { "Error 1", "Error 2", "Error 3" });
     }
 
@@ -634,7 +634,7 @@ public class MlResultBuclesTests
 
         result.IsFailure.Should().BeTrue();
         result.GetFailureDetailsOrThrow()
-              .ToErrorsMessages()
+              .GetErrorMessages()
               .Should().BeEquivalentTo(new[] { "Error 2", "Error 4" });
     }
 
@@ -668,7 +668,7 @@ public class MlResultBuclesTests
 
         result.IsFailure.Should().BeTrue();
         result.GetFailureDetailsOrThrow()
-              .ToErrorsMessages()
+              .GetErrorMessages()
               .Should().Contain("No elements found in failed state to merge");
     }
 
@@ -683,7 +683,7 @@ public class MlResultBuclesTests
 
         result.IsFailure.Should().BeTrue();
         result.GetFailureDetailsOrThrow()
-              .ToErrorsMessages()
+              .GetErrorMessages()
               .Should().Contain("No elements found in failed state to merge");
     }
 

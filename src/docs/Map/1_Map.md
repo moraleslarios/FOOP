@@ -39,7 +39,7 @@ MlResult<Recibo> recibo = ObtenerFactura(id)
                             .Bind(f => Cobrar(f));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`.
 
 ---
 
@@ -75,7 +75,7 @@ public static MlResult<TReturn> Map<T, TReturn>(this MlResult<T>      source,
 
 Dos observaciones sobre este cuerpo:
 
-1. **La rama de fallo cambia el tipo genérico pero conserva los errores intactos.** `MlResult<TReturn>.Fail` se pasa como *grupo de métodos*: recibe los `MlErrorsDetails` originales y los reempaqueta en el nuevo tipo. Ni un mensaje ni un detalle se pierden.
+1. **La rama de fallo cambia el tipo genérico pero conserva los errores intactos.** `MlResult<TReturn>.Fail` se pasa como *grupo de métodos*: recibe los `MlErrorDetails` originales y los reempaqueta en el nuevo tipo. Ni un mensaje ni un detalle se pierden.
 
 2. **La rama válida se apoya en la conversión implícita.** `func(value)` devuelve un `TReturn` desnudo, que se convierte automáticamente en `MlResult<TReturn>` válido gracias al operador implícito definido en `MlResult<T>`.
 

@@ -37,7 +37,7 @@ MlResult<Factura> r = ObtenerPedido(id)
                         .BindSaveValueInDetailsIfFailedFuncResult(pedido => Facturar(pedido));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`; para llegar al valor guardado, `GetDetailValue<T>()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`; para llegar al valor guardado, `GetMetadataValue<T>()`.
 
 ---
 
@@ -111,11 +111,11 @@ public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, objec
 
 public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, string errorKey, object errorValue)
     => source.Match(
-            fail : errorsDetails => errorsDetails.AddDetail(errorKey, errorValue),
+            fail : errorsDetails => errorsDetails.AddMetadataOrThrow(errorKey, errorValue),
             valid: _            => source);
 ```
 
-Donde `ValueMetadataKey` es la constante `"Value"` definida en `Helpers/Constants.cs`. Es exactamente la misma clave que usan `AddValueIfFail` y `GetDetailValue<T>()`, así que las tres piezas encajan sin configuración.
+Donde `ValueMetadataKey` es la constante `"Value"` definida en `Helpers/Constants.cs`. Es exactamente la misma clave que usan `AddValueIfFail` y `GetMetadataValue<T>()`, así que las tres piezas encajan sin configuración.
 
 ```csharp
 // Constants.cs
@@ -135,14 +135,14 @@ if (result.IsFailure) result.AddValueDetailIfFail(value!);   // ⚠️ el retorn
 return result;                                            // …y aun así funciona
 ```
 
-`AddValueDetailIfFail` **devuelve** un `MlResult<TReturn>` nuevo, pero aquí ese retorno se ignora y se devuelve `result`. ¿Por qué funciona entonces? Porque `AddDetail` no crea un diccionario nuevo, **muta el existente**:
+`AddValueDetailIfFail` **devuelve** un `MlResult<TReturn>` nuevo, pero aquí ese retorno se ignora y se devuelve `result`. ¿Por qué funciona entonces? Porque `AddMetadataOrThrow` no crea un diccionario nuevo, **muta el existente**:
 
 ```csharp
-public static MlErrorsDetails AddDetail<T>(this MlErrorsDetails source, string key, T value)
+public static MlErrorDetails AddMetadataOrThrow<T>(this MlErrorDetails source, string key, T value)
 {
-    source.Details.Add(key, value!);        // ⚠️ mutación in-place del diccionario
+    source.Metadata.Add(key, value!);        // ⚠️ mutación in-place del diccionario
 
-    var result = (source.Errors, source.Details);
+    var result = (source.Errors, source.Metadata);
 
     return result;
 }
@@ -170,16 +170,16 @@ ObtenerPedido(id)
 
 Tienes dos vías, según lo que quieras hacer.
 
-**Vía 1 — leerlo para diagnosticar**, con `GetDetailValue<T>()`:
+**Vía 1 — leerlo para diagnosticar**, con `GetMetadataValue<T>()`:
 
 ```csharp
 resultado.ExecSelfIfFail(errores =>
-    errores.GetDetailValue<Pedido>()
+    errores.GetMetadataValue<Pedido>()
            .Match(
                valid: pedido => _log.LogError("Fallo facturando el pedido {Id} de {Importe} €: {E}",
-                                              pedido.Id, pedido.Importe, errores.ToErrorsMessages()),
+                                              pedido.Id, pedido.Importe, errores.GetErrorMessages()),
                fail : _      => _log.LogError("Fallo facturando (sin dato de entrada): {E}",
-                                              errores.ToErrorsMessages())));
+                                              errores.GetErrorMessages())));
 ```
 
 **Vía 2 — usarlo para recuperarse**, con la familia `BindIfFailWithValue`, que ya sabe extraerlo:
@@ -253,13 +253,13 @@ var r = ObtenerPedido(id)
 // Y ahora el diagnóstico es completo:
 r.ExecSelfIfFail(errores =>
 {
-    var pedido    = errores.GetDetailValue<Pedido>();
-    var excepcion = errores.GetDetailException();
+    var pedido    = errores.GetMetadataValue<Pedido>();
+    var excepcion = errores.GetException();
 
     _log.LogError("Cobro fallido | Pedido: {P} | Excepción: {E} | Errores: {Er}",
                   pedido.Match(valid: p => p.Id.ToString(), fail: _ => "desconocido"),
                   excepcion.Match(valid: e => e.GetType().Name, fail: _ => "ninguna"),
-                  errores.ToErrorsMessages());
+                  errores.GetErrorMessages());
 });
 ```
 
@@ -323,12 +323,12 @@ public MlResult<InformeImportacion> Importar(IEnumerable<LineaFichero> lineas)
                  fail : errores =>
                  {
                      // El valor de entrada está garantizado en los detalles
-                     var original = errores.GetDetailValue<LineaFichero>()
+                     var original = errores.GetMetadataValue<LineaFichero>()
                                            .Match(valid: l => l, fail: _ => linea);
 
                      rechazos.Add(new Rechazo(original.Numero,
                                               original.Texto,
-                                              errores.ToErrorsMessages()));
+                                              errores.GetErrorMessages()));
                      return 0;
                  });
     }
@@ -354,7 +354,7 @@ public async Task<MlResult<Confirmacion>> EnviarNotificacionAsync(NotificacionDt
         .ExecSelfIfFailAsync(async errores =>
             await _auditoria.RegistrarAsync(
                 asunto : "Notificación no entregada por ningún canal",
-                detalle: errores.ToDetailsDescription()));
+                detalle: errores.GetMetadataSummary()));
 ```
 
 Sin el paso 1, el paso 2 no encontraría el valor y no se ejecutaría: `BindIfFailWithValue` depende de que `Details["Value"]` exista.
@@ -370,14 +370,14 @@ public MlResult<RespuestaScoring> ConsultarScoring(SolicitudCredito solicitud)
 
         .ExecSelfIfFail(errores =>
         {
-            var esTecnico = errores.GetDetailException().IsSuccess;
+            var esTecnico = errores.GetException().IsSuccess;
 
             _log.Log(esTecnico ? LogLevel.Error : LogLevel.Warning,
                      "Scoring fallido | Solicitud: {S} | Tipo: {T} | {E}",
-                     errores.GetDetailValue<SolicitudCredito>()
+                     errores.GetMetadataValue<SolicitudCredito>()
                             .Match(valid: s => $"{s.Nif}/{s.Importe}€", fail: _ => "n/d"),
                      esTecnico ? "técnico" : "negocio",
-                     errores.ToErrorsMessages());
+                     errores.GetErrorMessages());
         });
 ```
 
@@ -404,7 +404,7 @@ ObtenerExpediente(id)
 
 1. **Úsalo justo antes del paso que puede fallar de forma opaca.** Su valor está en los pasos cuyo mensaje de error no basta para saber qué ocurrió.
 
-2. **No lo apiles.** Como `AddDetail` usa `Dictionary.Add`, dos guardados sobre el mismo fallo lanzan `ArgumentException`. Un único punto de guardado por rama de fallo.
+2. **No lo apiles.** Como `AddMetadataOrThrow` usa `Dictionary.Add`, dos guardados sobre el mismo fallo lanzan `ArgumentException`. Un único punto de guardado por rama de fallo.
 
 3. **Piensa en el par con `BindIfFailWithValue`.** Si guardas el valor, es normalmente porque alguien lo va a recoger. Si nadie lo recoge y solo quieres registrar, un `ExecSelfIfFail` con el dato en la clausura puede ser más simple.
 
@@ -414,7 +414,7 @@ ObtenerExpediente(id)
 
 6. **Recuerda que no hace nada si el fallo venía de antes.** Solo captura los fallos que produce `func`.
 
-7. **No imites su patrón de mutación.** Funciona por el efecto colateral de `AddDetail`; en tu código, reasigna siempre el retorno.
+7. **No imites su patrón de mutación.** Funciona por el efecto colateral de `AddMetadataOrThrow`; en tu código, reasigna siempre el retorno.
 
 ---
 
@@ -422,7 +422,7 @@ ObtenerExpediente(id)
 
 - `BindSaveValueInDetailsIfFailedFuncResult` es un `Bind` que, **si la función falla**, guarda el valor de entrada en `Details["Value"]`.
 - Si el resultado **ya venía fallido**, se comporta como un `Bind` normal: no añade nada.
-- La clave usada es la constante `ValueMetadataKey` (`"Value"`), la misma que leen `GetDetailValue<T>()` y `BindIfFailWithValue`.
+- La clave usada es la constante `ValueMetadataKey` (`"Value"`), la misma que leen `GetMetadataValue<T>()` y `BindIfFailWithValue`.
 - ⚠️ Internamente funciona por **mutación** del diccionario de detalles, y `Dictionary.Add` **lanza si la clave ya existe**: no apiles dos guardados sobre el mismo fallo.
 - Tiene 3 sobrecargas asíncronas y 4 + 8 variantes `Try*` que además dejan la excepción en `Details["Ex"]`.
 - Su compañero natural es [`BindIfFailWithValue`](7_BindIfFailWithValue.md), que recoge el valor guardado para intentar un plan B.
@@ -436,7 +436,7 @@ ObtenerExpediente(id)
 - [`7_BindIfFailWithValue.md`](7_BindIfFailWithValue.md) — recoger el valor guardado para recuperarse.
 - [`8_BindIfFailWithException.md`](8_BindIfFailWithException.md) — recuperarse según la excepción de `Details["Ex"]`.
 - [`10_BindAlways.md`](10_BindAlways.md) — el punto de convergencia del *pipeline*.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetDetailValue<T>`, `GetDetailException`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetMetadataValue<T>`, `GetException`.
 - [`../Types/MlResultActions.md`](../core-types/MlResultActions.md) — `AddValueDetailIfFail`, `AddMlErrorDetailIfFail`.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la estructura real de `MlErrorsDetails`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — la estructura real de `MlErrorDetails`.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — observar el valor guardado sin alterar el resultado.

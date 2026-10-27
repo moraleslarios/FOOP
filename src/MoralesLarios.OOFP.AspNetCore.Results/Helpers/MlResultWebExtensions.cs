@@ -95,7 +95,7 @@ public static class MlResultWebExtensions
                                                                                                                                                 ? pkSelector(source.GetValueOrThrow())
                                                                                                                                                 : null!,
                                                                                                                                         source.GetValueOrThrow())).ToMlResultValid(),
-                                        fail: errors => (new BadRequestObjectResult(errors.ToErrorsDescription()) as IActionResult).ToMlResultValid())
+                                        fail: errors => (new BadRequestObjectResult(errors.GetErrorsSummary()) as IActionResult).ToMlResultValid())
                                 .GetValueOrThrow();
         return result;
     }
@@ -250,7 +250,7 @@ public static class MlResultWebExtensions
     {
         var badRequest = EnsureFp.NotNull(controllerBase, $"{nameof(controllerBase)} no puede ser nulo")
                                     .MapIfFail<ControllerBase, IActionResult>(funcValid: x      => controllerBase.Ok(x),
-                                                                              funcFail : errors => new BadRequestObjectResult(errors.ToErrorsDescription()));
+                                                                              funcFail : errors => new BadRequestObjectResult(errors.GetErrorsSummary()));
 
         if (controllerBase is null) return badRequest.GetValueOrThrow();
 
@@ -260,10 +260,10 @@ public static class MlResultWebExtensions
 
         var errorResult = errorsDetails switch
         {
-            { } errors when ContieneCombinacion(errors.ToErrorsDescription()!, notFoundKeys.ToArray()) => new NotFoundObjectResult(errors),
-            { } errors when errors.HasKeyDetails(NOT_FOUND_KEY)                                        => new NotFoundObjectResult(errors),
-            { } errors when errors.HasExceptionDetails()                                               => new ObjectResult(errors.ToErrorsDetailsDescription()) { StatusCode = 500 },
-            _ => new ObjectResult(errorsDetails.ToErrorsDescription()) { StatusCode = 500 }
+            { } errors when ContieneCombinacion(errors.GetErrorsSummary()!, notFoundKeys.ToArray()) => new NotFoundObjectResult(errors),
+            { } errors when errors.ContainsMetadata(NOT_FOUND_KEY)                                        => new NotFoundObjectResult(errors),
+            { } errors when errors.ContainsException()                                               => new ObjectResult(errors.ToErrorsDetailsDescription()) { StatusCode = 500 },
+            _ => new ObjectResult(errorsDetails.GetErrorsSummary()) { StatusCode = 500 }
         };
 
         return errorResult;

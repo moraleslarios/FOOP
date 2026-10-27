@@ -34,7 +34,7 @@ public class EnsureFpStringsTests
         var result = EnsureFp.NotNullOrEmptyArg(myText);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("myText");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("myText");
     }
 
     #endregion
@@ -71,8 +71,8 @@ public class EnsureFpStringsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details[PARAM_NAME_KEY].Should().Be("code");
-        details.Details[EXPECTED_KEY].Should().Be(3);
+        details.Metadata[PARAM_NAME_KEY].Should().Be("code");
+        details.Metadata[EXPECTED_KEY].Should().Be(3);
         details.Errors.First().Message.Should().Contain("6");
     }
 
@@ -135,7 +135,7 @@ public class EnsureFpStringsTests
         var result = EnsureFp.MatchesArg(nif, @"^\d{8}[A-Z]$");
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("nif");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("nif");
     }
 
     #endregion
@@ -178,7 +178,7 @@ public class EnsureFpStringsTests
         var result = EnsureFp.NotContainsTextArg(password, "admin");
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("password");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("password");
     }
 
     #endregion
@@ -209,7 +209,7 @@ public class EnsureFpStringsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details[PARAM_NAME_KEY].Should().Be("level");
+        details.Metadata[PARAM_NAME_KEY].Should().Be("level");
         details.Errors.First().Message.Should().Contain("1");
     }
 

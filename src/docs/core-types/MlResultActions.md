@@ -25,7 +25,7 @@ válido dentro de un método sin salir del modelo funcional.
 | `CompleteWithDataValueAsync` | 4 | Versiones asíncronas. |
 | `GetValueOrThrow` | 1 | Acceso **seguro** al valor válido: devuelve `MlResult<T>` en lugar de lanzar o exponer `Value`. |
 | `GetValueOrThrowAsync` | 1 | Versión asíncrona. |
-| `GetFailureDetailsOrThrow` | 1 | Acceso **seguro** al `MlErrorsDetails`: si el resultado es válido, devuelve `Fail` indicándolo. |
+| `GetFailureDetailsOrThrow` | 1 | Acceso **seguro** al `MlErrorDetails`: si el resultado es válido, devuelve `Fail` indicándolo. |
 | `GetFailureDetailsOrThrowAsync` | 2 | Versiones asíncronas. |
 | `CreateCompleteMlResult` | 3 | Crea un resultado que **transporta dos valores a la vez** (el actual y uno nuevo), fusionando errores si alguno falla. |
 | `CreateCompleteMlResultAsync` | 8 | Versiones asíncronas. |
@@ -45,7 +45,7 @@ MlResult<Tarifa> tarifa = await _servicio.ObtenerTarifaAsync(divisa)
     .AddMlErrorDetailIfFailAsync("Divisa"      , divisa)
     .AddMlErrorDetailIfFailAsync("CorrelationId", _contexto.CorrelationId);
 
-// Si falla, ErrorsDetails.Details contiene ahora "Divisa" y "CorrelationId".
+// Si falla, ErrorsDetails.Metadata contiene ahora "Divisa" y "CorrelationId".
 // Si no falla, la llamada es un no-op sin coste conceptual.
 ```
 
@@ -128,11 +128,11 @@ como `Fail`, coherente con el resto de la librería.
 
 ### `GetFailureDetailsOrThrow`
 
-El simétrico: obtiene el `MlErrorsDetails` de un resultado fallido. Si el resultado **es válido**,
+El simétrico: obtiene el `MlErrorDetails` de un resultado fallido. Si el resultado **es válido**,
 devuelve un `Fail` indicando que no hay errores que leer.
 
 ```csharp
-MlResult<MlErrorsDetails> errores = resultado.GetFailureDetailsOrThrow();
+MlResult<MlErrorDetails> errores = resultado.GetFailureDetailsOrThrow();
 
 string informe = errores.Match(
     valid: e => e.ToDescription(),
@@ -161,7 +161,7 @@ public async Task<IActionResult> AplicarDescuentoAsync(int pedidoId, string cupo
                       errorMessageBuilder: ex => $"Error al guardar el pedido {pedidoId}: {ex.Message}")
         .ExecSelfIfFailAsync(e => _log.LogWarning("Descuento no aplicado: {Detalle}", e.ToDescription()))
         .MatchAsync(valid: p       => Ok(new { p.Id, p.Descuento, p.Total }),
-                    fail : errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
+                    fail : errores => BadRequest(new { errores = errores.GetErrorMessages() }));
 }
 ```
 
@@ -171,6 +171,6 @@ public async Task<IActionResult> AplicarDescuentoAsync(int pedidoId, string cupo
 
 - [`MlResult<T>`](MlResult.md) — visibilidad de `Value` y `ErrorsDetails`.
 - [`MlResultActionsErrorsDetails`](MlResultActionsErrorsDetails.md) — lectura tipada de los detalles añadidos aquí.
-- [`MlResultErrors`](MlResultErrors.md) — `MlError`, `MlErrorsDetails` y sus operaciones.
+- [`MlResultErrors`](MlResultErrors.md) — `MlError`, `MlErrorDetails` y sus operaciones.
 - [`MlResultActionsSeveral`](MlResultActionsSeveral.md) — `Combine` para resultados independientes.
 - [`MlResultActionsMatch`](MlResultActionsMatch.md) — la alternativa recomendada a `Secure*`.

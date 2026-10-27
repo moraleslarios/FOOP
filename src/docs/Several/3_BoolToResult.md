@@ -38,10 +38,10 @@ return pedido.BoolToResult(pedido.Estado == EstadoPedido.Borrador,
              .MapEnsure(p => p.Lineas.Count <= 200,
                         "Un pedido no puede tener más de 200 líneas")
              .Match(valid: p   => Ok(p.ToDto()),
-                    fail : err => BadRequest(err.ToErrorsMessages()));
+                    fail : err => BadRequest(err.GetErrorMessages()));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -94,11 +94,11 @@ de permisos o de configuración global).
 // BASE
 public static MlResult<T> BoolToResult<T>(this T               source,
                                                 bool            condition,
-                                                MlErrorsDetails errorsDetails)
+                                                MlErrorDetails errorsDetails)
     => condition ? source.ToMlResultValid() : errorsDetails.ToMlResultFail<T>();
 
 public static MlResult<T> BoolToResult<T>(this T source, bool condition, MlError error)
-    => source BoolToResult(condition, MlErrorsDetails.FromError(error));
+    => source BoolToResult(condition, MlErrorDetails.FromError(error));
 
 public static MlResult<T> BoolToResult<T>(this T source, bool condition, string errorMessage)
     => source BoolToResult(condition, MlError.FromErrorMessage(errorMessage));
@@ -106,7 +106,7 @@ public static MlResult<T> BoolToResult<T>(this T source, bool condition, string 
 public static MlResult<T> BoolToResult<T>(this T                   source,
                                                 bool                condition,
                                                 IEnumerable<string> errorsMessage)
-    => source BoolToResult(condition, MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+    => source BoolToResult(condition, MlErrorDetails.FromEnumerableStrings(errorsMessage));
 ```
 
 Puntos importantes:
@@ -116,7 +116,7 @@ Puntos importantes:
 | `condition` es un **`bool`**, no un `Func<T,bool>` | Se evalúa **antes** de la llamada: no hay evaluación diferida ni cortocircuito |
 | El valor válido es `source` tal cual | No se transforma ni se copia |
 | No comprueba `null` | Un `source` `null` con `condition == true` produce un `MlResult` válido que contiene `null` |
-| Todas las sobrecargas delegan en la de `MlErrorsDetails` | Comportamiento uniforme |
+| Todas las sobrecargas delegan en la de `MlErrorDetails` | Comportamiento uniforme |
 | No existe `TryBoolToResult` | No hay delegado de usuario que pueda lanzar |
 
 ---
@@ -126,18 +126,18 @@ Puntos importantes:
 ```csharp
 // BASE
 public static MlResult<bool> BoolToResult(this bool            source,
-                                               MlErrorsDetails errorsDetails)
+                                               MlErrorDetails errorsDetails)
     => source ? source.ToMlResultValid() : errorsDetails.ToMlResultFail<bool>();
 
 public static MlResult<bool> BoolToResult(this bool source, MlError error)
-    => source BoolToResult(MlErrorsDetails.FromError(error));
+    => source BoolToResult(MlErrorDetails.FromError(error));
 
 public static MlResult<bool> BoolToResult(this bool source, string errorMessage)
     => source BoolToResult(MlError.FromErrorMessage(errorMessage));
 
 public static MlResult<bool> BoolToResult(this bool                source,
                                                IEnumerable<string> errorsMessage)
-    => source BoolToResult(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+    => source BoolToResult(MlErrorDetails.FromEnumerableStrings(errorsMessage));
 ```
 
 Aquí el `bool` cumple **dos papeles a la vez**: es la condición y es el valor. Por eso el
@@ -237,9 +237,9 @@ var r3 = pedido.BoolToResult(pedido.EsEditable, new[]
     "Solo los pedidos en borrador son editables"
 });
 
-// 4) MlErrorsDetails (mensaje + diagnóstico)
+// 4) MlErrorDetails (mensaje + diagnóstico)
 var r4 = pedido.BoolToResult(pedido.EsEditable,
-             MlErrorsDetails.FromErrorMessageDetails(
+             MlErrorDetails.FromErrorMessageDetails(
                  "El pedido no es editable",
                  new Dictionary<string, object> { ["PedidoId"] = pedido.Id,
                                                   ["Estado"]   = pedido.Estado.ToString(),
@@ -254,8 +254,8 @@ var r4 = pedido.BoolToResult(pedido.EsEditable,
 
 | Origen | Error como… | Naturaleza |
 |--------|-------------|-----------|
-| `T` | `MlError` / `MlErrorsDetails` / `string` / `IEnumerable<string>` | Envoltura (`ToAsync()`) |
-| `Task<T>` | `MlError` / `MlErrorsDetails` / `string` / `IEnumerable<string>` | **Espera el origen** |
+| `T` | `MlError` / `MlErrorDetails` / `string` / `IEnumerable<string>` | Envoltura (`ToAsync()`) |
+| `Task<T>` | `MlError` / `MlErrorDetails` / `string` / `IEnumerable<string>` | **Espera el origen** |
 
 ### Familia 2 (`BoolToResult`)
 
@@ -332,7 +332,7 @@ public class TransferenciaService
     public MlResult<Transferencia> Preparar(Cuenta origen, Cuenta destino, decimal importe)
         => origen.NullToFailed("La cuenta de origen es obligatoria")
                  .Bind(o => o.BoolToResult(o.Activa,
-                                MlErrorsDetails.FromErrorMessageDetails(
+                                MlErrorDetails.FromErrorMessageDetails(
                                     "La cuenta de origen no está activa",
                                     new Dictionary<string, object> { ["Iban"] = o.Iban, ["Regla"] = "TRF-001" })))
                  .Bind(o => o.BoolToResult(o.Saldo >= importe, new[]
@@ -360,14 +360,14 @@ public class DocumentoService
                         .BoolToResult("Debe iniciar sesión para descargar documentos")
                         .BindAsync(_ => _permisos.PuedeLeerAsync(usuario.Id, docId)
                                                  .BoolToResultAsync(
-                                                     MlErrorsDetails.FromErrorMessageDetails(
+                                                     MlErrorDetails.FromErrorMessageDetails(
                                                          "No tiene permiso para acceder a este documento",
                                                          new Dictionary<string, object> { ["Prohibido"] = true })))
                         .BindAsync(_ => _repo.ObtenerAsync(docId)
                                              .NullToFailedAsync("El documento no existe"))
                         .MapAsync(d => d.ConMarcaDeAgua(usuario.Nombre).ToAsync())
                         .ExecSelfIfFailAsync(err => _auditoria.RegistrarAsync(usuario.Id, docId,
-                                                                              err.ToErrorsDescription()));
+                                                                              err.GetErrorsSummary()));
 }
 ```
 
@@ -409,7 +409,7 @@ public static MlResult<AppOpciones> Verificar(AppOpciones opciones)
                                          $"La ruta temporal '{o.RutaTemporal}' no existe"))
                .Bind(o => o.BoolToResult(o.TiempoEsperaSegundos is > 0 and <= 300,
                                          "El tiempo de espera debe estar entre 1 y 300 segundos"))
-               .ExecSelfIfFail(err => Console.Error.WriteLine(err.ToErrorsDescription()));
+               .ExecSelfIfFail(err => Console.Error.WriteLine(err.GetErrorsSummary()));
 ```
 
 ### Ejemplo 5: qué no hacer
@@ -462,7 +462,7 @@ var r = pedido.ToMlResultValid()
 4. **Recuerda que la condición se evalúa siempre.** No pongas consultas ni cálculos caros
    directamente en el argumento `condition`.
 5. **Combínalo con `NullToFailed`**: `BoolToResult` no comprueba el `null`.
-6. **Usa la sobrecarga de `MlErrorsDetails`** para incluir el código de regla, los
+6. **Usa la sobrecarga de `MlErrorDetails`** para incluir el código de regla, los
    identificadores y marcas como `Prohibido` o `NoEncontrado`, y decidir el código HTTP al
    final de la tubería.
 7. **Usa la sobrecarga de `IEnumerable<string>`** cuando el usuario necesite ver el valor
@@ -482,10 +482,10 @@ var r = pedido.ToMlResultValid()
   es `true`, **Fail** con tu error si es `false`.
 - Hay **dos familias**: `BoolToResult<T>(source, condition, error)` conserva el valor;
   `BoolToResult(this bool, error)` devuelve `MlResult<bool>` y se consume con `Bind(_ => ...)`.
-- **8 sobrecargas síncronas** (4 por familia: `MlErrorsDetails`, `MlError`, `string`,
+- **8 sobrecargas síncronas** (4 por familia: `MlErrorDetails`, `MlError`, `string`,
   `IEnumerable<string>`) y **16 asíncronas** (8 por familia, la mitad simples envolturas y
   la mitad sobre `Task<...>`, que sí esperan el origen).
-- El método base de cada familia es el de `MlErrorsDetails`; el resto delega en él.
+- El método base de cada familia es el de `MlErrorDetails`; el resto delega en él.
 - ⚠️ La condición es un **`bool` ya evaluado**, no un `Func<T,bool>`: **no hay evaluación
   diferida ni cortocircuito**. Con condiciones costosas, usa
   [`MapEnsure`](../Map/2_MapEnsure.md).
@@ -503,5 +503,5 @@ var r = pedido.ToMlResultValid()
 - [`MapEnsure`](../Map/2_MapEnsure.md) — validar con predicado diferido dentro del carril
 - [`MapIf`](../Map/3_MapIf.md) y [`BindIf`](../Bind/5_BindIf.md) — bifurcar según una condición
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — `That`, `NotNull`, `NotEmpty` para validar argumentos
-- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y sus fábricas
+- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y sus fábricas
 - [`ExecSelfIfFail`](../ExecSelf/3_ExecSelfIfFail.md) — registrar el fallo sin alterar el carril

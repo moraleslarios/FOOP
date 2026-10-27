@@ -38,7 +38,7 @@ var perfil = ObtenerPerfil(id)
 // Un SqlException sigue siendo un fallo: se propaga y se puede traducir a un 500.
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`; para llegar al valor original, `GetDetailValue<T>()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`; para llegar al valor original, `GetMetadataValue<T>()`.
 
 ---
 
@@ -54,7 +54,7 @@ El criterio es puramente mecánico: **un fallo «no tiene excepción» cuando su
 | `NullToFailed(...)` / `EmptyToFailed(...)` / `BoolToResult(...)` | No | ✅ Sí |
 | `BindMulti` fusionando errores de validación | No | ✅ Sí |
 | `TryBind` / `TryMap` / `TryMatch`… que capturó una excepción | Sí | ❌ No |
-| `MlErrorsDetails.FromErrorMessageWithException(msg, ex)` | Sí | ❌ No |
+| `MlErrorDetails.FromErrorMessageWithException(msg, ex)` | Sí | ❌ No |
 | Un fallo de negocio **fusionado** con otro que sí traía excepción | Sí | ❌ No |
 
 > 📌 La última fila es la trampa habitual: `MergeErrorsDetailsIfFail` y `MergeErrorsIfExists` combinan los diccionarios `Details`, así que basta con que **uno** de los fallos fusionados trajera una excepción para que el resultado se considere «técnico».
@@ -67,17 +67,17 @@ Solo hay **una forma** (no existe la variante de dos caminos que sí tienen `Bin
 
 ```csharp
 public static MlResult<T> BindIfFailWithoutException<T>(this MlResult<T>                        source,
-                                                             Func<MlErrorsDetails, MlResult<T>> func)
+                                                             Func<MlErrorDetails, MlResult<T>> func)
     => source.Match(
-            fail : errorsDetails => errorsDetails.GetDetailException().Match(
+            fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : func,                       // ← NO hay excepción: recupera
                                             valid: _ => errorsDetails),        // ← SÍ hay excepción: propaga el fallo
             valid: x             => x);
 ```
 
-🔑 Fíjate en la inversión respecto a `BindIfFailWithException`: aquí tu función se coloca en la rama **`fail`** del `Match` interior, es decir, se ejecuta precisamente cuando `GetDetailException()` **no** encuentra nada. Es el mismo mecanismo leído al revés.
+🔑 Fíjate en la inversión respecto a `BindIfFailWithException`: aquí tu función se coloca en la rama **`fail`** del `Match` interior, es decir, se ejecuta precisamente cuando `GetException()` **no** encuentra nada. Es el mismo mecanismo leído al revés.
 
-Tu función recibe el `MlErrorsDetails` completo (no una excepción, obviamente: no hay ninguna), así que tienes acceso a los mensajes y al resto de claves de `Details`.
+Tu función recibe el `MlErrorDetails` completo (no una excepción, obviamente: no hay ninguna), así que tienes acceso a los mensajes y al resto de claves de `Details`.
 
 ---
 
@@ -111,9 +111,9 @@ var resultado = ObtenerTarifa(id)
 | Método | Se ejecuta si… | Recibe |
 |---|---|---|
 | `BindIfFailWithException` | hay excepción | `Exception` |
-| `BindIfFailWithExceptionError` | hay excepción | `MlErrorsDetails` |
-| `BindIfFailWithoutException` | **no** hay excepción | `MlErrorsDetails` |
-| `BindIfFail` | siempre que haya fallo | `MlErrorsDetails` |
+| `BindIfFailWithExceptionError` | hay excepción | `MlErrorDetails` |
+| `BindIfFailWithoutException` | **no** hay excepción | `MlErrorDetails` |
+| `BindIfFail` | siempre que haya fallo | `MlErrorDetails` |
 
 > 💡 Si vas a encadenar las dos mitades, pon primero la de excepciones. Da igual el orden por corrección (los conjuntos son disjuntos), pero se lee mejor «primero lo excepcional, luego lo ordinario».
 
@@ -123,7 +123,7 @@ var resultado = ObtenerTarifa(id)
 
 | Origen | Delegado | Firma |
 |---|---|---|
-| `MlResult<T>` | asíncrono | `BindIfFailWithoutExceptionAsync<T>(Func<MlErrorsDetails, Task<MlResult<T>>>)` |
+| `MlResult<T>` | asíncrono | `BindIfFailWithoutExceptionAsync<T>(Func<MlErrorDetails, Task<MlResult<T>>>)` |
 | `Task<MlResult<T>>` | asíncrono | idem sobre origen asíncrono |
 | `Task<MlResult<T>>` | síncrono | se adapta internamente con `func.ToFuncTask()` |
 
@@ -133,12 +133,12 @@ public Task<MlResult<Perfil>> ObtenerAsync(int id)
             .BindIfFailWithoutExceptionAsync(async errores =>
             {
                 _log.LogInformation("Perfil {Id} no encontrado ({Motivo}); se usa el anónimo",
-                                    id, errores.ToErrorsMessages());
+                                    id, errores.GetErrorMessages());
                 return await Perfil.AnonimoAsync();
             });
 ```
 
-> 📝 La sobrecarga asíncrona usa internamente `GetDetailExceptionAsync()`, la versión `Task` del extractor. El comportamiento es idéntico al síncrono.
+> 📝 La sobrecarga asíncrona usa internamente `GetExceptionAsync()`, la versión `Task` del extractor. El comportamiento es idéntico al síncrono.
 
 ---
 
@@ -148,11 +148,11 @@ Como en el resto de la librería, la variante `Try*` protege tu propia función 
 
 ```csharp
 public static MlResult<T> TryBindIfFailWithoutException<T>(this MlResult<T>                        source,
-                                                                Func<MlErrorsDetails, MlResult<T>> func,
+                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                 Func<Exception, string>            errorMessageBuilder);
 
 public static MlResult<T> TryBindIfFailWithoutException<T>(this MlResult<T>                        source,
-                                                                Func<MlErrorsDetails, MlResult<T>> func,
+                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                 string                             errorMessage = null!);
 ```
 
@@ -194,7 +194,7 @@ public class ServicioTarifas
              .BindIfFailWithoutException(errores =>
                     {
                         _log.LogInformation("Cliente {Id} sin tarifa propia ({Motivo}); se aplica la estándar",
-                                            clienteId, errores.ToErrorsMessages());
+                                            clienteId, errores.GetErrorMessages());
                         return Tarifa.Estandar.ToMlResultValid();
                     });
 }
@@ -214,10 +214,10 @@ public MlResult<Reserva> Reservar(ReservaDto dto)
 
          // Traduce a lenguaje de usuario, pero NO toca los errores técnicos
          .BindIfFailWithoutException(errores =>
-                MlErrorsDetails.FromErrorMessageDetails(
+                MlErrorDetails.FromErrorMessageDetails(
                         "No hemos podido completar tu reserva. Revisa las fechas y el número de personas.",
-                        errores.Details)                      // conserva el contexto original
-                    .AddErrorsMessages(errores.ToErrorsMessages())   // y también los mensajes internos
+                        errores.Metadata)                      // conserva el contexto original
+                    .AddErrorsMessages(errores.GetErrorMessages())   // y también los mensajes internos
                     .ToMlResultFail<Reserva>());
 ```
 
@@ -259,20 +259,20 @@ public async Task<IActionResult> Crear([FromBody] PedidoDto dto)
 
         // Último intento de negocio: completar datos opcionales ausentes
         .BindIfFailWithoutExceptionAsync(async errores =>
-                errores.ToErrorsMessages().Any(m => m.Contains("dirección",
+                errores.GetErrorMessages().Any(m => m.Contains("dirección",
                                                                StringComparison.OrdinalIgnoreCase))
                     ? await _servicio.CrearAsync(dto with { Direccion = await DireccionPorDefectoAsync(dto.ClienteId) })
                     : errores.ToMlResultFail<Pedido>());
 
     return resultado.Match(
         valid: pedido  => CreatedAtAction(nameof(Obtener), new { id = pedido.Id }, pedido),
-        fail : errores => errores.GetDetailException()
+        fail : errores => errores.GetException()
                                  .Match(
                                     // Había excepción ⇒ fallo técnico
                                     valid: ex => { _log.LogError(ex, "Error creando el pedido");
                                                    return StatusCode(500, "Error interno"); },
                                     // No había excepción ⇒ fallo de negocio
-                                    fail : _  => (IActionResult)BadRequest(errores.ToErrorsMessages())));
+                                    fail : _  => (IActionResult)BadRequest(errores.GetErrorMessages())));
 }
 ```
 
@@ -300,7 +300,7 @@ public async Task<IActionResult> Crear([FromBody] PedidoDto dto)
 
 - `BindIfFailWithoutException` ejecuta tu función **solo si el fallo NO lleva excepción** en `Details["Ex"]`, es decir, solo para los fallos de negocio.
 - Es el complemento exacto de `BindIfFailWithException`: entre ambos cubren todos los fallos posibles sin solaparse.
-- Tiene **una sola forma**: `BindIfFailWithoutException<T>(Func<MlErrorsDetails, MlResult<T>>)`. Recibe los detalles completos.
+- Tiene **una sola forma**: `BindIfFailWithoutException<T>(Func<MlErrorDetails, MlResult<T>>)`. Recibe los detalles completos.
 - Si hay excepción, **el fallo se devuelve intacto**; si el resultado era válido, el valor se devuelve intacto.
 - `func` puede recuperar (volver al camino válido) o simplemente **reescribir** el fallo de negocio con un mensaje más claro.
 - Las variantes `Try*` protegen la recuperación; al capturar, marcan el fallo como técnico y evitan reintentos en cascada.
@@ -316,5 +316,5 @@ public async Task<IActionResult> Crear([FromBody] PedidoDto dto)
 - [`3_Bind.md`](3_Bind.md) — encadenamiento básico y `TryBind`, origen habitual de `Details["Ex"]`.
 - [`../ExecSelf/6_ExecSelfIfFailWithoutException.md`](../ExecSelf/6_ExecSelfIfFailWithoutException.md) — el mismo filtro para efectos laterales.
 - [`../Map/7_MapIfFailWithoutException.md`](../Map/7_MapIfFailWithoutException.md) — cuando la recuperación no puede fallar.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailException`, `MergeErrorsDetailsIfFail`, `AddValueIfFail`.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — claves convencionales `Ex`, `Ex2`, `Value` y factorías de `MlErrorsDetails`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `MergeErrorsDetailsIfFail`, `AddValueIfFail`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — claves convencionales `Ex`, `Ex2`, `Value` y factorías de `MlErrorDetails`.

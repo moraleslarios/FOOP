@@ -12,7 +12,7 @@ public static partial class MlResultActions
                                                              object      errorValue)
         => source.Match
                     (
-                        fail : errorsDetails => errorsDetails.AddDetail(errorKey, errorValue),
+                        fail : errorsDetails => errorsDetails.AddMetadataOrThrow(errorKey, errorValue),
                         valid: _ => source
                     );
 
@@ -106,7 +106,7 @@ public static partial class MlResultActions
     public static MlResult<T> CompleteWithDetailsValueIfFail<T, TValue>(this MlResult<T> source, 
                                                                              TValue      value)
         => source.Match (
-                            fail : errorDetails => errorDetails.AddDetailValue(value),
+                            fail : errorDetails => errorDetails.AddValueMetadata(value),
                             valid: x            => source
                         );
 
@@ -136,7 +136,7 @@ public static partial class MlResultActions
                                                                                    TValue           value,
                                                                                    Func<T, TReturn> completeFunc)
         => source.Match(
-                            fail : errorDetails => errorDetails.AddDetailValue(value).ToMlResultFail<TReturn>(),
+                            fail : errorDetails => errorDetails.AddValueMetadata(value).ToMlResultFail<TReturn>(),
                             valid: x            => MlResult<TReturn>.Valid(completeFunc(x))
                         );
 
@@ -145,7 +145,7 @@ public static partial class MlResultActions
                                                                                                     TValue                 value,
                                                                                                     Func<T, Task<TReturn>> completeFuncAsync)
         => await source.MatchAsync(
-                                        failAsync :       errorDetails => errorDetails.AddDetailValue(value).ToMlResultFailAsync<TReturn>(),
+                                        failAsync :       errorDetails => errorDetails.AddValueMetadata(value).ToMlResultFailAsync<TReturn>(),
                                         validAsync: async x            => MlResult<TReturn>.Valid(await completeFuncAsync(x))
                                     );
 
@@ -183,14 +183,14 @@ public static partial class MlResultActions
         => await sourceAsync.MatchAsync(valid     : x => x,
                                         failAsync : _ => throw new InvalidProgramException(exceptionMessage));
 
-    public static MlErrorsDetails GetFailureDetailsOrThrow<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
+    public static MlErrorDetails GetFailureDetailsOrThrow<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
         => source.Match(valid: _ => throw new InvalidProgramException(exceptionMessage),
                         fail : errors => errors);
 
-    public static Task<MlErrorsDetails> GetFailureDetailsOrThrowAsync<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
+    public static Task<MlErrorDetails> GetFailureDetailsOrThrowAsync<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
         => source.GetFailureDetailsOrThrow(exceptionMessage).ToAsync();
 
-    public static async Task<MlErrorsDetails> GetFailureDetailsOrThrowAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
+    public static async Task<MlErrorDetails> GetFailureDetailsOrThrowAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = "Cannot obtain the MlErrorsDetails from MlResult in Valid state")
         => await sourceAsync.GetFailureDetailsOrThrowAsync(exceptionMessage);
 
 

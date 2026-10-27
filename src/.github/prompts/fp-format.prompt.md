@@ -70,10 +70,10 @@ Cuando una lista de par�metros contiene los modificadores `this` (extension me
 Ejemplo con `params` al final (las l�neas no-`params` insertan 7 espacios al inicio):
 
 ```csharp
-public Task<MlResult<TDto>> DeleteProblemDetailsAsync(       MlErrorsDetails               notFoundErrorDetails,
+public Task<MlResult<TDto>> DeleteProblemDetailsAsync(       MlErrorDetails               notFoundErrorDetails,
                                                              CancellationToken             ct                  = default!,
                                                              string                        initialMessage      = null!,
-                                                             Func<MlErrorsDetails, string> failMessageBuilder  = null!,
+                                                             Func<MlErrorDetails, string> failMessageBuilder  = null!,
                                                       params object[]                      pk)
 ```
 
@@ -278,7 +278,7 @@ Cuando hay m�ltiples sobrecargas est�ticas seguidas, **se alinean por column
 
 ```csharp
 public static MlResult<T> Fail<T>(params MlError[]            errors)        => new(errors);
-public static MlResult<T> Fail<T>(       MlErrorsDetails      errorsDetails) => new(errorsDetails);
+public static MlResult<T> Fail<T>(       MlErrorDetails      errorsDetails) => new(errorsDetails);
 public static MlResult<T> Fail<T>(       IEnumerable<MlError> errors       ) => new(errors);
 ```
 
@@ -289,10 +289,10 @@ Cuando un par�metro es `params` y otros no, los que no lo son llevan **espacio
 Cuando varios constructores asignan por deconstrucci�n, **alinea las tuplas izquierda y derecha en columnas**:
 
 ```csharp
-internal MlResult(T                    t                                                        ) => (Value, ErrorsDetails, IsSuccess) = (t       , new MlErrorsDetails()                                    , true );
-internal MlResult(MlErrorsDetails                                         errorsDetails         ) => (Value, ErrorsDetails, IsSuccess) = (default!, errorsDetails                                            , false);
-internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (Value, ErrorsDetails, IsSuccess) = (default!, new MlErrorsDetails(errors, details)                     , false);
-internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (Value, ErrorsDetails, IsSuccess) = (default!, new MlErrorsDetails(new List<MlError> { error }, details), false);
+internal MlResult(T                    t                                                        ) => (Value, ErrorsDetails, IsSuccess) = (t       , new MlErrorDetails()                                    , true );
+internal MlResult(MlErrorDetails                                         errorsDetails         ) => (Value, ErrorsDetails, IsSuccess) = (default!, errorsDetails                                            , false);
+internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (Value, ErrorsDetails, IsSuccess) = (default!, new MlErrorDetails(errors, details)                     , false);
+internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (Value, ErrorsDetails, IsSuccess) = (default!, new MlErrorDetails(new List<MlError> { error }, details), false);
 ```
 
 Cada coma, par�ntesis y `=` se alinea verticalmente con los de las otras l�neas.

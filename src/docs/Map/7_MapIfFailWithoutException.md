@@ -42,7 +42,7 @@ var resultado = ObtenerDescuento(clienteId)
                     .MapIfFailWithoutException(_ => 0m);   // el SqlException sigue subiendo intacto
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -82,15 +82,15 @@ Tres escenarios, tres comportamientos:
 | **Fail sin excepción** en `Details["Ex"]` | ✅ **Sí** | Se recupera: `Valid(func(errorsDetails))` |
 | **Fail con excepción** en `Details["Ex"]` | ❌ No | **El mismo `Fail` sale intacto**, con todos sus errores y detalles |
 
-La comprobación se hace con `GetDetailException()`, que devuelve `MlResult<Exception>`:
+La comprobación se hace con `GetException()`, que devuelve `MlResult<Exception>`:
 
 ```csharp
-errorsDetails.GetDetailException().Match(
+errorsDetails.GetException().Match(
     fail : _ => /* NO hay excepción → recuperamos */,
     valid: _ => /* SÍ hay excepción → devolvemos el fallo original */)
 ```
 
-Fíjate en la inversión: aquí la rama **`fail`** de `GetDetailException()` (es decir, "no encontré ninguna excepción") es la que dispara la recuperación. Es lo contrario de `MapIfFailWithException`.
+Fíjate en la inversión: aquí la rama **`fail`** de `GetException()` (es decir, "no encontré ninguna excepción") es la que dispara la recuperación. Es lo contrario de `MapIfFailWithException`.
 
 ---
 
@@ -101,20 +101,20 @@ Ambos métodos son complementarios y cubren, juntos, el 100 % de los fallos:
 ```csharp
 // Los dos se pueden apilar para dar respuestas distintas a cada clase de fallo
 var respuesta = await ProcesarPedidoAsync(dto)
-                        .MapIfFailWithoutExceptionAsync(err => Rechazo.PorNegocio(err.ToErrorsMessages()).ToAsync())
+                        .MapIfFailWithoutExceptionAsync(err => Rechazo.PorNegocio(err.GetErrorMessages()).ToAsync())
                         .MapIfFailWithExceptionAsync(ex   => Rechazo.PorAveria(ex.GetType().Name).ToAsync());
 ```
 
 | | `MapIfFailWithException` | `MapIfFailWithoutException` |
 |---|---|---|
 | Recupera cuando… | **sí** hay excepción en `Details["Ex"]` | **no** hay excepción en `Details["Ex"]` |
-| Firma del delegado de fallo | `Func<Exception, T>` (recibe la excepción) | `Func<MlErrorsDetails, T>` (recibe los errores) |
+| Firma del delegado de fallo | `Func<Exception, T>` (recibe la excepción) | `Func<MlErrorDetails, T>` (recibe los errores) |
 | Si no aplica | devuelve el `Fail` original intacto | devuelve el `Fail` original intacto |
 | Filtrado por tipo (`TException`) | ✅ Sí | ❌ No (no hay excepción que filtrar) |
-| Subfamilia `...Error` | ✅ Sí (`MapIfFailWithExceptionError`) | ❌ No (ya recibe `MlErrorsDetails`) |
+| Subfamilia `...Error` | ✅ Sí (`MapIfFailWithExceptionError`) | ❌ No (ya recibe `MlErrorDetails`) |
 | Uso típico | fallback ante averías técnicas | valores por defecto de negocio |
 
-📌 Detalle importante: como el delegado de `MapIfFailWithoutException` ya recibe `MlErrorsDetails`, **no necesita** una subfamilia `...Error` como sí ocurría en `MapIfFailWithException` (donde el delegado solo recibía la `Exception` y hacía falta otra variante para acceder a los errores completos).
+📌 Detalle importante: como el delegado de `MapIfFailWithoutException` ya recibe `MlErrorDetails`, **no necesita** una subfamilia `...Error` como sí ocurría en `MapIfFailWithException` (donde el delegado solo recibía la `Exception` y hacía falta otra variante para acceder a los errores completos).
 
 ---
 
@@ -123,7 +123,7 @@ var respuesta = await ProcesarPedidoAsync(dto)
 ### Forma A — recuperar sin cambiar de tipo
 
 ```csharp
-MlResult<T> MapIfFailWithoutException<T>(this MlResult<T> source, Func<MlErrorsDetails, T> func)
+MlResult<T> MapIfFailWithoutException<T>(this MlResult<T> source, Func<MlErrorDetails, T> func)
 ```
 
 La rama válida **no se toca**. Solo se define qué hacer con el fallo de negocio. Es la forma **apilable**: puedes encadenarla con más operaciones `MlResult<T>` porque el tipo no cambia.
@@ -138,7 +138,7 @@ MlResult<Tarifa> tarifa = BuscarTarifaCliente(clienteId)
 ```csharp
 MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(this MlResult<T>               source,
                                                             Func<T, TReturn>           funcValid,
-                                                            Func<MlErrorsDetails, TReturn> funcFail)
+                                                            Func<MlErrorDetails, TReturn> funcFail)
 ```
 
 Convergencia de tipos: el éxito se proyecta con `funcValid` y el fallo de negocio con `funcFail`, ambos hacia `TReturn`. Ideal para construir un DTO de respuesta.
@@ -148,7 +148,7 @@ MlResult<RespuestaDto> respuesta =
     ValidarSolicitud(dto)
         .MapIfFailWithoutException(
             funcValid: s   => RespuestaDto.Aceptada(s.Id),
-            funcFail : err => RespuestaDto.Rechazada(err.ToErrorsMessages()));
+            funcFail : err => RespuestaDto.Rechazada(err.GetErrorMessages()));
     // Si el fallo traía excepción, `respuesta` sigue siendo Fail: no se fabrica un DTO falso
 ```
 
@@ -162,9 +162,9 @@ MlResult<RespuestaDto> respuesta =
 
 ```csharp
 public static MlResult<T> MapIfFailWithoutException<T>(this MlResult<T>              source,
-                                                            Func<MlErrorsDetails, T> func)
+                                                            Func<MlErrorDetails, T> func)
     => source.Match(
-                fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : _ => func(errorsDetails).ToMlResultValid<T>(),
                                             valid: _ => errorsDetails),
                 valid: x => x);
@@ -181,9 +181,9 @@ Tres puntos que explican todo el comportamiento:
 ```csharp
 public static MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(this MlResult<T>                    source,
                                                                            Func<T              , TReturn> funcValid,
-                                                                           Func<MlErrorsDetails, TReturn> funcFail)
+                                                                           Func<MlErrorDetails, TReturn> funcFail)
     => source.Match(
-                fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : _ => funcFail(errorsDetails).ToMlResultValid(),
                                             valid: _ => errorsDetails),
                 valid: x => funcValid(x).ToMlResultValid());
@@ -201,9 +201,9 @@ Las sobrecargas asíncronas combinan dos ejes independientes:
 
 | Origen | Delegado(s) | Método |
 |---|---|---|
-| `MlResult<T>` | `Func<MlErrorsDetails, Task<T>>` | `MapIfFailWithoutExceptionAsync` |
-| `Task<MlResult<T>>` | `Func<MlErrorsDetails, Task<T>>` | `MapIfFailWithoutExceptionAsync` |
-| `Task<MlResult<T>>` | `Func<MlErrorsDetails, T>` (síncrono) | `MapIfFailWithoutExceptionAsync` |
+| `MlResult<T>` | `Func<MlErrorDetails, Task<T>>` | `MapIfFailWithoutExceptionAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorDetails, Task<T>>` | `MapIfFailWithoutExceptionAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorDetails, T>` (síncrono) | `MapIfFailWithoutExceptionAsync` |
 
 La Forma B replica el mismo esquema con el par `(funcValidAsync, funcFailAsync)`, incluyendo combinaciones mixtas (uno síncrono y otro asíncrono).
 
@@ -212,7 +212,7 @@ La Forma B replica el mismo esquema con el par `(funcValidAsync, funcFailAsync)`
 var config = await _api.LeerConfigRemotaAsync(entorno)
                        .MapIfFailWithoutExceptionAsync(async err =>
                        {
-                           await _auditoria.RegistrarAsync($"Config no definida: {err.ToErrorsMessages()}");
+                           await _auditoria.RegistrarAsync($"Config no definida: {err.GetErrorMessages()}");
                            return Configuracion.PorDefecto;
                        });
 
@@ -221,7 +221,7 @@ var config = await _api.LeerConfigRemotaAsync(entorno)
                        .MapIfFailWithoutExceptionAsync(_ => Configuracion.PorDefecto);
 ```
 
-📌 Internamente usan `MatchAsync` y `GetDetailExceptionAsync()`, la versión asíncrona de la comprobación. Si tienes un valor síncrono y la sobrecarga exige `Task<T>`, envuélvelo con `.ToAsync()`.
+📌 Internamente usan `MatchAsync` y `GetExceptionAsync()`, la versión asíncrona de la comprobación. Si tienes un valor síncrono y la sobrecarga exige `Task<T>`, envuélvelo con `.ToAsync()`.
 
 ---
 
@@ -231,16 +231,16 @@ Si el delegado de recuperación puede lanzar (leer un fichero de respaldo, deser
 
 ```csharp
 public static MlResult<T> TryMapIfFailWithoutException<T>(this MlResult<T>              source,
-                                                               Func<MlErrorsDetails, T> func,
+                                                               Func<MlErrorDetails, T> func,
                                                                Func<Exception, string>  errorMessageBuilder)
     => source.Match(
-                fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : _ => func.TryToMlResult(errorsDetails, errorMessageBuilder),
                                             valid: _ => errorsDetails),
                 valid: x => x);
 
 public static MlResult<T> TryMapIfFailWithoutException<T>(this MlResult<T>              source,
-                                                               Func<MlErrorsDetails, T> func,
+                                                               Func<MlErrorDetails, T> func,
                                                                string                   errorMessage = null!)
     => source.TryMapIfFailWithoutException(func, _ => errorMessage!);
 ```
@@ -269,7 +269,7 @@ Existen también las variantes `TryMapIfFailWithoutExceptionAsync` para todas la
 
 ## ⚠️ No existe la subfamilia `...Error`
 
-En `MapIfFailWithException` hay una subfamilia `MapIfFailWithExceptionError` cuyo delegado recibe `MlErrorsDetails` en vez de la `Exception`. **Aquí no existe ningún `MapIfFailWithoutExceptionError`** (verificado en el código fuente) y es lógico: el delegado de `MapIfFailWithoutException` **ya recibe** `MlErrorsDetails`, así que no hace falta otra variante para acceder a los errores.
+En `MapIfFailWithException` hay una subfamilia `MapIfFailWithExceptionError` cuyo delegado recibe `MlErrorDetails` en vez de la `Exception`. **Aquí no existe ningún `MapIfFailWithoutExceptionError`** (verificado en el código fuente) y es lógico: el delegado de `MapIfFailWithoutException` **ya recibe** `MlErrorDetails`, así que no hace falta otra variante para acceder a los errores.
 
 Tampoco existen sobrecargas con `TException`: no tiene sentido filtrar por tipo de excepción en un método que precisamente solo actúa **cuando no hay excepción**.
 
@@ -303,7 +303,7 @@ public async Task<MlResult<Preferencias>> ObtenerPreferenciasAsync(int usuarioId
                   {
                       // Solo llegamos aquí si el fallo fue "no existen preferencias" (negocio)
                       _log.LogInformation("Usuario {Id} sin preferencias: aplico predeterminadas. {D}",
-                                          usuarioId, err.ToErrorsDescription());
+                                          usuarioId, err.GetErrorsSummary());
                       return Preferencias.PorDefecto(usuarioId).ToAsync();
                   });
 ```
@@ -330,7 +330,7 @@ public async Task<IActionResult> Obtener(int id)
         fail : errores =>
         {
             // Si llegamos aquí, el fallo SÍ traía excepción: es técnico
-            _log.LogError("Fallo técnico al obtener ficha {Id}: {D}", id, errores.ToErrorsDescription());
+            _log.LogError("Fallo técnico al obtener ficha {Id}: {D}", id, errores.GetErrorsSummary());
             return StatusCode(503, new { mensaje = "Servicio temporalmente no disponible" });
         });
 }
@@ -348,14 +348,14 @@ public async Task<ResultadoAltaDto> AltaAsync(AltaClienteDto dto)
                             .MapIfFailWithoutExceptionAsync(
                                 funcValidAsync: cliente => ResultadoAltaDto.Ok(cliente.Id).ToAsync(),
                                 funcFailAsync : err     => ResultadoAltaDto
-                                                               .Rechazada(err.ToErrorsMessages())
+                                                               .Rechazada(err.GetErrorMessages())
                                                                .ToAsync());
 
     // Los fallos de validación ya vienen convertidos en DTO de rechazo.
     // Solo los fallos técnicos siguen siendo Fail y hay que traducirlos aquí.
     return resultado.Match(
         valid: dtoRespuesta => dtoRespuesta,
-        fail : errores      => ResultadoAltaDto.ErrorInterno(errores.ToErrorsDescription()));
+        fail : errores      => ResultadoAltaDto.ErrorInterno(errores.GetErrorsSummary()));
 }
 ```
 
@@ -390,7 +390,7 @@ var stock = await _almacen.ConsultarStockAsync(sku)
 // ❌ MAL: inspeccionar los detalles a mano reimplementa el método y es frágil
 var stock2 = (await _almacen.ConsultarStockAsync(sku)).Match(
     valid: x => x,
-    fail : err => err.Details.ContainsKey("Ex") ? throw new Exception("boom") : 0);
+    fail : err => err.Metadata.ContainsKey("Ex") ? throw new Exception("boom") : 0);
 
 // ❌ MAL: usar .Value directamente rompe el carril
 // var s = resultado.Value;
@@ -408,7 +408,7 @@ var stock3 = await _almacen.ConsultarStockAsync(sku)
 
 2. **Recuerda que el fallo con excepción sale intacto.** Eso significa que la tubería sigue en fallo: hay que darle salida más adelante (`MapIfFailWithException`, `Match`, o dejar que el llamante lo traduzca a 5xx).
 
-3. **La distinción depende de que las excepciones se guarden en `Details["Ex"]`.** Eso solo ocurre si usas `Try*` (`TryMap`, `TryBind`, `TryMapIfFail`…) o creas el fallo con `MlErrorsDetails.FromErrorMessageWithException`. Si capturas una excepción con `try/catch` y creas el fallo con `"mensaje".ToMlResultFail<T>()`, ese fallo pasará por "negocio" y **sí** se recuperará.
+3. **La distinción depende de que las excepciones se guarden en `Details["Ex"]`.** Eso solo ocurre si usas `Try*` (`TryMap`, `TryBind`, `TryMapIfFail`…) o creas el fallo con `MlErrorDetails.FromErrorMessageWithException`. Si capturas una excepción con `try/catch` y creas el fallo con `"mensaje".ToMlResultFail<T>()`, ese fallo pasará por "negocio" y **sí** se recuperará.
 
 4. **No pierdas el error de negocio original en las variantes `Try`.** A diferencia de `TryMapIfFailWithException`, aquí no hay merge automático; añade `.MergeErrorsDetailsIfFail(origen)` si necesitas conservarlo.
 
@@ -429,8 +429,8 @@ var stock3 = await _almacen.ConsultarStockAsync(sku)
 - `MapIfFailWithoutException` recupera **solo** los fallos que **no** llevan excepción en `Details["Ex"]`: los fallos de negocio y validación.
 - Si el fallo **sí** trae excepción, el delegado no se ejecuta y **el `Fail` original se devuelve intacto**, con todos sus errores y detalles.
 - Es el **espejo exacto** de [`MapIfFailWithException`](6_MapIfFailWithException.md); juntos cubren todos los fallos y permiten políticas distintas para cada clase.
-- Tiene **dos formas**: A `<T>(Func<MlErrorsDetails, T>)` que preserva el tipo y es apilable, y B `<T, TReturn>(funcValid, funcFail)` que hace converger ambas ramas a un tipo común.
-- **No existe** ninguna subfamilia `...Error` ni sobrecargas con `TException`: el delegado ya recibe `MlErrorsDetails` y no hay excepción que filtrar.
+- Tiene **dos formas**: A `<T>(Func<MlErrorDetails, T>)` que preserva el tipo y es apilable, y B `<T, TReturn>(funcValid, funcFail)` que hace converger ambas ramas a un tipo común.
+- **No existe** ninguna subfamilia `...Error` ni sobrecargas con `TException`: el delegado ya recibe `MlErrorDetails` y no hay excepción que filtrar.
 - Las variantes `TryMapIfFailWithoutException` protegen el delegado con `TryToMlResult`, pero **no fusionan** los errores originales (a diferencia de su hermana `WithException`).
 - El delegado devuelve un **valor desnudo**; si tu recuperación puede fallar, usa [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md).
 
@@ -445,6 +445,6 @@ var stock3 = await _almacen.ConsultarStockAsync(sku)
 - [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) — la versión `Bind`, cuando la recuperación devuelve `MlResult`.
 - [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) — su complementaria en la familia `Bind`.
 - [`../ExecSelf/6_ExecSelfIfFailWithoutException.md`](../ExecSelf/6_ExecSelfIfFailWithoutException.md) — efectos secundarios sin alterar el resultado.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailException()`, `MergeErrorsDetailsIfFail` y el resto de utilidades de detalles.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorsDetails`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException()`, `MergeErrorsDetailsIfFail` y el resto de utilidades de detalles.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorDetails`.
 - [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.

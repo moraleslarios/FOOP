@@ -79,7 +79,7 @@ public class VinosController(IGenServiceFp<Vino, VinoDto> _service)
 | CRUD repetido por entidad | Un único servicio genérico registrado con tipos abiertos |
 | Mapeo manual entidad ⇄ DTO | `Adapt<T>()` de Mapster por convención |
 | Trazas dispersas | Log automático al inicio y al final de cada operación |
-| Excepciones para el "no encontrado" | `MlErrorsDetails` con estructura `ProblemDetails` |
+| Excepciones para el "no encontrado" | `MlErrorDetails` con estructura `ProblemDetails` |
 | DTO de entrada ≠ DTO de salida | El modo **duplex** de tres parámetros genéricos |
 
 ---
@@ -191,11 +191,11 @@ public interface IGenServiceFp<TEntity, TDto>
     Task<MlResult<IEnumerable<TDto>>> AllAsync(CancellationToken ct = default!,
                                                string initialMessage = null!,
                                                Func<IEnumerable<TDto>, string> validMessageBuilder = null!,
-                                               Func<MlErrorsDetails, string>   failMessageBuilder  = null!);
+                                               Func<MlErrorDetails, string>   failMessageBuilder  = null!);
 
     // Búsqueda por clave
     Task<MlResult<TDto?>> FindByIdAsync                (…, params object[] pk);
-    Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync (MlErrorsDetails notFoundErrorDetails, …, params object[] pk);
+    Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync (MlErrorDetails notFoundErrorDetails, …, params object[] pk);
 
     // Creación
     Task<MlResult<TDto>>  CreateAsync(TDto dto, …);
@@ -203,12 +203,12 @@ public interface IGenServiceFp<TEntity, TDto>
     // Modificación: con y sin comprobación de existencia
     Task<MlResult<TDto>>  UpdateAsync              (TDto dto, …, params object[] pk);
     Task<MlResult<TDto>>  UpdateAsync              (TDto dto, …);                       // sin pk
-    Task<MlResult<TDto>>  UpdateProblemDetailsAsync(TDto dto, MlErrorsDetails notFoundErrorDetails, …, params object[] pk);
+    Task<MlResult<TDto>>  UpdateProblemDetailsAsync(TDto dto, MlErrorDetails notFoundErrorDetails, …, params object[] pk);
 
     // Borrado: por clave o por entidad
     Task<MlResult<TDto>>  DeleteAsync              (…, params object[] pk);
     Task<MlResult<TDto>>  DeleteAsync              (TDto dto, …);
-    Task<MlResult<TDto>>  DeleteProblemDetailsAsync(MlErrorsDetails notFoundErrorDetails, …, params object[] pk);
+    Task<MlResult<TDto>>  DeleteProblemDetailsAsync(MlErrorDetails notFoundErrorDetails, …, params object[] pk);
 }
 ```
 
@@ -216,7 +216,7 @@ public interface IGenServiceFp<TEntity, TDto>
 |---|---|---|
 | `AllAsync` | `TryAllAsync` → `Adapt<IEnumerable<TDto>>` | — |
 | `FindByIdAsync` | `TryFindAsync` por PK | ✅ (mensaje por defecto) |
-| `FindByIdProblemsDetailsAsync` | Igual, con tu `MlErrorsDetails` | ✅ (tu mensaje) |
+| `FindByIdProblemsDetailsAsync` | Igual, con tu `MlErrorDetails` | ✅ (tu mensaje) |
 | `CreateAsync` | Valida, mapea e inserta | — |
 | `UpdateAsync(dto, …, pk)` | `TryFind` + `TryUpdate` | ✅ |
 | `UpdateAsync(dto, …)` | `TryUpdate` directo | ❌ |
@@ -260,7 +260,7 @@ Cada operación acepta **tres parámetros opcionales** para controlar el trazado
 |---|---|---|
 | `initialMessage` | `string` | Traza de entrada. Si es `null`, mensaje por defecto en inglés |
 | `validMessageBuilder` | `Func<TDto, string>` | Traza de éxito, recibe el resultado |
-| `failMessageBuilder` | `Func<MlErrorsDetails, string>` | Traza de error, recibe los errores |
+| `failMessageBuilder` | `Func<MlErrorDetails, string>` | Traza de error, recibe los errores |
 
 ```csharp
 await _service.CreateAsync(
@@ -268,7 +268,7 @@ await _service.CreateAsync(
           ct,
           initialMessage     : $"Alta de vino solicitada por {usuario}",
           validMessageBuilder: v => $"Vino creado con Id {v.Id}",
-          failMessageBuilder : e => $"No se pudo crear el vino: {e.ToErrorsDescription()}");
+          failMessageBuilder : e => $"No se pudo crear el vino: {e.GetErrorsSummary()}");
 ```
 
 Si no los pasas, los mensajes por defecto son genéricos y **en inglés**:
@@ -300,8 +300,8 @@ public virtual Task<MlResult<TDto?>> FindByIdAsync(…, params object[] pk)
 Y el helper que lo genera:
 
 ```csharp
-public static MlErrorsDetails BuildNotFoundPkError(this string tableName, params object[] pk)
-    => MlErrorsDetails.FromErrorMessageDetails(
+public static MlErrorDetails BuildNotFoundPkError(this string tableName, params object[] pk)
+    => MlErrorDetails.FromErrorMessageDetails(
            $"No data found for the {tableName} table by Id ({pk.GetPkValues()})",
            new Dictionary<string, object> { ["NotFound"] = $"No data found for the {tableName} table by Id ({pk.GetPkValues()})" });
 ```
@@ -314,16 +314,16 @@ public static MlErrorsDetails BuildNotFoundPkError(this string tableName, params
 
 > ✅ **Usa las variantes `ProblemDetailsAsync` con `MlProblemsDetails.NotFoundError(…)`** cuando el error vaya a convertirse en respuesta HTTP: así obtienes el `Status = 404` y la estructura RFC 7807 completa, mientras que la versión corta solo produce una clave `"NotFound"` sin código de estado.
 
-> ⚠️ **El nombre es engañoso**: `FindByIdProblemsDetailsAsync` no *genera* un `ProblemDetails`, solo **acepta** el `MlErrorsDetails` que le pases. Y la versión corta **tampoco** produce un `ProblemDetails` con `Status`: el diccionario que crea `BuildNotFoundPkError` usa la clave `"NotFound"`, no `"ProblemsDetails"`, así que **la capa HTTP no la reconocerá como 404**.
+> ⚠️ **El nombre es engañoso**: `FindByIdProblemsDetailsAsync` no *genera* un `ProblemDetails`, solo **acepta** el `MlErrorDetails` que le pases. Y la versión corta **tampoco** produce un `ProblemDetails` con `Status`: el diccionario que crea `BuildNotFoundPkError` usa la clave `"NotFound"`, no `"ProblemsDetails"`, así que **la capa HTTP no la reconocerá como 404**.
 
 ---
 
 ## `MlProblemsDetails` — errores RFC 7807
 
-Clase estática con **15 fábricas** que devuelven un `MlErrorsDetails` cuyo diccionario de detalles contiene la clave `"ProblemsDetails"` con la forma estándar.
+Clase estática con **15 fábricas** que devuelven un `MlErrorDetails` cuyo diccionario de detalles contiene la clave `"ProblemsDetails"` con la forma estándar.
 
 ```csharp
-public static MlErrorsDetails NotFoundError(string title = null!, string detail = null!,
+public static MlErrorDetails NotFoundError(string title = null!, string detail = null!,
                                             string type = null!, Dictionary<string, object> errors = null!)
     => (title ?? "Not found",
         new Dictionary<string, object>
@@ -363,7 +363,7 @@ public static MlErrorsDetails NotFoundError(string title = null!, string detail 
 `BadRequestError` tiene una segunda forma que agrupa `ValidationResult` por miembro:
 
 ```csharp
-public static MlErrorsDetails BadRequestError(string title, string detail, string type,
+public static MlErrorDetails BadRequestError(string title, string detail, string type,
                                               IEnumerable<ValidationResult> validationResults)
 {
     var errors = validationResults?
@@ -550,9 +550,9 @@ failBuildMessage: errors => failMessageBuilder is null
                                 : failMessageBuilder(errors);
 ```
 
-Se llama a `ToString()` sobre el `MlErrorsDetails`. Si el tipo no lo sobrescribe de forma útil, el log podría mostrar solo el nombre del tipo en lugar de los mensajes.
+Se llama a `ToString()` sobre el `MlErrorDetails`. Si el tipo no lo sobrescribe de forma útil, el log podría mostrar solo el nombre del tipo en lugar de los mensajes.
 
-> 💡 **Pasa siempre `failMessageBuilder`** con `e => e.ToErrorsDescription()` para asegurarte de que el log contiene los mensajes reales.
+> 💡 **Pasa siempre `failMessageBuilder`** con `e => e.GetErrorsSummary()` para asegurarte de que el log contiene los mensajes reales.
 
 ### 8. ⚠️ `EnsureFp.That(pk, pk is not null && pk.Any(), …)` evalúa `pk.Any()` de forma anticipada
 
@@ -690,7 +690,7 @@ public class VinosDuplexService(IGenServiceFp<Vino, VinoRequest, VinoResponse> _
                         ct,
                         initialMessage     : $"Alta de vino: {request.Nombre}",
                         validMessageBuilder: r => $"Vino creado con Id {r.Id}",
-                        failMessageBuilder : e => $"Alta fallida: {e.ToErrorsDescription()}");
+                        failMessageBuilder : e => $"Alta fallida: {e.GetErrorsSummary()}");
 }
 ```
 
@@ -719,7 +719,7 @@ public class VinosServiceConReglas(IEFRepoFp<Vino>                          repo
             VinoDto dto, CancellationToken ct = default!,
             string initialMessage = null!,
             Func<VinoDto, string> validMessageBuilder = null!,
-            Func<MlErrorsDetails, string> failMessageBuilder = null!)
+            Func<MlErrorDetails, string> failMessageBuilder = null!)
         => EnsureFp.That(dto, d => d.Anyo <= DateTime.Now.Year,
                          MlProblemsDetails.UnprocessableContentError(
                              detail: "El año de la cosecha no puede ser futuro"))
@@ -824,7 +824,7 @@ await _service.CreateAsync(dto, ct);
 
 // ✅ BIEN: construye el mensaje con la descripción de los errores
 await _service.CreateAsync(dto, ct,
-                           failMessageBuilder: e => $"Alta fallida: {e.ToErrorsDescription()}");
+                           failMessageBuilder: e => $"Alta fallida: {e.GetErrorsSummary()}");
 ```
 
 **El `type` del ProblemDetails:**
@@ -871,7 +871,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 5. **Prefiere `UpdateAsync(dto, ct)` sin `pk`** para evitar el doble `Find` y los conflictos de seguimiento.
 6. **No uses `AllAsync` en tablas grandes**: no pagina. Baja al repositorio paginado y mapea con `Adapt`.
 7. **Valida antes de llamar al servicio**, con [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) o [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md).
-8. **Pasa `failMessageBuilder` con `e => e.ToErrorsDescription()`** para que el log contenga los mensajes reales.
+8. **Pasa `failMessageBuilder` con `e => e.GetErrorsSummary()`** para que el log contenga los mensajes reales.
 9. **Pasa siempre tu propio `type`** en `MlProblemsDetails`: el valor por defecto apunta al sitio del autor de la librería.
 10. **Configura y compila los mapeos de Mapster al arrancar** (`TypeAdapterConfig.Global.Compile()`): los errores de mapeo se convierten en `Fail` silenciosos.
 11. **Hereda y sobrescribe** para añadir reglas de negocio en lugar de escribir un servicio nuevo: todos los métodos son `virtual`.
@@ -885,7 +885,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 - Servicio de aplicación **genérico** que implementa el CRUD completo sobre `IEFRepoFp<TEntity>`, mapeando entidad ⇄ DTO con **Mapster** y trazando **entrada y salida** de cada operación en el raíl de `MlResult<T>`.
 - **Dos modos**: simple (`IGenServiceFp<TEntity, TDto>`)
 - Registro con tipos genéricos abiertos: **una sola llamada** sirve para todas las entidades. ⚠️ El nombre tiene la errata `AddScopedt…`.
-- **`MlProblemsDetails`**: 15 fábricas de `MlErrorsDetails` con la estructura **RFC 7807** (400, 401, 403, 404, 409, 422, 429, 500…), más una sobrecarga que agrupa `ValidationResult` por propiedad.
+- **`MlProblemsDetails`**: 15 fábricas de `MlErrorDetails` con la estructura **RFC 7807** (400, 401, 403, 404, 409, 422, 429, 500…), más una sobrecarga que agrupa `ValidationResult` por propiedad.
 - ❗ **Para obtener un 404 real, usa las variantes `ProblemDetailsAsync` con `MlProblemsDetails.NotFoundError(…)`**: las versiones cortas generan la clave `"NotFound"`, que la capa HTTP no interpreta.
 - ❗ **`UpdateProblemDetailsAsync` hace dos búsquedas y descarta la entidad recuperada**, lo que puede provocar conflictos de seguimiento en EF Core. Prefiere `UpdateAsync(dto, ct)` sin `pk`.
 - ⚠️ **No hay paginación, filtrado ni validación**: `AllAsync` trae toda la tabla, y debes validar antes de llamar al servicio.
@@ -916,7 +916,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md) 🔑 la base de `MlProblemsDetails`
+- [`MlErrorDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md) 🔑 la base de `MlProblemsDetails`
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` — transformación con cortocircuito](../docs/Map/1_Map.md)
 - [`TryMap` y `TryBind` — capturar excepciones en el raíl](../docs/Map/1_Map.md)

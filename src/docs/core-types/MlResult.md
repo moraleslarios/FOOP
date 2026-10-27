@@ -3,7 +3,7 @@
 `MlResult<T>` es el tipo raíz de toda la librería. Representa el resultado de una operación que **puede haber ido bien o mal**, sin usar excepciones como flujo de control:
 
 - **Válido**: transporta un valor de tipo `T`.
-- **Fallido**: transporta un [`MlErrorsDetails`](MlResultErrors.md) con la lista de errores y un diccionario de detalles (excepción original, valor de entrada, metadatos...).
+- **Fallido**: transporta un [`MlErrorDetails`](MlResultErrors.md) con la lista de errores y un diccionario de detalles (excepción original, valor de entrada, metadatos...).
 
 Se declara como `partial record`, por lo que la comparación e impresión son estructurales.
 
@@ -16,7 +16,7 @@ Se declara como `partial record`, por lo que la comparación e impresión son es
 | `IsSuccess` | `bool` | `true` si el resultado es válido. Es `{ get; init; }`. |
 | `IsFailure` | `bool` | Azúcar de `!IsSuccess`. |
 | `Value` | `T` | **`internal protected`**. No accesible desde código consumidor. |
-| `ErrorsDetails` | `MlErrorsDetails` | **`internal protected`**. No accesible desde código consumidor. |
+| `ErrorsDetails` | `MlErrorDetails` | **`internal protected`**. No accesible desde código consumidor. |
 | `ToString()` | `string` | Si es válido, `Value?.ToString()` (o `"Not right value"` si es `null`); si es fallido, la descripción de los errores. |
 
 > ⚠️ **`Value` y `ErrorsDetails` son `internal protected` a propósito.** Nunca los leas directamente: usa [`Match`](MlResultActionsMatch.md) para materializar el resultado, o `GetValueOrThrow` ([`MlResultActions`](MlResultActions.md)) si ya has verificado que es válido.
@@ -55,8 +55,8 @@ MlResult<Customer> f2 = MlResult<Customer>.Fail(new MlError("Nombre obligatorio"
 IEnumerable<MlError> errores = new[] { "Nombre obligatorio".ToMlError(), "Email obligatorio".ToMlError() };
 MlResult<Customer> f3 = MlResult<Customer>.Fail(errores);
 
-// 4) Un MlErrorsDetails ya construido (errores + Details)
-MlResult<Customer> f4 = MlResult<Customer>.Fail(MlErrorsDetails.FromErrorMessage("No encontrado"));
+// 4) Un MlErrorDetails ya construido (errores + Details)
+MlResult<Customer> f4 = MlResult<Customer>.Fail(MlErrorDetails.FromErrorMessage("No encontrado"));
 
 // 5) Mensaje + un detalle suelto (clave/valor)
 MlResult<Customer> f5 = MlResult<Customer>.Fail("Cliente no encontrado", "CustomerId", customerId);
@@ -82,7 +82,7 @@ Cualquiera de estos tipos se convierte implícitamente en un `MlResult<T>` falli
 | `MlError` | `return new MlError("Email inválido");` |
 | `MlError[]` | `return new MlError[] { "A", "B" };` |
 | `List<MlError>` | `return listaDeErrores;` |
-| `MlErrorsDetails` | `return MlErrorsDetails.FromErrorMessage("KO");` |
+| `MlErrorDetails` | `return MlErrorDetails.FromErrorMessage("KO");` |
 | Tuplas de error + detalles | `return (errores, detalles);` |
 
 ```csharp
@@ -128,10 +128,10 @@ public async Task<IActionResult> GetCustomer(int id)
                      .BindAsync(validId => repository.FindAsync(validId))            // acceso a datos
                      .BindAsync(customer => customer.NullToFailed($"No existe el cliente {id}"))
                      .MapAsync(customer => mapper.Map<CustomerDto>(customer))        // proyección a DTO
-                     .ExecSelfIfFailAsync(errors => logger.LogWarning(errors.ToErrorsDescription()))
+                     .ExecSelfIfFailAsync(errors => logger.LogWarning(errors.GetErrorsSummary()))
                      .MatchAsync(                                                    // salida al mundo real
                          valid: dto    => Ok(dto),
-                         fail : errors => NotFound(errors.ToErrorsDescription()));
+                         fail : errors => NotFound(errors.GetErrorsSummary()));
 ```
 
 Puntos clave del ejemplo:

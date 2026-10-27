@@ -41,10 +41,10 @@ var r = ObtenerUsuario(id)
     .ExecSelfIfValid(u => _log.LogInformation("Usuario {Nombre} recuperado", u.Nombre));
 ```
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception` ni
-> `HasValue`. Para consultar los errores usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `HasValue`. Para consultar los errores usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 > (`ExecSelfIfValid` no recibe los errores; esta nota aplica a las variantes hermanas
 > [`3_ExecSelfIfFail.md`](3_ExecSelfIfFail.md).)
 
@@ -150,7 +150,7 @@ public class RepositorioClientes
             // Si no se encontró, esto sí se ejecuta (variante hermana).
             .ExecSelfIfFailAsync(errores =>
                 _log.LogInformation("Cliente {Id} no encontrado: {E}",
-                                    id, errores.ToErrorsDescription()));
+                                    id, errores.GetErrorsSummary()));
 }
 ```
 
@@ -243,14 +243,14 @@ mecanismos previstos para trabajar con el valor de forma segura; los otros son `
 
 | Método | Se ejecuta si… | El delegado recibe |
 | --- | --- | --- |
-| `ExecSelf` (2 delegados) | Siempre (una rama u otra) | `T` / `MlErrorsDetails` |
+| `ExecSelf` (2 delegados) | Siempre (una rama u otra) | `T` / `MlErrorDetails` |
 | `ExecSelf` (1 delegado) | Siempre | `MlResult<T>` completo |
 | **`ExecSelfIfValid`** | **Solo si es válido** | **`T`** |
-| `ExecSelfIfFail` | Solo si es fallido | `MlErrorsDetails` |
+| `ExecSelfIfFail` | Solo si es fallido | `MlErrorDetails` |
 | `ExecSelfIf` | El predicado se cumple | `T` |
-| `ExecSelfIfFailWithValue` | Fallido y hay valor adjunto | `MlErrorsDetails`, `TValue` |
-| `ExecSelfIfFailWithException` | Fallido y hay excepción | `MlErrorsDetails`, `Exception` |
-| `ExecSelfIfFailWithoutException` | Fallido y **sin** excepción | `MlErrorsDetails` |
+| `ExecSelfIfFailWithValue` | Fallido y hay valor adjunto | `MlErrorDetails`, `TValue` |
+| `ExecSelfIfFailWithException` | Fallido y hay excepción | `MlErrorDetails`, `Exception` |
+| `ExecSelfIfFailWithoutException` | Fallido y **sin** excepción | `MlErrorDetails` |
 
 ---
 

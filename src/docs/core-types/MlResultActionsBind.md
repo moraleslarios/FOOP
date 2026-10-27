@@ -65,7 +65,7 @@ MlResult<T> → (T → MlResult<TReturn>) → MlResult<TReturn>
 
 > Nota sobre `BindAlways`: existen **dos formas** distintas.
 > - `BindAlways<T, TReturn>(Func<MlResult<TReturn>> funcAlways)`: la función **no recibe nada**; se ejecuta igual en válido y en fallido.
-> - `BindAlways<T, TResult>(Func<T, MlResult<TResult>> funcValidAlways, Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways)`: dos funciones, una para cada rama, pero **ambas devuelven `MlResult<TResult>`**, por lo que la cadena continúa siempre en el mismo tipo.
+> - `BindAlways<T, TResult>(Func<T, MlResult<TResult>> funcValidAlways, Func<MlErrorDetails, MlResult<TResult>> funcFailAlways)`: dos funciones, una para cada rama, pero **ambas devuelven `MlResult<TResult>`**, por lo que la cadena continúa siempre en el mismo tipo.
 
 ---
 
@@ -98,7 +98,7 @@ MlResult<InvoiceDto> result = await ValidateId(invoiceId)                       
 
 ### `TryBind`: encapsular código que lanza excepciones
 
-Convierte la excepción en `Fail` y la guarda en `Details["Ex"]`, de donde puedes recuperarla con `GetDetailException()`.
+Convierte la excepción en `Fail` y la guarda en `Details["Ex"]`, de donde puedes recuperarla con `GetException()`.
 
 ```csharp
 MlResult<Config> result = pathResult.TryBind(
@@ -168,7 +168,7 @@ MlResult<Pedido> resultado = await ObtenerPedidoAsync(id)
     // Fallo técnico (timeout, red, BD): reintentamos contra la réplica.
     .BindIfFailWithExceptionAsync(async ex => await ObtenerPedidoDesdeReplicaAsync(id))
     // Fallo de negocio (no existe, cancelado): devolvemos un pedido "vacío" navegable.
-    .BindIfFailWithoutExceptionAsync(errores => Pedido.NoDisponible(id, errores.ToErrorsMessages()));
+    .BindIfFailWithoutExceptionAsync(errores => Pedido.NoDisponible(id, errores.GetErrorMessages()));
 ```
 
 Regla práctica: si necesitas **reintentar**, usa `...WithException`; si necesitas **degradar
@@ -238,7 +238,7 @@ MlResult<(Cliente, IReadOnlyList<Linea>)> datos =
 // Y después se consume cómodamente por deconstrucción:
 string texto = datos.Match(
     valid: t     => $"{t.Item1.Nombre} con {t.Item2.Count} líneas",
-    fail : errs  => errs.ToErrorsDescription());
+    fail : errs  => errs.GetErrorsSummary());
 ```
 
 Existen sobrecargas para tuplas de 2, 3, 4 y más elementos, y sus equivalentes `TryBindBuildTupleAsync`.

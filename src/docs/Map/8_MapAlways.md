@@ -32,10 +32,10 @@ MlResult<Informe> r1 = tuberia.MapAlways(() => GenerarInformeFinal());
 // Forma B: cada rama produce su propio resultado, ambas hacia el mismo tipo
 MlResult<RespuestaDto> r2 = tuberia.MapAlways(
                                 funcValidAlways: pedido  => RespuestaDto.Ok(pedido.Id),
-                                funcFailAlways : errores => RespuestaDto.Error(errores.ToErrorsMessages()));
+                                funcFailAlways : errores => RespuestaDto.Error(errores.GetErrorMessages()));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -43,7 +43,7 @@ MlResult<RespuestaDto> r2 = tuberia.MapAlways(
 
 | | Forma A | Forma B |
 |---|---|---|
-| Firma del delegado | `Func<TReturn>` (sin parámetros) | `Func<T, TResult>` + `Func<MlErrorsDetails, TResult>` |
+| Firma del delegado | `Func<TReturn>` (sin parámetros) | `Func<T, TResult>` + `Func<MlErrorDetails, TResult>` |
 | ¿Accede al valor válido? | ❌ No | ✅ Sí (`funcValidAlways`) |
 | ¿Accede a los errores? | ❌ No | ✅ Sí (`funcFailAlways`) |
 | ¿Conserva los errores previos? | ❌ No, se descartan | ❌ No, pero los recibes para transformarlos |
@@ -85,7 +85,7 @@ var resultado = ValidarPedido(dto)          // pongamos que falla con 3 errores
 ```csharp
 // ✅ Patrón correcto: registrar primero, descartar después
 var acuse = await ProcesarLoteAsync(lote)
-                    .ExecSelfIfFailAsync(err => _log.LogErrorAsync(err.ToErrorsDescription()))
+                    .ExecSelfIfFailAsync(err => _log.LogErrorAsync(err.GetErrorsSummary()))
                     .MapAlwaysAsync(() => _repo.RecargarEstadoLoteAsync(lote.Id));
 ```
 
@@ -137,7 +137,7 @@ Esta es la forma útil en el 90 % de los casos reales. El propio autor la docume
 ```csharp
 public static MlResult<TResult> MapAlways<T, TResult>(this MlResult<T>                    source,
                                                            Func<T              , TResult> funcValidAlways,
-                                                           Func<MlErrorsDetails, TResult> funcFailAlways)
+                                                           Func<MlErrorDetails, TResult> funcFailAlways)
     => source.Match(valid: funcValidAlways,
                     fail : funcFailAlways);
 ```
@@ -151,7 +151,7 @@ public async Task<ResumenImportacion> ImportarAsync(Stream fichero)
                 .BindAsync(GuardarAsync)
                 .MapAlwaysAsync(
                     funcValidAlwaysAsync: r   => ResumenImportacion.Correcta(r.Filas).ToAsync(),
-                    funcFailAlwaysAsync : err => ResumenImportacion.Fallida(err.ToErrorsMessages()).ToAsync()))
+                    funcFailAlwaysAsync : err => ResumenImportacion.Fallida(err.GetErrorMessages()).ToAsync()))
         .Match(valid: x => x, fail: _ => ResumenImportacion.Desconocida);
 ```
 
@@ -171,12 +171,12 @@ La Forma B y `Match` hacen esencialmente lo mismo. La diferencia está en el tip
 // Match: salgo del carril, obtengo un IActionResult
 IActionResult respuesta = resultado.Match(
                               valid: c => Ok(c),
-                              fail : e => BadRequest(e.ToErrorsMessages()));
+                              fail : e => BadRequest(e.GetErrorMessages()));
 
 // MapAlways: sigo en el carril y puedo encadenar más pasos
 MlResult<Informe> informe = resultado.MapAlways(
                                 funcValidAlways: c => Informe.DeCliente(c),
-                                funcFailAlways : e => Informe.DeError(e.ToErrorsDescription()))
+                                funcFailAlways : e => Informe.DeError(e.GetErrorsSummary()))
                                      .Map(i => i.ConMarcaTemporal(DateTime.UtcNow))
                                      .MapEnsure(i => i.EsPublicable, "El informe no es publicable");
 ```
@@ -222,7 +222,7 @@ La Forma B protegida hace lo análogo con los dos delegados:
 ```csharp
 public static MlResult<TResult> TryMapAlways<T, TResult>(this MlResult<T>                    source,
                                                               Func<T              , TResult> funcValidAlways,
-                                                              Func<MlErrorsDetails, TResult> funcFailAlways,
+                                                              Func<MlErrorDetails, TResult> funcFailAlways,
                                                               Func<Exception, string>        errorMessageBuilder)
     => source.Match(valid: value        => funcValidAlways.TryToMlResult(value       , errorMessageBuilder),
                     fail : errorDetails => funcFailAlways .TryToMlResult(errorDetails, errorMessageBuilder));
@@ -285,11 +285,11 @@ public async Task<IActionResult> Crear(CrearPedidoDto dto)
 {
     var respuesta = await ValidarAsync(dto)
                             .BindAsync(_servicio.CrearAsync)
-                            .ExecSelfIfFailAsync(err => _log.LogWarningAsync(err.ToErrorsDescription()))
+                            .ExecSelfIfFailAsync(err => _log.LogWarningAsync(err.GetErrorsSummary()))
                             .MapAlwaysAsync(
                                 funcValidAlwaysAsync: p   => ApiRespuesta<int>.Ok(p.Id).ToAsync(),
                                 funcFailAlwaysAsync : err => ApiRespuesta<int>
-                                                                .Error(err.ToErrorsMessages())
+                                                                .Error(err.GetErrorMessages())
                                                                 .ToAsync())
                             // Seguimos en el carril: añadimos metadatos comunes
                             .MapAsync(r => (r with { Version = "v2", Marca = DateTime.UtcNow }).ToAsync());
@@ -317,9 +317,9 @@ public async Task<MlResult<RegistroAuditoria>> EjecutarConAuditoriaAsync(string 
         },
         funcFailAlwaysAsync: async err =>
         {
-            var esTecnico = err.GetDetailException().IsSuccess;   // ¿había excepción en Details["Ex"]?
+            var esTecnico = err.GetException().IsSuccess;   // ¿había excepción en Details["Ex"]?
             var reg = RegistroAuditoria.Fallido(operacion, inicio, DateTime.UtcNow,
-                                                err.ToErrorsDescription(),
+                                                err.GetErrorsSummary(),
                                                 esTecnico ? "TECNICO" : "NEGOCIO");
             await _auditoria.GuardarAsync(reg);
             return reg;
@@ -327,7 +327,7 @@ public async Task<MlResult<RegistroAuditoria>> EjecutarConAuditoriaAsync(string 
 }
 ```
 
-Fíjate en `err.GetDetailException().IsSuccess` como forma idiomática de preguntar "¿este fallo es técnico?".
+Fíjate en `err.GetException().IsSuccess` como forma idiomática de preguntar "¿este fallo es técnico?".
 
 ### Ejemplo 3: Recarga total de estado (Forma A bien usada)
 
@@ -337,7 +337,7 @@ Fíjate en `err.GetDetailException().IsSuccess` como forma idiomática de pregun
 public async Task<MlResult<EstadoCarrito>> AplicarCambiosAsync(Guid carritoId, IEnumerable<Cambio> cambios)
     => await AplicarUnoAUnoAsync(carritoId, cambios)
                  .ExecSelfIfFailAsync(err => _log.LogWarningAsync(
-                     "Algunos cambios del carrito {Id} no se aplicaron: {D}", carritoId, err.ToErrorsDescription()))
+                     "Algunos cambios del carrito {Id} no se aplicaron: {D}", carritoId, err.GetErrorsSummary()))
                  // El delegado es síncrono en su firma de entrada → esta sobrecarga SÍ espera el origen
                  .MapAlwaysAsync(() => _repo.LeerEstadoAsync(carritoId));
 ```
@@ -355,9 +355,9 @@ public async Task<Semaforo> ComprobarSaludAsync()
 
     var semaforo = await comprobaciones.MapAlwaysAsync(
         funcValidAlwaysAsync: _   => Semaforo.Verde.ToAsync(),
-        funcFailAlwaysAsync : err => (err.GetDetailException().IsSuccess
-                                          ? Semaforo.Rojo(err.ToErrorsMessages())      // avería
-                                          : Semaforo.Ambar(err.ToErrorsMessages()))    // degradación de negocio
+        funcFailAlwaysAsync : err => (err.GetException().IsSuccess
+                                          ? Semaforo.Rojo(err.GetErrorMessages())      // avería
+                                          : Semaforo.Ambar(err.GetErrorMessages()))    // degradación de negocio
                                      .ToAsync());
 
     return semaforo.Match(valid: s => s, fail: _ => Semaforo.Desconocido);
@@ -383,13 +383,13 @@ var r3 = await GuardarEnBdAsync(entidad)
 // ✅ BIEN: registrar antes de descartar, y garantizar el orden con un await explícito
 var guardado = await GuardarEnBdAsync(entidad);
 var r4 = await guardado
-                 .ExecSelfIfFailAsync(err => _log.LogErrorAsync(err.ToErrorsDescription()))
+                 .ExecSelfIfFailAsync(err => _log.LogErrorAsync(err.GetErrorsSummary()))
                  .MapAlwaysAsync(() => LeerDeBd(entidad.Id));   // delegado síncrono → espera el origen
 
 // ✅ BIEN: si necesitas los datos de cada rama, usa la Forma B
 var r5 = ObtenerCliente(id)
              .MapAlways(funcValidAlways: c   => FichaDto.De(c),
-                        funcFailAlways : err => FichaDto.NoDisponible(err.ToErrorsMessages()));
+                        funcFailAlways : err => FichaDto.NoDisponible(err.GetErrorMessages()));
 ```
 
 ---
@@ -410,7 +410,7 @@ var r5 = ObtenerCliente(id)
 
 7. **Protege con `TryMapAlways` los delegados frágiles** (serialización, E/S, cálculos con datos parciales). Recuerda que en la rama fallida los errores originales **se arrastran** si el delegado lanza.
 
-8. **Distingue fallo técnico de fallo de negocio dentro de `funcFailAlways`** con `err.GetDetailException().IsSuccess`. Así una sola llamada a `MapAlways` puede producir respuestas diferenciadas (503 vs. 400, rojo vs. ámbar).
+8. **Distingue fallo técnico de fallo de negocio dentro de `funcFailAlways`** con `err.GetException().IsSuccess`. Así una sola llamada a `MapAlways` puede producir respuestas diferenciadas (503 vs. 400, rojo vs. ámbar).
 
 9. **No uses `MapAlways` para efectos secundarios.** Si solo quieres registrar o notificar sin cambiar el resultado, la herramienta correcta es [`ExecSelf`](../ExecSelf/1_ExecSelf.md).
 
@@ -440,4 +440,4 @@ var r5 = ObtenerCliente(id)
 - [`../Match/2_MatchAll.md`](../Match/2_MatchAll.md) — la sobrecarga `Match(Func<TReturn>)`, gemela de la Forma A.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios en ambas ramas sin alterar el resultado.
 - [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorsDetails`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorDetails`.

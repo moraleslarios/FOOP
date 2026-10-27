@@ -148,9 +148,9 @@ public class Startup
 ```csharp
 public interface IMlConfigManager
 {
-    MlResult<T>      ReadAppSettingKey<T>    (string appSettingKey      , MlErrorsDetails errorsDetails = null!);
-    MlResult<object> ReadAppSettingKey       (string appSettingKey      , MlErrorsDetails errorsDetails = null!);
-    MlResult<string> ReadConnectionStringKey (string connectionStringKey, MlErrorsDetails errorsDetails = null!);
+    MlResult<T>      ReadAppSettingKey<T>    (string appSettingKey      , MlErrorDetails errorsDetails = null!);
+    MlResult<object> ReadAppSettingKey       (string appSettingKey      , MlErrorDetails errorsDetails = null!);
+    MlResult<string> ReadConnectionStringKey (string connectionStringKey, MlErrorDetails errorsDetails = null!);
 
     MlResult<T>      ReadAppSettingKey<T>    (string appSettingKey      , string errorMessage);
     MlResult<object> ReadAppSettingKey       (string appSettingKey      , string errorMessage);
@@ -220,12 +220,12 @@ Lee de la sección `ConnectionStrings` (`GetConnectionString` es azúcar para `c
 
 Cada uno de los tres métodos tiene dos sobrecargas.
 
-### Con `MlErrorsDetails` — control total
+### Con `MlErrorDetails` — control total
 
 ```csharp
-var errores = MlErrorsDetails.FromErrorMessage("Falta la URL de la API en la configuración")
-                             .AddDetail("clave"  , "Api:Url")
-                             .AddDetail("fichero", "appsettings.json");
+var errores = MlErrorDetails.FromErrorMessage("Falta la URL de la API en la configuración")
+                             .AddMetadataOrThrow("clave"  , "Api:Url")
+                             .AddMetadataOrThrow("fichero", "appsettings.json");
 
 MlResult<string> url = _config.ReadAppSettingKey<string>("Api:Url", errores);
 ```
@@ -237,7 +237,7 @@ MlResult<string> url = _config.ReadAppSettingKey<string>("Api:Url",
         "Falta la URL de la API en la configuración");
 ```
 
-Internamente hace `MlErrorsDetails.FromErrorMessage(errorMessage)`.
+Internamente hace `MlErrorDetails.FromErrorMessage(errorMessage)`.
 
 ### Sin nada — mensaje por defecto
 
@@ -259,7 +259,7 @@ Todo el proyecto se reduce a este método privado:
 ```csharp
 private MlResult<T> ReadConfigKey<T>(string          configKey,
                                      Func<string, T> configSearch,
-                                     MlErrorsDetails errorsDetails = null!)
+                                     MlErrorDetails errorsDetails = null!)
 {
     var result = EnsureFp.NotNullEmptyOrWhitespace(configKey, "Tkey cannot be null white or empty")
                          .Map      (_   => configSearch(configKey))
@@ -333,7 +333,7 @@ _config.ReadAppSettingKey<string>("NoExiste:Sub");             // ❌ Fail
                                      : $"No value found configured with the key '{configKey}'")
 ```
 
-Los dos brazos del ternario son de tipos distintos (`MlErrorsDetails` y `string`) y funciona por **conversión implícita de `string` a `MlErrorsDetails`**. Es válido, pero **la interpolación de la cadena se evalúa siempre**, incluso cuando `errorsDetails` no es nulo y ese texto se va a descartar.
+Los dos brazos del ternario son de tipos distintos (`MlErrorDetails` y `string`) y funciona por **conversión implícita de `string` a `MlErrorDetails`**. Es válido, pero **la interpolación de la cadena se evalúa siempre**, incluso cuando `errorsDetails` no es nulo y ese texto se va a descartar.
 
 > 💡 Coste irrelevante en la práctica (leer configuración no está en un bucle caliente), pero conviene saberlo.
 
@@ -491,7 +491,7 @@ using (var scope = app.Services.CreateScope())
 
     if (comprobacion.IsFailure)
         throw new InvalidOperationException(
-            $"Configuración incompleta: {comprobacion.FailureDetails.ToErrorsDescription()}");
+            $"Configuración incompleta: {comprobacion.FailureDetails.GetErrorsSummary()}");
 }
 
 app.Run();
@@ -508,7 +508,7 @@ var configManager = new MlConfigManager(builder.Configuration);
 
 configManager.ReadConnectionStringKey("DemoDb", "Falta la cadena de conexión 'DemoDb'")
              .ExecSelf(cs => builder.Services.AddDbContext<DemoDbContext>(o => o.UseSqlServer(cs)))
-             .ExecSelfIfFail(e => throw new InvalidOperationException(e.ToErrorsDescription()));
+             .ExecSelfIfFail(e => throw new InvalidOperationException(e.GetErrorsSummary()));
 ```
 
 ### Ejemplo 5 — Combinado con logging
@@ -518,7 +518,7 @@ using MoralesLarios.OOFP.Logging;
 
 public Task<MlResult<Informe>> Generar()
     => _config.ReadAppSettingKey<string>("Rutas:RutaFicheros")
-              .LogMlResultErrorIfFail(_logger, e => $"Configuración: {e.ToErrorsDescription()}")
+              .LogMlResultErrorIfFail(_logger, e => $"Configuración: {e.GetErrorsSummary()}")
               .BindAsync(ruta => _generador.GenerarAsync(ruta));
 ```
 
@@ -576,7 +576,7 @@ foreach (var item in items) { /* usa urlResult.Value */ }
 | Una cadena de conexión | `ReadConnectionStringKey("Nombre")` |
 | El valor sin convertir | `ReadAppSettingKey("…")` → `MlResult<object>` |
 | Un mensaje de error propio | La sobrecarga con `string errorMessage` |
-| Detalles estructurados en el error | La sobrecarga con `MlErrorsDetails` |
+| Detalles estructurados en el error | La sobrecarga con `MlErrorDetails` |
 | Un valor por defecto si falta | `.Map(v => v ?? porDefecto)` o `.ValueOr(porDefecto)` |
 | Rechazar valores vacíos | `.BindEnsure(s => !string.IsNullOrWhiteSpace(s), "…")` |
 | Tolerar valores mal formados | Leer como `string` + `TryMap` |
@@ -606,7 +606,7 @@ foreach (var item in items) { /* usa urlResult.Value */ }
 - Proyecto **minimalista**: tres ficheros de código y una única abstracción, `IMlConfigManager`.
 - Convierte la lectura de configuración en una operación del raíl funcional: **si la clave falta, obtienes un `Fail` con el nombre de la clave**, no un `null` silencioso.
 - **Tres operaciones**: `ReadAppSettingKey<T>` (con conversión), `ReadAppSettingKey` (crudo, `object`) y `ReadConnectionStringKey`.
-- **Dos formas de describir el error** para cada una: `MlErrorsDetails` o `string`. Sin ninguna, se usa un mensaje por defecto en inglés.
+- **Dos formas de describir el error** para cada una: `MlErrorDetails` o `string`. Sin ninguna, se usa un mensaje por defecto en inglés.
 - Internamente todo pasa por una única tubería: `EnsureFp.NotNullEmptyOrWhitespace(clave)` → `Map(lectura)` → `MapEnsure(valor is not null)`.
 - Registro: `services.AddMlUtilitiesConfig(configuration)` (como `Transient`, capturando la `IConfiguration`).
 - ⚠️ **El riesgo principal**: con tipos valor no anulables (`int`, `bool`), una clave ausente devuelve `Valid` con el valor por defecto. **Usa siempre `int?`, `bool?`.**
@@ -633,7 +633,7 @@ foreach (var item in items) { /* usa urlResult.Value */ }
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md)
 - [`EnsureFp` — validaciones de guarda](../docs/EnsureFp/EnsureFp.md)
 - [`Map` y `MapEnsure` — transformación y comprobación](../docs/Map/1_Map.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)

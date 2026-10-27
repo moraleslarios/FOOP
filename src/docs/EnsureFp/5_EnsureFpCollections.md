@@ -39,7 +39,7 @@ Este bloque cubre esas comprobaciones con dos garantías importantes:
 public static MlResult<TCollection> NotEmptyCollection<TCollection, T>(TCollection value, string errorMessage)
     where TCollection : IEnumerable<T>;
 
-public static MlResult<TCollection> NotEmptyCollection<TCollection, T>(TCollection value, MlErrorsDetails errorsDetails)
+public static MlResult<TCollection> NotEmptyCollection<TCollection, T>(TCollection value, MlErrorDetails errorsDetails)
     where TCollection : IEnumerable<T>;
 
 public static MlResult<TCollection> NotEmptyCollectionArg<TCollection, T>(TCollection value,
@@ -81,7 +81,7 @@ public static MlResult<IEnumerable<T>> CountAtLeast<T>(IEnumerable<T> value, int
 public static MlResult<IEnumerable<T>> CountAtMost<T>(IEnumerable<T> value, int maxCount, string errorMessage);
 public static MlResult<IEnumerable<T>> CountBetween<T>(IEnumerable<T> value, int minCount, int maxCount, string errorMessage);
 
-// Cada una con su sobrecarga MlErrorsDetails y su variante *Arg.
+// Cada una con su sobrecarga MlErrorDetails y su variante *Arg.
 ```
 
 | Regla | Condición | Uso típico |
@@ -116,7 +116,7 @@ public static MlResult<IEnumerable<T>> AllMatch<T>(IEnumerable<T> value, Func<T,
 public static MlResult<IEnumerable<T>> NoneMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, string errorMessage);
 public static MlResult<IEnumerable<T>> AnyMatch<T>(IEnumerable<T> value, Func<T, bool> predicate, string errorMessage);
 
-// Cada una con su sobrecarga MlErrorsDetails y su variante *Arg.
+// Cada una con su sobrecarga MlErrorDetails y su variante *Arg.
 ```
 
 | Regla | Válido cuando | Detalle en caso de fallo |
@@ -135,7 +135,7 @@ var resultado = AllMatch(lineas, l => l.Cantidad > 0,
 if (resultado.IsFailure)
 {
     var detalles = resultado.GetFailureDetailsOrThrow();
-    var indices  = detalles.GetDetailValue<IEnumerable<int>>();   // p. ej. [2, 7]
+    var indices  = detalles.GetMetadataValue<IEnumerable<int>>();   // p. ej. [2, 7]
     // → "Las líneas 3 y 8 tienen cantidad cero o negativa."
 }
 ```
@@ -163,14 +163,14 @@ var r3 = AllMatchArg(precios, p => p >= 0);   // mensaje y ParamName automático
 ```csharp
 public static MlResult<IEnumerable<T>> NoDuplicates<T>(IEnumerable<T> value, string errorMessage,
                                                        IEqualityComparer<T>? comparer = null);
-public static MlResult<IEnumerable<T>> NoDuplicates<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails,
+public static MlResult<IEnumerable<T>> NoDuplicates<T>(IEnumerable<T> value, MlErrorDetails errorsDetails,
                                                        IEqualityComparer<T>? comparer = null);
 public static MlResult<IEnumerable<T>> NoDuplicatesArg<T>(IEnumerable<T> value,
                                                           IEqualityComparer<T>? comparer = null,
                                                           [CallerArgumentExpression(nameof(value))] string? paramName = null);
 
 public static MlResult<IEnumerable<T>> NoNullItems<T>(IEnumerable<T> value, string errorMessage);
-public static MlResult<IEnumerable<T>> NoNullItems<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails);
+public static MlResult<IEnumerable<T>> NoNullItems<T>(IEnumerable<T> value, MlErrorDetails errorsDetails);
 public static MlResult<IEnumerable<T>> NoNullItemsArg<T>(IEnumerable<T> value,
                                                          [CallerArgumentExpression(nameof(value))] string? paramName = null);
 ```
@@ -204,7 +204,7 @@ Ambas informan de los índices implicados mediante `FailedIndexes` cuando fallan
 ```csharp
 public static MlResult<IEnumerable<T>> ContainsItem<T>(IEnumerable<T> value, T item, string errorMessage,
                                                        IEqualityComparer<T>? comparer = null);
-public static MlResult<IEnumerable<T>> ContainsItem<T>(IEnumerable<T> value, T item, MlErrorsDetails errorsDetails,
+public static MlResult<IEnumerable<T>> ContainsItem<T>(IEnumerable<T> value, T item, MlErrorDetails errorsDetails,
                                                        IEqualityComparer<T>? comparer = null);
 public static MlResult<IEnumerable<T>> ContainsItemArg<T>(IEnumerable<T> value, T item,
                                                           IEqualityComparer<T>? comparer = null,
@@ -303,9 +303,9 @@ resultado.Match(
     valid: f  => Ok($"{f.Count()} filas válidas."),
     fail:  e  =>
     {
-        var indices = e.GetDetailValue<IEnumerable<int>>();
+        var indices = e.GetMetadataValue<IEnumerable<int>>();
         var lineas  = indices is null ? "" : string.Join(", ", indices.Select(i => i + 1));
-        return BadRequest($"{e.ToErrorsMessages()} Líneas afectadas: {lineas}");
+        return BadRequest($"{e.GetErrorMessages()} Líneas afectadas: {lineas}");
     });
 ```
 

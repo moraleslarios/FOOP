@@ -34,7 +34,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la cadena no es nula ni vacía (los espacios en blanco sí se admiten).
     /// </summary>
-    public static MlResult<string> NotNullOrEmpty(string value, MlErrorsDetails errorsDetails)
+    public static MlResult<string> NotNullOrEmpty(string value, MlErrorDetails errorsDetails)
         => That(value, ! string.IsNullOrEmpty(value), errorsDetails);
 
     /// <summary>
@@ -58,7 +58,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la longitud de la cadena no supera <paramref name="maxLength"/>.
     /// </summary>
-    public static MlResult<string> MaxLength(string value, int maxLength, MlErrorsDetails errorsDetails)
+    public static MlResult<string> MaxLength(string value, int maxLength, MlErrorDetails errorsDetails)
         => That(value, HasMaxLength(value, maxLength), errorsDetails);
 
     /// <summary>
@@ -88,7 +88,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la longitud de la cadena alcanza <paramref name="minLength"/>.
     /// </summary>
-    public static MlResult<string> MinLength(string value, int minLength, MlErrorsDetails errorsDetails)
+    public static MlResult<string> MinLength(string value, int minLength, MlErrorDetails errorsDetails)
         => That(value, HasMinLength(value, minLength), errorsDetails);
 
     /// <summary>
@@ -117,7 +117,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la longitud de la cadena está entre <paramref name="minLength"/> y <paramref name="maxLength"/>, ambos incluidos.
     /// </summary>
-    public static MlResult<string> LengthBetween(string value, int minLength, int maxLength, MlErrorsDetails errorsDetails)
+    public static MlResult<string> LengthBetween(string value, int minLength, int maxLength, MlErrorDetails errorsDetails)
         => That(value, HasLengthBetween(value, minLength, maxLength), errorsDetails);
 
     /// <summary>
@@ -145,7 +145,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la cadena tiene exactamente <paramref name="length"/> caracteres.
     /// </summary>
-    public static MlResult<string> LengthExactly(string value, int length, MlErrorsDetails errorsDetails)
+    public static MlResult<string> LengthExactly(string value, int length, MlErrorDetails errorsDetails)
         => That(value, value is not null && value.Length == length, errorsDetails);
 
     /// <summary>
@@ -173,7 +173,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la cadena cumple el patrón indicado.
     /// </summary>
-    public static MlResult<string> Matches(string value, string pattern, MlErrorsDetails errorsDetails)
+    public static MlResult<string> Matches(string value, string pattern, MlErrorDetails errorsDetails)
         => That(value, IsMatch(value, pattern), errorsDetails);
 
     /// <summary>
@@ -185,7 +185,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la cadena cumple la expresión regular precompilada indicada.
     /// </summary>
-    public static MlResult<string> Matches(string value, Regex regex, MlErrorsDetails errorsDetails)
+    public static MlResult<string> Matches(string value, Regex regex, MlErrorDetails errorsDetails)
         => That(value, IsMatch(value, regex), errorsDetails);
 
     /// <summary>
@@ -213,7 +213,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la cadena NO cumple el patrón indicado.
     /// </summary>
-    public static MlResult<string> NotMatches(string value, string pattern, MlErrorsDetails errorsDetails)
+    public static MlResult<string> NotMatches(string value, string pattern, MlErrorDetails errorsDetails)
         => That(value, ! IsMatch(value, pattern), errorsDetails);
 
     /// <summary>
@@ -248,7 +248,7 @@ public static partial class EnsureFp
     /// </summary>
     public static MlResult<string> StartsWith(string value,
                                               string prefix,
-                                              MlErrorsDetails errorsDetails,
+                                              MlErrorDetails errorsDetails,
                                               StringComparison comparisonType = StringComparison.Ordinal)
         => That(value, value is not null && prefix is not null && value.StartsWith(prefix, comparisonType), errorsDetails);
 
@@ -278,7 +278,7 @@ public static partial class EnsureFp
     /// </summary>
     public static MlResult<string> EndsWith(string value,
                                             string suffix,
-                                            MlErrorsDetails errorsDetails,
+                                            MlErrorDetails errorsDetails,
                                             StringComparison comparisonType = StringComparison.Ordinal)
         => That(value, value is not null && suffix is not null && value.EndsWith(suffix, comparisonType), errorsDetails);
 
@@ -308,7 +308,7 @@ public static partial class EnsureFp
     /// </summary>
     public static MlResult<string> ContainsText(string value,
                                                 string substring,
-                                                MlErrorsDetails errorsDetails,
+                                                MlErrorDetails errorsDetails,
                                                 StringComparison comparisonType = StringComparison.Ordinal)
         => That(value, value is not null && substring is not null && value.Contains(substring, comparisonType), errorsDetails);
 
@@ -363,7 +363,7 @@ public static partial class EnsureFp
     /// </summary>
     public static MlResult<string> IsOneOf(string value,
                                            IEnumerable<string> allowedValues,
-                                           MlErrorsDetails errorsDetails,
+                                           MlErrorDetails errorsDetails,
                                            StringComparer? comparer = null)
         => That(value, IsInSet(value, allowedValues, comparer), errorsDetails);
 

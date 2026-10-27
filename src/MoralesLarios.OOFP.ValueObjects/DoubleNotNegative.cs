@@ -18,7 +18,7 @@ public class DoubleNotNegative : DoubleMoreThan
 
 
     public static DoubleNotNegative FromDouble(double value) => new DoubleNotNegative(value);
-    public static MlResult<DoubleNotNegative> ByDouble(double value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<DoubleNotNegative> ByDouble(double value, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                     .Map ( _ => new DoubleNotNegative(value));

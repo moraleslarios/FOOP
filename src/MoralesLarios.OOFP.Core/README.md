@@ -11,7 +11,7 @@ La librería se usa de base por capas posteriores como `ValueObjects`, `Validati
 - `MlResult<T>` para éxito/error con valor explícito.
 - Validaciones funcionales con `EnsureFp`: más de 90 reglas listas para usar (cadenas, números, colecciones, `Guid`, enumerados, fechas, `Uri`, email, rutas y `Nullable<T>`), con agregación de errores, captura de excepciones y variantes asíncronas.
 - `Bind`, `Map`, `Match`, `ExecSelf` y variantes `Try*` / `Async`.
-- `MlError` y `MlErrorsDetails` para errores detallados.
+- `MlError` y `MlErrorDetails` para errores detallados.
 - Extensiones para colecciones, acciones y conversiones funcionales.
 - Soporte natural de asincronía con `Task<MlResult<T>>`.
 
@@ -33,7 +33,7 @@ MoralesLarios.OOFP.Core/
 │   ├── MlResultBucles.cs
 │   └── Errors/
 │       ├── MlError.cs
-│       └── MlErrorsDetails.cs
+│       └── MlErrorDetails.cs
 ├── Helpers/
 │   ├── Constants.cs                # Claves de detalle compartidas (ParamName, Value, Expected…)
 │   ├── EnsureFp.cs                 # API histórica: That, NotNull, NotEmpty, NotNullEmptyOrWhitespace
@@ -57,7 +57,7 @@ MoralesLarios.OOFP.Core/
 ## Índice de contenidos
 
 1. [El tipo central: `MlResult<T>`](#1-el-tipo-central-mlresultt)
-2. [`MlError` y `MlErrorsDetails`](#2-mlerror-y-mlerrorsdetails)
+2. [`MlError` y `MlErrorDetails`](#2-mlerror-y-mlerrorsdetails)
 3. [`EnsureFp`: validaciones funcionales](#3-ensurefp-validaciones-funcionales)
 4. [`Bind`: encadenar operaciones](#4-bind-encadenar-operaciones)
 5. [`Map`: transformar el valor válido](#5-map-transformar-el-valor-válido)
@@ -129,7 +129,7 @@ var ok = MlResult<int>.Valid(42);
 var fail1 = MlResult<string>.Fail("No hay datos");
 
 // 3) Resultado fallido a partir de un detalle de error estructurado.
-var fail2 = MlResult<int>.Fail(MlErrorsDetails.FromErrorMessage("La validación ha fallado"));
+var fail2 = MlResult<int>.Fail(MlErrorDetails.FromErrorMessage("La validación ha fallado"));
 
 // 4) Resultado sin valor asociado: se usa cuando la operación sólo indica éxito/fracaso
 //    (por ejemplo, un borrado) y no hay nada que devolver.
@@ -140,7 +140,7 @@ var discard = MlResult.Discard;
 **Cuándo usar cada una:**
 - `Valid(value)` → la operación ha ido bien y hay un dato que propagar.
 - `Fail("mensaje")` → atajo cómodo cuando basta con un texto explicativo.
-- `Fail(MlErrorsDetails)` → cuando quieres adjuntar varios errores a la vez o detalles extra (el valor que falló, una excepción, un código de negocio…).
+- `Fail(MlErrorDetails)` → cuando quieres adjuntar varios errores a la vez o detalles extra (el valor que falló, una excepción, un código de negocio…).
 - `MlResult.Empty()` / `MlResult.Discard` → operaciones tipo comando, donde el "éxito" no lleva payload.
 
 ### Propiedades y conversiones implícitas
@@ -163,7 +163,7 @@ La librería ofrece conversiones implícitas para:
 |-------|-------|-----------|
 | `T` | `MlResult<T>` | Resultado **válido** con ese valor. |
 | `MlError` | `MlResult<T>` | Resultado **fallido** con ese error. |
-| `MlErrorsDetails` | `MlResult<T>` | Resultado **fallido** con ese detalle completo. |
+| `MlErrorDetails` | `MlResult<T>` | Resultado **fallido** con ese detalle completo. |
 | `IEnumerable<MlError>` | `MlResult<T>` | Resultado **fallido** con varios errores agrupados. |
 
 Gracias a esto, un método de negocio queda muy limpio:
@@ -243,12 +243,12 @@ Es muy práctico para volcar el estado en un log sin tener que hacer un `Match` 
 
 ---
 
-## 2. `MlError` y `MlErrorsDetails`
+## 2. `MlError` y `MlErrorDetails`
 
 Estos dos tipos representan la parte de error del flujo funcional. La distinción es sencilla pero importante:
 
 - **`MlError`** = *un* error individual (un mensaje).
-- **`MlErrorsDetails`** = *el paquete completo de error* que viaja dentro de un `MlResult` fallido: una colección de `MlError` **más** un diccionario de detalles adicionales.
+- **`MlErrorDetails`** = *el paquete completo de error* que viaja dentro de un `MlResult` fallido: una colección de `MlError` **más** un diccionario de detalles adicionales.
 
 Esa separación es la que permite que la información no se pierda a lo largo de la cadena: se pueden acumular varios errores de validación y, además, adjuntar contexto técnico (el valor que falló, la excepción original, el identificador de la entidad, etc.) sin mezclarlo con el mensaje que verá el usuario final.
 
@@ -281,19 +281,19 @@ var mensajes = new[] { "El nombre es obligatorio.", "La edad debe ser positiva."
 MlResult<Person> resultado = mensajes.ToMlErrors();   // conversión implícita a fail
 ```
 
-### `MlErrorsDetails`
+### `MlErrorDetails`
 
-`MlErrorsDetails` contiene una colección de errores y un diccionario con detalles adicionales. Es lo que realmente se transporta dentro de un `MlResult` fallido.
+`MlErrorDetails` contiene una colección de errores y un diccionario con detalles adicionales. Es lo que realmente se transporta dentro de un `MlResult` fallido.
 
 ```csharp
 // 1) Error simple: sólo un mensaje.
-var errors = MlErrorsDetails.FromErrorMessage("Fallo de validación");
+var errors = MlErrorDetails.FromErrorMessage("Fallo de validación");
 
 // 2) Error + el valor que lo provocó (queda registrado en los detalles).
-var withValue = MlErrorsDetails.FromErrorMessageWithValue("Id no válido", 42);
+var withValue = MlErrorDetails.FromErrorMessageWithValue("Id no válido", 42);
 
 // 3) Error + detalle técnico arbitrario (aquí, la excepción original).
-var withDetail = MlErrorsDetails.FromErrorDetails(
+var withDetail = MlErrorDetails.FromErrorDetails(
     "Fallo inesperado",
     "Exception",
     new InvalidOperationException("boom"));
@@ -305,13 +305,13 @@ La diferencia práctica entre las tres es **cuánta información de diagnóstico
 
 ```csharp
 // A partir de varios mensajes de texto: ideal para validaciones acumuladas.
-var errors1 = MlErrorsDetails.FromEnumerableStrings(new[] { "e1", "e2" });
+var errors1 = MlErrorDetails.FromEnumerableStrings(new[] { "e1", "e2" });
 
 // A partir de un MlError ya construido.
-var errors2 = MlErrorsDetails.FromError(MlError.FromErrorMessage("error"));
+var errors2 = MlErrorDetails.FromError(MlError.FromErrorMessage("error"));
 
 // A partir de un mensaje más un diccionario de detalles a medida.
-var errors3 = MlErrorsDetails.FromErrorMessageDetails(
+var errors3 = MlErrorDetails.FromErrorMessageDetails(
     "mensaje",
     new Dictionary<string, object> { ["key"] = 123 });
 ```
@@ -328,7 +328,7 @@ public MlResult<Person> Validar(Person person)
     if (person.Age < 0)                         errores.Add("La edad no puede ser negativa.");
 
     return errores.Any()
-        ? MlResult<Person>.Fail(MlErrorsDetails.FromEnumerableStrings(errores))
+        ? MlResult<Person>.Fail(MlErrorDetails.FromEnumerableStrings(errores))
         : MlResult<Person>.Valid(person);
 }
 ```
@@ -338,19 +338,19 @@ public MlResult<Person> Validar(Person person)
 Igual que con `MlResult<T>`, las conversiones implícitas evitan ruido sintáctico:
 
 ```csharp
-MlErrorsDetails d1 = "mensaje simple";                 // desde string
-MlErrorsDetails d2 = new[] { "a", "b" };               // desde colección de strings
-MlErrorsDetails d3 = MlError.FromErrorMessage("x");    // desde MlError
+MlErrorDetails d1 = "mensaje simple";                 // desde string
+MlErrorDetails d2 = new[] { "a", "b" };               // desde colección de strings
+MlErrorDetails d3 = MlError.FromErrorMessage("x");    // desde MlError
 ```
 
-Esto es lo que permite escribir `return "mensaje de error";` en un método que devuelve `MlResult<T>`: el `string` se convierte en `MlErrorsDetails` y éste, a su vez, en un resultado fallido.
+Esto es lo que permite escribir `return "mensaje de error";` en un método que devuelve `MlResult<T>`: el `string` se convierte en `MlErrorDetails` y éste, a su vez, en un resultado fallido.
 
 ### Formateo
 
 `ToString()` genera una salida legible que incluye los mensajes y los detalles asociados, lo que resulta muy útil tanto en logs como en respuestas de diagnóstico.
 
 ```csharp
-var error = MlErrorsDetails.FromErrorMessageWithValue("El registro no existe", 7);
+var error = MlErrorDetails.FromErrorMessageWithValue("El registro no existe", 7);
 Console.WriteLine(error.ToString());
 // Muestra el mensaje junto al detalle del valor (7) que provocó el fallo.
 ```
@@ -381,7 +381,7 @@ Todos los métodos comparten la misma forma: **reciben el valor a validar y el e
 | Variante | Ejemplo | Qué aporta |
 |----------|---------|------------|
 | Con `string` | `MaxLength(nombre, 50, "Nombre demasiado largo")` | mensaje pensado para el usuario final |
-| Con `MlErrorsDetails` | `MaxLength(nombre, 50, detalles)` | error enriquecido con tus propias claves |
+| Con `MlErrorDetails` | `MaxLength(nombre, 50, detalles)` | error enriquecido con tus propias claves |
 | Con sufijo `…Arg` | `MaxLengthArg(nombre, 50)` | mensaje, nombre del parámetro y detalles **automáticos** |
 
 Las variantes `…Arg` aprovechan `[CallerArgumentExpression]`, así que capturan la expresión escrita en la llamada:
@@ -1226,11 +1226,11 @@ var cotizacion = await consultar.TryToMlResultAsync(productoId,
 
 ### `TryToMlResultErrors`
 
-Variante para adaptar **acciones que trabajan sobre el detalle de error** (`Action<MlErrorsDetails>`) al flujo funcional. Es la pieza que permite incorporar manejadores de error existentes —notificadores, formateadores, escritores de log— protegiéndolos frente a excepciones propias.
+Variante para adaptar **acciones que trabajan sobre el detalle de error** (`Action<MlErrorDetails>`) al flujo funcional. Es la pieza que permite incorporar manejadores de error existentes —notificadores, formateadores, escritores de log— protegiéndolos frente a excepciones propias.
 
 ```csharp
-var result = ((Action<MlErrorsDetails>)(e => Console.WriteLine(e))).TryToMlResultErrors<int>(
-    MlErrorsDetails.FromErrorMessage("fallo"),
+var result = ((Action<MlErrorDetails>)(e => Console.WriteLine(e))).TryToMlResultErrors<int>(
+    MlErrorDetails.FromErrorMessage("fallo"),
     ex => $"Error: {ex.Message}"
 );
 ```
@@ -1245,7 +1245,7 @@ En otras palabras: ejecuta el manejador con el detalle de error indicado y, si e
 | `TryToMlResult` | `Func<TIn, TOut>` | ✅ | ❌ |
 | `ToMlResultAsync` | `Func<TIn, Task<TOut>>` | ❌ | ✅ |
 | `TryToMlResultAsync` | `Func<TIn, Task<TOut>>` | ✅ | ✅ |
-| `TryToMlResultErrors` | `Action<MlErrorsDetails>` | ✅ | ❌ |
+| `TryToMlResultErrors` | `Action<MlErrorDetails>` | ✅ | ❌ |
 
 Todas ellas convierten un delegado o método existente en un `MlResult`, de modo que el código heredado se incorpora al flujo funcional sin reescribirlo.
 
@@ -1436,7 +1436,7 @@ public async Task<MlResult<IEnumerable<ProductoConPrecio>>> EnriquecerAsync(IEnu
 
 ### `ProjectionSplit`
 
-Devuelve **dos diccionarios**: uno con los elementos que han ido bien (`valids`, clave = elemento original, valor = resultado) y otro con los que han fallado (`fails`, clave = elemento original, valor = su `MlErrorsDetails`).
+Devuelve **dos diccionarios**: uno con los elementos que han ido bien (`valids`, clave = elemento original, valor = resultado) y otro con los que han fallado (`fails`, clave = elemento original, valor = su `MlErrorDetails`).
 
 Su particularidad más importante es que **el resultado global es válido incluso si hay elementos fallidos**: el fallo de un elemento no es un fallo del proceso, sino un dato del informe final. Por eso es la opción natural para procesos **tolerantes a errores parciales**, donde interesa avanzar con lo que se puede y dar cuenta del resto.
 
@@ -1509,7 +1509,7 @@ var results = new[]
 };
 
 var merged = results.MergeErrorsIfExists();
-// → fail con "error 1" y "error 2" fusionados en un único MlErrorsDetails.
+// → fail con "error 1" y "error 2" fusionados en un único MlErrorDetails.
 ```
 
 **Caso real: validación por reglas independientes.**
@@ -1595,7 +1595,7 @@ public MlResult<T> Validar<T>(T objeto) where T : notnull
                         .ToList();
 
     return errores.Any()
-        ? MlResult<T>.Fail(MlErrorsDetails.FromEnumerableStrings(errores))
+        ? MlResult<T>.Fail(MlErrorDetails.FromEnumerableStrings(errores))
         : MlResult<T>.Valid(objeto);
 }
 
@@ -1674,9 +1674,9 @@ Convierte delegados síncronos en su equivalente asíncrono. Existen varias sobr
 | Sobrecarga | Convierte | En |
 |------------|-----------|-----|
 | `ToFuncTask<T, TResult>` | `Func<T, TResult>` | `Func<T, Task<TResult>>` |
-| `ToFuncTask<TResult>` | `Func<MlErrorsDetails, TResult>` | `Func<MlErrorsDetails, Task<TResult>>` |
+| `ToFuncTask<TResult>` | `Func<MlErrorDetails, TResult>` | `Func<MlErrorDetails, Task<TResult>>` |
 | `ToFuncTask<T>` | `Action<T>` | `Func<T, Task>` |
-| `ToFuncTask` | `Action<MlErrorsDetails>` | `Func<MlErrorsDetails, Task>` |
+| `ToFuncTask` | `Action<MlErrorDetails>` | `Func<MlErrorDetails, Task>` |
 | `ToFuncTask` | `Action` | `Func<Task>` |
 
 ```csharp
@@ -1821,7 +1821,7 @@ filosofía, convención de nombres y el
 |-----------|-----------|
 | [Índice de tipos](../docs/core-types/README.md) | Portada de la referencia por archivo |
 | [`MlResult`](../docs/core-types/MlResult.md) | El tipo raíz, fábricas y conversiones implícitas |
-| [Modelo de errores](../docs/core-types/MlResultErrors.md) | `MlError`, `MlErrorsDetails`, `ErrorMessage` |
+| [Modelo de errores](../docs/core-types/MlResultErrors.md) | `MlError`, `MlErrorDetails`, `ErrorMessage` |
 | [`MlResultActions`](../docs/core-types/MlResultActions.md) | Enriquecer errores, transportar datos, acceso seguro |
 | [`MlResultActionsBind`](../docs/core-types/MlResultActionsBind.md) | Todas las sobrecargas de `Bind*` |
 | [`MlResultActionsMap`](../docs/core-types/MlResultActionsMap.md) | Todas las sobrecargas de `Map*` |
@@ -1927,7 +1927,7 @@ central cabe en una frase:
 | Pieza | Para qué sirve | Documentación |
 |-------|----------------|---------------|
 | `MlResult<T>` | Contenedor de éxito con valor o fallo con errores | [`MlResult.md`](../docs/core-types/MlResult.md) |
-| `MlErrorsDetails` | Transporta los errores y el diccionario `Details` | [`MlResultErrors.md`](../docs/core-types/MlResultErrors.md) |
+| `MlErrorDetails` | Transporta los errores y el diccionario `Details` | [`MlResultErrors.md`](../docs/core-types/MlResultErrors.md) |
 | `EnsureFp` | Entrar al carril validando precondiciones: más de 90 reglas, agregación de errores y variantes asíncronas | [`EnsureFp.md`](../docs/EnsureFp/EnsureFp.md) |
 | `Bind` / `Map` | Avanzar por el carril (con y sin `MlResult` de vuelta) | [`3_Bind.md`](../docs/Bind/3_Bind.md) · [`1_Map.md`](../docs/Map/1_Map.md) |
 | `Match` | Salir del carril y materializar la respuesta | [`1_Match.md`](../docs/Match/1_Match.md) |
@@ -1949,7 +1949,7 @@ central cabe en una frase:
    garantizado la validez).
 2. **`Combine` no acumula errores**: cortocircuita. Si necesitas acumular, usa
    [`Projection`](../docs/loops/Bucles.md).
-3. **`MlErrorsDetails` solo expone `Errors` y `Details`**: no existen `AllErrors`,
+3. **`MlErrorDetails` solo expone `Errors` y `Details`**: no existen `AllErrors`,
    `FirstErrorMessage` ni `HasException`.
 4. **`ProjectionAsync` con delegado asíncrono es secuencial**: para paralelismo usa
    `ProjectionParallelAsync`.

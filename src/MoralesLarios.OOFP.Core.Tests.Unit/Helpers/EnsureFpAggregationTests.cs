@@ -120,14 +120,14 @@ public class EnsureFpAggregationTests
     [Fact]
     public void All_mergesDetails_from_failed_rules()
     {
-        Func<int, MlResult<int>> rule1 = _ => MlErrorsDetails.FromErrorDetails("e1", "Key1", "V1").ToMlResultFail<int>();
-        Func<int, MlResult<int>> rule2 = _ => MlErrorsDetails.FromErrorDetails("e2", "Key2", "V2").ToMlResultFail<int>();
+        Func<int, MlResult<int>> rule1 = _ => MlErrorDetails.FromErrorDetails("e1", "Key1", "V1").ToMlResultFail<int>();
+        Func<int, MlResult<int>> rule2 = _ => MlErrorDetails.FromErrorDetails("e2", "Key2", "V2").ToMlResultFail<int>();
 
         var result = EnsureFp.All(1, rule1, rule2);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details.Should().ContainKey("Key1");
-        result.GetFailureDetailsOrThrow().Details.Should().ContainKey("Key2");
+        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey("Key1");
+        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey("Key2");
     }
 
     #endregion

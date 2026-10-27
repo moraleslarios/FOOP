@@ -11,7 +11,7 @@ Esta sección documenta la librería **por clase/archivo**, y complementa la doc
 | Documento | Archivo de código | Qué resuelve |
 |---|---|---|
 | [`MlResult` y `MlResult<T>`](MlResult.md) | `Types/MlResult.cs` | El tipo raíz: éxito con valor o fallo con errores. |
-| [Modelo de errores](MlResultErrors.md) | `Types/Errors/*.cs` | `MlError`, `MlErrorsDetails`, `MlErrorsDetailsActions`, `ErrorMessage`. |
+| [Modelo de errores](MlResultErrors.md) | `Types/Errors/*.cs` | `MlError`, `MlErrorDetails`, `MlErrorDetailsActions`, `ErrorMessage`. |
 | [`MlResultActionsBind`](MlResultActionsBind.md) | `Types/MlResultActionsBind.cs` | Encadenar operaciones que devuelven `MlResult<T>` (mónada). |
 | [`MlResultActionsMap`](MlResultActionsMap.md) | `Types/MlResultActionsMap.cs` | Transformar el valor sin salir del raíl (functor). |
 | [`MlResultActionsMatch`](MlResultActionsMatch.md) | `Types/MlResultActionsMatch.cs` | Salir del raíl y materializar un valor final. |
@@ -72,7 +72,7 @@ En `MlResult<T>`, tanto `Value` como `ErrorsDetails` son `internal protected`. E
 // ✅ Materializa el resultado decidiendo ambas ramas
 IActionResult response = userResult.Match(
     valid: user   => Ok(user),
-    fail : errors => BadRequest(errors.ToErrorsDescription()));
+    fail : errors => BadRequest(errors.GetErrorsSummary()));
 ```
 
 ---

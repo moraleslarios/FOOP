@@ -877,7 +877,7 @@ public class MlResultActionsTests
 
         bool hasValue = result.Match(
             valid: _ => false,
-            fail: errors => errors.Details.ContainsKey(ValueMetadataKey) && (int)errors.Details[ValueMetadataKey] == 69);
+            fail: errors => errors.Metadata.ContainsKey(ValueMetadataKey) && (int)errors.Metadata[ValueMetadataKey] == 69);
 
         hasValue.Should().BeTrue();
     }

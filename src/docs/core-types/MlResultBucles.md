@@ -173,12 +173,12 @@ informe con el resto.
 var (correctos, fallidos) = lineasCsv.ProjectionSplit(linea => ParsearCliente(linea));
 
 // `correctos` contiene los ClienteDto que se pudieron construir.
-// `fallidos`  contiene los MlErrorsDetails de los que no.
+// `fallidos`  contiene los MlErrorDetails de los que no.
 
 _repo.InsertarLote(correctos);
 
 foreach (var errores in fallidos)
-    _informe.AñadirLineaRechazada(errores.ToErrorsDescription());
+    _informe.AñadirLineaRechazada(errores.GetErrorsSummary());
 
 _log.LogInformation("Importación: {Ok} correctas, {Ko} rechazadas",
                     correctos.Count(), fallidos.Count());
@@ -204,7 +204,7 @@ if (rechazados.Any())
 
 > 💡 Si dentro de la parte fallida necesitas saber **qué elemento original** produjo cada error,
 > guárdalo en los detalles con `AddValueIfFail` dentro de la propia transformación y recupéralo después
-> con `GetDetailValue<T>`. Consulta
+> con `GetMetadataValue<T>`. Consulta
 > [`MlResultActionsErrorsDetails`](MlResultActionsErrorsDetails.md).
 
 ## Fusión de errores

@@ -20,7 +20,7 @@ public static partial class EnsureFp
     {
         if (validators is null || validators.Length == 0) return MlResult<T>.Valid(value);
 
-        var failsDetails = new List<MlErrorsDetails>();
+        var failsDetails = new List<MlErrorDetails>();
 
         foreach (var validator in validators)
         {
@@ -90,7 +90,7 @@ public static partial class EnsureFp
     {
         if (validators is null || validators.Length == 0) return MlResult<T>.Valid(value);
 
-        var failsDetails = new List<MlErrorsDetails>();
+        var failsDetails = new List<MlErrorDetails>();
 
         foreach (var validator in validators)
         {
@@ -124,7 +124,7 @@ public static partial class EnsureFp
     {
         if (validators is null || validators.Length == 0) return MlResult<T>.Valid(value);
 
-        var failsDetails = new List<MlErrorsDetails>();
+        var failsDetails = new List<MlErrorDetails>();
 
         foreach (var validator in validators)
         {
@@ -164,7 +164,7 @@ public static partial class EnsureFp
     {
         if (validators is null || validators.Length == 0) return MlResult<T>.Valid(value);
 
-        var failsDetails = new List<MlErrorsDetails>();
+        var failsDetails = new List<MlErrorDetails>();
 
         foreach (var validator in validators)
         {
@@ -184,7 +184,7 @@ public static partial class EnsureFp
 
     #region Helpers privados
 
-    private static MlResult<T> BuildAggregationResult<T>(T value, List<MlErrorsDetails> failsDetails)
+    private static MlResult<T> BuildAggregationResult<T>(T value, List<MlErrorDetails> failsDetails)
         => failsDetails.Count switch
         {
             0 => MlResult<T>.Valid(value),

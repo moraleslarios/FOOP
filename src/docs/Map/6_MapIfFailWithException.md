@@ -44,12 +44,12 @@ var r = ConsultarTarifa(sku)
 //        un error de negocio ("SKU no catalogado") se propaga intacto
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**
-> `MlErrorsDetails` solo expone dos propiedades: `Errors` (una colección de `MlError`) y
+> ⚠️ **Sobre `MlErrorDetails`**
+> `MlErrorDetails` solo expone dos propiedades: `Errors` (una colección de `MlError`) y
 > `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`,
 > `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer errores usa
-> `ToErrorsMessages()`, `ToErrorsDescription()` o `Errors.First().Message`; para obtener la
-> excepción usa `GetDetailException()` o `GetDetailException<TException>()`.
+> `GetErrorMessages()`, `GetErrorsSummary()` o `Errors.First().Message`; para obtener la
+> excepción usa `GetException()` o `GetException<TException>()`.
 
 ---
 
@@ -86,7 +86,7 @@ var r = origen.TryMap(x => JsonSerializer.Deserialize<Dto>(x)!,
 //        si Deserialize lanza → fallo con la excepción en Details["Ex"]
 
 // 2) Explícitamente, al construir el error
-return MlErrorsDetails.FromErrorMessageWithException("No se pudo abrir el fichero", ex)
+return MlErrorDetails.FromErrorMessageWithException("No se pudo abrir el fichero", ex)
                       .ToMlResultFail<Contenido>();
 
 // 3) Añadiéndola a un error que ya existe
@@ -97,17 +97,17 @@ Y así se lee:
 
 ```csharp
 // La excepción concreta, sin filtrar por tipo
-MlResult<Exception> exResult = errores.GetDetailException();
+MlResult<Exception> exResult = errores.GetException();
 
 // Filtrando por tipo (falla si la guardada no es un TimeoutException)
-MlResult<TimeoutException> toResult = errores.GetDetailException<TimeoutException>();
+MlResult<TimeoutException> toResult = errores.GetException<TimeoutException>();
 
 // Comprobación booleana rápida
-bool esTecnico = errores.GetDetailException().IsSuccess;
+bool esTecnico = errores.GetException().IsSuccess;
 ```
 
 > 📌 `AppendExDetails` numera las excepciones sucesivas como `Ex`, `Ex2`, `Ex3`… si se apilan
-> varias. `GetDetailException()` lee la clave `Ex`.
+> varias. `GetException()` lee la clave `Ex`.
 
 ---
 
@@ -168,7 +168,7 @@ Las formas **C** y **D** llevan la restricción `where TException : Exception`.
 public static MlResult<T> MapIfFailWithException<T>(this MlResult<T>        source,
                                                          Func<Exception, T> funcException)
     => source.Match(
-                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                        fail : errorsDetails => errorsDetails.GetException().Match(
                                                     fail : exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),
                                                     valid: ex              => funcException(ex).ToMlResultValid()
                                                 ),
@@ -187,7 +187,7 @@ public static MlResult<TReturn> MapIfFailWithException<T, TReturn>(this MlResult
                                                                         Func<T        , TReturn> funcValid,
                                                                         Func<Exception, TReturn> funcFail)
     => source.Match(
-                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                        fail : errorsDetails => errorsDetails.GetException().Match(
                                                     fail : _  => errorsDetails.ToMlResultFail<TReturn>(),
                                                     valid: ex => funcFail(ex).ToMlResultValid()
                                                 ),
@@ -203,7 +203,7 @@ negocio» (este último caso sale como fallo y lo tratas fuera).
 
 ## Filtrar por tipo de excepción con `TException`
 
-Las formas C y D cambian `GetDetailException()` por `GetDetailException<TException>()`, que
+Las formas C y D cambian `GetException()` por `GetException<TException>()`, que
 falla si la excepción guardada **no es** del tipo pedido:
 
 ```csharp
@@ -211,7 +211,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                                                                      Func<TException, T> funcException)
     where TException : Exception
     => source.Match(
-                        fail : errorsDetails => errorsDetails.GetDetailException<TException>().Match(
+                        fail : errorsDetails => errorsDetails.GetException<TException>().Match(
                                                     fail : exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),
                                                     valid: ex              => funcException(ex).ToMlResultValid()
                                                 ),
@@ -242,13 +242,13 @@ var resultado = LeerConfiguracion(ruta)
 
 Junto a las cuatro formas anteriores, la región publica una **subfamilia paralela** con el
 sufijo `Error`. La condición de activación es la misma (que haya excepción), pero el delegado
-de fallo recibe **el `MlErrorsDetails` completo** en lugar de la excepción suelta:
+de fallo recibe **el `MlErrorDetails` completo** en lugar de la excepción suelta:
 
 ```csharp
 public static MlResult<T> MapIfFailWithExceptionError<T>(this MlResult<T>              source,
-                                                              Func<MlErrorsDetails, T> funcFail)
+                                                              Func<MlErrorDetails, T> funcFail)
     => source.Match(
-                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                        fail : errorsDetails => errorsDetails.GetException().Match(
                                                     fail : exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),
                                                     valid: ex              => funcFail(errorsDetails).ToMlResultValid()
                                                 ),
@@ -267,8 +267,8 @@ var r = SincronizarAsync(lote)
             .MapIfFailWithExceptionError(errores => new ResultadoSync
             {
                 Estado   = "Reintentable",
-                Mensajes = errores.ToErrorsMessages().ToList(),
-                Detalle  = errores.ToDetailsDescription()
+                Mensajes = errores.GetErrorMessages().ToList(),
+                Detalle  = errores.GetMetadataSummary()
             });
 ```
 
@@ -292,13 +292,13 @@ síncronos/asíncronos:
 | C | `MlResult<T>` / `Task<MlResult<T>>` | `Func<TException, Task<T>>` y `Func<TException, T>` |
 | D | `MlResult<T>` / `Task<MlResult<T>>` | mezclas de síncrono y asíncrono |
 
-Internamente usan `MatchAsync` y `GetDetailExceptionAsync()`:
+Internamente usan `MatchAsync` y `GetExceptionAsync()`:
 
 ```csharp
 public static async Task<MlResult<T>> MapIfFailWithExceptionAsync<T>(this MlResult<T>              source,
                                                                           Func<Exception, Task<T>> funcExceptionAsync)
     => await source.MatchAsync(
-                        failAsync : errorsDetails => errorsDetails.GetDetailExceptionAsync().MatchAsync(
+                        failAsync : errorsDetails => errorsDetails.GetExceptionAsync().MatchAsync(
                                         failAsync :       _  =>              errorsDetails.ToMlResultFailAsync<T>(),
                                         validAsync: async ex => await (await funcExceptionAsync(ex)).ToMlResultValidAsync<T>()
                                     ),
@@ -329,7 +329,7 @@ public static MlResult<T> TryMapIfFailWithException<T>(this MlResult<T>         
                                                             Func<Exception, T>      funcException,
                                                             Func<Exception, string> errorMessageBuilder)
     => source.Match(
-                        fail : errorsDetails => errorsDetails.GetDetailException().Match(
+                        fail : errorsDetails => errorsDetails.GetException().Match(
                                                     fail : _  => errorsDetails.ToMlResultFail<T>(),
                                                     valid: ex => funcException.TryToMlResult(ex, errorMessageBuilder)
                                                                               .MergeErrorsDetailsIfFail(source)
@@ -353,7 +353,7 @@ var r = ConsultarTarifaRemota(sku)                       // falla: HttpRequestEx
             .TryMapIfFailWithException(_ => LeerTarifaDeDisco(sku),   // falla: IOException
                                        ex => $"La caché en disco tampoco respondió: {ex.Message}");
 
-// r.Match(fail: e => e.ToErrorsDescription(), valid: …) muestra los DOS problemas.
+// r.Match(fail: e => e.GetErrorsSummary(), valid: …) muestra los DOS problemas.
 ```
 
 Compáralo con `TryMapIfFail`, que en la misma situación **pierde el error original**. Si
@@ -390,7 +390,7 @@ public class ServicioTarifas
     public MlResult<Tarifa> Obtener(string sku)
         => ValidarSku(sku)                                        // negocio: puede fallar sin excepción
                .Bind(ConsultarServicioRemoto)                     // técnico: Try* interno
-               .ExecSelfIfFail(e => _log.LogWarning("Tarifa {Sku}: {Detalle}", sku, e.ToErrorsDescription()))
+               .ExecSelfIfFail(e => _log.LogWarning("Tarifa {Sku}: {Detalle}", sku, e.GetErrorsSummary()))
                .MapIfFailWithException(ex => _cache.UltimaConocida(sku) with
                                              {
                                                  EsFiable    = false,
@@ -433,7 +433,7 @@ public async Task<IActionResult> Obtener(int pedidoId)
 
     // Si el fallo NO traía excepción, respuesta sigue siendo un MlResult fallido:
     return respuesta.Match(valid: accion  => accion,
-                           fail : errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
+                           fail : errores => BadRequest(new { errores = errores.GetErrorMessages() }));
 }
 ```
 
@@ -452,7 +452,7 @@ public MlResult<Documento> Recuperar(Guid documentoId)
                 funcException      : _  => LeerDeDiscoLocal(documentoId),   // puede lanzar IOException
                 errorMessageBuilder: ex => $"El respaldo local falló: {ex.Message}")
            .ExecSelfIfFail(e => _log.LogError("Documento {Id} irrecuperable. {Detalle}",
-                                              documentoId, e.ToErrorsDescription()));
+                                              documentoId, e.GetErrorsSummary()));
 ```
 
 Gracias a `MergeErrorsDetailsIfFail`, el log final contiene la `StorageException` original
@@ -473,7 +473,7 @@ resultado.MapIfFailWithException(ex => default!);
 resultado.MapIfFailWithException<TimeoutException>(ex => …);   // no compila
 
 // ❌ 4) Acceder a .Value para inspeccionar la excepción
-if (resultado.IsFailure) { var ex = resultado.FailureDetails.Details["Ex"]; }
+if (resultado.IsFailure) { var ex = resultado.FailureDetails.Metadata["Ex"]; }
 ```
 
 ✅ En su lugar:
@@ -489,10 +489,10 @@ resultado.MapIfFailWithException<Pedido, TimeoutException>(_ => Pedido.Reintenta
 resultado.MapIfFailWithException<Pedido, TimeoutException>(ex => …);
 
 // 4) lee la excepción con la API prevista
-resultado.ExecSelfIfFail(e => e.GetDetailException()
+resultado.ExecSelfIfFail(e => e.GetException()
                                .Match(valid: ex => _log.LogError(ex, "Fallo técnico"),
                                       fail : _  => _log.LogWarning("Fallo de negocio: {M}",
-                                                                   e.ToErrorsMessages())));
+                                                                   e.GetErrorMessages())));
 ```
 
 ---
@@ -510,7 +510,7 @@ resultado.ExecSelfIfFail(e => e.GetDetailException()
 5. **Marca el valor degradado** (`EsFiable = false`, `MotivoCache`, un aviso) para que el
    consumidor pueda distinguir un dato de primera de uno de respaldo.
 6. **Usa `Try…` en cadenas de respaldo** y aprovecha que fusiona los errores: tendrás el
-   histórico completo del fallo en un único `ToErrorsDescription()`.
+   histórico completo del fallo en un único `GetErrorsSummary()`.
 7. **Usa la subfamilia `…Error`** cuando la recuperación necesite los mensajes de negocio
    además de la excepción.
 8. **No la uses para bugs.** `NullReferenceException`, `IndexOutOfRangeException` y
@@ -529,7 +529,7 @@ resultado.ExecSelfIfFail(e => e.GetDetailException()
 - Hay **cuatro formas**: `<T>`, `<T, TReturn>`, `<T, TException>` y `<T, TReturn, TException>`;
   las dos últimas filtran por tipo de excepción con `where TException : Exception`.
 - Existe una **subfamilia `MapIfFailWithExceptionError`** con las mismas cuatro formas, cuyo
-  delegado recibe el `MlErrorsDetails` completo en lugar de la excepción; la excepción sigue
+  delegado recibe el `MlErrorDetails` completo en lugar de la excepción; la excepción sigue
   siendo la condición de activación, pero se descarta como parámetro.
 - Como el delegado devuelve un valor desnudo, si hay excepción **la salida es siempre válida**.
 - `TryMapIfFailWithException` protege la recuperación y, mediante
@@ -551,6 +551,6 @@ resultado.ExecSelfIfFail(e => e.GetDetailException()
 - [`../Bind/8_BindIfFailWithException.md`](../Bind/8_BindIfFailWithException.md) — la versión cuya recuperación sí puede volver a fallar.
 - [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) — su espejo en la familia `Bind`.
 - [`../ExecSelf/5_ExecSelfIfFailWithException.md`](../ExecSelf/5_ExecSelfIfFailWithException.md) — registrar sin recuperar.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailException`, `GetDetailException<TException>`, `MergeErrorsDetailsIfFail`.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlErrorsDetails` y la clave `Ex`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `GetException<TException>`, `MergeErrorsDetailsIfFail`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlErrorDetails` y la clave `Ex`.
 - [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.

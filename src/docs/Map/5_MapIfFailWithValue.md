@@ -26,7 +26,7 @@ los errores. Muchas veces eso no es suficiente: para construir un buen valor de 
 necesitas **el dato que estabas procesando cuando la cosa se rompió**.
 
 Ahí entra `MapIfFailWithValue`. Es la variante de `MapIfFail` cuyo delegado de recuperación
-no recibe `MlErrorsDetails`, sino **el valor original rescatado de los detalles del error**.
+no recibe `MlErrorDetails`, sino **el valor original rescatado de los detalles del error**.
 
 ```csharp
 // ❌ MapIfFail: solo tengo los errores, no sé qué producto estaba enriqueciendo
@@ -38,12 +38,12 @@ var resultado = EnriquecerPrecio(producto)
                     .MapIfFailWithValue(p => p with { PrecioFiable = false });
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**
-> `MlErrorsDetails` solo expone dos propiedades: `Errors` (una colección de `MlError`) y
+> ⚠️ **Sobre `MlErrorDetails`**
+> `MlErrorDetails` solo expone dos propiedades: `Errors` (una colección de `MlError`) y
 > `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`,
 > `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer errores usa
-> `ToErrorsMessages()`, `ToErrorsDescription()` o `Errors.First().Message`; para leer los
-> detalles usa `GetDetailValue<T>()`, `GetDetailException()` o `ToDetailsDescription()`.
+> `GetErrorMessages()`, `GetErrorsSummary()` o `Errors.First().Message`; para leer los
+> detalles usa `GetMetadataValue<T>()`, `GetException()` o `GetMetadataSummary()`.
 
 ---
 
@@ -81,7 +81,7 @@ var conValor = ValidarPedido(pedido).AddValueDetailIfFail(pedido);
 var conValor = ValidarPedido(pedido).AddValueIfFail(pedido);
 
 // 3) Desde el propio error, al crearlo
-return MlErrorsDetails.FromErrorMessageWithValue("El pedido no es válido", pedido)
+return MlErrorDetails.FromErrorMessageWithValue("El pedido no es válido", pedido)
                       .ToMlResultFail<PedidoValidado>();
 ```
 
@@ -89,14 +89,14 @@ Recuerda cómo se implementa `AddValueDetailIfFail` (verificado en `MlResultActi
 
 ```csharp
 public static MlResult<T> AddMlErrorDetailIfFail<T>(this MlResult<T> source, string errorKey, object errorValue)
-    => source.Match(fail : errorsDetails => errorsDetails.AddDetail(errorKey, errorValue),
+    => source.Match(fail : errorsDetails => errorsDetails.AddMetadataOrThrow(errorKey, errorValue),
                     valid: _ => source);
 
 public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, object errorValue)
     => source.AddMlErrorDetailIfFail(ValueMetadataKey, errorValue);
 ```
 
-> ⚠️ `AddDetail<T>` hace `source.Details.Add(key, value)`, es decir **muta el diccionario** y
+> ⚠️ `AddMetadataOrThrow<T>` hace `source.Metadata.Add(key, value)`, es decir **muta el diccionario** y
 > **lanza `ArgumentException` si la clave ya existe**. No llames dos veces a
 > `AddValueDetailIfFail` sobre el mismo resultado fallido.
 
@@ -140,7 +140,7 @@ public static MlResult<T> MapIfFailWithValue<T>(this MlResult<T> source,
                                                       Func<T, T> func)
     => source.Match
                     (
-                        fail : errorsDetails => errorsDetails.GetDetailValue<T>().Map(func),
+                        fail : errorsDetails => errorsDetails.GetMetadataValue<T>().Map(func),
                         valid: value         => value
                     );
 ```
@@ -148,7 +148,7 @@ public static MlResult<T> MapIfFailWithValue<T>(this MlResult<T> source,
 Léelo despacio, porque toda la semántica está en una línea:
 
 1. Si `source` es válido → se devuelve el valor **sin tocarlo**. `func` no se ejecuta.
-2. Si `source` es fallido → se pide `GetDetailValue<T>()`:
+2. Si `source` es fallido → se pide `GetMetadataValue<T>()`:
    - si el valor está y es del tipo `T`, se le aplica `func` y el resultado es **válido**;
    - si no está, el resultado sigue siendo **fallido** (ver la sección siguiente).
 
@@ -163,7 +163,7 @@ public static MlResult<TReturn> MapIfFailWithValue<T, TValue, TReturn>(this MlRe
                                                                             Func<TValue, TReturn> funcFail)
     => source.Match
                     (
-                        fail : errorsDetails => errorsDetails.GetDetailValue<TValue>().Map(value => funcFail(value)),
+                        fail : errorsDetails => errorsDetails.GetMetadataValue<TValue>().Map(value => funcFail(value)),
                         valid: value         => funcValid(value)
                     );
 ```
@@ -193,9 +193,9 @@ var r = ValidarPedido(pedido)                          // falla: "Falta el NIF"
 // r sigue fallido. El delegado NUNCA se ejecutó.
 ```
 
-`GetDetailValue<T>()` devuelve un `MlResult<T>` fallido cuando la clave `"Value"` no existe
+`GetMetadataValue<T>()` devuelve un `MlResult<T>` fallido cuando la clave `"Value"` no existe
 en `Details` o cuando el objeto almacenado no es del tipo pedido. Y como la implementación
-hace `errorsDetails.GetDetailValue<T>().Map(func)`, ese fallo es el que se propaga:
+hace `errorsDetails.GetMetadataValue<T>().Map(func)`, ese fallo es el que se propaga:
 **el error original queda sustituido por el error de «no hay valor»**.
 
 Estrategias:
@@ -208,7 +208,7 @@ var r = ValidarPedido(pedido)
 
 // ✅ 2) Si el valor es opcional, conserva el error original fusionándolo
 var r = ValidarPedido(pedido)
-            .BindIfFail(errores => errores.GetDetailValue<Pedido>()
+            .BindIfFail(errores => errores.GetMetadataValue<Pedido>()
                                           .Map(p => p with { Ok = false })
                                           .MergeErrorsDetailsIfFail(errores));
 
@@ -217,7 +217,7 @@ var r = ValidarPedido(pedido).MapIfFail(_ => Pedido.Vacio);
 ```
 
 > 📌 Diagnóstico rápido: si sospechas que el valor no está, inspecciona
-> `errores.ToDetailsDescription()` o `errores.HasValueDetails()`, que te dice si existe la
+> `errores.GetMetadataSummary()` o `errores.ContainsValueMetadata()`, que te dice si existe la
 > clave `"Value"`.
 
 ---
@@ -226,7 +226,7 @@ var r = ValidarPedido(pedido).MapIfFail(_ => Pedido.Vacio);
 
 | Método | Qué recibe el delegado de fallo | Qué devuelve el delegado | ¿Puede volver a fallar la recuperación? |
 |---|---|---|---|
-| `MapIfFail` | `MlErrorsDetails` | `T` desnudo | No (salvo que lance) |
+| `MapIfFail` | `MlErrorDetails` | `T` desnudo | No (salvo que lance) |
 | `MapIfFailWithValue` | el valor guardado (`T` o `TValue`) | `T`/`TReturn` desnudo | Solo si el valor no estaba |
 | `BindIfFailWithValue` | el valor guardado | `MlResult<…>` | Sí, la recuperación decide |
 
@@ -284,7 +284,7 @@ public static MlResult<T> TryMapIfFailWithValue<T>(this MlResult<T>             
                                                         Func<Exception, string> errorMessageBuilder)
     => source.Match
                     (
-                        fail : errorsDetails => errorsDetails.GetDetailValue<T>()
+                        fail : errorsDetails => errorsDetails.GetMetadataValue<T>()
                                                              .Bind(x => funcValue.TryToMlResult(x, errorMessageBuilder)),
                         valid: value         => value
                     );
@@ -304,7 +304,7 @@ public static MlResult<TReturn> TryMapIfFailWithValue<T, TValue, TReturn>(this M
                                                                                Func<Exception, string> errorMessageBuilder)
     => source.Match
                     (
-                        fail : errorsDetails => errorsDetails.GetDetailValue<TValue>()
+                        fail : errorsDetails => errorsDetails.GetMetadataValue<TValue>()
                                                              .Bind(value => funcFail.TryToMlResult(value, errorMessageBuilder)),
                         valid: value         => funcValid.TryToMlResult(source.Value, errorMessageBuilder)
                     );
@@ -389,7 +389,7 @@ public MlResult<Justificante> EmitirJustificante(SolicitudJustificante solicitud
     => _correo.Enviar(solicitud)                                  // MlResult<Justificante>
               .AddValueDetailIfFail(solicitud)
               .ExecSelfIfFail(e => _log.LogWarning("Correo no disponible: {Detalle}",
-                                                   e.ToErrorsDescription()))
+                                                   e.GetErrorsSummary()))
               .TryMapIfFailWithValue<SolicitudJustificante, SolicitudJustificante, Justificante>
               (
                   funcValid: j   => j,
@@ -430,7 +430,7 @@ _precios.Consultar(sku).Map(…).AddValueDetailIfFail(producto);
 .MapIfFailWithValue<Entidad, Dto, Vm>(funcValid: …, funcFail: …);
 
 // 4) si el fallo es un bug, déjalo propagar; registra y devuelve el error
-resultado.ExecSelfIfFail(e => _log.LogError("{Detalle}", e.ToErrorsDescription()));
+resultado.ExecSelfIfFail(e => _log.LogError("{Detalle}", e.GetErrorsSummary()));
 ```
 
 ---
@@ -444,7 +444,7 @@ resultado.ExecSelfIfFail(e => _log.LogError("{Detalle}", e.ToErrorsDescription()
 3. **Sé explícito con los genéricos en la Forma B** (`<T, TValue, TReturn>`); la inferencia
    con tres parámetros suele fallar y el mensaje del compilador no ayuda.
 4. **Registra antes de recuperar.** Una vez recuperas, el error desaparece del resultado:
-   `.ExecSelfIfFail(e => _log.LogWarning("{D}", e.ToErrorsDescription()))`.
+   `.ExecSelfIfFail(e => _log.LogWarning("{D}", e.GetErrorsSummary()))`.
 5. **Marca el valor degradado.** Añade una propiedad (`PrecioFiable`, `Completa`, `Aviso`)
    para que el consumidor sepa que no es un resultado de primera categoría.
 6. **Usa `BindIfFailWithValue` si la recuperación puede fallar.** No fuerces un `Map` con un
@@ -481,7 +481,7 @@ producción.**
 - `MapIfFailWithValue` es `MapIfFail` pero el delegado de recuperación recibe **el valor
   original**, no los errores.
 - El valor se lee de `Details["Value"]`, así que **hay que haberlo guardado antes** con
-  `AddValueDetailIfFail`, `AddValueIfFail` o `MlErrorsDetails.FromErrorMessageWithValue`.
+  `AddValueDetailIfFail`, `AddValueIfFail` o `MlErrorDetails.FromErrorMessageWithValue`.
 - Hay **dos formas**: la A (`<T>`, misma forma de salida) y la B (`<T, TValue, TReturn>`,
   proyecta las dos ramas a un tipo común y permite que el valor guardado sea de otro tipo).
 - Si el valor **no está** o **no es del tipo pedido**, el delegado no se ejecuta y el error
@@ -503,6 +503,6 @@ producción.**
 - [`../Bind/7_BindIfFailWithValue.md`](../Bind/7_BindIfFailWithValue.md) — la versión que sí puede volver a fallar.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — efectos laterales con el valor recuperado.
 - [`../Types/MlResultActions.md`](../core-types/MlResultActions.md) — `AddValueDetailIfFail` y compañía.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailValue<T>`, `AddValueIfFail`.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlErrorsDetails`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetMetadataValue<T>`, `AddValueIfFail`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlErrorDetails`.
 - [`../Types/MlResultActionsMap.md`](../core-types/MlResultActionsMap.md) — inventario completo de la familia `Map`.

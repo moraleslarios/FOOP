@@ -16,7 +16,7 @@ public partial class IntMoreThan : ValueObject<int>
 
 
     public static IntMoreThan FromIntLength(int value, int length) => new IntMoreThan(value, length);
-    public static MlResult<IntMoreThan> ByIntLength(int value, int length, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<IntMoreThan> ByIntLength(int value, int length, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
                     .Map ( _ => new IntMoreThan(value, length));

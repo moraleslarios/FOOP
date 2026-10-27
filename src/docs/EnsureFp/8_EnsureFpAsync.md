@@ -54,9 +54,9 @@ Todas las sobrecargas devuelven `Task<MlResult<T>>` y se combinan con `BindAsync
 
 ```csharp
 public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, bool> predicate, string errorMessage);
-public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, bool> predicate, MlErrorsDetails errorsDetails);
+public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, bool> predicate, MlErrorDetails errorsDetails);
 public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, bool condition, string errorMessage);
-public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, bool condition, MlErrorsDetails errorsDetails);
+public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, bool condition, MlErrorDetails errorsDetails);
 ```
 
 Evita el `await` intermedio y la variable temporal:
@@ -90,9 +90,9 @@ var r = await ThatAsync(repositorio.GetAsync(id),
 
 ```csharp
 public static Task<MlResult<T>> ThatAsync<T>(T value,       Func<T, Task<bool>> predicateAsync, string errorMessage);
-public static Task<MlResult<T>> ThatAsync<T>(T value,       Func<T, Task<bool>> predicateAsync, MlErrorsDetails errorsDetails);
+public static Task<MlResult<T>> ThatAsync<T>(T value,       Func<T, Task<bool>> predicateAsync, MlErrorDetails errorsDetails);
 public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, Task<bool>> predicateAsync, string errorMessage);
-public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, Task<bool>> predicateAsync, MlErrorsDetails errorsDetails);
+public static Task<MlResult<T>> ThatAsync<T>(Task<T> valueAsync, Func<T, Task<bool>> predicateAsync, MlErrorDetails errorsDetails);
 ```
 
 Este es el caso que antes no existía: **la regla de negocio necesita consultar el almacén**.
@@ -137,7 +137,7 @@ public static Task<MlResult<T>> ThatAsync<T>(T value,
 
 public static Task<MlResult<T>> ThatAsync<T>(T value,
                                              Func<T, CancellationToken, Task<bool>> predicateAsync,
-                                             MlErrorsDetails errorsDetails,
+                                             MlErrorDetails errorsDetails,
                                              CancellationToken cancellationToken = default);
 ```
 
@@ -150,7 +150,7 @@ public async Task<IActionResult> Crear(CrearDto dto, CancellationToken ct) =>
                      (c, token) => repositorio.EsCodigoLibreAsync(c, token),
                      "Ese código ya está en uso.",
                      ct))
-        .Match(valid: c => Ok(c), fail: e => BadRequest(e.ToErrorsMessages()));
+        .Match(valid: c => Ok(c), fail: e => BadRequest(e.GetErrorMessages()));
 ```
 
 Si el predicado es `null`, la regla delega en `That(value, false, …)`: falla de forma controlada, sin
@@ -192,7 +192,7 @@ public static Task<MlResult<T>> TryThatAsync<T>(T value, Func<T, Task<bool>> pre
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 
 public static Task<MlResult<T>> TryThatAsync<T>(T value, Func<T, Task<bool>> predicateAsync,
-                                                MlErrorsDetails errorsDetails,
+                                                MlErrorDetails errorsDetails,
     [CallerArgumentExpression(nameof(value))] string? paramName = null);
 
 public static Task<MlResult<T>> TryThatAsync<T>(T value, Func<T, Task<bool>> predicateAsync,
@@ -212,7 +212,7 @@ var r = await TryThatAsync(dto.Nif,
 if (r.IsFailure)
 {
     var detalles = r.GetFailureDetailsOrThrow();
-    var excepcion = detalles.GetDetailException();   // la excepción original, para el log
+    var excepcion = detalles.GetException();   // la excepción original, para el log
     logger.LogError(excepcion, "Fallo validando NIF");
 }
 ```
@@ -227,17 +227,17 @@ excepción concreta y es la más útil para diagnóstico. Ver también
 
 ```csharp
 public static Task<MlResult<T>> NotNullAsync<T>(Task<T> valueAsync, string errorMessage);
-public static Task<MlResult<T>> NotNullAsync<T>(Task<T> valueAsync, MlErrorsDetails errorsDetails);
+public static Task<MlResult<T>> NotNullAsync<T>(Task<T> valueAsync, MlErrorDetails errorsDetails);
 public static Task<MlResult<T>> NotNullArgAsync<T>(Task<T> valueAsync,
     [CallerArgumentExpression(nameof(valueAsync))] string? paramName = null);
 
 public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(Task<IEnumerable<T>> valueAsync, string errorMessage);
-public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(Task<IEnumerable<T>> valueAsync, MlErrorsDetails errorsDetails);
+public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(Task<IEnumerable<T>> valueAsync, MlErrorDetails errorsDetails);
 public static Task<MlResult<IEnumerable<T>>> NotEmptyArgAsync<T>(Task<IEnumerable<T>> valueAsync,
     [CallerArgumentExpression(nameof(valueAsync))] string? paramName = null);
 
 public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(Task<string> valueAsync, string errorMessage);
-public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(Task<string> valueAsync, MlErrorsDetails errorsDetails);
+public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(Task<string> valueAsync, MlErrorDetails errorsDetails);
 public static Task<MlResult<string>> NotNullEmptyOrWhitespaceArgAsync(Task<string> valueAsync,
     [CallerArgumentExpression(nameof(valueAsync))] string? paramName = null);
 
@@ -299,13 +299,13 @@ Las sobrecargas asíncronas originales siguen existiendo por compatibilidad:
 
 ```csharp
 public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, string errorMessage);
-public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, MlErrorsDetails errorsDetails);
+public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, MlErrorDetails errorsDetails);
 public static Task<MlResult<T>> NotNullAsync<T>(T value, string errorMessage);
-public static Task<MlResult<T>> NotNullAsync<T>(T value, MlErrorsDetails errorsDetails);
+public static Task<MlResult<T>> NotNullAsync<T>(T value, MlErrorDetails errorsDetails);
 public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(IEnumerable<T> value, string errorMessage);
-public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails);
+public static Task<MlResult<IEnumerable<T>>> NotEmptyAsync<T>(IEnumerable<T> value, MlErrorDetails errorsDetails);
 public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(string value, string errorMessage);
-public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(string value, MlErrorsDetails errorsDetails);
+public static Task<MlResult<string>> NotNullEmptyOrWhitespaceAsync(string value, MlErrorDetails errorsDetails);
 ```
 
 **No son asíncronas de verdad:** evalúan la regla en el hilo actual y envuelven el resultado con
@@ -381,9 +381,9 @@ public async Task<IActionResult> Confirmar(int id, CancellationToken ct) =>
     (await ConfirmarAsync(id, ct))
         .Match(
             valid: p => Ok(p),
-            fail:  e => e.Details.ContainsKey(ExceptionMetadataKey)
-                            ? StatusCode(StatusCodes.Status503ServiceUnavailable, e.ToErrorsMessages())
-                            : BadRequest(e.ToErrorsMessages()));
+            fail:  e => e.Metadata.ContainsKey(ExceptionMetadataKey)
+                            ? StatusCode(StatusCodes.Status503ServiceUnavailable, e.GetErrorMessages())
+                            : BadRequest(e.GetErrorMessages()));
 ```
 
 La presencia de la clave `Ex` en los detalles distingue un fallo de **infraestructura** (503) de un

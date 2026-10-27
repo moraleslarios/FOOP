@@ -99,8 +99,8 @@ public static class MlResultTransformations
     //    {
     //        string message = BuildErrorMessage(errorMessageBuilder, ex);
 
-    //        var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                               Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+    //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
+    //                                               Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
     //        return errorDetails.ToMlResultFail<T>();
     //    }
@@ -135,7 +135,7 @@ public static class MlResultTransformations
         {
             string message = BuildErrorMessage(errorMessageBuilder, ex);
 
-            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+            var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             result = errorDetails.ToMlResultFail<T>();
@@ -163,7 +163,7 @@ public static class MlResultTransformations
         {
             string message = BuildErrorMessage(messageBuilder, ex);
 
-            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+            var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
@@ -187,8 +187,8 @@ public static class MlResultTransformations
     //    {
     //        string message = BuildErrorMessage(errorMessageBuilder, ex);
 
-    //        var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+    //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
+    //                                    Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
     //        return errorDetails.ToMlResultFail<T>();
     //    }
@@ -221,7 +221,7 @@ public static class MlResultTransformations
         {
             string message = BuildErrorMessage(errorMessageBuilder, ex);
 
-            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+            var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             result = errorDetails.ToMlResultFail<T>();
@@ -249,7 +249,7 @@ public static class MlResultTransformations
         {
             string message = BuildErrorMessage(messageBuilder, ex);
 
-            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+            var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
@@ -257,8 +257,8 @@ public static class MlResultTransformations
     }
 
 
-    public static MlResult<T> TryToMlResultErrors<T>(this Action<MlErrorsDetails> source,
-                                                          MlErrorsDetails         errorsDetails,
+    public static MlResult<T> TryToMlResultErrors<T>(this Action<MlErrorDetails> source,
+                                                          MlErrorDetails         errorsDetails,
                                                           Func<Exception, string> errorMessageBuilder = null!)
     {
         MlResult<T> result = default!;
@@ -279,8 +279,8 @@ public static class MlResultTransformations
 
 
 
-    public static async Task<MlResult<T>> TryToMlResultErrorsAsync<T>(this Func<MlErrorsDetails, Task> sourceAsync,
-                                                                           MlErrorsDetails             errorsDetails,
+    public static async Task<MlResult<T>> TryToMlResultErrorsAsync<T>(this Func<MlErrorDetails, Task> sourceAsync,
+                                                                           MlErrorDetails             errorsDetails,
                                                                            Func<Exception, string>     errorMessageBuilder = null!)
     {
         MlResult<T> result = default!;
@@ -343,8 +343,8 @@ public static class MlResultTransformations
     //    {
     //        string msg = BuildErrorMessage(errorMessageBuilder, ex);
 
-    //        result = new MlErrorsDetails(Errors : new List<MlError> { new MlError(msg) },
-    //                                     Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+    //        result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
+    //                                     Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
     //    }
 
@@ -354,35 +354,35 @@ public static class MlResultTransformations
 
 
 
-    public static MlResult<T> TryToMlResult<T>(this Func<MlErrorsDetails,T> source,
-                                                    MlErrorsDetails         errorsDetails,
+    public static MlResult<T> TryToMlResult<T>(this Func<MlErrorDetails,T> source,
+                                                    MlErrorDetails         errorsDetails,
                                                     Func<Exception, string> errorMessageBuilder)
         => TryToInternalMlResult<T>(source, errorsDetails, errorMessageBuilder);
 
 
-    public static MlResult<T> TryToMlResult<T>(this Func<MlErrorsDetails, MlResult<T>> source,
-                                                    MlErrorsDetails                    errorsDetails,
+    public static MlResult<T> TryToMlResult<T>(this Func<MlErrorDetails, MlResult<T>> source,
+                                                    MlErrorDetails                    errorsDetails,
                                                     Func<Exception, string>            errorMessageBuilder)
         => TryToInternalMlResult<T>(source, errorsDetails, errorMessageBuilder);
 
 
-    public static Task<MlResult<T>> TryToMlResultAsync<T>(this Func<MlErrorsDetails,Task<T>> sourceAsync,
-                                                               MlErrorsDetails               errorsDetails,
+    public static Task<MlResult<T>> TryToMlResultAsync<T>(this Func<MlErrorDetails,Task<T>> sourceAsync,
+                                                               MlErrorDetails               errorsDetails,
                                                                Func<Exception, string>       errorMessageBuilder)
         => TryToInternalMlResultAsync<T>(sourceAsync, errorsDetails, errorMessageBuilder);
 
-    public static async Task<MlResult<T>> TryToMlResultAsync<T>(this Func<MlErrorsDetails, Task<MlResult<T>>> sourceAsync,
-                                                                     MlErrorsDetails                          errorsDetails,
+    public static async Task<MlResult<T>> TryToMlResultAsync<T>(this Func<MlErrorDetails, Task<MlResult<T>>> sourceAsync,
+                                                                     MlErrorDetails                          errorsDetails,
                                                                      Func<Exception, string>                  errorMessageBuilder)
         => await TryToInternalMlResultAsync<T>(sourceAsync, errorsDetails, errorMessageBuilder);
 
     public static MlResult<T> TryToMlResult<T>(this Func<T>                 source,
-                                                    MlErrorsDetails         errorsDetails,
+                                                    MlErrorDetails         errorsDetails,
                                                     Func<Exception, string> errorMessageBuilder)
         => TryToInternalMlResult<T>(source, errorsDetails, errorMessageBuilder);
 
     public static Task<MlResult<T>> TryToMlResultAsync<T>(this Func<Task<T>>           sourceAsync,
-                                                               MlErrorsDetails         errorsDetails,
+                                                               MlErrorDetails         errorsDetails,
                                                                Func<Exception, string> errorMessageBuilder)
         => TryToInternalMlResultAsync<T>(sourceAsync, errorsDetails, errorMessageBuilder);
 
@@ -404,7 +404,7 @@ public static class MlResultTransformations
         {
             string message = BuildErrorMessage(messageBuilder, ex);
 
-            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+            var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
@@ -412,7 +412,7 @@ public static class MlResultTransformations
     }
 
     public static MlResult<T> TryToMlResultErrors<T>(this Action                  source,
-                                                          MlErrorsDetails         errorsDetails,
+                                                          MlErrorDetails         errorsDetails,
                                                           Func<Exception, string> errorMessageBuilder = null!)
     {
         MlResult<T> result = default!;
@@ -448,7 +448,7 @@ public static class MlResultTransformations
         {
             string message = BuildErrorMessage(messageBuilder, ex);
 
-            var errorDetails = new MlErrorsDetails(Errors : new List<MlError> { new MlError(message) },
+            var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
                                                    Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
@@ -458,7 +458,7 @@ public static class MlResultTransformations
 
 
     public static async Task<MlResult<T>> TryToMlResultErrorsAsync<T>(this Func<Task>              sourceAsync,
-                                                                           MlErrorsDetails         errorsDetails,
+                                                                           MlErrorDetails         errorsDetails,
                                                                            Func<Exception, string> errorMessageBuilder = null!)
     {
         MlResult<T> result = default!;
@@ -482,7 +482,7 @@ public static class MlResultTransformations
 
 
     private static MlResult<T> TryToInternalMlResult<T>(this object                  source,
-                                                             MlErrorsDetails         errorsDetails,
+                                                             MlErrorDetails         errorsDetails,
                                                              Func<Exception, string> errorMessageBuilder)
     {
         MlResult<T> result = default!;
@@ -492,8 +492,8 @@ public static class MlResultTransformations
             result = source switch
             {
                 Func<T>                            mySource => mySource(),
-                Func<MlErrorsDetails, T>           mySource => mySource(errorsDetails),
-                Func<MlErrorsDetails, MlResult<T>> mySource => mySource(errorsDetails),
+                Func<MlErrorDetails, T>           mySource => mySource(errorsDetails),
+                Func<MlErrorDetails, MlResult<T>> mySource => mySource(errorsDetails),
                 _ => throw new ArgumentException($"The type {source.GetType()} is not a valid type")
             };
         }
@@ -507,7 +507,7 @@ public static class MlResultTransformations
 
 
     private static async Task<MlResult<T>> TryToInternalMlResultAsync<T>(this object                  source,
-                                                                              MlErrorsDetails         errorsDetails,
+                                                                              MlErrorDetails         errorsDetails,
                                                                               Func<Exception, string> errorMessageBuilder)
     {
         MlResult<T> result = default!;
@@ -517,8 +517,8 @@ public static class MlResultTransformations
             result = source switch
             {
                 Func<Task<T>>                            mySource => await mySource(),
-                Func<MlErrorsDetails, Task<T>>           mySource => await mySource(errorsDetails),
-                Func<MlErrorsDetails, Task<MlResult<T>>> mySource => await mySource(errorsDetails),
+                Func<MlErrorDetails, Task<T>>           mySource => await mySource(errorsDetails),
+                Func<MlErrorDetails, Task<MlResult<T>>> mySource => await mySource(errorsDetails),
                 _ => throw new ArgumentException($"The type {source.GetType()} is not a valid type")
             };
         }
@@ -553,34 +553,34 @@ public static class MlResultTransformations
 
 
     public static MlResult<T> ToMlResultValid<T>(this T                    source) => source;
-    public static MlResult<T> ToMlResultFail <T>(this MlErrorsDetails      source) => source;
+    public static MlResult<T> ToMlResultFail <T>(this MlErrorDetails      source) => source;
     public static MlResult<T> ToMlResultFail <T>(this MlError              source) => source;
     public static MlResult<T> ToMlResultFail <T>(this string               source) => MlError.FromErrorMessage(source).ToMlResultFail<T>();
     public static MlResult<T> ToMlResultFail <T>(this List<MlError>        source) => source;
-    public static MlResult<T> ToMlResultFail <T>(this List<string>         source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
+    public static MlResult<T> ToMlResultFail <T>(this List<string>         source) => MlErrorDetails.FromErrorsMessagesDetails(source);
     public static MlResult<T> ToMlResultFail <T>(this MlError[]            source) => source;
-    public static MlResult<T> ToMlResultFail <T>(this string[]             source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
-    public static MlResult<T> ToMlResultFail <T>(this IEnumerable<MlError> source) => new MlErrorsDetails(source);
-    public static MlResult<T> ToMlResultFail <T>(this IEnumerable<string>  source) => MlErrorsDetails.FromErrorsMessagesDetails(source);
-    public static MlResult<T> ToMlResultFail <T>(this (IEnumerable<MlError>, Dictionary<string, object>) source) => new MlErrorsDetails(source.Item1, source.Item2);
-    public static MlResult<T> ToMlResultFail <T>(this (IEnumerable<string> , Dictionary<string, object>) source) => MlErrorsDetails.FromErrorsMessagesDetails(source.Item1, source.Item2);
-    public static MlResult<T> ToMlResultFail <T>(this (MlError             , Dictionary<string, object>) source) => new MlErrorsDetails(new List<MlError> { source.Item1 }, source.Item2);
-    public static MlResult<T> ToMlResultFail <T>(this (string              , Dictionary<string, object>) source) => MlErrorsDetails.FromErrorMessageDetails(source.Item1, source.Item2);
+    public static MlResult<T> ToMlResultFail <T>(this string[]             source) => MlErrorDetails.FromErrorsMessagesDetails(source);
+    public static MlResult<T> ToMlResultFail <T>(this IEnumerable<MlError> source) => new MlErrorDetails(source);
+    public static MlResult<T> ToMlResultFail <T>(this IEnumerable<string>  source) => MlErrorDetails.FromErrorsMessagesDetails(source);
+    public static MlResult<T> ToMlResultFail <T>(this (IEnumerable<MlError>, Dictionary<string, object>) source) => new MlErrorDetails(source.Item1, source.Item2);
+    public static MlResult<T> ToMlResultFail <T>(this (IEnumerable<string> , Dictionary<string, object>) source) => MlErrorDetails.FromErrorsMessagesDetails(source.Item1, source.Item2);
+    public static MlResult<T> ToMlResultFail <T>(this (MlError             , Dictionary<string, object>) source) => new MlErrorDetails(new List<MlError> { source.Item1 }, source.Item2);
+    public static MlResult<T> ToMlResultFail <T>(this (string              , Dictionary<string, object>) source) => MlErrorDetails.FromErrorMessageDetails(source.Item1, source.Item2);
 
     public static Task<MlResult<T>> ToMlResultValidAsync<T>(this T                    source) => source.ToMlResultValid().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this MlErrorsDetails      source) => source.ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this MlErrorDetails      source) => source.ToMlResultFail<T>().ToAsync();
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this MlError              source) => source.ToMlResultFail<T>().ToAsync();
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this string               source) => MlError.FromErrorMessage(source).ToMlResultFail<T>().ToAsync();
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this List<MlError>        source) => source.ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this List<string>         source) => MlErrorsDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this List<string>         source) => MlErrorDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this MlError[]            source) => source.ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this string[]             source) => MlErrorsDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this IEnumerable<MlError> source) => new MlErrorsDetails(source).ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this IEnumerable<string>  source) => MlErrorsDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (IEnumerable<MlError>, Dictionary<string, object>) source) => new MlErrorsDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (IEnumerable<string> , Dictionary<string, object>) source) => MlErrorsDetails.FromErrorsMessagesDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (MlError             , Dictionary<string, object>) source) => new MlErrorsDetails(new List<MlError> { source.Item1 }, source.Item2).ToMlResultFail<T>().ToAsync();
-    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (string              , Dictionary<string, object>) source) => MlErrorsDetails.FromErrorMessageDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this string[]             source) => MlErrorDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this IEnumerable<MlError> source) => new MlErrorDetails(source).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this IEnumerable<string>  source) => MlErrorDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (IEnumerable<MlError>, Dictionary<string, object>) source) => new MlErrorDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (IEnumerable<string> , Dictionary<string, object>) source) => MlErrorDetails.FromErrorsMessagesDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (MlError             , Dictionary<string, object>) source) => new MlErrorDetails(new List<MlError> { source.Item1 }, source.Item2).ToMlResultFail<T>().ToAsync();
+    public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (string              , Dictionary<string, object>) source) => MlErrorDetails.FromErrorMessageDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
 
 
 
@@ -698,7 +698,7 @@ public static class MlResultTransformations
         {
             string msg = BuildErrorMessage(errorMessageBuilder, ex);
 
-            result = new MlErrorsDetails(Errors : new List<MlError> { new MlError(msg) },
+            result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
                                          Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
             
         }
@@ -738,7 +738,7 @@ public static class MlResultTransformations
 
             string msg = BuildErrorMessage(errorMessageBuilder, ex);
 
-            result = new MlErrorsDetails(Errors : new List<MlError> { new MlError(msg) },
+            result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
                                          Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
             
         }

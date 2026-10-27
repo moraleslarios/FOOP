@@ -26,7 +26,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el <see cref="Guid"/> es distinto de <see cref="Guid.Empty"/>.
     /// </summary>
-    public static MlResult<Guid> NotEmptyGuid(Guid value, MlErrorsDetails errorsDetails)
+    public static MlResult<Guid> NotEmptyGuid(Guid value, MlErrorDetails errorsDetails)
         => That(value, value != Guid.Empty, errorsDetails);
 
     /// <summary>
@@ -50,7 +50,7 @@ public static partial class EnsureFp
     /// Comprueba que el <see cref="Guid"/> nullable no es nulo ni <see cref="Guid.Empty"/>,
     /// devolviendo el valor ya desenvuelto.
     /// </summary>
-    public static MlResult<Guid> NotNullNotEmptyGuid(Guid? value, MlErrorsDetails errorsDetails)
+    public static MlResult<Guid> NotNullNotEmptyGuid(Guid? value, MlErrorDetails errorsDetails)
         => value is not null && value.Value != Guid.Empty
                 ? MlResult<Guid>.Valid(value.Value)
                 : MlResult<Guid>.Fail(errorsDetails);
@@ -79,7 +79,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor está definido en el enumerado <typeparamref name="TEnum"/>.
     /// </summary>
-    public static MlResult<TEnum> IsDefined<TEnum>(TEnum value, MlErrorsDetails errorsDetails)
+    public static MlResult<TEnum> IsDefined<TEnum>(TEnum value, MlErrorDetails errorsDetails)
         where TEnum : struct, Enum
         => That(value, Enum.IsDefined(typeof(TEnum), value), errorsDetails);
 
@@ -108,7 +108,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la fecha es posterior al momento actual.
     /// </summary>
-    public static MlResult<DateTime> InFuture(DateTime value, MlErrorsDetails errorsDetails)
+    public static MlResult<DateTime> InFuture(DateTime value, MlErrorDetails errorsDetails)
         => That(value, value > NowFor(value), errorsDetails);
 
     /// <summary>
@@ -127,7 +127,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la fecha es anterior al momento actual.
     /// </summary>
-    public static MlResult<DateTime> InPast(DateTime value, MlErrorsDetails errorsDetails)
+    public static MlResult<DateTime> InPast(DateTime value, MlErrorDetails errorsDetails)
         => That(value, value < NowFor(value), errorsDetails);
 
     /// <summary>
@@ -202,7 +202,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el valor no coincide con el valor por defecto de su tipo.
     /// </summary>
-    public static MlResult<T> NotDefault<T>(T value, MlErrorsDetails errorsDetails)
+    public static MlResult<T> NotDefault<T>(T value, MlErrorDetails errorsDetails)
         => That(value, ! EqualityComparer<T>.Default.Equals(value, default!), errorsDetails);
 
     /// <summary>
@@ -229,7 +229,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la <see cref="Uri"/> no es nula y es absoluta.
     /// </summary>
-    public static MlResult<Uri> IsAbsoluteUri(Uri value, MlErrorsDetails errorsDetails)
+    public static MlResult<Uri> IsAbsoluteUri(Uri value, MlErrorDetails errorsDetails)
         => That(value, value is not null && value.IsAbsoluteUri, errorsDetails);
 
     /// <summary>
@@ -250,7 +250,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la cadena representa una <see cref="Uri"/> válida y devuelve la <see cref="Uri"/> construida.
     /// </summary>
-    public static MlResult<Uri> IsValidUri(string value, MlErrorsDetails errorsDetails, UriKind uriKind = UriKind.Absolute)
+    public static MlResult<Uri> IsValidUri(string value, MlErrorDetails errorsDetails, UriKind uriKind = UriKind.Absolute)
         => Uri.TryCreate(value, uriKind, out var uri)
                 ? MlResult<Uri>.Valid(uri)
                 : MlResult<Uri>.Fail(errorsDetails);
@@ -281,7 +281,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que la cadena es un correo electrónico válido.
     /// </summary>
-    public static MlResult<string> IsValidEmail(string value, MlErrorsDetails errorsDetails)
+    public static MlResult<string> IsValidEmail(string value, MlErrorDetails errorsDetails)
         => That(value, IsEmail(value), errorsDetails);
 
     /// <summary>
@@ -304,7 +304,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el fichero indicado existe.
     /// </summary>
-    public static MlResult<string> FileExists(string value, MlErrorsDetails errorsDetails)
+    public static MlResult<string> FileExists(string value, MlErrorDetails errorsDetails)
         => That(value, ! string.IsNullOrWhiteSpace(value) && File.Exists(value), errorsDetails);
 
     /// <summary>
@@ -326,7 +326,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el directorio indicado existe.
     /// </summary>
-    public static MlResult<string> DirectoryExists(string value, MlErrorsDetails errorsDetails)
+    public static MlResult<string> DirectoryExists(string value, MlErrorDetails errorsDetails)
         => That(value, ! string.IsNullOrWhiteSpace(value) && Directory.Exists(value), errorsDetails);
 
     /// <summary>
@@ -356,7 +356,7 @@ public static partial class EnsureFp
     /// <summary>
     /// Comprueba que el nullable de tipo valor tiene valor y lo devuelve ya desenvuelto.
     /// </summary>
-    public static MlResult<T> NotNullValue<T>(T? value, MlErrorsDetails errorsDetails)
+    public static MlResult<T> NotNullValue<T>(T? value, MlErrorDetails errorsDetails)
         where T : struct
         => value.HasValue
                 ? MlResult<T>.Valid(value.Value)

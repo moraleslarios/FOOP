@@ -23,17 +23,17 @@ valor ya tipado.
 ```csharp
 resultado.ExecSelfIfFailWithValue<Resultado, LineaCsv>((errores, linea) =>
     _log.LogWarning("La línea {N} no se pudo importar: {E}",
-                    linea.Numero, errores.ToErrorsDescription()));
+                    linea.Numero, errores.GetErrorsSummary()));
 ```
 
-El valor viaja en `MlErrorsDetails.Details` bajo la clave convencional `"Value"`
+El valor viaja en `MlErrorDetails.Metadata` bajo la clave convencional `"Value"`
 (`Constants.ValueMetadataKey`). Si esa clave **no** existe o el tipo no coincide, la acción **no se
 ejecuta** y el resultado se propaga igual: no hay excepciones ni sorpresas.
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`,
-> `HasValue` ni `HasException`. Consulta los errores con `ToErrorsMessages()`,
-> `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `HasValue` ni `HasException`. Consulta los errores con `GetErrorMessages()`,
+> `GetErrorsSummary()`, `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -53,7 +53,7 @@ public MlResult<Registro> ImportarLinea(LineaCsv linea)
 
         // Y ahora ya podemos usarla en el efecto secundario.
         .ExecSelfIfFailWithValue<Registro, LineaCsv>((errores, l) =>
-            _rechazos.Add(new Rechazo(l.Numero, l.Texto, errores.ToErrorsDescription())));
+            _rechazos.Add(new Rechazo(l.Numero, l.Texto, errores.GetErrorsSummary())));
 ```
 
 **Cadena completa del mecanismo:**
@@ -62,11 +62,11 @@ public MlResult<Registro> ImportarLinea(LineaCsv linea)
 | --- | --- | --- |
 | 1 | `AddValueIfFail(valor)` | Guarda `valor` en `Details["Value"]` si el resultado es fallido |
 | 2 | `ExecSelfIfFailWithValue<T, TValue>(action)` | Ejecuta la acción con ese valor recuperado y tipado |
-| — | `GetDetailValue<TValue>()` | Alternativa manual: devuelve `MlResult<TValue>` |
+| — | `GetMetadataValue<TValue>()` | Alternativa manual: devuelve `MlResult<TValue>` |
 
 Otras formas de que la clave `"Value"` acabe rellena:
 
-- `MlResult.Fail<T>(mensaje, valor)` y `MlErrorsDetails.FromErrorMessageWithValue(mensaje, valor)`.
+- `MlResult.Fail<T>(mensaje, valor)` y `MlErrorDetails.FromErrorMessageWithValue(mensaje, valor)`.
 - `AddValueDetailIfFail` y `CompleteWithDataValueIfValid` de `MlResultActions`.
 - Las familias `BindIfFailWithValue` y `MapIfFailWithValue`, que ya asumen ese contrato.
 
@@ -78,17 +78,17 @@ Otras formas de que la clave `"Value"` acabe rellena:
 // Síncrono
 public static MlResult<T> ExecSelfIfFailWithValue<T, TValue>(
         this MlResult<T>                 source,
-        Action<MlErrorsDetails, TValue>  actionFailWithValue)
+        Action<MlErrorDetails, TValue>  actionFailWithValue)
 
 // Con captura de excepciones
 public static MlResult<T> TryExecSelfIfFailWithValue<T, TValue>(
         this MlResult<T>                 source,
-        Action<MlErrorsDetails, TValue>  actionFailWithValue,
+        Action<MlErrorDetails, TValue>  actionFailWithValue,
         Func<Exception, string>          errorMessageBuilder)
 
 public static MlResult<T> TryExecSelfIfFailWithValue<T, TValue>(
         this MlResult<T>                 source,
-        Action<MlErrorsDetails, TValue>  actionFailWithValue,
+        Action<MlErrorDetails, TValue>  actionFailWithValue,
         string                           exceptionAditionalMessage = null!)
 ```
 
@@ -105,7 +105,7 @@ argumento:
 .ExecSelfIfFailWithValue<Registro, LineaCsv>((errores, linea) => ...)
 
 // ⚠️ Con lambda tipada también compila, pero es menos legible
-.ExecSelfIfFailWithValue((MlErrorsDetails errores, LineaCsv linea) => ...)
+.ExecSelfIfFailWithValue((MlErrorDetails errores, LineaCsv linea) => ...)
 ```
 
 **Comportamiento**:
@@ -125,10 +125,10 @@ Las cuatro combinaciones de fuente y delegado:
 
 | Fuente | Delegado | Método |
 | --- | --- | --- |
-| `MlResult<T>` | `Action<MlErrorsDetails, TValue>` | `ExecSelfIfFailWithValue` |
-| `MlResult<T>` | `Func<MlErrorsDetails, TValue, Task>` | `ExecSelfIfFailWithValueAsync` |
-| `Task<MlResult<T>>` | `Action<MlErrorsDetails, TValue>` | `ExecSelfIfFailWithValueAsync` |
-| `Task<MlResult<T>>` | `Func<MlErrorsDetails, TValue, Task>` | `ExecSelfIfFailWithValueAsync` |
+| `MlResult<T>` | `Action<MlErrorDetails, TValue>` | `ExecSelfIfFailWithValue` |
+| `MlResult<T>` | `Func<MlErrorDetails, TValue, Task>` | `ExecSelfIfFailWithValueAsync` |
+| `Task<MlResult<T>>` | `Action<MlErrorDetails, TValue>` | `ExecSelfIfFailWithValueAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorDetails, TValue, Task>` | `ExecSelfIfFailWithValueAsync` |
 
 Y sus equivalentes seguros `TryExecSelfIfFailWithValueAsync` (8 sobrecargas: 4 combinaciones × 2
 formas de mensaje de error).
@@ -137,7 +137,7 @@ formas de mensaje de error).
 await ProcesarPagoAsync(peticion)
     .AddValueIfFailAsync(peticion)
     .ExecSelfIfFailWithValueAsync<Recibo, PeticionPago>(async (errores, p) =>
-        await _colaReintentos.EncolarAsync(p, errores.ToErrorsDescription()));
+        await _colaReintentos.EncolarAsync(p, errores.GetErrorsSummary()));
 ```
 
 ---
@@ -163,7 +163,7 @@ public class ImportadorCsv
                     _rechazos.Add(new LineaRechazada(
                         Numero  : l.Numero,
                         Original: l.Texto,
-                        Motivos : errores.ToErrorsMessages().ToList())));
+                        Motivos : errores.GetErrorMessages().ToList())));
         }
 
         return new ResumenImportacion(correctos.Count, _rechazos.Count, _rechazos);
@@ -200,14 +200,14 @@ public Task<MlResult<Recibo>> CobrarAsync(PeticionCobro peticion)
         .ExecSelfIfFailWithValueAsync<Recibo, PeticionCobro>(async (errores, p) =>
         {
             // Solo reintentamos los fallos técnicos, no los rechazos del banco.
-            var esTecnico = errores.GetDetailException()
+            var esTecnico = errores.GetException()
                                    .Match(valid: _ => true, fail: _ => false);
 
             if (esTecnico)
                 await _colaReintentos.EncolarAsync(p, TimeSpan.FromMinutes(5));
             else
                 _log.LogInformation("Cobro rechazado para {Ref}: {E}",
-                                    p.Referencia, errores.ToErrorsDescription());
+                                    p.Referencia, errores.GetErrorsSummary());
         });
 ```
 
@@ -237,26 +237,26 @@ public Task<MlResult<Usuario>> AutenticarAsync(Credenciales credenciales)
 public record IntentoAcceso(string Email, string Ip);
 ```
 
-### Ejemplo 4: Alternativa manual con `GetDetailValue<T>`
+### Ejemplo 4: Alternativa manual con `GetMetadataValue<T>`
 
 Si solo necesitas el valor en un punto concreto, puedes leerlo directamente:
 
 ```csharp
 resultado.ExecSelfIfFail(errores =>
 {
-    var descripcion = errores.GetDetailValue<LineaCsv>()
+    var descripcion = errores.GetMetadataValue<LineaCsv>()
         .Match(valid: l  => $"línea {l.Numero}: «{l.Texto}»",
                fail:  _  => "(sin línea asociada)");
 
     _log.LogWarning("Importación fallida en {Contexto}: {E}",
-                    descripcion, errores.ToErrorsDescription());
+                    descripcion, errores.GetErrorsSummary());
 });
 ```
 
 | Enfoque | Cuándo usarlo |
 | --- | --- |
 | `ExecSelfIfFailWithValue<T, TValue>` | El efecto **solo tiene sentido** si hay valor adjunto |
-| `ExecSelfIfFail` + `GetDetailValue<T>()` | El efecto se ejecuta siempre y el valor es **opcional** |
+| `ExecSelfIfFail` + `GetMetadataValue<T>()` | El efecto se ejecuta siempre y el valor es **opcional** |
 
 ---
 
@@ -296,12 +296,12 @@ adjunto, usa `MapIfFailWithValue` o `BindIfFailWithValue`.
 
 | Método | Se ejecuta si… | El delegado recibe | ¿Cambia el resultado? |
 | --- | --- | --- | :---: |
-| `ExecSelfIfFail` | Es fallido | `MlErrorsDetails` | No |
-| **`ExecSelfIfFailWithValue`** | **Fallido y hay `Details["Value"]` de tipo `TValue`** | **`MlErrorsDetails`, `TValue`** | **No** |
-| `ExecSelfIfFailWithException` | Fallido y hay `Details["Ex"]` | `MlErrorsDetails`, `Exception` | No |
-| `ExecSelfIfFailWithoutException` | Fallido y **sin** excepción | `MlErrorsDetails` | No |
-| `MapIfFailWithValue` | Fallido y hay valor adjunto | `MlErrorsDetails`, `TValue` | **Sí**: devuelve un valor |
-| `BindIfFailWithValue` | Fallido y hay valor adjunto | `MlErrorsDetails`, `TValue` | **Sí**: devuelve otro `MlResult` |
+| `ExecSelfIfFail` | Es fallido | `MlErrorDetails` | No |
+| **`ExecSelfIfFailWithValue`** | **Fallido y hay `Details["Value"]` de tipo `TValue`** | **`MlErrorDetails`, `TValue`** | **No** |
+| `ExecSelfIfFailWithException` | Fallido y hay `Details["Ex"]` | `MlErrorDetails`, `Exception` | No |
+| `ExecSelfIfFailWithoutException` | Fallido y **sin** excepción | `MlErrorDetails` | No |
+| `MapIfFailWithValue` | Fallido y hay valor adjunto | `MlErrorDetails`, `TValue` | **Sí**: devuelve un valor |
+| `BindIfFailWithValue` | Fallido y hay valor adjunto | `MlErrorDetails`, `TValue` | **Sí**: devuelve otro `MlResult` |
 
 ---
 
@@ -323,7 +323,7 @@ adjunto, usa `MapIfFailWithValue` o `BindIfFailWithValue`.
 - [`3_ExecSelfIfFail.md`](3_ExecSelfIfFail.md) — efectos en la rama fallida.
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — el equivalente con la excepción.
 - [`6_ExecSelfIfFailWithoutException.md`](6_ExecSelfIfFailWithoutException.md) — solo fallos de negocio.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetDetailValue<T>`, `GetDetail<T>`.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `AddValueIfFail`, `GetMetadataValue<T>`, `GetDetail<T>`.
 - [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia y recuento de sobrecargas.
 - [`../Bind/7_BindIfFailWithValue.md`](../Bind/7_BindIfFailWithValue.md) y [`../Map/5_MapIfFailWithValue.md`](../Map/5_MapIfFailWithValue.md) — cuando sí quieres recuperar.
 - [`../Types/MlResultBucles.md`](../core-types/MlResultBucles.md) — `ProjectionSplit` para separar correctos y fallidos.

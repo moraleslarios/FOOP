@@ -27,7 +27,7 @@ Existe por una razón de diseño muy concreta:
 public partial record MlResult<T>
 {
     internal protected T                Value         { get; init; }
-    internal protected MlErrorsDetails  ErrorsDetails { get; init; }
+    internal protected MlErrorDetails  ErrorsDetails { get; init; }
 }
 ```
 
@@ -36,10 +36,10 @@ puedes leerlos directamente, y eso es una virtud, no una limitación. Te obliga 
 [`Match`](../Match/1_Match.md) o por los métodos de esta clase, que nunca lanzan
 `NullReferenceException` ni devuelven un valor «basura».
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
-> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `FirstErrorMessage` ni `HasValue`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -106,7 +106,7 @@ var resultado = ProcesarLinea(linea)
     .AddValueDetailIfFail(linea);          // Guarda la línea original en Details["Value"]
 
 resultado.ExecSelfIfFailWithValue<Registro, LineaCsv>((errores, lineaMala) =>
-    _log.LogWarning("Línea {N} descartada: {E}", lineaMala.Numero, errores.ToErrorsDescription()));
+    _log.LogWarning("Línea {N} descartada: {E}", lineaMala.Numero, errores.GetErrorsSummary()));
 ```
 
 > 💡 Es el hermano de [`AddValueIfFail`](../core-types/MlResultActionsErrorsDetails.md) y el requisito
@@ -143,7 +143,7 @@ var resultado = ObtenerPedido(id)
     .Bind(p => CalcularTotales(p))          // Aquí ya trabajamos con un Totales, no con el Pedido
     .Bind(t => Facturar(t))
     .ExecSelfIfFail(errores =>
-        errores.GetDetailValue<Pedido>().Match(
+        errores.GetMetadataValue<Pedido>().Match(
             valid: pedido => _log.LogError("Falló la facturación del pedido {Id}", pedido.Id),
             fail:  _      => _log.LogError("Falló la facturación (sin contexto de pedido)")));
 ```
@@ -167,13 +167,13 @@ Son las **puertas de escape controladas**. Nunca lanzan excepciones, sea cual se
 
 ```csharp
 public static T               GetValueOrThrow<T>       (this MlResult<T> source);
-public static MlErrorsDetails GetFailureDetailsOrThrow<T>(this MlResult<T> source);
+public static MlErrorDetails GetFailureDetailsOrThrow<T>(this MlResult<T> source);
 ```
 
 | Método | Si el resultado es válido | Si el resultado es fallido |
 | --- | --- | --- |
 | `GetValueOrThrow` | Devuelve el valor | Devuelve `default(T)` (`null` en referencias, `0` en `int`…) |
-| `GetFailureDetailsOrThrow` | Devuelve un `MlErrorsDetails` vacío | Devuelve los errores reales |
+| `GetFailureDetailsOrThrow` | Devuelve un `MlErrorDetails` vacío | Devuelve los errores reales |
 
 ```csharp
 // Caso legítimo: interoperar con un API que espera el valor pelado y acepta null.
@@ -182,7 +182,7 @@ if (cliente is null) return NotFound();
 
 // Caso legítimo: volcar los errores en un log sin ramificar.
 _log.LogDebug("Errores acumulados: {E}",
-              resultado.GetFailureDetailsOrThrow().ToErrorsDescription());
+              resultado.GetFailureDetailsOrThrow().GetErrorsSummary());
 ```
 
 ⚠️ **Cuidado con `GetValueOrThrow`:** te devuelve `default(T)` en la rama fallida, lo que significa
@@ -212,7 +212,7 @@ public static MlResult<T> DesdeTercero<T>(ResultadoExterno<T> externo)
         ? MlResult<T>.Valid(externo.Data)
         : MlResultActions.CreateCompleteMlResult<T>(
               value         : default!,
-              errorsDetails : MlErrorsDetails.FromErrorsMessagesDetails(
+              errorsDetails : MlErrorDetails.FromErrorsMessagesDetails(
                                   externo.Mensajes,
                                   new Dictionary<string, object>
                                   {
@@ -250,12 +250,12 @@ public class GestorPedidos
                 // Un único punto de observabilidad, con la historia completa del fallo.
                 .ExecSelfIfFailAsync(errores =>
                 {
-                    var contexto = errores.GetDetailValue<Pedido>()
+                    var contexto = errores.GetMetadataValue<Pedido>()
                                           .Match(valid: p => $"pedido {p.Id}, total {p.Total:C}",
                                                  fail:  _ => "sin contexto de pedido");
 
                     _log.LogError("Descuento no aplicado ({Contexto}). Traza:\n{Traza}",
-                                  contexto, errores.ToErrorsDescription());
+                                  contexto, errores.GetErrorsSummary());
                     return Task.CompletedTask;
                 });
 }
@@ -284,7 +284,7 @@ public MlResult<ResumenImportacion> Importar(IEnumerable<LineaCsv> lineas)
             .ExecSelfIfFailWithValue<Registro, LineaCsv>((errores, mala) =>
                 rechazadas.Add(new LineaRechazada(mala.Numero,
                                                   mala.Contenido,
-                                                  errores.ToErrorsMessages())));
+                                                  errores.GetErrorMessages())));
     }
 
     return new ResumenImportacion(aceptadas, rechazadas);
@@ -313,8 +313,8 @@ public async Task<IActionResult> Confirmar(int id)
         valid: c       => Ok(c),
         fail:  errores => StatusCode(500, new
         {
-            errores = errores.ToErrorsMessages(),
-            traza   = errores.ToDetailsDescription()      // Incluye TraceId y Usuario
+            errores = errores.GetErrorMessages(),
+            traza   = errores.GetMetadataSummary()      // Incluye TraceId y Usuario
         }));
 }
 ```
@@ -365,8 +365,8 @@ encadenarlos con total libertad sin alterar la semántica de la tubería.
 - [`3_Bind.md`](3_Bind.md) — encadenar operaciones que devuelven `MlResult`.
 - [`../Types/MlResult.md`](../core-types/MlResult.md) — el tipo y sus miembros reales.
 - [`../Types/MlResultActions.md`](../core-types/MlResultActions.md) — referencia completa de esta clase.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetail`, `AddValueIfFail`, `GetDetailException`.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y las claves convencionales.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetail`, `AddValueIfFail`, `GetException`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y las claves convencionales.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — la forma idiomática de salir de `MlResult<T>`.
 - [`../ExecSelf/4_ExecSelfIfFailWithValue.md`](../ExecSelf/4_ExecSelfIfFailWithValue.md) — consumir el valor guardado en el fallo.
 - [`../Transformations/Transformations.md`](../Transformations/Transformations.md) — crear resultados desde valores y mensajes.

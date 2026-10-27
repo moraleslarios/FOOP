@@ -18,7 +18,7 @@ public class NotEmptyString : ValueObject<string>
 
     public static NotEmptyString FromString(string value) => new NotEmptyString(value);
 
-    public static MlResult<NotEmptyString> ByString(string value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<NotEmptyString> ByString(string value, MlErrorDetails errorsDetails = null!)
         => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value))
                     .Map(_ => new NotEmptyString(value));
 

@@ -50,18 +50,18 @@ Fallo → failFunc(errorsDetails) → TReturn
 
 ## Métodos Match Básicos
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Este tipo expone **solo** dos propiedades: `Errors`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Este tipo expone **solo** dos propiedades: `Errors`
 > (`IEnumerable<MlError>`) y `Details` (`Dictionary<string, object>`). **No existen** `AllErrors`,
 > `FirstErrorMessage`, `Exception` ni `HasValue`. Para obtener los mensajes usa los métodos de
 > extensión reales:
 >
 > | Necesitas | Usa |
 > | --- | --- |
-> | Array/lista de mensajes | `errores.ToErrorsMessages()` |
-> | Un único texto con todos los errores | `errores.ToErrorsDescription()` |
+> | Array/lista de mensajes | `errores.GetErrorMessages()` |
+> | Un único texto con todos los errores | `errores.GetErrorsSummary()` |
 > | El primer mensaje | `errores.Errors.First().Message` |
-> | La excepción capturada por un `Try*` | `errores.GetDetailException()` → `MlResult<Exception>` |
-> | Un dato adjunto | `errores.GetDetailValue<T>()` / `errores.GetDetail<T>("clave")` |
+> | La excepción capturada por un `Try*` | `errores.GetException()` → `MlResult<Exception>` |
+> | Un dato adjunto | `errores.GetMetadataValue<T>()` / `errores.GetDetail<T>("clave")` |
 
 ### `Match<T, TReturn>()`
 
@@ -70,7 +70,7 @@ Fallo → failFunc(errorsDetails) → TReturn
 ```csharp
 public static TReturn Match<T, TReturn>(this MlResult<T>               source,
                                         Func<T, TReturn>               valid,
-                                        Func<MlErrorsDetails, TReturn> fail)
+                                        Func<MlErrorDetails, TReturn> fail)
 ```
 
 **Comportamiento**:
@@ -86,7 +86,7 @@ MlResult<Usuario> usuario = ObtenerUsuario(usuarioId);
 RespuestaApi<Usuario> respuesta = usuario.Match(
     valid: u        => new RespuestaApi<Usuario> { Correcto = true,  Datos = u },
     fail : errores  => new RespuestaApi<Usuario> { Correcto = false,
-                                                  Errores  = errores.ToErrorsMessages() });
+                                                  Errores  = errores.GetErrorMessages() });
 ```
 
 **Ejemplo con distinto tipo de retorno** (decidir un código HTTP a partir de los errores):
@@ -95,7 +95,7 @@ MlResult<Pago> resultado = ProcesarPago(datosPago);
 
 int codigo = resultado.Match(
     valid: pago    => StatusCodes.Status200OK,
-    fail : errores => errores.ToErrorsDescription().Contains("fraude", StringComparison.OrdinalIgnoreCase)
+    fail : errores => errores.GetErrorsSummary().Contains("fraude", StringComparison.OrdinalIgnoreCase)
                         ? StatusCodes.Status403Forbidden
                         : StatusCodes.Status400BadRequest);
 ```
@@ -120,7 +120,7 @@ Configuracion config = resultado.Match(
 ```csharp
 IActionResult respuesta = resultado.Match(
     valid: dto     => Ok(dto),
-    fail : errores => errores.GetDetailException().Match(
+    fail : errores => errores.GetException().Match(
                           // Hubo excepción: distinguimos por su tipo.
                           valid: ex => ex switch
                           {
@@ -130,7 +130,7 @@ IActionResult respuesta = resultado.Match(
                               _                     => StatusCode(500, ex.Message)
                           },
                           // No hubo excepción: es un error de negocio o validación.
-                          fail : _  => BadRequest(errores.ToErrorsMessages())));
+                          fail : _  => BadRequest(errores.GetErrorMessages())));
 ```
 
 ---
@@ -143,7 +143,7 @@ IActionResult respuesta = resultado.Match(
 public static async Task<TReturn> MatchAsync<T, TReturn>(
     this MlResult<T> source,
     Func<T, Task<TReturn>> validAsync,
-    Func<MlErrorsDetails, Task<TReturn>> failAsync)
+    Func<MlErrorDetails, Task<TReturn>> failAsync)
 ```
 
 **Ejemplo**:
@@ -161,7 +161,7 @@ var notification = await result.MatchAsync(
 public static async Task<TReturn> MatchAsync<T, TReturn>(
     this MlResult<T> source,
     Func<T, TReturn> valid,
-    Func<MlErrorsDetails, Task<TReturn>> failAsync)
+    Func<MlErrorDetails, Task<TReturn>> failAsync)
 ```
 
 ### `MatchAsync<T, TReturn>()` - Solo Función de Éxito Asíncrona
@@ -170,7 +170,7 @@ public static async Task<TReturn> MatchAsync<T, TReturn>(
 public static async Task<TReturn> MatchAsync<T, TReturn>(
     this MlResult<T> source,
     Func<T, Task<TReturn>> validAsync,
-    Func<MlErrorsDetails, TReturn> fail)
+    Func<MlErrorDetails, TReturn> fail)
 ```
 
 ### Variantes con Fuente Asíncrona
@@ -180,13 +180,13 @@ public static async Task<TReturn> MatchAsync<T, TReturn>(
 public static async Task<TReturn> MatchAsync<T, TReturn>(
     this Task<MlResult<T>> sourceAsync,
     Func<T, Task<TReturn>> validAsync,
-    Func<MlErrorsDetails, Task<TReturn>> failAsync)
+    Func<MlErrorDetails, Task<TReturn>> failAsync)
 
 // Task<MlResult<T>> con funciones síncronas
 public static async Task<TReturn> MatchAsync<T, TReturn>(
     this Task<MlResult<T>> sourceAsync,
     Func<T, TReturn> valid,
-    Func<MlErrorsDetails, TReturn> fail)
+    Func<MlErrorDetails, TReturn> fail)
 ```
 
 ---
@@ -199,14 +199,14 @@ public static async Task<TReturn> MatchAsync<T, TReturn>(
 public static MlResult<TResult> TryMatch<T, TResult>(
     this MlResult<T> source, 
     Func<T, TResult> valid,
-    Func<MlErrorsDetails, TResult> fail,
+    Func<MlErrorDetails, TResult> fail,
     Func<Exception, string> errorMessageBuilder)
 ```
 
 **Comportamiento**:
 - Ejecuta el `Match` normalmente.
 - Si **cualquiera** de las dos funciones lanza una excepción, devuelve un `MlResult<TResult>` fallido
-  con la excepción guardada en `Details["Ex"]` (recuperable con `GetDetailException()`).
+  con la excepción guardada en `Details["Ex"]` (recuperable con `GetException()`).
 - Convierte así las excepciones en errores manejables dentro de la tubería.
 
 > ⚠️ **Diferencia importante**: `Match` devuelve `TResult` **crudo**, mientras que `TryMatch` devuelve
@@ -226,7 +226,7 @@ MlResult<RespuestaDto> respuesta = resultado.TryMatch(
 ```csharp
 MlResult<byte[]> pdf = informe.TryMatch(
     valid: inf     => SerializarPdf(inf),                            // Puede lanzar
-    fail : errores => GenerarPdfDeError(errores.ToErrorsDescription()),
+    fail : errores => GenerarPdfDeError(errores.GetErrorsSummary()),
     "No se pudo generar el PDF del informe");
 ```
 
@@ -240,14 +240,14 @@ Si omites tanto `errorMessageBuilder` como `exceptionAditionalMessage`, se usa e
 public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(
     this MlResult<T> source, 
     Func<T, Task<TResult>> validAsync,
-    Func<MlErrorsDetails, Task<TResult>> failAsync,
+    Func<MlErrorDetails, Task<TResult>> failAsync,
     Func<Exception, string> errorMessageBuilder)
 
 // Con Task<MlResult<T>>
 public static async Task<MlResult<TResult>> TryMatchAsync<T, TResult>(
     this Task<MlResult<T>> sourceAsync, 
     Func<T, Task<TResult>> validAsync,
-    Func<MlErrorsDetails, Task<TResult>> failAsync,
+    Func<MlErrorDetails, Task<TResult>> failAsync,
     Func<Exception, string> errorMessageBuilder)
 ```
 
@@ -258,7 +258,7 @@ public static async Task<MlResult<TResult>> TryMatchAsync<T, TResult>(
 ### Ejemplo 1: Constructor de respuestas de API
 
 Un único punto de traducción entre el mundo `MlResult` y el mundo HTTP. Observa que **todo** el acceso a
-los errores se hace con la API real (`ToErrorsMessages`, `ToErrorsDescription`, `GetDetailException`).
+los errores se hace con la API real (`GetErrorMessages`, `GetErrorsSummary`, `GetException`).
 
 ```csharp
 public static class ConstructorRespuestas
@@ -277,9 +277,9 @@ public static class ConstructorRespuestas
             fail : errores => new RespuestaApi<T>
             {
                 Correcto      = false,
-                Errores       = errores.ToErrorsMessages(),      // string[]
+                Errores       = errores.GetErrorMessages(),      // string[]
                 CodigoError   = DeterminarCodigo(errores),
-                Diagnostico   = errores.ToErrorsDescription(),   // texto único
+                Diagnostico   = errores.GetErrorsSummary(),   // texto único
                 MomentoUtc    = DateTime.UtcNow
             });
 
@@ -296,25 +296,25 @@ public static class ConstructorRespuestas
             failAsync : async errores =>
             {
                 await RegistrarErroresAsync(errores);
-                return new ObjectResult(errores.ToErrorsMessages())
+                return new ObjectResult(errores.GetErrorMessages())
                 {
                     StatusCode = DeterminarCodigoHttp(errores)
                 };
             });
 
-    private static string DeterminarCodigo(MlErrorsDetails errores)
+    private static string DeterminarCodigo(MlErrorDetails errores)
     {
         // Un único texto en minúsculas evita recorrer la colección varias veces.
-        var texto = errores.ToErrorsDescription().ToLowerInvariant();
+        var texto = errores.GetErrorsSummary().ToLowerInvariant();
 
         if (texto.Contains("validación") || texto.Contains("validacion")) return "VALIDATION_ERROR";
         if (texto.Contains("no existe")  || texto.Contains("no encontrado")) return "NOT_FOUND";
         return "GENERAL_ERROR";
     }
 
-    private static int DeterminarCodigoHttp(MlErrorsDetails errores)
+    private static int DeterminarCodigoHttp(MlErrorDetails errores)
         // Primero miramos si hubo excepción: es la señal más fiable.
-        => errores.GetDetailException().Match(
+        => errores.GetException().Match(
             valid: ex => ex switch
             {
                 TimeoutException            => StatusCodes.Status504GatewayTimeout,
@@ -331,7 +331,7 @@ public static class ConstructorRespuestas
             });
 
     private static Task RegistrarExitoAsync<T>(T datos)          => Task.CompletedTask;
-    private static Task RegistrarErroresAsync(MlErrorsDetails e) => Task.CompletedTask;
+    private static Task RegistrarErroresAsync(MlErrorDetails e) => Task.CompletedTask;
 }
 
 public class RespuestaApi<T>
@@ -404,12 +404,12 @@ public class ServicioNotificaciones
 
     // ── Rama de fallo ──────────────────────────────────────────────────────────
     private async Task<ResultadoNotificacion> NotificarFalloAsync(SolicitudPedido solicitud,
-                                                                 MlErrorsDetails  errores)
+                                                                 MlErrorDetails  errores)
     {
         var enviadas = new List<string>();
 
-        // ToErrorsDescription() da un único texto legible con todos los errores.
-        var diagnostico = errores.ToErrorsDescription();
+        // GetErrorsSummary() da un único texto legible con todos los errores.
+        var diagnostico = errores.GetErrorsSummary();
 
         if (!string.IsNullOrWhiteSpace(solicitud.EmailCliente))
         {
@@ -423,8 +423,8 @@ public class ServicioNotificaciones
             enviadas.Add("Alerta crítica a soporte");
         }
 
-        // El log incluye la excepción original si la hubo, gracias a GetDetailException().
-        errores.GetDetailException()
+        // El log incluye la excepción original si la hubo, gracias a GetException().
+        errores.GetException()
                .Match(valid: ex => { _log.LogError(ex, "Pedido rechazado: {D}", diagnostico); return 0; },
                       fail : _  => { _log.LogWarning("Pedido rechazado: {D}", diagnostico);   return 0; });
 
@@ -443,16 +443,16 @@ public class ServicioNotificaciones
     /// Un error es crítico si vino de una excepción de infraestructura
     /// o si su descripción menciona un componente crítico.
     /// </summary>
-    private static bool EsErrorCritico(MlErrorsDetails errores)
-        => errores.GetDetailException().Match(
+    private static bool EsErrorCritico(MlErrorDetails errores)
+        => errores.GetException().Match(
                valid: ex => ex is TimeoutException or HttpRequestException or InvalidOperationException,
                fail : _  => new[] { "pasarela de pago", "base de datos", "crítico" }
-                                .Any(clave => errores.ToErrorsDescription()
+                                .Any(clave => errores.GetErrorsSummary()
                                                      .Contains(clave, StringComparison.OrdinalIgnoreCase)));
 
-    private static string ClasificarError(MlErrorsDetails errores)
+    private static string ClasificarError(MlErrorDetails errores)
     {
-        var texto = errores.ToErrorsDescription().ToLowerInvariant();
+        var texto = errores.GetErrorsSummary().ToLowerInvariant();
 
         if (texto.Contains("validación") || texto.Contains("validacion")) return "VALIDACION";
         if (texto.Contains("pago"))                                        return "PAGO";
@@ -499,7 +499,7 @@ querías era `Bind`, `Map`, `MapIfFail` o `ExecSelf*`.
 Si **cualquiera** de las dos ramas puede lanzar, usa `TryMatch` / `TryMatchAsync`. Ten en cuenta que
 `TryMatch` **cambia el tipo de retorno** a `MlResult<TResult>`, mientras que `Match` devuelve
 `TResult` crudo: esa es la única diferencia estructural entre ambos. La excepción capturada queda en
-`Details["Ex"]` y se recupera después con `GetDetailException()`.
+`Details["Ex"]` y se recupera después con `GetException()`.
 
 Hay dos formas de indicar el mensaje de error: `Func<Exception, string> errorMessageBuilder` o
 `string exceptionAditionalMessage`. Si no indicas ninguna, se usa el mensaje por defecto
@@ -537,7 +537,7 @@ tipo común (`IActionResult`, una interfaz propia, etc.).
 | --- | --- | --- | :---: | :---: |
 | `Bind` | `T` | `MlResult<TReturn>` | Sí | No |
 | `Map` | `T` | `MlResult<TReturn>` | Sí | No |
-| `MapIfFail` | `MlErrorsDetails` | `MlResult<T>` | Sí | **Solo** si hay fallo |
+| `MapIfFail` | `MlErrorDetails` | `MlResult<T>` | Sí | **Solo** si hay fallo |
 | `ExecSelf` | `T` o los errores | El mismo `MlResult<T>` | Sí | Según la variante |
 | `Match(valid, fail)` | `T` **y** los errores | `TReturn` **crudo** | **No** | Sí (rama `fail`) |
 | `TryMatch(valid, fail, …)` | `T` **y** los errores | `MlResult<TResult>` | Sí | Sí (rama `fail`) |
@@ -565,15 +565,15 @@ La misma necesidad, «obtener un pedido y devolver una respuesta HTTP», resuelt
 - `TryMatch` hace lo mismo pero captura las excepciones de los delegados y devuelve
   `MlResult<TResult>`, guardando la excepción en `Details["Ex"]`.
 - Existen sobrecargas para las **ocho** combinaciones de fuente y delegados síncronos/asíncronos.
-- `MlErrorsDetails` solo tiene `Errors` y `Details`: usa `ToErrorsMessages()`,
-  `ToErrorsDescription()`, `GetDetailException()` y `GetDetailValue<T>()` para consultarlo.
+- `MlErrorDetails` solo tiene `Errors` y `Details`: usa `GetErrorMessages()`,
+  `GetErrorsSummary()`, `GetException()` y `GetMetadataValue<T>()` para consultarlo.
 
 ## Ver también
 
 - [`2_MatchAll.md`](2_MatchAll.md) — la sobrecarga incondicional (`Func<TReturn>` sin parámetros).
 - [`../Types/MlResultActionsMatch.md`](../core-types/MlResultActionsMatch.md) — referencia completa del archivo fuente.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — el sistema de errores (`MlError`, `MlErrorsDetails`).
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailException`, `GetDetailValue<T>`, `GetDetail<T>`.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — el sistema de errores (`MlError`, `MlErrorDetails`).
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `GetMetadataValue<T>`, `GetDetail<T>`.
 - [`../Bind/3_Bind.md`](../Bind/3_Bind.md) — encadenar operaciones que pueden fallar.
 - [`../Map/1_Map.md`](../Map/1_Map.md) — transformar el valor sin salir de la tubería.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios sin alterar el resultado.

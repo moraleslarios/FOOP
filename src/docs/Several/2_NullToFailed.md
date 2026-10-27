@@ -40,10 +40,10 @@ return await _repo.ObtenerAsync(id)
                                           .NullToFailed($"Tarifa {c.TarifaId} no configurada")
                                           .Map(t => (Cliente: c, Tarifa: t)))
                   .MatchAsync(valid: par => Ok(par.ToDto()).ToAsync<IActionResult>(),
-                              fail : err => NotFound(err.ToErrorsMessages()).ToAsync<IActionResult>());
+                              fail : err => NotFound(err.GetErrorMessages()).ToAsync<IActionResult>());
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -93,24 +93,24 @@ yaEnCarril.Bind(c => c.Tarifa.NullToFailed("Tarifa no configurada"));
 
 ## Firmas reales e implementación
 
-El método base es el que recibe `MlErrorsDetails`; **todas las demás sobrecargas delegan
+El método base es el que recibe `MlErrorDetails`; **todas las demás sobrecargas delegan
 en él**, así que el comportamiento es idéntico:
 
 ```csharp
 // BASE
 public static MlResult<T> NullToFailed<T>(this T               source,
-                                               MlErrorsDetails errorsDetails)
+                                               MlErrorDetails errorsDetails)
     => source == null ? errorsDetails.ToMlResultFail<T>() : source.ToMlResultValid();
 
 public static MlResult<T> NullToFailed<T>(this T       source, MlError error)
-    => source.NullToFailed(MlErrorsDetails.FromError(error));
+    => source.NullToFailed(MlErrorDetails.FromError(error));
 
 public static MlResult<T> NullToFailed<T>(this T source, string errorMessage)
     => source.NullToFailed(MlError.FromErrorMessage(errorMessage));
 
 public static MlResult<T> NullToFailed<T>(this T                   source,
                                                IEnumerable<string> errorsMessage)
-    => source.NullToFailed(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+    => source.NullToFailed(MlErrorDetails.FromEnumerableStrings(errorsMessage));
 ```
 
 Puntos que conviene retener:
@@ -119,7 +119,7 @@ Puntos que conviene retener:
 |---------|----------------------|
 | La comprobación es `source == null` (no `is null`) | Para tipos con `operator ==` sobrecargado se usa **ese** operador, no la comparación de referencias |
 | El valor válido es `source`, tal cual | No hay copia, transformación ni normalización |
-| Todas las sobrecargas delegan en la de `MlErrorsDetails` | Un único punto de verdad; sin divergencias de comportamiento |
+| Todas las sobrecargas delegan en la de `MlErrorDetails` | Un único punto de verdad; sin divergencias de comportamiento |
 | No existe `TryNullToFailed` | No hace falta: el método no invoca ningún delegado tuyo |
 | No existe una sobrecarga con `Func<...>` para el mensaje | El mensaje se **evalúa siempre**, aunque el valor no sea `null` (ver particularidades) |
 
@@ -142,8 +142,8 @@ var r3 = configuracion.NullToFailed(new[]
     "Contacte con soporte si el problema persiste"
 });
 
-// 4) MlErrorsDetails → mensaje + detalles de diagnóstico
-var r4 = cliente.NullToFailed(MlErrorsDetails.FromErrorMessageDetails(
+// 4) MlErrorDetails → mensaje + detalles de diagnóstico
+var r4 = cliente.NullToFailed(MlErrorDetails.FromErrorMessageDetails(
              "No existe el cliente solicitado",
              new Dictionary<string, object> { ["ClienteId"]    = id,
                                               ["NoEncontrado"] = true,
@@ -220,11 +220,11 @@ origen.
 | Origen | Error como… | Naturaleza |
 |--------|-------------|-----------|
 | `T` | `MlError` | Envoltura (`ToAsync()`) |
-| `T` | `MlErrorsDetails` | Envoltura |
+| `T` | `MlErrorDetails` | Envoltura |
 | `T` | `string` | Envoltura |
 | `T` | `IEnumerable<string>` | Envoltura |
 | `Task<T>` | `MlError` | **Espera el origen** |
-| `Task<T>` | `MlErrorsDetails` | **Espera el origen** |
+| `Task<T>` | `MlErrorDetails` | **Espera el origen** |
 | `Task<T>` | `string` | **Espera el origen** |
 | `Task<T>` | `IEnumerable<string>` | **Espera el origen** |
 
@@ -268,7 +268,7 @@ método, y `NullToFailed` para **encadenar** resultados de consultas.
 |-----------|-----|
 | Fallar si un objeto es `null` | `NullToFailed("...")` |
 | Fallar si un objeto es `null`, con varios mensajes | `NullToFailed(new[] { "...", "..." })` |
-| Fallar si es `null` y adjuntar diagnóstico | `NullToFailed(MlErrorsDetails.FromErrorMessageDetails(...))` |
+| Fallar si es `null` y adjuntar diagnóstico | `NullToFailed(MlErrorDetails.FromErrorMessageDetails(...))` |
 | Lo mismo, partiendo de un `Task<T>` | `NullToFailedAsync("...")` |
 | Fallar si una colección viene vacía o `null` | [`EmptyToFailed`](1_EmptyToFailed.md) |
 | Validar un `int`, `decimal`, `DateTime`… | `EnsureFp.That(x, condición, "...")` |
@@ -290,7 +290,7 @@ public class FacturacionService
 
     public async Task<MlResult<DatosFacturacion>> PrepararAsync(int clienteId)
         => await _clientes.ObtenerAsync(clienteId)
-                          .NullToFailedAsync(MlErrorsDetails.FromErrorMessageDetails(
+                          .NullToFailedAsync(MlErrorDetails.FromErrorMessageDetails(
                               "El cliente indicado no existe",
                               new Dictionary<string, object> { ["ClienteId"] = clienteId,
                                                                ["NoEncontrado"] = true,
@@ -366,12 +366,12 @@ public MlResult<Envio> PrepararEnvio(Pedido pedido)
              .Bind(p => p.Destinatario.NullToFailed("El pedido no tiene destinatario")
                                       .Map(d => (Pedido: p, Destinatario: d)))
              .Bind(par => par.Destinatario.Direccion
-                             .NullToFailed(MlErrorsDetails.FromErrorMessageDetails(
+                             .NullToFailed(MlErrorDetails.FromErrorMessageDetails(
                                  "El destinatario no tiene dirección de entrega",
                                  new Dictionary<string, object> { ["PedidoId"]      = par.Pedido.Id,
                                                                   ["DestinatarioId"] = par.Destinatario.Id }))
                              .Map(dir => new Envio(par.Pedido, par.Destinatario, dir)))
-             .ExecSelfIfFail(err => _log.LogWarning("Envío no preparado: {Desc}", err.ToErrorsDescription()));
+             .ExecSelfIfFail(err => _log.LogWarning("Envío no preparado: {Desc}", err.GetErrorsSummary()));
 ```
 
 ### Ejemplo 5: qué no hacer
@@ -388,7 +388,7 @@ var r = EnsureFp.That(importe, importe > 0, "El importe debe ser positivo");
 var r = cliente.NullToFailed($"No existe: {await DescribirAsync(id)}");
 
 // ✅ Mensaje sencillo + detalles
-var r = cliente.NullToFailed(MlErrorsDetails.FromErrorMessageDetails(
+var r = cliente.NullToFailed(MlErrorDetails.FromErrorMessageDetails(
             "Cliente no encontrado", new Dictionary<string, object> { ["Id"] = id }));
 
 ```
@@ -403,7 +403,7 @@ var r = cliente.NullToFailed(MlErrorsDetails.FromErrorMessageDetails(
    defecto razonable, usa `??`.
 3. **No lo uses con tipos de valor no anulables**: nunca fallará. Usa
    `EnsureFp.That` o [`BoolToResult`](3_BoolToResult.md).
-4. **Prefiere la sobrecarga de `MlErrorsDetails`** en servicios: los `Details`
+4. **Prefiere la sobrecarga de `MlErrorDetails`** en servicios: los `Details`
    (`NoEncontrado`, identificadores, capa) permiten decidir la respuesta HTTP al final.
 5. **Usa la sobrecarga de `IEnumerable<string>`** para mensajes orientados al usuario:
    qué pasó, qué revisar, a quién avisar.
@@ -425,10 +425,10 @@ var r = cliente.NullToFailed(MlErrorsDetails.FromErrorMessageDetails(
   **Valid** con el mismo valor en caso contrario.
 - Es un **constructor de `MlResult`** (extensión de `T`), no un operador del carril; para
   usarlo dentro de una tubería, encadénalo con `Bind`.
-- **4 sobrecargas síncronas** (`MlErrorsDetails`, `MlError`, `string`,
+- **4 sobrecargas síncronas** (`MlErrorDetails`, `MlError`, `string`,
   `IEnumerable<string>`) y **8 asíncronas** (las mismas cuatro sobre `T`, que son meras
   envolturas, y sobre `Task<T>`, que sí esperan el origen).
-- El método **base** es el de `MlErrorsDetails`; todos los demás delegan en él.
+- El método **base** es el de `MlErrorDetails`; todos los demás delegan en él.
 - **No existe `TryNullToFailed`**: el método no invoca delegados de usuario.
 - ⚠️ Usa `source == null` (respeta `operator ==` sobrecargados) y **evalúa el mensaje
   siempre**.
@@ -445,5 +445,5 @@ var r = cliente.NullToFailed(MlErrorsDetails.FromErrorMessageDetails(
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — `NotNull`, `NotEmpty`, `That` y compañía
 - [`MapEnsure`](../Map/2_MapEnsure.md) — validar el contenido sin salir del carril
 - [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que devuelven `MlResult`
-- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y sus fábricas
+- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y sus fábricas
 - [`Transformations`](../Transformations/Transformations.md) — `ToMlResultValid`, `ToMlResultFail`, `ToAsync`

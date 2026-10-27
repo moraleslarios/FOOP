@@ -24,7 +24,7 @@ de errores, las alertas y las métricas de fallo, sin ensuciar la tubería de ne
 
 ```csharp
 MlResult<Pedido> resultado = ProcesarPedido(dto)
-    .ExecSelfIfFail(errores => _log.LogWarning("Pedido rechazado: {E}", errores.ToErrorsDescription()));
+    .ExecSelfIfFail(errores => _log.LogWarning("Pedido rechazado: {E}", errores.GetErrorsSummary()));
 
 // Si ProcesarPedido fue bien, el log NO se escribe y `resultado` sigue siendo válido.
 ```
@@ -48,15 +48,15 @@ var r = Consultar(id).MapIfFail(_ => valorPorDefecto);
 ```csharp
 // Síncrono
 public static MlResult<T> ExecSelfIfFail<T>(this MlResult<T>       source,
-                                            Action<MlErrorsDetails> actionFail)
+                                            Action<MlErrorDetails> actionFail)
 
 // Con captura de excepciones (ojo al nombre: TryExecSelfFail, sin "If")
 public static MlResult<T> TryExecSelfFail<T>(this MlResult<T>        source,
-                                            Action<MlErrorsDetails> actionFail,
+                                            Action<MlErrorDetails> actionFail,
                                             Func<Exception, string> errorMessageBuilder)
 
 public static MlResult<T> TryExecSelfFail<T>(this MlResult<T>        source,
-                                            Action<MlErrorsDetails> actionFail,
+                                            Action<MlErrorDetails> actionFail,
                                             string                  exceptionAditionalMessage = null!)
 ```
 
@@ -73,18 +73,18 @@ public static MlResult<T> TryExecSelfFail<T>(this MlResult<T>        source,
 
 ## Cómo consultar los errores
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone dos propiedades: `Errors`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone dos propiedades: `Errors`
 > (`IEnumerable<MlError>`) y `Details` (`Dictionary<string, object>`). **No existen** `AllErrors`,
 > `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`.
 
 | Quieres… | Usa |
 | --- | --- |
-| Todos los mensajes como colección | `errores.ToErrorsMessages()` |
-| Todos los mensajes en un solo texto | `errores.ToErrorsDescription()` |
+| Todos los mensajes como colección | `errores.GetErrorMessages()` |
+| Todos los mensajes en un solo texto | `errores.GetErrorsSummary()` |
 | Solo el primer mensaje | `errores.Errors.First().Message` |
-| La excepción original, si la hay | `errores.GetDetailException()` → `MlResult<Exception>` |
-| Una excepción de un tipo concreto | `errores.GetDetailException<TimeoutException>()` |
-| El valor que provocó el fallo | `errores.GetDetailValue<T>()` |
+| La excepción original, si la hay | `errores.GetException()` → `MlResult<Exception>` |
+| Una excepción de un tipo concreto | `errores.GetException<TimeoutException>()` |
+| El valor que provocó el fallo | `errores.GetMetadataValue<T>()` |
 | Un dato arbitrario adjunto | `errores.GetDetail<T>("miClave")` |
 
 Todos los `Get*` devuelven `MlResult<...>`, nunca lanzan. Para leerlos, encadena un `Match`:
@@ -92,11 +92,11 @@ Todos los `Get*` devuelven `MlResult<...>`, nunca lanzan. Para leerlos, encadena
 ```csharp
 .ExecSelfIfFail(errores =>
 {
-    var nivel = errores.GetDetailException()
+    var nivel = errores.GetException()
                        .Match(valid: _  => LogLevel.Error,     // Fallo técnico
                               fail:  _  => LogLevel.Warning);  // Fallo de negocio
 
-    _log.Log(nivel, "Operación fallida: {E}", errores.ToErrorsDescription());
+    _log.Log(nivel, "Operación fallida: {E}", errores.GetErrorsSummary());
 });
 ```
 
@@ -106,10 +106,10 @@ Todos los `Get*` devuelven `MlResult<...>`, nunca lanzan. Para leerlos, encadena
 
 | Fuente | Delegado | Método |
 | --- | --- | --- |
-| `MlResult<T>` | `Action<MlErrorsDetails>` | `ExecSelfIfFail` |
-| `MlResult<T>` | `Func<MlErrorsDetails, Task>` | `ExecSelfIfFailAsync` |
-| `Task<MlResult<T>>` | `Action<MlErrorsDetails>` | `ExecSelfIfFailAsync` |
-| `Task<MlResult<T>>` | `Func<MlErrorsDetails, Task>` | `ExecSelfIfFailAsync` |
+| `MlResult<T>` | `Action<MlErrorDetails>` | `ExecSelfIfFail` |
+| `MlResult<T>` | `Func<MlErrorDetails, Task>` | `ExecSelfIfFailAsync` |
+| `Task<MlResult<T>>` | `Action<MlErrorDetails>` | `ExecSelfIfFailAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorDetails, Task>` | `ExecSelfIfFailAsync` |
 
 Además existe `ExecSelfFailAsync` (2 sobrecargas) como alias asíncrono, y las variantes seguras
 `TryExecSelfFailAsync` (4) y `TryExecSelfIfFailAsync` (8).
@@ -117,7 +117,7 @@ Además existe `ExecSelfFailAsync` (2 sobrecargas) como alias asíncrono, y las 
 ```csharp
 var resultado = await ProcesarPedidoAsync(dto)
     .ExecSelfIfFailAsync(async errores =>
-        await _alertas.EnviarAsync($"Pedido rechazado: {errores.ToErrorsDescription()}"))
+        await _alertas.EnviarAsync($"Pedido rechazado: {errores.GetErrorsSummary()}"))
     .BindAsync(p => FacturarAsync(p));   // No se ejecuta si hubo fallo
 ```
 
@@ -154,7 +154,7 @@ public class ServicioFacturacion
             .ExecSelfIfFailAsync(async errores =>
             {
                 // ¿Hay excepción? Entonces es un fallo técnico: nivel Error + alerta.
-                await errores.GetDetailException()
+                await errores.GetException()
                     .Match(
                         valid: async ex =>
                         {
@@ -165,7 +165,7 @@ public class ServicioFacturacion
                         {
                             // Sin excepción: es una regla de negocio, no una avería.
                             _log.LogWarning("Pedido {Id} no facturable: {E}",
-                                            pedidoId, errores.ToErrorsDescription());
+                                            pedidoId, errores.GetErrorsSummary());
                             await Task.CompletedTask;
                         });
             });
@@ -187,7 +187,7 @@ public MlResult<Reserva> Reservar(PeticionReserva peticion)
         .ExecSelfIfFail(errores =>
         {
             // Una métrica por cada error acumulado, no solo por el primero.
-            foreach (var mensaje in errores.ToErrorsMessages())
+            foreach (var mensaje in errores.GetErrorMessages())
                 _metricas.Incrementar("reservas.fallidas", ("motivo", Clasificar(mensaje)));
         });
 
@@ -216,7 +216,7 @@ public Task<MlResult<Transferencia>> TransferirAsync(OrdenTransferencia orden)
                 Origen    = orden.CuentaOrigen,
                 Destino   = orden.CuentaDestino,
                 Importe   = orden.Importe,
-                Motivo    = errores.ToErrorsDescription(),
+                Motivo    = errores.GetErrorsSummary(),
                 Momento   = DateTime.UtcNow
             }),
             ex => $"La transferencia falló y además no se pudo auditar el fallo: {ex.Message}");
@@ -237,7 +237,7 @@ public async Task<MlResult<Cotizacion>> ObtenerCotizacionAsync(string simbolo)
         {
             intentos++;
             _log.LogInformation("Intento {N} fallido para {Simbolo}: {E}",
-                                intentos, simbolo, errores.ToErrorsDescription());
+                                intentos, simbolo, errores.GetErrorsSummary());
         })
 
         // Aquí sí recuperamos: BindIfFail devuelve una nueva tubería.
@@ -267,9 +267,9 @@ var config = Cargar().MapIfFail(_ => Configuracion.PorDefecto);
 Cuanto más cerca esté del origen del fallo, más contexto podrás registrar. Un único
 `ExecSelfIfFail` al final del método solo sabe *que* algo falló, no *dónde*.
 
-### 3. Nunca uses miembros inventados de `MlErrorsDetails`
+### 3. Nunca uses miembros inventados de `MlErrorDetails`
 
-`ToErrorsDescription()` para el texto completo, `ToErrorsMessages()` para la colección,
+`GetErrorsSummary()` para el texto completo, `GetErrorMessages()` para la colección,
 `Errors.First().Message` para el primero. Nada de `FirstErrorMessage` ni `AllErrors`.
 
 ### 4. Usa las variantes especializadas cuando aporten claridad
@@ -290,13 +290,13 @@ publicar en una cola, `TryExecSelfFail` / `TryExecSelfIfFailAsync`.
 | Método | Se ejecuta si… | El delegado recibe | ¿Cambia el resultado? |
 | --- | --- | --- | :---: |
 | `ExecSelfIfValid` | Es válido | `T` | No |
-| **`ExecSelfIfFail`** | **Es fallido** | **`MlErrorsDetails`** | **No** |
-| `ExecSelfIfFailWithValue` | Fallido y hay valor en `Details["Value"]` | `MlErrorsDetails`, `TValue` | No |
-| `ExecSelfIfFailWithException` | Fallido y hay excepción en `Details["Ex"]` | `MlErrorsDetails`, `Exception` | No |
-| `ExecSelfIfFailWithoutException` | Fallido y **sin** excepción | `MlErrorsDetails` | No |
-| `TryExecSelfFail` | Es fallido | `MlErrorsDetails` | Solo si el delegado lanza |
-| `MapIfFail` | Es fallido | `MlErrorsDetails` | **Sí**: devuelve un valor |
-| `BindIfFail` | Es fallido | `MlErrorsDetails` | **Sí**: devuelve otro `MlResult<T>` |
+| **`ExecSelfIfFail`** | **Es fallido** | **`MlErrorDetails`** | **No** |
+| `ExecSelfIfFailWithValue` | Fallido y hay valor en `Details["Value"]` | `MlErrorDetails`, `TValue` | No |
+| `ExecSelfIfFailWithException` | Fallido y hay excepción en `Details["Ex"]` | `MlErrorDetails`, `Exception` | No |
+| `ExecSelfIfFailWithoutException` | Fallido y **sin** excepción | `MlErrorDetails` | No |
+| `TryExecSelfFail` | Es fallido | `MlErrorDetails` | Solo si el delegado lanza |
+| `MapIfFail` | Es fallido | `MlErrorDetails` | **Sí**: devuelve un valor |
+| `BindIfFail` | Es fallido | `MlErrorDetails` | **Sí**: devuelve otro `MlResult<T>` |
 
 ---
 
@@ -305,8 +305,8 @@ publicar en una cola, `TryExecSelfFail` / `TryExecSelfIfFailAsync`.
 - `ExecSelfIfFail` ejecuta una acción **solo cuando el resultado es fallido** y devuelve el mismo
   `MlResult<T>`, con los mismos errores.
 - **No recupera** el resultado: para eso están `MapIfFail` y `BindIfFail`.
-- Los errores se consultan con `ToErrorsMessages()`, `ToErrorsDescription()`,
-  `Errors.First().Message`, `GetDetailException()` y `GetDetailValue<T>()`.
+- Los errores se consultan con `GetErrorMessages()`, `GetErrorsSummary()`,
+  `Errors.First().Message`, `GetException()` y `GetMetadataValue<T>()`.
 - ⚠️ El método síncrono con captura de excepciones se llama **`TryExecSelfFail`**, no
   `TryExecSelfIfFail`. En asíncrono existen ambos nombres.
 - Es el sitio idiomático para *logging*, métricas, alertas y auditoría de fallos.

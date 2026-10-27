@@ -15,7 +15,7 @@ public class MlDirectory : RegexValue
 
     public static MlDirectory FromString(string value) => new MlDirectory(value);
 
-    public static MlResult<MlDirectory> ByString(string value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<MlDirectory> ByString(string value, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
                             .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                             .Map ( _ => new MlDirectory(value));

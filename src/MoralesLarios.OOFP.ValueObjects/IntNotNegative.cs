@@ -18,7 +18,7 @@ public class IntNotNegative : IntMoreThan
 
 
     public static IntNotNegative FromInt(int value) => new IntNotNegative(value);
-    public static MlResult<IntNotNegative> ByInt(int value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<IntNotNegative> ByInt(int value, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                     .Map ( _ => new IntNotNegative(value));

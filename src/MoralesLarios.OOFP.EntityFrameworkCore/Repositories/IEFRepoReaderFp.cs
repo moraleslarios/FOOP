@@ -18,10 +18,10 @@ public interface IEFRepoReaderFp<T> where T : class
     Task<MlResult<IEnumerable<T>>> TryGetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
     MlResult<IEnumerable<T>> TryAll();
     Task<MlResult<IEnumerable<T>>> TryAllAsync(CancellationToken token = default);
-    MlResult<T> TryFind(MlErrorsDetails notFoundErrorDetails, params object[] pk);
-    Task<MlResult<T>> TryFindAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
-    MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails);
-    Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default);
-    MlResult<T> TryLast(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails);
-    Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default);
+    MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] pk);
+    Task<MlResult<T>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+    MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
+    Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
+    MlResult<T> TryLast(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
+    Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
 }

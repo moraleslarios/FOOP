@@ -29,7 +29,7 @@ Son también los cimientos internos de la librería: `TryToMlResult` es lo que h
 
 | Método | Sobrecargas | Descripción |
 | --- | --- | --- |
-| `ToMlResultFail<T>(...)` | 14 | Crea un `MlResult<T>` **fallido** desde `string`, `MlError`, colecciones, `MlErrorsDetails`, `Exception`, mensaje + excepción, mensaje + valor… |
+| `ToMlResultFail<T>(...)` | 14 | Crea un `MlResult<T>` **fallido** desde `string`, `MlError`, colecciones, `MlErrorDetails`, `Exception`, mensaje + excepción, mensaje + valor… |
 | `ToMlResultFailAsync<T>(...)` | 15 | Versiones asíncronas. |
 | `TryToMlResultErrors<T>(...)` | 2 | Ejecuta una función y, si lanza, produce un fallo con los errores ya construidos. |
 | `TryToMlResultErrorsAsync<T>(...)` | 2 | Versiones asíncronas. |
@@ -115,7 +115,7 @@ MlResult<Cliente> r4 = "Error al leer el cliente de la base de datos"
 MlResult<Cliente> r5 = "El DNI no supera la validación de dígito de control"
                            .ToMlResultFail<Cliente>(dniEntrante);
 
-// 6) Desde un MlErrorsDetails ya construido.
+// 6) Desde un MlErrorDetails ya construido.
 MlResult<Cliente> r6 = detalles.ToMlResultFail<Cliente>();
 ```
 
@@ -165,7 +165,7 @@ conservar:
 | `Func<Exception, string> errorMessageBuilder` | Quieres incluir datos de la excepción en el mensaje. |
 | `string exceptionAditionalMessage` | Te basta un prefijo fijo; se combina con `Constants.DEFAULT_EX_ERROR_MESSAGE`. |
 | Sin mensaje | Se usa el mensaje por defecto de la excepción. |
-| Con `MlErrorsDetails` previo | Se **fusionan** los errores anteriores con la excepción nueva. |
+| Con `MlErrorDetails` previo | Se **fusionan** los errores anteriores con la excepción nueva. |
 
 Versión asíncrona:
 
@@ -287,7 +287,7 @@ public async Task<MlResult<PedidoConfirmado>> ConfirmarAsync(string json)
 ## Ver también
 
 - [`MlResult<T>`](MlResult.md) — el tipo destino de todas estas conversiones.
-- [`MlResultErrors`](MlResultErrors.md) — `MlError`, `MlErrorsDetails` y sus conversiones implícitas.
+- [`MlResultErrors`](MlResultErrors.md) — `MlError`, `MlErrorDetails` y sus conversiones implícitas.
 - [`MlResultActionsErrorsDetails`](MlResultActionsErrorsDetails.md) — leer la excepción guardada por `TryToMlResult`.
 - [`MlResultActionsBind`](MlResultActionsBind.md) — `TryBind*`, construidos sobre `TryToMlResult`.
 - [`MlResultActionsMap`](MlResultActionsMap.md) — `TryMap*`, idem.

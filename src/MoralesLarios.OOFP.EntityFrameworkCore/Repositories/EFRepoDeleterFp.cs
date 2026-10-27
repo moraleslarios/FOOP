@@ -26,7 +26,7 @@ public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
     public virtual MlResult<T> TryRemove(params object[] pk)
         => TryRemove(null!, pk);
 
-    public virtual MlResult<T> TryRemove(MlErrorsDetails notFoundErrorDetails, params object[] pk)
+    public virtual MlResult<T> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] pk)
     {
         var result = EnsureFp.NotEmpty(pk, "The object array pk cannot be empty")
                                 .Bind  ( pk      => notFoundErrorDetails is null        
@@ -53,7 +53,7 @@ public class EFRepoDeleterFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbC
         return result;
     }
 
-    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
+    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk)
     {
         var result = await EnsureFp.NotEmptyAsync(pk, "The object array pk cannot be empty")
                                     .BindAsync  ( _       => notFoundErrorDetails is null

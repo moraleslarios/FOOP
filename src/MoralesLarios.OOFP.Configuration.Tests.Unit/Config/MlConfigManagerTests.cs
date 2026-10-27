@@ -79,7 +79,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     public void ReadAppSettingKey_withErrorsDetails_WhenKeyExists_return_valid()
     {
         string appSettingKey = "SimpleKey";
-        MoralesLarios.OOFP.Types.Errors.MlErrorsDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorsDetails.FromErrorMessage("Error personalizado");
+        MoralesLarios.OOFP.Types.Errors.MlErrorDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorDetails.FromErrorMessage("Error personalizado");
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
@@ -90,7 +90,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     public void ReadAppSettingKey_withErrorsDetails_WhenKeyExists_return_validValue()
     {
         string appSettingKey = "SimpleKey";
-        MoralesLarios.OOFP.Types.Errors.MlErrorsDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorsDetails.FromErrorMessage("Error personalizado");
+        MoralesLarios.OOFP.Types.Errors.MlErrorDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorDetails.FromErrorMessage("Error personalizado");
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
@@ -103,7 +103,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     public void ReadAppSettingKey_withErrorsDetails_WhenKeyNotExists_return_fail()
     {
         string appSettingKey = "NotExists";
-        MoralesLarios.OOFP.Types.Errors.MlErrorsDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorsDetails.FromErrorMessage("Error personalizado");
+        MoralesLarios.OOFP.Types.Errors.MlErrorDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorDetails.FromErrorMessage("Error personalizado");
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
@@ -114,7 +114,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     public void ReadAppSettingKey_complexKey_withErrorsDetails_WhenKeyExists_return_valid()
     {
         string appSettingKey = "ComplexKey:ComplexKey1";
-        MoralesLarios.OOFP.Types.Errors.MlErrorsDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorsDetails.FromErrorMessage("Error personalizado");
+        MoralesLarios.OOFP.Types.Errors.MlErrorDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorDetails.FromErrorMessage("Error personalizado");
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
@@ -125,7 +125,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     public void ReadAppSettingKey_complexKey_withErrorsDetails_WhenKeyExists_return_validValue()
     {
         string appSettingKey = "ComplexKey:ComplexKey1";
-        MoralesLarios.OOFP.Types.Errors.MlErrorsDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorsDetails.FromErrorMessage("Error personalizado");
+        MoralesLarios.OOFP.Types.Errors.MlErrorDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorDetails.FromErrorMessage("Error personalizado");
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 
@@ -138,7 +138,7 @@ public class MlConfigManagerTests(IMlConfigManager sut)
     public void ReadAppSettingKey_complexKey_withErrorsDetails_WhenKeyNotExists_return_fail()
     {
         string appSettingKey = "NotExists:ComplexKey";
-        MoralesLarios.OOFP.Types.Errors.MlErrorsDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorsDetails.FromErrorMessage("Error personalizado");
+        MoralesLarios.OOFP.Types.Errors.MlErrorDetails errorsDetails = MoralesLarios.OOFP.Types.Errors.MlErrorDetails.FromErrorMessage("Error personalizado");
 
         MlResult<string> result = _sut.ReadAppSettingKey<string>(appSettingKey, errorsDetails);
 

@@ -54,7 +54,7 @@ Todas las reglas del bloque tienen la restricción `where T : struct` y devuelve
 
 ```csharp
 public static MlResult<T> NotNullValue<T>(T? value, string errorMessage)           where T : struct;
-public static MlResult<T> NotNullValue<T>(T? value, MlErrorsDetails errorsDetails) where T : struct;
+public static MlResult<T> NotNullValue<T>(T? value, MlErrorDetails errorsDetails) where T : struct;
 ```
 
 ```csharp

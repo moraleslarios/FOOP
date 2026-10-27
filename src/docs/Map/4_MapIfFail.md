@@ -35,7 +35,7 @@ MlResult<Configuracion> cfg = LeerConfiguracion(ruta)
                                   .MapIfFail(errores => Configuracion.PorDefecto);
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`.
 
 ---
 
@@ -46,7 +46,7 @@ Como en tantas familias de la biblioteca, hay **dos formas** con propósitos dis
 | | Forma A — solo recuperación | Forma B — punto de convergencia |
 |---|---|---|
 | **Genéricos** | `<T>` | `<T, TReturn>` |
-| **Delegados** | `Func<MlErrorsDetails, T> func` | `funcValid` **y** `funcFail` |
+| **Delegados** | `Func<MlErrorDetails, T> func` | `funcValid` **y** `funcFail` |
 | **Tipo de salida** | El mismo: `MlResult<T>` | Puede cambiar: `MlResult<TReturn>` |
 | **Rama válida** | El valor pasa **intacto** | Se transforma con `funcValid` |
 | **Lectura** | «si falla, usa esto» | «unifica los dos carriles en un tipo común» |
@@ -59,7 +59,7 @@ MlResult<decimal> saldo = ConsultarSaldo(cuenta)
 // Forma B: convertir ambos carriles en un único tipo de salida
 MlResult<string> mensaje = ConsultarSaldo(cuenta)
                                .MapIfFail(funcValid: s        => $"Saldo disponible: {s:C}",
-                                          funcFail : errores  => $"No se pudo consultar: {errores.ToErrorsDescription()}");
+                                          funcFail : errores  => $"No se pudo consultar: {errores.GetErrorsSummary()}");
 ```
 
 ---
@@ -70,7 +70,7 @@ MlResult<string> mensaje = ConsultarSaldo(cuenta)
 
 ```csharp
 public static MlResult<T> MapIfFail<T>(this MlResult<T>              source,
-                                            Func<MlErrorsDetails, T> func)
+                                            Func<MlErrorDetails, T> func)
     => source.Match
                     (
                         fail : func,
@@ -78,14 +78,14 @@ public static MlResult<T> MapIfFail<T>(this MlResult<T>              source,
                     );
 ```
 
-Es literalmente un `Match` en el que la rama válida es la identidad. El delegado recibe **el `MlErrorsDetails` completo**, así que puedes usar los errores para decidir el valor de reemplazo.
+Es literalmente un `Match` en el que la rama válida es la identidad. El delegado recibe **el `MlErrorDetails` completo**, así que puedes usar los errores para decidir el valor de reemplazo.
 
 ### Forma B — `<T, TReturn>`, punto de convergencia
 
 ```csharp
 public static MlResult<TReturn> MapIfFail<T, TReturn>(this MlResult<T>                    source,
                                                            Func<T,               TReturn> funcValid,
-                                                           Func<MlErrorsDetails, TReturn> funcFail)
+                                                           Func<MlErrorDetails, TReturn> funcFail)
     => source.Match
                     (
                         fail : funcFail,
@@ -121,7 +121,7 @@ Tres formas de tratar la rama de fallo, con niveles de compromiso muy distintos:
 
 // Match: ya no quiero un MlResult, quiero una respuesta HTTP
 .Match(valid: t       => Ok(t),
-       fail : errores => BadRequest(errores.ToErrorsMessages()))
+       fail : errores => BadRequest(errores.GetErrorMessages()))
 ```
 
 > 🔑 **Criterio de elección**: si el plan B puede fallar, usa `BindIfFail`. Si es un valor seguro (una constante, un objeto por defecto, un cálculo local), usa `MapIfFail`. Y si ya no vas a seguir la tubería, usa `Match`.
@@ -156,7 +156,7 @@ Ese `0m` es indistinguible de un saldo real de cero. Dos medidas obligatorias:
 ```csharp
 var saldo = _repo.ConsultarSaldo(cuenta)
                  .ExecSelfIfFail(errores => _log.LogWarning("Saldo no disponible para {Cuenta}: {Detalle}",
-                                                            cuenta, errores.ToErrorsDescription()))
+                                                            cuenta, errores.GetErrorsSummary()))
                  .MapIfFail(_ => 0m);
 ```
 
@@ -165,16 +165,16 @@ var saldo = _repo.ConsultarSaldo(cuenta)
 ```csharp
 // ✅ El consumidor sabe que es un valor degradado
 var saldo = _repo.ConsultarSaldo(cuenta)
-                 .ExecSelfIfFail(e => _log.LogWarning("{Detalle}", e.ToErrorsDescription()))
+                 .ExecSelfIfFail(e => _log.LogWarning("{Detalle}", e.GetErrorsSummary()))
                  .MapIfFail(errores => new SaldoInfo(Importe: 0m,
                                                      EsFiable: false,
-                                                     Motivo: errores.ToErrorsDescription()));
+                                                     Motivo: errores.GetErrorsSummary()));
 ```
 
 **3. Distingue error técnico de error de negocio.** Un fallo de negocio puede tener un valor por defecto razonable; una excepción de infraestructura normalmente no debe silenciarse:
 
 ```csharp
-.MapIfFail(errores => errores.GetDetailException().IsSuccess
+.MapIfFail(errores => errores.GetException().IsSuccess
                           ? throw new InvalidOperationException("Fallo técnico no recuperable")  // ⚠️ ver TryMapIfFail
                           : Tarifa.Estandar);
 ```
@@ -192,7 +192,7 @@ var saldo = _repo.ConsultarSaldo(cuenta)
 | Origen | `func` |
 |---|---|
 | `MlResult<T>` | sync |
-| `MlResult<T>` | **async** (`Func<MlErrorsDetails, Task<T>>`) |
+| `MlResult<T>` | **async** (`Func<MlErrorDetails, Task<T>>`) |
 | `Task<MlResult<T>>` | sync |
 | `Task<MlResult<T>>` | **async** |
 
@@ -203,7 +203,7 @@ Combinaciones de origen (`MlResult<T>` / `Task<MlResult<T>>`) con la asincronía
 ```csharp
 public static async Task<MlResult<TReturn>> MapIfFailAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                             Func<T,               TReturn> funcValid,
-                                                                            Func<MlErrorsDetails, Task<TReturn>> funcFailAsync)
+                                                                            Func<MlErrorDetails, Task<TReturn>> funcFailAsync)
     => await (await sourceAsync).MapIfFailAsync(funcValid.ToFuncTask(), funcFailAsync);
 ```
 
@@ -219,7 +219,7 @@ Aunque el delegado de `MapIfFail` *debería* ser infalible, a veces el valor por
 
 ```csharp
 public static MlResult<T> TryMapIfFail<T>(this MlResult<T>              source,
-                                               Func<MlErrorsDetails, T> func,
+                                               Func<MlErrorDetails, T> func,
                                                Func<Exception, string>  errorMessageBuilder)
     => source.Match
                     (
@@ -228,7 +228,7 @@ public static MlResult<T> TryMapIfFail<T>(this MlResult<T>              source,
                     );
 
 // Sobrecarga con mensaje fijo
-public static MlResult<T> TryMapIfFail<T>(this MlResult<T> source, Func<MlErrorsDetails, T> func,
+public static MlResult<T> TryMapIfFail<T>(this MlResult<T> source, Func<MlErrorDetails, T> func,
                                                string errorMessage = null!)
     => source.TryMapIfFail(func, _ => errorMessage!);
 ```
@@ -238,7 +238,7 @@ public static MlResult<T> TryMapIfFail<T>(this MlResult<T> source, Func<MlErrors
 ```csharp
 public static MlResult<TReturn> TryMapIfFail<T, TReturn>(this MlResult<T>                    source,
                                                               Func<T,               TReturn> funcValid,
-                                                              Func<MlErrorsDetails, TReturn> funcFail,
+                                                              Func<MlErrorDetails, TReturn> funcFail,
                                                               Func<Exception, string>        errorMessageBuilder)
     => source.Match
                     (
@@ -253,7 +253,7 @@ Fíjate en que en la Forma B **las dos ramas están protegidas**.
 
 ```csharp
 var cfg = LeerConfiguracion(ruta)
-              .ExecSelfIfFail(e => _log.LogWarning("Config principal no disponible: {D}", e.ToErrorsDescription()))
+              .ExecSelfIfFail(e => _log.LogWarning("Config principal no disponible: {D}", e.GetErrorsSummary()))
               .TryMapIfFail(_ => JsonSerializer.Deserialize<Configuracion>(File.ReadAllText(rutaRespaldo))!,
                             ex => $"Tampoco se pudo leer la configuración de respaldo '{rutaRespaldo}': {ex.Message}");
 ```
@@ -273,7 +273,7 @@ public async Task<MlResult<PreferenciasUsuario>> ObtenerPreferenciasAsync(int us
         // 1. Observar SIN silenciar: el fallo queda registrado
         .ExecSelfIfFailAsync(errores => _log.LogWarning(
                 "Preferencias no disponibles para el usuario {UsuarioId}. Se usarán las de por defecto. Detalle: {Detalle}",
-                usuarioId, errores.ToErrorsDescription()))
+                usuarioId, errores.GetErrorsSummary()))
 
         // 2. Recuperar con un valor que DECLARA que es de reemplazo
         .MapIfFailAsync(errores => PreferenciasUsuario.PorDefecto with
@@ -303,10 +303,10 @@ public async Task<MlResult<TarjetaSaldoVm>> ObtenerTarjetaAsync(string iban)
             funcFail : errores => new TarjetaSaldoVm(
                                     Importe    = "—",
                                     Actualizado = "no disponible",
-                                    Estado      = errores.GetDetailException().IsSuccess
+                                    Estado      = errores.GetException().IsSuccess
                                                         ? EstadoTarjeta.ErrorTecnico
                                                         : EstadoTarjeta.SinDatos,
-                                    Aviso       = errores.ToErrorsDescription()));
+                                    Aviso       = errores.GetErrorsSummary()));
 ```
 
 La interfaz recibe siempre un `TarjetaSaldoVm` y sabe pintar los tres estados. **Ningún `if` en la vista.**
@@ -319,7 +319,7 @@ public MlResult<CadenaConexion> ResolverConexion(string entorno)
        LeerDesdeFichero($"appsettings.{entorno}.json")
 
         // 2º intento: variable de entorno (puede lanzar si el formato es inválido)
-        .ExecSelfIfFail(e => _log.LogInformation("Sin fichero de configuración: {D}", e.ToErrorsDescription()))
+        .ExecSelfIfFail(e => _log.LogInformation("Sin fichero de configuración: {D}", e.GetErrorsSummary()))
         .TryMapIfFail(_ => CadenaConexion.Parsear(
                                Environment.GetEnvironmentVariable("DB_CONN")
                                    ?? throw new InvalidOperationException("La variable DB_CONN no está definida")),
@@ -329,7 +329,7 @@ public MlResult<CadenaConexion> ResolverConexion(string entorno)
         .MapIfFail(errores => entorno == "Development"
                                   ? CadenaConexion.LocalDb
                                   : throw new InvalidOperationException(
-                                        $"Configuración de base de datos ausente en '{entorno}'. {errores.ToErrorsDescription()}"));
+                                        $"Configuración de base de datos ausente en '{entorno}'. {errores.GetErrorsSummary()}"));
 ```
 
 > 💡 En el último paso se lanza a propósito: hay fallos de los que **no se debe** recuperar. Cuando la ausencia de configuración es un error de despliegue, lo correcto es que la aplicación no arranque.
@@ -341,7 +341,7 @@ public MlResult<CadenaConexion> ResolverConexion(string entorno)
 var total = CalcularTotal(pedido).MapIfFail(_ => 0m);
 // ✅ Observa primero
 var total2 = CalcularTotal(pedido)
-                 .ExecSelfIfFail(e => _log.LogError("Cálculo fallido: {D}", e.ToErrorsDescription()))
+                 .ExecSelfIfFail(e => _log.LogError("Cálculo fallido: {D}", e.GetErrorsSummary()))
                  .MapIfFail(_ => 0m);
 
 
@@ -359,7 +359,7 @@ var mal3 = _repo.Obtener(id).MapIfFail(_ => Pedido.Vacio)
                             .MapEnsure(p => p.Lineas.Any(), "Sin líneas");   // ahora falla por el valor FALSO
 // ✅ Coloca la recuperación al FINAL, cuando ya has validado
 var bien3 = _repo.Obtener(id).MapEnsure(p => p.Lineas.Any(), "Sin líneas")
-                             .ExecSelfIfFail(e => _log.LogWarning("{D}", e.ToErrorsDescription()))
+                             .ExecSelfIfFail(e => _log.LogWarning("{D}", e.GetErrorsSummary()))
                              .MapIfFail(_ => Pedido.Vacio);
 
 
@@ -367,7 +367,7 @@ var bien3 = _repo.Obtener(id).MapEnsure(p => p.Lineas.Any(), "Sin líneas")
 var mal4 = Principal().TryMapIfFail(_ => Respaldo(), "El respaldo también falló");
 //    Si el respaldo lanza, el error de Principal() ya no está en ninguna parte.
 // ✅ Registra o fusiona antes
-var bien4 = Principal().ExecSelfIfFail(e => _log.LogWarning("{D}", e.ToErrorsDescription()))
+var bien4 = Principal().ExecSelfIfFail(e => _log.LogWarning("{D}", e.GetErrorsSummary()))
                        .TryMapIfFail(_ => Respaldo(), ex => $"El respaldo también falló: {ex.Message}");
 ```
 
@@ -385,7 +385,7 @@ var bien4 = Principal().ExecSelfIfFail(e => _log.LogWarning("{D}", e.ToErrorsDes
 
 5. **Usa la Forma B como traductor final a modelo de vista.** Unifica los dos carriles en un tipo que la presentación sabe pintar, sin `if` en la vista.
 
-6. **Aprovecha el `MlErrorsDetails` que recibes.** No lo ignores con `_ =>`: puede alimentar el motivo, decidir entre varios valores por defecto o distinguir error técnico de error de negocio con `GetDetailException().IsSuccess`.
+6. **Aprovecha el `MlErrorDetails` que recibes.** No lo ignores con `_ =>`: puede alimentar el motivo, decidir entre varios valores por defecto o distinguir error técnico de error de negocio con `GetException().IsSuccess`.
 
 7. **Para «recuperar solo si no fue una excepción», usa [`MapIfFailWithoutException`](7_MapIfFailWithoutException.md)**, no un `if` dentro del delegado.
 

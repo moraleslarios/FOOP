@@ -151,3 +151,25 @@ fase3a-nivel2-mlresult;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types
 fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Helpers.Constants;EX_DESC_KEY;ExceptionMetadataKey;1;86;El valor "Ex" no cambia aqui (cambio de contrato -> Fase 12)
 fase3a-nivel2-mlresult;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Helpers.Constants;VALUE_KEY;ValueMetadataKey;1;41;
 fase3a-nivel2-mlresult;2;Correccion;MoralesLarios.OOFP.Core;MlResultTransformations.SecureGetValueFromMlResultBoxed;p.Name == "IsValid" / "Value";nameof(MlResult<object>.IsSuccess) / nameof(...SuccessValue);0;2;Reflexion por literal: el renombrado la rompia
+fase3b-nivel2-errordetails;2;Propiedad;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetails;Details;Metadata;1;114;errorDetails.Details era redundante, contiene metadatos adjuntos al error
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorDetailsExtensions;ToErrorsMessages;GetErrorMessages;1;4;To... se reserva para conversiones
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorDetailsExtensions;ToErrorsDescription;GetErrorsSummary;2;7;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorDetailsExtensions;ToDetailsDescription;GetMetadataSummary;1;0;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;HasKeyDetails;ContainsMetadata;1;2;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;HasValueDetails;ContainsValueMetadata;1;3;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;HasValueDetailsAsync;ContainsValueMetadataAsync;1;2;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;HasExceptionDetails;ContainsException;1;8;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;HasExceptionDetailsAsync;ContainsExceptionAsync;1;2;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;AddDetail;AddMetadataOrThrow;1;9;Muta y lanza si la clave existe, WithMetadata inmutable queda como cambio de contrato
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;AddDetails;AddMetadataRange;2;0;Derivado. BUG preexistente: descarta la union de metadatos
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors.MlErrorsDetailsActions;AddDetailValue;AddValueMetadata;1;7;Derivado
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsErrorsDetails;GetDetailValue;GetMetadataValue;1;22;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsErrorsDetails;GetDetailValueAsync;GetMetadataValueAsync;2;8;
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsErrorsDetails;GetDetailException;GetException;2;68;Solo hay una excepcion por resultado
+fase3b-nivel2-errordetails;2;Metodo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.MlResultActionsErrorsDetails;GetDetailExceptionAsync;GetExceptionAsync;4;44;Solo hay una excepcion por resultado
+fase3b-nivel2-errordetails;2;Tipo;MoralesLarios.OOFP.AspNetCore.Results;MoralesLarios.OOFP.AspNetCore.Results.Helpers;MlErrorsDetailsExtensions;MlErrorDetailsExtensions;0;0;Los detalles de los errores = ErrorDetails en ingles
+fase3b-nivel2-errordetails;2;Tipo;MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit;MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit.Helpers;MlErrorsDetailsExtensionsTests;MlErrorDetailsExtensionsTests;0;0;Los detalles de los errores = ErrorDetails en ingles
+fase3b-nivel2-errordetails;2;Tipo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors;MlErrorsDetails;MlErrorDetails;0;1283;Los detalles de los errores = ErrorDetails en ingles
+fase3b-nivel2-errordetails;2;Tipo;MoralesLarios.OOFP.Core;MoralesLarios.OOFP.Types.Errors;MlErrorsDetailsActions;MlErrorDetailsActions;0;0;Los detalles de los errores = ErrorDetails en ingles
+fase3b-nivel2-errordetails;2;Tipo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.Errors;MlErrorsDetailsActionsTests;MlErrorDetailsActionsTests;0;0;Los detalles de los errores = ErrorDetails en ingles
+fase3b-nivel2-errordetails;2;Tipo;MoralesLarios.OOFP.Core.Tests.Unit;MoralesLarios.OOFP.Core.Tests.Unit.Types.Errors;MlErrorsDetailsTests;MlErrorDetailsTests;0;0;Los detalles de los errores = ErrorDetails en ingles

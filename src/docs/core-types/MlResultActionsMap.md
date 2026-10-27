@@ -11,7 +11,7 @@ proyectar campos, formatear textos, calcular totales…
 | Estado de `source` | Comportamiento de `Map` |
 | --- | --- |
 | `IsSuccess == true` | Ejecuta la función y devuelve `MlResult<TReturn>` válido con el nuevo valor. |
-| `IsFailure == true` | **No ejecuta nada**: propaga tal cual el `MlErrorsDetails` original, cambiando solo el tipo genérico. |
+| `IsFailure == true` | **No ejecuta nada**: propaga tal cual el `MlErrorDetails` original, cambiando solo el tipo genérico. |
 
 Es decir, `Map` es un **cortocircuito**: los errores viajan intactos por la tubería hasta el
 `Match` final, sin `if`s ni `try/catch` intermedios.
@@ -138,7 +138,7 @@ MlResult<int> cantidad = MlResult<string>.Valid(entradaUsuario)
 // Si int.Parse lanza FormatException:
 //   - cantidad.IsFailure == true
 //   - el mensaje es el construido por errorMessageBuilder
-//   - la excepción original queda accesible en ErrorsDetails.Details["Ex"]
+//   - la excepción original queda accesible en ErrorsDetails.Metadata["Ex"]
 ```
 
 Recuperar después esa excepción es inmediato:
@@ -216,9 +216,9 @@ MlResult<Cotizacion> cotizacion = await ObtenerCotizacionAsync(divisa)
 
 | Método | Se ejecuta cuando… |
 | --- | --- |
-| `MapIfFailWithException` | El fallo **tiene** excepción en `Details["Ex"]` (`HasExceptionDetails() == true`). |
+| `MapIfFailWithException` | El fallo **tiene** excepción en `Details["Ex"]` (`ContainsException() == true`). |
 | `MapIfFailWithoutException` | El fallo **no tiene** excepción: es una regla de negocio o validación. |
-| `MapIfFailWithExceptionError` | Igual que `WithException`, pero la función recibe además el `MlErrorsDetails` completo, útil para logs enriquecidos. |
+| `MapIfFailWithExceptionError` | Igual que `WithException`, pero la función recibe además el `MlErrorDetails` completo, útil para logs enriquecidos. |
 
 ### `MapAlways`: una salida única para ambas ramas
 
@@ -230,7 +230,7 @@ MlResult<DateTime> instante = ProcesarLote(lote)
 // Forma con dos funciones: cada rama produce el mismo tipo de salida.
 MlResult<RespuestaApi> respuesta = ProcesarLote(lote)
     .MapAlways(funcValidAlways: resumen => RespuestaApi.Ok(resumen),
-               funcFailAlways : errores => RespuestaApi.ConErrores(errores.ToErrorsMessages()));
+               funcFailAlways : errores => RespuestaApi.ConErrores(errores.GetErrorMessages()));
 ```
 
 > Si solo quieres **observar** sin transformar (log, métrica, auditoría), usa
@@ -254,7 +254,7 @@ public async Task<IActionResult> ActualizarEmail(int clienteId, string nuevoEmai
                         errorMessageBuilder: ex => $"Error al guardar el cliente {clienteId}: {ex.Message}")
         .MapAsync      (c      => new ClienteDto(c.Id, c.Nombre, c.Email))
         .MatchAsync    (valid  : dto     => Ok(dto),
-                        fail   : errores => BadRequest(errores.ToErrorsMessages()));
+                        fail   : errores => BadRequest(errores.GetErrorMessages()));
 }
 ```
 

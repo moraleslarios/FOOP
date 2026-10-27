@@ -88,8 +88,8 @@ MoralesLarios.OOFP/
 │   └── Errors/                       # Gestión de errores
 │       ├── ErrorMessage.cs           # record ErrorMessage(string Message)
 │       ├── MlError.cs                # Error base
-│       ├── MlErrorsDetails.cs        # Detalles de error
-│       └── MlErrorsDetailsActions.cs # Acciones sobre errores
+│       ├── MlErrorDetails.cs        # Detalles de error
+│       └── MlErrorDetailsActions.cs # Acciones sobre errores
 └── docs/                            # Documentación
     ├── 1_Intro.md                    # Este documento
     ├── Types/                        # Referencia por archivo fuente
@@ -128,7 +128,7 @@ El tipo principal que encapsula un resultado que puede ser:
 public partial record MlResult<T>
 {
     internal protected T               Value         { get; init; }
-    internal protected MlErrorsDetails ErrorsDetails { get; init; }
+    internal protected MlErrorDetails ErrorsDetails { get; init; }
 
     public bool IsSuccess { get; init; }
     public bool IsFailure  => ! IsSuccess;
@@ -153,22 +153,22 @@ MlResult<Cliente> resultado = ObtenerCliente(id);
 // ✅ La forma correcta de salir del MlResult.
 IActionResult respuesta = resultado.Match(
     valid: cliente => Ok(cliente),
-    fail : errores => NotFound(errores.ToErrorsMessages()));
+    fail : errores => NotFound(errores.GetErrorMessages()));
 ```
 
 `MlResult` (sin genérico) aporta las fábricas **estáticas** (`MlResult.Valid<T>`, `MlResult.Fail<T>`,
 `MlResult.Empty()`), y `MlResult<T>` añade `Valid` / `Fail` / `*Async` y numerosos **operadores de
-conversión implícita** desde `T`, `string`, `MlError`, `MlError[]` y `MlErrorsDetails`.
+conversión implícita** desde `T`, `string`, `MlError`, `MlError[]` y `MlErrorDetails`.
 
 Detalle completo en [`Types/MlResult.md`](core-types/MlResult.md).
 
-### MlErrorsDetails
+### MlErrorDetails
 
 Encapsula la información completa de un fallo. Su diseño es minimalista a propósito: **solo dos
 propiedades**.
 
 ```csharp
-public class MlErrorsDetails(IEnumerable<MlError>       Errors  = null!,
+public class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
                              Dictionary<string, object> Details = null!)
 {
     public IEnumerable<MlError>       Errors  { get; }
@@ -191,8 +191,8 @@ Se leen de forma **tipada y segura** con
 [`MlResultActionsErrorsDetails`](core-types/MlResultActionsErrorsDetails.md):
 
 ```csharp
-MlResult<Exception> ex     = errores.GetDetailException();          // clave "Ex"
-MlResult<PedidoDto> origen = errores.GetDetailValue<PedidoDto>();   // clave "Value"
+MlResult<Exception> ex     = errores.GetException();          // clave "Ex"
+MlResult<PedidoDto> origen = errores.GetMetadataValue<PedidoDto>();   // clave "Value"
 MlResult<string>    divisa = errores.GetDetail<string>("Divisa");   // clave propia
 ```
 
@@ -299,7 +299,7 @@ la forma de instrumentar una tubería sin romperla.
 ```csharp
 await ConfirmarPedidoAsync(pedido)
           .ExecSelfIfValidAsync(p  => _log.LogInformation("Pedido {Id} confirmado", p.Id))
-          .ExecSelfIfFailAsync (er => _log.LogWarning("Fallo: {E}", er.ToErrorsDescription()));
+          .ExecSelfIfFailAsync (er => _log.LogWarning("Fallo: {E}", er.GetErrorsSummary()));
 ```
 
 Detalle: [`Types/MlResultActionsExecSelf.md`](core-types/MlResultActionsExecSelf.md).
@@ -311,7 +311,7 @@ Es el **único punto de salida**: obliga a tratar los dos estados y devuelve un 
 ```csharp
 return resultado.Match(
     valid: dto     => Ok(dto),
-    fail : errores => BadRequest(errores.ToErrorsMessages()));
+    fail : errores => BadRequest(errores.GetErrorMessages()));
 ```
 
 Detalle: [`Types/MlResultActionsMatch.md`](core-types/MlResultActionsMatch.md).
@@ -322,7 +322,7 @@ Detalle: [`Types/MlResultActionsMatch.md`](core-types/MlResultActionsMatch.md).
 
 Cualquier operación con prefijo `Try` ejecuta el delegado dentro de un `try/catch`. Si se lanza una
 excepción, el resultado pasa a `Fail` y la excepción queda **guardada** en `Details["Ex"]`, disponible
-después con `GetDetailException()`.
+después con `GetException()`.
 
 Todas las variantes `Try*` aceptan el mensaje de error de dos formas:
 
@@ -350,10 +350,10 @@ MlResult<Configuracion> config = rutaFichero
 | *(ninguno)* | El resultado es **válido** | El valor `T` |
 | `IfValid` | El resultado es válido | El valor `T` |
 | `If` | Se cumple un **predicado** sobre el valor | El valor `T` |
-| `IfFail` | El resultado es **fallido** | `MlErrorsDetails` |
+| `IfFail` | El resultado es **fallido** | `MlErrorDetails` |
 | `IfFailWithValue` | Es fallido **y** hay un valor en `Details["Value"]` | El valor original |
 | `IfFailWithException` | Es fallido **y** hay una excepción en `Details["Ex"]` | La `Exception` |
-| `IfFailWithoutException` | Es fallido **y no** hay excepción (fallo de negocio/validación) | `MlErrorsDetails` |
+| `IfFailWithoutException` | Es fallido **y no** hay excepción (fallo de negocio/validación) | `MlErrorDetails` |
 | `Always` | **Siempre**, sea válido o fallido | Nada, o los dos delegados |
 | `Ensure` | Solo en `Map`: valida el valor con un predicado | El valor `T` |
 
@@ -416,7 +416,7 @@ sobrecargas de cada método) está en [`docs/core-types/`](core-types/README.md)
 | `Types/MlResultChangeReturnResult.cs` | Cambiar el tipo de retorno conservando el estado | [`MlResultChangeReturnResult.md`](core-types/MlResultChangeReturnResult.md) |
 | `Types/MlResultActions.cs` | Enriquecer errores, transportar datos, acceso seguro | [`MlResultActions.md`](core-types/MlResultActions.md) |
 | `Types/MlResultActionsErrorsDetails.cs` | Leer, escribir y fusionar los `Details` del error | [`MlResultActionsErrorsDetails.md`](core-types/MlResultActionsErrorsDetails.md) |
-| `Types/Errors/*.cs` | `MlError`, `MlErrorsDetails` y sus acciones | [`MlResultErrors.md`](core-types/MlResultErrors.md) |
+| `Types/Errors/*.cs` | `MlError`, `MlErrorDetails` y sus acciones | [`MlResultErrors.md`](core-types/MlResultErrors.md) |
 
 ### Cómo elegir la operación adecuada
 
@@ -470,9 +470,9 @@ Con esto, más adelante puedes recuperar el DTO y, por ejemplo, encolarlo para r
 ```csharp
 resultado.Match(
     valid: p       => Ok(p),
-    fail : errores => errores.GetDetailValue<PedidoDto>()
+    fail : errores => errores.GetMetadataValue<PedidoDto>()
                              .Match(valid: origen => { _cola.Encolar(origen); return Accepted(); },
-                                    fail : _      => BadRequest(errores.ToErrorsMessages())));
+                                    fail : _      => BadRequest(errores.GetErrorMessages())));
 ```
 
 ### Acumular errores en lugar de cortocircuitar
@@ -507,18 +507,18 @@ public async Task<IActionResult> Post(PedidoDto dto)
         failAsync : er => Task.FromResult(Traducir(er)));
 }
 
-private IActionResult Traducir(MlErrorsDetails errores) =>
-    errores.GetDetailException()
+private IActionResult Traducir(MlErrorDetails errores) =>
+    errores.GetException()
            .Match(
                valid: ex => ex switch
                             {
-                                TimeoutException        => StatusCode(504, errores.ToErrorsMessages()),
-                                HttpRequestException    => StatusCode(502, errores.ToErrorsMessages()),
+                                TimeoutException        => StatusCode(504, errores.GetErrorMessages()),
+                                HttpRequestException    => StatusCode(502, errores.GetErrorMessages()),
                                 UnauthorizedAccessException => Forbid(),
-                                _                       => StatusCode(500, errores.ToErrorsMessages())
+                                _                       => StatusCode(500, errores.GetErrorMessages())
                             },
                // Sin excepción ⇒ es un fallo de negocio ⇒ 400.
-               fail : _  => BadRequest(errores.ToErrorsMessages()));
+               fail : _  => BadRequest(errores.GetErrorMessages()));
 ```
 
 Detalle completo en [`Types/MlResultErrors.md`](core-types/MlResultErrors.md) y
@@ -588,7 +588,7 @@ MlResult<ClienteDto> validado =
         d => EnsureFp.InRangeArg(d.Edad, 18, 120).Map(_ => d));
 ```
 
-`All` ejecuta **todos** los validadores y fusiona los `MlErrorsDetails` resultantes.
+`All` ejecuta **todos** los validadores y fusiona los `MlErrorDetails` resultantes.
 `AllOrFirst` conserva la semántica *fail-fast*, y `Any` basta con que una regla pase.
 
 #### Predicados que pueden lanzar
@@ -661,7 +661,7 @@ MlResult<Pedido> resultado = EnsureFp.NotNull(dto, "Datos obligatorios")
 
 ```csharp
 await resultado.ExecSelfIfValidAsync(p  => _metricas.Incr("pedido.ok"))
-               .ExecSelfIfFailAsync (er => _log.LogWarning("{E}", er.ToErrorsDescription()));
+               .ExecSelfIfFailAsync (er => _log.LogWarning("{E}", er.GetErrorsSummary()));
 ```
 
 ### 4. Recuperación por capas
@@ -677,7 +677,7 @@ MlResult<Tarifa> tarifa = await _api.ObtenerAsync(zona)
 ### 5. Salir una sola vez, al final
 
 ```csharp
-return tarifa.Match(valid: t => Ok(t), fail: er => BadRequest(er.ToErrorsMessages()));
+return tarifa.Match(valid: t => Ok(t), fail: er => BadRequest(er.GetErrorMessages()));
 ```
 
 ### Antipatrones a evitar
@@ -717,7 +717,7 @@ public Task<MlResult<ClienteDto>> AltaAsync(AltaClienteDto dto) =>
         // 6. Efectos secundarios, sin alterar el resultado.
         .ExecSelfIfValidAsync(c  => _log.LogInformation("Cliente {Id} creado", c.Id))
         .ExecSelfIfFailAsync (er => _log.LogWarning("Alta rechazada: {E}",
-                                                   er.ToErrorsDescription()))
+                                                   er.GetErrorsSummary()))
         // 7. Salida del dominio.
         .MapAsync(c => c.ToDto());
 
@@ -744,9 +744,9 @@ public async Task<IActionResult> Post(AltaClienteDto dto)
 
     return resultado.Match(
         valid: cliente => Created($"/clientes/{cliente.Id}", cliente),
-        fail : errores => errores.GetDetailException()
-                                 .Match(valid: _ => StatusCode(500, errores.ToErrorsMessages()),
-                                        fail : _ => BadRequest(errores.ToErrorsMessages())));
+        fail : errores => errores.GetException()
+                                 .Match(valid: _ => StatusCode(500, errores.GetErrorMessages()),
+                                        fail : _ => BadRequest(errores.GetErrorMessages())));
 }
 ```
 
@@ -763,7 +763,7 @@ public async Task<InformeImportacion> ImportarAsync(Stream csv)
 
     return new InformeImportacion(
         Correctos : importados.Count(),
-        Rechazados: rechazados.Select(e => e.ToErrorsDescription()).ToList());
+        Rechazados: rechazados.Select(e => e.GetErrorsSummary()).ToList());
 }
 ```
 
@@ -781,7 +781,7 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 |-----------|----------------|-----------|
 | [Índice de tipos](core-types/README.md) | — | Portada de la referencia por tipos |
 | [`MlResult.md`](core-types/MlResult.md) | `Types/MlResult.cs` | El tipo raíz, fábricas y conversiones implícitas |
-| [`MlResultErrors.md`](core-types/MlResultErrors.md) | `Types/Errors/*.cs` | `MlError`, `MlErrorsDetails`, `ErrorMessage` |
+| [`MlResultErrors.md`](core-types/MlResultErrors.md) | `Types/Errors/*.cs` | `MlError`, `MlErrorDetails`, `ErrorMessage` |
 | [`MlResultActions.md`](core-types/MlResultActions.md) | `Types/MlResultActions.cs` | Enriquecer errores, transportar datos, acceso seguro |
 | [`MlResultActionsBind.md`](core-types/MlResultActionsBind.md) | `Types/MlResultActionsBind.cs` | `Bind`, `BindMulti`, `BindIf`, `BindIfFail*`, `BindAlways`, `TryBindBuild*` |
 | [`MlResultActionsMap.md`](core-types/MlResultActionsMap.md) | `Types/MlResultActionsMap.cs` | `Map`, `MapEnsure`, `MapIf`, `MapIfFail*`, `MapAlways` |

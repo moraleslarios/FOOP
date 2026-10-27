@@ -9,9 +9,9 @@ detalles.
 | --- | --- | --- |
 | `Types/Errors/MlError.cs` | `record MlError` | Un error individual: **solo un mensaje**. |
 | `Types/Errors/MlError.cs` | `static class MlErrorExtensions` | Conversiones `string` ⇄ `MlError`. |
-| `Types/Errors/MlErrorsDetails.cs` | `class MlErrorsDetails` | Conjunto de errores + diccionario de detalles. |
-| `Types/Errors/MlErrorsDetails.cs` | `static class MlErrorDetailsExtensions` | Conversiones y descripciones legibles. |
-| `Types/Errors/MlErrorsDetailsActions.cs` | `static class MlErrorsDetailsActions` | Operaciones sobre detalles: añadir, fusionar, consultar. |
+| `Types/Errors/MlErrorDetails.cs` | `class MlErrorDetails` | Conjunto de errores + diccionario de detalles. |
+| `Types/Errors/MlErrorDetails.cs` | `static class MlErrorDetailsExtensions` | Conversiones y descripciones legibles. |
+| `Types/Errors/MlErrorDetailsActions.cs` | `static class MlErrorDetailsActions` | Operaciones sobre detalles: añadir, fusionar, consultar. |
 | `Types/Errors/ErrorMessage.cs` | `record ErrorMessage(string Message)` | Envoltorio ligero de un mensaje. |
 
 ---
@@ -26,7 +26,7 @@ public record MlError
 ```
 
 Un `MlError` **solo tiene `Message`**. No hay `Code` ni `Metadata`: si necesitas más información,
-va en el diccionario `Details` de `MlErrorsDetails`.
+va en el diccionario `Details` de `MlErrorDetails`.
 
 | Miembro | Descripción |
 | --- | --- |
@@ -72,10 +72,10 @@ IEnumerable<MlError> errores = new[]
 
 ---
 
-## `MlErrorsDetails`
+## `MlErrorDetails`
 
 ```csharp
-public class MlErrorsDetails(IEnumerable<MlError>       Errors  = null!,
+public class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
                              Dictionary<string, object> Details = null!)
 ```
 
@@ -88,7 +88,7 @@ Es el objeto que transporta **todo** el fallo. Tiene exactamente **dos propiedad
 
 > ⚠️ **No existen** las propiedades `Exception`, `Value`, `HasException` ni `HasValue`. Esa
 > información se guarda en `Details` bajo claves convencionales y se consulta con los métodos de
-> extensión de `MlErrorsDetailsActions` (ver más abajo).
+> extensión de `MlErrorDetailsActions` (ver más abajo).
 
 ### Claves convencionales de `Details`
 
@@ -117,9 +117,9 @@ falta invocar las fábricas:
 
 ```csharp
 // Todas estas asignaciones funcionan por conversión implícita:
-MlErrorsDetails d1 = "Error único";
-MlErrorsDetails d2 = new[] { "Error 1", "Error 2" };
-MlErrorsDetails d3 = new MlError("Error de dominio");
+MlErrorDetails d1 = "Error único";
+MlErrorDetails d2 = new[] { "Error 1", "Error 2" };
+MlErrorDetails d3 = new MlError("Error de dominio");
 
 // Y también al construir un MlResult fallido:
 MlResult<Cliente> fallo = MlResult<Cliente>.Fail("No se encontró el cliente");
@@ -130,7 +130,7 @@ MlResult<Cliente> fallo = MlResult<Cliente>.Fail("No se encontró el cliente");
 Produce una descripción legible con dos bloques, `MlError:` y `Details:`, ideal para logs:
 
 ```csharp
-var detalles = MlErrorsDetails.FromErrorMessageWithException(
+var detalles = MlErrorDetails.FromErrorMessageWithException(
     "No se pudo conectar con el servicio de tarifas",
     new TimeoutException("The operation has timed out."));
 
@@ -145,25 +145,25 @@ Console.WriteLine(detalles);
 
 | Extensión | Descripción |
 | --- | --- |
-| `ToMlErrorsDetails(...)` (8 sobrecargas) | Convierte `string`, `MlError`, colecciones, etc. en `MlErrorsDetails`. |
-| `ToErrorsMessages()` | `IEnumerable<string>` con los mensajes. Perfecto para respuestas HTTP. |
+| `ToMlErrorDetails(...)` (8 sobrecargas) | Convierte `string`, `MlError`, colecciones, etc. en `MlErrorDetails`. |
+| `GetErrorMessages()` | `IEnumerable<string>` con los mensajes. Perfecto para respuestas HTTP. |
 | `ToDescription()` | Descripción completa (errores + detalles) en una cadena. |
-| `ToErrorsDescription()` (2 sobrecargas) | Solo los errores, concatenados. |
-| `ToDetailsDescription()` | Solo el bloque de detalles. |
+| `GetErrorsSummary()` (2 sobrecargas) | Solo los errores, concatenados. |
+| `GetMetadataSummary()` | Solo el bloque de detalles. |
 
 ```csharp
 IActionResult respuesta = resultado.Match(
     valid: dto     => Ok(dto),
-    fail : errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
+    fail : errores => BadRequest(new { errores = errores.GetErrorMessages() }));
 
 _log.LogError("Fallo en la operación: {Detalle}", errores.ToDescription());
 ```
 
 ---
 
-## `MlErrorsDetailsActions`
+## `MlErrorDetailsActions`
 
-Clase de extensión (27 métodos) para **construir y consultar** el contenido de un `MlErrorsDetails`.
+Clase de extensión (27 métodos) para **construir y consultar** el contenido de un `MlErrorDetails`.
 Se agrupa en cuatro bloques.
 
 ### 1. Añadir errores
@@ -179,35 +179,35 @@ Se agrupa en cuatro bloques.
 
 | Método | Descripción |
 | --- | --- |
-| `AddDetail<T>(string key, T value)` | Añade una entrada al diccionario. |
-| `AddDetails(Dictionary<string, object>)` | Añade varias entradas. |
-| `AddDetails(params (string key, object value)[])` | Añade varias entradas con sintaxis de tuplas. |
-| `AddDetailValue<T>(T value)` | Añade el valor bajo la clave convencional `"Value"`. |
+| `AddMetadataOrThrow<T>(string key, T value)` | Añade una entrada al diccionario. |
+| `AddMetadataRange(Dictionary<string, object>)` | Añade varias entradas. |
+| `AddMetadataRange(params (string key, object value)[])` | Añade varias entradas con sintaxis de tuplas. |
+| `AddValueMetadata<T>(T value)` | Añade el valor bajo la clave convencional `"Value"`. |
 | `AppendExDetails(Exception)` | Devuelve un `Dictionary<string, object>` con la excepción añadida bajo `"Ex"` (numerando si ya existía). |
-| `AppendExDetailsToMlDetails(...)` (2) | Igual, pero devolviendo `MlErrorsDetails`. |
+| `AppendExDetailsToMlDetails(...)` (2) | Igual, pero devolviendo `MlErrorDetails`. |
 | `AppendExErrorDetail(...)` (2) | Añade a la vez un error y su excepción. |
 
 ```csharp
-MlErrorsDetails detalles = MlErrorsDetails.FromErrorMessage("Validación fallida")
+MlErrorDetails detalles = MlErrorDetails.FromErrorMessage("Validación fallida")
     .AddErrorsMessages("El nombre es obligatorio", "El email no es válido")
-    .AddDetails(("Entidad", "Cliente"), ("Operacion", "Alta"))
-    .AddDetailValue(clienteEntrante);
+    .AddMetadataRange(("Entidad", "Cliente"), ("Operacion", "Alta"))
+    .AddValueMetadata(clienteEntrante);
 ```
 
 ### 3. Consultar
 
 | Método | Devuelve | Descripción |
 | --- | --- | --- |
-| `HasValueDetails()` / `HasValueDetailsAsync()` | `bool` | ¿Existe la clave `"Value"`? |
-| `HasExceptionDetails()` / `HasExceptionDetailsAsync()` | `bool` | ¿Existe la clave `"Ex"`? |
-| `HasKeyDetails(string key)` | `bool` | ¿Existe una clave arbitraria? |
+| `ContainsValueMetadata()` / `ContainsValueMetadataAsync()` | `bool` | ¿Existe la clave `"Value"`? |
+| `ContainsException()` / `ContainsExceptionAsync()` | `bool` | ¿Existe la clave `"Ex"`? |
+| `ContainsMetadata(string key)` | `bool` | ¿Existe una clave arbitraria? |
 
 Estos predicados son exactamente los que usan internamente las familias `*WithException` y
 `*WithoutException` de `Bind`, `Map` y `ExecSelf` para decidir si actúan.
 
 ```csharp
-if (errores.HasExceptionDetails())
-    _telemetria.RegistrarExcepcion(errores.GetDetailException().Match(valid: ex => ex, fail: _ => null!));
+if (errores.ContainsException())
+    _telemetria.RegistrarExcepcion(errores.GetException().Match(valid: ex => ex, fail: _ => null!));
 else
     _metricas.Incrementar("errores.negocio");
 ```
@@ -216,7 +216,7 @@ else
 
 | Método | Descripción |
 | --- | --- |
-| `Merge(...)` (2 sobrecargas) | Une dos `MlErrorsDetails` en uno (errores y detalles). |
+| `Merge(...)` (2 sobrecargas) | Une dos `MlErrorDetails` en uno (errores y detalles). |
 | `MergeErrorsDetails<T, TReturn>(...)` | Fusiona y devuelve un `MlResult<TReturn>` fallido con el resultado. |
 | `MergeErrorsDetailsAsync<T, TReturn>(...)` (4 sobrecargas) | Versiones asíncronas. |
 
@@ -235,11 +235,11 @@ Métodos más usados:
 
 ```csharp
 // Excepción guardada bajo "Ex":
-MlResult<Exception>       ex        = errores.GetDetailException();
-MlResult<TimeoutException> exTipada = errores.GetDetailException<TimeoutException>();
+MlResult<Exception>       ex        = errores.GetException();
+MlResult<TimeoutException> exTipada = errores.GetException<TimeoutException>();
 
 // Valor guardado bajo "Value":
-MlResult<Cliente> original = errores.GetDetailValue<Cliente>();
+MlResult<Cliente> original = errores.GetMetadataValue<Cliente>();
 
 // Cualquier otra clave:
 MlResult<string> entidad = errores.GetDetail<string>("Entidad");
@@ -258,7 +258,7 @@ public record ErrorMessage(string Message);
 
 Envoltorio mínimo de un mensaje de error. No tiene métodos ni conversiones: es un tipo de apoyo para
 firmas que necesitan distinguir un mensaje de error de un `string` cualquiera. En el código de la
-tubería se usa muy poco; lo habitual es trabajar con `MlError` y `MlErrorsDetails`.
+tubería se usa muy poco; lo habitual es trabajar con `MlError` y `MlErrorDetails`.
 
 ---
 
@@ -272,15 +272,15 @@ public async Task<IActionResult> ObtenerTarifaAsync(string divisa)
         .AddMlErrorDetailIfFailAsync("Divisa", divisa)
         .ExecSelfIfFailAsync(errores =>
         {
-            if (errores.HasExceptionDetails())
+            if (errores.ContainsException())
                 _log.LogError("Error técnico obteniendo la tarifa: {Detalle}", errores.ToDescription());
             else
-                _log.LogWarning("Error de negocio obteniendo la tarifa: {Errores}", errores.ToErrorsDescription());
+                _log.LogWarning("Error de negocio obteniendo la tarifa: {Errores}", errores.GetErrorsSummary());
         })
         .MatchAsync(valid: tarifa  => Ok(tarifa),
-                    fail : errores => errores.HasExceptionDetails()
-                                          ? StatusCode(502, new { errores = errores.ToErrorsMessages() })
-                                          : BadRequest(new { errores = errores.ToErrorsMessages() }));
+                    fail : errores => errores.ContainsException()
+                                          ? StatusCode(502, new { errores = errores.GetErrorMessages() })
+                                          : BadRequest(new { errores = errores.GetErrorMessages() }));
 }
 ```
 
@@ -289,7 +289,7 @@ public async Task<IActionResult> ObtenerTarifaAsync(string divisa)
 ## Relación con Web API
 
 `MlProblemsDetails` (en `MoralesLarios.OOFP.Application`) escribe en `Details["ProblemsDetails"]`.
-Luego `MlErrorsDetailsExtensions.GetProblemDetails()` (en `MoralesLarios.OOFP.AspNetCore.Results`) lo convierte en
+Luego `MlErrorDetailsExtensions.GetProblemDetails()` (en `MoralesLarios.OOFP.AspNetCore.Results`) lo convierte en
 `ProblemDetailsInfo`, permitiendo devolver respuestas conformes a RFC 7807 sin acoplar el núcleo de la
 librería a ASP.NET Core.
 

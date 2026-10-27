@@ -34,7 +34,7 @@ Son piezas pequeñas, pero conocerlas evita mucho código repetitivo: `ToAsync` 
 todas las tuberías asíncronas y `ToFuncTask` resuelve los problemas de inferencia de tipos
 más frecuentes.
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -144,13 +144,13 @@ los errores de inferencia de tipos más molestos de la librería:
 public static Func<T, Task<TResult>> ToFuncTask<T, TResult>(this Func<T, TResult> func)
     => x => func(x).ToAsync();
 
-public static Func<MlErrorsDetails, Task<TResult>> ToFuncTask<TResult>(this Func<MlErrorsDetails, TResult> func)
+public static Func<MlErrorDetails, Task<TResult>> ToFuncTask<TResult>(this Func<MlErrorDetails, TResult> func)
     => errorsDetails => func(errorsDetails).ToAsync();
 
 public static Func<T, Task> ToFuncTask<T>(this Action<T> action)
     => x => { action(x); return Task.CompletedTask; };
 
-public static Func<MlErrorsDetails, Task> ToFuncTask(this Action<MlErrorsDetails> action)
+public static Func<MlErrorDetails, Task> ToFuncTask(this Action<MlErrorDetails> action)
     => errorsDetails => { action(errorsDetails); return Task.CompletedTask; };
 
 public static Func<Task> ToFuncTask(this Action action)
@@ -162,21 +162,21 @@ un operador `*Async` que espera un delegado asíncrono.
 
 ```csharp
 // Un logger síncrono ya existente
-void Registrar(MlErrorsDetails err) => _log.LogWarning(err.ToErrorsDescription());
+void Registrar(MlErrorDetails err) => _log.LogWarning(err.GetErrorsSummary());
 
-// ❌ No encaja: ExecSelfIfFailAsync espera Func<MlErrorsDetails, Task>
+// ❌ No encaja: ExecSelfIfFailAsync espera Func<MlErrorDetails, Task>
 // await resultado.ExecSelfIfFailAsync(Registrar);
 
 // ✅ Con ToFuncTask
-Action<MlErrorsDetails> accion = Registrar;
+Action<MlErrorDetails> accion = Registrar;
 await resultado.ExecSelfIfFailAsync(accion.ToFuncTask());
 
 // ✅ Alternativa sin ToFuncTask: lambda con ToAsync
 await resultado.ExecSelfIfFailAsync(err => { Registrar(err); return Task.CompletedTask; });
 ```
 
-⚠️ Las dos sobrecargas específicas de `MlErrorsDetails` existen porque el compilador **no
-puede inferir** `T = MlErrorsDetails` cuando la sobrecarga genérica también encaja. Es un
+⚠️ Las dos sobrecargas específicas de `MlErrorDetails` existen porque el compilador **no
+puede inferir** `T = MlErrorDetails` cuando la sobrecarga genérica también encaja. Es un
 apaño necesario, no un capricho.
 
 ---
@@ -209,7 +209,7 @@ otra. Como `ExceptionMetadataKey` vale `"Ex"`, las claves resultantes son:
 
 🔑 **Por qué importa:** es lo que permite que un resultado fallido acumule **varias**
 excepciones (la del negocio y la del logger que también falló) sin que una tape a la otra.
-Es la base de `AppendExErrorDetail` en `MlErrorsDetails`.
+Es la base de `AppendExErrorDetail` en `MlErrorDetails`.
 
 ```csharp
 // Devuelve un diccionario NUEVO: el original no se modifica
@@ -348,12 +348,12 @@ public static class Constants
    tus `Details`: colisionan con la maquinaria interna.
 2. Los mensajes por defecto están **en inglés** y exponen `ex.Message`. Nunca los muestres a
    un usuario final: pasa siempre un mensaje de dominio a los `Try*`.
-3. Para leer estos valores usa los accesores oficiales (`GetDetailException()`,
-   `GetDetailValue<T>()`), no las claves literales.
+3. Para leer estos valores usa los accesores oficiales (`GetException()`,
+   `GetMetadataValue<T>()`), no las claves literales.
 
 ```csharp
 // ❌ Depender de la constante literal
-var ex = resultado.FailureDetails.Details["Ex"];
+var ex = resultado.FailureDetails.Metadata["Ex"];
 
 // ✅ Accesor oficial
 resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
@@ -388,7 +388,7 @@ la lista. Funciona, pero significa que no distingue "válido" de "no se pudo val
 **8. `VoidToAsync` ejecuta la acción de forma síncrona** antes de devolver
 `Task.CompletedTask`.
 
-**9. Las dos sobrecargas de `ToFuncTask` para `MlErrorsDetails` son necesarias** por
+**9. Las dos sobrecargas de `ToFuncTask` para `MlErrorDetails` son necesarias** por
 limitaciones de inferencia del compilador, no redundancia.
 
 **10. Las constantes son propiedades `static get`, no `const`.** Da igual en la práctica,
@@ -408,7 +408,7 @@ pero significa que no se pueden usar en atributos ni en `switch` de constantes.
 | Validar DataAnnotations | `MoralesLarios.OOFP.Validation.DataAnnotations` (mejor que `ValidateObject`) |
 | Convertir un value type a nullable | `valor.ToNullable()` |
 | Paralelismo real | `Task.Run` / E/S asíncrona (**no** `ToAsync`) |
-| Leer la excepción de un fallo | `GetDetailException()` |
+| Leer la excepción de un fallo | `GetException()` |
 
 ---
 
@@ -438,12 +438,12 @@ public class AuditoriaService
 {
     // Métodos síncronos ya existentes, usados en muchos sitios
     private void RegistrarExito(Pedido p)          => _log.LogInformation("Pedido {Id} OK", p.Id);
-    private void RegistrarFallo(MlErrorsDetails e) => _log.LogWarning("Fallo: {D}", e.ToErrorsDescription());
+    private void RegistrarFallo(MlErrorDetails e) => _log.LogWarning("Fallo: {D}", e.GetErrorsSummary());
 
     public async Task<MlResult<PedidoDto>> ProcesarAsync(int id)
     {
         Action<Pedido>          onOk = RegistrarExito;
-        Action<MlErrorsDetails> onKo = RegistrarFallo;
+        Action<MlErrorDetails> onKo = RegistrarFallo;
 
         return await ObtenerPedidoAsync(id)
                          .ExecSelfAsync(onOk.ToFuncTask(), onKo.ToFuncTask())
@@ -525,7 +525,7 @@ var detalles = new Dictionary<string, object> { ["UsuarioExportacion"] = usuario
 
 
 // ❌ Leer Details con la clave literal
-var ex = (Exception)resultado.FailureDetails.Details["Ex"];
+var ex = (Exception)resultado.FailureDetails.Metadata["Ex"];
 
 // ✅ Accesor oficial
 resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
@@ -551,8 +551,8 @@ var errores = dto.ValidateObject();
    duplicarlos con `async`.
 5. **Nunca uses claves de `Details` que empiecen por `Ex`** ni la clave `Value`: colisionan
    con `ExceptionMetadataKey` y `ValueMetadataKey`.
-6. **Accede a los detalles con los accesores oficiales** (`GetDetailException`,
-   `GetDetailValue<T>`), no con claves literales.
+6. **Accede a los detalles con los accesores oficiales** (`GetException`,
+   `GetMetadataValue<T>`), no con claves literales.
 7. **Pasa siempre un mensaje de dominio a los `Try*`**: los mensajes por defecto están en
    inglés y exponen `ex.Message`.
 8. **Para DataAnnotations, usa el paquete de integración**, no `ValidateObject` directamente.
@@ -569,7 +569,7 @@ var errores = dto.ValidateObject();
 - **`With` / `WithAsync`** aplican acciones en cadena y devuelven el objeto.
   ⚠️ **MUTAN el original** y exigen `where T : class`. No es la expresión `with` de C#.
 - **`ToFuncTask`** (5 sobrecargas) convierte `Func`/`Action` síncronos en asíncronos; dos de
-  ellas existen específicamente para `MlErrorsDetails` por límites de inferencia.
+  ellas existen específicamente para `MlErrorDetails` por límites de inferencia.
 - **`AppendExDetails`** añade excepciones al diccionario generando claves `Ex`, `Ex2`, `Ex3`…
   Devuelve un diccionario **nuevo**. ⚠️ No uses claves propias que empiecen por `Ex`.
 - **`ValidateObject`** ejecuta DataAnnotations recursivamente y devuelve
@@ -584,7 +584,7 @@ var errores = dto.ValidateObject();
 ## Ver también
 
 - [`Transformations`](../Transformations/Transformations.md) — `ToMlResultValid`, `ToMlResultFail`, los `Try*`
-- [`MlResultErrors`](../core-types/MlResultErrors.md) — `AppendExErrorDetail`, `GetDetailException`, `GetDetailValue`
+- [`MlResultErrors`](../core-types/MlResultErrors.md) — `AppendExErrorDetail`, `GetException`, `GetMetadataValue`
 - [`MlResult`](../core-types/MlResult.md) — el tipo central
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — guardas de entrada al carril
 - [`ExecSelf`](../ExecSelf/1_ExecSelf.md) — efectos laterales, donde `ToFuncTask` es más útil

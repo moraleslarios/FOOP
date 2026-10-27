@@ -66,7 +66,7 @@ RegistrarUsuario(email, nombre, edad);   // ❌ error de compilación
 
 | Dependencia | Para qué |
 |---|---|
-| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) (núcleo) | `MlResult<T>`, `MlErrorsDetails`, [`EnsureFp`](../docs/EnsureFp/EnsureFp.md), `Bind`, `Map` |
+| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) (núcleo) | `MlResult<T>`, `MlErrorDetails`, [`EnsureFp`](../docs/EnsureFp/EnsureFp.md), `Bind`, `Map` |
 | `System.Text.RegularExpressions` | Usado por `RegexValue` y sus derivados |
 
 ```csharp
@@ -96,7 +96,7 @@ MlResult<Mail> resultado = Mail.ByString(entradaDelUsuario);
 
 resultado.Match(
     valid: mail    => EnviarCorreo(mail),
-    fail : errores => MostrarError(errores.ToErrorsMessages()));
+    fail : errores => MostrarError(errores.GetErrorMessages()));
 
 // Conversión implícita → azúcar sintáctico, pero lanza igual que From…
 Mail directo = "otro@empresa.com";
@@ -131,7 +131,7 @@ El nombre del método `By…` depende del tipo primitivo de origen. Merece la pe
 
 ### Personalizar el mensaje de error
 
-Casi todos los `By…` aceptan un `MlErrorsDetails` opcional que **sustituye** al mensaje por defecto (que está en inglés):
+Casi todos los `By…` aceptan un `MlErrorDetails` opcional que **sustituye** al mensaje por defecto (que está en inglés):
 
 ```csharp
 // Mensaje por defecto: "usuario@ is not a valid mail"
@@ -141,7 +141,7 @@ var r1 = Mail.ByString("usuario@");
 var r2 = Mail.ByString("usuario@", "El correo del destinatario no tiene un formato válido");
 ```
 
-> 💡 `MlErrorsDetails` tiene conversión implícita desde `string`, por eso puedes pasar el texto directamente sin construir nada.
+> 💡 `MlErrorDetails` tiene conversión implícita desde `string`, por eso puedes pasar el texto directamente sin construir nada.
 
 ---
 
@@ -252,7 +252,7 @@ Conocido el patrón, ya sabes usar los 30 tipos. Cada VO expone:
 | `IsValid(...)` | `static bool` | Predicado puro de validación. **Útil para preguntar sin construir.** |
 | `BuildErrorMessage(...)` | `static string` | Mensaje de error por defecto (en inglés). |
 | `From…(...)` | `static VO` | Construcción directa. **Lanza** si es inválido. |
-| `By…(..., MlErrorsDetails? )` | `static MlResult<VO>` | Construcción funcional. **No lanza.** |
+| `By…(..., MlErrorDetails? )` | `static MlResult<VO>` | Construcción funcional. **No lanza.** |
 | `implicit operator TPrimitivo(VO)` | conversión | Sacar el valor: `string texto = miMail;` |
 | `implicit operator VO(TPrimitivo)` | conversión | Meter el valor: `Mail m = "a@b.com";` (lanza si es inválido) |
 
@@ -260,13 +260,13 @@ Y la implementación de `By…` es siempre una tubería funcional del núcleo:
 
 ```csharp
 // Caso simple (numéricos): arranca de MlResult.Empty()
-public static MlResult<IntNotNegative> ByInt(int value, MlErrorsDetails errorsDetails = null!)
+public static MlResult<IntNotNegative> ByInt(int value, MlErrorDetails errorsDetails = null!)
     => MlResult.Empty()
                .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                .Map (_ => new IntNotNegative(value));
 
 // Caso compuesto (texto): valida primero el VO padre y luego la regla propia
-public static MlResult<Mail> ByString(string value, MlErrorsDetails errorsDetails = null!)
+public static MlResult<Mail> ByString(string value, MlErrorDetails errorsDetails = null!)
     => NotEmptyString.ByString(value)
                      .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                      .Map (_ => new Mail(value));
@@ -437,7 +437,7 @@ A diferencia del resto de la librería (donde el constructor es `protected` para
 
 ### 7. Los mensajes de error por defecto están en inglés
 
-`"{value} cannot be null or empty"`, `"{value} is not a valid mail"`, `"{value} must be More than 0"`… Si esos textos van a llegar al usuario final, **pasa siempre tu propio `MlErrorsDetails` en español**.
+`"{value} cannot be null or empty"`, `"{value} is not a valid mail"`, `"{value} must be More than 0"`… Si esos textos van a llegar al usuario final, **pasa siempre tu propio `MlErrorDetails` en español**.
 
 ### 8. `RegexValue.Pattern` es una propiedad de instancia
 
@@ -465,7 +465,7 @@ Endpoint.IsValid("https://localhost:5001");         // ✅
 
 > ⚠️ **No existen** métodos `Validate()` de instancia, ni `TryCreate(out …)`, ni variantes `…Async` de los `By…` (salvo `Empty.CreateAsync()`). Tampoco hay conversión implícita de un VO a `MlResult<VO>`.
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -491,7 +491,7 @@ var resultado = CrearUsuario(1, "Ana", "ana@empresa.com", 34);
 
 resultado.Match(
     valid: u       => Console.WriteLine($"Creado: {u.Nombre} <{u.Correo}>, {u.Edad} años"),
-    fail : errores => Console.WriteLine($"No se pudo crear: {errores.ToErrorsDescription()}"));
+    fail : errores => Console.WriteLine($"No se pudo crear: {errores.GetErrorsSummary()}"));
 ```
 
 > 💡 La interpolación `{u.Nombre}` funciona sin conversión explícita gracias al `ToString()` de `ValueObject<TValue>`.
@@ -507,7 +507,7 @@ public IActionResult Suscribir([FromBody] SuscripcionRequest request)
            .Bind(x => _servicio.Suscribir(x.mail, x.nombre))
            .Match(
                valid: _       => Ok(new { mensaje = "Suscripción registrada" }),
-               fail : errores => BadRequest(new { errores = errores.ToErrorsMessages() }));
+               fail : errores => BadRequest(new { errores = errores.GetErrorMessages() }));
 ```
 
 ### Ejemplo 3 — Convertir texto en número de forma segura
@@ -576,12 +576,12 @@ void Enviar(Mail destino) { /* … */ }
 
 
 // ❌ MAL: dejar el mensaje en inglés llegar al usuario final
-return BadRequest(Name.ByString(x).Match(valid: _ => "", fail: e => e.ToErrorsMessages()));
+return BadRequest(Name.ByString(x).Match(valid: _ => "", fail: e => e.GetErrorMessages()));
 //     → "ab cannot be less than 3 characters"
 
 // ✅ BIEN: mensaje propio en español
 return BadRequest(Name.ByString(x, "El nombre debe tener al menos 3 caracteres")
-                      .Match(valid: _ => "", fail: e => e.ToErrorsMessages()));
+                      .Match(valid: _ => "", fail: e => e.GetErrorMessages()));
 
 
 // ❌ MAL: asumir que los rangos son inclusivos
@@ -643,7 +643,7 @@ var estado = EnsureFp.That(texto, Enum.TryParse<EstadoPedido>(texto, true, out _
 ## Mejores prácticas
 
 1. **Usa `By…` para todo dato externo y `From…` solo para literales tuyos.** Es la distinción más importante de la librería.
-2. **Pasa siempre tu propio `MlErrorsDetails` en español** cuando el mensaje pueda llegar al usuario. Los mensajes por defecto están en inglés y son técnicos.
+2. **Pasa siempre tu propio `MlErrorDetails` en español** cuando el mensaje pueda llegar al usuario. Los mensajes por defecto están en inglés y son técnicos.
 3. **Pon los value objects en las firmas públicas**, no los primitivos. Ahí es donde el compilador empieza a trabajar para ti.
 4. **No revalides dentro del método** lo que el tipo del parámetro ya garantiza.
 5. **Recuerda que los máximos y los rangos son exclusivos**; ajusta el límite en uno.
@@ -691,7 +691,7 @@ Esta librería es la base de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObje
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
 - [`EnsureFp` — el motor de validación que usan todos los `By…`](../docs/EnsureFp/EnsureFp.md)
 - [`Bind` — encadenar validaciones dependientes](../docs/Bind/3_Bind.md)
 - [`Map` — construir el objeto final](../docs/Map/1_Map.md)

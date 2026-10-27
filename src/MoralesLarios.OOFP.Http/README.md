@@ -90,7 +90,7 @@ public class PruebasClient(ILogger<GenClientFp<PruebasDto>> logger,
 Eso es **todo**. Con esas cuatro líneas ya tienes `GetAllAsync`, `GetByIdAsync`, `PostAsync`, `PutAsync`,
 `PutByIdAsync`, `DeleteAsync` y `DeleteByIdAsync`, todos devolviendo `MlResult<…>`, todos con logging de
 entrada/salida y todos con la descripción completa del error del servidor (código, razón y cuerpo JSON
-indentado) dentro de `MlErrorsDetails`.
+indentado) dentro de `MlErrorDetails`.
 
 > 💡 **La idea clave:** el error de red o de negocio deja de ser una excepción o un `null` y pasa a ser
 > **un valor de primera clase** que puedes encadenar con `Bind`, `Map`, `TryMap` o `ExecSelf` igual que el
@@ -297,7 +297,7 @@ nunca se propaga una excepción por culpa del formateo del error.
 > ⚠️ **El código HTTP se pierde como dato estructurado.** Llega solo *dentro del texto* del mensaje.
 > No hay ningún `Details["StatusCode"]`, así que el llamador **no puede distinguir programáticamente**
 > un 404 de un 500 sin hacer *string matching*. Si necesitas esa distinción, envuelve la llamada y añade
-> tú la clave con `MlErrorsDetails.AddDetail`.
+> tú la clave con `MlErrorDetails.AddMetadataOrThrow`.
 
 ---
 
@@ -807,7 +807,7 @@ var resultado = await _client.GetByIdAsync("42");
 
 string mensaje = resultado.Match(
     valid: dto   => $"Encontrada: {dto.Nombre}",
-    fail : error => $"Error: {error.ToErrorsDescription()}");
+    fail : error => $"Error: {error.GetErrorsSummary()}");
 
 Console.WriteLine(mensaje);
 ```
@@ -971,7 +971,7 @@ public async Task<PruebasDto> MalAsync(int id)
 public async Task<IActionResult> TambienMalAsync(int id)
 {
     var r = await _client.GetByIdAsync($"{id}");
-    if (r.IsFailure && r.Match(_ => "", e => e.ToErrorsDescription()).Contains("404"))
+    if (r.IsFailure && r.Match(_ => "", e => e.GetErrorsSummary()).Contains("404"))
         return NotFound();
     return Ok(r.GetValueOrThrow());
 }
@@ -1089,7 +1089,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
     entrada y salida de cada llamada; repetirlo en cada capa multiplica el ruido.
 
 16. **Si necesitas distinguir el código HTTP, envuelve la llamada.** El status solo llega dentro del texto
-    del error; añade tú la clave con `AddDetail` en el punto de la petición si vas a decidir según 404 / 409.
+    del error; añade tú la clave con `AddMetadataOrThrow` en el punto de la petición si vas a decidir según 404 / 409.
 
 17. **Para paginación desde una interfaz, usa `PostGetPaginationAsync`.** `GetPaginationAsync` obliga a
     depender de la clase concreta `HttpClientFactoryManager`.
@@ -1149,7 +1149,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 
 - [`MlResult`](../docs/core-types/MlResult.md) — el tipo que devuelven todos los métodos.
 - [`MlResult` y errores](../docs/core-types/MlResultErrors.md) — `MlError`,
-  `MlErrorsDetails`, `ToErrorsDescription()`, `GetDetailException()`.
+  `MlErrorDetails`, `GetErrorsSummary()`, `GetException()`.
 - [`Bind`](../docs/Bind/3_Bind.md) — encadenar llamadas HTTP dependientes.
 - [`Map`](../docs/Map/1_Map.md) — transformar el DTO recibido.
 - [`Match`](../docs/Match/1_Match.md) — cerrar la tubería en la frontera.
@@ -1158,7 +1158,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 - [`EnsureFp`](../docs/EnsureFp/EnsureFp.md) — validaciones previas a la llamada.
 - [Bucles y colecciones](../docs/loops/Bucles.md) — N peticiones y fusión de errores.
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`,
-> `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`,
-> `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()` o
-> `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`,
+> `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`,
+> `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()` o
+> `GetMetadataSummary()`.

@@ -5,7 +5,7 @@
 using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.Core.Tests.Unit.Types.Errors;
-public class MlErrorsDetailsTests
+public class MlErrorDetailsTests
 {
 
 
@@ -15,7 +15,7 @@ public class MlErrorsDetailsTests
     [Fact]
     public void ToDescription_OK()
     {
-        MlErrorsDetails expected = (new List<MlError> { "miError", "miError2", "miError3", "miError4", "miError5" }, new Dictionary<string, object>
+        MlErrorDetails expected = (new List<MlError> { "miError", "miError2", "miError3", "miError4", "miError5" }, new Dictionary<string, object>
                                          {
                                                         { "key1", "value1" },
                                                         { "key2", "value2" },

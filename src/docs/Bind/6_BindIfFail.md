@@ -42,10 +42,10 @@ var tarifa = ObtenerDeCache(id)
     .BindIfFail(_ => MlResult<Tarifa>.Valid(Tarifa.PorDefecto));
 ```
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
-> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `FirstErrorMessage` ni `HasValue`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -67,7 +67,7 @@ MlResult<Tarifa> t = ObtenerDeCache(id)
 // Forma B: los dos caminos convergen en un tipo nuevo.
 MlResult<RespuestaApi> r = ObtenerCliente(id)
     .BindIfFail(funcValid: c       => RespuestaApi.Ok(c),
-                funcFail : errores => RespuestaApi.Error(errores.ToErrorsMessages()));
+                funcFail : errores => RespuestaApi.Error(errores.GetErrorMessages()));
 ```
 
 📌 La forma B es exactamente [`Match`](../Match/1_Match.md) pero devolviendo `MlResult<TReturn>` en las
@@ -81,7 +81,7 @@ dos ramas. Si una de tus ramas no puede fallar, `Match` suele leerse mejor.
 
 ```csharp
 public static MlResult<T> BindIfFail<T>(this MlResult<T>                        source,
-                                             Func<MlErrorsDetails, MlResult<T>> func)
+                                             Func<MlErrorDetails, MlResult<T>> func)
     => source.Match(
         fail : func,
         valid: value => value);          // ← conversión implícita T → MlResult<T>
@@ -92,7 +92,7 @@ public static MlResult<T> BindIfFail<T>(this MlResult<T>                        
 ```csharp
 public static MlResult<TReturn> BindIfFail<T, TReturn>(this MlResult<T>                              source,
                                                             Func<T              , MlResult<TReturn>> funcValid,
-                                                            Func<MlErrorsDetails, MlResult<TReturn>> funcFail)
+                                                            Func<MlErrorDetails, MlResult<TReturn>> funcFail)
     => source.Match(
         fail : funcFail,
         valid: funcValid);
@@ -103,9 +103,9 @@ public static MlResult<TReturn> BindIfFail<T, TReturn>(this MlResult<T>         
 | Válido | Devuelve el valor sin cambios | `funcValid(valor)` |
 | Fallido | `func(errorsDetails)` | `funcFail(errorsDetails)` |
 
-🔑 `func`/`funcFail` reciben el **`MlErrorsDetails` completo**, no un simple mensaje. Eso te permite
+🔑 `func`/`funcFail` reciben el **`MlErrorDetails` completo**, no un simple mensaje. Eso te permite
 decidir la estrategia de recuperación en función de *qué* falló: leer la excepción con
-`GetDetailException()`, recuperar el valor original con `GetDetailValue<T>()` o inspeccionar los
+`GetException()`, recuperar el valor original con `GetMetadataValue<T>()` o inspeccionar los
 mensajes.
 
 📌 A diferencia de `Bind`, `BindIfFail` **puede recuperar** un fallo… y también **puede empeorarlo**:
@@ -144,12 +144,12 @@ excepciones, usa `TryBindIfFail`, que las convierte en un fallo y guarda la exce
 
 ```csharp
 public static MlResult<T> TryBindIfFail<T>(this MlResult<T>                        source,
-                                                Func<MlErrorsDetails, MlResult<T>> func,
+                                                Func<MlErrorDetails, MlResult<T>> func,
                                                 Func<Exception, string>            errorMessageBuilder);
 
 // Sobrecarga equivalente con mensaje fijo:
 public static MlResult<T> TryBindIfFail<T>(this MlResult<T>                        source,
-                                                Func<MlErrorsDetails, MlResult<T>> func,
+                                                Func<MlErrorDetails, MlResult<T>> func,
                                                 string                             exceptionAditionalMessage);
 ```
 
@@ -249,16 +249,16 @@ public async Task<IActionResult> Obtener(int id)
 
     return respuesta.Match<RespuestaPedido, IActionResult>(
         valid: r       => Ok(r),
-        fail : errores => StatusCode(500, errores.ToErrorsMessages()));
+        fail : errores => StatusCode(500, errores.GetErrorMessages()));
 }
 
-private async Task<MlResult<RespuestaPedido>> RegistrarYConstruirErrorAsync(MlErrorsDetails errores)
+private async Task<MlResult<RespuestaPedido>> RegistrarYConstruirErrorAsync(MlErrorDetails errores)
 {
-    await _auditoria.RegistrarAsync(errores.ToErrorsDescription());
+    await _auditoria.RegistrarAsync(errores.GetErrorsSummary());
 
     // Un pedido inexistente no es un error del sistema: devolvemos una respuesta "vacía" válida.
     return errores.Errors.Any(e => e.Message.Contains("no encontrado", StringComparison.OrdinalIgnoreCase))
-                ? RespuestaPedido.NoEncontrado(errores.ToErrorsMessages())
+                ? RespuestaPedido.NoEncontrado(errores.GetErrorMessages())
                 : MlResult<RespuestaPedido>.Fail(errores);
 }
 ```
@@ -275,7 +275,7 @@ public async Task<MlResult<Pago>> CobrarAsync(Pago pago)
     => await IntentarCobroAsync(pago)
         .BindIfFailAsync(async errores =>
             // ¿Hubo excepción? → fallo técnico transitorio → merece un reintento.
-            await errores.GetDetailException()
+            await errores.GetException()
                 .MatchAsync(
                     validAsync: async ex =>
                     {
@@ -287,7 +287,7 @@ public async Task<MlResult<Pago>> CobrarAsync(Pago pago)
                     failAsync: _ => MlResult<Pago>.FailAsync(errores)));
 ```
 
-**Clave:** distinguir fallo técnico de rechazo de negocio mediante `GetDetailException()` evita
+**Clave:** distinguir fallo técnico de rechazo de negocio mediante `GetException()` evita
 reintentos inútiles y cargos duplicados.
 
 ---
@@ -302,7 +302,7 @@ en significado, no la esconds tras un *fallback*: hazla explícita en el flujo.
 ### 2. Registra por qué se activó el *fallback*
 
 Un *fallback* silencioso oculta averías: el sistema «funciona» mientras la caché lleva días caída.
-Aprovecha que recibes `MlErrorsDetails` para dejar traza, o añade un `ExecSelfIfFail` antes.
+Aprovecha que recibes `MlErrorDetails` para dejar traza, o añade un `ExecSelfIfFail` antes.
 
 ### 3. Fusiona los errores si el *fallback* también falla
 
@@ -312,7 +312,7 @@ ejemplo 2.
 ### 4. No reintentes fallos de negocio
 
 Reintentar «saldo insuficiente» es inútil; reintentar un *timeout* tiene sentido. Distingue con
-`GetDetailException()` o usa directamente
+`GetException()` o usa directamente
 [`BindIfFailWithException`](8_BindIfFailWithException.md) y
 [`BindIfFailWithoutException`](9_BindIfFailWithoutException.md), que ya filtran por ti.
 
@@ -339,7 +339,7 @@ Tres *fallbacks* encadenados ya son un olor a diseño: probablemente necesitas u
   camino válido.
 - **Forma A** (`func`): mismo tipo, no toca el valor si es válido. **Forma B** (`funcValid` +
   `funcFail`): cubre ambos caminos y permite cambiar de tipo.
-- El delegado recibe el `MlErrorsDetails` **completo**, lo que permite decidir la estrategia según el
+- El delegado recibe el `MlErrorDetails` **completo**, lo que permite decidir la estrategia según el
   motivo del fallo.
 - Si el *fallback* también falla, su error **sustituye** al original; usa `MergeErrorsDetailsIfFail`
   para conservar los dos.
@@ -357,5 +357,5 @@ Tres *fallbacks* encadenados ya son un olor a diseño: probablemente necesitas u
 - [`10_BindAlways.md`](10_BindAlways.md) — ejecutar algo con independencia del estado.
 - [`../Map/4_MapIfFail.md`](../Map/4_MapIfFail.md) — valor por defecto sin posibilidad de fallo.
 - [`../ExecSelf/3_ExecSelfIfFail.md`](../ExecSelf/3_ExecSelfIfFail.md) — observar el fallo sin alterarlo.
-- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetDetailException`, `MergeErrorsDetailsIfFail` y compañía.
+- [`../Types/MlResultActionsErrorsDetails.md`](../core-types/MlResultActionsErrorsDetails.md) — `GetException`, `MergeErrorsDetailsIfFail` y compañía.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir de `MlResult` hacia cualquier tipo.

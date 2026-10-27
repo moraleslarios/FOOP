@@ -36,10 +36,10 @@ return _repo.BuscarPorProvincia("Málaga")
             .EmptyToFailed("No hay clientes en esa provincia")
             .Map(cs => cs.Select(c => c.ToDto()))
             .Match(valid: dtos => Ok(dtos),
-                   fail : err  => NotFound(err.ToErrorsMessages()));
+                   fail : err  => NotFound(err.GetErrorMessages()));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -99,7 +99,7 @@ public static MlResult<IEnumerable<T>>? EmptyToFailed<T>(this IEnumerable<T> ite
             : error.ToMlResultFail<IEnumerable<T>>();
 
 public static MlResult<IEnumerable<T>>? EmptyToFailed<T>(this IEnumerable<T>  items,
-                                                              MlErrorsDetails errorsDetails)
+                                                              MlErrorDetails errorsDetails)
     => (items != null && items.Any())
             ? items.ToMlResultValid()
             : errorsDetails.ToMlResultFail<IEnumerable<T>>();
@@ -135,8 +135,8 @@ public static class ErroresPedido
 }
 var r2 = lineas.EmptyToFailed(ErroresPedido.SinLineas);
 
-// 3) MlErrorsDetails → cuando quieres varios errores y/o detalles de diagnóstico
-var detalles = MlErrorsDetails.FromErrorMessageDetails(
+// 3) MlErrorDetails → cuando quieres varios errores y/o detalles de diagnóstico
+var detalles = MlErrorDetails.FromErrorMessageDetails(
                     "El pedido no tiene líneas",
                     new Dictionary<string, object> { ["PedidoId"] = pedidoId,
                                                      ["Origen"]   = "CierrePedidoService" });
@@ -144,7 +144,7 @@ var r3 = lineas.EmptyToFailed(detalles);
 ```
 
 La tercera forma es la más valiosa en servicios reales: los `Details` viajan con el error
-por toda la tubería y puedes recuperarlos al final con `ToDetailsDescription()` o
+por toda la tubería y puedes recuperarlos al final con `GetMetadataSummary()` o
 `GetDetail<T>("PedidoId")`.
 
 ---
@@ -193,10 +193,10 @@ Hay dos grupos, según **de dónde venga la colección**:
 | Origen | Error como… | Firma | Naturaleza |
 |--------|-------------|-------|-----------|
 | `IEnumerable<T>` | `MlError` | `EmptyToFailedAsync<T>(this IEnumerable<T>, MlError)` | Envoltura (`ToAsync()`) |
-| `IEnumerable<T>` | `MlErrorsDetails` | `EmptyToFailedAsync<T>(this IEnumerable<T>, MlErrorsDetails)` | Envoltura |
+| `IEnumerable<T>` | `MlErrorDetails` | `EmptyToFailedAsync<T>(this IEnumerable<T>, MlErrorDetails)` | Envoltura |
 | `IEnumerable<T>` | `string` | `EmptyToFailedAsync<T>(this IEnumerable<T>, string)` | Envoltura |
 | `Task<IEnumerable<T>>` | `MlError` | `EmptyToFailedAsync<T>(this Task<IEnumerable<T>>, MlError)` | **Espera el origen** |
-| `Task<IEnumerable<T>>` | `MlErrorsDetails` | `EmptyToFailedAsync<T>(this Task<IEnumerable<T>>, MlErrorsDetails)` | **Espera el origen** |
+| `Task<IEnumerable<T>>` | `MlErrorDetails` | `EmptyToFailedAsync<T>(this Task<IEnumerable<T>>, MlErrorDetails)` | **Espera el origen** |
 | `Task<IEnumerable<T>>` | `string` | `EmptyToFailedAsync<T>(this Task<IEnumerable<T>>, string)` | **Espera el origen** |
 
 Las tres últimas son las verdaderamente útiles, porque te permiten enlazar directamente
@@ -246,7 +246,7 @@ public class CierrePedidoService
         => await EnsureFp.That(pedidoId, pedidoId > 0, "El identificador de pedido debe ser positivo")
                          .BindAsync(id => _repo.ObtenerLineasAsync(id)
                                                .EmptyToFailedAsync(
-                                                   MlErrorsDetails.FromErrorMessageDetails(
+                                                   MlErrorDetails.FromErrorMessageDetails(
                                                        "No se puede cerrar un pedido sin líneas",
                                                        new Dictionary<string, object> { ["PedidoId"] = id }))!)
                          .BindAsync(async lineas =>
@@ -271,15 +271,15 @@ public async Task<IActionResult> Buscar(string provincia)
     => await EnsureFp.NotNullEmptyOrWhitespace(provincia, "Debe indicar una provincia")
                      .BindAsync(p => _repo.BuscarPorProvinciaAsync(p)
                                           .EmptyToFailedAsync(
-                                              MlErrorsDetails.FromErrorMessageDetails(
+                                              MlErrorDetails.FromErrorMessageDetails(
                                                   "No hay clientes en la provincia indicada",
                                                   new Dictionary<string, object> { ["NoEncontrado"] = true }))!)
                      .MapAsync(cs => cs.Select(c => c.ToDto()).ToAsync())
                      .MatchAsync(
                           valid: dtos => Ok(dtos).ToAsync<IActionResult>(),
-                          fail : err  => (err.HasKeyDetails("NoEncontrado")
-                                              ? NotFound(err.ToErrorsMessages())
-                                              : BadRequest(err.ToErrorsMessages())).ToAsync<IActionResult>());
+                          fail : err  => (err.ContainsMetadata("NoEncontrado")
+                                              ? NotFound(err.GetErrorMessages())
+                                              : BadRequest(err.GetErrorMessages())).ToAsync<IActionResult>());
 ```
 
 Marcar el error con un detalle (`NoEncontrado`) permite decidir el código HTTP **al final**
@@ -314,12 +314,12 @@ es un resultado legítimo, no lo conviertas en fallo.
 ```csharp
 public static class ErroresCatalogo
 {
-    public static readonly MlErrorsDetails SinTarifas =
-        MlErrorsDetails.FromErrorMessageDetails("No hay tarifas activas",
+    public static readonly MlErrorDetails SinTarifas =
+        MlErrorDetails.FromErrorMessageDetails("No hay tarifas activas",
             new Dictionary<string, object> { ["Codigo"] = "TAR-001", ["Severidad"] = "Alta" });
 
-    public static readonly MlErrorsDetails SinAlmacenes =
-        MlErrorsDetails.FromErrorMessageDetails("No hay almacenes operativos",
+    public static readonly MlErrorDetails SinAlmacenes =
+        MlErrorDetails.FromErrorMessageDetails("No hay almacenes operativos",
             new Dictionary<string, object> { ["Codigo"] = "ALM-004", ["Severidad"] = "Critica" });
 }
 
@@ -328,7 +328,7 @@ var tarifas   = (await _tarifas.ActivasAsync()).EmptyToFailed(ErroresCatalogo.Si
 var almacenes = (await _almacenes.OperativosAsync()).EmptyToFailed(ErroresCatalogo.SinAlmacenes)!;
 
 // Y al reportar, los detalles vienen incluidos
-tarifas.ExecSelfIfFail(err => _log.LogWarning("{Desc}", err.ToDetailsDescription()));
+tarifas.ExecSelfIfFail(err => _log.LogWarning("{Desc}", err.GetMetadataSummary()));
 ```
 
 ### Ejemplo 5: qué no hacer
@@ -366,7 +366,7 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
    devuelta a un listado de UI es una respuesta válida, no un error.
 2. **Materializa las fuentes diferidas** (`ToList()`, `ToArray()`) antes de llamarlo, para
    evitar enumerar dos veces la consulta.
-3. **Prefiere la sobrecarga de `MlErrorsDetails`** en servicios: los `Details` permiten
+3. **Prefiere la sobrecarga de `MlErrorDetails`** en servicios: los `Details` permiten
    decidir el código HTTP o la política de reintento al final de la tubería.
 4. **Centraliza los errores frecuentes** en una clase estática de catálogo, como en el
    ejemplo 4, para mantener mensajes y códigos consistentes.
@@ -388,7 +388,7 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
   es `null` o está vacío, **Valid** con la misma colección en caso contrario.
 - Es un **constructor de `MlResult`**, extensión de `IEnumerable<T>`, no un operador del
   carril: para usarlo dentro de una tubería necesitas `Bind`.
-- **3 sobrecargas síncronas** (`MlError`, `MlErrorsDetails`, `string`) y **6 asíncronas**
+- **3 sobrecargas síncronas** (`MlError`, `MlErrorDetails`, `string`) y **6 asíncronas**
   (las mismas tres sobre `IEnumerable<T>`, que son meras envolturas, y sobre
   `Task<IEnumerable<T>>`, que sí esperan el origen).
 - **No existe `TryEmptyToFailed`**: el método no invoca delegados de usuario.
@@ -406,5 +406,5 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
 - [`MapEnsure`](../Map/2_MapEnsure.md) — validar sin salir del carril
 - [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que devuelven `MlResult`
 - [`Bucles y proyecciones`](../loops/Bucles.md) — recorrer colecciones dentro del carril
-- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y sus fábricas
+- [`MlResultErrors`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y sus fábricas
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — validaciones de entrada al carril

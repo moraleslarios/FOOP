@@ -46,10 +46,10 @@ public MlResult<Factura> Emitir(Pedido pedido, string serie)
                .Map(p => Construir(p, serie));
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`,
-> `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`,
-> `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`,
-> `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`,
+> `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`,
+> `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`,
+> `GetMetadataSummary()`.
 
 ---
 
@@ -130,7 +130,7 @@ consultar la firma:
 | Forma | Firma típica | Cuándo usarla |
 |-------|--------------|---------------|
 | **Mensaje** | `MaxLength(value, 10, "El nombre es demasiado largo")` | el texto va dirigido al usuario final |
-| **Detalles** | `MaxLength(value, 10, MlErrorsDetails.FromErrorMessageDetails(…))` | necesitas adjuntar diagnóstico propio |
+| **Detalles** | `MaxLength(value, 10, MlErrorDetails.FromErrorMessageDetails(…))` | necesitas adjuntar diagnóstico propio |
 | **`…Arg`** | `MaxLengthArg(value, 10)` | validación de argumentos: el mensaje y el nombre del parámetro se generan solos |
 
 Las variantes `…Arg` usan `[CallerArgumentExpression]`, así que capturan **la expresión escrita en
@@ -217,11 +217,11 @@ uso**:
 
 | Herramienta | Forma | Formas de error | Comprobación de `null` |
 |-------------|-------|-----------------|------------------------|
-| `EnsureFp.NotNull` | Estático | `string`, `MlErrorsDetails`, `…Arg` | `is not null` (estricto) |
+| `EnsureFp.NotNull` | Estático | `string`, `MlErrorDetails`, `…Arg` | `is not null` (estricto) |
 | [`NullToFailed`](../Several/2_NullToFailed.md) | Extensión | 4 formas | `== null` (respeta `operator==`) |
-| `EnsureFp.NotEmpty` | Estático | `string`, `MlErrorsDetails`, `…Arg` | `!= null && Any()` |
+| `EnsureFp.NotEmpty` | Estático | `string`, `MlErrorDetails`, `…Arg` | `!= null && Any()` |
 | [`EmptyToFailed`](../Several/1_EmptyToFailed.md) | Extensión | 3 formas | `!= null && Any()` |
-| `EnsureFp.That` | Estático | `string`, `MlErrorsDetails`, perezosas, `…Arg` | — |
+| `EnsureFp.That` | Estático | `string`, `MlErrorDetails`, perezosas, `…Arg` | — |
 | [`BoolToResult`](../Several/3_BoolToResult.md) | Extensión | 4 formas | — |
 | [`MapEnsure`](../Map/2_MapEnsure.md) | Extensión de `MlResult<T>` | varias | Predicado **diferido** |
 
@@ -354,7 +354,7 @@ var r = EnsureFp.TryThat(cadenaJson,
                          ex => $"No se pudo interpretar la configuración: {ex.Message}");
 
 if (r.IsFailure)
-    logger.LogError(r.GetFailureDetailsOrThrow().GetDetailException(), "Configuración inválida");
+    logger.LogError(r.GetFailureDetailsOrThrow().GetException(), "Configuración inválida");
 ```
 
 ### Ejemplo 5: qué no hacer
@@ -371,7 +371,7 @@ var r = EnsureFp.NotNull(cliente, "El cliente es obligatorio");
 // EnsureFp.NotNull(cliente, ErroresCliente.Obligatorio);
 
 // ✅ Conviértelo
-EnsureFp.NotNull(cliente, MlErrorsDetails.FromError(ErroresCliente.Obligatorio));
+EnsureFp.NotNull(cliente, MlErrorDetails.FromError(ErroresCliente.Obligatorio));
 
 
 // ❌ Encadenar Bind cuando quieres informar de todos los errores: solo verás el primero
@@ -446,7 +446,7 @@ EnsureFp.InRangeArg(dto.Edad, 18, 120);
   excepciones**.
 - Cubre **ocho familias**: núcleo, agregación, cadenas, números, colecciones, tipos concretos,
   nullables y asíncronas.
-- Cada regla se ofrece en **tres variantes**: con `string`, con `MlErrorsDetails` y `…Arg` con
+- Cada regla se ofrece en **tres variantes**: con `string`, con `MlErrorDetails` y `…Arg` con
   mensaje y nombre de parámetro automáticos vía `[CallerArgumentExpression]`.
 - `That` acepta **condición ya evaluada o predicado diferido**, y mensajes perezosos
   (`Func<string>`, `Func<T,string>`).
@@ -480,4 +480,4 @@ EnsureFp.InRangeArg(dto.Edad, 18, 120);
 - [`MapEnsure` — validar dentro del carril](../Map/2_MapEnsure.md)
 - [`EmptyToFailed`](../Several/1_EmptyToFailed.md) · [`NullToFailed`](../Several/2_NullToFailed.md) · [`BoolToResult`](../Several/3_BoolToResult.md) · [`Combine`](../Several/4_Combine.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../Bind/3_Bind.md)
-- [`MlResultErrors` — anatomía de `MlErrorsDetails`](../core-types/MlResultErrors.md)
+- [`MlResultErrors` — anatomía de `MlErrorDetails`](../core-types/MlResultErrors.md)

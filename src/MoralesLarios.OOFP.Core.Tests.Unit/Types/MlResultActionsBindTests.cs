@@ -498,7 +498,7 @@ public class MlResultActionsBindTests
 
         bool hasDetails = result.Match(
                                             valid: x             => false,
-                                            fail : errorsDetails => errorsDetails.HasExceptionDetails()
+                                            fail : errorsDetails => errorsDetails.ContainsException()
                                         );
 
         hasDetails.Should().BeTrue();
@@ -531,7 +531,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -546,7 +546,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -576,7 +576,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -591,7 +591,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -622,7 +622,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -637,7 +637,7 @@ public class MlResultActionsBindTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -717,7 +717,7 @@ public class MlResultActionsBindTests
                                                                                                   funcFail           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year),
                                                                                                   errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -737,7 +737,7 @@ public class MlResultActionsBindTests
                                                                                                   funcFail           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year / 0),
                                                                                                   errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -757,7 +757,7 @@ public class MlResultActionsBindTests
                                                                                                        funcFailAsync           : valueDateTime  => (Convert.ToDecimal(valueDateTime.Year)).ToMlResultValidAsync(),
                                                                                                        errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -777,7 +777,7 @@ public class MlResultActionsBindTests
                                                                                                        funcFailAsync           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year / 0).ToMlResultValidAsync(),
                                                                                                        errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -1333,7 +1333,7 @@ public class MlResultActionsBindTests
 
         bool hasExError = result.Match(
                                             valid: _             => false,
-                                            fail : errorsDetails => errorsDetails.Details.ContainsKey(ExceptionMetadataKey)
+                                            fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
                                         );
 
         hasExError.Should().BeTrue();

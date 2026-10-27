@@ -17,7 +17,7 @@ public partial class StringMaxLength : ValueObject<NotEmptyString>
 
     public static StringMaxLength FromStringLength(string value, int length) => new StringMaxLength(value, length);
 
-    public static MlResult<StringMaxLength> ByStringLength(string value, int length, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<StringMaxLength> ByStringLength(string value, int length, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
                             .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
                             .Map ( _ => new StringMaxLength(value, length));

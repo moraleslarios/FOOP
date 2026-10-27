@@ -21,7 +21,7 @@ public static class MlResultActionsSeveral
                 : error.ToMlResultFail<IEnumerable<T>>();
 
     public static MlResult<IEnumerable<T>>? EmptyToFailed<T>(this IEnumerable<T>  items, 
-                                                                  MlErrorsDetails errorsDetails)
+                                                                  MlErrorDetails errorsDetails)
         => (items != null && items.Any()) 
                 ? items.ToMlResultValid() 
                 : errorsDetails.ToMlResultFail<IEnumerable<T>>();
@@ -39,7 +39,7 @@ public static class MlResultActionsSeveral
                 : error.ToMlResultFail<IEnumerable<T>>().ToAsync();
 
     public static Task<MlResult<IEnumerable<T>>>? EmptyToFailedAsync<T>(this IEnumerable<T>  items, 
-                                                                             MlErrorsDetails errorsDetails)
+                                                                             MlErrorDetails errorsDetails)
         => (items != null && items.Any()) 
                 ? items.ToMlResultValid().ToAsync() 
                 : errorsDetails.ToMlResultFail<IEnumerable<T>>().ToAsync();
@@ -61,7 +61,7 @@ public static class MlResultActionsSeveral
     }
 
     public static async Task<MlResult<IEnumerable<T>>>? EmptyToFailedAsync<T>(this Task<IEnumerable<T>> itemsAsync, 
-                                                                                   MlErrorsDetails errorsDetails)
+                                                                                   MlErrorDetails errorsDetails)
     {
         var partialMlResult = await itemsAsync;
 
@@ -96,12 +96,12 @@ public static class MlResultActionsSeveral
 
 
     public static MlResult<T> NullToFailed<T>(this T               source,
-                                                   MlErrorsDetails errorsDetails)
+                                                   MlErrorDetails errorsDetails)
         => source == null ? errorsDetails.ToMlResultFail<T>() : source.ToMlResultValid();
 
     public static MlResult<T> NullToFailed<T>(this T       source,
                                                    MlError error)
-        => source.NullToFailed(MlErrorsDetails.FromError(error));
+        => source.NullToFailed(MlErrorDetails.FromError(error));
 
 
     public static MlResult<T> NullToFailed<T>(this T      source,
@@ -112,15 +112,15 @@ public static class MlResultActionsSeveral
 
     public static MlResult<T> NullToFailed<T>(this T                   source,
                                                    IEnumerable<string> errorsMessage)
-        => source.NullToFailed(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => source.NullToFailed(MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
 
     public static async Task<MlResult<T>> NullToFailedAsync<T>(this T       source,
                                                                     MlError error)
-        => await source.NullToFailedAsync(MlErrorsDetails.FromError(error));
+        => await source.NullToFailedAsync(MlErrorDetails.FromError(error));
 
     public static async Task<MlResult<T>> NullToFailedAsync<T>(this T               source,
-                                                                    MlErrorsDetails errorsDetails)
+                                                                    MlErrorDetails errorsDetails)
         => await source.NullToFailed(errorsDetails).ToAsync();
 
 
@@ -130,7 +130,7 @@ public static class MlResultActionsSeveral
 
     public static async Task<MlResult<T>> NullToFailedAsync<T>(this T                   source,
                                                                     IEnumerable<string> errorsMessage)
-        => await source.NullToFailedAsync(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => await source.NullToFailedAsync(MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
     public static async Task<MlResult<T>> NullToFailedAsync<T>(this Task<T> sourceAsync,
                                                                     string  errorMessage)
@@ -141,12 +141,12 @@ public static class MlResultActionsSeveral
         => await (await sourceAsync).NullToFailedAsync(error);
 
     public static async Task<MlResult<T>> NullToFailedAsync<T>(this Task<T>             sourceAsync,
-                                                                    MlErrorsDetails    errorsDetails)
+                                                                    MlErrorDetails    errorsDetails)
         => await (await sourceAsync).NullToFailedAsync(errorsDetails);
 
     public static async Task<MlResult<T>> NullToFailedAsync<T>(this Task<T>             sourceAsync,
                                                                     IEnumerable<string> errorsMessage)
-        => await (await sourceAsync).NullToFailedAsync(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => await (await sourceAsync).NullToFailedAsync(MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
 
     #endregion
@@ -160,13 +160,13 @@ public static class MlResultActionsSeveral
 
     public static MlResult<T> BoolToResult<T>(this T               source,
                                                     bool            condition,
-                                                    MlErrorsDetails errorsDetails)
+                                                    MlErrorDetails errorsDetails)
         => condition ?  source.ToMlResultValid() : errorsDetails.ToMlResultFail<T>();
 
     public static MlResult<T> BoolToResult<T>(this T       source,
                                                    bool    condition,
                                                    MlError error)
-        => source.BoolToResult(condition, MlErrorsDetails.FromError(error));
+        => source.BoolToResult(condition, MlErrorDetails.FromError(error));
 
 
     public static MlResult<T> BoolToResult<T>(this T      source,
@@ -179,17 +179,17 @@ public static class MlResultActionsSeveral
     public static MlResult<T> BoolToResult<T>(this T                   source,
                                                    bool                condition,
                                                    IEnumerable<string> errorsMessage)
-        => source.BoolToResult(condition, MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => source.BoolToResult(condition, MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
 
     public static async Task<MlResult<T>> BoolToResultAsync<T>(this T       source,
                                                                     bool    condition,
                                                                     MlError error)
-        => await source.BoolToResultAsync(condition, MlErrorsDetails.FromError(error));
+        => await source.BoolToResultAsync(condition, MlErrorDetails.FromError(error));
 
     public static Task<MlResult<T>> BoolToResultAsync<T>(this T               source,
                                                                     bool            condition,
-                                                                    MlErrorsDetails errorsDetails)
+                                                                    MlErrorDetails errorsDetails)
         => source.BoolToResult(condition, errorsDetails).ToAsync();
 
 
@@ -201,7 +201,7 @@ public static class MlResultActionsSeveral
     public static async Task<MlResult<T>> BoolToResultAsync<T>(this T                   source,
                                                                     bool                condition,
                                                                     IEnumerable<string> errorsMessage)
-        => await source.BoolToResultAsync(condition, MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => await source.BoolToResultAsync(condition, MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
     public static async Task<MlResult<T>> BoolToResultAsync<T>(this Task<T> sourceAsync,
                                                                     bool    condition,
@@ -215,13 +215,13 @@ public static class MlResultActionsSeveral
 
     public static async Task<MlResult<T>> BoolToResultAsync<T>(this Task<T>             sourceAsync,
                                                                     bool                condition,
-                                                                    MlErrorsDetails    errorsDetails)
+                                                                    MlErrorDetails    errorsDetails)
         => await (await sourceAsync).BoolToResultAsync(condition, errorsDetails);
 
     public static async Task<MlResult<T>> BoolToResultAsync<T>(this Task<T>             sourceAsync,
                                                                     bool                condition,
                                                                     IEnumerable<string> errorsMessage)
-        => await (await sourceAsync).BoolToResultAsync(condition, MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => await (await sourceAsync).BoolToResultAsync(condition, MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
 
 
@@ -233,12 +233,12 @@ public static class MlResultActionsSeveral
 
 
     public static MlResult<bool> BoolToResult(this bool            source,
-                                                   MlErrorsDetails errorsDetails)
+                                                   MlErrorDetails errorsDetails)
         => source ? source.ToMlResultValid() : errorsDetails.ToMlResultFail<bool>();
 
     public static MlResult<bool> BoolToResult(this bool    source,
                                                    MlError error)
-        => source.BoolToResult(MlErrorsDetails.FromError(error));
+        => source.BoolToResult(MlErrorDetails.FromError(error));
 
     public static MlResult<bool> BoolToResult(this bool   source,
                                                    string errorMessage)
@@ -246,16 +246,16 @@ public static class MlResultActionsSeveral
 
     public static MlResult<bool> BoolToResult(this bool                source,
                                                    IEnumerable<string> errorsMessage)
-        => source.BoolToResult(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => source.BoolToResult(MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
 
     public static Task<MlResult<bool>> BoolToResultAsync(this bool            source,
-                                                              MlErrorsDetails errorsDetails)
+                                                              MlErrorDetails errorsDetails)
         => source.BoolToResult(errorsDetails).ToAsync();
 
     public static Task<MlResult<bool>> BoolToResultAsync(this bool    source,
                                                               MlError error)
-        => source.BoolToResult(MlErrorsDetails.FromError(error)).ToAsync();
+        => source.BoolToResult(MlErrorDetails.FromError(error)).ToAsync();
 
     public static Task<MlResult<bool>> BoolToResultAsync(this bool   source,
                                                               string errorMessage)
@@ -263,16 +263,16 @@ public static class MlResultActionsSeveral
 
     public static Task<MlResult<bool>> BoolToResultAsync(this bool                source,
                                                               IEnumerable<string> errorsMessage)
-        => source.BoolToResult(MlErrorsDetails.FromEnumerableStrings(errorsMessage)).ToAsync();
+        => source.BoolToResult(MlErrorDetails.FromEnumerableStrings(errorsMessage)).ToAsync();
 
 
     public static async Task<MlResult<bool>> BoolToResultAsync(this Task<bool>      sourceAsync,
-                                                                    MlErrorsDetails errorsDetails)
+                                                                    MlErrorDetails errorsDetails)
         => await (await sourceAsync).BoolToResultAsync(errorsDetails);
 
     public static async Task<MlResult<bool>> BoolToResultAsync(this Task<bool> sourceAsync,
                                                                     MlError    error)
-        => await (await sourceAsync).BoolToResultAsync(MlErrorsDetails.FromError(error));
+        => await (await sourceAsync).BoolToResultAsync(MlErrorDetails.FromError(error));
 
     public static async Task<MlResult<bool>> BoolToResultAsync(this Task<bool> sourceAsync,
                                                                     string     errorMessage)
@@ -280,7 +280,7 @@ public static class MlResultActionsSeveral
 
     public static async Task<MlResult<bool>> BoolToResultAsync(this Task<bool>          sourceAsync,
                                                                     IEnumerable<string> errorsMessage)
-        => await (await sourceAsync).BoolToResultAsync(MlErrorsDetails.FromEnumerableStrings(errorsMessage));
+        => await (await sourceAsync).BoolToResultAsync(MlErrorDetails.FromEnumerableStrings(errorsMessage));
 
 
 

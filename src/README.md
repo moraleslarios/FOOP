@@ -25,7 +25,7 @@ funcional, las librerías satélite que lo extienden y los proyectos de pruebas 
 **MoralesLarios.FOOP** es un ecosistema .NET que aplica *Railway-Oriented Programming* de forma
 sistemática: en lugar de propagar excepciones como mecanismo primario de control de flujo, cada
 operación devuelve un **`MlResult<T>`** que representa explícitamente el éxito o el fallo, y el
-error viaja como **dato estructurado** (`MlErrorsDetails`) hasta el borde de la aplicación.
+error viaja como **dato estructurado** (`MlErrorDetails`) hasta el borde de la aplicación.
 
 Sobre esa base común se construyen capas independientes: value objects validados, validación
 declarativa, IO seguro, repositorios EF Core, servicios de aplicación, traducción a
@@ -58,7 +58,7 @@ Todos ellos tienen su propio `README.md` con documentación detallada.
 
 | Proyecto | Propósito |
 |---|---|
-| [**MoralesLarios.FOOP**](MoralesLarios.OOFP.Core/README.md) *(assembly `MoralesLarios.OOFP`)* | Corazón del ecosistema: `MlResult<T>`, `MlErrorsDetails`, `EnsureFp` y las familias de extensiones `Bind`, `Map`, `Match`, `ExecSelf`, `Several`, `Transformations` y `Bucles`. **Es el único proyecto que hay que conocer de verdad.** |
+| [**MoralesLarios.FOOP**](MoralesLarios.OOFP.Core/README.md) *(assembly `MoralesLarios.OOFP`)* | Corazón del ecosistema: `MlResult<T>`, `MlErrorDetails`, `EnsureFp` y las familias de extensiones `Bind`, `Map`, `Match`, `ExecSelf`, `Several`, `Transformations` y `Bucles`. **Es el único proyecto que hay que conocer de verdad.** |
 | [**MoralesLarios.OOFP.Shared**](MoralesLarios.OOFP.Shared/README.md) | Tipos compartidos de bajo nivel y soporte de paginación. |
 | [**MoralesLarios.OOFP.Shared**](./MoralesLarios.OOFP.Shared/README.md) | Constantes compartidas entre proyectos, **sin ninguna dependencia**. Evita que dos capas se pongan de acuerdo mediante literales duplicados. |
 
@@ -142,7 +142,7 @@ ficheros** que ofrece **más de 90 reglas** listas para usar, sin dejar de ser r
 Las tres claves del diseño:
 
 1. **Tres variantes por regla.** Cada comprobación existe con mensaje `string`, con
-   `MlErrorsDetails` completo, y con sufijo **`…Arg`**, que usa
+   `MlErrorDetails` completo, y con sufijo **`…Arg`**, que usa
    `[CallerArgumentExpression]` para deducir el nombre del parámetro y **construir el mensaje
    por ti**:
 
@@ -196,7 +196,7 @@ Las ocho familias:
 ### 📦 Nuevo proyecto `MoralesLarios.OOFP.Shared`
 
 Proyecto sin dependencias cuya misión es alojar las **constantes que comparten varios
-proyectos**. Nace de un bug real: la clave del diccionario `MlErrorsDetails.Details` se escribía
+proyectos**. Nace de un bug real: la clave del diccionario `MlErrorDetails.Metadata` se escribía
 como literal en dos capas distintas, y el desacuerdo entre ambas **degradaba silenciosamente un
 404 en un 500**. Con `WebErrorDetailsKeys.ProblemsDetails` hay una sola fuente de verdad.
 

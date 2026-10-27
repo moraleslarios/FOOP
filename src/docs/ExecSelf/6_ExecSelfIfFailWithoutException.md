@@ -26,7 +26,7 @@ no se cumplen.
 ```csharp
 resultado.ExecSelfIfFailWithoutException(errores =>
     _log.LogWarning("Petición rechazada por reglas de negocio: {E}",
-                    errores.ToErrorsDescription()));
+                    errores.GetErrorsSummary()));
 ```
 
 Usados juntos, los dos métodos parten el conjunto de fallos en dos mitades disjuntas y completas, sin
@@ -36,13 +36,13 @@ un solo `if`:
 resultado
     .ExecSelfIfFailWithException(   (errores, ex) => _log.LogError(ex, "Avería técnica"))
     .ExecSelfIfFailWithoutException( errores      => _log.LogWarning("Regla incumplida: {E}",
-                                                                    errores.ToErrorsDescription()));
+                                                                    errores.GetErrorsSummary()));
 ```
 
-> ⚠️ **Nota sobre `MlErrorsDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
+> ⚠️ **Nota sobre `MlErrorDetails`.** Solo expone `Errors` (`IEnumerable<MlError>`) y `Details`
 > (`Dictionary<string, object>`). **No existen** `Exception`, `HasException`, `AllErrors`,
-> `FirstErrorMessage` ni `HasValue`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailException()` o `GetDetailValue<T>()`.
+> `FirstErrorMessage` ni `HasValue`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetException()` o `GetMetadataValue<T>()`.
 
 ---
 
@@ -74,10 +74,10 @@ avisos, métricas de negocio, mensajes de dominio.
 // Síncrono
 public static MlResult<T> ExecSelfIfFailWithoutException<T>(
         this MlResult<T>         source,
-        Action<MlErrorsDetails>  actionFailWithoutException)
+        Action<MlErrorDetails>  actionFailWithoutException)
 ```
 
-Fíjate en que el delegado recibe **solo** `MlErrorsDetails`: no hay nada más que pasar, precisamente
+Fíjate en que el delegado recibe **solo** `MlErrorDetails`: no hay nada más que pasar, precisamente
 porque no hay excepción.
 
 **Comportamiento**:
@@ -94,16 +94,16 @@ porque no hay excepción.
 
 | Fuente | Delegado | Método |
 | --- | --- | --- |
-| `MlResult<T>` | `Action<MlErrorsDetails>` | `ExecSelfIfFailWithoutException` |
-| `MlResult<T>` | `Func<MlErrorsDetails, Task>` | `ExecSelfIfFailWithoutExceptionAsync` |
-| `Task<MlResult<T>>` | `Action<MlErrorsDetails>` | `ExecSelfIfFailWithoutExceptionAsync` |
-| `Task<MlResult<T>>` | `Func<MlErrorsDetails, Task>` | `ExecSelfIfFailWithoutExceptionAsync` |
+| `MlResult<T>` | `Action<MlErrorDetails>` | `ExecSelfIfFailWithoutException` |
+| `MlResult<T>` | `Func<MlErrorDetails, Task>` | `ExecSelfIfFailWithoutExceptionAsync` |
+| `Task<MlResult<T>>` | `Action<MlErrorDetails>` | `ExecSelfIfFailWithoutExceptionAsync` |
+| `Task<MlResult<T>>` | `Func<MlErrorDetails, Task>` | `ExecSelfIfFailWithoutExceptionAsync` |
 
 ```csharp
 await ValidarSolicitudAsync(solicitud)
     .BindAsync(s => TramitarAsync(s))
     .ExecSelfIfFailWithoutExceptionAsync(async errores =>
-        await _notificaciones.AvisarUsuarioAsync(solicitud.Email, errores.ToErrorsMessages()));
+        await _notificaciones.AvisarUsuarioAsync(solicitud.Email, errores.GetErrorMessages()));
 ```
 
 ---
@@ -123,16 +123,16 @@ Si tu efecto secundario **puede lanzar** y quieres capturarlo, tienes dos altern
 // Opción A: protege el delegado a mano.
 .ExecSelfIfFailWithoutException(errores =>
 {
-    try   { _cola.Publicar(new SolicitudRechazada(errores.ToErrorsMessages())); }
+    try   { _cola.Publicar(new SolicitudRechazada(errores.GetErrorMessages())); }
     catch (Exception ex) { _log.LogError(ex, "No se pudo publicar el rechazo"); }
 });
 
-// Opción B: usa TryExecSelfFail y filtra dentro con GetDetailException.
+// Opción B: usa TryExecSelfFail y filtra dentro con GetException.
 .TryExecSelfFail(
     errores =>
     {
-        var esNegocio = errores.GetDetailException().Match(valid: _ => false, fail: _ => true);
-        if (esNegocio) _cola.Publicar(new SolicitudRechazada(errores.ToErrorsMessages()));
+        var esNegocio = errores.GetException().Match(valid: _ => false, fail: _ => true);
+        if (esNegocio) _cola.Publicar(new SolicitudRechazada(errores.GetErrorMessages()));
     },
     ex => $"No se pudo publicar el rechazo: {ex.Message}");
 ```
@@ -159,11 +159,11 @@ public class ServicioSolicitudes
             .ExecSelfIfFailWithoutExceptionAsync(async errores =>
             {
                 _log.LogInformation("Solicitud de {Email} rechazada: {E}",
-                                    dto.Email, errores.ToErrorsDescription());
+                                    dto.Email, errores.GetErrorsSummary());
 
                 await _notificaciones.EnviarAsync(dto.Email,
                     asunto : "No hemos podido tramitar tu solicitud",
-                    cuerpo : ComponerCuerpo(errores.ToErrorsMessages()));
+                    cuerpo : ComponerCuerpo(errores.GetErrorMessages()));
             })
 
             // Fallo técnico: el usuario no puede hacer nada → avisamos al equipo.
@@ -196,7 +196,7 @@ public MlResult<Descuento> AplicarCupon(Carrito carrito, string cupon)
         // y quedaría fuera de esta métrica automáticamente.
         .ExecSelfIfFailWithoutException(errores =>
         {
-            foreach (var motivo in errores.ToErrorsMessages())
+            foreach (var motivo in errores.GetErrorMessages())
                 _metricas.Incrementar("cupones.rechazados", ("motivo", Normalizar(motivo)));
         });
 
@@ -222,7 +222,7 @@ public async Task<IActionResult> Crear(ClienteDto dto)
         .ExecSelfIfFailWithoutExceptionAsync(errores =>
         {
             _log.LogInformation("Alta rechazada ({N} problemas): {E}",
-                                errores.Errors.Count(), errores.ToErrorsDescription());
+                                errores.Errors.Count(), errores.GetErrorsSummary());
             return Task.CompletedTask;
         })
 
@@ -230,7 +230,7 @@ public async Task<IActionResult> Crear(ClienteDto dto)
             valid: c       => Task.FromResult<IActionResult>(CreatedAtAction(nameof(Obtener),
                                                                             new { id = c.Id }, c)),
             fail:  errores => Task.FromResult<IActionResult>(
-                                  BadRequest(new { errores = errores.ToErrorsMessages() })));
+                                  BadRequest(new { errores = errores.GetErrorMessages() })));
 }
 
 private static MlResult<Cliente> ValidarAsync(ClienteDto dto)
@@ -268,7 +268,7 @@ respuesta al cliente.
 ### 4. Recuerda que no hay variante `Try*`
 
 Si el efecto puede lanzar, protégelo con `try/catch` dentro del delegado o usa `TryExecSelfFail`
-filtrando con `GetDetailException()`.
+filtrando con `GetException()`.
 
 ### 5. Sigue sin recuperar el resultado
 
@@ -283,12 +283,12 @@ Para recuperar un fallo de negocio, usa
 | Método | Se ejecuta si… | El delegado recibe | ¿Existe `Try*`? |
 | --- | --- | --- | :---: |
 | `ExecSelfIfValid` | Es válido | `T` | Sí |
-| `ExecSelfIfFail` | Es fallido (siempre) | `MlErrorsDetails` | Sí (`TryExecSelfFail`) |
-| `ExecSelfIfFailWithValue` | Fallido y hay `Details["Value"]` | `MlErrorsDetails`, `TValue` | Sí |
-| `ExecSelfIfFailWithException` | Fallido y hay `Details["Ex"]` | `MlErrorsDetails`, `Exception` | Sí |
-| **`ExecSelfIfFailWithoutException`** | **Fallido y sin `Details["Ex"]`** | **`MlErrorsDetails`** | **No** |
-| `MapIfFailWithoutException` | Fallido y sin excepción | `MlErrorsDetails` | — (transforma) |
-| `BindIfFailWithoutException` | Fallido y sin excepción | `MlErrorsDetails` | — (transforma) |
+| `ExecSelfIfFail` | Es fallido (siempre) | `MlErrorDetails` | Sí (`TryExecSelfFail`) |
+| `ExecSelfIfFailWithValue` | Fallido y hay `Details["Value"]` | `MlErrorDetails`, `TValue` | Sí |
+| `ExecSelfIfFailWithException` | Fallido y hay `Details["Ex"]` | `MlErrorDetails`, `Exception` | Sí |
+| **`ExecSelfIfFailWithoutException`** | **Fallido y sin `Details["Ex"]`** | **`MlErrorDetails`** | **No** |
+| `MapIfFailWithoutException` | Fallido y sin excepción | `MlErrorDetails` | — (transforma) |
+| `BindIfFailWithoutException` | Fallido y sin excepción | `MlErrorDetails` | — (transforma) |
 
 ---
 
@@ -296,7 +296,7 @@ Para recuperar un fallo de negocio, usa
 
 - `ExecSelfIfFailWithoutException` ejecuta una acción **solo ante fallos de negocio**: resultado
   fallido **sin** excepción en `Details["Ex"]`.
-- El delegado recibe únicamente `MlErrorsDetails`.
+- El delegado recibe únicamente `MlErrorDetails`.
 - Es el complemento disjunto de `ExecSelfIfFailWithException`; juntos cubren todos los fallos.
 - Los fallos sin excepción los generan `ToMlResultFail`, `MlResult.Fail(mensaje)`, `EnsureFp.*`,
   `MapEnsure`, `BoolToResult` y `MergeErrorsIfExists`.
@@ -310,7 +310,7 @@ Para recuperar un fallo de negocio, usa
 - [`3_ExecSelfIfFail.md`](3_ExecSelfIfFail.md) — efectos ante cualquier fallo.
 - [`4_ExecSelfIfFailWithValue.md`](4_ExecSelfIfFailWithValue.md) — el valor adjunto al fallo.
 - [`5_ExecSelfIfFailWithException.md`](5_ExecSelfIfFailWithException.md) — el complemento exacto de este documento.
-- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorsDetails` y las claves convencionales.
+- [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — `MlError`, `MlErrorDetails` y las claves convencionales.
 - [`../Types/MlResultActionsExecSelf.md`](../core-types/MlResultActionsExecSelf.md) — referencia y recuento de sobrecargas.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — generar fallos de negocio sin excepciones.
 - [`../Bind/9_BindIfFailWithoutException.md`](../Bind/9_BindIfFailWithoutException.md) y [`../Map/7_MapIfFailWithoutException.md`](../Map/7_MapIfFailWithoutException.md) — cuando sí quieres recuperar.

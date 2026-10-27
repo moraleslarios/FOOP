@@ -15,7 +15,7 @@ public class MlFile : RegexValue
 
     public static MlFile FromString(string value) => new MlFile(value);
 
-    public static MlResult<MlFile> ByString(string value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<MlFile> ByString(string value, MlErrorDetails errorsDetails = null!)
         => NotEmptyString.ByString(value)
                             .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
                             .Map ( _ => new MlFile(value));

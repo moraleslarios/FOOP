@@ -15,7 +15,7 @@ La idea de fondo es simple: **tu controlador no debería contener ni un solo `if
 5. [`ExtendedProblemDetails`](#extendedproblemdetails)
 6. [`MlActionResults` — fábrica de respuestas de error](#mlactionresults--fábrica-de-respuestas-de-error)
 7. [`ProblemDetailsInfo`](#problemdetailsinfo)
-8. [`MlErrorsDetailsExtensions` — el puente por reflexión](#mlerrorsdetailsextensions--el-puente-por-reflexión)
+8. [`MlErrorDetailsExtensions` — el puente por reflexión](#mlerrorsdetailsextensions--el-puente-por-reflexión)
 9. [`MlResultWebExtensionsPlus` — la capa recomendada](#mlresultwebextensionsplus--la-capa-recomendada)
 10. [`MlRequestWebExtensions` — cabeceras HTTP al raíl](#mlrequestwebextensions--cabeceras-http-al-raíl)
 11. [`MlResultWebExtensions` — capa legacy (`[Obsolete]`)](#mlresultwebextensions--capa-legacy-obsolete)
@@ -47,13 +47,13 @@ public async Task<IActionResult> Get(int id)
     var errors = result.GetFailureDetailsOrThrow();
 
     // ¿Es un "no encontrado"? ¿Cómo lo sé? Comparando cadenas...
-    if (errors.ToErrorsDescription().Contains("not found", StringComparison.OrdinalIgnoreCase))
+    if (errors.GetErrorsSummary().Contains("not found", StringComparison.OrdinalIgnoreCase))
         return NotFound(new ProblemDetails { Status = 404, Title = "No encontrado" });
 
-    if (errors.HasExceptionDetails())
+    if (errors.ContainsException())
         return StatusCode(500, new ProblemDetails { Status = 500, Title = "Error interno" });
 
-    return StatusCode(500, new ProblemDetails { Status = 500, Detail = errors.ToErrorsDescription() });
+    return StatusCode(500, new ProblemDetails { Status = 500, Detail = errors.GetErrorsSummary() });
 }
 ```
 
@@ -67,7 +67,7 @@ public async Task<IActionResult> Get(int id)
     => await _service.FindByIdProblemsDetailsAsync(id).ToGetPdActionResultAsync();
 ```
 
-💡 **La clave**: quien conoce el significado del error es la capa que lo produce, no el controlador. Por eso `MoralesLarios.OOFP.Application` adjunta al `MlErrorsDetails` un detalle bajo la clave `"ProblemsDetails"` con el `Status`, `Title`, `Detail`, `Type` y `Errors` definitivos. Este proyecto solo lo **lee y lo re-emite**. El controlador no decide nada.
+💡 **La clave**: quien conoce el significado del error es la capa que lo produce, no el controlador. Por eso `MoralesLarios.OOFP.Application` adjunta al `MlErrorDetails` un detalle bajo la clave `"ProblemsDetails"` con el `Status`, `Title`, `Detail`, `Type` y `Errors` definitivos. Este proyecto solo lo **lee y lo re-emite**. El controlador no decide nada.
 
 ---
 
@@ -81,7 +81,7 @@ Referencias de proyecto:
 
 | Proyecto referenciado | Para qué |
 |---|---|
-| `MoralesLarios.OOFP` | `MlResult<T>`, `MlErrorsDetails`, `Match`, `Bind`, `Map`, `MapEnsure` |
+| `MoralesLarios.OOFP` | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind`, `Map`, `MapEnsure` |
 | `MoralesLarios.OOFP.Shared` | `PaginationInfo` (resultado de `GetHeaderPaginationInfo`) |
 | `MoralesLarios.OOFP.ValueObjects` | `Name`, `NotEmptyString`, `IntNotNegative` (tipos de las cabeceras) |
 
@@ -116,7 +116,7 @@ MoralesLarios.OOFP.AspNetCore.Results/
 │   └── ProblemDetailsInfo.cs             → record con la forma canónica de un ProblemDetails
 ├── Helpers/
 │   ├── MlResultWebExtensionsPlus.cs      → ⭐ capa recomendada (ToGetPd…, ToPostPd…, ToPutPd…)
-│   ├── MlErrorsDetailsExtensions.cs      → MlErrorsDetails → ProblemDetailsInfo (por reflexión)
+│   ├── MlErrorDetailsExtensions.cs      → MlErrorDetails → ProblemDetailsInfo (por reflexión)
 │   ├── MlRequestWebExtensions.cs         → HttpRequest → MlResult<value object>
 │   └── MlResultWebExtensions.cs          → ⛔ capa legacy, la clase entera está [Obsolete]
 └── GlobalUsings.cs
@@ -127,7 +127,7 @@ Tres bloques funcionales bien separados:
 | Bloque | Dirección | Tipos implicados |
 |---|---|---|
 | **Salida de datos** | `MlResult<T>` → `IActionResult` | `MlResultWebExtensionsPlus`, `MlActionResults` |
-| **Traducción de errores** | `MlErrorsDetails` → `ProblemDetailsInfo` | `MlErrorsDetailsExtensions` |
+| **Traducción de errores** | `MlErrorDetails` → `ProblemDetailsInfo` | `MlErrorDetailsExtensions` |
 | **Entrada de datos** | `HttpRequest` → `MlResult<T>` | `MlRequestWebExtensions` |
 
 ---
@@ -140,7 +140,7 @@ Para entender este proyecto hay que ver el recorrido completo de un error desde 
 1. EFCore                 TryFindAsync(id) devuelve fail
                               │
 2. WebServices            MlProblemsDetails.NotFoundError("Cliente 7 no existe")
-   (MlProblemsDetails)    crea un MlErrorsDetails con:
+   (MlProblemsDetails)    crea un MlErrorDetails con:
                               Errors  = [ "Cliente 7 no existe" ]
                               Details = { ["ProblemsDetails"] = new {
                                              Status = 404, Title = "...",
@@ -148,7 +148,7 @@ Para entender este proyecto hay que ver el recorrido completo de un error desde 
                                              Errors = {...}, StatusCode = 404 } }
                               │
 3. WebApi                 errors.GetProblemDetails()
-   (MlErrorsDetails-        → lee Details["ProblemsDetails"]
+   (MlErrorDetails-        → lee Details["ProblemsDetails"]
     Extensions)            → por reflexión lo convierte en ProblemDetailsInfo
                               │
 4. WebApi                 pdInfo.ToMlActionResult()
@@ -251,7 +251,7 @@ return MlActionResults.BadRequest(validaciones, "Datos de entrada no válidos");
 
 > ⚠️ **`type` por defecto.** Si no pasas `type`, se usa la cadena literal `"https://www.puntonetalpunto.net/"` (el dominio del autor de la librería). Según la RFC 7807 el `type` debe ser un URI que **documente tu error**, así que en producción **pásalo siempre** o centralízalo en un *wrapper* propio.
 
-> 💡 **Espejo de `MlProblemsDetails`.** Este catálogo de 15 métodos es el reflejo exacto del catálogo `MlProblemsDetails` de `MoralesLarios.OOFP.Application`. La diferencia: `MlProblemsDetails.*` devuelve `MlErrorsDetails` (para meterlo en el raíl) y `MlActionResults.*` devuelve `IActionResult` (para salir por HTTP).
+> 💡 **Espejo de `MlProblemsDetails`.** Este catálogo de 15 métodos es el reflejo exacto del catálogo `MlProblemsDetails` de `MoralesLarios.OOFP.Application`. La diferencia: `MlProblemsDetails.*` devuelve `MlErrorDetails` (para meterlo en el raíl) y `MlActionResults.*` devuelve `IActionResult` (para salir por HTTP).
 
 ---
 
@@ -268,18 +268,18 @@ public record ProblemDetailsInfo(int                        Status,
                                  int                        StatusCode);
 ```
 
-Es el tipo intermedio del puente: `MlErrorsDetails` → **`ProblemDetailsInfo`** → `IActionResult`.
+Es el tipo intermedio del puente: `MlErrorDetails` → **`ProblemDetailsInfo`** → `IActionResult`.
 
 > ⚠️ `Status` y `StatusCode` son **redundantes**: en todos los caminos del código llevan el mismo valor. `Status` sirve al cuerpo JSON y `StatusCode` a la respuesta HTTP, pero nada garantiza que coincidan si construyes el record a mano.
 
 ---
 
-## `MlErrorsDetailsExtensions` — el puente por reflexión
+## `MlErrorDetailsExtensions` — el puente por reflexión
 
 Dos métodos de extensión:
 
 ```csharp
-public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorsDetails source);
+public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorDetails source);
 public static MlResult<ProblemDetailsInfo> ToProblemsDetailsInfo(this object obj);
 ```
 
@@ -288,11 +288,11 @@ public static MlResult<ProblemDetailsInfo> ToProblemsDetailsInfo(this object obj
 Es la implementación literal, escrita en el propio raíl:
 
 ```csharp
-public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorsDetails source)
+public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorDetails source)
     => MlResult.Empty()
-        .MapEnsure(_   => source.HasKeyDetails(ProblemsDetails),
-                   _   => "The MlErrorsDetails does not have details.")
-        .Map      (_   => source.Details[ProblemsDetails])
+        .MapEnsure(_   => source.ContainsMetadata(ProblemsDetails),
+                   _   => "The MlErrorDetails does not have details.")
+        .Map      (_   => source.Metadata[ProblemsDetails])
         .MapEnsure(obj => obj is not null,
                    _   => "The details ProblemsDetails key has a null object.")
         .Bind     (obj => obj.ToProblemsDetailsInfo());
@@ -300,7 +300,7 @@ public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorsDetail
 
 | Paso | Qué comprueba | Si falla |
 |---|---|---|
-| `MapEnsure` #1 | Existe la clave `"ProblemsDetails"` en `Details` | fail `"The MlErrorsDetails does not have details."` |
+| `MapEnsure` #1 | Existe la clave `"ProblemsDetails"` en `Details` | fail `"The MlErrorDetails does not have details."` |
 | `Map` | Extrae el objeto asociado | — |
 | `MapEnsure` #2 | El objeto no es `null` | fail `"The details ProblemsDetails key has a null object."` |
 | `Bind` | Delegación a `ToProblemsDetailsInfo` | propaga el fail |
@@ -314,12 +314,12 @@ Recibe un `object` (en la práctica, el **tipo anónimo** que crea `MlProblemsDe
 **Uso manual** (cuando escribes tu propio *mapper* de errores):
 
 ```csharp
-IActionResult Traducir(MlErrorsDetails errors)
+IActionResult Traducir(MlErrorDetails errors)
     => errors.GetProblemDetails()
              .Match(valid: pd => pd.ToMlActionResult(),
                     fail : _  => MlActionResults.InternalServerError(
                                      "Error no clasificado",
-                                     errors.ToErrorsDescription()));
+                                     errors.GetErrorsSummary()));
 ```
 
 ---
@@ -489,8 +489,8 @@ Lógica de `ToRepoActionResult`:
 |---|---|
 | `IsSuccess` | lo que devuelva el `OkHandler` que le pases |
 | la descripción del error contiene alguna `notFoundKeys` | `NotFoundObjectResult` |
-| `errors.HasKeyDetails("NotFound")` | `NotFoundObjectResult` |
-| `errors.HasExceptionDetails()` | `ObjectResult` con `StatusCode = 500` y la descripción de la excepción |
+| `errors.ContainsMetadata("NotFound")` | `NotFoundObjectResult` |
+| `errors.ContainsException()` | `ObjectResult` con `StatusCode = 500` y la descripción de la excepción |
 | resto | `ObjectResult` con `StatusCode = 500` |
 
 Métodos que expone (todos obsoletos): `ToRepoGetActionResult` (+2 `Async`), `ToRepoPutActionResult` (+`Async`), `ToRepoPostActionResult` (×2 +3 `Async`), `ToSimpleRepoPostActionResult` (+2 `Async`), `ToRepoDeleteActionResult` (+2 `Async`), `ToRepoActionResult` (+2 `Async`).
@@ -523,9 +523,9 @@ Cosas que **no** deducirías de las firmas y que conviene conocer antes de apoya
 
 5. **Nomenclatura asimétrica en las sobrecargas asíncronas de POST**: `ToPostActionResultAsync` (sobre `Task<MlResult<T>>`) frente a `ToPostPdActionResultAsync` (sobre `MlResult<T>`). El `Pd` desaparece justo en las sobrecargas de `Task`.
 
-6. **El puente `MlErrorsDetails` → `ProblemDetailsInfo` funciona por reflexión.** `ToProblemsDetailsInfo` lee propiedades por nombre de un **tipo anónimo** creado en otro proyecto (`MlProblemsDetails`, en `WebServices`). No hay interfaz ni contrato compilado: un renombrado degrada silenciosamente el resultado a `500` / `"Error"`.
+6. **El puente `MlErrorDetails` → `ProblemDetailsInfo` funciona por reflexión.** `ToProblemsDetailsInfo` lee propiedades por nombre de un **tipo anónimo** creado en otro proyecto (`MlProblemsDetails`, en `WebServices`). No hay interfaz ni contrato compilado: un renombrado degrada silenciosamente el resultado a `500` / `"Error"`.
 
-7. **El *fallback* a 500 oculta errores de negocio.** Si el `MlErrorsDetails` no trae el detalle `"ProblemsDetails"`, `MlResultWebExtensionsPlus` devuelve `InternalServerError()` **sin incluir el mensaje original**. Un 404 legítimo se convierte en un 500 mudo. Ocurre, por ejemplo, con los errores que genera `MoralesLarios.OOFP.Application.Helpers.Extensions.BuildNotFoundPkError`, que usa la clave `"NotFound"` en vez de `"ProblemsDetails"`.
+7. **El *fallback* a 500 oculta errores de negocio.** Si el `MlErrorDetails` no trae el detalle `"ProblemsDetails"`, `MlResultWebExtensionsPlus` devuelve `InternalServerError()` **sin incluir el mensaje original**. Un 404 legítimo se convierte en un 500 mudo. Ocurre, por ejemplo, con los errores que genera `MoralesLarios.OOFP.Application.Helpers.Extensions.BuildNotFoundPkError`, que usa la clave `"NotFound"` en vez de `"ProblemsDetails"`.
 
 8. **`ProblemDetailsInfo` duplica el código de estado** en `Status` y `StatusCode`, sin ninguna garantía de coherencia entre ambos.
 
@@ -683,7 +683,7 @@ public async Task<IActionResult> Pdf(int id)
                                .Match(valid: pd => pd.ToMlActionResult(),
                                       fail : _  => MlActionResults.InternalServerError(
                                                        "No se pudo generar el PDF",
-                                                       errors.ToErrorsDescription())));
+                                                       errors.GetErrorsSummary())));
 }
 ```
 
@@ -702,8 +702,8 @@ public static class ApiProblems
     public static IActionResult Conflict(string detail)
         => MlActionResults.Conflict("Conflicto de estado", detail, $"{Base}conflict");
 
-    public static IActionResult Internal(MlErrorsDetails errors)
-        => MlActionResults.InternalServerError("Error interno", errors.ToErrorsDescription(),
+    public static IActionResult Internal(MlErrorDetails errors)
+        => MlActionResults.InternalServerError("Error interno", errors.GetErrorsSummary(),
                                                $"{Base}internal");
 }
 ```
@@ -756,7 +756,7 @@ return await Request.GetHeaderPaginationInfo()
 return await Request.GetHeaderPaginationInfo()
                     .MapIfFail(errors => MlProblemsDetails.BadRequestError(
                                              "Cabeceras de paginación no válidas",
-                                             errors.ToErrorsDescription()))
+                                             errors.GetErrorsSummary()))
                     .BindAsync(p => _repo.TryAllPaginationAsync(p.PageNumber, p.PageSize))
                     .ToGetPdActionResultAsync();
 ```
@@ -805,7 +805,7 @@ return resultado.ToGetPdActionResult();
 | Devolver un error con un código no cubierto | `MlActionResults.CreateProblemsDetails(statusCode, …)` |
 | Convertir `ValidationResult` en un `400` con `errors` por campo | `MlActionResults.BadRequest(IEnumerable<ValidationResult>, …)` |
 | Devolver algo que **no** es JSON (`File`, `Redirect`…) | `Match(valid: …, fail: errors => errors.GetProblemDetails()…)` |
-| Extraer el `ProblemDetails` real de un `MlErrorsDetails` | `errors.GetProblemDetails()` |
+| Extraer el `ProblemDetails` real de un `MlErrorDetails` | `errors.GetProblemDetails()` |
 | Convertir un `ProblemDetailsInfo` en `IActionResult` | `pdInfo.ToMlActionResult()` |
 | Leer una cabecera obligatoria como texto | `Request.GetHeaderInfo("X-…")` |
 | Leer una cabecera obligatoria como entero | `Request.GetHeaderInfoAsIntNotNegative("X-…")` |
@@ -842,7 +842,7 @@ return resultado.ToGetPdActionResult();
 
 11. **Documenta los códigos posibles con `[ProducesResponseType]`.** Como el controlador devuelve `IActionResult`, Swagger no puede inferir nada: decláralo explícitamente.
 
-12. **Registra antes de traducir.** Encadena `LogMlResultFinalAsync` (proyecto `Extensions.Loggers`) *antes* del `ToXxxPdActionResultAsync`, para que el log conserve el `MlErrorsDetails` completo y no solo el `ProblemDetails` recortado.
+12. **Registra antes de traducir.** Encadena `LogMlResultFinalAsync` (proyecto `Extensions.Loggers`) *antes* del `ToXxxPdActionResultAsync`, para que el log conserve el `MlErrorDetails` completo y no solo el `ProblemDetails` recortado.
 
 13. **Cuida el `PageSize`.** `PaginationInfo` lo recorta a `[1, 1000]` silenciosamente: si tu cliente pide 5000 y recibe 1000, no habrá ningún error que lo avise.
 
@@ -855,7 +855,7 @@ return resultado.ToGetPdActionResult();
 1. **Un único cometido**: traducir `MlResult<T>` ⇄ HTTP. Nada de lógica de negocio, nada de acceso a datos.
 2. **`MlResultWebExtensionsPlus` es la puerta de entrada**: un método por verbo, con variantes `Async`, y el controlador queda en una línea por acción.
 3. **`MlActionResults`** ofrece 15 fábricas de error que devuelven `ObjectResult` con cuerpo `ExtendedProblemDetails` (RFC 7807 + diccionario `Errors`).
-4. **`MlErrorsDetailsExtensions`** es el puente: lee el detalle `"ProblemsDetails"` del `MlErrorsDetails` y lo convierte —**por reflexión**— en `ProblemDetailsInfo`.
+4. **`MlErrorDetailsExtensions`** es el puente: lee el detalle `"ProblemsDetails"` del `MlErrorDetails` y lo convierte —**por reflexión**— en `ProblemDetailsInfo`.
 5. **El código de estado lo decide la capa que genera el error**, no el controlador. Si el error no viene clasificado, la respuesta será un `500`.
 6. **`MlRequestWebExtensions`** cierra el círculo en la dirección de entrada: cabeceras HTTP → *value objects* validados dentro del raíl.
 7. **`MlResultWebExtensions` está obsoleta al completo** y contiene defectos reales; migra con la tabla de la sección correspondiente.
@@ -885,7 +885,7 @@ return resultado.ToGetPdActionResult();
 ### Documentación del núcleo útil aquí
 
 - [📄 `MlResult<T>`](../docs/core-types/MlResult.md) — el tipo que se traduce a `IActionResult`
-- [📄 Errores y `MlErrorsDetails`](../docs/core-types/MlResultErrors.md) — estructura de `Errors` y `Details`
+- [📄 Errores y `MlErrorDetails`](../docs/core-types/MlResultErrors.md) — estructura de `Errors` y `Details`
 - [📄 `Match`](../docs/Match/1_Match.md) — la base de toda la traducción de este proyecto
 - [📄 `Bind`](../docs/Bind/3_Bind.md) — encadenar reglas antes de responder
 - [📄 `Map`](../docs/Map/1_Map.md) — transformar la entidad en DTO antes de serializar

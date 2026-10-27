@@ -22,7 +22,7 @@ public class RangeEnumValueObject<TEnum> : ValueObject<string>
 
     public static RangeEnumValueObject<TEnum> FromString(string value) => new(value);
 
-    public static MlResult<RangeEnumValueObject<TEnum>> ByString(string value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<RangeEnumValueObject<TEnum>> ByString(string value, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
             .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
             .Map(_ => new RangeEnumValueObject<TEnum>(value));

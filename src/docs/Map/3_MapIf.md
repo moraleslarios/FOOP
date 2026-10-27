@@ -40,7 +40,7 @@ MlResult<decimal> r = ObtenerPrecio(articuloId)
                                p => p.Base);           // rama false
 ```
 
-> ⚠️ **Sobre `MlErrorsDetails`**: `MlErrorsDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `ToErrorsMessages()` o `ToErrorsDescription()`; para llegar a la excepción usa `GetDetailException()`.
+> ⚠️ **Sobre `MlErrorDetails`**: `MlErrorDetails` solo expone dos propiedades públicas: `Errors` (la colección de `MlError`) y `Details` (un `Dictionary<string, object>`). **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Para leer los mensajes usa `GetErrorMessages()` o `GetErrorsSummary()`; para llegar a la excepción usa `GetException()`.
 
 ---
 
@@ -108,7 +108,7 @@ public static MlResult<T> MapIf<T>(this MlResult<T>   source,
 
 Fíjate en dos detalles del código real:
 
-1. **`fail: MlResult<TReturn>.Fail` es un grupo de métodos**, no una lambda. Se apoya en la sobrecarga que recibe `MlErrorsDetails`, así que **los errores y todos sus detalles se conservan íntegros** al cambiar de tipo genérico.
+1. **`fail: MlResult<TReturn>.Fail` es un grupo de métodos**, no una lambda. Se apoya en la sobrecarga que recibe `MlErrorDetails`, así que **los errores y todos sus detalles se conservan íntegros** al cambiar de tipo genérico.
 2. Los delegados devuelven `TReturn`/`T` **desnudo**, no `MlResult<...>`. La conversión implícita del tipo hace el resto. Esto es lo que convierte a `MapIf` en un `Map` condicional y no en un `Bind`.
 
 | Estado de entrada | `condition(x)` | Forma A | Forma B |
@@ -246,9 +246,9 @@ var r = dato.ToMlResultValid()
                       ex => $"No se pudo interpretar la configuración: {ex.Message}");
 
 r.Match(valid: cfg     => Aplicar(cfg),
-        fail : errores => errores.GetDetailException()
+        fail : errores => errores.GetException()
                                  .Match(valid: ex => _log.LogError(ex, "Fallo de parseo"),
-                                        fail : _  => _log.LogWarning("{Msg}", errores.ToErrorsDescription())));
+                                        fail : _  => _log.LogWarning("{Msg}", errores.GetErrorsSummary())));
 ```
 
 > ⚠️ **La condición no está protegida.** `condition(x)` se evalúa **fuera** del `TryToMlResult`. Si tu predicado lanza, la excepción escapa de la tubería. Mantenlo trivial.

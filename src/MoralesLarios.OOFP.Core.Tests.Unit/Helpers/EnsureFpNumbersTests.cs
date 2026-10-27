@@ -52,9 +52,9 @@ public class EnsureFpNumbersTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Details[PARAM_NAME_KEY].Should().Be("age");
-        details.Details[EXPECTED_KEY].Should().Be(18);
-        details.Details[ValueMetadataKey].Should().Be(3);
+        details.Metadata[PARAM_NAME_KEY].Should().Be("age");
+        details.Metadata[EXPECTED_KEY].Should().Be(18);
+        details.Metadata[ValueMetadataKey].Should().Be(3);
     }
 
     #endregion
@@ -136,7 +136,7 @@ public class EnsureFpNumbersTests
         var result = EnsureFp.NotZeroArg(divisor);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Details[PARAM_NAME_KEY].Should().Be("divisor");
+        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("divisor");
     }
 
     [Fact]

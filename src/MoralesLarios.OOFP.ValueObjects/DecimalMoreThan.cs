@@ -15,7 +15,7 @@ public class DecimalMoreThan : ValueObject<decimal>
     public static bool IsValid(decimal value, decimal length) => value > length;
 
     public static DecimalMoreThan FromDecimalLength(decimal value, decimal length) => new DecimalMoreThan(value, length);
-    public static MlResult<DecimalMoreThan> ByDecimalLength(decimal value, decimal length, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<DecimalMoreThan> ByDecimalLength(decimal value, decimal length, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                    .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
                    .Map ( _ => new DecimalMoreThan(value, length));

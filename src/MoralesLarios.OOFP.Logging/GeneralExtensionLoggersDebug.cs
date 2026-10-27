@@ -25,20 +25,20 @@ public static class GeneralExtensionLoggersDebug
     public static MlResult<T> LogMlResultDebug<T>(this MlResult<T>                   source, 
                                                        ILogger                       logger,
                                                        Func<T, string>               validBuilMessage = null!,
-                                                       Func<MlErrorsDetails, string> failBuildMessage = null!)
+                                                       Func<MlErrorDetails, string> failBuildMessage = null!)
         => source.LogMlResult<T>(logger, LogLevel.Debug, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage);
 
     public static Task<MlResult<T>> LogMlResultDebugAsync<T>(this MlResult<T>                   source, 
                                                                   ILogger                       logger,
                                                                   Func<T, string>               validBuilMessage = null!,
-                                                                  Func<MlErrorsDetails, string> failBuildMessage = null!)
+                                                                  Func<MlErrorDetails, string> failBuildMessage = null!)
         => source.LogMlResult(logger, LogLevel.Debug, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage).ToAsync();
 
 
     public static async Task<MlResult<T>> LogMlResultDebugAsync<T>(this Task<MlResult<T>>             sourceAsync, 
                                                                         ILogger                       logger,
                                                                         Func<T, string>               validBuilMessage = null!,
-                                                                        Func<MlErrorsDetails, string> failBuildMessage = null!)
+                                                                        Func<MlErrorDetails, string> failBuildMessage = null!)
         => (await sourceAsync).LogMlResult(logger, LogLevel.Debug, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage);
 
 
@@ -148,18 +148,18 @@ public static class GeneralExtensionLoggersDebug
 
     public static MlResult<T> LogMlResultDebugIfFail<T>(this MlResult<T>                   source,
                                                              ILogger                       logger,
-                                                             Func<MlErrorsDetails, string> failBuildMessage)
+                                                             Func<MlErrorDetails, string> failBuildMessage)
         => source.LogMlResultIfFail(logger, LogLevel.Debug, failBuildMessage);
 
     public static Task<MlResult<T>> LogMlResultDebugIfFailAsync<T>(this MlResult<T>                   source,
                                                                         ILogger                       logger,
-                                                                        Func<MlErrorsDetails, string> failBuildMessage)
+                                                                        Func<MlErrorDetails, string> failBuildMessage)
 
         => source.LogMlResultIfFail(logger, LogLevel.Debug, failBuildMessage).ToAsync();
 
     public async static Task<MlResult<T>> LogMlResultDebugIfFailAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                               ILogger                       logger,
-                                                                              Func<MlErrorsDetails, string> failBuildMessage)
+                                                                              Func<MlErrorDetails, string> failBuildMessage)
         => (await sourceAsync).LogMlResultIfFail(logger, LogLevel.Debug, failBuildMessage);
 
 
@@ -171,7 +171,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static MlResult<T> LogMlResultDebugIfFailWithValue<T>(this MlResult<T>                   source,
                                                                       ILogger                       logger,
-                                                                      Func<MlErrorsDetails, string> failBuildMessage)
+                                                                      Func<MlErrorDetails, string> failBuildMessage)
         => source.LogMlResultIfFailWithValue(logger, LogLevel.Debug, failBuildMessage);
 
     public static MlResult<T> LogMlResultDebugIfFailWithValue<T>(this MlResult<T> source,
@@ -184,7 +184,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithValueAsync<T>(this MlResult<T>                   source,
                                                                                        ILogger                       logger,
-                                                                                       Func<MlErrorsDetails, string> failBuildMessage)
+                                                                                       Func<MlErrorDetails, string> failBuildMessage)
         => await source.LogMlResultIfFailWithValueAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithValueAsync<T>(this MlResult<T> source,
@@ -194,7 +194,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithValueAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                                        ILogger                       logger,
-                                                                                       Func<MlErrorsDetails, string> failBuildMessage)
+                                                                                       Func<MlErrorDetails, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithValueAsync<T>(this Task<MlResult<T>> sourceAsync,
@@ -209,17 +209,17 @@ public static class GeneralExtensionLoggersDebug
 
     public static MlResult<T> LogMlResultDebugIfFailWithValue<T, TValue>(this MlResult<T>                           source,
                                                                                     ILogger                               logger,
-                                                                                    Func<MlErrorsDetails, TValue, string> failBuildMessage)
+                                                                                    Func<MlErrorDetails, TValue, string> failBuildMessage)
         => source.LogMlResultIfFailWithValue(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithValueAsync<T, TValue>(this MlResult<T>                           source,
                                                                                                ILogger                               logger,
-                                                                                               Func<MlErrorsDetails, TValue, string> failBuildMessage)
+                                                                                               Func<MlErrorDetails, TValue, string> failBuildMessage)
         => await source.LogMlResultIfFailWithValueAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithValueAsync<T, TValue>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                ILogger                               logger,
-                                                                                               Func<MlErrorsDetails, TValue, string> failBuildMessage)
+                                                                                               Func<MlErrorDetails, TValue, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, LogLevel.Debug, failBuildMessage);
 
 
@@ -232,7 +232,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static MlResult<T> LogMlResultDebugIfFailWithException<T>(this MlResult<T>                   source,
                                                                           ILogger                       logger,
-                                                                          Func<MlErrorsDetails, string> failBuildMessage)
+                                                                          Func<MlErrorDetails, string> failBuildMessage)
         => source.LogMlResultIfFailWithException(logger, LogLevel.Debug, failBuildMessage);
 
     public static MlResult<T> LogMlResultDebugIfFailWithException<T>(this MlResult<T> source,
@@ -245,7 +245,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionAsync<T>(this MlResult<T>                   source,
                                                                                            ILogger                       logger,
-                                                                                           Func<MlErrorsDetails, string> failBuildMessage)
+                                                                                           Func<MlErrorDetails, string> failBuildMessage)
         => await source.LogMlResultIfFailWithExceptionAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionAsync<T>(this MlResult<T> source,
@@ -255,7 +255,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                                            ILogger                       logger,
-                                                                                           Func<MlErrorsDetails, string> failBuildMessage)
+                                                                                           Func<MlErrorDetails, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithExceptionAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionAsync<T>(this Task<MlResult<T>> sourceAsync,
@@ -270,17 +270,17 @@ public static class GeneralExtensionLoggersDebug
 
     public static MlResult<T> LogMlResultDebugIfFailWithException<T>(this MlResult<T>                              source,
                                                                           ILogger                                  logger,
-                                                                          Func<MlErrorsDetails, Exception, string> failBuildMessage)
+                                                                          Func<MlErrorDetails, Exception, string> failBuildMessage)
         => source.LogMlResultIfFailWithException(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionAsync<T>(this MlResult<T>                              source,
                                                                                            ILogger                                  logger,
-                                                                                           Func<MlErrorsDetails, Exception, string> failBuildMessage)
+                                                                                           Func<MlErrorDetails, Exception, string> failBuildMessage)
         => await source.LogMlResultIfFailWithExceptionAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionAsync<T>(this Task<MlResult<T>>                        sourceAsync,
                                                                                            ILogger                                  logger,
-                                                                                           Func<MlErrorsDetails, Exception, string> failBuildMessage)
+                                                                                           Func<MlErrorDetails, Exception, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithExceptionAsync(logger, LogLevel.Debug, failBuildMessage);
 
 
@@ -294,7 +294,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static MlResult<T> LogMlResultDebugIfFailWithoutException<T>(this MlResult<T>                   source,
                                                                             ILogger                       logger,
-                                                                            Func<MlErrorsDetails, string> failBuildMessage)
+                                                                            Func<MlErrorDetails, string> failBuildMessage)
         => source.LogMlResultIfFailWithoutException(logger, LogLevel.Debug, failBuildMessage);
 
     public static MlResult<T> LogMlResultDebugIfFailWithoutException<T>(this MlResult<T>                   source,
@@ -305,7 +305,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionAsync<T>(this MlResult<T>                   source,
                                                                                               ILogger                       logger,
-                                                                                              Func<MlErrorsDetails, string> failBuildMessage)
+                                                                                              Func<MlErrorDetails, string> failBuildMessage)
         => await source.LogMlResultIfFailWithoutExceptionAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionAsync<T>(this MlResult<T> source,
@@ -315,7 +315,7 @@ public static class GeneralExtensionLoggersDebug
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                                               ILogger                       logger,
-                                                                                              Func<MlErrorsDetails, string> failBuildMessage)
+                                                                                              Func<MlErrorDetails, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithoutExceptionAsync(logger, LogLevel.Debug, failBuildMessage);
 
     public static async Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>> source,
@@ -364,7 +364,7 @@ public static class GeneralExtensionLoggersDebug
     //public static MlResult<T> LogMlResulttDebug<T>(this MlResult<T>                   value, 
     //                                                 ILogger                       logger,
     //                                                 Func<T, string>               validBuildMessage = null!,
-    //                                                 Func<MlErrorsDetails, string> failBuildMessage  = null!)
+    //                                                 Func<MlErrorDetails, string> failBuildMessage  = null!)
     //    => value.LogMlResult<T>(logger, LogLevel.Debug, validBuilMessage: validBuildMessage, failBuildMessage: failBuildMessage);
 
 
@@ -393,7 +393,7 @@ public static class GeneralExtensionLoggersDebug
 
     //public static MlResult<T> LogMlResultIfFailDebug<T>(this MlResult<T>                   value,
     //                                                        ILogger                       logger,
-    //                                                        Func<MlErrorsDetails, string> errorBuildMessage)
+    //                                                        Func<MlErrorDetails, string> errorBuildMessage)
     //    => value.LogMlResult<T>(logger, LogLevel.Debug, failBuildMessage: errorBuildMessage);
 
 
@@ -434,7 +434,7 @@ public static class GeneralExtensionLoggersDebug
     //public static async Task<MlResult<T>> LogMlResulttDebugAsync<T>(this Task<MlResult<T>>      valueAsync, 
     //                                                           ILogger                       logger, 
     //                                                           Func<T, string>               validBuildMessage = null!,
-    //                                                           Func<MlErrorsDetails, string> failBuildMessage  = null!)
+    //                                                           Func<MlErrorDetails, string> failBuildMessage  = null!)
     //    => (await valueAsync).LogMlResult<T>(logger, LogLevel.Debug, validBuilMessage: validBuildMessage, failBuildMessage: failBuildMessage);
 
     //public static async Task<MlResult<T>> LogMlResulttIfValidDebugAsync<T>(this Task<MlResult<T>> valueAsync,
@@ -444,7 +444,7 @@ public static class GeneralExtensionLoggersDebug
 
     //public static async Task<MlResult<T>> LogMlResultIfFailDebugAsync<T>(this Task<MlResult<T>>             valueAsync,
     //                                                                         ILogger                       logger,
-    //                                                                         Func<MlErrorsDetails, string> errorBuildMessage)
+    //                                                                         Func<MlErrorDetails, string> errorBuildMessage)
     //    => (await valueAsync).LogMlResult<T>(logger, LogLevel.Debug, failBuildMessage: errorBuildMessage);
 
 

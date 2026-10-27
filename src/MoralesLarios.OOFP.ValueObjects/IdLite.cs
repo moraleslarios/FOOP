@@ -16,7 +16,7 @@ public class IdLite : IntMoreThan
     public static bool IsValid(int value) => IdLite.IsValid(value, Limit);
 
     public static IdLite FromInt(int value) => new IdLite(value);
-    public static MlResult<IdLite> ByInt(int value, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<IdLite> ByInt(int value, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessIdLite(value)))
                     .Map ( _ => new IdLite(value));

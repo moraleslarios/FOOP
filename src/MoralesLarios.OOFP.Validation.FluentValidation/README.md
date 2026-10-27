@@ -50,7 +50,7 @@ return Ok(creado);
 return await dto.ValidateWitHFluentValidations<CrearUsuarioDto, CrearUsuarioValidator>()
                 .BindAsync(v => _repo.AddAsync(v))
                 .MatchAsync(valid: creado  => Ok(creado),
-                            fail : errores => BadRequest(errores.ToErrorsMessages()));
+                            fail : errores => BadRequest(errores.GetErrorMessages()));
 ```
 
 > 💡 **La ventaja real**: la validación deja de ser un `if` que interrumpe y pasa a ser **un eslabón más** de la misma cadena que la persistencia, el mapeo y la respuesta HTTP. Un único `Match` al final decide qué se devuelve.
@@ -170,7 +170,7 @@ Consecuencias importantes de este diseño:
 3. **Los errores de infraestructura y los de negocio llegan por el mismo canal**: un fallo al construir el validador produce un `Fail` igual que una regla incumplida. Se distinguen porque el primero **lleva excepción en `Details`** (ver [Ejemplo 5](#ejemplo-5--distinguir-error-de-validación-de-error-técnico)).
 4. `Severity.Warning` / `Severity.Info` **también se convierten en errores**: `ValidationResult.Errors` los incluye, y aquí no se filtran por severidad.
 
-> ⚠️ **Sobre `MlErrorsDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`, `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()`, `ToDetailsDescription()`.
+> ⚠️ **Sobre `MlErrorDetails`** — solo expone `Errors` y `Details`. **No existen** `AllErrors`, `FirstErrorMessage`, `Exception`, `HasValue` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`, `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()`, `GetMetadataSummary()`.
 
 ---
 
@@ -284,7 +284,7 @@ Con la restricción `new()` presente, el compilador **podría** haber usado `new
 .TryMap(validator => validator.Validate(source))    // sin mensaje
 ```
 
-Si una regla lanza una excepción (por ejemplo, un `Must(...)` que accede a una propiedad nula), el `Fail` llevará el **mensaje por defecto** del núcleo, no algo descriptivo. La excepción sí queda en `Details`: recupérala con `GetDetailException()`.
+Si una regla lanza una excepción (por ejemplo, un `Must(...)` que accede a una propiedad nula), el `Fail` llevará el **mensaje por defecto** del núcleo, no algo descriptivo. La excepción sí queda en `Details`: recupérala con `GetException()`.
 
 ### 5. `source` no se comprueba contra `null`
 
@@ -396,7 +396,7 @@ public static MlResult<IEnumerable<FilaCsv>> ValidarFichero(List<FilaCsv> filas)
             .MergeErrorsIfExists();
 ```
 
-> 💡 `AddMlErrorDetailIfFail` guarda el índice en `Details`, así los logs sí saben qué fila falló aunque el mensaje no lo diga. Recupéralo con `ToDetailsDescription()`.
+> 💡 `AddMlErrorDetailIfFail` guarda el índice en `Details`, así los logs sí saben qué fila falló aunque el mensaje no lo diga. Recupéralo con `GetMetadataSummary()`.
 
 ### Ejemplo 4 — Comprobar el nulo con un mensaje propio
 
@@ -415,13 +415,13 @@ var resultado = dto.ValidateWitHFluentValidations<CrearProductoDto, CrearProduct
 
 return resultado.Match(
     valid: v       => Ok(v),
-    fail : errores => errores.GetDetailException().Match(
+    fail : errores => errores.GetException().Match(
                           valid: ex => { _logger.LogError(ex, "Fallo técnico al validar");
                                          return StatusCode(500, "Error interno de validación"); },
-                          fail : _  => BadRequest(errores.ToErrorsMessages())));
+                          fail : _  => BadRequest(errores.GetErrorMessages())));
 ```
 
-> 💡 `GetDetailException()` devuelve `MlResult<Exception>`: `IsSuccess` significa "hay excepción registrada", es decir, **el fallo es técnico y no debe mostrarse al usuario**.
+> 💡 `GetException()` devuelve `MlResult<Exception>`: `IsSuccess` significa "hay excepción registrada", es decir, **el fallo es técnico y no debe mostrarse al usuario**.
 
 ### Ejemplo 6 — Validador con dependencias inyectadas
 
@@ -557,7 +557,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 5. **Un validador por DTO, en su propio fichero**, con el sufijo `Validator`.
 6. **Delega desde `MlValidableFp<T>.Validate()`** para no acoplar el resto del código a FluentValidation.
 7. **Comprueba los nulos tú mismo** con `EnsureFp.NotNull` y un mensaje propio.
-8. **Separa error técnico de error de negocio** con `GetDetailException()` antes de responder al cliente.
+8. **Separa error técnico de error de negocio** con `GetException()` antes de responder al cliente.
 9. **No uses estas extensiones con reglas asíncronas o validadores con dependencias**: convierte el `ValidationResult` a mano.
 10. **Para volúmenes grandes, reutiliza la instancia del validador**: aquí se crea una nueva en cada llamada.
 11. **No dupliques la validación con la automática de MVC**: elige un mecanismo por proyecto.
@@ -574,7 +574,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 - El validador se **instancia por reflexión** en cada llamada: de ahí las restricciones `T : class` y `TValidator : AbstractValidator<T>, new()`.
 - **Todos los errores llegan juntos** (uno por `MlError`), pero **solo sobrevive `ErrorMessage`**: pon el nombre del campo en el texto.
 - ⚠️ Erratas y límites reales: el nombre lleva **`WitH`**; el método `Async` **no es asíncrono**; **no soporta reglas asíncronas, `RuleSet`s ni validadores con dependencias**; **no comprueba `null`**; **no filtra por severidad**.
-- Los fallos técnicos se distinguen de los de negocio porque **llevan excepción en `Details`** (`GetDetailException()`).
+- Los fallos técnicos se distinguen de los de negocio porque **llevan excepción en `Details`** (`GetException()`).
 - Combínalo con [`MlValidableFp<T>`](../MoralesLarios.OOFP.Validation/README.md) para que el consumidor no dependa del motor de validación.
 
 ---
@@ -598,7 +598,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorsDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
+- [`MlErrorDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
 - [`EnsureFp` — comprobaciones que devuelven `MlResult`](../docs/EnsureFp/EnsureFp.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` y `TryMap` — transformar el valor válido](../docs/Map/1_Map.md)

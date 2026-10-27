@@ -5,7 +5,7 @@
 using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.Core.Tests.Unit.Types.Errors;
-public class MlErrorsDetailsActionsTests
+public class MlErrorDetailsActionsTests
 {
 
 
@@ -14,23 +14,23 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void Merge_OK()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                                     { 
                                                         { "key1", "value1" },
                                                         { "key2", "value2" }
                                                     }
                                    );
 
-        MlErrorsDetails other = ("miError2", new Dictionary<string, object> 
+        MlErrorDetails other = ("miError2", new Dictionary<string, object> 
                                                     { 
                                                         { "key3", "value3" },
                                                         { "key4", "value4" }
                                                     }
                                    );
 
-        MlErrorsDetails result = errors1.Merge(other);
+        MlErrorDetails result = errors1.Merge(other);
 
-        MlErrorsDetails expected = ( new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
+        MlErrorDetails expected = ( new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
                                          {
                                                         { "key1", "value1" },
                                                         { "key2", "value2" },
@@ -47,14 +47,14 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void Merge_Range_OK()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
                                             }
                             );
 
-        IEnumerable<MlErrorsDetails> mlErrorsDetails = new List<MlErrorsDetails>
+        IEnumerable<MlErrorDetails> mlErrorsDetails = new List<MlErrorDetails>
         {
             ("miError2", new Dictionary<string, object>
                                             {
@@ -83,9 +83,9 @@ public class MlErrorsDetailsActionsTests
 
         };
 
-        MlErrorsDetails result = errors1.Merge(mlErrorsDetails);
+        MlErrorDetails result = errors1.Merge(mlErrorsDetails);
 
-        MlErrorsDetails expected = (new List<MlError> { "miError", "miError2", "miError3", "miError4", "miError5" }, new Dictionary<string, object>
+        MlErrorDetails expected = (new List<MlError> { "miError", "miError2", "miError3", "miError4", "miError5" }, new Dictionary<string, object>
                                          {
                                                         { "key1", "value1" },
                                                         { "key2", "value2" },
@@ -108,14 +108,14 @@ public class MlErrorsDetailsActionsTests
     //[Fact]
     //public void Merge_withExceptions_OK()
     //{
-    //    MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+    //    MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
     //                                        { 
     //                                            { ExceptionMetadataKey      , new ArgumentNullException("Excepcion 1") },
     //                                            { $"{ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 2") }
     //                                        }
     //                                );
 
-    //    IEnumerable<MlErrorsDetails> mlErrorsDetails = new List<MlErrorsDetails>
+    //    IEnumerable<MlErrorDetails> mlErrorsDetails = new List<MlErrorDetails>
     //    {
     //        ("miError2", new Dictionary<string, object>
     //                                        {
@@ -126,9 +126,9 @@ public class MlErrorsDetailsActionsTests
 
     //    };
 
-    //    MlErrorsDetails result = errors1.Merge(mlErrorsDetails);
+    //    MlErrorDetails result = errors1.Merge(mlErrorsDetails);
 
-    //    MlErrorsDetails expected = (new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
+    //    MlErrorDetails expected = (new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
     //                                     {
     //                                            { ExceptionMetadataKey      , new ArgumentNullException("Excepcion 1") },
     //                                            { $"{ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 2") },
@@ -148,16 +148,16 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void AddError_Ok()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
                                             }
                             );
 
-        MlErrorsDetails result = errors1.AddError("miError2");
+        MlErrorDetails result = errors1.AddError("miError2");
 
-        MlErrorsDetails expected = ( new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
+        MlErrorDetails expected = ( new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
                                          {
                                                         { "key1", "value1" },
                                                         { "key2", "value2" }
@@ -170,16 +170,16 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void AddErrorMessage_Ok()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
                                             }
                             );
 
-        MlErrorsDetails result = errors1.AddErrorMessage("miError2");
+        MlErrorDetails result = errors1.AddErrorMessage("miError2");
 
-        MlErrorsDetails expected = ( new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
+        MlErrorDetails expected = ( new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
                                          {
                                                         { "key1", "value1" },
                                                         { "key2", "value2" }
@@ -192,16 +192,16 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void AddErrors_Ok()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
                                             }
                             );
 
-        MlErrorsDetails result = errors1.AddErrors("miError2", "miError3");
+        MlErrorDetails result = errors1.AddErrors("miError2", "miError3");
 
-        MlErrorsDetails expected = ( new List<MlError> { "miError", "miError2", "miError3" }, new Dictionary<string, object>
+        MlErrorDetails expected = ( new List<MlError> { "miError", "miError2", "miError3" }, new Dictionary<string, object>
                                          {
                                                         { "key1", "value1" },
                                                         { "key2", "value2" }
@@ -214,16 +214,16 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void AddDetail_Ok()
     {
-        MlErrorsDetails errors1 = ("miError", new Dictionary<string, object> 
+        MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
                                                 { "key1", "value1" },
                                                 { "key2", "value2" }
                                             }
                             );
 
-        MlErrorsDetails result = errors1.AddDetail("key3", "value3");
+        MlErrorDetails result = errors1.AddMetadataOrThrow("key3", "value3");
 
-        MlErrorsDetails expected = ( new List<MlError> { "miError" }, new Dictionary<string, object>
+        MlErrorDetails expected = ( new List<MlError> { "miError" }, new Dictionary<string, object>
         {
                                                         { "key1", "value1" },
                                                         { "key2", "value2" },
@@ -247,7 +247,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void AddDetailValue_keyExist_return_valid()
     {
-        MlErrorsDetails errors1 = ("miError", 
+        MlErrorDetails errors1 = ("miError", 
                                     new Dictionary<string, object>
                                             {
                                                 { ValueMetadataKey, "value1" },
@@ -255,9 +255,9 @@ public class MlErrorsDetailsActionsTests
                                             }
                                     );
 
-        MlErrorsDetails result = errors1.AddDetailValue("value3");
+        MlErrorDetails result = errors1.AddValueMetadata("value3");
 
-        MlErrorsDetails expected = ("miError", 
+        MlErrorDetails expected = ("miError", 
                                     new Dictionary<string, object>
                                             {
                                                 { ValueMetadataKey, "value3" },
@@ -272,7 +272,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void AddDetailValue_keyNotExist_return_valid()
     {
-        MlErrorsDetails errors1 = ("miError", 
+        MlErrorDetails errors1 = ("miError", 
                                     new Dictionary<string, object>
                                             {
                                                 { "keyXXX", "value1" },
@@ -280,9 +280,9 @@ public class MlErrorsDetailsActionsTests
                                             }
                                     );
 
-        MlErrorsDetails result = errors1.AddDetailValue("value3");
+        MlErrorDetails result = errors1.AddValueMetadata("value3");
 
-        MlErrorsDetails expected = ("miError", 
+        MlErrorDetails expected = ("miError", 
                                     new Dictionary<string, object>
                                             {
                                                 { "keyXXX", "value1" },
@@ -309,7 +309,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void HasValueDetails_withDetailsValue_return_true()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                                new Dictionary<string, object>
                                                {
                                                 { ValueMetadataKey, "value1" },
@@ -317,7 +317,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                   );
 
-        bool result = errors1.HasValueDetails();
+        bool result = errors1.ContainsValueMetadata();
 
         result.Should().BeTrue();
     }
@@ -326,7 +326,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void HasValueDetails_withoutDetailsValue_return_false()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                                new Dictionary<string, object>
                                                {
                                                 { "Key1", "value1" },
@@ -334,7 +334,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                   );
 
-        bool result = errors1.HasValueDetails();
+        bool result = errors1.ContainsValueMetadata();
 
         result.Should().BeFalse();
     }
@@ -344,7 +344,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public async Task HasValueDetailsAsync_withDetailsValue_return_true()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                                new Dictionary<string, object>
                                                {
                                                 { ValueMetadataKey, "value1" },
@@ -352,7 +352,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                   );
 
-        bool result = await errors1.HasValueDetailsAsync();
+        bool result = await errors1.ContainsValueMetadataAsync();
 
         result.Should().BeTrue();
     }
@@ -361,7 +361,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public async Task HasValueDetailsAsync_withoutDetailsValue_return_false()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                                new Dictionary<string, object>
                                                {
                                                 { "Key1", "value1" },
@@ -369,7 +369,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                   );
 
-        bool result = await errors1.HasValueDetailsAsync();
+        bool result = await errors1.ContainsValueMetadataAsync();
 
         result.Should().BeFalse();
     }
@@ -387,7 +387,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void HasExceptionDetails_withExceptionDetails_return_true()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                             new Dictionary<string, object>
                                                           {
                                                 { ExceptionMetadataKey, new Exception("miException") },
@@ -395,7 +395,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                                                                            );
 
-        bool result = errors1.HasExceptionDetails();
+        bool result = errors1.ContainsException();
 
         result.Should().BeTrue();
     }
@@ -404,7 +404,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public void HasExceptionDetails_withoutExceptionDetails_return_false()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                             new Dictionary<string, object>
                                                                      {
                                                 { "Key1", "value1" },
@@ -412,7 +412,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                                                                                                                                                );
 
-        bool result = errors1.HasExceptionDetails();
+        bool result = errors1.ContainsException();
 
         result.Should().BeFalse();
     }
@@ -421,7 +421,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public async Task HasExceptionDetailsAsync_withExceptionDetails_return_true()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                                           new Dictionary<string, object>
                                                           {
                                                 { ExceptionMetadataKey, new Exception("miException") },
@@ -429,7 +429,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                                                                            );
 
-        bool result = await errors1.HasExceptionDetailsAsync();
+        bool result = await errors1.ContainsExceptionAsync();
 
         result.Should().BeTrue();
     }
@@ -438,7 +438,7 @@ public class MlErrorsDetailsActionsTests
     [Fact]
     public async Task HasExceptionDetailsAsync_withoutExceptionDetails_return_false()
     {
-        MlErrorsDetails errors1 = ("miError",
+        MlErrorDetails errors1 = ("miError",
                                             new Dictionary<string, object>
                                                                      {
                                                 { "Key1", "value1" },
@@ -446,7 +446,7 @@ public class MlErrorsDetailsActionsTests
                                             }
                                                                                                                                                                                                                );
 
-        bool result = await errors1.HasExceptionDetailsAsync();
+        bool result = await errors1.ContainsExceptionAsync();
 
         result.Should().BeFalse();
     }

@@ -24,7 +24,7 @@
 El bloque `Core` es el corazón de `EnsureFp`. Contiene la primitiva `That` en todas sus formas
 y los tres mecanismos transversales que el resto de familias reutiliza:
 
-1. **Mensajes perezosos** (`Func<string>`, `Func<MlErrorsDetails>`, `Func<T,string>`): el mensaje
+1. **Mensajes perezosos** (`Func<string>`, `Func<MlErrorDetails>`, `Func<T,string>`): el mensaje
    se construye **solo si la validación falla**, evitando interpolaciones costosas en el camino feliz.
 2. **Predicados perezosos** (`Func<T,bool>`): la condición se evalúa dentro del método, lo que
    permite componer sin evaluar de antemano y sin riesgo de `NullReferenceException`.
@@ -51,7 +51,7 @@ importante para orientarse en la API:
 | Variante | Firma del error | Cuándo usarla |
 |---|---|---|
 | `Regla(valor, string mensaje)` | mensaje literal | quieres un texto de negocio concreto |
-| `Regla(valor, MlErrorsDetails error)` | error enriquecido | necesitas código de error, `Details` propios, varios errores |
+| `Regla(valor, MlErrorDetails error)` | error enriquecido | necesitas código de error, `Details` propios, varios errores |
 | `ReglaArg(valor)` | ninguno: se genera | validación de argumento; el nombre de la variable es suficiente |
 
 Las variantes `*Arg` añaden además dos entradas al diccionario `Details` del error:
@@ -63,7 +63,7 @@ Las variantes `*Arg` añaden además dos entradas al diccionario `Details` del e
 
 ```csharp
 public static MlResult<T> That<T>(T value, bool condition, Func<string> errorMessageBuilder);
-public static MlResult<T> That<T>(T value, bool condition, Func<MlErrorsDetails> errorsDetailsBuilder);
+public static MlResult<T> That<T>(T value, bool condition, Func<MlErrorDetails> errorsDetailsBuilder);
 ```
 
 El delegado **solo se invoca cuando `condition` es `false`**. Esto importa cuando el mensaje es caro:
@@ -78,14 +78,14 @@ var r2 = That(pedido, pedido.Total > 0,
               () => $"El pedido {pedido.Referencia} con líneas [{string.Join(", ", pedido.Lineas)}] no es válido.");
 ```
 
-Con `MlErrorsDetails` perezoso puedes construir un error completo (con detalles de diagnóstico)
+Con `MlErrorDetails` perezoso puedes construir un error completo (con detalles de diagnóstico)
 solo en la rama de fallo:
 
 ```csharp
 var result = That(factura, factura.Importe <= limite,
-                  () => MlErrorsDetails.FromErrorMessage("Importe por encima del límite autorizado.")
-                                       .AddDetail("Limite",  limite)
-                                       .AddDetail("Importe", factura.Importe));
+                  () => MlErrorDetails.FromErrorMessage("Importe por encima del límite autorizado.")
+                                       .AddMetadataOrThrow("Limite",  limite)
+                                       .AddMetadataOrThrow("Importe", factura.Importe));
 ```
 
 ---
@@ -94,11 +94,11 @@ var result = That(factura, factura.Importe <= limite,
 
 ```csharp
 public static MlResult<T> That<T>(T value, Func<T, bool> predicate, string errorMessage);
-public static MlResult<T> That<T>(T value, Func<T, bool> predicate, MlErrorsDetails errorsDetails);
+public static MlResult<T> That<T>(T value, Func<T, bool> predicate, MlErrorDetails errorsDetails);
 public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<string> errorMessageBuilder);
-public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<MlErrorsDetails> errorsDetailsBuilder);
+public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<MlErrorDetails> errorsDetailsBuilder);
 public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<T, string> errorMessageBuilder);
-public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<T, MlErrorsDetails> errorsDetailsBuilder);
+public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<T, MlErrorDetails> errorsDetailsBuilder);
 ```
 
 La versión con predicado tiene tres ventajas sobre la versión con `bool`:
@@ -138,7 +138,7 @@ public static MlResult<T> TryThat<T>(T value,
 
 public static MlResult<T> TryThat<T>(T value,
                                      Func<T, bool> predicate,
-                                     MlErrorsDetails errorsDetails,
+                                     MlErrorDetails errorsDetails,
                                      [CallerArgumentExpression(nameof(value))] string? paramName = null);
 
 public static MlResult<T> TryThat<T>(T value,
@@ -159,7 +159,7 @@ var result = TryThat(json,
 
 // Si Parse lanza:
 //   result.IsFailure == true
-//   result.GetFailureDetailsOrThrow().GetDetailException()   → la JsonException original
+//   result.GetFailureDetailsOrThrow().GetException()   → la JsonException original
 ```
 
 La tercera sobrecarga permite construir el mensaje **a partir de la excepción**:
@@ -205,7 +205,7 @@ usa el nombre por defecto `"value"`.
 |---|---|
 | Validar argumentos de un método interno / de infraestructura | ✅ `*Arg` |
 | Regla de negocio que el usuario final va a leer | ❌ usa la variante con `string` |
-| API pública cuyos mensajes están traducidos | ❌ usa `MlErrorsDetails` |
+| API pública cuyos mensajes están traducidos | ❌ usa `MlErrorDetails` |
 | Prototipar rápido | ✅ `*Arg` |
 
 ---
@@ -216,13 +216,13 @@ Siguen disponibles y sin cambios (`Helpers/EnsureFp.cs`):
 
 ```csharp
 public static MlResult<T>              NotNull<T>(T value, string errorMessage);
-public static MlResult<T>              NotNull<T>(T value, MlErrorsDetails errorsDetails);
+public static MlResult<T>              NotNull<T>(T value, MlErrorDetails errorsDetails);
 public static MlResult<IEnumerable<T>> NotEmpty<T>(IEnumerable<T> value, string errorMessage);
-public static MlResult<IEnumerable<T>> NotEmpty<T>(IEnumerable<T> value, MlErrorsDetails errorsDetails);
+public static MlResult<IEnumerable<T>> NotEmpty<T>(IEnumerable<T> value, MlErrorDetails errorsDetails);
 public static MlResult<string>         NotNullEmptyOrWhitespace(string value, string errorMessage);
-public static MlResult<string>         NotNullEmptyOrWhitespace(string value, MlErrorsDetails errorsDetails);
+public static MlResult<string>         NotNullEmptyOrWhitespace(string value, MlErrorDetails errorsDetails);
 public static MlResult<T>              That<T>(T value, bool condition, string errorMessage);
-public static MlResult<T>              That<T>(T value, bool condition, MlErrorsDetails errorsDetails);
+public static MlResult<T>              That<T>(T value, bool condition, MlErrorDetails errorsDetails);
 ```
 
 > Para cadenas existe además `NotNullOrEmpty` (que **sí** acepta `"   "`) en el bloque de
@@ -278,15 +278,15 @@ result.Match(
     valid: v  => Ok(v),
     fail:  e  => BadRequest(new
     {
-        mensaje   = e.ToErrorsMessages(),
-        parametro = e.GetDetailValue<string>(),      // consulta el diccionario Details
-        detalle   = e.ToDetailsDescription()
+        mensaje   = e.GetErrorMessages(),
+        parametro = e.GetMetadataValue<string>(),      // consulta el diccionario Details
+        detalle   = e.GetMetadataSummary()
     }));
 ```
 
-> ⚠️ `MlErrorsDetails` **solo expone** `Errors` y `Details`. No existen `AllErrors`,
-> `FirstErrorMessage` ni `HasException`. Usa `ToErrorsMessages()`, `ToErrorsDescription()`,
-> `Errors.First().Message`, `GetDetailValue<T>()`, `GetDetailException()` o `ToDetailsDescription()`.
+> ⚠️ `MlErrorDetails` **solo expone** `Errors` y `Details`. No existen `AllErrors`,
+> `FirstErrorMessage` ni `HasException`. Usa `GetErrorMessages()`, `GetErrorsSummary()`,
+> `Errors.First().Message`, `GetMetadataValue<T>()`, `GetException()` o `GetMetadataSummary()`.
 
 ---
 
@@ -323,10 +323,10 @@ public MlResult<string> ValidarPlantilla(string plantilla) =>
 public MlResult<Transferencia> Autorizar(Transferencia t, decimal limiteDiario) =>
     That(t,
          x => x.Importe + _acumulado(x.Cuenta) <= limiteDiario,
-         () => MlErrorsDetails.FromErrorMessage("Límite diario superado.")
-                              .AddDetail("Cuenta",       t.Cuenta)
-                              .AddDetail("LimiteDiario", limiteDiario)
-                              .AddDetail("Acumulado",    _acumulado(t.Cuenta)));
+         () => MlErrorDetails.FromErrorMessage("Límite diario superado.")
+                              .AddMetadataOrThrow("Cuenta",       t.Cuenta)
+                              .AddMetadataOrThrow("LimiteDiario", limiteDiario)
+                              .AddMetadataOrThrow("Acumulado",    _acumulado(t.Cuenta)));
 ```
 
 ---

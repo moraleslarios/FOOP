@@ -19,25 +19,25 @@ public class EFRepoPaginationFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(
 
     public virtual async Task<MlResult<T>> TryFindAsync(CancellationToken token = default, params object[] pk) => await _repoReaderPaginatorFp.TryFindAsync(token, pk);
 
-    public virtual MlResult<T> TryFind(MlErrorsDetails notFoundErrorDetails, params object[] pk) => _repoReaderPaginatorFp.TryFind(notFoundErrorDetails, pk);
+    public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] pk) => _repoReaderPaginatorFp.TryFind(notFoundErrorDetails, pk);
 
-    public virtual async Task<MlResult<T>> TryFindAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoReaderPaginatorFp.TryFindAsync(notFoundErrorDetails, token, pk);
+    public virtual async Task<MlResult<T>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoReaderPaginatorFp.TryFindAsync(notFoundErrorDetails, token, pk);
 
     public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryFirst(filter);
 
     public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryFirstAsync(filter, token);
 
-    public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryFirst(filter, notFoundErrorDetails);
+    public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryFirst(filter, notFoundErrorDetails);
 
-    public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryFirstAsync(filter, notFoundErrorDetails, token);
+    public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryFirstAsync(filter, notFoundErrorDetails, token);
 
     public virtual MlResult<T> TryLast(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryLast(filter);
 
     public virtual async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryLastAsync(filter, token);
 
-    public virtual MlResult<T> TryLast(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryLast(filter, notFoundErrorDetails);
+    public virtual MlResult<T> TryLast(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryLast(filter, notFoundErrorDetails);
 
-    public virtual async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryLastAsync(filter, notFoundErrorDetails, token);
+    public virtual async Task<MlResult<T>> TryLastAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryLastAsync(filter, notFoundErrorDetails, token);
 
     public virtual MlResult<IEnumerable<T>> TryGetData(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryGetData(filter);
 
@@ -55,18 +55,18 @@ public class EFRepoPaginationFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(
     public virtual async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoWriterFp.TryAddRangeAsync(items, token);
     public virtual MlResult<T> TryRemove(T item) => _repoWriterFp.TryRemove(item);
     public virtual MlResult<T> TryRemove(params object[] pk) => _repoWriterFp.TryRemove(pk);
-    public virtual MlResult<T> TryRemove(MlErrorsDetails notFoundErrorDetails, params object[] pk) => _repoWriterFp.TryRemove(notFoundErrorDetails, pk);
+    public virtual MlResult<T> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] pk) => _repoWriterFp.TryRemove(notFoundErrorDetails, pk);
     public virtual async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default) => await _repoWriterFp.TryRemoveAsync(item, token);
     public virtual async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] pk) => await _repoWriterFp.TryRemoveAsync(token, pk);
-    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoWriterFp.TryRemoveAsync(notFoundErrorDetails, token, pk);
+    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoWriterFp.TryRemoveAsync(notFoundErrorDetails, token, pk);
     public virtual MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items) => _repoWriterFp.TryRemoveRange(items);
     public virtual async Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoWriterFp.TryRemoveRangeAsync(items, token);
     public virtual MlResult<T> TryUpdate(T item) => _repoWriterFp.TryUpdate(item);
     public virtual MlResult<T> TryUpdate(T item, params object[] pk) => _repoWriterFp.TryUpdate(item, pk);
-    public virtual MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, params object[] pk) => _repoWriterFp.TryUpdate(item, notFoundErrorDetails, pk);
+    public virtual MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] pk) => _repoWriterFp.TryUpdate(item, notFoundErrorDetails, pk);
     public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default) => await _repoWriterFp.TryUpdateAsync(item, token);
     public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] pk) => await _repoWriterFp.TryUpdateAsync(item, token, pk);
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoWriterFp.TryUpdateAsync(item, notFoundErrorDetails, token, pk);
+    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk) => await _repoWriterFp.TryUpdateAsync(item, notFoundErrorDetails, token, pk);
     public virtual MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items) => _repoWriterFp.TryUpdateRange(items);
     public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoWriterFp.TryUpdateRangeAsync(items, token);
 

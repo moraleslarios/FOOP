@@ -11,10 +11,10 @@ public interface IEFRepoUpdaterFp<T>
 {
     MlResult<T> TryUpdate(T item);
     MlResult<T> TryUpdate(T item, params object[] pk);
-    MlResult<T> TryUpdate(T item, MlErrorsDetails notFoundErrorDetails, params object[] pk);
+    MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] pk);
     Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default);
     Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] pk);
-    Task<MlResult<T>> TryUpdateAsync(T item, MlErrorsDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+    Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
     MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items);
     Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 }

@@ -16,7 +16,7 @@ public class DoubleBetween : ValueObject<double>
 
     public static DoubleBetween FromDoubleLength(double value, double minLength, double maxLength) => new DoubleBetween(value, minLength, maxLength);
 
-    public static MlResult<DoubleBetween> ByDoubleLength(double value, double minLength, double maxLength, MlErrorsDetails errorsDetails = null!)
+    public static MlResult<DoubleBetween> ByDoubleLength(double value, double minLength, double maxLength, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                    .Bind(_ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? BuildErrorMessage(value, minLength, maxLength)))
                    .Map(_ => new DoubleBetween(value, minLength, maxLength));

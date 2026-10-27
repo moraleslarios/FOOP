@@ -78,7 +78,7 @@ public static Task<MlResult<T>> AnyAsync<T>(T value, params Func<T, Task<MlResul
 ## 1. `All`: acumula todos los errores
 
 Ejecuta **todos** los validadores, aunque alguno falle, y fusiona los errores de los que fallen
-en un único `MlErrorsDetails`.
+en un único `MlErrorDetails`.
 
 ```csharp
 public MlResult<ClienteDto> Validar(ClienteDto dto) =>
@@ -92,7 +92,7 @@ public MlResult<ClienteDto> Validar(ClienteDto dto) =>
 Si fallan tres de las cuatro reglas, el resultado contiene los tres mensajes:
 
 ```csharp
-var errores = resultado.GetFailureDetailsOrThrow().ToErrorsMessages();
+var errores = resultado.GetFailureDetailsOrThrow().GetErrorMessages();
 // "El nombre es obligatorio.", "El email no tiene un formato válido.", "El tenant es obligatorio."
 ```
 
@@ -204,7 +204,7 @@ La lógica es la misma para `All`, `AllResults` y `Any` (rama de fallo total):
 | Nº de reglas fallidas | Resultado |
 |---|---|
 | 0 | `Valid(value)` |
-| 1 | ese mismo `MlErrorsDetails`, **sin envolver** |
+| 1 | ese mismo `MlErrorDetails`, **sin envolver** |
 | 2 o más | `failsDetails[0].Merge(failsDetails.Skip(1))` |
 
 Consecuencias prácticas:
