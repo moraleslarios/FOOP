@@ -23,8 +23,8 @@ public static class MlResultTransformations
 
     public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn> source, 
                                                                    T                value,
-                                                                   string           exceptionAditionalMessage = null!)
-        => source.TryToInternalMlResult<T, TReturn>(value, exceptionAditionalMessage);
+                                                                   string           exceptionAdditionalMessage = null!)
+        => source.TryToInternalMlResult<T, TReturn>(value, exceptionAdditionalMessage);
 
     public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn>         source, 
                                                                    T                        value,
@@ -34,8 +34,8 @@ public static class MlResultTransformations
 
     public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, MlResult<TReturn>> source, 
                                                                    T                          value,
-                                                                   string                     exceptionAditionalMessage = null!)
-        => source.TryToInternalMlResult<T, TReturn>(value, exceptionAditionalMessage);
+                                                                   string                     exceptionAdditionalMessage = null!)
+        => source.TryToInternalMlResult<T, TReturn>(value, exceptionAdditionalMessage);
 
     public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, MlResult<TReturn>> source, 
                                                                    T                          value,
@@ -58,8 +58,8 @@ public static class MlResultTransformations
 
     public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<TReturn>> sourceAsync, 
                                                                                     T                      value,
-                                                                                    string                 exceptionAditionalMessage = null!)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, exceptionAditionalMessage);
+                                                                                    string                 exceptionAdditionalMessage = null!)
+        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, exceptionAdditionalMessage);
 
     public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<TReturn>>  sourceAsync, 
                                                                                     T                       value,
@@ -69,8 +69,8 @@ public static class MlResultTransformations
 
     public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<MlResult<TReturn>>> sourceAsync, 
                                                                                     T                                value,
-                                                                                    string                           exceptionAditionalMessage = null!)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, exceptionAditionalMessage);
+                                                                                    string                           exceptionAdditionalMessage = null!)
+        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, exceptionAdditionalMessage);
 
 
     public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<MlResult<TReturn>>> sourceAsync, 
@@ -321,8 +321,8 @@ public static class MlResultTransformations
 
     //private static MlResult<TReturn> ToInternalMlResultEx<T, TReturn>(this object source, 
     //                                                                       T      value,
-    //                                                                       string exceptionAditionalMessage = null!)
-    //    => source.ToInternalMlResultEx<T, TReturn>(value, ex => exceptionAditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+    //                                                                       string exceptionAdditionalMessage = null!)
+    //    => source.ToInternalMlResultEx<T, TReturn>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
 
     //private static MlResult<TReturn> ToInternalMlResultEx<T, TReturn>(this object                  source, 
     //                                                                       T                       value,
@@ -676,8 +676,8 @@ public static class MlResultTransformations
 
     private static MlResult<TReturn> TryToInternalMlResult<T, TReturn>(this object source, 
                                                                             T      value,
-                                                                            string exceptionAditionalMessage = null!)
-        => source.TryToInternalMlResult<T, TReturn>(value, ex => exceptionAditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+                                                                            string exceptionAdditionalMessage = null!)
+        => source.TryToInternalMlResult<T, TReturn>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
 
     private static MlResult<TReturn> TryToInternalMlResult<T, TReturn>(this object                  source, 
                                                                             T                       value,
@@ -713,8 +713,8 @@ public static class MlResultTransformations
 
     private static async Task<MlResult<TReturn>> TryToInternalMlResultAsync<T, TReturn>(this object sourceAsync, 
                                                                                              T      value,
-                                                                                             string exceptionAditionalMessage = null!)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, ex => exceptionAditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+                                                                                             string exceptionAdditionalMessage = null!)
+        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
 
 
     private static async Task<MlResult<TReturn>> TryToInternalMlResultAsync<T, TReturn>(this object                  sourceAsync, 

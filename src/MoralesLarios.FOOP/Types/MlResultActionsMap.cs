@@ -57,13 +57,13 @@ public static class MlResultActionsMap
 
     public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T>      source, 
                                                             Func<T, TReturn> func,
-                                                            string           exceptionAditionalMessage = null!)
-        => TryMap(source, func, _ => exceptionAditionalMessage!);
+                                                            string           exceptionAdditionalMessage = null!)
+        => TryMap(source, func, _ => exceptionAdditionalMessage!);
 
     public static Task<MlResult<TReturn>> TryMapAsync<T, TReturn>(this MlResult<T>      source, 
                                                                        Func<T, TReturn> func,
-                                                                       string           exceptionAditionalMessage = null!)
-        => source.TryMap(func, exceptionAditionalMessage).ToAsync();
+                                                                       string           exceptionAdditionalMessage = null!)
+        => source.TryMap(func, exceptionAdditionalMessage).ToAsync();
 
     public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T>             source, 
                                                             Func<T, TReturn>        func,
@@ -71,7 +71,7 @@ public static class MlResultActionsMap
         => source.Match
         (
             fail : MlResult<TReturn>.Fail,
-            valid: value => func.TryToMlResult(source.Value, errorMessageBuilder)
+            valid: value => func.TryToMlResult(value, errorMessageBuilder)
         );
 
     public static Task<MlResult<TReturn>> TryMapAsync<T, TReturn>(this MlResult<T>             source, 
@@ -81,8 +81,8 @@ public static class MlResultActionsMap
 
     public static async Task<MlResult<TReturn>> TryMapAsync<T, TReturn>(this MlResult<T>            source,
                                                                              Func<T, Task<TReturn>> funcAsync,
-                                                                             string                 exceptionAditionalMessage = null!)
-        => await TryMapAsync(source, funcAsync, _ => exceptionAditionalMessage!);
+                                                                             string                 exceptionAdditionalMessage = null!)
+        => await TryMapAsync(source, funcAsync, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapAsync<T, TReturn>(this MlResult<T>             source,
                                                                              Func<T, Task<TReturn>>  funcAsync,
@@ -90,14 +90,14 @@ public static class MlResultActionsMap
         => await source.MatchAsync
         (
             failAsync :       errorsDetails => Task.FromResult(MlResult<TReturn>.Fail(errorsDetails)),
-            validAsync: async value         => await funcAsync.TryToMlResultAsync(source.Value, errorMessageBuilder)
+            validAsync: async value         => await funcAsync.TryToMlResultAsync(value, errorMessageBuilder)
         );
 
 
     public static async Task<MlResult<TReturn>> TryMapAsync<T, TReturn>(this Task<MlResult<T>>      sourceAsync,
                                                                              Func<T, Task<TReturn>> funcAsync,
-                                                                             string                 exceptionAditionalMessage = null!)
-        => await TryMapAsync(sourceAsync, funcAsync, _ => exceptionAditionalMessage!);
+                                                                             string                 exceptionAdditionalMessage = null!)
+        => await TryMapAsync(sourceAsync, funcAsync, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
                                                                              Func<T, Task<TReturn>>  funcAsync,
@@ -108,7 +108,7 @@ public static class MlResultActionsMap
         var result = await partialMlResult.MatchAsync
         (
             failAsync :       errorsDetails => Task.FromResult(MlResult<TReturn>.Fail(errorsDetails)),
-            validAsync: async value         => await funcAsync.TryToMlResultAsync((await sourceAsync).Value, errorMessageBuilder)
+            validAsync: async value         => await funcAsync.TryToMlResultAsync(value, errorMessageBuilder)
         );
 
         return result;
@@ -122,8 +122,8 @@ public static class MlResultActionsMap
 
     public static async Task<MlResult<TReturn>> TryMapAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
                                                                              Func<T, TReturn>  func,
-                                                                             string            exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryMapAsync(func, exceptionAditionalMessage);
+                                                                             string            exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryMapAsync(func, exceptionAdditionalMessage);
 
 
     #endregion
@@ -391,8 +391,8 @@ public static class MlResultActionsMap
                                                               Func<T, bool>    condition,
                                                               Func<T, TReturn> funcTrue,
                                                               Func<T, TReturn> funcFalse,
-                                                              string           exceptionAditionalMessage = null!)
-        => source.TryMapIf(condition, funcTrue, funcFalse, _ => exceptionAditionalMessage!);
+                                                              string           exceptionAdditionalMessage = null!)
+        => source.TryMapIf(condition, funcTrue, funcFalse, _ => exceptionAdditionalMessage!);
 
 
     public static Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this MlResult<T>             source,
@@ -406,8 +406,8 @@ public static class MlResultActionsMap
                                                                          Func<T, bool>    condition,
                                                                          Func<T, TReturn> funcTrue,
                                                                          Func<T, TReturn> funcFalse,
-                                                                         string           exceptionAditionalMessage = null!)
-        => source.TryMapIf(condition, funcTrue, funcFalse, exceptionAditionalMessage!).ToAsync();
+                                                                         string           exceptionAdditionalMessage = null!)
+        => source.TryMapIf(condition, funcTrue, funcFalse, exceptionAdditionalMessage!).ToAsync();
 
 
     public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this MlResult<T>       source,
@@ -429,8 +429,8 @@ public static class MlResultActionsMap
                                                                                Func<T, bool>          condition,
                                                                                Func<T, Task<TReturn>> funcTrueAsync,
                                                                                Func<T, TReturn>       funcFalse,
-                                                                               string                 exceptionAditionalMessage = null!)
-        => await source.TryMapIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAditionalMessage!);
+                                                                               string                 exceptionAdditionalMessage = null!)
+        => await source.TryMapIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAdditionalMessage!);
 
 
     public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this MlResult<T>       source,
@@ -452,8 +452,8 @@ public static class MlResultActionsMap
                                                                                Func<T, bool>          condition,
                                                                                Func<T, TReturn>       funcTrue,
                                                                                Func<T, Task<TReturn>> funcFalseAsync,
-                                                                               string                 exceptionAditionalMessage = null!)
-        => await source.TryMapIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                               string                 exceptionAdditionalMessage = null!)
+        => await source.TryMapIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
 
     public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this MlResult<T>             source,
@@ -475,12 +475,12 @@ public static class MlResultActionsMap
                                                                                Func<T, bool>          condition,
                                                                                Func<T, Task<TReturn>> funcTrueAsync,
                                                                                Func<T, Task<TReturn>> funcFalseAsync,
-                                                                               string                 exceptionAditionalMessage = null!)
-        => await source.TryMapIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                               string                 exceptionAdditionalMessage = null!)
+        => await source.TryMapIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
 
 
-    public static async Task<MlResult<TReturn>> TryMapIAsyncf<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
                                                                                Func<T, bool>           condition,
                                                                                Func<T, TReturn>        funcTrue,
                                                                                Func<T, TReturn>        funcFalse,
@@ -491,23 +491,23 @@ public static class MlResultActionsMap
                                                                                Func<T, bool>     condition,
                                                                                Func<T, TReturn>  funcTrue,
                                                                                Func<T, TReturn>  funcFalse,
-                                                                               string            exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryMapIfAsync(condition, funcTrue, funcFalse, exceptionAditionalMessage!);
+                                                                               string            exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryMapIfAsync(condition, funcTrue, funcFalse, exceptionAdditionalMessage!);
 
 
-    public static async Task<MlResult<TReturn>> TryMapIAsyncf<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
+    public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
                                                                                Func<T, bool>           condition,
                                                                                Func<T, Task<TReturn>>  funcTrueAsync,
                                                                                Func<T, TReturn>        funcFalse,
                                                                                Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryMapIfAsync(condition, funcTrueAsync, funcFalse, errorMessageBuilder);
 
-    public static async Task<MlResult<TReturn>> TryMapIAsyncf<T, TReturn>(this Task<MlResult<T>>      sourceAsync,
+    public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this Task<MlResult<T>>      sourceAsync,
                                                                                Func<T, bool>          condition,
                                                                                Func<T, Task<TReturn>> funcTrueAsync,
                                                                                Func<T, TReturn>       funcFalse,
-                                                                               string                 exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryMapIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAditionalMessage!);
+                                                                               string                 exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryMapIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
                                                                                Func<T, bool>           condition,
@@ -520,8 +520,8 @@ public static class MlResultActionsMap
                                                                                Func<T, bool>          condition,
                                                                                Func<T, TReturn>       funcTrue,
                                                                                Func<T, Task<TReturn>> funcFalseAsync,
-                                                                               string                 exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryMapIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                               string                 exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryMapIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
                                                                                Func<T, bool>           condition,
@@ -534,8 +534,8 @@ public static class MlResultActionsMap
                                                                                Func<T, bool>          condition,
                                                                                Func<T, Task<TReturn>> funcTrueAsync,
                                                                                Func<T, Task<TReturn>> funcFalseAsync,
-                                                                               string                 exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryMapIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                               string                 exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryMapIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
 
 
@@ -554,8 +554,8 @@ public static class MlResultActionsMap
     public static MlResult<T> TryMapIf<T>(this MlResult<T>   source,
                                                Func<T, bool> condition,
                                                Func<T, T>    func,
-                                               string        exceptionAditionalMessage = null!)
-        => source.TryMapIf(condition, func, _ => exceptionAditionalMessage!);
+                                               string        exceptionAdditionalMessage = null!)
+        => source.TryMapIf(condition, func, _ => exceptionAdditionalMessage!);
 
     public static Task<MlResult<T>> TryMapIfAsync<T>(this MlResult<T>             source,
                                                           Func<T, bool>           condition,
@@ -566,8 +566,8 @@ public static class MlResultActionsMap
     public static Task<MlResult<T>> TryMapIfAsync<T>(this MlResult<T>   source,
                                                           Func<T, bool> condition,
                                                           Func<T, T>    func,
-                                                          string        exceptionAditionalMessage = null!)
-        => source.TryMapIf(condition, func, _ => exceptionAditionalMessage!).ToAsync();
+                                                          string        exceptionAdditionalMessage = null!)
+        => source.TryMapIf(condition, func, _ => exceptionAdditionalMessage!).ToAsync();
 
     public static async Task<MlResult<T>> TryMapIfAsync<T>(this MlResult<T>             source,
                                                                 Func<T, bool>           condition,
@@ -583,8 +583,8 @@ public static class MlResultActionsMap
     public static async Task<MlResult<T>> TryMapIfAsync<T>(this MlResult<T>      source,
                                                                 Func<T, bool>    condition,
                                                                 Func<T, Task<T>> funcAsync,
-                                                                string           exceptionAditionalMessage = null!)
-        => await source.TryMapIfAsync(condition, funcAsync, _ => exceptionAditionalMessage!);
+                                                                string           exceptionAdditionalMessage = null!)
+        => await source.TryMapIfAsync(condition, funcAsync, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<T>> TryMapIfAsync<T>(this Task<MlResult<T>>       sourceAsync,
                                                                 Func<T, bool>           condition,
@@ -595,8 +595,8 @@ public static class MlResultActionsMap
     public static async Task<MlResult<T>> TryMapIfAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                 Func<T, bool>     condition,
                                                                 Func<T, Task<T>>  funcAsync,
-                                                                string            exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryMapIfAsync(condition, funcAsync, _ => exceptionAditionalMessage!);
+                                                                string            exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryMapIfAsync(condition, funcAsync, _ => exceptionAdditionalMessage!);
 
 
 
@@ -757,7 +757,7 @@ public static class MlResultActionsMap
     public static async Task<MlResult<TReturn>> MapIfFailAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync, 
                                                                                 Func<T              , TReturn> funcValid,
                                                                                 Func<MlErrorsDetails, TReturn> funcFail)
-        => await sourceAsync.MapIfFailAsync(funcValid, funcFail);
+        => (await sourceAsync).MapIfFail(funcValid, funcFail);
 
 
 
@@ -844,13 +844,13 @@ public static class MlResultActionsMap
                                                                                    Func<T              , TReturn> funcValid,
                                                                                    Func<MlErrorsDetails, TReturn> funcFail,
                                                                                    Func<Exception, string>        errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailAsync(funcValid, funcFail, errorMessageBuilder);
+        => (await sourceAsync).TryMapIfFail(funcValid, funcFail, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                    Func<T, TReturn>               funcValid,
                                                                                    Func<MlErrorsDetails, TReturn> funcFail,
                                                                                    string                         errorMessage = null!)
-        => await sourceAsync.TryMapIfFailAsync(funcValid, funcFail, errorMessage);
+        => (await sourceAsync).TryMapIfFail(funcValid, funcFail, _ => errorMessage!);
 
 
     public static async Task<MlResult<TReturn>> MapIfFailAsync<T, TReturn>(this MlResult<T>                    source,
@@ -903,7 +903,7 @@ public static class MlResultActionsMap
     #region MapDefault
 
 
-    public static MlResult<T> MapDefault<T>(this object source) => "Warning, MapDefault method is only valid tu debug code".ToMlResultFail<T>();
+    public static MlResult<T> MapDefault<T>(this object source) => "Warning, MapDefault method is only valid to debug code".ToMlResultFail<T>();
 
     public static async Task<MlResult<T>> MapDefaultAsync<T>(this object source) => await (source ?? new object()).MapDefault<T>().ToAsync();
 
@@ -919,7 +919,7 @@ public static class MlResultActionsMap
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a prevous 'Value' execution
+    /// source parameter has a previous 'Value' execution
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     /// <typeparam name="T"></typeparam>
@@ -1009,7 +1009,7 @@ public static class MlResultActionsMap
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a prevous 'Value' execution
+    /// source parameter has a previous 'Value' execution
     /// -- 2 funcs (valid and fail) are necessary, since they have to preserve output compatibility --
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -1057,7 +1057,7 @@ public static class MlResultActionsMap
         => source.Match
                         (
                             fail : errorsDetails => errorsDetails.GetDetailValue<TValue>().Bind(value => funcFail.TryToMlResult(value, errorMessageBuilder)),  
-                            valid: value         => funcValid.TryToMlResult(source.Value, errorMessageBuilder)
+                            valid: value         => funcValid.TryToMlResult(value, errorMessageBuilder)
                         );
 
     public static MlResult<TReturn> TryMapIfFailWithValue<T, TValue, TReturn>(this MlResult<T>           source,
@@ -1074,7 +1074,7 @@ public static class MlResultActionsMap
         => await source.MatchAsync
                                  (
                                      failAsync : errorsDetails => errorsDetails.GetDetailValueAsync<TValue>().BindAsync(value => funcFailAsync.TryToMlResultAsync(value, errorMessageBuilder)),
-                                     validAsync: value         => funcValidAsync.TryToMlResultAsync(source.Value, errorMessageBuilder)
+                                     validAsync: value         => funcValidAsync.TryToMlResultAsync(value, errorMessageBuilder)
                                  );
 
 
@@ -1230,7 +1230,7 @@ public static class MlResultActionsMap
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a prevous Exception execution or 'ex' ErrorDetail
+    /// source parameter has a previous Exception execution or 'ex' ErrorDetail
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     /// <typeparam name="T"></typeparam>
@@ -1372,7 +1372,7 @@ public static class MlResultActionsMap
     public static async Task<MlResult<TReturn>> MapIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>>        sourceAsync,
                                                                                              Func<T        , TReturn> funcValid,
                                                                                              Func<Exception, TReturn> funcFail)
-        => await sourceAsync.MapIfFailWithExceptionAsync(funcValid, funcFail);
+        => (await sourceAsync).MapIfFailWithException(funcValid, funcFail);
 
 
     public static MlResult<TReturn> TryMapIfFailWithException<T, TReturn>(this MlResult<T>              source,
@@ -1405,7 +1405,7 @@ public static class MlResultActionsMap
                                                                                                 Func<T        , TReturn> funcValid,
                                                                                                 Func<Exception, TReturn> funcFail,
                                                                                                 string                   errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValid, funcFail, _ => errorMessage);
+        => (await sourceAsync).TryMapIfFailWithException(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                                 Func<T        , Task<TReturn>> funcValidAsync,
@@ -1430,43 +1430,31 @@ public static class MlResultActionsMap
                                                                                                 Func<T        , TReturn>       funcValid,
                                                                                                 Func<Exception, Task<TReturn>> funcFailAsync,
                                                                                                 Func<Exception, string>        errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValid, funcFailAsync, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                                 Func<T        , TReturn>       funcValid,
                                                                                                 Func<Exception, Task<TReturn>> funcFailAsync,
                                                                                                 string                         errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValid, funcFailAsync, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                                 Func<T        , Task<TReturn>> funcValidAsync,
                                                                                                 Func<Exception, TReturn>       funcFail,
                                                                                                 Func<Exception, string>        errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValidAsync, funcFail, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                                 Func<T        , Task<TReturn>> funcValidAsync,
                                                                                                 Func<Exception, TReturn>       funcFail,
                                                                                                 string                         errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValidAsync, funcFail, errorMessage);
-
-    //public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-    //                                                                                            Func<T, TReturn> funcValid,
-    //                                                                                            Func<Exception, TReturn> funcFail,
-    //                                                                                            Func<Exception, string> errorMessageBuilder)
-    //    => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValid, funcFail, errorMessageBuilder);
-
-    //public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-    //                                                                                            Func<T, TReturn> funcValid,
-    //                                                                                            Func<Exception, TReturn> funcFail,
-    //                                                                                            string errorMessage = null!)
-    //    => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValid, funcFail, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), _ => errorMessage!);
 
 
 public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>         source,
                                                                      Func<TException, T> funcException)
-        where TException : Exception
-        => source.Match(
+    where TException : Exception
+    => source.Match(
                             fail : errorsDetails => errorsDetails.GetDetailException<TException>().Match(
                                                                                                             fail : exErrorsDetails => exErrorsDetails.ToMlResultFail<T>(),
                                                                                                             valid: ex              => funcException(ex).ToMlResultValid()
@@ -1615,7 +1603,8 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
     public static async Task<MlResult<TReturn>> MapIfFailWithExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>         sourceAsync,
                                                                                                          Func<T         , TReturn> funcValid,
                                                                                                          Func<TException, TReturn> funcFail)
-        => await sourceAsync.MapIfFailWithExceptionAsync(funcValid, funcFail);
+        where TException : Exception
+        => (await sourceAsync).MapIfFailWithException<T, TReturn, TException>(funcValid, funcFail);
 
 
     public static MlResult<TReturn> TryMapIfFailWithException<T, TReturn, TException>(this MlResult<T>               source,
@@ -1652,7 +1641,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                                                                                                             Func<TException, TReturn> funcFail,
                                                                                                             string                    errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>               sourceAsync,
                                                                                                             Func<T         , Task<TReturn>> funcValidAsync,
@@ -1680,28 +1669,28 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                                                                                                             Func<TException, Task<TReturn>> funcFailAsync,
                                                                                                             Func<Exception , string>        errorMessageBuilder)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValid, funcFailAsync, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>               sourceAsync,
                                                                                                             Func<T         , TReturn>       funcValid,
                                                                                                             Func<TException, Task<TReturn>> funcFailAsync,
                                                                                                             string                          errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValid, funcFailAsync, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>               sourceAsync,
                                                                                                             Func<T         , Task<TReturn>> funcValidAsync,
                                                                                                             Func<TException, TReturn>       funcFail,
                                                                                                             Func<Exception, string>         errorMessageBuilder)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>               sourceAsync,
                                                                                                             Func<T         , Task<TReturn>> funcValidAsync,
                                                                                                             Func<TException, TReturn>       funcFail,
                                                                                                             string                          errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), _ => errorMessage!);
 
 
 
@@ -1844,7 +1833,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
     public static async Task<MlResult<TReturn>> MapIfFailWithExceptionErrorAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                              Func<T              , TReturn> funcValid,
                                                                                              Func<MlErrorsDetails, TReturn> funcFail)
-        => await sourceAsync.MapIfFailWithExceptionErrorAsync(funcValid, funcFail);
+        => (await sourceAsync).MapIfFailWithExceptionError(funcValid, funcFail);
 
 
     public static MlResult<TReturn> TryMapIfFailWithExceptionError<T, TReturn>(this MlResult<T>                    source,
@@ -1877,7 +1866,7 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                                                                                                 Func<T              , TReturn> funcValid,
                                                                                                 Func<MlErrorsDetails, TReturn> funcFail,
                                                                                                 string                         errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValid, funcFail, _ => errorMessage);
+        => (await sourceAsync).TryMapIfFailWithExceptionError(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                 Func<T              , Task<TReturn>> funcValidAsync,
@@ -1902,25 +1891,25 @@ public static MlResult<T> MapIfFailWithException<T, TException>(this MlResult<T>
                                                                                                 Func<T              , TReturn>       funcValid,
                                                                                                 Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                 Func<Exception, string>              errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValid, funcFailAsync, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                 Func<T              , TReturn>       funcValid,
                                                                                                 Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                 string                               errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValid, funcFailAsync, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                 Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                 Func<MlErrorsDetails, TReturn>       funcFail,
                                                                                                 Func<Exception, string>              errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValidAsync, funcFail, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                 Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                 Func<MlErrorsDetails, TReturn>       funcFail,
                                                                                                 string                               errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValidAsync, funcFail, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask(), _ => errorMessage!);
 
 
 
@@ -2076,7 +2065,8 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static async Task<MlResult<TReturn>> MapIfFailWithExceptionErrorAsync<T, TReturn, TException>(this Task<MlResult<T>>              sourceAsync,
                                                                                                          Func<T              , TReturn> funcValid,
                                                                                                          Func<MlErrorsDetails, TReturn> funcFail)
-        => await sourceAsync.MapIfFailWithExceptionErrorAsync(funcValid, funcFail);
+        where TException : Exception
+        => (await sourceAsync).MapIfFailWithExceptionError<T, TReturn, TException>(funcValid, funcFail);
 
 
     public static MlResult<TReturn> TryMapIfFailWithExceptionError<T, TReturn, TException>(this MlResult<T>                    source,
@@ -2113,7 +2103,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                                             Func<MlErrorsDetails, TReturn> funcFail,
                                                                                                             string                         errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage);
+        => (await sourceAsync).TryMapIfFailWithExceptionError<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                             Func<T              , Task<TReturn>> funcValidAsync,
@@ -2141,28 +2131,28 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                                             Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                             Func<Exception , string>             errorMessageBuilder)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid, funcFailAsync, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                             Func<T              , TReturn>       funcValid,
                                                                                                             Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                             string                               errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid, funcFailAsync, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                             Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                             Func<MlErrorsDetails, TReturn>       funcFail,
                                                                                                             Func<Exception, string>              errorMessageBuilder)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail, errorMessageBuilder);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                             Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                             Func<MlErrorsDetails, TReturn>       funcFail,
                                                                                                             string                               errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail, errorMessage);
+        => await sourceAsync.TryMapIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValidAsync, funcFail.ToFuncTask(), _ => errorMessage!);
 
 
     // Missing sync-source overloads for MapIfFailWithException<T>
@@ -2609,7 +2599,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static async Task<MlResult<TReturn>> MapIfFailWithoutExceptionAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                                 Func<T              , TReturn> funcValid,
                                                                                                 Func<MlErrorsDetails, TReturn> funcFail)
-        => await sourceAsync.MapIfFailWithoutExceptionAsync(funcValid, funcFail);
+        => (await sourceAsync).MapIfFailWithoutException(funcValid, funcFail);
 
 
 
@@ -2628,8 +2618,8 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static MlResult<TReturn> TryMapIfFailWithoutException<T, TReturn>(this MlResult<T>                    source,
                                                                                   Func<T              , TReturn> funcValid,
                                                                                   Func<MlErrorsDetails, TReturn> funcFail,
-                                                                                  string                         errorMessageBuilder)
-        => source.TryMapIfFailWithoutException(funcValid, funcFail, _ => errorMessageBuilder);
+                                                                                  string                         errorMessage = null!)
+        => source.TryMapIfFailWithoutException(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                          source,
                                                                                                    Func<T              , Task<TReturn>> funcValidAsync,
@@ -2647,25 +2637,25 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                                    Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                    Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                    string                               errorMessage = null!)
-        => await source.TryMapIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, _ => errorMessage);
+        => await source.TryMapIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                    Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                    Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                    Func<Exception, string>              errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, errorMessageBuilder);
+        => await (await sourceAsync).TryMapIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                    Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                    Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                    string                               errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, errorMessage);
+        => await (await sourceAsync).TryMapIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                    Func<T              , TReturn>       funcValid,
-                                                                                                   Func<MlErrorsDetails, Task<TReturn>> funcFail,
+                                                                                                   Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                    Func<Exception, string>              errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync(funcValid, funcFail, errorMessageBuilder);
+        => await (await sourceAsync).TryMapIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                    Func<T              , TReturn>       funcValid,
@@ -2689,13 +2679,13 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                                    Func<T              , TReturn> funcValid,
                                                                                                    Func<MlErrorsDetails, TReturn> funcFail,
                                                                                                    Func<Exception, string>        errorMessageBuilder)
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync(funcValid, funcFail, errorMessageBuilder);
+        => (await sourceAsync).TryMapIfFailWithoutException(funcValid, funcFail, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
                                                                                                    Func<T              , TReturn> funcValid,
                                                                                                    Func<MlErrorsDetails, TReturn> funcFail,
                                                                                                    string                         errorMessage = null!)
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync(funcValid, funcFail, errorMessage);
+        => (await sourceAsync).TryMapIfFailWithoutException(funcValid, funcFail, _ => errorMessage!);
 
 
 
@@ -2849,7 +2839,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                                             Func<T              , TReturn> funcValid,
                                                                                                             Func<MlErrorsDetails, TReturn> funcFail)
         where TException : Exception
-        => await sourceAsync.MapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid, funcFail);
+        => (await sourceAsync).MapIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail);
 
 
 
@@ -2869,9 +2859,9 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static MlResult<TReturn> TryMapIfFailWithoutException<T, TReturn, TException>(this MlResult<T>                    source,
                                                                                               Func<T              , TReturn> funcValid,
                                                                                               Func<MlErrorsDetails, TReturn> funcFail,
-                                                                                              string                         errorMessageBuilder)
+                                                                                              string                         errorMessage = null!)
         where TException : Exception
-        => source.TryMapIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, _ => errorMessageBuilder);
+        => source.TryMapIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                          source,
                                                                                                                Func<T              , Task<TReturn>> funcValidAsync,
@@ -2891,28 +2881,28 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                                                Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                                string                               errorMessage = null!)
         where TException : Exception
-        => await source.TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, _ => errorMessage);
+        => await source.TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                                Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                                Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                                Func<Exception, string>              errorMessageBuilder)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, errorMessageBuilder);
+        => await (await sourceAsync).TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                                Func<T              , Task<TReturn>> funcValidAsync,
                                                                                                                Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                                string                               errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, errorMessage);
+        => await (await sourceAsync).TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                                Func<T              , TReturn>       funcValid,
-                                                                                                               Func<MlErrorsDetails, Task<TReturn>> funcFail,
+                                                                                                               Func<MlErrorsDetails, Task<TReturn>> funcFailAsync,
                                                                                                                Func<Exception, string>              errorMessageBuilder)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid, funcFail, errorMessageBuilder);
+        => await (await sourceAsync).TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>                    sourceAsync,
                                                                                                                Func<T              , TReturn>       funcValid,
@@ -2940,14 +2930,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                                                Func<MlErrorsDetails, TReturn> funcFail,
                                                                                                                Func<Exception, string>        errorMessageBuilder)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid, funcFail, errorMessageBuilder);
+        => (await sourceAsync).TryMapIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>              sourceAsync,
                                                                                                                Func<T              , TReturn> funcValid,
                                                                                                                Func<MlErrorsDetails, TReturn> funcFail,
                                                                                                                string                         errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid, funcFail, errorMessage);
+        => (await sourceAsync).TryMapIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage!);
 
 
     // Missing sync-source overloads for MapIfFailWithoutException<T>
@@ -2990,8 +2980,8 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                    source,
                                                                                              Func<T              , TReturn> funcValid,
                                                                                              Func<MlErrorsDetails, TReturn> funcFail,
-                                                                                             string                         errorMessageBuilder)
-        => source.TryMapIfFailWithoutException(funcValid, funcFail, errorMessageBuilder).ToAsync();
+                                                                                             string                         errorMessage = null!)
+        => source.TryMapIfFailWithoutException(funcValid, funcFail, errorMessage).ToAsync();
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                          source,
                                                                                                     Func<T              , Task<TReturn>> funcValidAsync,
@@ -3064,9 +3054,9 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                    source,
                                                                                                          Func<T              , TReturn> funcValid,
                                                                                                          Func<MlErrorsDetails, TReturn> funcFail,
-                                                                                                         string                         errorMessageBuilder)
+                                                                                                         string                         errorMessage = null!)
         where TException : Exception
-        => source.TryMapIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, errorMessageBuilder).ToAsync();
+        => source.TryMapIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, errorMessage).ToAsync();
 
     public static async Task<MlResult<TReturn>> TryMapIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                          source,
                                                                                                                 Func<T              , Task<TReturn>> funcValidAsync,
@@ -3108,7 +3098,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     {
         var partialResult = funcAlways();
 
-        if (partialResult is null) return "The parameter 'funcAlways' returned null to executed.".ToMlResultFail<TReturn>();
+        if (partialResult is null) return "The parameter 'funcAlways' returned null when executed.".ToMlResultFail<TReturn>();
 
         var result = partialResult.ToMlResultValid();
 
@@ -3120,7 +3110,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     {
         var partialResult = await funcAlwaysAsync();
 
-        if (partialResult is null) return await "The parameter 'funcAlwaysAsync' returned null to executed.".ToMlResultFailAsync<TReturn>();
+        if (partialResult is null) return await "The parameter 'funcAlwaysAsync' returned null when executed.".ToMlResultFailAsync<TReturn>();
 
         var result = await partialResult.ToMlResultValidAsync();
 
@@ -3152,7 +3142,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static MlResult<TReturn> TryMapAlways<T, TReturn>(this MlResult<T>   source, 
                                                                   Func<TReturn> funcAlways,
                                                                   string        errorMessage = null!)
-        => TryMapAlways(source, funcAlways, _ => errorMessage);
+        => TryMapAlways(source, funcAlways, _ => errorMessage!);
 
 
     public static Task<MlResult<TReturn>> TryMapAlwaysAsync<T, TReturn>(this MlResult<T>             source, 
@@ -3164,7 +3154,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static Task<MlResult<TReturn>> TryMapAlwaysAsync<T, TReturn>(this MlResult<T>         source, 
                                                                              Func<Task<TReturn>> funcAlwaysAsync,
                                                                              string              errorMessage = null!)
-        => TryMapAlwaysAsync(source, funcAlwaysAsync, _ => errorMessage);
+        => TryMapAlwaysAsync(source, funcAlwaysAsync, _ => errorMessage!);
 
     public async static Task<MlResult<TReturn>> TryMapAlwaysAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync, 
                                                                                    Func<Task<TReturn>>     funcAlwaysAsync,
@@ -3230,7 +3220,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static async Task<MlResult<TResult>> MapAlwaysAsync<T, TResult>(this Task<MlResult<T>>              sourceAsync, 
                                                                                 Func<T              , TResult> funcValidAlways,
                                                                                 Func<MlErrorsDetails, TResult> funcFailAlways)
-        => await sourceAsync.MapAlwaysAsync(funcValidAlways, funcFailAlways);
+        => (await sourceAsync).MapAlways(funcValidAlways, funcFailAlways);
 
     public static MlResult<TResult> TryMapAlways<T, TResult>(this MlResult<T>                    source, 
                                                                   Func<T              , TResult> funcValidAlways,
@@ -3243,7 +3233,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                   Func<T              , TResult> funcValidAlways,
                                                                   Func<MlErrorsDetails, TResult> funcFailAlways,
                                                                   string                         errorMessage = null!)
-        => source.TryMapAlways(funcValidAlways, funcFailAlways, _ => errorMessage);
+        => source.TryMapAlways(funcValidAlways, funcFailAlways, _ => errorMessage!);
 
     public static Task<MlResult<TResult>> TryMapAlwaysAsync<T, TResult>(this MlResult<T>                          source, 
                                                                              Func<T              , Task<TResult>> funcValidAlwaysAsync,
@@ -3256,7 +3246,7 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                              Func<T              , Task<TResult>> funcValidAlwaysAsync,
                                                                              Func<MlErrorsDetails, Task<TResult>> funcFailAlwaysAsync,
                                                                              string                               errorMessage = null!)
-        => source.TryMapAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync, _ => errorMessage);
+        => source.TryMapAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync, _ => errorMessage!);
 
 
     public async static Task<MlResult<TResult>> TryMapAlwaysAsync<T, TResult>(this Task<MlResult<T>>                    sourceAsync, 
@@ -3299,13 +3289,13 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
                                                                                    Func<T              , TResult> funcValidAlways,
                                                                                    Func<MlErrorsDetails, TResult> funcFailAlways,
                                                                                    Func<Exception, string>        errorMessageBuilder)
-        => await sourceAsync.TryMapAlwaysAsync(funcValidAlways, funcFailAlways, errorMessageBuilder);
+        => (await sourceAsync).TryMapAlways(funcValidAlways, funcFailAlways, errorMessageBuilder);
 
     public async static Task<MlResult<TResult>> TryMapAlwaysAsync<T, TResult>(this Task<MlResult<T>>              sourceAsync, 
                                                                                    Func<T              , TResult> funcValidAlways,
                                                                                    Func<MlErrorsDetails, TResult> funcFailAlways,
                                                                                    string                         errorMessage = null!)
-        => await sourceAsync.TryMapAlwaysAsync(funcValidAlways, funcFailAlways, errorMessage);
+        => (await sourceAsync).TryMapAlways(funcValidAlways, funcFailAlways, _ => errorMessage!);
 
 
     public static Task<MlResult<TReturn>> MapAlwaysAsync<T, TReturn>(this MlResult<T>   source,

@@ -78,17 +78,17 @@ public static class MlResultActionsBind
     /// <typeparam name="TReturn"></typeparam>
     /// <param name="source"></param>
     /// <param name="func"></param>
-    /// <param name="exceptionAditionalMessage"></param>
+    /// <param name="exceptionAdditionalMessage"></param>
     /// <returns></returns>
     public static MlResult<TReturn> TryBind<T, TReturn>(this MlResult<T>                source,
                                                              Func<T, MlResult<TReturn>> func,
-                                                             string                     exceptionAditionalMessage = null!)
-        => TryBind(source, func, _ => exceptionAditionalMessage!);
+                                                             string                     exceptionAdditionalMessage = null!)
+        => TryBind(source, func, _ => exceptionAdditionalMessage!);
 
     public static Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this MlResult<T>                source,
                                                                         Func<T, MlResult<TReturn>> func,
-                                                                        string                     exceptionAditionalMessage = null!)
-        => source.TryBind(func, exceptionAditionalMessage).ToAsync();
+                                                                        string                     exceptionAdditionalMessage = null!)
+        => source.TryBind(func, exceptionAdditionalMessage).ToAsync();
 
 
     public static MlResult<TReturn> TryBind<T, TReturn>(this MlResult<T>                source,
@@ -97,7 +97,7 @@ public static class MlResultActionsBind
         => source.Match
         (
             fail : MlResult<TReturn>.Fail,
-            valid: value => func.TryToMlResult(source.Value, errorMessageBuilder)
+            valid: value => func.TryToMlResult(value, errorMessageBuilder)
         );
 
     public static Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this MlResult<T>                source,
@@ -108,8 +108,8 @@ public static class MlResultActionsBind
 
     public static async Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this MlResult<T>                      source,
                                                                               Func<T, Task<MlResult<TReturn>>> funcAsync,
-                                                                              string                           exceptionAditionalMessage = null!)
-        => await TryBindAsync(source, funcAsync, _ => exceptionAditionalMessage!);
+                                                                              string                           exceptionAdditionalMessage = null!)
+        => await TryBindAsync(source, funcAsync, _ => exceptionAdditionalMessage!);
 
 
     public static async Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this MlResult<T>                      source,
@@ -118,14 +118,14 @@ public static class MlResultActionsBind
         => await source.MatchAsync
         (
             failAsync :       errorsDetails =>       MlResult<TReturn>.Fail(errorsDetails).ToAsync(),
-            validAsync: async value         => await funcAsync.TryToMlResultAsync(source.Value, errorMessageBuilder)
+            validAsync: async value         => await funcAsync.TryToMlResultAsync(value, errorMessageBuilder)
         );
 
 
     public static async Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this Task<MlResult<T>>                sourceAsync,
                                                                               Func<T, Task<MlResult<TReturn>>> funcAsync,
-                                                                              string                           exceptionAditionalMessage = null!)
-        => await TryBindAsync(sourceAsync, funcAsync, _ => exceptionAditionalMessage!);
+                                                                              string                           exceptionAdditionalMessage = null!)
+        => await TryBindAsync(sourceAsync, funcAsync, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this Task<MlResult<T>>                sourceAsync,
                                                                               Func<T, Task<MlResult<TReturn>>> funcAsync,
@@ -147,10 +147,10 @@ public static class MlResultActionsBind
                                                                               Func<Exception, string>    errorMessageBuilder)
         => await (await sourceAsync).TryBindAsync(func.ToFuncTask(), errorMessageBuilder);
 
-        public static async Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this Task<MlResult<T>>          sourceAsync,
-                                                                                  Func<T, MlResult<TReturn>> func,
-                                                                                  string                     exceptionAditionalMessage = null!)
-            => await (await sourceAsync).TryBindAsync(func.ToFuncTask(), exceptionAditionalMessage);
+    public static async Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this Task<MlResult<T>>          sourceAsync,
+                                                                              Func<T, MlResult<TReturn>> func,
+                                                                              string                     exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryBindAsync(func.ToFuncTask(), exceptionAdditionalMessage);
 
 
 
@@ -709,8 +709,8 @@ public static class MlResultActionsBind
                                                                           Func<T, bool>              condition,
                                                                           Func<T, MlResult<TReturn>> funcTrue,
                                                                           Func<T, MlResult<TReturn>> funcFalse,
-                                                                          string                     exceptionAditionalMessage = null!)
-        => source.TryBindIf(condition, funcTrue, funcFalse, _ => exceptionAditionalMessage!).ToAsync();
+                                                                          string                     exceptionAdditionalMessage = null!)
+        => source.TryBindIf(condition, funcTrue, funcFalse, _ => exceptionAdditionalMessage!).ToAsync();
 
     public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
@@ -731,8 +731,8 @@ public static class MlResultActionsBind
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcTrueAsync,
                                                                                 Func<T,      MlResult<TReturn>>  funcFalse,
-                                                                                string                           exceptionAditionalMessage = null!)
-        => await source.TryBindIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAditionalMessage!);
+                                                                                string                           exceptionAdditionalMessage = null!)
+        => await source.TryBindIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
@@ -753,8 +753,8 @@ public static class MlResultActionsBind
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T,      MlResult<TReturn>>  funcTrue,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcFalseAsync,
-                                                                                string                           exceptionAditionalMessage = null!)
-        => await source.TryBindIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                                string                           exceptionAdditionalMessage = null!)
+        => await source.TryBindIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
@@ -775,8 +775,8 @@ public static class MlResultActionsBind
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcTrueAsync,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcFalseAsync,
-                                                                                string                           exceptionAditionalMessage = null!)
-        => await source.TryBindIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                                string                           exceptionAdditionalMessage = null!)
+        => await source.TryBindIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this Task<MlResult<T>>          sourceAsync,
                                                                                 Func<T, bool>              condition,
@@ -789,8 +789,8 @@ public static class MlResultActionsBind
                                                                                 Func<T, bool>              condition,
                                                                                 Func<T, MlResult<TReturn>> funcTrue,
                                                                                 Func<T, MlResult<TReturn>> funcFalse,
-                                                                                string                     exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalse, _ => exceptionAditionalMessage!);
+                                                                                string                     exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalse, _ => exceptionAdditionalMessage!);
 
 
     public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this Task<MlResult<T>>                sourceAsync,
@@ -804,8 +804,8 @@ public static class MlResultActionsBind
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcTrueAsync,
                                                                                 Func<T,      MlResult<TReturn>>  funcFalse,
-                                                                                string                           exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryBindIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAditionalMessage!);
+                                                                                string                           exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryBindIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAdditionalMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this Task<MlResult<T>>                sourceAsync,
                                                                                 Func<T, bool>                    condition,
@@ -818,8 +818,8 @@ public static class MlResultActionsBind
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T,      MlResult<TReturn>>  funcTrue,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcFalseAsync,
-                                                                                string                           exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                                string                           exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
 
     public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this Task<MlResult<T>>                sourceAsync,
@@ -833,8 +833,8 @@ public static class MlResultActionsBind
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcTrueAsync,
                                                                                 Func<T, Task<MlResult<TReturn>>> funcFalseAsync,
-                                                                                string                           exceptionAditionalMessage = null!)
-        => await (await sourceAsync).TryBindIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAditionalMessage!);
+                                                                                string                           exceptionAdditionalMessage = null!)
+        => await (await sourceAsync).TryBindIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
 
 
@@ -1072,10 +1072,10 @@ public static class MlResultActionsBind
                         );
 
     public static async Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this MlResult<T>                                    source,
-                                                                                    Func<T              , Task<MlResult<TReturn>>> funcValidAsyc,
+                                                                                    Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
                                                                                     Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
                                                                                     string                                         errorMessage = null!)
-        => await source.TryBindIfFailAsync(funcValidAsyc, funcFailAsync, _ => errorMessage!);
+        => await source.TryBindIfFailAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailAsync<T, TReturn>(this Task<MlResult<T>>                              sourceAsync,
                                                                                     Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
@@ -1203,7 +1203,7 @@ public static class MlResultActionsBind
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a prevous 'Value' execution
+    /// source parameter has a previous 'Value' execution
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     /// <typeparam name="T"></typeparam>
@@ -1305,7 +1305,7 @@ public static class MlResultActionsBind
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a prevous 'Value' execution
+    /// source parameter has a previous 'Value' execution
     /// -- 2 funcs (valid and fail) are necessary, since they have to preserve output compatibility --
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -1379,7 +1379,7 @@ public static class MlResultActionsBind
         => source.Match
                         (
                             fail : errorsDetails => errorsDetails.GetDetailValue<TValue>().Bind(value => funcFail.TryToMlResult(value, errorMessageBuilder)),
-                            valid: value         => funcValid.TryToMlResult(source.Value, errorMessageBuilder)
+                            valid: value         => funcValid.TryToMlResult(value, errorMessageBuilder)
                         );
 
     public static MlResult<TReturn> TryBindIfFailWithValue<T, TValue, TReturn>(this MlResult<T>                     source,
@@ -1396,7 +1396,7 @@ public static class MlResultActionsBind
         => await source.MatchAsync
                                  (
                                      failAsync : errorsDetails => errorsDetails.GetDetailValueAsync<TValue>().BindAsync(value => funcFailAsync.TryToMlResultAsync(value, errorMessageBuilder)),
-                                     validAsync: value         => funcValidAsync.TryToMlResultAsync(source.Value, errorMessageBuilder)
+                                     validAsync: value         => funcValidAsync.TryToMlResultAsync(value, errorMessageBuilder)
                                  );
 
 
@@ -1510,7 +1510,7 @@ public static class MlResultActionsBind
 
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
-    /// source parameter has a prevous Exception execution or 'ex' ErrorDetail
+    /// source parameter has a previous Exception execution or 'ex' ErrorDetail
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     /// <typeparam name="T"></typeparam>
@@ -1679,7 +1679,7 @@ public static class MlResultActionsBind
                                                                                                  Func<T        , MlResult<TReturn>> funcValid,
                                                                                                  Func<Exception, MlResult<TReturn>> funcFail,
                                                                                                  string                             errorMessage = null!)
-        => await sourceAsync.TryBindIfFailWithExceptionAsync(funcValid, funcFail, _ => errorMessage);
+        => await sourceAsync.TryBindIfFailWithExceptionAsync(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , Task<MlResult<TReturn>>> funcValidAsync,
@@ -1932,7 +1932,7 @@ public static class MlResultActionsBind
                                                                                                              Func<TException, MlResult<TReturn>> funcFail,
                                                                                                              string                              errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryBindIfFailWithExceptionAsync<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage);
+        => await sourceAsync.TryBindIfFailWithExceptionAsync<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                              Func<T         , Task<MlResult<TReturn>>> funcValidAsync,
@@ -2157,7 +2157,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                  Func<T        , MlResult<TReturn>>       funcValid,
                                                                                                  Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
                                                                                                  string                                   errorMessage = null!)
-        => await sourceAsync.TryBindIfFailWithExceptionErrorAsync(funcValid, funcFail, _ => errorMessage);
+        => await sourceAsync.TryBindIfFailWithExceptionErrorAsync(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
@@ -2410,7 +2410,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                              Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
                                                                                                              string                                   errorMessage = null!)
         where TException : Exception
-        => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage);
+        => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithExceptionErrorAsync<T, TReturn, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
@@ -2957,7 +2957,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                    Func<T              , MlResult<TReturn>> funcValid,
                                                                                    Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
                                                                                    string                                   errorMessage = null!)
-        => source.TryBindIfFailWithoutException(funcValid, funcFail, _ => errorMessage);
+        => source.TryBindIfFailWithoutException(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this MlResult<T>                                    source,
                                                                                                     Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
@@ -2975,7 +2975,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                     Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
                                                                                                     Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
                                                                                                     string                                         errorMessage = null!)
-        => await source.TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, _ => errorMessage);
+        => await source.TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
@@ -3120,11 +3120,10 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync, errorMessageBuilder);
 
-    public static async Task<MlResult<T>> BindExIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
-                                                                                                Func<MlErrorsDetails, Task<MlResult<T>>> funcAsync,
-                                                                                                string                                   errorMessage = null!)
+    public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
+                                                                                                 Func<MlErrorsDetails, Task<MlResult<T>>> funcAsync,
+                                                                                                 string                                   errorMessage = null!)
         where TException : Exception
-
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync, errorMessage);
 
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
@@ -3134,8 +3133,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync.ToFuncTask(), errorMessageBuilder);
 
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
-                                                                                     Func<MlErrorsDetails, MlResult<T>> funcAsync,
-                                                                                     string                             errorMessage = null!)
+                                                                                                 Func<MlErrorsDetails, MlResult<T>> funcAsync,
+                                                                                                 string                             errorMessage = null!)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync.ToFuncTask(), errorMessage);
 
@@ -3208,7 +3207,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                Func<MlErrorsDetails, MlResult<TReturn>> funcFail,
                                                                                                string                                   errorMessage = null!)
         where TException : Exception
-        => source.TryBindIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage);
+        => source.TryBindIfFailWithoutException<T, TReturn, TException>(funcValid, funcFail, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this MlResult<T>                                    source,
                                                                                                                 Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
@@ -3228,7 +3227,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                 Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
                                                                                                                 string                                         errorMessage = null!)
         where TException : Exception
-        => await source.TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, _ => errorMessage);
+        => await source.TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                                 Func<T              , Task<MlResult<TReturn>>> funcValidAsync,
@@ -3248,7 +3247,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                     Func<T              , MlResult<TReturn>>       funcValid,
                                                                                                     Func<MlErrorsDetails, Task<MlResult<TReturn>>> funcFailAsync,
                                                                                                     Func<Exception, string>                        errorMessageBuilder)
-        => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
+        where TException : Exception
+        => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
     public static async Task<MlResult<TReturn>> TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                                 Func<T              , MlResult<TReturn>>       funcValid,
@@ -3439,74 +3439,6 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.TryBindIfFailWithoutExceptionAsync<T, TReturn, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /// Está mal, hay que cambiar  
-    ///
-    /// failAsync : async errorDetails2 => await funcAsync(errorDetails2), --> failAsync : async _ => await funcAsync(errorDetails),
-
-
-
-
-    //public static MlResult<T> BindIfFailWithoutException<T, TException>(this MlResult<T>                        source,
-    //                                                                         Func<MlErrorsDetails, MlResult<T>> func)
-    //    where TException : Exception
-    //=> source.Match(
-    //                    fail: errorsDetails => errorsDetails.GetDetailException<TException>().Match(
-    //                                                                                                    fail:       func,
-    //                                                                                                    valid: _ => errorsDetails
-    //                                                                                                ),
-    //                    valid: x => x
-    //                );
-
-
-    //public static async Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T> source,
-    //                                                                              Func<MlErrorsDetails, Task<MlResult<T>>> funcAsync)
-    //    where TException : Exception
-    //    => await source.MatchAsync(
-    //                                    failAsync: errorsDetails => errorsDetails.GetDetailExceptionAsync<T, TException>().MatchAsync(
-    //                                                                                                                                    failAsync : async errorDetails2 => await funcAsync(errorDetails2),
-    //                                                                                                                                    validAsync: async _             => await errorsDetails.ToMlResultFailAsync<T>()
-    //                                                                                                                                ),
-    //                                    validAsync: value => value.ToMlResultValidAsync()
-    //                                );
-
-
-
-
-
-
     #endregion
 
 
@@ -3526,32 +3458,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                  Func<Task<MlResult<TReturn>>> funcAlwaysAsync)
         => await funcAlwaysAsync();
 
-
     public static async Task<MlResult<TReturn>> BindAlwaysAsync<T, TReturn>(this Task<MlResult<T>>             sourceAsync, 
                                                                                  Func<Task<MlResult<TReturn>>> funcAlwaysAsync)
-        => await funcAlwaysAsync();
+    {
+        _ = await sourceAsync;
+
+        return await funcAlwaysAsync();
+    }
 
     public static async Task<MlResult<TReturn>> BindAlwaysAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync, 
                                                                                  Func<MlResult<TReturn>> funcAlways)
          => await (await sourceAsync).BindAlwaysAsync<T, TReturn>(funcAlways);
 
-
-
-    //public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T> source,
-    //                                                               Func<MlResult<TReturn>> funcAlways,
-    //                                                               Func<Exception, string> errorMessageBuilder)
-    //    => source.Match<T, MlResult<TReturn>>(valid: _ => funcAlways.TryToMlResult(errorMessageBuilder),
-    //                                          fail : _ => funcAlways.TryToMlResult(errorMessageBuilder));
-
     public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T>             source,
                                                                    Func<MlResult<TReturn>> funcAlways,
                                                                    Func<Exception, string> errorMessageBuilder)
         => funcAlways.TryToMlResult(errorMessageBuilder);
-
-
-
-
-
 
     public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T>             source,
                                                                    Func<MlResult<TReturn>> funcAlways,
@@ -3568,11 +3490,10 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                               string                  errorMessage = null!)
         => source.TryBindAlwaysAsync(funcAlways, _ => errorMessage!);
 
-
     public static Task<MlResult<TReturn>> TryBindAlwaysAsync<T, TReturn>(this MlResult<T>                   source,
                                                                               Func<Task<MlResult<TReturn>>> funcAlwaysAsync,
                                                                               Func<Exception, string>       errorMessageBuilder)
-        => source.TryBindAlwaysAsync(funcAlwaysAsync, errorMessageBuilder);
+        => funcAlwaysAsync.TryToMlResultAsync(errorMessageBuilder);
 
     public static Task<MlResult<TReturn>> TryBindAlwaysAsync<T, TReturn>(this MlResult<T>                   source,
                                                                               Func<Task<MlResult<TReturn>>> funcAlwaysAsync,
@@ -3607,7 +3528,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     public async static Task<MlResult<TReturn>> TryBindAlwaysAsync<T, TReturn>(this Task<MlResult<T>>       sourceAsync,
                                                                                     Func<MlResult<TReturn>> funcAlways,
                                                                                     string                  errorMessage = null!)
-        => (await sourceAsync).TryBindAlways<T, TReturn>(funcAlways, _ => errorMessage);
+        => (await sourceAsync).TryBindAlways<T, TReturn>(funcAlways, _ => errorMessage!);
 
 
 
@@ -3666,16 +3587,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>                              source, 
                                                                    Func<T              , MlResult<TResult>> funcValidAlways,
-                                                                   Func<MlErrorsDetails, MlResult<TResult>> funcFailAlwaiys,
+                                                                   Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways,
                                                                    Func<Exception, string>                  errorMessageBuilder)
         => source.Match(valid: value        => funcValidAlways.TryToMlResult(value       , errorMessageBuilder),
-                        fail : errorDetails => funcFailAlwaiys.TryToMlResult(errorDetails, errorMessageBuilder));
+                        fail : errorDetails => funcFailAlways .TryToMlResult(errorDetails, errorMessageBuilder));
 
     public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>                              source, 
                                                                    Func<T              , MlResult<TResult>> funcValidAlways,
                                                                    Func<MlErrorsDetails, MlResult<TResult>> funcFailAlways,
                                                                    string                                   errorMessage = null!)
-        => source.TryBindAlways(funcValidAlways, funcFailAlways, _ => errorMessage);
+        => source.TryBindAlways(funcValidAlways, funcFailAlways, _ => errorMessage!);
 
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source, 
                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
@@ -3688,7 +3609,7 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                               Func<MlErrorsDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
                                                                               string                                         errorMessage = null!)
-        => source.TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync, _ => errorMessage);
+        => source.TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync, _ => errorMessage!);
 
 
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
@@ -3803,9 +3724,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.InternalTryBindBuild<T, TResult>(false, errorMessageBuilder, funcArgs);
 
     public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
-                                                                    string                      exceptionAditionalMessage,
+                                                                    string                      exceptionAdditionalMessage,
                                                              params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuild<T, TResult>(false, exceptionAditionalMessage, funcArgs);
+        => source.InternalTryBindBuild<T, TResult>(false, exceptionAdditionalMessage, funcArgs);
 
 
     public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
@@ -3818,9 +3739,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder, funcArgs);
 
     public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
-                                                                                   string                      exceptionAditionalMessage,
+                                                                                   string                      exceptionAdditionalMessage,
                                                                             params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAditionalMessage, funcArgs);
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAdditionalMessage, funcArgs);
 
     public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                   params Func<T, MlResult<object>>[] funcArgs)
@@ -3832,9 +3753,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder, funcArgs);
 
         public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
-                                                                                             string                      exceptionAditionalMessage,
+                                                                                             string                      exceptionAdditionalMessage,
                                                                                       params Func<T, MlResult<object>>[] funcArgs)
-        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAditionalMessage, funcArgs);
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAdditionalMessage, funcArgs);
 
     public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                               params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
@@ -3846,9 +3767,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, errorMessageBuilder, funcArgsAsync);
 
     public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
-                                                                                     string                            exceptionAditionalMessage,
+                                                                                     string                            exceptionAdditionalMessage,
                                                                               params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
-        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, ex => exceptionAditionalMessage, funcArgsAsync);
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, ex => exceptionAdditionalMessage, funcArgsAsync);
 
 
     private static MlResult<TResult> InternalTryBindBuild<T, TResult>(this   MlResult<T>                 source,
@@ -3870,9 +3791,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
         private static MlResult<TResult> InternalTryBindBuild<T, TResult>(this   MlResult<T>                 source,
                                                                                  bool                        breakInError,
-                                                                                 string                      exceptionAditionalMessage,
+                                                                                 string                      exceptionAdditionalMessage,
                                                                           params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuild<T, TResult>(breakInError, ex => exceptionAditionalMessage, funcArgs);
+        => source.InternalTryBindBuild<T, TResult>(breakInError, ex => exceptionAdditionalMessage, funcArgs);
 
 
     private static Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
@@ -3883,9 +3804,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     private static Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
                                                                                             bool                        breakInError,
-                                                                                            string                      exceptionAditionalMessage,
+                                                                                            string                      exceptionAdditionalMessage,
                                                                                      params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuild<T, TResult>(breakInError, exceptionAditionalMessage, funcArgs).ToAsync();
+        => source.InternalTryBindBuild<T, TResult>(breakInError, exceptionAdditionalMessage, funcArgs).ToAsync();
 
 
     private static async Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
@@ -3896,9 +3817,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     private static async Task<MlResult<TResult>> InternalTryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                                   bool                        breakInError,
-                                                                                                  string                      exceptionAditionalMessage,
+                                                                                                  string                      exceptionAdditionalMessage,
                                                                                            params Func<T, MlResult<object>>[] funcArgs)
-        => await (await sourceAsync).InternalTryBindBuildSyncAsync<T, TResult>(breakInError, exceptionAditionalMessage, funcArgs);
+        => await (await sourceAsync).InternalTryBindBuildSyncAsync<T, TResult>(breakInError, exceptionAdditionalMessage, funcArgs);
 
     private static async Task<MlResult<TResult>> InternalTryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                               bool                              breakInError,
@@ -3966,20 +3887,20 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>            source,
                                                                            Func<T, MlResult<TR1>> funcBuild1,
                                                                            Func<T, MlResult<TR2>> funcBuild2,
-                                                                           string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                           string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>            source,
                                                                            Func<T,          TR1 > funcBuild1,
                                                                            Func<T, MlResult<TR2>> funcBuild2,
-                                                                           string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                           string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>            source,
                                                                            Func<T, MlResult<TR1>> funcBuild1,
                                                                            Func<T,          TR2 > funcBuild2,
-                                                                           string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                           string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
 
 
@@ -4006,8 +3927,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>            source,
                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                       Func<T, MlResult<TR2>> funcBuild2,
-                                                                                      string                 exceptionAditionalMessage)
-        => source.TryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+                                                                                      string                 exceptionAdditionalMessage)
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
     public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
                                                                                             Func<T, MlResult<TR1>> funcBuild1,
@@ -4023,8 +3944,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
                                                                                             Func<T, MlResult<TR1>> funcBuild1,
                                                                                             Func<T, MlResult<TR2>> funcBuild2,
-                                                                                            string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                            string                 exceptionAdditionalMessage)
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                       Func<T, Task<MlResult<TR1>>> funcBuild1Async,
@@ -4040,8 +3961,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                       Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                       Func<T, Task<MlResult<TR2>>> funcBuild2Async,
-                                                                                      string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                      string                        exceptionAdditionalMessage)
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
 
     // TR3
@@ -4062,8 +3983,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                      Func<T, MlResult<TR1>> funcBuild1,
                                                                                      Func<T, MlResult<TR2>> funcBuild2,
                                                                                      Func<T, MlResult<TR3>> funcBuild3,
-                                                                                     string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                     string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
@@ -4082,8 +4003,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                                 Func<T, MlResult<TR2>> funcBuild2,
                                                                                                 Func<T, MlResult<TR3>> funcBuild3,
-                                                                                                string                 exceptionAditionalMessage)
-        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+                                                                                                string                 exceptionAdditionalMessage)
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
     public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>      sourceAsync,
                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
@@ -4102,8 +4023,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                                       Func<T, MlResult<TR2>> funcBuild2,
                                                                                                       Func<T, MlResult<TR3>> funcBuild3,
-                                                                                                      string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                      string                 exceptionAdditionalMessage)
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
@@ -4122,8 +4043,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                            Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                            Func<T, Task<MlResult<TR3>>> funcBuild3Async,
-                                                                                           string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                           string                        exceptionAdditionalMessage)
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR4
     public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
@@ -4146,8 +4067,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                           Func<T, MlResult<TR2>> funcBuild2,
                                                                                           Func<T, MlResult<TR3>> funcBuild3,
                                                                                           Func<T, MlResult<TR4>> funcBuild4,
-                                                                                          string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                          string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
@@ -4169,8 +4090,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                      Func<T, MlResult<TR2>> funcBuild2,
                                                                                                      Func<T, MlResult<TR3>> funcBuild3,
                                                                                                      Func<T, MlResult<TR4>> funcBuild4,
-                                                                                                     string                 exceptionAditionalMessage)
-        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+                                                                                                     string                 exceptionAdditionalMessage)
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
     public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>      sourceAsync,
                                                                                                             Func<T, MlResult<TR1>> funcBuild1,
@@ -4192,8 +4113,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                             Func<T, MlResult<TR2>> funcBuild2,
                                                                                                             Func<T, MlResult<TR3>> funcBuild3,
                                                                                                             Func<T, MlResult<TR4>> funcBuild4,
-                                                                                                            string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                            string                 exceptionAdditionalMessage)
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
                                                                                                      Func<T, Task<MlResult<TR1>>> funcBuild1Async,
@@ -4215,8 +4136,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                      Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                                      Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                      Func<T, Task<MlResult<TR4>>> funcBuild4Async,
-                                                                                                     string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                     string                        exceptionAdditionalMessage)
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR5
     public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
@@ -4242,8 +4163,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                     Func<T, MlResult<TR3>> funcBuild3,
                                                                                                     Func<T, MlResult<TR4>> funcBuild4,
                                                                                                     Func<T, MlResult<TR5>> funcBuild5,
-                                                                                                    string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                    string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                Func<T, MlResult<TR1>>  funcBuild1,
@@ -4268,8 +4189,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                Func<T, MlResult<TR3>> funcBuild3,
                                                                                                                Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                Func<T, MlResult<TR5>> funcBuild5,
-                                                                                                               string                 exceptionAditionalMessage)
-        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+                                                                                                               string                 exceptionAdditionalMessage)
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
@@ -4294,8 +4215,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                       Func<T, MlResult<TR3>> funcBuild3,
                                                                                                                       Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                       Func<T, MlResult<TR5>> funcBuild5,
-                                                                                                                      string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                      string                 exceptionAdditionalMessage)
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                Func<T, Task<MlResult<TR1>>> funcBuild1Async,
@@ -4320,8 +4241,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                Func<T, Task<MlResult<TR3>>> funcBuild3Async,
                                                                                                                Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                                Func<T, Task<MlResult<TR5>>> funcBuild5Async,
-                                                                                                               string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                               string                        exceptionAdditionalMessage)
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR6
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
@@ -4350,8 +4271,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                               Func<T, MlResult<TR4>> funcBuild4,
                                                                                                               Func<T, MlResult<TR5>> funcBuild5,
                                                                                                               Func<T, MlResult<TR6>> funcBuild6,
-                                                                                                              string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                              string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                                          Func<T, MlResult<TR1>>  funcBuild1,
@@ -4379,8 +4300,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                          Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                          Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                          Func<T, MlResult<TR6>> funcBuild6,
-                                                                                                                         string                 exceptionAditionalMessage)
-        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+                                                                                                                         string                 exceptionAdditionalMessage)
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
@@ -4408,8 +4329,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                 Func<T, MlResult<TR4>> funcBuild4,
                                                                                                                                 Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                                 Func<T, MlResult<TR6>> funcBuild6,
-                                                                                                                                string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                                string                 exceptionAdditionalMessage)
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
@@ -4437,8 +4358,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                          Func<T, Task<MlResult<TR4>>> funcBuild4Async,
                                                                                                                          Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                          Func<T, Task<MlResult<TR6>>> funcBuild6Async,
-                                                                                                                         string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                         string                        exceptionAdditionalMessage)
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR7
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
@@ -4470,8 +4391,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                         Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                         Func<T, MlResult<TR7>> funcBuild7,
-                                                                                                                        string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                        string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
@@ -4502,8 +4423,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                                    Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                    Func<T, MlResult<TR7>> funcBuild7,
-                                                                                                                                   string                 exceptionAditionalMessage)
-        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+                                                                                                                                   string                 exceptionAdditionalMessage)
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
@@ -4534,8 +4455,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           Func<T, MlResult<TR5>> funcBuild5,
                                                                                                                                           Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                           Func<T, MlResult<TR7>> funcBuild7,
-                                                                                                                                          string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                                          string                 exceptionAdditionalMessage)
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
@@ -4566,8 +4487,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, Task<MlResult<TR5>>> funcBuild5Async,
                                                                                                                                    Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async,
-                                                                                                                                   string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                                   string                        exceptionAdditionalMessage)
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
 
 
@@ -4605,8 +4526,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                         Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                         Func<T, MlResult<TR8>> funcBuild8,
-                                                                                                                        string                 exceptionAditionalMessage)
-        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                        string                 exceptionAdditionalMessage)
+        => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
@@ -4640,8 +4561,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                    Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                                    Func<T, MlResult<TR8>> funcBuild8,
-                                                                                                                                   string                 exceptionAditionalMessage)
-        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage).ToAsync();
+                                                                                                                                   string                 exceptionAdditionalMessage)
+        => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
@@ -4675,8 +4596,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           Func<T, MlResult<TR6>> funcBuild6,
                                                                                                                                           Func<T, MlResult<TR7>> funcBuild7,
                                                                                                                                           Func<T, MlResult<TR8>> funcBuild8,
-                                                                                                                                          string                 exceptionAditionalMessage)
-        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                                          string                 exceptionAdditionalMessage)
+        => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
@@ -4710,8 +4631,8 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, Task<MlResult<TR6>>> funcBuild6Async,
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async,
                                                                                                                                    Func<T, Task<MlResult<TR8>>> funcBuild8Async,
-                                                                                                                                   string                        exceptionAditionalMessage)
-        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: ex => exceptionAditionalMessage);
+                                                                                                                                   string                        exceptionAdditionalMessage)
+        => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
 
 
@@ -5565,9 +5486,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.InternalTryBindBuild<T, TResult>(true, errorMessageBuilder, funcArgs);
 
         public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
-                                                                             string                      exceptionAditionalMessage,
+                                                                             string                      exceptionAdditionalMessage,
                                                                       params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuild<T, TResult>(true, exceptionAditionalMessage, funcArgs);
+        => source.InternalTryBindBuild<T, TResult>(true, exceptionAdditionalMessage, funcArgs);
 
 
     public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
@@ -5580,9 +5501,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder, funcArgs);
 
     public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
-                                                                                    string                      exceptionAditionalMessage,
+                                                                                    string                      exceptionAdditionalMessage,
                                                                              params Func<T, MlResult<object>>[] funcArgs)
-        => source.InternalTryBindBuildSyncAsync<T, TResult>(true, ex => exceptionAditionalMessage, funcArgs);
+        => source.InternalTryBindBuildSyncAsync<T, TResult>(true, ex => exceptionAdditionalMessage, funcArgs);
 
 
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
@@ -5595,9 +5516,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder, funcArgs);
 
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
-                                                                                          string                      exceptionAditionalMessage,
+                                                                                          string                      exceptionAdditionalMessage,
                                                                                    params Func<T, MlResult<object>>[] funcArgs)
-        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, exceptionAditionalMessage, funcArgs);
+        => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, exceptionAdditionalMessage, funcArgs);
 
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                    params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
@@ -5609,9 +5530,9 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, errorMessageBuilder, funcArgsAsync);
 
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
-                                                                                          string                            exceptionAditionalMessage,
+                                                                                          string                            exceptionAdditionalMessage,
                                                                                    params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
-        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, ex => exceptionAditionalMessage, funcArgsAsync);
+        => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, ex => exceptionAdditionalMessage, funcArgsAsync);
 
 
     #endregion

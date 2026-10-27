@@ -70,7 +70,7 @@ public static class MlResultActionsSeveral
         return result!;
     }
 
-    public async static Task<MlResult<IEnumerable<T>>>? EmptyToFailedAsync<T>(this Task<IEnumerable<T>> itemsAsync, 
+    public static async Task<MlResult<IEnumerable<T>>>? EmptyToFailedAsync<T>(this Task<IEnumerable<T>> itemsAsync, 
                                                                                    string               messageError)
     {
         var partialMlResult = await itemsAsync;
@@ -351,8 +351,6 @@ public static class MlResultActionsSeveral
 
 
 
-
-
     public static MlResult<(TResult1, TResult2, TResult3, TResult4, TResult5)> Combine<TResult1, TResult2, TResult3, TResult4, TResult5>(this MlResult<TResult1>                                                   source,
                                                                                                                                               (TResult2 value1, TResult3 value2, TResult4 value3, TResult5 value4) values)
         => source.Match(
@@ -451,13 +449,15 @@ public static class MlResultActionsSeveral
                                 fail : errorDetails => errorDetails.ToMlResultFail<(TResult1, TResult2, TResult3)>()
                            );
 
-    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3)>?> CombineAsync<TResult1, TResult2, TResult3>(this (TResult1 value1, TResult2 value2) source,
-                                                                                                                                       MlResult<TResult3>                 mlResultValue)
-        => source.Combine(mlResultValue).ToAsync()!;
+    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3)>> CombineAsync<TResult1, TResult2, TResult3>(this (TResult1 value1, TResult2 value2) source,
+                                                                                                                                      MlResult<TResult3>                 mlResultValue)
+        => source.Combine(mlResultValue).ToAsync();
 
-    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3)>?> CombineAsync<TResult1, TResult2, TResult3>(this (TResult1 value1, TResult2 value2) source,
-                                                                                                                                             Task<MlResult<TResult3>>           mlResultValueAsync)
+    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3)>> CombineAsync<TResult1, TResult2, TResult3>(this (TResult1 value1, TResult2 value2) source,
+                                                                                                                                            Task<MlResult<TResult3>>           mlResultValueAsync)
         => await source.CombineAsync(await mlResultValueAsync);
+
+
 
 
     public static MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4)> Combine<TResult1, TResult2, TResult3, TResult4>(this (TResult1 value1, TResult2 value2, TResult3 value3) source, 
@@ -467,11 +467,11 @@ public static class MlResultActionsSeveral
                                     fail : errorDetails => errorDetails.ToMlResultFail<(TResult1, TResult2, TResult3, TResult4)>()
                                );
 
-    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4>(this (TResult1 value1, TResult2 value2, TResult3 value3) source,
+    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4)>> CombineAsync<TResult1, TResult2, TResult3, TResult4>(this (TResult1 value1, TResult2 value2, TResult3 value3) source,
                                                                                                                                                                   MlResult<TResult4>                                  mlResultValue)
-        => source.Combine(mlResultValue).ToAsync()!;
+        => source.Combine(mlResultValue).ToAsync();
 
-    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4>(this (TResult1 value1, TResult2 value2, TResult3 value3) source,
+    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4)>> CombineAsync<TResult1, TResult2, TResult3, TResult4>(this (TResult1 value1, TResult2 value2, TResult3 value3) source,
                                                                                                                                                                          Task<MlResult<TResult4>>                            mlResultValueAsync)
         => await source.CombineAsync(await mlResultValueAsync);
 
@@ -485,11 +485,11 @@ public static class MlResultActionsSeveral
                                );
 
 
-    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4) source,
+    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4) source,
                                                                                                                                                                                              MlResult<TResult5>                                                   mlResultValue)
-        => source.Combine(mlResultValue).ToAsync()!;
+        => source.Combine(mlResultValue).ToAsync();
 
-    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4) source,
+    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4) source,
                                                                                                                                                                                                    Task<MlResult<TResult5>>                                             mlResultValueAsync)
         => await source.CombineAsync(await mlResultValueAsync);
 
@@ -504,11 +504,11 @@ public static class MlResultActionsSeveral
                                );
 
 
-    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5) source,
+    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5) source,
                                                                                                                                                                                                                         MlResult<TResult6> mlResultValue)
-        => source.Combine(mlResultValue).ToAsync()!;
+        => source.Combine(mlResultValue).ToAsync();
 
-    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5) source,
+    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5) source,
                                                                                                                                                                                                                                 Task<MlResult<TResult6>> mlResultValueAsync)
         => await source.CombineAsync(await mlResultValueAsync);
 
@@ -522,11 +522,11 @@ public static class MlResultActionsSeveral
                                );
 
 
-    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6) source,
+    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6) source,
                                                                                                                                                                                                                                                     MlResult<TResult7> mlResultValue)
-        => source.Combine(mlResultValue).ToAsync()!;
+        => source.Combine(mlResultValue).ToAsync();
 
-    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6) source,
+    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6) source,
                                                                                                                                                                                                                                                           Task<MlResult<TResult7>> mlResultValueAsync)
         => await source.CombineAsync(await mlResultValueAsync);
 
@@ -540,11 +540,11 @@ public static class MlResultActionsSeveral
                                );
 
 
-    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7, TResult8 value8)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7) source,
+    public static Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7, TResult8 value8)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7) source,
                                                                                                                                                                                                                                                                                MlResult<TResult8> mlResultValue)
-        => source.Combine(mlResultValue).ToAsync()!;
+        => source.Combine(mlResultValue).ToAsync();
 
-    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7, TResult8 value8)>?> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7) source,
+    public static async Task<MlResult<(TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7, TResult8 value8)>> CombineAsync<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8>(this (TResult1 value1, TResult2 value2, TResult3 value3, TResult4 value4, TResult5 value5, TResult6 value6, TResult7 value7) source,
                                                                                                                                                                                                                                                                                      Task<MlResult<TResult8>> mlResultValueAsync)
         => await source.CombineAsync(await mlResultValueAsync);
 
