@@ -102,7 +102,7 @@ Para tipos que usan **constructor primario** (C# 12+) con inyecci�n de depende
 Ejemplo can�nico (clase con constructor primario + DI + gen�ricos restringidos + interfaz):
 
 ```csharp
-public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _repo,
+public class GenServiceFp<TEntity, TDto>(IEfRepository<TEntity>                   _repo,
                                          ILogger<GenServiceFp<TEntity, TDto>> _logger) : IGenServiceFp<TEntity, TDto>
     where TEntity : class
     where TDto    : class

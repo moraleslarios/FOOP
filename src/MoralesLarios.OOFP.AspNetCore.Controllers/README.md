@@ -560,7 +560,7 @@ public static class RegisterServices
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 
 // 2) Repositorios funcionales (MoralesLarios.OOFP.EntityFrameworkCore)
-builder.Services.AddScopedOOFPRepos<User, AppDbContext>();
+builder.Services.AddOofpRepositories<User, AppDbContext>();
 
 // 3) Servicios genéricos (MoralesLarios.OOFP.Application)
 builder.Services.AddScopedCrudServicesFpWithoutRepositories();   // ⚠️ la errata "Scopedt" es real
@@ -638,7 +638,7 @@ Con eso, cualquier controlador que herede de las clases base ya resuelve su `IGe
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
-builder.Services.AddScopedOOFPRepos<User, AppDbContext>();
+builder.Services.AddOofpRepositories<User, AppDbContext>();
 builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 builder.Services.AddControllers();
 
@@ -849,7 +849,7 @@ builder.Services.AddSwaggerGen(o => o.OperationFilter<PkParameterOperationFilter
 ```csharp
 [Route("api/[controller]")]
 public class UsersController(IGenServiceFp<User, UserDto> svc,
-                             IEFRepoReaderPaginationFp<User> repoPag)
+                             IEfPagedReadRepository<User> repoPag)
     : SimpleMlControllerBase<User, UserDto, int>(svc)
 {
     /// <summary>Lee X-Page-Number y X-Page-Size de las cabeceras.</summary>
@@ -914,7 +914,7 @@ public override Task<IActionResult> GetAllAsync(CancellationToken ct = default!)
 builder.Services.AddWebControllers();
 
 // ✅ registra lo que de verdad hace falta
-builder.Services.AddScopedOOFPRepos<User, AppDbContext>();
+builder.Services.AddOofpRepositories<User, AppDbContext>();
 builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 builder.Services.AddControllers();
 ```
@@ -975,7 +975,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 | Quitar un endpoint heredado | Sobreescribirlo y devolver `MlActionResults.MethodNotAllowed()` (o no usar estas bases) |
 | Un `Location` correcto en el `201` | Sobreescribir `PostAsync` y usar `ToPostPdActionResult(uri)` |
 | `400` en vez de `404`/`500` para un `id` inválido | Sobreescribir con `MlActionResults.BadRequest` o `MlProblemsDetails.BadRequestError` |
-| Paginar | Endpoint propio con `GetHeaderPaginationInfo` + `IEFRepoReaderPaginationFp<T>` |
+| Paginar | Endpoint propio con `GetHeaderPaginationInfo` + `IEfPagedReadRepository<T>` |
 | Proteger la API | `[Authorize]` en la derivada o política global |
 | Documentar en Swagger | `[ProducesResponseType]` + `IOperationFilter` para `PkParameterAttribute` |
 | Validar el DTO | `ValidateObject()` / `MlSelfValidatable<T>` antes del `BindAsync` al servicio |
@@ -1022,7 +1022,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 
 12. **No expones los mensajes de error tal cual** si tu API es pública: reescríbelos con `MapIfFail` para no filtrar textos internos en inglés defectuoso.
 
-13. **No llames a `AddWebControllers()`**: está vacío. Registra `AddScopedOOFPRepos<,>` y `AddScopedCrudServicesFpWithoutRepositories()`.
+13. **No llames a `AddWebControllers()`**: está vacío. Registra `AddOofpRepositories<,>` y `AddScopedCrudServicesFpWithoutRepositories()`.
 
 14. **Añade un endpoint paginado** en cuanto una tabla pueda crecer: `GetAllAsync` trae la tabla completa.
 

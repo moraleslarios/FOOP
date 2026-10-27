@@ -1,5 +1,5 @@
 ﻿namespace MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Repos;
 
-public interface IVinosRepo : IEFRepoFp<Vino>
+public interface IVinosRepo : IEfRepository<Vino>
 {
 }

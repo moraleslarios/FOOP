@@ -20,11 +20,11 @@ public static class Extensions
 
 
     public static IQueryable<T> PrivateOrderBy<T>(this IQueryable<T>               source,
-                                                       OrderBy                     orderBy      = OrderBy.Ascending,
+                                                       SortDirection                     orderBy      = SortDirection.Ascending,
                                                        Expression<Func<T, object>> orderByField = null!)
         => orderByField is null 
                                 ? source
-                                : orderBy == OrderBy.Ascending
+                                : orderBy == SortDirection.Ascending
                                     ? source.OrderBy(orderByField)
                                     : source.OrderByDescending(orderByField);
 

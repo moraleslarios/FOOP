@@ -90,13 +90,13 @@ public class VinosController(IGenServiceFp<Vino, VinoDto> _service)
 |---|---|---|
 | `Mapster` | 7.4.0 | 🔑 `Adapt<T>()`, el mapeo entidad ⇄ DTO |
 | `Microsoft.Extensions.Configuration.Abstractions` | 9.0.6 | ⚠️ Declarada pero **no se usa** |
-| [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) | — | 🔑 `IEFRepoFp<TEntity>`, `GetPkValues` |
+| [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) | — | 🔑 `IEfRepository<TEntity>`, `GetPkValues` |
 | [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) | — | 🔑 `LogMlResultInformationAsync`, `LogCompletedResultAsync` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | Tipos internos compartidos |
 
 Destino: **`net8.0`**. Versión del paquete: **1.0.10**.
 
-> ⚠️ **Arrastra `EFCore` como dependencia obligatoria.** El servicio depende de `IEFRepoFp<TEntity>` en el constructor, así que **no puedes usar esta capa con otro tipo de persistencia** (Dapper, MongoDB, un servicio remoto…) sin implementar tú `IEFRepoFp<T>`.
+> ⚠️ **Arrastra `EFCore` como dependencia obligatoria.** El servicio depende de `IEfRepository<TEntity>` en el constructor, así que **no puedes usar esta capa con otro tipo de persistencia** (Dapper, MongoDB, un servicio remoto…) sin implementar tú `IEfRepository<T>`.
 
 ```csharp
 using MoralesLarios.OOFP.Application;             // MlProblemsDetails, RegisterServices
@@ -194,21 +194,21 @@ public interface IGenServiceFp<TEntity, TDto>
                                                Func<MlErrorDetails, string>   failMessageBuilder  = null!);
 
     // Búsqueda por clave
-    Task<MlResult<TDto?>> FindByIdAsync                (…, params object[] pk);
-    Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync (MlErrorDetails notFoundErrorDetails, …, params object[] pk);
+    Task<MlResult<TDto?>> FindByIdAsync                (…, params object[] keyValues);
+    Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync (MlErrorDetails notFoundErrorDetails, …, params object[] keyValues);
 
     // Creación
     Task<MlResult<TDto>>  CreateAsync(TDto dto, …);
 
     // Modificación: con y sin comprobación de existencia
-    Task<MlResult<TDto>>  UpdateAsync              (TDto dto, …, params object[] pk);
+    Task<MlResult<TDto>>  UpdateAsync              (TDto dto, …, params object[] keyValues);
     Task<MlResult<TDto>>  UpdateAsync              (TDto dto, …);                       // sin pk
-    Task<MlResult<TDto>>  UpdateProblemDetailsAsync(TDto dto, MlErrorDetails notFoundErrorDetails, …, params object[] pk);
+    Task<MlResult<TDto>>  UpdateProblemDetailsAsync(TDto dto, MlErrorDetails notFoundErrorDetails, …, params object[] keyValues);
 
     // Borrado: por clave o por entidad
-    Task<MlResult<TDto>>  DeleteAsync              (…, params object[] pk);
+    Task<MlResult<TDto>>  DeleteAsync              (…, params object[] keyValues);
     Task<MlResult<TDto>>  DeleteAsync              (TDto dto, …);
-    Task<MlResult<TDto>>  DeleteProblemDetailsAsync(MlErrorDetails notFoundErrorDetails, …, params object[] pk);
+    Task<MlResult<TDto>>  DeleteProblemDetailsAsync(MlErrorDetails notFoundErrorDetails, …, params object[] keyValues);
 }
 ```
 
@@ -233,9 +233,9 @@ Mismos 11 métodos, con `TRequest` en la entrada y `TResponse` en la salida:
 
 ```csharp
 Task<MlResult<IEnumerable<TResponse>>> AllAsync(…);
-Task<MlResult<TResponse?>>             FindByIdAsync(…, params object[] pk);
+Task<MlResult<TResponse?>>             FindByIdAsync(…, params object[] keyValues);
 Task<MlResult<TResponse>>              CreateAsync(TRequest dtoRequest, …);
-Task<MlResult<TResponse>>              UpdateAsync(TRequest dtoRequest, …, params object[] pk);
+Task<MlResult<TResponse>>              UpdateAsync(TRequest dtoRequest, …, params object[] keyValues);
 Task<MlResult<TResponse>>              DeleteAsync(TRequest dtoRequest, …);
 // …
 ```
@@ -291,7 +291,7 @@ Tres operaciones vienen duplicadas, y la diferencia es **quién construye el err
 
 ```csharp
 // Versión corta: el mensaje lo genera la librería
-public virtual Task<MlResult<TDto?>> FindByIdAsync(…, params object[] pk)
+public virtual Task<MlResult<TDto?>> FindByIdAsync(…, params object[] keyValues)
     => FindByIdProblemsDetailsAsync(
            notFoundErrorDetails: typeof(TDto).Name.BuildNotFoundPkError(pk),   // 🔑 automático
            …);
@@ -300,7 +300,7 @@ public virtual Task<MlResult<TDto?>> FindByIdAsync(…, params object[] pk)
 Y el helper que lo genera:
 
 ```csharp
-public static MlErrorDetails BuildNotFoundPkError(this string tableName, params object[] pk)
+public static MlErrorDetails BuildNotFoundPkError(this string tableName, params object[] keyValues)
     => MlErrorDetails.FromErrorMessageDetails(
            $"No data found for the {tableName} table by Id ({pk.GetPkValues()})",
            new Dictionary<string, object> { ["NotFound"] = $"No data found for the {tableName} table by Id ({pk.GetPkValues()})" });
@@ -418,15 +418,15 @@ services.AddScoped(typeof(IGenServiceFp<,>), typeof(GenServiceFp<,>));
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 
 // 1️⃣ Los repositorios, por entidad
-builder.Services.AddScopedOOFPRepos<Vino, AppDbContext>();
+builder.Services.AddOofpRepositories<Vino, AppDbContext>();
 
 // 2️⃣ El servicio genérico, una sola vez
 builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 ```
 
-> 🔑 **El registro de repositorios es por entidad; el del servicio, una sola vez.** El servicio genérico resuelve `IEFRepoFp<TEntity>` por constructor, así que si olvidas el `AddScopedOOFPRepos<TEntity, TContext>()` la inyección del servicio fallará al resolverse.
+> 🔑 **El registro de repositorios es por entidad; el del servicio, una sola vez.** El servicio genérico resuelve `IEfRepository<TEntity>` por constructor, así que si olvidas el `AddOofpRepositories<TEntity, TContext>()` la inyección del servicio fallará al resolverse.
 
-> ⚠️ **Evita `AddSingleton…`**: el servicio depende de `IEFRepoFp<TEntity>`, que a su vez depende del `DbContext` (`Scoped`). Es una *captive dependency*, igual que en [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
+> ⚠️ **Evita `AddSingleton…`**: el servicio depende de `IEfRepository<TEntity>`, que a su vez depende del `DbContext` (`Scoped`). Es una *captive dependency*, igual que en [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
 
 ---
 
@@ -582,7 +582,7 @@ El contrato del modo simple está formateado con alineación cuidadosa; el del m
 
 ## ⚠️ Lo que NO incluye
 
-> ⚠️ **No hay paginación.** `AllAsync` trae **toda la tabla** y la mapea completa. Aunque [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) ofrece `IEFRepoPaginationFp<T>`, esta capa depende solo de `IEFRepoFp<T>` y **no expone ningún método paginado**. En una tabla grande, `AllAsync` es un problema de rendimiento serio.
+> ⚠️ **No hay paginación.** `AllAsync` trae **toda la tabla** y la mapea completa. Aunque [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) ofrece `IEfPagedRepository<T>`, esta capa depende solo de `IEfRepository<T>` y **no expone ningún método paginado**. En una tabla grande, `AllAsync` es un problema de rendimiento serio.
 
 > ⚠️ **No hay filtrado ni búsqueda.** No existe un `GetDataAsync(filter)`: solo `AllAsync` y `FindByIdAsync`.
 
@@ -652,7 +652,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 
 // Repositorios: una llamada por entidad
-builder.Services.AddScopedOOFPRepos<Vino, AppDbContext>();
+builder.Services.AddOofpRepositories<Vino, AppDbContext>();
 
 // Servicios genéricos: una sola vez cada modo
 builder.Services.AddScopedCrudServicesFpWithoutRepositories();        // ⚠️ "Scopedt"
@@ -711,7 +711,7 @@ public class VinosValidadosService(IGenServiceFp<Vino, VinoDto> _service,
 ### Ejemplo 5 — Extender por herencia
 
 ```csharp
-public class VinosServiceConReglas(IEFRepoFp<Vino>                          repo,
+public class VinosServiceConReglas(IEfRepository<Vino>                          repo,
                                    ILogger<GenServiceFp<Vino, VinoDto>>     logger)
     : GenServiceFp<Vino, VinoDto>(repo, logger)
 {
@@ -802,7 +802,7 @@ await _service.UpdateAsync(dto, ct);
 await _service.AllAsync(ct);
 
 // ✅ BIEN: pagina con el repositorio directamente
-await _repoPaginado.TryGetDataPaginationAsync((1, 25), OrderBy.Ascending, x => x.Id, x => true, ct)
+await _repoPaginado.TryGetDataPaginationAsync((1, 25), SortDirection.Ascending, x => x.Id, x => true, ct)
                    .MapAsync(p => p.Items.Adapt<IEnumerable<VinoDto>>());
 ```
 
@@ -856,7 +856,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 | Un error 400 con errores por campo | `MlProblemsDetails.BadRequestError(…, validationResults)` |
 | Un código de estado arbitrario | `MlProblemsDetails.CreateProblemDetails(statusCode, …)` |
 | Añadir reglas de negocio | Heredar de `GenServiceFp<,>` y sobrescribir el método |
-| Paginar, filtrar o proyectar | ❌ No disponible: usa `IEFRepoPaginationFp<T>` directamente |
+| Paginar, filtrar o proyectar | ❌ No disponible: usa `IEfPagedRepository<T>` directamente |
 | Validar | ❌ No lo hace: usa [`Validation`](../MoralesLarios.OOFP.Validation/README.md) antes |
 | Registrar | `AddScopedCrudServicesFpWithoutRepositories()` ✅ (con la errata) |
 
@@ -866,7 +866,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 
 1. **Usa el modo duplex en APIs públicas**: separa el DTO de entrada del de salida para no exponer `Id` ni campos internos.
 2. **Registra con `AddScopedt…`** (sí, con la errata). Evita `AddSingleton…` por la dependencia cautiva del `DbContext`.
-3. **No olvides `AddScopedOOFPRepos<TEntity, TContext>()`** por cada entidad: el servicio resuelve `IEFRepoFp<TEntity>` por constructor.
+3. **No olvides `AddOofpRepositories<TEntity, TContext>()`** por cada entidad: el servicio resuelve `IEfRepository<TEntity>` por constructor.
 4. **Usa siempre las variantes `ProblemDetailsAsync` con `MlProblemsDetails`** si el error va a convertirse en respuesta HTTP. Las versiones cortas **no producen un 404 real**.
 5. **Prefiere `UpdateAsync(dto, ct)` sin `pk`** para evitar el doble `Find` y los conflictos de seguimiento.
 6. **No uses `AllAsync` en tablas grandes**: no pagina. Baja al repositorio paginado y mapea con `Adapt`.
@@ -882,7 +882,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 
 ## Resumen
 
-- Servicio de aplicación **genérico** que implementa el CRUD completo sobre `IEFRepoFp<TEntity>`, mapeando entidad ⇄ DTO con **Mapster** y trazando **entrada y salida** de cada operación en el raíl de `MlResult<T>`.
+- Servicio de aplicación **genérico** que implementa el CRUD completo sobre `IEfRepository<TEntity>`, mapeando entidad ⇄ DTO con **Mapster** y trazando **entrada y salida** de cada operación en el raíl de `MlResult<T>`.
 - **Dos modos**: simple (`IGenServiceFp<TEntity, TDto>`)
 - Registro con tipos genéricos abiertos: **una sola llamada** sirve para todas las entidades. ⚠️ El nombre tiene la errata `AddScopedt…`.
 - **`MlProblemsDetails`**: 15 fábricas de `MlErrorDetails` con la estructura **RFC 7807** (400, 401, 403, 404, 409, 422, 429, 500…), más una sobrecarga que agrupa `ValidationResult` por propiedad.

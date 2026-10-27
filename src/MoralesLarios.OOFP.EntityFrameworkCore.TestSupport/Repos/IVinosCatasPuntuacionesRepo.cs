@@ -1,5 +1,5 @@
 namespace MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Repos;
 
-public interface IVinosCatasPuntuacionesRepo : IEFRepoFp<VinosCatasPuntuacion>
+public interface IVinosCatasPuntuacionesRepo : IEfRepository<VinosCatasPuntuacion>
 {
 }

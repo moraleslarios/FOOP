@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Repos;
 
-public class VinosRepo(JfCatasDbContext dbContext) : EFRepoFp<Vino, JfCatasDbContext>(dbContext), IVinosRepo
+public class VinosRepo(TestDbContext dbContext) : EfCrudRepository<Vino, TestDbContext>(dbContext), IVinosRepo
 {
 
 

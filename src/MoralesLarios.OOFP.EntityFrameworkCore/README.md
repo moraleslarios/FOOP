@@ -14,14 +14,14 @@ Es el proyecto **más grande y ambicioso** de la periferia de la solución: 35 f
 4. [Arquitectura: dos capas paralelas](#arquitectura-dos-capas-paralelas)
 5. [Jerarquía de interfaces](#jerarquía-de-interfaces)
 6. [Registro en el contenedor](#registro-en-el-contenedor)
-7. [`IEFRepoReaderFp<T>` — lectura](#iefrepoReaderfpt--lectura)
-8. [`IEFRepoAdderFp<T>` — inserción](#iefrepoadderfpt--inserción)
-9. [`IEFRepoUpdaterFp<T>` — modificación](#iefrepoupdaterfpt--modificación)
-10. [`IEFRepoDeleterFp<T>` — borrado](#iefrepodeleterfpt--borrado)
-11. [`IEFRepoWriterFp<T>` y `IEFRepoFp<T>` — agregados](#iefrepowriterfpt-y-iefrepofpt--agregados)
-12. [Paginación: `IEFPaginatorFp<T>`](#paginación-iefpaginatorfpt)
+7. [`IEfReadRepository<T>` — lectura](#iefrepoReaderfpt--lectura)
+8. [`IEfCreateRepository<T>` — inserción](#iefrepoadderfpt--inserción)
+9. [`IEfUpdateRepository<T>` — modificación](#iefrepoupdaterfpt--modificación)
+10. [`IEfDeleteRepository<T>` — borrado](#iefrepodeleterfpt--borrado)
+11. [`IEfWriteRepository<T>` y `IEfRepository<T>` — agregados](#iefrepowriterfpt-y-iefrepofpt--agregados)
+12. [Paginación: `IEfPaginator<T>`](#paginación-iefpaginatorfpt)
 13. [Mensajes de error personalizados](#mensajes-de-error-personalizados)
-14. [Helpers y `OrderBy`](#helpers-y-orderby)
+14. [Helpers y `SortDirection`](#helpers-y-orderby)
 15. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 16. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
 17. [Ejemplos prácticos](#ejemplos-prácticos)
@@ -59,7 +59,7 @@ public async Task<Vino> RenombrarAsync(int id, string nombre, CancellationToken 
 }
 ```
 
-✅ **Con `IEFRepoFp<T>`:**
+✅ **Con `IEfRepository<T>`:**
 
 ```csharp
 public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationToken ct)
@@ -91,9 +91,9 @@ Destino: **`net8.0`**. Versión del paquete: **1.0.14**.
 > ⚠️ **`Microsoft.Extensions.DependencyInjection` se usa sin declararse** como paquete propio: llega de forma transitiva a través de EF Core. Funciona, pero es una dependencia implícita.
 
 ```csharp
-using MoralesLarios.OOFP.EntityFrameworkCore;              // AddTransientOOFPRepos, …
-using MoralesLarios.OOFP.EntityFrameworkCore.Repositories;        // IEFRepoFp<T>, EFRepoFp<T, TContext>
-using MoralesLarios.OOFP.EntityFrameworkCore.Enums;        // OrderBy
+using MoralesLarios.OOFP.EntityFrameworkCore;              // AddOofpRepositoriesTransient, …
+using MoralesLarios.OOFP.EntityFrameworkCore.Repositories;        // IEfRepository<T>, EfCrudRepository<T, TContext>
+using MoralesLarios.OOFP.EntityFrameworkCore.Enums;        // SortDirection
 using MoralesLarios.OOFP.Shared.Pagination;      // PageRequest, PagedResult<T>
 ```
 
@@ -104,25 +104,25 @@ using MoralesLarios.OOFP.Shared.Pagination;      // PageRequest, PagedResult<T>
 ```
 MoralesLarios.OOFP.EntityFrameworkCore/
 ├── Repos/                          ← 🟢 API PÚBLICA funcional (devuelve MlResult)
-│   ├── EFRepoBaseFp.cs                 → base: GetContext() + Dispose()
-│   ├── IEFRepoReaderFp.cs   / EFRepoReaderFp.cs
-│   ├── IEFRepoAdderFp.cs    / EFRepoAdderFp.cs
-│   ├── IEFRepoUpdaterFp.cs  / EFRepoUpdaterFp.cs
-│   ├── IEFRepoDeleterFp.cs  / EFRepoDeleterFp.cs
-│   ├── IEFRepoWriterFp.cs   / EFRepoWriterFp.cs        (adder+updater+deleter)
-│   ├── IEFRepoFp.cs         / EFRepoFp.cs              (reader+writer)
-│   ├── IEFPaginatorFp.cs                               (solo paginación)
-│   ├── IEFRepoReaderPaginationFp.cs / EFRepoReaderPaginationFp.cs
-│   └── IEFRepoPaginationFp.cs       / EFRepoPaginationFp.cs
+│   ├── EfRepository.cs                 → base: GetContext() + Dispose()
+│   ├── IEfReadRepository.cs   / EfReadRepository.cs
+│   ├── IEfCreateRepository.cs    / EfCreateRepository.cs
+│   ├── IEfUpdateRepository.cs  / EfUpdateRepository.cs
+│   ├── IEfDeleteRepository.cs  / EfDeleteRepository.cs
+│   ├── IEfWriteRepository.cs   / EfWriteRepository.cs        (adder+updater+deleter)
+│   ├── IEfRepository.cs         / EfCrudRepository.cs              (reader+writer)
+│   ├── IEfPaginator.cs                               (solo paginación)
+│   ├── IEfPagedReadRepository.cs / EfPagedReadRepository.cs
+│   └── IEfPagedRepository.cs       / EfPagedRepository.cs
 ├── OopRepos/                       ← 🔒 MOTOR INTERNO (devuelve T, clases internal)
-│   ├── EFRepoBase.cs, EFRepo.cs, EFRepoReader.cs
-│   ├── EFRepoAdder.cs, EFRepoUpdater.cs, EFRepoDeleter.cs
-│   ├── EFRepoPagination.cs, EFRepoReaderPagination.cs
+│   ├── ThrowingEfRepository.cs, ThrowingEfCrudRepository.cs, ThrowingEfReadRepository.cs
+│   ├── ThrowingEfCreateRepository.cs, ThrowingEfUpdateRepository.cs, ThrowingEfDeleteRepository.cs
+│   ├── ThrowingEfPagedRepository.cs, ThrowingEfPagedReadRepository.cs
 │   └── IGetContextable.cs
 ├── Helpers/
 │   ├── Extensions.cs                   → GetPkValues, PrivateOrderBy
 │   └── Constants.cs                    → ⚠️ vacío
-├── Enums/OrderBy.cs                    → Ascending, Descending
+├── Enums/SortDirection.cs                    → Ascending, Descending
 ├── RegisterServices.cs                 → Add{Transient|Scoped|Singleton}OOFPRepos
 └── GlobalUsings.cs
 ```
@@ -137,12 +137,12 @@ Cada repositorio existe **dos veces**: una versión OOP interna que habla con EF
 Tu servicio
      │
      ▼
-IEFRepoReaderFp<T>          🟢 pública — devuelve MlResult<T>
-  EFRepoReaderFp<T, TContext>
+IEfReadRepository<T>          🟢 pública — devuelve MlResult<T>
+  EfReadRepository<T, TContext>
      │  valida con EnsureFp, envuelve en TryMap, FailIfNull
      ▼
-IEFRepoReader<T>            🔒 internal — devuelve T (puede ser null, puede lanzar)
-  EFRepoReader<T, TContext>
+IThrowingEfReadRepository<T>            🔒 internal — devuelve T (puede ser null, puede lanzar)
+  ThrowingEfReadRepository<T, TContext>
      │
      ▼
 DbContext.Set<T>()          EF Core
@@ -153,7 +153,7 @@ DbContext.Set<T>()          EF Core
 | **Funcional** (`*Fp`) | `…EFCore.Repos` | **pública** | `MlResult<T>` | 🟢 **La que debes usar** |
 | **OOP** | `…EFCore.OopRepos` | `internal` | `T` | 🔒 Motor interno |
 
-Ejemplo del envoltorio, en `EFRepoAdderFp`:
+Ejemplo del envoltorio, en `EfCreateRepository`:
 
 ```csharp
 public virtual MlResult<T> TryAdd(T item)
@@ -172,39 +172,39 @@ public T Add(T item)
 }
 ```
 
-> ⚠️ **Las clases OOP son `internal`**, así que **no puedes usarlas ni heredarlas** desde tu proyecto. Solo la capa `*Fp` es accesible. Las interfaces `IEFRepoReader<T>` etc. son públicas, pero sus implementaciones no.
+> ⚠️ **Las clases OOP son `internal`**, así que **no puedes usarlas ni heredarlas** desde tu proyecto. Solo la capa `*Fp` es accesible. Las interfaces `IThrowingEfReadRepository<T>` etc. son públicas, pero sus implementaciones no.
 
-> 💡 **Todos los métodos de la capa funcional son `virtual`**: puedes heredar de `EFRepoReaderFp<T, TContext>` y sobrescribir solo lo que necesites.
+> 💡 **Todos los métodos de la capa funcional son `virtual`**: puedes heredar de `EfReadRepository<T, TContext>` y sobrescribir solo lo que necesites.
 
 ---
 
 ## Jerarquía de interfaces
 
 ```
-IEFRepoReaderFp<T>       lectura: Find, First, Last, GetData, All
-IEFRepoAdderFp<T>        Add, AddRange
-IEFRepoUpdaterFp<T>      Update, UpdateRange
-IEFRepoDeleterFp<T>      Remove, RemoveRange
-IEFPaginatorFp<T>        AllPagination, GetDataPagination
+IEfReadRepository<T>       lectura: Find, First, Last, GetData, All
+IEfCreateRepository<T>        Add, AddRange
+IEfUpdateRepository<T>      Update, UpdateRange
+IEfDeleteRepository<T>      Remove, RemoveRange
+IEfPaginator<T>        AllPagination, GetDataPagination
 
-IEFRepoWriterFp<T>            : Adder + Updater + Deleter
-IEFRepoFp<T>                  : Reader + Writer                    ← 🟢 el más usado
-IEFRepoReaderPaginationFp<T>  : Reader + Paginator
-IEFRepoPaginationFp<T>        : Repo + Paginator                   ← 🟢 el más completo
+IEfWriteRepository<T>            : Adder + Updater + Deleter
+IEfRepository<T>                  : Reader + Writer                    ← 🟢 el más usado
+IEfPagedReadRepository<T>  : Reader + Paginator
+IEfPagedRepository<T>        : Repo + Paginator                   ← 🟢 el más completo
 ```
 
 | Necesito… | Interfaz |
 |---|---|
-| Solo leer | `IEFRepoReaderFp<T>` |
-| Solo insertar | `IEFRepoAdderFp<T>` |
-| Solo modificar | `IEFRepoUpdaterFp<T>` |
-| Solo borrar | `IEFRepoDeleterFp<T>` |
-| Escribir (las tres) | `IEFRepoWriterFp<T>` |
-| CRUD completo | `IEFRepoFp<T>` ✅ |
-| Leer + paginar | `IEFRepoReaderPaginationFp<T>` |
-| CRUD + paginar | `IEFRepoPaginationFp<T>` ✅ |
+| Solo leer | `IEfReadRepository<T>` |
+| Solo insertar | `IEfCreateRepository<T>` |
+| Solo modificar | `IEfUpdateRepository<T>` |
+| Solo borrar | `IEfDeleteRepository<T>` |
+| Escribir (las tres) | `IEfWriteRepository<T>` |
+| CRUD completo | `IEfRepository<T>` ✅ |
+| Leer + paginar | `IEfPagedReadRepository<T>` |
+| CRUD + paginar | `IEfPagedRepository<T>` ✅ |
 
-> 💡 **Segrega por intención**: si un servicio solo consulta, inyecta `IEFRepoReaderFp<T>`. El compilador impedirá que escriba por accidente.
+> 💡 **Segrega por intención**: si un servicio solo consulta, inyecta `IEfReadRepository<T>`. El compilador impedirá que escriba por accidente.
 
 ---
 
@@ -213,21 +213,21 @@ IEFRepoPaginationFp<T>        : Repo + Paginator                   ← 🟢 el m
 Un solo método registra **las 16 interfaces** (8 OOP + 8 funcionales) para una entidad y su contexto:
 
 ```csharp
-builder.Services.AddDbContext<JfCatasDbContext>(o => o.UseSqlServer(cs));
+builder.Services.AddDbContext<TestDbContext>(o => o.UseSqlServer(cs));
 
-builder.Services.AddScopedOOFPRepos<Vino, JfCatasDbContext>();
-builder.Services.AddScopedOOFPRepos<Cata, JfCatasDbContext>();   // una llamada por entidad
+builder.Services.AddOofpRepositories<Vino, TestDbContext>();
+builder.Services.AddOofpRepositories<Cata, TestDbContext>();   // una llamada por entidad
 ```
 
 Tres variantes según el ciclo de vida:
 
 | Método | Ciclo de vida | Recomendación |
 |---|---|---|
-| `AddTransientOOFPRepos<T, TContext>()` | `Transient` | ✅ Válido |
-| `AddScopedOOFPRepos<T, TContext>()` | `Scoped` | ✅ **Recomendado** (coincide con `AddDbContext`) |
-| `AddSingletonOOFPRepos<T, TContext>()` | `Singleton` | ❌ **Ver la advertencia** |
+| `AddOofpRepositoriesTransient<T, TContext>()` | `Transient` | ✅ Válido |
+| `AddOofpRepositories<T, TContext>()` | `Scoped` | ✅ **Recomendado** (coincide con `AddDbContext`) |
+| `AddOofpRepositoriesSingleton<T, TContext>()` | `Singleton` | ❌ **Ver la advertencia** |
 
-> ❌ **No uses `AddSingletonOOFPRepos` con un `DbContext` registrado con `AddDbContext`** (que es `Scoped`). Es una *captive dependency*: el repositorio `Singleton` retendría para siempre un contexto de un ámbito ya cerrado. `DbContext` **no es seguro entre hilos** y acumularía todo el *change tracker* durante la vida del proceso.
+> ❌ **No uses `AddOofpRepositoriesSingleton` con un `DbContext` registrado con `AddDbContext`** (que es `Scoped`). Es una *captive dependency*: el repositorio `Singleton` retendría para siempre un contexto de un ámbito ya cerrado. `DbContext` **no es seguro entre hilos** y acumularía todo el *change tracker* durante la vida del proceso.
 
 > ⚠️ **El nombre rompe la convención de la solución.** Aquí es `Add…OOFPRepos`; en otros proyectos es `AddMl…`.
 
@@ -244,7 +244,7 @@ public static class RegisterServices
         => _services?.BuildServiceProvider()           // ⚠️❗ construye un provider NUEVO cada vez
            ?? throw new ArgumentNullException("The field Provider is null");
 
-    public static TRepo ResolveRepoFp<TRepo>()
+    public static TRepo GetRepository<TRepo>()
         => ServiceProvider.GetService<TRepo>() ?? throw new ArgumentException(…);
 }
 ```
@@ -252,10 +252,10 @@ public static class RegisterServices
 Y en cada repositorio:
 
 ```csharp
-public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbContext), IEFRepoAdderFp<T>
+public class EfCreateRepository<T, TContext>(TContext dbContext) : EfRepository(dbContext), IEfCreateRepository<T>
 {
-    internal readonly IEFRepoAdder<T>? _internalRepoAdder =
-        RegisterServices.ResolveRepoFp<IEFRepoAdder<T>>();   // ⚠️ en la construcción del objeto
+    internal readonly IThrowingEfCreateRepository<T>? _internalRepoAdder =
+        RegisterServices.GetRepository<IThrowingEfCreateRepository<T>>();   // ⚠️ en la construcción del objeto
 }
 ```
 
@@ -273,27 +273,27 @@ public class EFRepoAdderFp<T, TContext>(TContext dbContext) : EFRepoBaseFp(dbCon
 
 > ❗ **Este es el aspecto más delicado del proyecto.** Funciona en aplicaciones normales de ASP.NET Core porque `_services` apunta a la misma `IServiceCollection` que acaba en el contenedor real, pero el patrón de *service locator* con `BuildServiceProvider()` repetido es un antipatrón reconocido. Ten presente que **el `DbContext` que usa el motor interno puede no ser el del ámbito de la petición**, lo que afecta al seguimiento de entidades y a las transacciones.
 
-> 💡 **Mitigación práctica**: registra siempre con `AddScopedOOFPRepos`, haz las llamadas **al principio** de la configuración de servicios, y no dependas de que dos operaciones consecutivas compartan el mismo *change tracker*.
+> 💡 **Mitigación práctica**: registra siempre con `AddOofpRepositories`, haz las llamadas **al principio** de la configuración de servicios, y no dependas de que dos operaciones consecutivas compartan el mismo *change tracker*.
 
 ---
 
-## `IEFRepoReaderFp<T>` — lectura
+## `IEfReadRepository<T>` — lectura
 
 ```csharp
-MlResult<T>       TryFind      (params object[] pk);
-MlResult<T>       TryFind      (MlErrorDetails notFoundErrorDetails, params object[] pk);
-Task<MlResult<T>> TryFindAsync (CancellationToken token = default, params object[] pk);
-Task<MlResult<T>> TryFindAsync (MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+MlResult<T>       TryFind      (params object[] keyValues);
+MlResult<T>       TryFind      (MlErrorDetails notFoundErrorDetails, params object[] keyValues);
+Task<MlResult<T>> TryFindAsync (CancellationToken token = default, params object[] keyValues);
+Task<MlResult<T>> TryFindAsync (MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues);
 
 MlResult<T>       TryFirst     (Expression<Func<T, bool>> filter);
 MlResult<T>       TryFirst     (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
 Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
 Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
 
-MlResult<T>       TryLast      (Expression<Func<T, bool>> filter);
-MlResult<T>       TryLast      (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
-Task<MlResult<T>> TryLastAsync (Expression<Func<T, bool>> filter, CancellationToken token = default);
-Task<MlResult<T>> TryLastAsync (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
+MlResult<T>       TryGetLast      (Expression<Func<T, bool>> filter);
+MlResult<T>       TryGetLast      (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
+Task<MlResult<T>> TryGetLastAsync (Expression<Func<T, bool>> filter, CancellationToken token = default);
+Task<MlResult<T>> TryGetLastAsync (Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
 
 MlResult<IEnumerable<T>>       TryGetData     (Expression<Func<T, bool>> filter);
 Task<MlResult<IEnumerable<T>>> TryGetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
@@ -305,14 +305,14 @@ Task<MlResult<IEnumerable<T>>> TryAllAsync    (CancellationToken token = default
 |---|---|---|
 | `TryFind` | `pk` nulo, vacío, o no existe la fila | `"{valores} values not found data in {Entidad}"` |
 | `TryFirst` | `filter` nulo o sin coincidencias | `"The query did not return any elements"` |
-| `TryLast` | `filter` nulo o sin coincidencias | `"The query did not return any elements"` |
+| `TryGetLast` | `filter` nulo o sin coincidencias | `"The query did not return any elements"` |
 | `TryGetData` | `filter` nulo o error de BD | *(propaga la excepción como error)* |
 | `TryAll` | Error de BD | *(propaga la excepción como error)* |
 
 Implementación de `TryFind` (muestra el patrón completo):
 
 ```csharp
-public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] pk)
+public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues)
     => EnsureFp.NotNull(pk, "The object array pk cannot be null")
                .TryMap (x => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
                .TryMap (x => _repoReader!.Find(pk))
@@ -329,13 +329,13 @@ await repo.TryFindAsync(ct, 42);
 await repo.TryFindAsync(ct, idVino, idCata, idUsuario);
 ```
 
-> 💡 **No hay `TryFirstOrDefault` ni `TryLastOrDefault`, y no hacen falta**: `TryFirst`/`TryLast` ya devuelven `Fail` en lugar de lanzar, así que cubren el caso seguro.
+> 💡 **No hay `TryFirstOrDefault` ni `TryLastOrDefault`, y no hacen falta**: `TryFirst`/`TryGetLast` ya devuelven `Fail` en lugar de lanzar, así que cubren el caso seguro.
 
 > 💡 **`TryAll` y `TryGetData` usan `AsNoTracking()`** en el motor interno: son de solo lectura y no cargan el *change tracker*. `TryFind`, en cambio, **sí hace seguimiento** (usa `Find`), lo que es correcto porque suele preceder a una modificación.
 
 ---
 
-## `IEFRepoAdderFp<T>` — inserción
+## `IEfCreateRepository<T>` — inserción
 
 ```csharp
 MlResult<T>                    TryAdd          (T item);
@@ -350,22 +350,22 @@ Valida que el argumento no sea nulo y delega. **Cada llamada hace `SaveChanges` 
 
 ---
 
-## `IEFRepoUpdaterFp<T>` — modificación
+## `IEfUpdateRepository<T>` — modificación
 
 ```csharp
 MlResult<T>                    TryUpdate          (T item);
-MlResult<T>                    TryUpdate          (T item, params object[] pk);
-MlResult<T>                    TryUpdate          (T item, MlErrorDetails notFoundErrorDetails, params object[] pk);
+MlResult<T>                    TryUpdate          (T item, params object[] keyValues);
+MlResult<T>                    TryUpdate          (T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues);
 Task<MlResult<T>>              TryUpdateAsync     (T item, CancellationToken token = default);
-Task<MlResult<T>>              TryUpdateAsync     (T item, CancellationToken token = default, params object[] pk);
-Task<MlResult<T>>              TryUpdateAsync     (T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+Task<MlResult<T>>              TryUpdateAsync     (T item, CancellationToken token = default, params object[] keyValues);
+Task<MlResult<T>>              TryUpdateAsync     (T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues);
 MlResult<IEnumerable<T>>       TryUpdateRange     (IEnumerable<T> items);
 Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 ```
 
 **Dos comportamientos distintos según pases `pk` o no:**
 ```csharp
-public MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] pk)
+public MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues)
     => EnsureFp.NotNull  (item, "The entity item to update cannot be null")
                .Bind  ( _  => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
                .Bind  ( pk => notFoundErrorDetails is null
@@ -380,15 +380,15 @@ public MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params
 
 ---
 
-## `IEFRepoDeleterFp<T>` — borrado
+## `IEfDeleteRepository<T>` — borrado
 
 ```csharp
 MlResult<T>                    TryRemove          (T item);
-MlResult<T>                    TryRemove          (params object[] pk);
-MlResult<T>                    TryRemove          (MlErrorDetails notFoundErrorDetails, params object[] pk);
+MlResult<T>                    TryRemove          (params object[] keyValues);
+MlResult<T>                    TryRemove          (MlErrorDetails notFoundErrorDetails, params object[] keyValues);
 Task<MlResult<T>>              TryRemoveAsync     (T item, CancellationToken token = default);
-Task<MlResult<T>>              TryRemoveAsync     (CancellationToken token = default, params object[] pk);
-Task<MlResult<T>>              TryRemoveAsync     (MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] pk);
+Task<MlResult<T>>              TryRemoveAsync     (CancellationToken token = default, params object[] keyValues);
+Task<MlResult<T>>              TryRemoveAsync     (MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues);
 MlResult<IEnumerable<T>>       TryRemoveRange     (IEnumerable<T> items);
 Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 ```
@@ -400,29 +400,29 @@ Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, Cancell
 .TryMap( bdItem => _internalRepoDeleter!.Remove(bdItem));   // ✅ borra la entidad de la BD
 ```
 
-> ⚠️ **`TryRemove(params object[] pk)` puede confundirse con `TryRemove(T item)`** si tu entidad es un `object[]`, caso raro pero posible. Y ojo: `TryRemove(MlErrorDetails, params object[])` frente a `TryRemove(params object[])` se resuelven por el primer argumento, así que un `string` como primera clave podría convertirse implícitamente en `MlErrorDetails`. **Con PK de tipo `string`, usa siempre la sobrecarga explícita con mensaje.**
+> ⚠️ **`TryRemove(params object[] keyValues)` puede confundirse con `TryRemove(T item)`** si tu entidad es un `object[]`, caso raro pero posible. Y ojo: `TryRemove(MlErrorDetails, params object[])` frente a `TryRemove(params object[])` se resuelven por el primer argumento, así que un `string` como primera clave podría convertirse implícitamente en `MlErrorDetails`. **Con PK de tipo `string`, usa siempre la sobrecarga explícita con mensaje.**
 
 ---
 
-## `IEFRepoWriterFp<T>` y `IEFRepoFp<T>` — agregados
+## `IEfWriteRepository<T>` y `IEfRepository<T>` — agregados
 
 ```csharp
-public interface IEFRepoWriterFp<T> : IEFRepoAdderFp<T>, IEFRepoUpdaterFp<T>, IEFRepoDeleterFp<T> { }
+public interface IEfWriteRepository<T> : IEfCreateRepository<T>, IEfUpdateRepository<T>, IEfDeleteRepository<T> { }
 
-public interface IEFRepoFp<T> : IEFRepoReaderFp<T>, IEFRepoWriterFp<T> { }
+public interface IEfRepository<T> : IEfReadRepository<T>, IEfWriteRepository<T> { }
 ```
 
-No añaden métodos: solo combinan. Las clases `EFRepoWriterFp` y `EFRepoFp` son **delegadores puros**, resuelven los repos especializados y reenvían cada llamada.
+No añaden métodos: solo combinan. Las clases `EfWriteRepository` y `EfCrudRepository` son **delegadores puros**, resuelven los repos especializados y reenvían cada llamada.
 
-> ⚠️ **`IEFRepoWriterFp<T>` contiene ~19 líneas de firmas comentadas**, restos de cuando declaraba los métodos antes de heredarlos. Sin efecto funcional, pero es ruido.
+> ⚠️ **`IEfWriteRepository<T>` contiene ~19 líneas de firmas comentadas**, restos de cuando declaraba los métodos antes de heredarlos. Sin efecto funcional, pero es ruido.
 
 ---
 
-## Paginación: `IEFPaginatorFp<T>`
+## Paginación: `IEfPaginator<T>`
 
 ```csharp
 MlResult<PagedResult<T>>       TryAllPagination         (PageRequest paginationInfo,
-                                                                  OrderBy orderBy = OrderBy.Ascending,
+                                                                  SortDirection orderBy = SortDirection.Ascending,
                                                                   Expression<Func<T, object>> orderByField = null!);
 Task<MlResult<PagedResult<T>>> TryAllPaginationAsync    (…, CancellationToken ct = default!);
 MlResult<PagedResult<T>>       TryGetDataPagination     (…, Expression<Func<T, bool>> filter = null!);
@@ -448,17 +448,17 @@ public record PagedResult<T>(IEnumerable<T> Items, int PageNumber, int PageSize,
 
 > 💡 **Conversión implícita desde tupla**, muy cómoda:
 > ```csharp
-> await repo.TryAllPaginationAsync((2, 25), OrderBy.Descending, x => x.FechaEntrada, ct);
+> await repo.TryAllPaginationAsync((2, 25), SortDirection.Descending, x => x.FechaEntrada, ct);
 > ```
 
 ### Ordenación
 
 ```csharp
 public static IQueryable<T> PrivateOrderBy<T>(this IQueryable<T> source,
-                                              OrderBy orderBy = OrderBy.Ascending,
+                                              SortDirection orderBy = SortDirection.Ascending,
                                               Expression<Func<T, object>> orderByField = null!)
     => orderByField is null ? source
-                            : orderBy == OrderBy.Ascending ? source.OrderBy          (orderByField)
+                            : orderBy == SortDirection.Ascending ? source.OrderBy          (orderByField)
                                                            : source.OrderByDescending(orderByField);
 ```
 
@@ -494,10 +494,10 @@ new object[] { 10, "A" }.GetPkValues();   // "(10, A)"
 
 ---
 
-## Helpers y `OrderBy`
+## Helpers y `SortDirection`
 
 ```csharp
-public enum OrderBy { Ascending, Descending }
+public enum SortDirection { Ascending, Descending }
 ```
 
 | Helper | Firma | Uso |
@@ -518,7 +518,7 @@ Ya descrito en [Registro en el contenedor](#-cómo-resuelven-sus-dependencias-lo
 ### 2. ❗ `Dispose` libera el `DbContext` que gestiona el contenedor
 
 ```csharp
-public class EFRepoBaseFp(DbContext dbContext) : IGetContextable, IDisposable
+public class EfRepository(DbContext dbContext) : IGetContextable, IDisposable
 {
     public DbContext GetContext() => dbContext;
 
@@ -530,7 +530,7 @@ El `DbContext` **lo inyecta el contenedor**, que ya se encarga de liberarlo al c
 
 **Consecuencias:**
 ```csharp
-public class EFRepoBaseFp(DbContext dbContext) : IGetContextable, IDisposable
+public class EfRepository(DbContext dbContext) : IGetContextable, IDisposable
 {
     public DbContext GetContext() => dbContext;
 
@@ -577,7 +577,7 @@ await repoCatas.TryAddAsync(cata, ct);
 > ```
 > ⚠️ Esto solo funciona si **ambos repositorios comparten el mismo `DbContext`**, lo que no está garantizado por el punto 1.
 
-### 4. ❗ `TryLast` trae **todos** los registros filtrados a memoria
+### 4. ❗ `TryGetLast` trae **todos** los registros filtrados a memoria
 
 ```csharp
 public T LastOrDefault(Expression<Func<T, bool>> filter)
@@ -590,12 +590,12 @@ public T LastOrDefault(Expression<Func<T, bool>> filter)
 
 **`AsEnumerable()` materializa toda la consulta** y luego toma el último elemento en memoria. En una tabla con un millón de filas coincidentes, se transfieren **todas**.
 
-> ❗ **Evita `TryLast`/`TryLastAsync` en tablas grandes.** SQL Server no soporta `LAST()`, y la alternativa correcta es invertir la ordenación y tomar el primero:
+> ❗ **Evita `TryGetLast`/`TryGetLastAsync` en tablas grandes.** SQL Server no soporta `LAST()`, y la alternativa correcta es invertir la ordenación y tomar el primero:
 > ```csharp
 > // ✅ Solo trae una fila
 > var ultimo = await repo.TryGetDataPaginationAsync(
 >                             new PageRequest(1, 1),
->                             OrderBy.Descending,
+>                             SortDirection.Descending,
 >                             x => x.FechaEntrada,
 >                             x => x.Bodega == "X",
 >                             ct)
@@ -605,7 +605,7 @@ public T LastOrDefault(Expression<Func<T, bool>> filter)
 ### 5. ❗ En la capa OOP de paginación, el `ORDER BY` se aplica **después** de `Skip`/`Take`
 
 ```csharp
-// EFRepoReaderPagination (capa OOP interna)
+// ThrowingEfPagedReadRepository (capa OOP interna)
 public IEnumerable<T> GetDataOrderby<TKey>(int pageNumber, int pageSize,
                                            Expression<Func<T, TKey>> orderBy, …)
     => GetInternalData(pageNumber, pageSize, filter)   // ya aplicó Skip().Take()
@@ -615,7 +615,7 @@ public IEnumerable<T> GetDataOrderby<TKey>(int pageNumber, int pageSize,
 
 Esto **ordena solo las filas de la página**, no el conjunto completo: el contenido de cada página es esencialmente arbitrario.
 
-> ✅ **La capa funcional lo hace bien**: `EFRepoReaderPaginationFp.TryGetInternalData` ordena antes de paginar.
+> ✅ **La capa funcional lo hace bien**: `EfPagedReadRepository.TryQueryPage` ordena antes de paginar.
 > ```csharp
 > .Where(filter)
 > .PrivateOrderBy(orderBy, orderByField)   // ✅ primero ordena
@@ -627,7 +627,7 @@ Esto **ordena solo las filas de la página**, no el conjunto completo: el conten
 ### 6. ❗ El `TotalCount` es incoherente entre la versión síncrona y la asíncrona
 
 ```csharp
-// TryGetInternalData (SÍNCRONO)
+// TryQueryPage (SÍNCRONO)
 .TryMap(items => new { Count = GetContext().Set<T>().Count(),               // ⚠️ SIN filtro
                        Items = items })
 
@@ -646,7 +646,7 @@ Esto **ordena solo las filas de la página**, no el conjunto completo: el conten
 > ⚠️ **Y en la versión asíncrona hay un riesgo complementario**: `Where(filter!)` usa el parámetro `filter`, que **es `null` cuando la llamada viene de `TryAllPaginationAsync`**. Eso produce una `ArgumentNullException` que el `TryMapAsync` convierte en `Fail`. Es decir, **`TryAllPaginationAsync` puede devolver `Fail` al calcular el total**. Si necesitas paginar todo, pasa un filtro trivial:
 > ```csharp
 > // ✅ Evita el null interno
-> await repo.TryGetDataPaginationAsync((1, 25), OrderBy.Ascending, x => x.Id, x => true, ct);
+> await repo.TryGetDataPaginationAsync((1, 25), SortDirection.Ascending, x => x.Id, x => true, ct);
 > ```
 
 ### 7. ⚠️ `TryUpdate(item, pk)` puede provocar un conflicto de seguimiento
@@ -679,17 +679,17 @@ public virtual Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T>
 
 Funciona (devuelve la `Task` sin esperar), pero **es el único método del proyecto con ese estilo**; el resto usa `await` y `EnsureFp.NotNullAsync`.
 
-### 9. ⚠️ `EFRepoReaderPaginationFp` no usa la capa OOP
+### 9. ⚠️ `EfPagedReadRepository` no usa la capa OOP
 
 A diferencia de todos los demás repos funcionales, este **accede al `DbContext` directamente**:
 
 ```csharp
-.TryMap(filter => GetContext().Set<T>()      // ⚠️ directo, sin pasar por IEFRepoReaderPagination
+.TryMap(filter => GetContext().Set<T>()      // ⚠️ directo, sin pasar por IThrowingEfPagedReadRepository
                               .AsNoTracking()
                               …)
 ```
 
-> 💡 **Es en realidad una ventaja**: al no pasar por el motor interno, evita el bug del `OrderBy` tras `Skip` descrito en el punto 5. Pero significa que `EFRepoReaderPagination` (OOP) **queda registrado y sin usar**.
+> 💡 **Es en realidad una ventaja**: al no pasar por el motor interno, evita el bug del `OrderBy` tras `Skip` descrito en el punto 5. Pero significa que `ThrowingEfPagedReadRepository` (OOP) **queda registrado y sin usar**.
 
 ### 10. ⚠️ `IntNonNegative` en `PageRequest` con anotaciones incorrectas
 
@@ -702,7 +702,7 @@ El máximo del rango es **`int.MinValue`**, menor que el mínimo. La anotación 
 
 ### 11. Las clases OOP son `internal`, sus interfaces públicas
 
-Puedes **declarar** una dependencia de `IEFRepoReader<T>` pero no implementarla con las clases del paquete ni heredarlas. En la práctica, **la capa OOP es inaccesible**.
+Puedes **declarar** una dependencia de `IThrowingEfReadRepository<T>` pero no implementarla con las clases del paquete ni heredarlas. En la práctica, **la capa OOP es inaccesible**.
 
 ### 12. `typeName` se calcula por instancia
 
@@ -760,7 +760,7 @@ public class VinosCatasPuntuacion   // PK compuesta
     public decimal  Puntuacion { get; set; }
 }
 
-public class JfCatasDbContext(DbContextOptions<JfCatasDbContext> options) : DbContext(options)
+public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
 {
     public DbSet<Vino>                 Vinos        => Set<Vino>();
     public DbSet<VinosCatasPuntuacion> Puntuaciones => Set<VinosCatasPuntuacion>();
@@ -776,11 +776,11 @@ public class JfCatasDbContext(DbContextOptions<JfCatasDbContext> options) : DbCo
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<JfCatasDbContext>(o => o.UseSqlServer(cs));
+builder.Services.AddDbContext<TestDbContext>(o => o.UseSqlServer(cs));
 
 // 🔑 Scoped, y ANTES de registrar los repos concretos
-builder.Services.AddScopedOOFPRepos<Vino,                 JfCatasDbContext>();
-builder.Services.AddScopedOOFPRepos<VinosCatasPuntuacion, JfCatasDbContext>();
+builder.Services.AddOofpRepositories<Vino,                 TestDbContext>();
+builder.Services.AddOofpRepositories<VinosCatasPuntuacion, TestDbContext>();
 
 // Repos concretos propios (opcional)
 builder.Services.AddScoped<IVinosRepo, VinosRepo>();
@@ -789,10 +789,10 @@ builder.Services.AddScoped<IVinosRepo, VinosRepo>();
 ### Ejemplo 2 — Repositorio propio con interfaz específica
 
 ```csharp
-public interface IVinosRepo : IEFRepoPaginationFp<Vino> { }
+public interface IVinosRepo : IEfPagedRepository<Vino> { }
 
-public class VinosRepo(JfCatasDbContext db)
-    : EFRepoPaginationFp<Vino, JfCatasDbContext>(db), IVinosRepo { }
+public class VinosRepo(TestDbContext db)
+    : EfPagedRepository<Vino, TestDbContext>(db), IVinosRepo { }
 ```
 
 > 💡 **Este es el patrón recomendado**: una interfaz por entidad, para que la inyección sea explícita y puedas añadir métodos propios más adelante.
@@ -800,7 +800,7 @@ public class VinosRepo(JfCatasDbContext db)
 ### Ejemplo 3 — Consulta con PK simple y compuesta
 
 ```csharp
-public class ConsultasService(IVinosRepo _vinos, IEFRepoReaderFp<VinosCatasPuntuacion> _puntos)
+public class ConsultasService(IVinosRepo _vinos, IEfReadRepository<VinosCatasPuntuacion> _puntos)
 {
     public Task<MlResult<Vino>> BuscarVinoAsync(int id, CancellationToken ct)
         => _vinos.TryFindAsync($"No existe el vino con id {id}", ct, id);
@@ -828,7 +828,7 @@ public Task<MlResult<PagedResult<Vino>>> PaginaAsync(
         int pagina, int tamanyo, string? bodega, CancellationToken ct)
     => _vinos.TryGetDataPaginationAsync(
                  paginationInfo: (pagina, tamanyo),                       // 🔑 tupla implícita
-                 orderBy:        OrderBy.Descending,
+                 orderBy:        SortDirection.Descending,
                  orderByField:   x => x.FechaEntrada,                     // 🔑 SIEMPRE ordena
                  filter:         x => bodega == null || x.Bodega == bodega,  // 🔑 nunca null
                  ct:             ct);
@@ -879,10 +879,10 @@ public async Task<MlResult<Vino>> CrearConPuntuacionAsync(
 
 ```csharp
 // ❌ MAL: Singleton con un DbContext Scoped → captive dependency
-services.AddSingletonOOFPRepos<Vino, JfCatasDbContext>();
+services.AddOofpRepositoriesSingleton<Vino, TestDbContext>();
 
 // ✅ BIEN
-services.AddScopedOOFPRepos<Vino, JfCatasDbContext>();
+services.AddOofpRepositories<Vino, TestDbContext>();
 ```
 
 **Liberación del repositorio:**
@@ -902,17 +902,17 @@ var repoInyectado = provider.GetRequiredService<IVinosRepo>();
 await repo.TryAllPaginationAsync((1, 20), ct: ct);
 
 // ✅ BIEN: ordena y filtra explícitamente
-await repo.TryGetDataPaginationAsync((1, 20), OrderBy.Ascending, x => x.Id, x => true, ct);
+await repo.TryGetDataPaginationAsync((1, 20), SortDirection.Ascending, x => x.Id, x => true, ct);
 ```
 
 **Obtener el último registro:**
 
 ```csharp
-// ❌ MAL: TryLast en una tabla grande → trae todas las filas a memoria
-await repo.TryLastAsync(x => x.Bodega == "Rioja", ct);
+// ❌ MAL: TryGetLast en una tabla grande → trae todas las filas a memoria
+await repo.TryGetLastAsync(x => x.Bodega == "Rioja", ct);
 
 // ✅ BIEN: ordenar descendente y tomar el primero (una sola fila)
-await repo.TryGetDataPaginationAsync((1, 1), OrderBy.Descending, x => x.FechaEntrada,
+await repo.TryGetDataPaginationAsync((1, 1), SortDirection.Descending, x => x.FechaEntrada,
                                      x => x.Bodega == "Rioja", ct)
           .MapAsync(p => p.Items.First());
 ```
@@ -921,11 +921,11 @@ await repo.TryGetDataPaginationAsync((1, 1), OrderBy.Descending, x => x.FechaEnt
 
 ```csharp
 // ❌ MAL: la versión síncrona cuenta TODA la tabla, ignorando el filtro
-var paginaMal = repo.TryGetDataPagination((1, 20), OrderBy.Ascending, x => x.Id,
+var paginaMal = repo.TryGetDataPagination((1, 20), SortDirection.Ascending, x => x.Id,
                                           x => x.Anyo == 2020);
 
 // ✅ BIEN: la asíncrona sí aplica el filtro al total
-var paginaBien = await repo.TryGetDataPaginationAsync((1, 20), OrderBy.Ascending, x => x.Id,
+var paginaBien = await repo.TryGetDataPaginationAsync((1, 20), SortDirection.Ascending, x => x.Id,
                                                       x => x.Anyo == 2020, ct);
 ```
 
@@ -956,10 +956,10 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 
 | Necesito… | Uso |
 |---|---|
-| CRUD completo de una entidad | `IEFRepoFp<T>` |
-| CRUD + paginación | `IEFRepoPaginationFp<T>` ✅ el más completo |
-| Solo consultas | `IEFRepoReaderFp<T>` |
-| Solo consultas + paginación | `IEFRepoReaderPaginationFp<T>` |
+| CRUD completo de una entidad | `IEfRepository<T>` |
+| CRUD + paginación | `IEfPagedRepository<T>` ✅ el más completo |
+| Solo consultas | `IEfReadRepository<T>` |
+| Solo consultas + paginación | `IEfPagedReadRepository<T>` |
 | Buscar por PK con mensaje propio | `TryFindAsync("mensaje", ct, pk)` |
 | Buscar por condición | `TryFirstAsync(x => …, ct)` |
 | Listar todo | `TryAllAsync(ct)` (usa `AsNoTracking`) |
@@ -967,25 +967,25 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 | Página de resultados | `TryGetDataPaginationAsync(…)` ✅ con `orderByField` y `filter` |
 | Insertar varios de golpe | `TryAddRangeAsync(items, ct)` |
 | Borrar comprobando existencia | `TryRemoveAsync("mensaje", ct, pk)` |
-| El último registro | ❌ **No uses `TryLast`**: ordena descendente y toma el primero |
+| El último registro | ❌ **No uses `TryGetLast`**: ordena descendente y toma el primero |
 | Atomicidad entre operaciones | Transacción manual con `GetContext().Database.BeginTransaction()` |
 | `Include`, proyecciones, agregados | ❌ No disponible: baja a `GetContext()` |
-| Registrar en DI | `AddScopedOOFPRepos<T, TContext>()` ✅ |
+| Registrar en DI | `AddOofpRepositories<T, TContext>()` ✅ |
 
 ---
 
 ## Mejores prácticas
 
-1. **Registra siempre con `AddScopedOOFPRepos`**, que coincide con el ciclo de vida de `AddDbContext`. Evita `Singleton`.
+1. **Registra siempre con `AddOofpRepositories`**, que coincide con el ciclo de vida de `AddDbContext`. Evita `Singleton`.
 2. **Llama a `Add…OOFPRepos` al principio** de la configuración de servicios, antes de cualquier registro que dependa de repositorios.
 3. **Nunca llames a `Dispose()`** sobre un repositorio ni lo envuelvas en `using`: liberaría el `DbContext` compartido.
 4. **Usa siempre las versiones asíncronas** en aplicaciones web, y en paginación además por el problema del `TotalCount`.
 5. **Al paginar, pasa siempre `orderByField` y un `filter` no nulo.**
-6. **Evita `TryLast`/`TryLastAsync`**: materializa toda la consulta. Ordena descendente y toma el primero.
+6. **Evita `TryGetLast`/`TryGetLastAsync`**: materializa toda la consulta. Ordena descendente y toma el primero.
 7. **Para modificar, recupera y actualiza la misma instancia** (`TryFind` → modificar → `TryUpdate(v)` sin `pk`).
 8. **Personaliza los `MlErrorDetails`** si el mensaje va a llegar al usuario: los de serie están en inglés e incluyen el nombre del tipo.
-9. **Segrega las interfaces**: inyecta `IEFRepoReaderFp<T>` donde solo consultes.
-10. **Declara una interfaz por entidad** (`IVinosRepo : IEFRepoPaginationFp<Vino>`) para poder ampliarla sin romper llamadas.
+9. **Segrega las interfaces**: inyecta `IEfReadRepository<T>` donde solo consultes.
+10. **Declara una interfaz por entidad** (`IVinosRepo : IEfPagedRepository<Vino>`) para poder ampliarla sin romper llamadas.
 11. **Si necesitas atomicidad, usa una transacción explícita** con `GetContext().Database.BeginTransaction()`.
 12. **Para `Include`, proyecciones o agregados, baja a `GetContext()`**: la API no los cubre y forzarla es peor que usar EF Core directamente.
 13. **Combina con [`Validation`](../MoralesLarios.OOFP.Validation/README.md)** para validar la entidad antes de persistirla, y con [`Extensions.Loggers`](../MoralesLarios.OOFP.Logging/README.md) para trazar.
@@ -997,12 +997,12 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 
 - Repositorios genéricos sobre **EF Core 8** que devuelven `MlResult<T>`: el "no encontrado" es un `Fail` con mensaje personalizable, no una excepción, y los argumentos se validan con `EnsureFp` antes de tocar la base de datos.
 - **Dos capas paralelas**: la funcional (`*Fp`, pública, `MlResult`) envuelve a la OOP (`internal`, devuelve `T`). **Usa solo la funcional**; la OOP es inaccesible desde fuera.
-- **Ocho repositorios componibles** por entidad, desde `IEFRepoAdderFp<T>` hasta `IEFRepoPaginationFp<T>`. Todos los métodos son `virtual`: puedes heredar y sobrescribir.
-- Registro: `AddScopedOOFPRepos<T, TContext>()` ✅ registra las 16 interfaces de una entidad. ⚠️ **Evita la variante `Singleton`** (captive dependency con el `DbContext`).
+- **Ocho repositorios componibles** por entidad, desde `IEfCreateRepository<T>` hasta `IEfPagedRepository<T>`. Todos los métodos son `virtual`: puedes heredar y sobrescribir.
+- Registro: `AddOofpRepositories<T, TContext>()` ✅ registra las 16 interfaces de una entidad. ⚠️ **Evita la variante `Singleton`** (captive dependency con el `DbContext`).
 - ❗ **El punto más delicado**: los repos resuelven sus colaboradores con un **localizador de servicios estático que llama a `BuildServiceProvider()` en cada acceso**. Implica coste, providers sin liberar y que el `DbContext` interno pueda no ser el del ámbito actual.
 - ❗ **`Dispose` libera el `DbContext` inyectado**: nunca dispongas un repositorio a mano.
 - ❗ **Sin unidad de trabajo**: cada operación hace su propio `SaveChanges`. Para atomicidad, transacción explícita con `GetContext().Database.BeginTransaction()`.
-- ⚠️ **Tres trampas concretas**: `TryLast` materializa toda la consulta; el `TotalCount` de la paginación **síncrona** ignora el filtro; y `TryUpdate(item, pk)` puede provocar conflicto de seguimiento.
+- ⚠️ **Tres trampas concretas**: `TryGetLast` materializa toda la consulta; el `TotalCount` de la paginación **síncrona** ignora el filtro; y `TryUpdate(item, pk)` puede provocar conflicto de seguimiento.
 - ⚠️ **No cubre** `Include`, proyecciones, agregados, `ThenBy`, SQL crudo ni operaciones por lotes: para eso, `GetContext()`.
 
 ---

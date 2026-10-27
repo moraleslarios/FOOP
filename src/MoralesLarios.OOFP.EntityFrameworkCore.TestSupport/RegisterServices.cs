@@ -21,13 +21,13 @@ public static class RegisterServices
         }
 
         // Configure SQLite Database
-        services.AddDbContext<JfCatasDbContext>(options =>
+        services.AddDbContext<TestDbContext>(options =>
             options.UseSqlite(connectionString));
 
-        services.AddTransientOOFPRepos<Vino, JfCatasDbContext>();
-        services.AddTransientOOFPRepos<Cata                , JfCatasDbContext>();
-        services.AddTransientOOFPRepos<VinosCata, JfCatasDbContext>();
-        services.AddTransientOOFPRepos<VinosCatasPuntuacion, JfCatasDbContext>();
+        services.AddOofpRepositoriesTransient<Vino, TestDbContext>();
+        services.AddOofpRepositoriesTransient<Cata                , TestDbContext>();
+        services.AddOofpRepositoriesTransient<VinosCata, TestDbContext>();
+        services.AddOofpRepositoriesTransient<VinosCatasPuntuacion, TestDbContext>();
 
         // Register specific repository implementations
         services.AddTransient<IVinosRepo, VinosRepo>();

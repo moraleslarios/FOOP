@@ -6,7 +6,7 @@ using MoralesLarios.OOFP.Application.Helpers;
 
 namespace MoralesLarios.OOFP.Application.Services;
 
-public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _repo,
+public class GenServiceFp<TEntity, TDto>(IEfRepository<TEntity>                   _repo,
                                          ILogger<GenServiceFp<TEntity, TDto>> _logger) : IGenServiceFp<TEntity, TDto>
     where TEntity  : class
     where TDto     : class
@@ -47,7 +47,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TDto).Name} table by Id ({pk.GetPkValues()})")
                             .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                     token               : ct,
-                                                                    pk                  : pk))
+                                                                    keyValues                  : pk))
                             .MapAsync (vinoBd => vinoBd?.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
@@ -103,12 +103,12 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
                             .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                       token               : ct,
-                                                                      pk                  : pk))
+                                                                      keyValues                  : pk))
                             .TryMapAsync( _     => dto.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryUpdateAsync(item                : bdData,
                                                                         notFoundErrorDetails: notFoundErrorDetails,
                                                                         token               : ct,
-                                                                        pk                  : pk))
+                                                                        keyValues                  : pk))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was updated successfully in the table corresponding to dto {typeof(TDto).Name}" : validMessageBuilder(x),
@@ -155,7 +155,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
                             .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                       token               : ct,
-                                                                      pk                  : pk))
+                                                                      keyValues                  : pk))
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
@@ -183,9 +183,9 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
 
 
 
-    //private MlErrorDetails BuildNotFoundPkError(string tableName, params object[] pk)
-    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({pk.GetPkValues()})",
-    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({pk.GetPkValues()})" });
+    //private MlErrorDetails BuildNotFoundPkError(string tableName, params object[] keyValues)
+    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})",
+    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})" });
 }
 
 
@@ -201,7 +201,7 @@ public class GenServiceFp<TEntity, TDto>(IEFRepoFp<TEntity>                   _r
 
 
 
-public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>                                  _repo,
+public class GenServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity>                                  _repo,
                                                         ILogger<GenServiceFp<TEntity, TRequest, TResponse>> _logger) : IGenServiceFp<TEntity, TRequest, TResponse>
     where TEntity   : class
     where TRequest  : class
@@ -247,7 +247,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying data from the {typeof(TResponse).Name} table by Id ({pk.GetPkValues()})")
                             .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                     token               : ct,
-                                                                    pk                  : pk))
+                                                                    keyValues                  : pk))
                             .MapAsync (vinoBd => vinoBd?.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
@@ -303,12 +303,12 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
                             .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                       token               : ct,
-                                                                      pk                  : pk))
+                                                                      keyValues                  : pk))
                             .TryMapAsync( _     => dtoRequest.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryUpdateAsync(item                : bdData,
                                                                         notFoundErrorDetails: notFoundErrorDetails,
                                                                         token               : ct,
-                                                                        pk                  : pk))
+                                                                        keyValues                  : pk))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => validMessageBuilder is null ? $"The record was updated successfully in the table corresponding to {DtosDescType}" : validMessageBuilder(x),
@@ -355,7 +355,7 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
                             .BindAsync  ( _     => EnsureFp.That(pk, pk is not null && pk.Any(), $"{nameof(pk)} can't be null or empty"))
                             .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                       token               : ct,
-                                                                      pk                  : pk))
+                                                                      keyValues                  : pk))
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
@@ -383,9 +383,9 @@ public class GenServiceFp<TEntity, TRequest, TResponse>(IEFRepoFp<TEntity>      
 
 
 
-    //private MlErrorDetails BuildNotFoundPkError(string tableName, params object[] pk)
-    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({pk.GetPkValues()})",
-    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({pk.GetPkValues()})" });
+    //private MlErrorDetails BuildNotFoundPkError(string tableName, params object[] keyValues)
+    //    => MlErrorDetails.FromErrorMessageDetails($"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})",
+    //                                               new Dictionary<string, object>() { ["NotFound"] = $"No data found for the {tableName} table by Id ({keyValues.GetPkValues()})" });
 
 
     private string DtosDescType => $"dto Request {typeof(TRequest).Name} to dto Response {typeof(TResponse).Name}";

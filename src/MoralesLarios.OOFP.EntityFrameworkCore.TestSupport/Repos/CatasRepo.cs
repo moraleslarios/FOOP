@@ -4,6 +4,6 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Repos;
 
-public class CatasRepo(JfCatasDbContext dbContext) : EFRepoFp<Cata, JfCatasDbContext>(dbContext), ICatasRepo
+public class CatasRepo(TestDbContext dbContext) : EfCrudRepository<Cata, TestDbContext>(dbContext), ICatasRepo
 {
 }

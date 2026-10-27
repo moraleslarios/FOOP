@@ -162,7 +162,7 @@ El proyecto ofrece **tres niveles de abstracción**. Elige el más alto que te s
 ```text
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │ Nivel 3 — GenComplexClientFp<TDto> / <TRequest, TResponse>                    │
-│   CRUD con CLAVE COMPUESTA. Recibe params object[] pk, lo formatea a          │
+│   CRUD con CLAVE COMPUESTA. Recibe params object[] keyValues, lo formatea a          │
 │   "v1,v2,v3" y delega en el nivel 2.                                          │
 └───────────────────────────────┬───────────────────────────────────────────────┘
                                 │  IGenClientFp<TDto>
@@ -406,7 +406,7 @@ public class PruebasClient(ILogger<GenClientFp<PruebasDto>> logger,
 ## `GenComplexClientFp<TDto>` — cliente CRUD de clave compuesta
 
 Cuando la entidad tiene **clave primaria compuesta** (por ejemplo `(int Id, DateTime Fecha)`), no puedes
-pasar un solo `idStr`. `GenComplexClientFp<TDto>` resuelve eso: recibe `params object[] pk`, lo convierte
+pasar un solo `idStr`. `GenComplexClientFp<TDto>` resuelve eso: recibe `params object[] keyValues`, lo convierte
 en una cadena `"v1,v2"` con formato estable y delega en un `IGenClientFp<TDto>` inyectado.
 
 ```csharp
@@ -428,17 +428,17 @@ public class GenComplexClientFp<TRequest, TResponse>(
 ```csharp
 Task<MlResult<IEnumerable<TDto>>> GetAllAsync   (Dictionary<string,string> headers = null!, CancellationToken ct = default);
 
-Task<MlResult<TDto>>  GetByIdAsync   (Dictionary<string,string> headers = null!, CancellationToken ct = default, params object[] pk);
+Task<MlResult<TDto>>  GetByIdAsync   (Dictionary<string,string> headers = null!, CancellationToken ct = default, params object[] keyValues);
 Task<MlResult<TDto>>  GetByIdAsync   (object[] pk, Dictionary<string,string> headers = null!, CancellationToken ct = default);
 
 Task<MlResult<TDto>>  PostAsync      (TDto itemBody, Dictionary<string,string> headers = null!, CancellationToken ct = default);
 Task<MlResult<Empty>> PutAsync       (TDto itemBody, Dictionary<string,string> headers = null!, CancellationToken ct = default);
 
-Task<MlResult<Empty>> PutByIdAsync   (TDto itemBody, Dictionary<string,string> headers = null!, CancellationToken ct = default, params object[] pk);
+Task<MlResult<Empty>> PutByIdAsync   (TDto itemBody, Dictionary<string,string> headers = null!, CancellationToken ct = default, params object[] keyValues);
 Task<MlResult<Empty>> PutByIdAsync   (object[] pk, TDto itemBody, Dictionary<string,string> headers = null!, CancellationToken ct = default);
 
 Task<MlResult<Empty>> DeleteAsync    (TDto itemBody, Dictionary<string,string> headers = null!, CancellationToken ct = default);
-Task<MlResult<Empty>> DeleteByIdAsync(Dictionary<string,string> headers = null!, CancellationToken ct = default, params object[] pk);
+Task<MlResult<Empty>> DeleteByIdAsync(Dictionary<string,string> headers = null!, CancellationToken ct = default, params object[] keyValues);
 Task<MlResult<Empty>> DeleteByIdAsync(object[] pk, Dictionary<string,string> headers = null!, CancellationToken ct = default);
 ```
 
@@ -446,7 +446,7 @@ Cada operación "por id" viene **duplicada** con dos formas de pasar la clave:
 
 | Forma | Firma | Cuándo usarla |
 |---|---|---|
-| `params` al final | `GetByIdAsync(headers, ct, params object[] pk)` | Cuando ya vas a especificar cabeceras y token: `GetByIdAsync(null!, ct, 42, fecha)`. |
+| `params` al final | `GetByIdAsync(headers, ct, params object[] keyValues)` | Cuando ya vas a especificar cabeceras y token: `GetByIdAsync(null!, ct, 42, fecha)`. |
 | Array al principio | `GetByIdAsync(object[] pk, headers, ct)` | **La más legible** y la que evita ambigüedades: `GetByIdAsync([42, fecha])`. |
 
 > 💡 **Recomendación:** usa siempre la sobrecarga que recibe el `object[]` en primera posición. La variante
