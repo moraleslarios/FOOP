@@ -66,7 +66,7 @@ RegistrarUsuario(email, nombre, edad);   // ❌ error de compilación
 
 | Dependencia | Para qué |
 |---|---|
-| [`MoralesLarios.OOFP`](../MoralesLarios.FOOP/README.md) (núcleo) | `MlResult<T>`, `MlErrorsDetails`, [`EnsureFp`](../MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md), `Bind`, `Map` |
+| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) (núcleo) | `MlResult<T>`, `MlErrorsDetails`, [`EnsureFp`](../docs/EnsureFp/EnsureFp.md), `Bind`, `Map` |
 | `System.Text.RegularExpressions` | Usado por `RegexValue` y sus derivados |
 
 ```csharp
@@ -272,7 +272,7 @@ public static MlResult<Mail> ByString(string value, MlErrorsDetails errorsDetail
                      .Map (_ => new Mail(value));
 ```
 
-> 💡 Fíjate en el `Bind` del segundo caso: si el texto viene vacío, **el error es "cannot be null or empty"**, no "is not a valid mail". El cortocircuito de [`Bind`](../MoralesLarios.FOOP/__Doc/Bind/3_Bind.md) hace que el mensaje sea siempre el de la primera regla incumplida, que es el más informativo.
+> 💡 Fíjate en el `Bind` del segundo caso: si el texto viene vacío, **el error es "cannot be null or empty"**, no "is not a valid mail". El cortocircuito de [`Bind`](../docs/Bind/3_Bind.md) hace que el mensaje sea siempre el de la primera regla incumplida, que es el más informativo.
 
 ---
 
@@ -668,7 +668,7 @@ var estado = EnsureFp.That(texto, Enum.TryParse<EstadoPedido>(texto, true, out _
 - **Conversiones implícitas** hacia el primitivo (siempre seguras) y desde el primitivo o desde tuplas (pueden lanzar).
 - ⚠️ **Puntos a vigilar**: la condición invertida de `DecimalNotNegative`/`DoubleNotNegative`, los máximos exclusivos, el `limit` público mutable de `IntNotNegative`, los mensajes en inglés y `RangeEnumValueObject` (comentado, inexistente).
 
-Esta librería es la base de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObjects.IO/README.md) (rutas y ficheros), aporta `IntNotNegative` a [`Internals`](../MoralesLarios.OOFP.Internals/README.md) (paginación) y se combina de forma natural con [`Validation`](../MoralesLarios.OOFP.Validation/README.md).
+Esta librería es la base de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) (rutas y ficheros), aporta `IntNotNegative` a [`Internals`](../MoralesLarios.OOFP.Shared/README.md) (paginación) y se combina de forma natural con [`Validation`](../MoralesLarios.OOFP.Validation/README.md).
 
 ---
 
@@ -677,22 +677,22 @@ Esta librería es la base de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObje
 ### Navegación general
 
 - [README de la solución completa](../README.md)
-- [README del núcleo `MoralesLarios.OOFP`](../MoralesLarios.FOOP/README.md)
-- [Introducción general al núcleo funcional](../MoralesLarios.FOOP/__Doc/1_Intro.md)
+- [README del núcleo `MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md)
+- [Introducción general al núcleo funcional](../docs/1_Intro.md)
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.ValueObjects.IO`](../MoralesLarios.OOFP.ValueObjects.IO/README.md) — value objects de rutas y ficheros (`MlFile`, `MlDirectory`)
+- [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) — value objects de rutas y ficheros (`MlFile`, `MlDirectory`)
 - [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validación funcional con `MlValidableFp<T>`
-- [`MoralesLarios.OOFP.Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.Dataannotations/README.md) — validación por atributos
-- [`MoralesLarios.OOFP.Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidations/README.md) — integración con FluentValidation
-- [`MoralesLarios.OOFP.Internals`](../MoralesLarios.OOFP.Internals/README.md) — usa `IntNotNegative` en la paginación
+- [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — validación por atributos
+- [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — integración con FluentValidation
+- [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — usa `IntNotNegative` en la paginación
 
 ### Documentación del núcleo útil aquí
 
-- [`MlResult<T>` — el contenedor de éxito/error](../MoralesLarios.FOOP/__Doc/Types/MlResult.md)
-- [`MlErrorsDetails` — errores y detalles](../MoralesLarios.FOOP/__Doc/Types/MlResultErrors.md)
-- [`EnsureFp` — el motor de validación que usan todos los `By…`](../MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md)
-- [`Bind` — encadenar validaciones dependientes](../MoralesLarios.FOOP/__Doc/Bind/3_Bind.md)
-- [`Map` — construir el objeto final](../MoralesLarios.FOOP/__Doc/Map/1_Map.md)
-- [`Match` — salir del mundo `MlResult`](../MoralesLarios.FOOP/__Doc/Match/1_Match.md)
+- [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
+- [`MlErrorsDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
+- [`EnsureFp` — el motor de validación que usan todos los `By…`](../docs/EnsureFp/EnsureFp.md)
+- [`Bind` — encadenar validaciones dependientes](../docs/Bind/3_Bind.md)
+- [`Map` — construir el objeto final](../docs/Map/1_Map.md)
+- [`Match` — salir del mundo `MlResult`](../docs/Match/1_Match.md)

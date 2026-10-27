@@ -1,0 +1,20 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.Http.Tests.Integration.Data;
+
+public class Pruebas
+{
+    public long Id { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string Nombre { get; set; } = string.Empty;
+
+    [MaxLength(2000)]
+    public string Comentarios { get; set; } = string.Empty;
+
+
+}
+

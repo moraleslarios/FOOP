@@ -1,0 +1,41 @@
+﻿Lote;Nivel;Tipo;Proyecto;Contenedor;Antes;Despues;Puentes;Referencias;Nota
+fase1-nivel0;0;Solucion;-;;MoralesLarios.FOOP/MoralesLarios.FOOP.sln;(eliminada);0;;Solucion duplicada
+fase1-nivel0;0;Solucion;-;;MoralesLarios.OOFP - copia.sln;(eliminada);0;;Copia obsoleta de la solucion
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP (carpeta MoralesLarios.FOOP);MoralesLarios.OOFP.Core;0;;Paquete/assembly. El namespace raiz MoralesLarios.OOFP NO cambia (RootNamespace explicito)
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.Internals;MoralesLarios.OOFP.Shared (fusionado);0;;Shared ya existia: Info/*.cs, GlobalUsings y README pasan a Shared
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.Utilities;MoralesLarios.OOFP.Configuration;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.IO;MoralesLarios.OOFP.FileSystem;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.Validation.Dataannotations;MoralesLarios.OOFP.Validation.DataAnnotations;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.Validation.FluentValidations;MoralesLarios.OOFP.Validation.FluentValidation;0;;Referencias a FluentValidation.Results cualificadas con global:: (colision con el namespace propio)
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.WebApi;MoralesLarios.OOFP.AspNetCore.Results;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.WebControllers;MoralesLarios.OOFP.AspNetCore.Controllers;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.WebControllers.Cache;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.WebServices;MoralesLarios.OOFP.Application;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.HttpClients;MoralesLarios.OOFP.Http;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.EFCore;MoralesLarios.OOFP.EntityFrameworkCore;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.Extensions.Loggers;MoralesLarios.OOFP.Logging;0;;
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.ValueObjects.IO;MoralesLarios.OOFP.ValueObjects.FileSystem;0;;Derivado (coherencia con FileSystem)
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.EFCore.WebApi;MoralesLarios.OOFP.EntityFrameworkCore.Sample;0;;Derivado: es una aplicacion de ejemplo
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.Unit.Tests;MoralesLarios.OOFP.Core.Tests.Unit;0;;
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.EFCore.Infrastructure.Tests;MoralesLarios.OOFP.EntityFrameworkCore.TestSupport;0;;No contiene tests: es soporte
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.EFCore.Integration.Tests;MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration;0;;Derivado
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.ValueObjects.IO.Test.Unit;MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit;0;;
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.ValueObjects.IO.2.Tests.Unit;(eliminado);0;;Fuera del .sln, no compilaba y no tenia tests: no habia nada que fusionar
+fase1-nivel0;0;Proyecto;-;;MoralesLarios.OOFP.Extensions.Loggers.Console.Tests;MoralesLarios.OOFP.Logging.Sample;0;;Es una app de consola, no un proyecto de tests
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.Utilities.Tests.Unit;MoralesLarios.OOFP.Configuration.Tests.Unit;0;;Derivado
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit;MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit;0;;Derivado
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit;MoralesLarios.OOFP.Validation.FluentValidation.Tests.Unit;0;;Derivado
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.WebApi.Tests.Unit;MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit;0;;Derivado
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.WebServices.Tests.Unit;MoralesLarios.OOFP.Application.Tests.Unit;0;;Derivado
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.HttpClients.Tests.Unit;MoralesLarios.OOFP.Http.Tests.Unit;0;;Derivado
+fase1-nivel0;0;Proyecto test;-;;MoralesLarios.OOFP.HttpClients.Tests.Integration;MoralesLarios.OOFP.Http.Tests.Integration;0;;Derivado
+fase1-nivel0;0;Carpeta;Core;;MoralesLarios.FOOP/__Doc/;docs/;0;;Documentacion del nucleo en src/docs
+fase1-nivel0;0;Carpeta;Core;;__Doc/Bucle/;docs/loops/;0;;
+fase1-nivel0;0;Carpeta;Core;;__Doc/Types/;docs/core-types/;0;;
+fase1-nivel0;0;Fichero;Core;;__Doc/PendingTasks.txt;Temas Pendientes/PendingTasks-legacy.md;0;;Pendiente de convertir en issues de GitHub
+fase1-nivel0;0;Carpeta;EntityFrameworkCore;;EFCore/OopRepos/;EntityFrameworkCore/Repositories.Imperative/;0;;Namespace ...EFCore.OopRepos -> ...EntityFrameworkCore.Repositories.Imperative
+fase1-nivel0;0;Carpeta;EntityFrameworkCore;;EFCore/Repos/;EntityFrameworkCore/Repositories/;0;;Namespace ...EFCore.Repos -> ...EntityFrameworkCore.Repositories
+fase1-nivel0;0;Carpeta;Http;;HttpClients/ParamsInfo/;Http/Requests/;0;;Namespace ...HttpClients.ParamsInfo -> ...Http.Requests
+fase1-nivel0;0;Carpeta;Shared;;Internals/Info/;Shared/Pagination/;0;;Namespace ...Internals.Info -> ...Shared.Pagination
+fase1-nivel0;0;Fichero;Application;;WebServices/Services/GenService.cs;(eliminado);0;;Fichero vacio (0 bytes)
+fase1-nivel0;0;Fichero;EntityFrameworkCore;;EFCore/Helpers/Constants.cs;(eliminado);0;;Clase vacia sin uso

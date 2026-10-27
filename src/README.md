@@ -39,13 +39,13 @@ mismo idioma, con las mismas convenciones de nombres (`Bind*`, `Map*`, `Match*`,
 
 | Si quieres… | Ve a… |
 |---|---|
-| Entender la filosofía y el mapa completo | [`MoralesLarios.FOOP/__Doc/1_Intro.md`](./MoralesLarios.FOOP/__Doc/1_Intro.md) |
-| Aprender el núcleo con ejemplos y patrones | [`MoralesLarios.FOOP/README.md`](./MoralesLarios.FOOP/README.md) |
-| Validar precondiciones al entrar en un método | [`__Doc/EnsureFp/EnsureFp.md`](./MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md) |
-| Encadenar operaciones que devuelven `MlResult` | [`__Doc/Bind/3_Bind.md`](./MoralesLarios.FOOP/__Doc/Bind/3_Bind.md) |
-| Transformar el valor de un resultado válido | [`__Doc/Map/1_Map.md`](./MoralesLarios.FOOP/__Doc/Map/1_Map.md) |
-| Salir del carril y devolver un valor concreto | [`__Doc/Match/1_Match.md`](./MoralesLarios.FOOP/__Doc/Match/1_Match.md) |
-| Ver la referencia archivo a archivo del núcleo | [`__Doc/Types/README.md`](./MoralesLarios.FOOP/__Doc/Types/README.md) |
+| Entender la filosofía y el mapa completo | [`docs/1_Intro.md`](docs/1_Intro.md) |
+| Aprender el núcleo con ejemplos y patrones | [`MoralesLarios.OOFP.Core/README.md`](MoralesLarios.OOFP.Core/README.md) |
+| Validar precondiciones al entrar en un método | [`docs/EnsureFp/EnsureFp.md`](docs/EnsureFp/EnsureFp.md) |
+| Encadenar operaciones que devuelven `MlResult` | [`docs/Bind/3_Bind.md`](docs/Bind/3_Bind.md) |
+| Transformar el valor de un resultado válido | [`docs/Map/1_Map.md`](docs/Map/1_Map.md) |
+| Salir del carril y devolver un valor concreto | [`docs/Match/1_Match.md`](docs/Match/1_Match.md) |
+| Ver la referencia archivo a archivo del núcleo | [`docs/core-types/README.md`](docs/core-types/README.md) |
 | Saber qué hay que arreglar y en qué orden | [`Temas Pendientes/README.md`](./Temas%20Pendientes/README.md) |
 
 ---
@@ -58,8 +58,8 @@ Todos ellos tienen su propio `README.md` con documentación detallada.
 
 | Proyecto | Propósito |
 |---|---|
-| [**MoralesLarios.FOOP**](./MoralesLarios.FOOP/README.md) *(assembly `MoralesLarios.OOFP`)* | Corazón del ecosistema: `MlResult<T>`, `MlErrorsDetails`, `EnsureFp` y las familias de extensiones `Bind`, `Map`, `Match`, `ExecSelf`, `Several`, `Transformations` y `Bucles`. **Es el único proyecto que hay que conocer de verdad.** |
-| [**MoralesLarios.OOFP.Internals**](./MoralesLarios.OOFP.Internals/README.md) | Tipos compartidos de bajo nivel y soporte de paginación. |
+| [**MoralesLarios.FOOP**](MoralesLarios.OOFP.Core/README.md) *(assembly `MoralesLarios.OOFP`)* | Corazón del ecosistema: `MlResult<T>`, `MlErrorsDetails`, `EnsureFp` y las familias de extensiones `Bind`, `Map`, `Match`, `ExecSelf`, `Several`, `Transformations` y `Bucles`. **Es el único proyecto que hay que conocer de verdad.** |
+| [**MoralesLarios.OOFP.Shared**](MoralesLarios.OOFP.Shared/README.md) | Tipos compartidos de bajo nivel y soporte de paginación. |
 | [**MoralesLarios.OOFP.Shared**](./MoralesLarios.OOFP.Shared/README.md) | Constantes compartidas entre proyectos, **sin ninguna dependencia**. Evita que dos capas se pongan de acuerdo mediante literales duplicados. |
 
 ### Dominio, semántica y validación
@@ -67,40 +67,40 @@ Todos ellos tienen su propio `README.md` con documentación detallada.
 | Proyecto | Propósito |
 |---|---|
 | [**MoralesLarios.OOFP.ValueObjects**](./MoralesLarios.OOFP.ValueObjects/README.md) | Value objects tipados y autovalidados que hacen imposibles los estados inválidos. |
-| [**MoralesLarios.OOFP.ValueObjects.IO**](./MoralesLarios.OOFP.ValueObjects.IO/README.md) | Value objects específicos de rutas, ficheros y directorios. |
+| [**MoralesLarios.OOFP.ValueObjects.FileSystem**](MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) | Value objects específicos de rutas, ficheros y directorios. |
 | [**MoralesLarios.OOFP.Validation**](./MoralesLarios.OOFP.Validation/README.md) | Base común de la validación funcional: contratos y extensiones sobre `MlResult<T>`. |
-| [**MoralesLarios.OOFP.Validation.Dataannotations**](./MoralesLarios.OOFP.Validation.Dataannotations/README.md) | Implementación con `System.ComponentModel.DataAnnotations`. |
-| [**MoralesLarios.OOFP.Validation.FluentValidations**](./MoralesLarios.OOFP.Validation.FluentValidations/README.md) | Implementación con FluentValidation, con paridad de características respecto a la anterior. |
+| [**MoralesLarios.OOFP.Validation.DataAnnotations**](./MoralesLarios.OOFP.Validation.DataAnnotations/README.md) | Implementación con `System.ComponentModel.DataAnnotations`. |
+| [**MoralesLarios.OOFP.Validation.FluentValidation**](MoralesLarios.OOFP.Validation.FluentValidation/README.md) | Implementación con FluentValidation, con paridad de características respecto a la anterior. |
 
 ### Infraestructura y utilidades
 
 | Proyecto | Propósito |
 |---|---|
-| [**MoralesLarios.OOFP.IO**](./MoralesLarios.OOFP.IO/README.md) | Operaciones de ficheros y directorios que devuelven `MlResult` en lugar de lanzar excepciones. |
-| [**MoralesLarios.OOFP.Utilities**](./MoralesLarios.OOFP.Utilities/README.md) | Lectura segura de configuración (`IConfiguration`) con resultados explícitos. |
-| [**MoralesLarios.OOFP.Extensions.Loggers**](./MoralesLarios.OOFP.Extensions.Loggers/README.md) | Registro de trazas encadenable sobre `MlResult<T>` sin romper el carril. |
+| [**MoralesLarios.OOFP.FileSystem**](MoralesLarios.OOFP.FileSystem/README.md) | Operaciones de ficheros y directorios que devuelven `MlResult` en lugar de lanzar excepciones. |
+| [**MoralesLarios.OOFP.Configuration**](MoralesLarios.OOFP.Configuration/README.md) | Lectura segura de configuración (`IConfiguration`) con resultados explícitos. |
+| [**MoralesLarios.OOFP.Logging**](MoralesLarios.OOFP.Logging/README.md) | Registro de trazas encadenable sobre `MlResult<T>` sin romper el carril. |
 
 ### Persistencia
 
 | Proyecto | Propósito |
 |---|---|
-| [**MoralesLarios.OOFP.EFCore**](./MoralesLarios.OOFP.EFCore/README.md) | Repositorios genéricos sobre EF Core en dos sabores: funcional (`MlResult`) y orientado a objetos. |
-| [**MoralesLarios.OOFP.EFCore.WebApi**](./MoralesLarios.OOFP.EFCore.WebApi/README.md) | Piezas de integración entre los repositorios EF Core y la capa Web API. |
+| [**MoralesLarios.OOFP.EntityFrameworkCore**](MoralesLarios.OOFP.EntityFrameworkCore/README.md) | Repositorios genéricos sobre EF Core en dos sabores: funcional (`MlResult`) y orientado a objetos. |
+| [**MoralesLarios.OOFP.EntityFrameworkCore.Sample**](MoralesLarios.OOFP.EntityFrameworkCore.Sample/README.md) | Piezas de integración entre los repositorios EF Core y la capa Web API. |
 
 ### Servicios y exposición web
 
 | Proyecto | Propósito |
 |---|---|
-| [**MoralesLarios.OOFP.WebServices**](./MoralesLarios.OOFP.WebServices/README.md) | Servicios de aplicación funcionales: orquestan repositorios y validación devolviendo `MlResult`. |
-| [**MoralesLarios.OOFP.WebApi**](./MoralesLarios.OOFP.WebApi/README.md) | Puente entre `MlResult<T>` e `IActionResult`, con traducción a `ProblemDetails` (RFC 7807) y códigos HTTP correctos. |
-| [**MoralesLarios.OOFP.WebControllers**](./MoralesLarios.OOFP.WebControllers/README.md) | Controladores REST genéricos listos para heredar (CRUD completo). |
-| [**MoralesLarios.OOFP.WebControllers.Cache**](./MoralesLarios.OOFP.WebControllers.Cache/README.md) | Los mismos controladores con caché configurable por controlador. |
+| [**MoralesLarios.OOFP.Application**](MoralesLarios.OOFP.Application/README.md) | Servicios de aplicación funcionales: orquestan repositorios y validación devolviendo `MlResult`. |
+| [**MoralesLarios.OOFP.AspNetCore.Results**](MoralesLarios.OOFP.AspNetCore.Results/README.md) | Puente entre `MlResult<T>` e `IActionResult`, con traducción a `ProblemDetails` (RFC 7807) y códigos HTTP correctos. |
+| [**MoralesLarios.OOFP.AspNetCore.Controllers**](MoralesLarios.OOFP.AspNetCore.Controllers/README.md) | Controladores REST genéricos listos para heredar (CRUD completo). |
+| [**MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching**](MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching/README.md) | Los mismos controladores con caché configurable por controlador. |
 
 ### Consumo HTTP
 
 | Proyecto | Propósito |
 |---|---|
-| [**MoralesLarios.OOFP.HttpClients**](./MoralesLarios.OOFP.HttpClients/README.md) | Clientes HTTP tipados que convierten respuestas y errores de red en `MlResult<T>`. |
+| [**MoralesLarios.OOFP.Http**](MoralesLarios.OOFP.Http/README.md) | Clientes HTTP tipados que convierten respuestas y errores de red en `MlResult<T>`. |
 
 ---
 
@@ -111,20 +111,20 @@ ecosistema y, en la práctica, como documentación ejecutable de cada comportami
 
 | Proyecto | Cubre |
 |---|---|
-| `MoralesLarios.OOFP.Unit.Tests` | El núcleo: `MlResult`, `EnsureFp` y todas las familias de extensiones |
+| `MoralesLarios.OOFP.Core.Tests.Unit` | El núcleo: `MlResult`, `EnsureFp` y todas las familias de extensiones |
 | `MoralesLarios.OOFP.ValueObjects.Tests.Unit` | Value objects |
-| `MoralesLarios.OOFP.ValueObjects.IO.Test.Unit` | Value objects de IO |
-| `MoralesLarios.OOFP.ValueObjects.IO.2.Tests.Unit` | Value objects de IO (segunda batería) |
-| `MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit` | Validación con DataAnnotations |
-| `MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit` | Validación con FluentValidation |
-| `MoralesLarios.OOFP.Utilities.Tests.Unit` | Lectura de configuración |
-| `MoralesLarios.OOFP.WebServices.Tests.Unit` | Servicios de aplicación |
-| `MoralesLarios.OOFP.WebApi.Tests.Unit` | Traducción a `IActionResult` y `ProblemDetails` |
-| `MoralesLarios.OOFP.HttpClients.Tests.Unit` | Clientes HTTP (unitarias) |
-| `MoralesLarios.OOFP.HttpClients.Tests.Integration` | Clientes HTTP (integración) |
-| `MoralesLarios.OOFP.EFCore.Infrastructure.Tests` | Repositorios EF Core sobre base en memoria/archivo |
-| `MoralesLarios.OOFP.EFCore.Integration.Tests` | Repositorios EF Core contra base real |
-| `MoralesLarios.OOFP.Extensions.Loggers.Console.Tests` | Logging funcional |
+| `MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit` | Value objects de IO |
+| `MoralesLarios.OOFP.ValueObjects.FileSystem.2.Tests.Unit` | Value objects de IO (segunda batería) |
+| `MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit` | Validación con DataAnnotations |
+| `MoralesLarios.OOFP.Validation.FluentValidation.Tests.Unit` | Validación con FluentValidation |
+| `MoralesLarios.OOFP.Configuration.Tests.Unit` | Lectura de configuración |
+| `MoralesLarios.OOFP.Application.Tests.Unit` | Servicios de aplicación |
+| `MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit` | Traducción a `IActionResult` y `ProblemDetails` |
+| `MoralesLarios.OOFP.Http.Tests.Unit` | Clientes HTTP (unitarias) |
+| `MoralesLarios.OOFP.Http.Tests.Integration` | Clientes HTTP (integración) |
+| `MoralesLarios.OOFP.EntityFrameworkCore.TestSupport` | Repositorios EF Core sobre base en memoria/archivo |
+| `MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration` | Repositorios EF Core contra base real |
+| `MoralesLarios.OOFP.Logging.Sample` | Logging funcional |
 
 > Estos proyectos de pruebas son, hoy, los únicos
 > proyectos que **todavía no tienen `README.md`** propio (recogido como punto 89 del inventario de mejoras).
@@ -181,17 +181,17 @@ Las ocho familias:
 | **`Nullable<T>`** | `NotNullValue`, `NotNullValueThat` — desenvuelven `T?` a `MlResult<T>` |
 | **Asíncronas** | `ThatAsync`, `TryThatAsync`, `NotNullAsync`, `NotEmptyAsync`, `NotNullValueAsync` |
 
-📚 Documentación completa: [`__Doc/EnsureFp/EnsureFp.md`](./MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md)
+📚 Documentación completa: [`docs/EnsureFp/EnsureFp.md`](docs/EnsureFp/EnsureFp.md)
 (índice) y sus nueve páginas de familia:
-[Núcleo](./MoralesLarios.FOOP/__Doc/EnsureFp/1_EnsureFpCore.md) ·
-[Agregación](./MoralesLarios.FOOP/__Doc/EnsureFp/2_EnsureFpAggregation.md) ·
-[Cadenas](./MoralesLarios.FOOP/__Doc/EnsureFp/3_EnsureFpStrings.md) ·
-[Números](./MoralesLarios.FOOP/__Doc/EnsureFp/4_EnsureFpNumbers.md) ·
-[Colecciones](./MoralesLarios.FOOP/__Doc/EnsureFp/5_EnsureFpCollections.md) ·
-[Tipos](./MoralesLarios.FOOP/__Doc/EnsureFp/6_EnsureFpTypes.md) ·
-[Nullables](./MoralesLarios.FOOP/__Doc/EnsureFp/7_EnsureFpNullables.md) ·
-[Asíncronas](./MoralesLarios.FOOP/__Doc/EnsureFp/8_EnsureFpAsync.md) ·
-[Mensajes](./MoralesLarios.FOOP/__Doc/EnsureFp/9_EnsureFpMessages.md).
+[Núcleo](docs/EnsureFp/1_EnsureFpCore.md) ·
+[Agregación](docs/EnsureFp/2_EnsureFpAggregation.md) ·
+[Cadenas](docs/EnsureFp/3_EnsureFpStrings.md) ·
+[Números](docs/EnsureFp/4_EnsureFpNumbers.md) ·
+[Colecciones](docs/EnsureFp/5_EnsureFpCollections.md) ·
+[Tipos](docs/EnsureFp/6_EnsureFpTypes.md) ·
+[Nullables](docs/EnsureFp/7_EnsureFpNullables.md) ·
+[Asíncronas](docs/EnsureFp/8_EnsureFpAsync.md) ·
+[Mensajes](docs/EnsureFp/9_EnsureFpMessages.md).
 
 ### 📦 Nuevo proyecto `MoralesLarios.OOFP.Shared`
 
@@ -215,8 +215,8 @@ Detalles y reglas de uso en su [README](./MoralesLarios.OOFP.Shared/README.md).
 
 ### 📚 Documentación
 
-El núcleo cuenta con **57 documentos** en `MoralesLarios.FOOP/__Doc/`, organizados por familia
-funcional. El [índice completo](./MoralesLarios.FOOP/__Doc/1_Intro.md#índice-completo-de-la-documentación)
+El núcleo cuenta con **57 documentos** en `docs/`, organizados por familia
+funcional. El [índice completo](docs/1_Intro.md#índice-completo-de-la-documentación)
 los lista todos con una descripción de cada uno.
 
 ---
@@ -230,10 +230,10 @@ Desde esta carpeta (`src/`):
 dotnet build .\MoralesLarios.OOFP.sln
 
 # Ejecutar las pruebas del núcleo
-dotnet test .\MoralesLarios.OOFP.Unit.Tests\MoralesLarios.OOFP.Unit.Tests.csproj
+dotnet test .\MoralesLarios.OOFP.Core.Tests.Unit\MoralesLarios.OOFP.Core.Tests.Unit.csproj
 
 # Ejecutar sólo las pruebas de EnsureFp
-dotnet test .\MoralesLarios.OOFP.Unit.Tests\MoralesLarios.OOFP.Unit.Tests.csproj --filter "FullyQualifiedName~EnsureFp"
+dotnet test .\MoralesLarios.OOFP.Core.Tests.Unit\MoralesLarios.OOFP.Core.Tests.Unit.csproj --filter "FullyQualifiedName~EnsureFp"
 ```
 
 > ⚠️ Los proyectos de **integración** (`*.Integration.Tests`) pueden requerir recursos externos
@@ -273,6 +273,6 @@ profesionalizar la biblioteca. Ninguno de ellos modifica código: son inventario
 ## Ver también
 
 - 📘 [README general del repositorio](../README.md)
-- 📘 [README del núcleo `MoralesLarios.OOFP`](./MoralesLarios.FOOP/README.md)
-- 📘 [Introducción técnica y mapa de la documentación](./MoralesLarios.FOOP/__Doc/1_Intro.md)
+- 📘 [README del núcleo `MoralesLarios.OOFP`](MoralesLarios.OOFP.Core/README.md)
+- 📘 [Introducción técnica y mapa de la documentación](docs/1_Intro.md)
 - 🗂️ [Temas pendientes](./Temas%20Pendientes/README.md)

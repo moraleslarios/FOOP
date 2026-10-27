@@ -743,5 +743,5 @@ Ver también:
   superficie pública, asincronía, observabilidad y hoja de ruta.
 - [`README.md`](README.md) — índice de la carpeta y plan de trabajo por bloques.
 - [`../README.md`](../README.md) — visión general de la solución.
-- [`../MoralesLarios.FOOP/__Doc/1_Intro.md`](../MoralesLarios.FOOP/__Doc/1_Intro.md) —
+- [`../MoralesLarios.FOOP/__Doc/1_Intro.md`](../docs/1_Intro.md) —
   convenciones de nomenclatura **actuales** del núcleo (`[Try][Operación][Contexto][Async]`).

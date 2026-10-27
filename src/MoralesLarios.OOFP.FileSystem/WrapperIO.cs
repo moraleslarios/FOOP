@@ -1,0 +1,34 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+namespace MoralesLarios.OOFP.FileSystem;
+
+public class WrapperIO : IWrapperIO
+{
+
+    public MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr)
+    {
+        var result = ExistDirectory.ByString(directoryStr)
+                                    .Map( _     => Directory.EnumerateFiles(directoryStr))
+                                    .Map( files => files.Select(file => ExistsFile.FromString(file)));
+        return result;
+    }
+
+    public MlResult<string> ReadAllText(string filePathStr)
+    {
+        var result = ExistsFile.ByString(filePathStr)
+                                .Map( _ => File.ReadAllText(filePathStr));
+        return result;
+    }
+
+    public MlResult<IEnumerable<string>> ReadAllLines(string filePathStr)
+    {
+        var result = ExistsFile.ByString(filePathStr)
+                                .Map(_ => File.ReadLines(filePathStr));
+        return result;
+    }
+
+
+}
+

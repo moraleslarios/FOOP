@@ -1,0 +1,21 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Configurations;
+
+public class VinosCatasPuntuacionConfiguration : IEntityTypeConfiguration<VinosCatasPuntuacion>
+{
+    public void Configure(EntityTypeBuilder<VinosCatasPuntuacion> builder)
+    {
+        // Composite primary key
+        builder.HasKey(vcp => new { vcp.IdVino, vcp.IdCata, vcp.IdUsuario });
+
+        // Relationship with Identity User
+
+    }
+}

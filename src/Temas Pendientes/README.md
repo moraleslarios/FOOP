@@ -146,5 +146,5 @@ entienda**: sitio de documentación publicado, ejemplos que compilen en CI, plan
 ## Ver también
 
 - [`../README.md`](../README.md) — visión general de la solución y sus proyectos.
-- [`../MoralesLarios.FOOP/README.md`](../MoralesLarios.FOOP/README.md) — biblioteca núcleo.
-- [`../MoralesLarios.FOOP/__Doc/1_Intro.md`](../MoralesLarios.FOOP/__Doc/1_Intro.md) — documentación funcional completa.
+- [`../MoralesLarios.FOOP/README.md`](../MoralesLarios.OOFP.Core/README.md) — biblioteca núcleo.
+- [`../MoralesLarios.FOOP/__Doc/1_Intro.md`](../docs/1_Intro.md) — documentación funcional completa.

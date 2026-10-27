@@ -1,0 +1,15 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text;
+global using System.Threading.Tasks;
+global using Microsoft.EntityFrameworkCore;
+global using MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Models;
+global using System.ComponentModel.DataAnnotations;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Models.Models;
+global using MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
+global using MoralesLarios.OOFP.Types;
+global using MoralesLarios.OOFP.Helpers;
+global using MoralesLarios.OOFP.Types.Errors;

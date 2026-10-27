@@ -1,6 +1,6 @@
 # MoralesLarios.OOFP.Validation — el contrato de los objetos auto-validables
 
-Proyecto **mínimo y deliberadamente vacío de implementación**: contiene un único tipo, `MlValidableFp<T>`, que define el contrato común *"este objeto sabe validarse a sí mismo y devuelve un [`MlResult<T>`](../MoralesLarios.FOOP/__Doc/Types/MlResult.md)"*.
+Proyecto **mínimo y deliberadamente vacío de implementación**: contiene un único tipo, `MlValidableFp<T>`, que define el contrato común *"este objeto sabe validarse a sí mismo y devuelve un [`MlResult<T>`](../docs/core-types/MlResult.md)"*.
 
 Su valor no está en el código que trae (son cuatro líneas), sino en **unificar la forma de validar en toda la solución**: da igual si por debajo usas `if`s a mano, DataAnnotations o FluentValidation — desde fuera, todo objeto validable se comporta igual y encadena igual.
 
@@ -58,7 +58,7 @@ Además, al ser el objeto quien se valida, **la regla vive junto al dato**: no h
 
 | Dependencia | Para qué |
 |---|---|
-| [`MoralesLarios.OOFP`](../MoralesLarios.FOOP/README.md) | `MlResult<T>`, `MlErrorsDetails` y todos los operadores |
+| [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorsDetails` y todos los operadores |
 
 Es la única dependencia. **Este proyecto no referencia DataAnnotations ni FluentValidation**: son las librerías satélite las que dependen de él, nunca al contrario.
 
@@ -238,7 +238,7 @@ public override MlResult<Registro> Validate()
 
 > ⚠️ **`BindMulti` ejecuta *todos* los delegados**, incluso si el primero falla. Asegúrate de que ninguno pueda lanzar sobre un dato nulo: si `Clave` puede ser `null`, `r.Clave.Length` explota. En esos casos combina: `BindMulti` para las reglas independientes y `Bind` para las dependientes.
 
-Más detalle en la documentación de [`Bind` y `BindMulti`](../MoralesLarios.FOOP/__Doc/Bind/3_Bind.md).
+Más detalle en la documentación de [`Bind` y `BindMulti`](../docs/Bind/3_Bind.md).
 
 ---
 
@@ -264,8 +264,8 @@ Es `abstract`, no `virtual`: **cada clase derivada está obligada a escribirla**
 
 No hay motor de reglas, ni atributos, ni reflexión, ni caché. Todo el trabajo real lo hace el `Validate()` que escribas tú, o las librerías satélite:
 
-- [`MoralesLarios.OOFP.Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.Dataannotations/README.md) — atributos `[Required]`, `[Range]`, `[EmailAddress]`…
-- [`MoralesLarios.OOFP.Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidations/README.md) — reglas con `AbstractValidator<T>`
+- [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — atributos `[Required]`, `[Range]`, `[EmailAddress]`…
+- [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — reglas con `AbstractValidator<T>`
 
 ### 4. Nada garantiza que se llame a `Validate()`
 
@@ -379,7 +379,7 @@ public class Pedido : MlValidableFp<Pedido>
 }
 ```
 
-> 💡 [`Projection`](../MoralesLarios.FOOP/__Doc/Bucle/Bucles.md) recorre la colección, valida cada elemento y **fusiona todos los errores** en un único `MlErrorsDetails`: el usuario ve de golpe qué líneas están mal.
+> 💡 [`Projection`](../docs/loops/Bucles.md) recorre la colección, valida cada elemento y **fusiona todos los errores** en un único `MlErrorsDetails`: el usuario ve de golpe qué líneas están mal.
 
 ### Ejemplo 4 — Añadir contexto al error para diagnóstico
 
@@ -467,8 +467,8 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 | Comprobar una condición suelta | `EnsureFp.That(obj, condicion, "mensaje")` |
 | Comprobar no nulo / no vacío | `EnsureFp.NotNull`, `NotEmpty`, `NotNullEmptyOrWhitespace` |
 | Validar cada elemento de una colección | `coleccion.Projection(x => x.Validate())` |
-| Validar con atributos `[Required]`, `[Range]`… | [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.Dataannotations/README.md) |
-| Validar con reglas `AbstractValidator<T>` | [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidations/README.md) |
+| Validar con atributos `[Required]`, `[Range]`… | [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) |
+| Validar con reglas `AbstractValidator<T>` | [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) |
 | Reglas reutilizables por tipo de dato | [`ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) |
 | Validaciones que consultan la BD | En el servicio, con `BindAsync` |
 
@@ -498,7 +498,7 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 - Se usa con el patrón autorreferencial `class X : MlValidableFp<X>` y devolviendo `this` cuando es válido.
 - **Cortocircuito con `Bind`**, **acumulación con `BindMulti`**: la elección depende de si el error lo lee un humano o un proceso.
 - `Validate()` debe ser **pura y síncrona**; las reglas que necesitan la base de datos se encadenan después con `BindAsync`.
-- Es la base de [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.Dataannotations/README.md) y [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidations/README.md), que aportan los motores de reglas.
+- Es la base de [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) y [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md), que aportan los motores de reglas.
 
 ---
 
@@ -507,23 +507,23 @@ EnsureFp.NotNull(Clave, "Clave obligatoria")
 ### Navegación general
 
 - [README de la solución completa](../README.md)
-- [README del núcleo `MoralesLarios.OOFP`](../MoralesLarios.FOOP/README.md)
-- [Introducción general al núcleo funcional](../MoralesLarios.FOOP/__Doc/1_Intro.md)
+- [README del núcleo `MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md)
+- [Introducción general al núcleo funcional](../docs/1_Intro.md)
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.Dataannotations/README.md) — validación con atributos
-- [`MoralesLarios.OOFP.Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidations/README.md) — validación con FluentValidation
+- [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — validación con atributos
+- [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — validación con FluentValidation
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — reglas reutilizables encapsuladas en tipos
-- [`MoralesLarios.OOFP.WebServices`](../MoralesLarios.OOFP.WebServices/README.md) — servicios genéricos donde encadenar la validación
-- [`MoralesLarios.OOFP.WebApi`](../MoralesLarios.OOFP.WebApi/README.md) — conversión de `MlErrorsDetails` a respuestas HTTP
+- [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos donde encadenar la validación
+- [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md) — conversión de `MlErrorsDetails` a respuestas HTTP
 
 ### Documentación del núcleo útil aquí
 
-- [`MlResult<T>` — el contenedor de éxito/error](../MoralesLarios.FOOP/__Doc/Types/MlResult.md)
-- [`MlErrorsDetails` — errores y detalles](../MoralesLarios.FOOP/__Doc/Types/MlResultErrors.md)
-- [`EnsureFp` — comprobaciones que devuelven `MlResult`](../MoralesLarios.FOOP/__Doc/EnsureFp/EnsureFp.md)
-- [`Bind` y `BindMulti` — cortocircuito y acumulación](../MoralesLarios.FOOP/__Doc/Bind/3_Bind.md)
-- [`Map` — transformar el valor válido](../MoralesLarios.FOOP/__Doc/Map/1_Map.md)
-- [`Match` — convertir el resultado en respuesta](../MoralesLarios.FOOP/__Doc/Match/1_Match.md)
-- [`Projection` — validar colecciones enteras](../MoralesLarios.FOOP/__Doc/Bucle/Bucles.md)
+- [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
+- [`MlErrorsDetails` — errores y detalles](../docs/core-types/MlResultErrors.md)
+- [`EnsureFp` — comprobaciones que devuelven `MlResult`](../docs/EnsureFp/EnsureFp.md)
+- [`Bind` y `BindMulti` — cortocircuito y acumulación](../docs/Bind/3_Bind.md)
+- [`Map` — transformar el valor válido](../docs/Map/1_Map.md)
+- [`Match` — convertir el resultado en respuesta](../docs/Match/1_Match.md)
+- [`Projection` — validar colecciones enteras](../docs/loops/Bucles.md)

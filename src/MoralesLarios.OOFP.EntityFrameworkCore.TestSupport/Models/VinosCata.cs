@@ -1,0 +1,22 @@
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// moraleslarios@gmail.com
+// Licensed under the Apache License, Version 2.0
+
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Models;
+
+[Table("VINOSCATAS")]
+public class VinosCata
+{
+    [Required]
+    public int IdVino { get; set; }
+    
+    [Required]
+    public int IdCata { get; set; }
+
+    // Navigation properties
+    public virtual Vino Vino { get; set; } = null!;
+    public virtual Cata Cata { get; set; } = null!;
+}

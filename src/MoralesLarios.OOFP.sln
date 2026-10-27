@@ -3,67 +3,65 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.2.11430.68
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP", "MoralesLarios.FOOP\MoralesLarios.OOFP.csproj", "{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Core", "MoralesLarios.OOFP.Core\MoralesLarios.OOFP.Core.csproj", "{78FFDE6E-E72D-4E68-A75B-DD11B7979CA6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Extensions.Loggers", "MoralesLarios.OOFP.Extensions.Loggers\MoralesLarios.OOFP.Extensions.Loggers.csproj", "{5BB633B9-8B3F-4A58-B3FE-82559BE792EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Logging", "MoralesLarios.OOFP.Logging\MoralesLarios.OOFP.Logging.csproj", "{5BB633B9-8B3F-4A58-B3FE-82559BE792EF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EFCore", "MoralesLarios.OOFP.EFCore\MoralesLarios.OOFP.EFCore.csproj", "{716DE563-4802-4DFF-946A-41C63EBE49EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EntityFrameworkCore", "MoralesLarios.OOFP.EntityFrameworkCore\MoralesLarios.OOFP.EntityFrameworkCore.csproj", "{716DE563-4802-4DFF-946A-41C63EBE49EF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EFCore.Integration.Tests", "MoralesLarios.OOFP.EFCore.Integration.Tests\MoralesLarios.OOFP.EFCore.Integration.Tests.csproj", "{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration", "MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration\MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration.csproj", "{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Unit.Tests", "MoralesLarios.OOFP.Unit.Tests\MoralesLarios.OOFP.Unit.Tests.csproj", "{EE89C980-EFE8-4239-8716-0211019190CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Core.Tests.Unit", "MoralesLarios.OOFP.Core.Tests.Unit\MoralesLarios.OOFP.Core.Tests.Unit.csproj", "{EE89C980-EFE8-4239-8716-0211019190CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Extensions.Loggers.Console.Tests", "MoralesLarios.OOFP.Extensions.Loggers.Console.Tests\MoralesLarios.OOFP.Extensions.Loggers.Console.Tests.csproj", "{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Logging.Sample", "MoralesLarios.OOFP.Logging.Sample\MoralesLarios.OOFP.Logging.Sample.csproj", "{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation", "MoralesLarios.OOFP.Validation\MoralesLarios.OOFP.Validation.csproj", "{43AE87C0-2DDA-4A9B-93F7-CB425094FB53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.Dataannotations", "MoralesLarios.OOFP.Validation.Dataannotations\MoralesLarios.OOFP.Validation.Dataannotations.csproj", "{4934EE81-D911-4BDD-8FDB-90C74C6E2B26}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.DataAnnotations", "MoralesLarios.OOFP.Validation.DataAnnotations\MoralesLarios.OOFP.Validation.DataAnnotations.csproj", "{4934EE81-D911-4BDD-8FDB-90C74C6E2B26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit", "MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit\MoralesLarios.OOFP.Validation.Dataannotations.Tests.Unit.csproj", "{C3202EAA-F3EF-4172-9695-52C24283CAC4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit", "MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit\MoralesLarios.OOFP.Validation.DataAnnotations.Tests.Unit.csproj", "{C3202EAA-F3EF-4172-9695-52C24283CAC4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.FluentValidations", "MoralesLarios.OOFP.Validation.FluentValidations\MoralesLarios.OOFP.Validation.FluentValidations.csproj", "{316C2157-1246-4F8A-A4D6-D265CD37CFB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.FluentValidation", "MoralesLarios.OOFP.Validation.FluentValidation\MoralesLarios.OOFP.Validation.FluentValidation.csproj", "{316C2157-1246-4F8A-A4D6-D265CD37CFB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit", "MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit\MoralesLarios.OOFP.Validation.FluentValidations.Tests.Unit.csproj", "{4D2261EB-D834-406C-B983-6A0CCBDEC690}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Validation.FluentValidation.Tests.Unit", "MoralesLarios.OOFP.Validation.FluentValidation.Tests.Unit\MoralesLarios.OOFP.Validation.FluentValidation.Tests.Unit.csproj", "{4D2261EB-D834-406C-B983-6A0CCBDEC690}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebApi", "MoralesLarios.OOFP.WebApi\MoralesLarios.OOFP.WebApi.csproj", "{453CD9D8-7490-4A14-AD99-D02E71093A2F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.AspNetCore.Results", "MoralesLarios.OOFP.AspNetCore.Results\MoralesLarios.OOFP.AspNetCore.Results.csproj", "{453CD9D8-7490-4A14-AD99-D02E71093A2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Utilities", "MoralesLarios.OOFP.Utilities\MoralesLarios.OOFP.Utilities.csproj", "{21346E0E-1C6C-4D3E-9694-2C04DDF8EDC4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Configuration", "MoralesLarios.OOFP.Configuration\MoralesLarios.OOFP.Configuration.csproj", "{21346E0E-1C6C-4D3E-9694-2C04DDF8EDC4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Utilities.Tests.Unit", "MoralesLarios.OOFP.Utilities.Tests.Unit\MoralesLarios.OOFP.Utilities.Tests.Unit.csproj", "{82BB9E3A-F775-4F64-9DB3-2284B68A529A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Configuration.Tests.Unit", "MoralesLarios.OOFP.Configuration.Tests.Unit\MoralesLarios.OOFP.Configuration.Tests.Unit.csproj", "{82BB9E3A-F775-4F64-9DB3-2284B68A529A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects", "MoralesLarios.OOFP.ValueObjects\MoralesLarios.OOFP.ValueObjects.csproj", "{FF0AFBDD-FEB3-4A08-86FA-A139D9859481}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "MoralesLarios.OOFP.ValueObjects.Tests.Unit\MoralesLarios.OOFP.ValueObjects.Tests.Unit.csproj", "{B23C5B79-C25D-4379-8BF6-68E490490039}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.HttpClients", "MoralesLarios.OOFP.HttpClients\MoralesLarios.OOFP.HttpClients.csproj", "{C565808B-15AC-4A19-A564-5D1142469F1E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Http", "MoralesLarios.OOFP.Http\MoralesLarios.OOFP.Http.csproj", "{C565808B-15AC-4A19-A564-5D1142469F1E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.HttpClients.Tests.Integration", "MoralesLarios.OOFP.HttpClients.Tests.Integration\MoralesLarios.OOFP.HttpClients.Tests.Integration.csproj", "{F720E251-B07E-4108-BBC6-FC1416D7700F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Http.Tests.Integration", "MoralesLarios.OOFP.Http.Tests.Integration\MoralesLarios.OOFP.Http.Tests.Integration.csproj", "{F720E251-B07E-4108-BBC6-FC1416D7700F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebApi.Tests.Unit", "MoralesLarios.OOFP.WebApi.Tests.Unit\MoralesLarios.OOFP.WebApi.Tests.Unit.csproj", "{05CD0A01-1C9E-4397-96DA-8E4CD42B3167}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit", "MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit\MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit.csproj", "{05CD0A01-1C9E-4397-96DA-8E4CD42B3167}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.HttpClients.Tests.Unit", "MoralesLarios.OOFP.HttpClients.Tests.Unit\MoralesLarios.OOFP.HttpClients.Tests.Unit.csproj", "{394050A0-C3EE-47FF-9DD4-18BA663809A9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Http.Tests.Unit", "MoralesLarios.OOFP.Http.Tests.Unit\MoralesLarios.OOFP.Http.Tests.Unit.csproj", "{394050A0-C3EE-47FF-9DD4-18BA663809A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Internals", "MoralesLarios.OOFP.Internals\MoralesLarios.OOFP.Internals.csproj", "{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.EntityFrameworkCore.Sample", "MoralesLarios.OOFP.EntityFrameworkCore.Sample\MoralesLarios.OOFP.EntityFrameworkCore.Sample.csproj", "{A34FFF65-561B-4CD8-829A-F5B22406FE48}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.EFCore.WebApi", "MoralesLarios.OOFP.EFCore.WebApi\MoralesLarios.OOFP.EFCore.WebApi.csproj", "{A34FFF65-561B-4CD8-829A-F5B22406FE48}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit", "MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit\MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit.csproj", "{EFD19A6F-537C-4406-91CE-1DEA8B84BD93}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.IO.Test.Unit", "MoralesLarios.OOFP.ValueObjects.IO.Test.Unit\MoralesLarios.OOFP.ValueObjects.IO.Test.Unit.csproj", "{EFD19A6F-537C-4406-91CE-1DEA8B84BD93}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.FileSystem", "MoralesLarios.OOFP.FileSystem\MoralesLarios.OOFP.FileSystem.csproj", "{22464FE8-051B-4DAF-91BE-D3684D015FE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.IO", "MoralesLarios.OOFP.IO\MoralesLarios.OOFP.IO.csproj", "{22464FE8-051B-4DAF-91BE-D3684D015FE5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Application", "MoralesLarios.OOFP.Application\MoralesLarios.OOFP.Application.csproj", "{E234A3DF-2111-469D-B0DC-EDB0FD8C14EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebServices", "MoralesLarios.OOFP.WebServices\MoralesLarios.OOFP.WebServices.csproj", "{E234A3DF-2111-469D-B0DC-EDB0FD8C14EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Application.Tests.Unit", "MoralesLarios.OOFP.Application.Tests.Unit\MoralesLarios.OOFP.Application.Tests.Unit.csproj", "{6E585EFC-1785-411F-9DEB-36DF65185531}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebServices.Tests.Unit", "MoralesLarios.OOFP.WebServices.Tests.Unit\MoralesLarios.OOFP.WebServices.Tests.Unit.csproj", "{6E585EFC-1785-411F-9DEB-36DF65185531}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.AspNetCore.Controllers", "MoralesLarios.OOFP.AspNetCore.Controllers\MoralesLarios.OOFP.AspNetCore.Controllers.csproj", "{1CE27521-6489-4443-B117-96F0F635492D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebControllers", "MoralesLarios.OOFP.WebControllers\MoralesLarios.OOFP.WebControllers.csproj", "{1CE27521-6489-4443-B117-96F0F635492D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.EntityFrameworkCore.TestSupport", "MoralesLarios.OOFP.EntityFrameworkCore.TestSupport\MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.csproj", "{A2672982-BB4B-422C-962E-301DAB45ED3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.EFCore.Infrastructure.Tests", "MoralesLarios.OOFP.EFCore.Infrastructure.Tests\MoralesLarios.OOFP.EFCore.Infrastructure.Tests.csproj", "{A2672982-BB4B-422C-962E-301DAB45ED3D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.WebControllers.Cache", "MoralesLarios.OOFP.WebControllers.Cache\MoralesLarios.OOFP.WebControllers.Cache.csproj", "{A44C4A77-2AC3-4614-AE27-F5929DB15CBE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching", "MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching\MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.csproj", "{A44C4A77-2AC3-4614-AE27-F5929DB15CBE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Shared", "MoralesLarios.OOFP.Shared\MoralesLarios.OOFP.Shared.csproj", "{61A4943F-20BC-4237-980B-651E1948FEED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.IO", "MoralesLarios.OOFP.ValueObjects.IO\MoralesLarios.OOFP.ValueObjects.IO.csproj", "{503D8BEB-1FCA-B3BC-EBD8-540262455E24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.ValueObjects.FileSystem", "MoralesLarios.OOFP.ValueObjects.FileSystem\MoralesLarios.OOFP.ValueObjects.FileSystem.csproj", "{503D8BEB-1FCA-B3BC-EBD8-540262455E24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -315,18 +313,6 @@ Global
 		{394050A0-C3EE-47FF-9DD4-18BA663809A9}.Release|x64.Build.0 = Release|Any CPU
 		{394050A0-C3EE-47FF-9DD4-18BA663809A9}.Release|x86.ActiveCfg = Release|Any CPU
 		{394050A0-C3EE-47FF-9DD4-18BA663809A9}.Release|x86.Build.0 = Release|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|x64.Build.0 = Debug|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Debug|x86.Build.0 = Debug|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|x64.ActiveCfg = Release|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|x64.Build.0 = Release|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|x86.ActiveCfg = Release|Any CPU
-		{DA8DCC51-825A-4346-9E26-C17E2B4DC15B}.Release|x86.Build.0 = Release|Any CPU
 		{A34FFF65-561B-4CD8-829A-F5B22406FE48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A34FFF65-561B-4CD8-829A-F5B22406FE48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A34FFF65-561B-4CD8-829A-F5B22406FE48}.Debug|x64.ActiveCfg = Debug|Any CPU
