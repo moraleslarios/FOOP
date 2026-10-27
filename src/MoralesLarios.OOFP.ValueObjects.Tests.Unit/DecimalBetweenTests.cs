@@ -13,7 +13,7 @@ public class DecimalBetweenTests
         decimal minLength = 4.1m;
         decimal maxLength = 35.7m;
 
-        var result = DecimalBetween.ByDecimalLength(value, minLength, maxLength);
+        var result = DecimalBetween.FromDecimalLength(value, minLength, maxLength);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -25,7 +25,7 @@ public class DecimalBetweenTests
         decimal minLength = 4.1m;
         decimal maxLength = 15.0m;
 
-        var result = DecimalBetween.ByDecimalLength(value, minLength, maxLength);
+        var result = DecimalBetween.FromDecimalLength(value, minLength, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -37,7 +37,7 @@ public class DecimalBetweenTests
         decimal minLength = 4.1m;
         decimal maxLength = 15.0m;
 
-        var result = DecimalBetween.ByDecimalLength(value, minLength, maxLength);
+        var result = DecimalBetween.FromDecimalLength(value, minLength, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }

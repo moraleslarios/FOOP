@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.ValueObjects.Tests.Unit;
 
-public class DecimalNotNegativeTests
+public class DecimalNonNegativeTests
 {
     [Theory]
     [InlineData(-1)]
@@ -12,7 +12,7 @@ public class DecimalNotNegativeTests
     [InlineData(1)]
     public void ByDecimal_should_match_expected_validity(decimal value)
     {
-        var result = DecimalNotNegative.ByDecimal(value);
+        var result = DecimalNonNegative.FromDecimal(value);
 
         if (value < 0)
         {
@@ -26,7 +26,7 @@ public class DecimalNotNegativeTests
     }
 }
 
-public class DoubleNotNegativeTests
+public class DoubleNonNegativeTests
 {
     [Theory]
     [InlineData(-1)]
@@ -34,7 +34,7 @@ public class DoubleNotNegativeTests
     [InlineData(1)]
     public void ByDouble_should_match_expected_validity(double value)
     {
-        var result = DoubleNotNegative.ByDouble(value);
+        var result = DoubleNonNegative.FromDouble(value);
 
         if (value < 0)
         {

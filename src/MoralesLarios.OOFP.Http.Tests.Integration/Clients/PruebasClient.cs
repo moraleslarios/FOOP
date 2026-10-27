@@ -8,7 +8,7 @@ namespace MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
 public class PruebasClient(ILogger<PruebasClient>    _logger,
                            IHttpClientFactoryManager _httpClientFactoryManager,
-                           Key                       _httpClientFactoryKey) : GenClientFp<PruebasDto>(_logger, _httpClientFactoryManager, _httpClientFactoryKey), IPruebasClient
+                           ServiceKey                       _httpClientFactoryKey) : GenClientFp<PruebasDto>(_logger, _httpClientFactoryManager, _httpClientFactoryKey), IPruebasClient
 {
 
 

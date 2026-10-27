@@ -12,7 +12,7 @@ public class RegexValueTests
         var value   = "Hello";              // Capital first letter then lowercase
         var pattern = "^[A-Z][a-z]+$";      // Pattern requiring first capital then lowercase letters
 
-        var result = RegexValue.ByRegex(value, pattern);
+        var result = RegexValue.FromRegex(value, pattern);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -23,7 +23,7 @@ public class RegexValueTests
         var value   = string.Empty;
         var pattern = "^[A-Z][a-z]+$";
 
-        var result = RegexValue.ByRegex(value, pattern);
+        var result = RegexValue.FromRegex(value, pattern);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -34,7 +34,7 @@ public class RegexValueTests
         var value   = "XX";         // Not digits
         var pattern = "^[0-9]+$";   // Only digits
 
-        var result = RegexValue.ByRegex(value, pattern);
+        var result = RegexValue.FromRegex(value, pattern);
 
         result.IsFailure.Should().BeTrue();
     }

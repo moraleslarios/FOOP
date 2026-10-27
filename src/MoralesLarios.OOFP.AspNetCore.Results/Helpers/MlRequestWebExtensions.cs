@@ -7,55 +7,55 @@ namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 public static class MlRequestWebExtensions
 {
 
-    public static MlResult<NotEmptyString> GetHeaderInfo(this HttpRequest request, Name headerKey)
+    public static MlResult<NotEmptyString> GetHeaderInfo(this HttpRequest request, MemberName headerKey)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind( _          => InternalReadHeaderRequest(request, headerKey))
-                                .Bind(headerValue => NotEmptyString.ByString(headerValue));
+                                .Bind(headerValue => NotEmptyString.FromString(headerValue));
         return result;
     }
 
-    public static Task<MlResult<NotEmptyString>> GetHeaderInfoAsync(this HttpRequest request, Name headerKey)
+    public static Task<MlResult<NotEmptyString>> GetHeaderInfoAsync(this HttpRequest request, MemberName headerKey)
         => request.GetHeaderInfo(headerKey).ToAsync();
 
-    public static MlResult<IntNotNegative> GetHeaderInfoAsIntNotNegative(this HttpRequest request, Name headerKey)
+    public static MlResult<IntNonNegative> GetHeaderInfoAsIntNotNegative(this HttpRequest request, MemberName headerKey)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind( _          => InternalReadHeaderRequest(request, headerKey))
                                 .Bind(headerValue => int.TryParse(headerValue, out var intValue)
-                                                        ? MlResult<IntNotNegative>.Valid(intValue)
-                                                        : $"Header '{headerKey}' value '{headerValue}' is not a valid integer.".ToMlResultFail<IntNotNegative>());
+                                                        ? MlResult<IntNonNegative>.Valid(intValue)
+                                                        : $"Header '{headerKey}' value '{headerValue}' is not a valid integer.".ToMlResultFail<IntNonNegative>());
         return result;
     }
 
-    public static Task<MlResult<IntNotNegative>> GetHeaderInfoAsIntNotNegativeAsync(this HttpRequest request, Name headerKey)
+    public static Task<MlResult<IntNonNegative>> GetHeaderInfoAsIntNotNegativeAsync(this HttpRequest request, MemberName headerKey)
         => request.GetHeaderInfoAsIntNotNegative(headerKey).ToAsync();
 
-    public static MlResult<IntNotNegative> GetHeaderPageNumber(this HttpRequest request)
+    public static MlResult<IntNonNegative> GetHeaderPageNumber(this HttpRequest request)
     {
-        Name headerKey = "X-Page-Number";
+        MemberName headerKey = "X-Page-Number";
 
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind(_ => GetHeaderInfoAsIntNotNegative(request, headerKey));
         return result;
     }
 
-    public static Task<MlResult<IntNotNegative>> GetHeaderPageNumberAsync(this HttpRequest request)
+    public static Task<MlResult<IntNonNegative>> GetHeaderPageNumberAsync(this HttpRequest request)
         => request.GetHeaderPageNumber().ToAsync();
 
-    public static MlResult<IntNotNegative> GetHeaderPageSize(this HttpRequest request)
+    public static MlResult<IntNonNegative> GetHeaderPageSize(this HttpRequest request)
     {
-        Name headerKey = "X-Page-Size";
+        MemberName headerKey = "X-Page-Size";
 
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind(_ => GetHeaderInfoAsIntNotNegative(request, headerKey));
         return result;
     }
 
-    public static Task<MlResult<IntNotNegative>> GetHeaderPageSizeAsync(this HttpRequest request)
+    public static Task<MlResult<IntNonNegative>> GetHeaderPageSizeAsync(this HttpRequest request)
         => request.GetHeaderPageSize().ToAsync();
 
-    public static MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> GetHeaderPageInfo(this HttpRequest request)
+    public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetHeaderPageInfo(this HttpRequest request)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind( _             => GetHeaderPageNumber(request)
@@ -64,11 +64,11 @@ public static class MlRequestWebExtensions
         return result;
     }
 
-    public static Task<MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)>> GetHeaderPageInfoAsync(this HttpRequest request)
+    public static Task<MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)>> GetHeaderPageInfoAsync(this HttpRequest request)
         => request.GetHeaderPageInfo().ToAsync();
 
 
-    private static MlResult<string> InternalReadHeaderRequest(this HttpRequest request, Name headerKey)
+    private static MlResult<string> InternalReadHeaderRequest(this HttpRequest request, MemberName headerKey)
     {
         var exists = request.Headers.TryGetValue(headerKey, out var headerValue);
 

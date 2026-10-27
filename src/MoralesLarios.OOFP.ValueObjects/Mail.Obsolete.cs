@@ -1,0 +1,9 @@
+﻿// Puentes [Obsolete] de la v2.0.0: nombres antiguos que reenvian al nombre nuevo. Se eliminan en la v3.0.0.
+namespace MoralesLarios.OOFP.ValueObjects;
+public partial class Mail
+{
+    [global::System.Obsolete("Renamed to FromString. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public static MlResult<Mail> ByString(string value, MlErrorDetails errorsDetails = null !) => FromString(value, errorsDetails);
+    [global::System.Obsolete("Renamed to ValidationPattern. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public const string EndpointPattern = ValidationPattern;
+}

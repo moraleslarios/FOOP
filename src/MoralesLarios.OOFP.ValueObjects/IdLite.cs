@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class IdLite : IntMoreThan
+public partial class IdLite : IntMoreThan
 {
     private static int Limit => 0;
 
@@ -15,8 +15,8 @@ public class IdLite : IntMoreThan
     public static string BuildErrorMessIdLite(int value) => $"IdLite can be mayor 0.";
     public static bool IsValid(int value) => IdLite.IsValid(value, Limit);
 
-    public static IdLite FromInt(int value) => new IdLite(value);
-    public static MlResult<IdLite> ByInt(int value, MlErrorDetails errorsDetails = null!)
+    public static IdLite CreateFromInt(int value) => new IdLite(value);
+    public static MlResult<IdLite> FromInt(int value, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
                     .Bind( _ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessIdLite(value)))
                     .Map ( _ => new IdLite(value));

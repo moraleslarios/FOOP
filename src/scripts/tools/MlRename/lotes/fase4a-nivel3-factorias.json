@@ -1,0 +1,13 @@
+{
+  "id": "fase4a-nivel3-factorias",
+  "level": 3,
+  "renames": [
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects", "match": "^FromStringLength$", "replace": "CreateFromLength", "bridge": false, "note": "Lanza -> Create. Sin puente: su nombre pasa a la variante MlResult. String es redundante en String*Length" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects", "match": "^From(\\w+)$", "replace": "CreateFrom$1", "bridge": false, "note": "Convencion documentada: Create lanza, From devuelve MlResult. Sin puente posible" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "match": "^FromString$", "replace": "CreateFromPath", "bridge": false, "note": "Lanza -> Create. ByString describia el tipo del parametro, no la intencion" },
+
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects", "match": "^ByStringLength$", "replace": "FromLength", "bridge": true, "note": "By sugiere ordenacion (OrderBy); From = conversion que devuelve MlResult" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects", "match": "^By(\\w+)$", "replace": "From$1", "bridge": true },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "match": "^ByString$", "replace": "FromPath", "bridge": true }
+  ]
+}

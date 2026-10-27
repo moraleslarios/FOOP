@@ -221,7 +221,7 @@ var resultado = await repo.GetPageAsync((pageNumber: 2, pageSize: 20));
 
 | Dependencia | Para qué |
 |---|---|
-| [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | Aporta `IntNotNegative`, usado en una de las conversiones implícitas. |
+| [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | Aporta `IntNonNegative`, usado en una de las conversiones implícitas. |
 | `System.ComponentModel.DataAnnotations` | Atributos `[Range]` sobre los parámetros del record. |
 
 `GlobalUsings.cs` del proyecto ya expone `MoralesLarios.OOFP.ValueObjects` y `System.ComponentModel.DataAnnotations`, por lo que dentro de esta librería no hacen falta `using` explícitos.
@@ -270,7 +270,7 @@ public record PaginationInfo([property: Range(0, int.MinValue)] int PageNumber,
     public static implicit operator PaginationInfo((int pageNumber, int pageSize) value)
         => new PaginationInfo(value.pageNumber, value.pageSize);
 
-    public static implicit operator PaginationInfo((IntNotNegative pageNumber, IntNotNegative pageSize) value)
+    public static implicit operator PaginationInfo((IntNonNegative pageNumber, IntNonNegative pageSize) value)
         => new PaginationInfo(value.pageNumber, value.pageSize);
 }
 ```
@@ -366,7 +366,7 @@ Las tres conversiones implícitas existen para que **las llamadas queden legible
 | Desde | Hacia | Definido en |
 |---|---|---|
 | `(int pageNumber, int pageSize)` | `PaginationInfo` | `PaginationInfo` |
-| `(IntNotNegative pageNumber, IntNotNegative pageSize)` | `PaginationInfo` | `PaginationInfo` |
+| `(IntNonNegative pageNumber, IntNonNegative pageSize)` | `PaginationInfo` | `PaginationInfo` |
 | `(IEnumerable<T> items, int pageNumber, int pageSize, int totalCount)` | `PaginationResultInfo<T>` | `PaginationResultInfo<T>` |
 
 ```csharp
@@ -374,8 +374,8 @@ Las tres conversiones implícitas existen para que **las llamadas queden legible
 PaginationInfo peticion = (pageNumber: 2, pageSize: 20);
 
 // 2) Tupla de value objects → petición (ya validados en origen)
-IntNotNegative pagina  = 2;
-IntNotNegative tamanyo = 20;
+IntNonNegative pagina  = 2;
+IntNonNegative tamanyo = 20;
 PaginationInfo peticionVO = (pagina, tamanyo);
 
 // 3) Tupla de 4 elementos → respuesta
@@ -576,7 +576,7 @@ using MoralesLarios.OOFP.Shared.Pagination;
 | Recibir "qué página quiero" desde una API o un servicio | `PaginationInfo` (o directamente una tupla `(pageNumber:, pageSize:)`) |
 | Devolver los elementos de una página **con su contexto** | `PaginationResultInfo<T>` |
 | Que un `?pageSize=999999` no tumbe la base de datos | Nada extra: `PaginationInfo` lo limita a 1000 |
-| Partir de valores ya validados como no negativos | Conversión implícita desde `(IntNotNegative, IntNotNegative)` |
+| Partir de valores ya validados como no negativos | Conversión implícita desde `(IntNonNegative, IntNonNegative)` |
 | `TotalPages`, `HasNextPage`, etc. | Métodos de extensión propios (no existen en la librería) |
 | Un tope de página distinto de 1000 | Validación propia con `EnsureFp` antes de construir el `PaginationInfo` |
 
@@ -619,7 +619,7 @@ La consumen principalmente [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — de aquí sale `IntNotNegative`
+- [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — de aquí sale `IntNonNegative`
 - [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) — repositorios con consultas paginadas
 - [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos que propagan la paginación
 - [`MoralesLarios.OOFP.AspNetCore.Controllers`](../MoralesLarios.OOFP.AspNetCore.Controllers/README.md) — controladores REST genéricos

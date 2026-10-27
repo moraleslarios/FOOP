@@ -10,7 +10,7 @@ public class StringAsDoubleTests
     public void FromString_ValidDoubleString_ReturnsValid()
     {
         var value = "123,456789";
-        StringAsDouble result = StringAsDouble.FromString(value);
+        StringAsDouble result = StringAsDouble.CreateFromString(value);
         double expected = 123.456789;
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -19,7 +19,7 @@ public class StringAsDoubleTests
     public void FromString_InvalidDoubleString_ThrowsArgumentNullException()
     {
         var value = "ABC";
-        Action act = () => StringAsDouble.FromString(value);
+        Action act = () => StringAsDouble.CreateFromString(value);
         act.Should().Throw<FormatException>();
     }
 
@@ -27,7 +27,7 @@ public class StringAsDoubleTests
     public void ByString_ValidDoubleString_ReturnsValidResult()
     {
         var value = "3.141592653589793";
-        var result = StringAsDouble.ByString(value);
+        var result = StringAsDouble.FromString(value);
         result.IsSuccess.Should().BeTrue();
     }
 
@@ -35,7 +35,7 @@ public class StringAsDoubleTests
     public void ByString_InvalidDoubleString_ReturnsFailResult()
     {
         var value = "XYZ";
-        MlResult<StringAsDouble> result = StringAsDouble.ByString(value);
+        MlResult<StringAsDouble> result = StringAsDouble.FromString(value);
         result.IsFailure.Should().BeTrue();
     }
 }

@@ -6,25 +6,25 @@ namespace MoralesLarios.OOFP.ValueObjects;
 
 
 
-public class StringAsInt : StringAsNumeric<int>
+public partial class StringAsInt : StringAsNumeric<int>
 {
 
     protected StringAsInt(string value) : base(value)
     {
-        if( ! IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if( ! IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
 
         Value = int.Parse(value);
     }
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} should be a valid int";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} should be a valid int";
     public static bool IsValid(string value) => int.TryParse(value, out _);
 
-    public static StringAsInt FromString(string value) => new StringAsInt(value);
+    public static StringAsInt CreateFromString(string value) => new StringAsInt(value);
 
-    public static MlResult<StringAsInt> ByString(string value)
+    public static MlResult<StringAsInt> FromString(string value)
         => MlResult.Empty()
-                    .TryBind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)),
-                                            $"{BuildErrorMessage(value)}")
+                    .TryBind(_ => EnsureFp.That(value, IsValid(value), FormatErrorMessage(value)),
+                                            $"{FormatErrorMessage(value)}")
                     .Map(_ => new StringAsInt(value));
 
 

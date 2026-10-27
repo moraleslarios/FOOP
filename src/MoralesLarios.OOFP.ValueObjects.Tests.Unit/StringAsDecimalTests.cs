@@ -10,7 +10,7 @@ public class StringAsDecimalTests
     public void FromString_ValidDecimalString_ReturnsValid()
     {
         var value = "123,456789";
-        StringAsDecimal result = StringAsDecimal.FromString(value);
+        StringAsDecimal result = StringAsDecimal.CreateFromString(value);
         decimal expected = 123.456789m;
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -19,7 +19,7 @@ public class StringAsDecimalTests
     public void FromString_InvalidDecimalString_ThrowsArgumentNullException()
     {
         var value = "ABC";
-        Action act = () => StringAsDecimal.FromString(value);
+        Action act = () => StringAsDecimal.CreateFromString(value);
         act.Should().Throw<FormatException>();
     }
 
@@ -27,7 +27,7 @@ public class StringAsDecimalTests
     public void ByString_ValidDecimalString_ReturnsValidResult()
     {
         var value = "99999.99";
-        var result = StringAsDecimal.ByString(value);
+        var result = StringAsDecimal.FromString(value);
         result.IsSuccess.Should().BeTrue();
     }
 
@@ -35,7 +35,7 @@ public class StringAsDecimalTests
     public void ByString_InvalidDecimalString_ReturnsFailResult()
     {
         var value = "XYZ";
-        MlResult<StringAsDecimal> result = StringAsDecimal.ByString(value);
+        MlResult<StringAsDecimal> result = StringAsDecimal.FromString(value);
         result.IsFailure.Should().BeTrue();
     }
 }

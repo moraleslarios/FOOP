@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringAsNumeric<TValue> : ValueObject
+public partial class StringAsNumeric<TValue> : ValueObject
     where TValue : struct
 {
 
@@ -12,7 +12,7 @@ public class StringAsNumeric<TValue> : ValueObject
 
     protected StringAsNumeric(string value)
     {
-        if ( ! IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if ( ! IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
 
         Value = (TValue)Convert.ChangeType(value, typeof(TValue))!;
     }
@@ -25,15 +25,15 @@ public class StringAsNumeric<TValue> : ValueObject
     }
 
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} should be a valid number";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} should be a valid number";
     public static bool IsValid(string value) => Convert.ChangeType(value, typeof(TValue)) != null;
 
-    public static StringAsNumeric<TValue> FromString(string value) => new StringAsNumeric<TValue>(value);
+    public static StringAsNumeric<TValue> CreateFromString(string value) => new StringAsNumeric<TValue>(value);
 
-    public static MlResult<StringAsNumeric<TValue>> ByString(string value)
+    public static MlResult<StringAsNumeric<TValue>> FromString(string value)
         => MlResult.Empty()
-                    .TryBind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)),
-                                            $"{BuildErrorMessage(value)}")
+                    .TryBind(_ => EnsureFp.That(value, IsValid(value), FormatErrorMessage(value)),
+                                            $"{FormatErrorMessage(value)}")
                     .Map(_ => new StringAsNumeric<TValue>(value));
 
 

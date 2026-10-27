@@ -83,7 +83,7 @@ Referencias de proyecto:
 |---|---|
 | `MoralesLarios.OOFP` | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind`, `Map`, `MapEnsure` |
 | `MoralesLarios.OOFP.Shared` | `PaginationInfo` (resultado de `GetHeaderPaginationInfo`) |
-| `MoralesLarios.OOFP.ValueObjects` | `Name`, `NotEmptyString`, `IntNotNegative` (tipos de las cabeceras) |
+| `MoralesLarios.OOFP.ValueObjects` | `MemberName`, `NotEmptyString`, `IntNonNegative` (tipos de las cabeceras) |
 
 > ⚠️ **Aviso sobre el paquete NuGet.** El proyecto compila contra `net8.0` pero referencia `Microsoft.AspNetCore.Mvc.Core` **2.1.0**, un paquete de la era .NET Core 2.1. En una aplicación ASP.NET Core moderna eso genera duplicidad de ensamblados y advertencias de resolución: lo correcto sería `<FrameworkReference Include="Microsoft.AspNetCore.App" />`. Ver [Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente).
 
@@ -417,15 +417,15 @@ public static MlResult<NotEmptyString> GetHeaderInfo(this HttpRequest source, Na
 public static Task<MlResult<NotEmptyString>> GetHeaderInfoAsync(this HttpRequest source, Name headerKey);
 
 // Cabecera genérica convertida a entero no negativo
-public static MlResult<IntNotNegative> GetHeaderInfoAsIntNotNegative(this HttpRequest source, Name headerKey);
-public static Task<MlResult<IntNotNegative>> GetHeaderInfoAsIntNotNegativeAsync(this HttpRequest source, Name headerKey);
+public static MlResult<IntNonNegative> GetHeaderInfoAsIntNonNegative(this HttpRequest source, Name headerKey);
+public static Task<MlResult<IntNonNegative>> GetHeaderInfoAsIntNotNegativeAsync(this HttpRequest source, Name headerKey);
 
 // Cabeceras de paginación (nombres fijos)
-public static MlResult<IntNotNegative> GetHeaderPageNumber(this HttpRequest source);   // "X-Page-Number"
-public static MlResult<IntNotNegative> GetHeaderPageSize  (this HttpRequest source);   // "X-Page-Size"
+public static MlResult<IntNonNegative> GetHeaderPageNumber(this HttpRequest source);   // "X-Page-Number"
+public static MlResult<IntNonNegative> GetHeaderPageSize  (this HttpRequest source);   // "X-Page-Size"
 
 // Combinaciones
-public static MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> GetHeaderPageInfo(this HttpRequest source);
+public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetHeaderPageInfo(this HttpRequest source);
 public static MlResult<PaginationInfo> GetHeaderPaginationInfo(this HttpRequest source);
 ```
 
@@ -434,9 +434,9 @@ public static MlResult<PaginationInfo> GetHeaderPaginationInfo(this HttpRequest 
 | Método | Devuelve | Cabecera(s) leída(s) |
 |---|---|---|
 | `GetHeaderInfo` | `NotEmptyString` | la que indiques |
-| `GetHeaderInfoAsIntNotNegative` | `IntNotNegative` | la que indiques |
-| `GetHeaderPageNumber` | `IntNotNegative` | `X-Page-Number` |
-| `GetHeaderPageSize` | `IntNotNegative` | `X-Page-Size` |
+| `GetHeaderInfoAsIntNonNegative` | `IntNonNegative` | la que indiques |
+| `GetHeaderPageNumber` | `IntNonNegative` | `X-Page-Number` |
+| `GetHeaderPageSize` | `IntNonNegative` | `X-Page-Size` |
 | `GetHeaderPageInfo` | tupla `(PageNumber, PageSize)` | ambas |
 | `GetHeaderPaginationInfo` | `PaginationInfo` | ambas |
 
@@ -808,7 +808,7 @@ return resultado.ToGetPdActionResult();
 | Extraer el `ProblemDetails` real de un `MlErrorDetails` | `errors.GetProblemDetails()` |
 | Convertir un `ProblemDetailsInfo` en `IActionResult` | `pdInfo.ToMlActionResult()` |
 | Leer una cabecera obligatoria como texto | `Request.GetHeaderInfo("X-…")` |
-| Leer una cabecera obligatoria como entero | `Request.GetHeaderInfoAsIntNotNegative("X-…")` |
+| Leer una cabecera obligatoria como entero | `Request.GetHeaderInfoAsIntNonNegative("X-…")` |
 | Leer solo el número de página | `Request.GetHeaderPageNumber()` |
 | Leer solo el tamaño de página | `Request.GetHeaderPageSize()` |
 | Leer ambas como tupla | `Request.GetHeaderPageInfo()` |
@@ -877,7 +877,7 @@ return resultado.ToGetPdActionResult();
 - [📄 `MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — genera los errores con `MlProblemsDetails`; **es el compañero natural de este proyecto**
 - [📄 `MoralesLarios.OOFP.AspNetCore.Controllers`](../MoralesLarios.OOFP.AspNetCore.Controllers/README.md) — controladores base genéricos que ya usan estas extensiones
 - [📄 `MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) — repositorios funcionales que alimentan los servicios
-- [📄 `MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `Name`, `NotEmptyString`, `IntNotNegative` usados por las cabeceras
+- [📄 `MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `MemberName`, `NotEmptyString`, `IntNonNegative` usados por las cabeceras
 - [📄 `MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PaginationInfo` y `PaginationResultInfo`
 - [📄 `MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — produce los `ValidationResult` que consume `MlActionResults.BadRequest`
 - [📄 `MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — registro dentro del raíl antes de traducir a HTTP

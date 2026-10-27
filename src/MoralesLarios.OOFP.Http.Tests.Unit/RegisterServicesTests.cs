@@ -12,9 +12,9 @@ public class RegisterServicesTests
 
     private sealed class TestClient : GenClientFp<string>, ITestClient
     {
-        public static Key? CapturedKey { get; private set; }
+        public static ServiceKey? CapturedKey { get; private set; }
 
-        public TestClient(ILogger<GenClientFp<string>> logger, IHttpClientFactoryManager httpClientFactoryManager, Key httpClientFactoryKey)
+        public TestClient(ILogger<GenClientFp<string>> logger, IHttpClientFactoryManager httpClientFactoryManager, ServiceKey httpClientFactoryKey)
             : base(logger, httpClientFactoryManager, httpClientFactoryKey)
         {
             CapturedKey = httpClientFactoryKey;
@@ -23,9 +23,9 @@ public class RegisterServicesTests
 
     private sealed class DuplexService : GenClientFp<string, string>, ITestClient
     {
-        public static Key? CapturedKey { get; private set; }
+        public static ServiceKey? CapturedKey { get; private set; }
 
-        public DuplexService(ILogger<GenClientFp<string, string>> logger, IHttpClientFactoryManager httpClientFactoryManager, Key httpClientFactoryKey)
+        public DuplexService(ILogger<GenClientFp<string, string>> logger, IHttpClientFactoryManager httpClientFactoryManager, ServiceKey httpClientFactoryKey)
             : base(logger, httpClientFactoryManager, httpClientFactoryKey)
         {
             CapturedKey = httpClientFactoryKey;
@@ -44,7 +44,7 @@ public class RegisterServicesTests
 
         _ = provider.GetRequiredService<ITestClient>();
 
-        TestClient.CapturedKey.Should().Be(Key.FromString(nameof(TestClient)));
+        TestClient.CapturedKey.Should().Be(ServiceKey.CreateFromString(nameof(TestClient)));
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class RegisterServicesTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddHttpClientsFp();
-        var expected = Key.FromString("custom-client");
+        var expected = ServiceKey.CreateFromString("custom-client");
 
         services.AddGenClientFp<ITestClient, TestClient>(() => expected);
         var provider = services.BuildServiceProvider();
@@ -69,7 +69,7 @@ public class RegisterServicesTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddHttpClientsFp();
-        var expected = Key.FromString("complex-client");
+        var expected = ServiceKey.CreateFromString("complex-client");
 
         services.AddGenClientComplexFp<ITestClient, TestClient, string>(() => expected);
         var provider = services.BuildServiceProvider();

@@ -333,6 +333,9 @@ internal static class Runner
                 {
                     MethodDeclarationSyntax md => BridgeMethod(md, newName),
                     PropertyDeclarationSyntax pd => BridgeProperty(pd, newName),
+                    VariableDeclaratorSyntax { Parent.Parent: FieldDeclarationSyntax fd } vd
+                        when fd.Modifiers.Any(SyntaxKind.ConstKeyword) || (fd.Modifiers.Any(SyntaxKind.StaticKeyword) && fd.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
+                        => BridgeField(fd, vd, newName),
                     _ => null
                 };
                 if (bridge is not null) list.Add(StripTrivia(bridge));
@@ -387,6 +390,12 @@ internal static class Runner
                  .WithoutLeadingTrivia()
                  .WithoutTrailingTrivia();
     }
+
+    private static MemberDeclarationSyntax BridgeField(FieldDeclarationSyntax fd, VariableDeclaratorSyntax vd, string newName)
+        => fd.WithAttributeLists(SingletonList(BridgeAttributes(newName)))
+             .WithDeclaration(fd.Declaration.WithVariables(SingletonSeparatedList(vd.WithInitializer(EqualsValueClause(IdentifierName(newName))))))
+             .WithoutLeadingTrivia()
+             .WithoutTrailingTrivia();
 
     private static MemberDeclarationSyntax BridgeProperty(PropertyDeclarationSyntax pd, string newName)
     {

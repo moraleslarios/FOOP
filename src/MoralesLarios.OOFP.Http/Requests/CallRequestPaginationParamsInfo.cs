@@ -5,17 +5,17 @@
 
 
 public record CallRequestPaginationParamsInfo(string                      Url,
-                                              Key                         HttpClientFactoryKey,
-                                              IntNotNegative              PageNumber,
-                                              IntNotNegative              PageSize,
+                                              ServiceKey                         HttpClientFactoryKey,
+                                              IntNonNegative              PageNumber,
+                                              IntNonNegative              PageSize,
                                               Dictionary<string, string>? Headers           = null!,
                                               CancellationToken           CancellationToken = default)
     : CallRequestParamsInfo(Url, HttpClientFactoryKey, Headers,  CancellationToken)
 {
     public static implicit operator CallRequestPaginationParamsInfo((string                      url,
-                                                                     Key                         httpClientFactoryKey,
-                                                                     IntNotNegative              pageNumber,
-                                                                     IntNotNegative              pageSize,
+                                                                     ServiceKey                         httpClientFactoryKey,
+                                                                     IntNonNegative              pageNumber,
+                                                                     IntNonNegative              pageSize,
                                                                      Dictionary<string, string>? Headers,
                                                                      CancellationToken           cancellationToken) value)
         => new(value.url, value.httpClientFactoryKey, value.pageNumber, value.pageSize, value.Headers, value.cancellationToken);
@@ -27,19 +27,19 @@ public record CallRequestPaginationParamsInfo(string                      Url,
 
 
 public record CallRequestPaginationParamsInfo<TRequest>(                     string                      Url,
-                                                                             Key                         HttpClientFactoryKey,
+                                                                             ServiceKey                         HttpClientFactoryKey,
                                                         [property: Required] TRequest                    RequestBody,
-                                                                             IntNotNegative              PageNumber,
-                                                                             IntNotNegative              PageSize,
+                                                                             IntNonNegative              PageNumber,
+                                                                             IntNonNegative              PageSize,
                                                                              Dictionary<string, string>? Headers           = null!,
                                                                              CancellationToken           CancellationToken = default)
     : CallRequestParamsInfo<TRequest>(Url, HttpClientFactoryKey, RequestBody, Headers, CancellationToken)
 {
     public static implicit operator CallRequestPaginationParamsInfo<TRequest>((string                      url,
-                                                                               Key                         httpClientFactoryKey,
+                                                                               ServiceKey                         httpClientFactoryKey,
                                                                                TRequest                    requestBody,
-                                                                               IntNotNegative              pageNumber,
-                                                                               IntNotNegative              pageSize,
+                                                                               IntNonNegative              pageNumber,
+                                                                               IntNonNegative              pageSize,
                                                                                Dictionary<string, string>? headers,
                                                                                CancellationToken           cancellationToken) value)
         => new(value.url, value.httpClientFactoryKey, value.requestBody, value.pageNumber, value.pageSize, value.headers, value.cancellationToken);

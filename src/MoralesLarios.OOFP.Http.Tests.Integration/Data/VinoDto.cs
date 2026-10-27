@@ -8,7 +8,7 @@ namespace MoralesLarios.OOFP.Http.Tests.Integration.Data;
 
 public class VinoDto
 {
-    // Id sin [Key]
+    // Id sin [ServiceKey]
     public int Id { get; set; }
 
     [Required]

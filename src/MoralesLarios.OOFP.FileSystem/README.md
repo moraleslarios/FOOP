@@ -70,13 +70,13 @@ Si el fichero no existe, obtienes un `Fail` con el mensaje `"C:\tmp\x.txt not ex
 |---|---|---|
 | `Microsoft.Extensions.DependencyInjection.Abstractions` | 9.0.6 | `IServiceCollection` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `Map` |
-| [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) | — | 🔑 `ExistsFile`, `ExistDirectory` |
+| [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) | — | 🔑 `ExistingFilePath`, `ExistingDirectoryPath` |
 
 Destino: **`net8.0`**. Versión del paquete: **1.0.0**.
 
 ```csharp
 using MoralesLarios.OOFP.FileSystem;              // IWrapperIO, AddOOFPIO
-using MoralesLarios.OOFP.ValueObjects.FileSystem; // ExistsFile (aparece en las firmas)
+using MoralesLarios.OOFP.ValueObjects.FileSystem; // ExistingFilePath (aparece en las firmas)
 ```
 
 > ⚠️ **Versión 1.0.0 y sin `GeneratePackageOnBuild`**: a diferencia de otros proyectos de la solución, este no genera paquete NuGet al compilar. Es el proyecto menos maduro del conjunto.
@@ -122,7 +122,7 @@ builder.Services.AddOOFPIO();
 ```csharp
 public interface IWrapperIO
 {
-    MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr);
+    MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr);
     MlResult<string>                  ReadAllText   (string filePathStr);
     MlResult<IEnumerable<string>>     ReadAllLines  (string filePathStr);
 }
@@ -130,13 +130,13 @@ public interface IWrapperIO
 
 | Método | Valida | Ejecuta | Devuelve |
 |---|---|---|---|
-| `EnumerateFiles(directorio)` | `ExistDirectory.ByString` | `Directory.EnumerateFiles` | `MlResult<IEnumerable<ExistsFile>>` |
-| `ReadAllText(fichero)` | `ExistsFile.ByString` | `File.ReadAllText` | `MlResult<string>` |
-| `ReadAllLines(fichero)` | `ExistsFile.ByString` | `File.ReadLines` | `MlResult<IEnumerable<string>>` |
+| `EnumerateFiles(directorio)` | `ExistingDirectoryPath.FromPath` | `Directory.EnumerateFiles` | `MlResult<IEnumerable<ExistingFilePath>>` |
+| `ReadAllText(fichero)` | `ExistingFilePath.FromPath` | `File.ReadAllText` | `MlResult<string>` |
+| `ReadAllLines(fichero)` | `ExistingFilePath.FromPath` | `File.ReadLines` | `MlResult<IEnumerable<string>>` |
 
 **Toda la superficie pública del proyecto son estos tres métodos.** Son **solo de lectura**: no hay escritura, ni copia, ni borrado.
 
-> 💡 **`EnumerateFiles` devuelve `ExistsFile`, no `string`**: los ficheros vienen ya envueltos en un objeto de valor que garantiza su existencia. Es un buen detalle de diseño, porque el tipo del resultado transporta la garantía.
+> 💡 **`EnumerateFiles` devuelve `ExistingFilePath`, no `string`**: los ficheros vienen ya envueltos en un objeto de valor que garantiza su existencia. Es un buen detalle de diseño, porque el tipo del resultado transporta la garantía.
 
 ---
 
@@ -147,18 +147,18 @@ Los tres métodos siguen exactamente la misma forma:
 ```csharp
 public MlResult<string> ReadAllText(string filePathStr)
 {
-    var result = ExistsFile.ByString(filePathStr)          // 1️⃣ valida: ¿no vacía y existe?
+    var result = ExistingFilePath.FromPath(filePathStr)          // 1️⃣ valida: ¿no vacía y existe?
                            .Map(_ => File.ReadAllText(filePathStr));   // 2️⃣ solo entonces, lee
     return result;
 }
 ```
 
 ```csharp
-public MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr)
+public MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr)
 {
-    var result = ExistDirectory.ByString(directoryStr)
+    var result = ExistingDirectoryPath.FromPath(directoryStr)
                                .Map(_     => Directory.EnumerateFiles(directoryStr))
-                               .Map(files => files.Select(file => ExistsFile.FromString(file)));
+                               .Map(files => files.Select(file => ExistingFilePath.CreateFromPath(file)));
     return result;
 }
 ```
@@ -170,29 +170,29 @@ public MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr)
 
 > 💡 **La clave del patrón**: el `Map` cortocircuita. Es la razón de que no haya que comprobar `File.Exists` a mano ni capturar `FileNotFoundException`: **el objeto de valor ya lo hizo.**
 
-> ⚠️ **Nótese que se descarta el objeto de valor** (`.Map(_ => …)`) y se vuelve a usar la `string` original. Funciona porque son equivalentes, pero significa que el `ExistsFile` se crea solo para validar.
+> ⚠️ **Nótese que se descarta el objeto de valor** (`.Map(_ => …)`) y se vuelve a usar la `string` original. Funciona porque son equivalentes, pero significa que el `ExistingFilePath` se crea solo para validar.
 
 ---
 
 ## Relación con `ValueObjects.IO`
 
-Los dos objetos de valor que usa (`ExistsFile` y `ExistDirectory`) viven en [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) y ambos heredan de `NotEmptyString`:
+Los dos objetos de valor que usa (`ExistingFilePath` y `ExistingDirectoryPath`) viven en [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) y ambos heredan de `NotEmptyString`:
 
 ```csharp
-public class ExistsFile : NotEmptyString
+public class ExistingFilePath : NotEmptyString
 {
     public new static bool   IsValid          (string pathStr) => File.Exists(pathStr);
-    public new static string BuildErrorMessage(string pathStr) => $"{pathStr} not exists";
+    public new static string FormatErrorMessage(string pathStr) => $"{pathStr} not exists";
 
-    public new static MlResult<ExistsFile> ByString(string pathStr, MlErrorDetails errorsDetails = null!)
-        => NotEmptyString.ByString(pathStr)
+    public new static MlResult<ExistingFilePath> ByString(string pathStr, MlErrorDetails errorsDetails = null!)
+        => NotEmptyString.FromString(pathStr)
                          .Bind(_ => EnsureFp.That(pathStr, IsValid(pathStr),
-                                                  errorsDetails ?? BuildErrorMessage(pathStr))
-                         .Map (_ => new ExistsFile(pathStr)));
+                                                  errorsDetails ?? FormatErrorMessage(pathStr))
+                         .Map (_ => new ExistingFilePath(pathStr)));
 }
 ```
 
-| Aspecto | `ExistsFile` | `ExistDirectory` |
+| Aspecto | `ExistingFilePath` | `ExistingDirectoryPath` |
 |---|---|---|
 | Comprobación | `File.Exists` | `Directory.Exists` |
 | Mensaje de error | `"{ruta} not exists"` | `"{ruta} not exists"` |
@@ -211,7 +211,7 @@ public class ExistsFile : NotEmptyString
 
 ```csharp
 public MlResult<IEnumerable<string>> ReadAllLines(string filePathStr)
-    => ExistsFile.ByString(filePathStr)
+    => ExistingFilePath.FromPath(filePathStr)
                  .Map(_ => File.ReadLines(filePathStr));   // ⚠️ ReadLines, no ReadAllLines
 ```
 
@@ -246,10 +246,10 @@ foreach (var l in lineas.Value)        // 💥 IOException AQUÍ, fuera del raí
 
 ```csharp
 .Map(_     => Directory.EnumerateFiles(directoryStr))    // perezoso
-.Map(files => files.Select(file => ExistsFile.FromString(file)));   // perezoso
+.Map(files => files.Select(file => ExistingFilePath.CreateFromPath(file)));   // perezoso
 ```
 
-Ni `EnumerateFiles` ni `Select` se ejecutan hasta que enumeras. **Y `ExistsFile.FromString` lanza `ArgumentNullException` si el fichero ya no existe:**
+Ni `EnumerateFiles` ni `Select` se ejecutan hasta que enumeras. **Y `ExistingFilePath.CreateFromPath` lanza `ArgumentNullException` si el fichero ya no existe:**
 
 ```csharp
 var ficheros = _io.EnumerateFiles(carpeta);    // ✅ Valid
@@ -287,7 +287,7 @@ Ningún `Map` es un `TryMap`. La validación previa cubre **existencia**, pero n
 ### 5. Hay una ventana entre validar y ejecutar (TOCTOU)
 
 ```csharp
-ExistsFile.ByString(filePathStr)              // t0: el fichero existe
+ExistingFilePath.FromPath(filePathStr)              // t0: el fichero existe
           .Map(_ => File.ReadAllText(filePathStr));   // t1: ¿sigue existiendo?
 ```
 
@@ -304,7 +304,7 @@ Los tres métodos podrían ser estáticos. La interfaz existe **exclusivamente p
 ### 8. La variable local `result` es innecesaria
 
 ```csharp
-var result = ExistsFile.ByString(filePathStr).Map(…);
+var result = ExistingFilePath.FromPath(filePathStr).Map(…);
 return result;
 ```
 
@@ -328,7 +328,7 @@ Podría ser un cuerpo de expresión (`=>`). Es solo estilo.
 
 > ⚠️ **No hay streams.** No hay forma de procesar un fichero grande sin cargarlo (bueno, `ReadLines` lo permite, pero con los riesgos ya descritos).
 
-> ⚠️ **No hay personalización del mensaje de error.** Los métodos no aceptan `MlErrorDetails`, aunque `ExistsFile.ByString` sí lo soporta. **La capacidad existe en el objeto de valor pero no se expone en el wrapper.**
+> ⚠️ **No hay personalización del mensaje de error.** Los métodos no aceptan `MlErrorDetails`, aunque `ExistingFilePath.FromPath` sí lo soporta. **La capacidad existe en el objeto de valor pero no se expone en el wrapper.**
 
 > ⚠️ **No hay tests.** No existe un proyecto `MoralesLarios.OOFP.FileSystem.Tests`.
 
@@ -346,28 +346,28 @@ public interface IWrapperIOExtendido : IWrapperIO
 {
     MlResult<string>              WriteAllText   (string filePathStr, string contenido);
     Task<MlResult<string>>        ReadAllTextAsync(string filePathStr);
-    MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr, string patron);
+    MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr, string patron);
 }
 
 public class WrapperIOExtendido : WrapperIO, IWrapperIOExtendido
 {
     // ✅ Escritura: valida el DIRECTORIO padre, no el fichero (aún no existe)
     public MlResult<string> WriteAllText(string filePathStr, string contenido)
-        => ExistDirectory.ByString(Path.GetDirectoryName(filePathStr)!")
+        => ExistingDirectoryPath.FromPath(Path.GetDirectoryName(filePathStr)!")
                          .TryMap(_ => { File.WriteAllText(filePathStr, contenido); return filePathStr; },
                                  $"Error al escribir en '{filePathStr}'");
 
     // ✅ Asíncrono
     public Task<MlResult<string>> ReadAllTextAsync(string filePathStr)
-        => ExistsFile.ByString(filePathStr)
+        => ExistingFilePath.FromPath(filePathStr)
                      .TryMapAsync(_ => File.ReadAllTextAsync(filePathStr),
                                   $"Error al leer '{filePathStr}'");
 
     // ✅ Con patrón y materialización inmediata (evita la pereza)
-    public MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr, string patron)
-        => ExistDirectory.ByString(directoryStr)
+    public MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr, string patron)
+        => ExistingDirectoryPath.FromPath(directoryStr)
                          .TryMap(_ => Directory.EnumerateFiles(directoryStr, patron)
-                                               .Select(ExistsFile.FromString)
+                                               .Select(ExistingFilePath.CreateFromPath)
                                                .ToList()
                                                .AsEnumerable(),
                                  $"Error al enumerar '{directoryStr}'");
@@ -412,7 +412,7 @@ public MlResult<IEnumerable<Registro>> ProcesarCarpeta(string carpeta)
 ```csharp
 public class ImportadorFicheros(IMlConfigManager _config, IWrapperIO _io)
 {
-    public MlResult<IEnumerable<ExistsFile>> ListarPendientes()
+    public MlResult<IEnumerable<ExistingFilePath>> ListarPendientes()
         => _config.ReadAppSettingKey<string>("Rutas:RutaFicheros",
                                              "Falta 'Rutas:RutaFicheros' en la configuración")
                   .BindEnsure(r => !string.IsNullOrWhiteSpace(r), "La ruta configurada está vacía")
@@ -420,7 +420,7 @@ public class ImportadorFicheros(IMlConfigManager _config, IWrapperIO _io)
 }
 ```
 
-> 💡 El `BindEnsure` es necesario porque `IMlConfigManager` **acepta cadenas vacías como valor válido** (ver [`Utilities`](../MoralesLarios.OOFP.Configuration/README.md)), y una ruta vacía haría fallar `ExistDirectory` con un mensaje menos claro.
+> 💡 El `BindEnsure` es necesario porque `IMlConfigManager` **acepta cadenas vacías como valor válido** (ver [`Utilities`](../MoralesLarios.OOFP.Configuration/README.md)), y una ruta vacía haría fallar `ExistingDirectoryPath` con un mensaje menos claro.
 
 ### Ejemplo 4 — Con logging
 
@@ -445,8 +445,8 @@ public class ProcesadorInformesTests
         public MlResult<IEnumerable<string>> ReadAllLines(string filePathStr)
             => MlResult<IEnumerable<string>>.Valid(contenido.Split(Environment.NewLine));
 
-        public MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr)
-            => MlResult<IEnumerable<ExistsFile>>.Valid([]);
+        public MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr)
+            => MlResult<IEnumerable<ExistingFilePath>>.Valid([]);
     }
 
     [Fact]
@@ -504,8 +504,8 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 | Copiar, mover, borrar | ❌ No disponible |
 | Lectura asíncrona | ❌ No disponible: [extiéndelo](#cómo-extenderlo) |
 | Recorrer subcarpetas | ❌ No disponible |
-| Una codificación concreta | ❌ Usa `ExistsFile.ByString` + `TryMap` con `File.ReadAllText(ruta, encoding)` |
-| Solo validar que existe | `ExistsFile.ByString(ruta)` de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) |
+| Una codificación concreta | ❌ Usa `ExistingFilePath.FromPath` + `TryMap` con `File.ReadAllText(ruta, encoding)` |
+| Solo validar que existe | `ExistingFilePath.FromPath(ruta)` de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) |
 | Cubrir permisos, bloqueos, etc. | Envolver la llamada en `MlResult.TryMap(…)` |
 
 ---
@@ -517,11 +517,11 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 3. **`ReadAllText` es el método más seguro**: es el único que lee de forma inmediata.
 4. **Depende de `IWrapperIO`, no de `WrapperIO`**: es la razón de ser de la interfaz (tests sin disco).
 5. **Extiende con tu propio wrapper** si necesitas escritura o asincronía; el patrón es de tres líneas.
-6. **Al escribir, valida el directorio padre** (`ExistDirectory`), no el fichero destino: aún no existe.
+6. **Al escribir, valida el directorio padre** (`ExistingDirectoryPath`), no el fichero destino: aún no existe.
 7. **Combina con [`Utilities`](../MoralesLarios.OOFP.Configuration/README.md)** para leer las rutas de configuración, y añade `BindEnsure` contra rutas vacías.
 8. **Filtra con LINQ tras `EnumerateFiles`**: no hay `searchPattern`.
-9. **No asumas UTF-8** si los ficheros vienen de sistemas antiguos: usa `File.ReadAllText(ruta, encoding)` con `ExistsFile.ByString` a mano.
-10. **En carpetas con concurrencia, materializa cuanto antes**: la enumeración perezosa combinada con `ExistsFile.FromString` puede lanzar a mitad del recorrido.
+9. **No asumas UTF-8** si los ficheros vienen de sistemas antiguos: usa `File.ReadAllText(ruta, encoding)` con `ExistingFilePath.FromPath` a mano.
+10. **En carpetas con concurrencia, materializa cuanto antes**: la enumeración perezosa combinada con `ExistingFilePath.CreateFromPath` puede lanzar a mitad del recorrido.
 11. **Combina con [`Extensions.Loggers`](../MoralesLarios.OOFP.Logging/README.md)** para trazar qué ruta falló.
 12. **No lo uses para ficheros muy grandes** sin pensarlo: `ReadAllText` los carga completos en memoria.
 
@@ -530,8 +530,8 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 ## Resumen
 
 - El proyecto **más pequeño de la solución**: tres ficheros y una interfaz, `IWrapperIO`, con **tres métodos de solo lectura**.
-- El patrón que aplica: **validar la ruta con un objeto de valor** (`ExistsFile` / `ExistDirectory`) y **solo entonces** ejecutar la operación de `System.IO`, gracias al cortocircuito del `Map`.
-- `EnumerateFiles` devuelve **`ExistsFile`**, no `string`: el tipo transporta la garantía de existencia.
+- El patrón que aplica: **validar la ruta con un objeto de valor** (`ExistingFilePath` / `ExistingDirectoryPath`) y **solo entonces** ejecutar la operación de `System.IO`, gracias al cortocircuito del `Map`.
+- `EnumerateFiles` devuelve **`ExistingFilePath`**, no `string`: el tipo transporta la garantía de existencia.
 - Registro: `services.AddOOFPIO()` como `Singleton`. ⚠️ El nombre **rompe la convención `AddMl…`** del resto de la solución.
 - ⚠️ **Dos de los tres métodos son perezosos** (`File.ReadLines` y `Directory.EnumerateFiles`): el `MlResult` es `Valid` **antes de leer nada**, y una excepción durante la enumeración **escapa del raíl**. **Materializa con `TryMap(x => x.ToList(), …)`.**
 - ⚠️ **Solo se convierte en `Fail` el caso "no existe"**: permisos, bloqueos, rutas largas y codificaciones siguen lanzando excepciones.
@@ -550,7 +550,7 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) — 🔑 `ExistsFile` y `ExistDirectory`, la base de la validación
+- [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) — 🔑 `ExistingFilePath` y `ExistingDirectoryPath`, la base de la validación
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `NotEmptyString`, del que heredan
 - [`MoralesLarios.OOFP.Configuration`](../MoralesLarios.OOFP.Configuration/README.md) — leer de configuración las rutas que se pasan aquí
 - [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — trazar los fallos de E/S

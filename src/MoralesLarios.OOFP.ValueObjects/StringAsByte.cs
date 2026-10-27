@@ -4,24 +4,24 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringAsByte : StringAsNumeric<byte>
+public partial class StringAsByte : StringAsNumeric<byte>
 {
     protected StringAsByte(string value) : base(value)
     {
-        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
 
         Value = byte.Parse(value);
     }
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} should be a valid byte";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} should be a valid byte";
     public static bool IsValid(string value) => byte.TryParse(value, out _);
 
-    public static StringAsByte FromString(string value) => new StringAsByte(value);
+    public static StringAsByte CreateFromString(string value) => new StringAsByte(value);
 
-    public static MlResult<StringAsByte> ByString(string value)
+    public static MlResult<StringAsByte> FromString(string value)
         => MlResult.Empty()
-                    .TryBind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)),
-                                            $"{BuildErrorMessage(value)}")
+                    .TryBind(_ => EnsureFp.That(value, IsValid(value), FormatErrorMessage(value)),
+                                            $"{FormatErrorMessage(value)}")
                     .Map(_ => new StringAsByte(value));
 
     public static implicit operator byte(StringAsByte ValueObjectFp) => ValueObjectFp.Value;

@@ -12,7 +12,7 @@ public class StringAsNumericTests
     {
         var value = "123,45";
 
-        StringAsNumeric<decimal> result = StringAsNumeric<decimal>.FromString(value);
+        StringAsNumeric<decimal> result = StringAsNumeric<decimal>.CreateFromString(value);
 
         decimal expected = 123.45m;
 
@@ -24,7 +24,7 @@ public class StringAsNumericTests
     {
         var value = "ABC";
 
-        Action act = () => StringAsNumeric<decimal>.FromString(value);
+        Action act = () => StringAsNumeric<decimal>.CreateFromString(value);
 
         act.Should().Throw<FormatException>();
     }
@@ -35,7 +35,7 @@ public class StringAsNumericTests
     {
         var value = "678.90";
 
-        var result = StringAsNumeric<decimal>.ByString(value);
+        var result = StringAsNumeric<decimal>.FromString(value);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -45,7 +45,7 @@ public class StringAsNumericTests
     {
         var value = "XYZ";
 
-        MlResult<StringAsNumeric<decimal>> result = StringAsNumeric<decimal>.ByString(value);
+        MlResult<StringAsNumeric<decimal>> result = StringAsNumeric<decimal>.FromString(value);
 
         result.IsFailure.Should().BeTrue();
     }

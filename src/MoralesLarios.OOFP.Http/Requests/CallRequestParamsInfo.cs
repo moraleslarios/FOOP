@@ -2,13 +2,13 @@ namespace MoralesLarios.OOFP.Http.Requests;
 
 
 public record CallRequestParamsInfo(string                      Url,
-                                    Key                         HttpClientFactoryKey,
+                                    ServiceKey                         HttpClientFactoryKey,
                                     Dictionary<string, string>? Headers           = null!,
                                     CancellationToken           CancellationToken = default
 )
 {
     public static implicit operator CallRequestParamsInfo((NotEmptyString              url,
-                                                           Key                         httpClientFactoryKey,
+                                                           ServiceKey                         httpClientFactoryKey,
                                                            Dictionary<string, string>? headers,
                                                            CancellationToken           cancellationToken) value) 
         => new (value.url, value.httpClientFactoryKey, value.headers,  value.cancellationToken);
@@ -18,14 +18,14 @@ public record CallRequestParamsInfo(string                      Url,
 
 
 public record CallRequestParamsInfo<TRequest>(                     string                      Url,
-                                                                   Key                         HttpClientFactoryKey,
+                                                                   ServiceKey                         HttpClientFactoryKey,
                                               [property: Required] TRequest                    RequestBody,
                                                                    Dictionary<string, string>? Headers           = null!,
                                                                    CancellationToken           CancellationToken = default
 )
 {
     public static implicit operator CallRequestParamsInfo<TRequest>((string                      url,
-                                                                     Key                         httpClientFactoryKey,
+                                                                     ServiceKey                         httpClientFactoryKey,
                                                                      TRequest                    requestBody,
                                                                      Dictionary<string, string>? headers,
                                                                      CancellationToken           cancellationToken) value) 

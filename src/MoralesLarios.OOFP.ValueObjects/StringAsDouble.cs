@@ -4,24 +4,24 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringAsDouble : StringAsNumeric<double>
+public partial class StringAsDouble : StringAsNumeric<double>
 {
     protected StringAsDouble(string value) : base(value)
     {
-        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
 
         Value = double.Parse(value);
     }
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} should be a valid double";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} should be a valid double";
     public static bool IsValid(string value) => double.TryParse(value, out _);
 
-    public static StringAsDouble FromString(string value) => new StringAsDouble(value);
+    public static StringAsDouble CreateFromString(string value) => new StringAsDouble(value);
 
-    public static MlResult<StringAsDouble> ByString(string value)
+    public static MlResult<StringAsDouble> FromString(string value)
         => MlResult.Empty()
-                    .TryBind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)),
-                                            $"{BuildErrorMessage(value)}")
+                    .TryBind(_ => EnsureFp.That(value, IsValid(value), FormatErrorMessage(value)),
+                                            $"{FormatErrorMessage(value)}")
                     .Map(_ => new StringAsDouble(value));
 
     public static implicit operator double(StringAsDouble ValueObjectFp) => ValueObjectFp.Value;

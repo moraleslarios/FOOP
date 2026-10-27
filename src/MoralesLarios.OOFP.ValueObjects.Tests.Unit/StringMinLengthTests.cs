@@ -12,7 +12,7 @@ public class StringMinLengthTests
         var validString = "Hello";
         var maxLength   = 2;
 
-        var result = StringMinLength.ByStringLength(validString, maxLength);
+        var result = StringMinLength.FromLength(validString, maxLength);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -23,7 +23,7 @@ public class StringMinLengthTests
         var validString = "";
         var maxLength   = 10;
 
-        var result = StringMinLength.ByStringLength(validString, maxLength);
+        var result = StringMinLength.FromLength(validString, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -34,7 +34,7 @@ public class StringMinLengthTests
         var validString = "XX";
         var maxLength   = 5;
 
-        var result = StringMinLength.ByStringLength(validString, maxLength);
+        var result = StringMinLength.FromLength(validString, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }

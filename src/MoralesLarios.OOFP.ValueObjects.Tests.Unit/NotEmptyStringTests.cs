@@ -11,7 +11,7 @@ public class NotEmptyStringTests
     [Fact]
     public void ByString_ValidValue_ReturnsValid()
     {
-        MlResult<NotEmptyString> result = NotEmptyString.ByString("Valid String");
+        MlResult<NotEmptyString> result = NotEmptyString.FromString("Valid String");
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -19,7 +19,7 @@ public class NotEmptyStringTests
     [Fact]
     public void ByString_FailValue_ReturnsFail()
     {
-        MlResult<NotEmptyString> result = NotEmptyString.ByString("");
+        MlResult<NotEmptyString> result = NotEmptyString.FromString("");
 
         result.IsFailure.Should().BeTrue();
     }
@@ -27,7 +27,7 @@ public class NotEmptyStringTests
     [Fact]
     public void FromString_FailValue_ThrowException()
     {
-        Action act = () => NotEmptyString.FromString("");
+        Action act = () => NotEmptyString.CreateFromString("");
 
         act.Should().Throw<ArgumentException>();
     }

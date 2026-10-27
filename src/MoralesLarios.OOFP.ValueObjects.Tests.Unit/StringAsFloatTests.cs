@@ -10,7 +10,7 @@ public class StringAsFloatTests
     public void FromString_ValidFloatString_ReturnsValid()
     {
         var value = "123,45";
-        StringAsFloat result = StringAsFloat.FromString(value);
+        StringAsFloat result = StringAsFloat.CreateFromString(value);
         float expected = 123.45f;
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -19,7 +19,7 @@ public class StringAsFloatTests
     public void FromString_InvalidFloatString_ThrowsArgumentNullException()
     {
         var value = "ABC";
-        Action act = () => StringAsFloat.FromString(value);
+        Action act = () => StringAsFloat.CreateFromString(value);
         act.Should().Throw<FormatException>();
     }
 
@@ -27,7 +27,7 @@ public class StringAsFloatTests
     public void ByString_ValidFloatString_ReturnsValidResult()
     {
         var value = "3.14159";
-        var result = StringAsFloat.ByString(value);
+        var result = StringAsFloat.FromString(value);
         result.IsSuccess.Should().BeTrue();
     }
 
@@ -35,7 +35,7 @@ public class StringAsFloatTests
     public void ByString_InvalidFloatString_ReturnsFailResult()
     {
         var value = "XYZ";
-        MlResult<StringAsFloat> result = StringAsFloat.ByString(value);
+        MlResult<StringAsFloat> result = StringAsFloat.FromString(value);
         result.IsFailure.Should().BeTrue();
     }
 }

@@ -1,0 +1,8 @@
+{
+  "id": "fase4c-nivel3-patrones",
+  "level": 3,
+  "renames": [
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects", "type": "MoralesLarios.OOFP.ValueObjects.Endpoint", "name": "EndpointPattern", "new": "ValidationPattern", "bridge": true, "note": "Derivado: es la regex de validacion" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects", "type": "MoralesLarios.OOFP.ValueObjects.Mail",     "name": "EndpointPattern", "new": "ValidationPattern", "bridge": true, "note": "Derivado: nombre copiado de Endpoint; es la regex de email" }
+  ]
+}

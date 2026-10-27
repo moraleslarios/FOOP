@@ -10,7 +10,7 @@ public class StringAsULongTests
     public void FromString_ValidULongString_ReturnsValid()
     {
         var value = "123456789012345";
-        StringAsULong result = StringAsULong.FromString(value);
+        StringAsULong result = StringAsULong.CreateFromString(value);
         ulong expected = 123456789012345;
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -19,7 +19,7 @@ public class StringAsULongTests
     public void FromString_InvalidULongString_ThrowsArgumentNullException()
     {
         var value = "ABC";
-        Action act = () => StringAsULong.FromString(value);
+        Action act = () => StringAsULong.CreateFromString(value);
         act.Should().Throw<FormatException>();
     }
 
@@ -27,7 +27,7 @@ public class StringAsULongTests
     public void ByString_ValidULongString_ReturnsValidResult()
     {
         var value = "18000000000000000000";
-        var result = StringAsULong.ByString(value);
+        var result = StringAsULong.FromString(value);
         result.IsSuccess.Should().BeTrue();
     }
 
@@ -35,7 +35,7 @@ public class StringAsULongTests
     public void ByString_InvalidULongString_ReturnsFailResult()
     {
         var value = "XYZ";
-        MlResult<StringAsULong> result = StringAsULong.ByString(value);
+        MlResult<StringAsULong> result = StringAsULong.FromString(value);
         result.IsFailure.Should().BeTrue();
     }
 }

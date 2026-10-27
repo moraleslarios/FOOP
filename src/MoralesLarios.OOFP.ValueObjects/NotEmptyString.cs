@@ -6,20 +6,20 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class NotEmptyString : ValueObject<string>
+public partial class NotEmptyString : ValueObject<string>
 {
     protected NotEmptyString(string value) : base(value)
     {
-        if ( ! IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if ( ! IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
     }
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} cannot be null or empty";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} cannot be null or empty";
     public static bool IsValid(string value) => ! string.IsNullOrWhiteSpace(value);
 
-    public static NotEmptyString FromString(string value) => new NotEmptyString(value);
+    public static NotEmptyString CreateFromString(string value) => new NotEmptyString(value);
 
-    public static MlResult<NotEmptyString> ByString(string value, MlErrorDetails errorsDetails = null!)
-        => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value))
+    public static MlResult<NotEmptyString> FromString(string value, MlErrorDetails errorsDetails = null!)
+        => EnsureFp.That(value, IsValid(value), errorsDetails ?? FormatErrorMessage(value))
                     .Map(_ => new NotEmptyString(value));
 
     public static implicit operator string        (NotEmptyString valueObject) => valueObject.Value;

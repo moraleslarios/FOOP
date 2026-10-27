@@ -11,7 +11,7 @@ public record PaginationInfo([property: Range(0, int.MinValue)] int PageNumber,
      public static implicit operator PaginationInfo((int pageNumber, int pageSize) value)
         => new PaginationInfo(value.pageNumber, value.pageSize);
 
-    public static implicit operator PaginationInfo((IntNotNegative pageNumber, IntNotNegative pageSize) value)
+    public static implicit operator PaginationInfo((IntNonNegative pageNumber, IntNonNegative pageSize) value)
         => new PaginationInfo(value.pageNumber, value.pageSize);
 
 }

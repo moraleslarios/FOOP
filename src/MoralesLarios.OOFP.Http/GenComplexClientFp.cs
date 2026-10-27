@@ -13,7 +13,7 @@ public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
     public virtual async Task<MlResult<TDto>> GetByIdAsync(       Dictionary<string, string> headers = null!,
                                                                   CancellationToken          ct      = default,
                                                            params object[]                   pk)
-        => await NotEmptyString.ByString(GetPkValuesString(pk))
+        => await NotEmptyString.FromString(GetPkValuesString(pk))
                                      .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
 
 
@@ -29,36 +29,36 @@ public class GenComplexClientFp<TDto>(ILogger<GenComplexClientFp<TDto>> _logger,
         => _genClientFp.PostAsync(itemBody, headers, ct);
 
 
-    public virtual Task<MlResult<Empty>> PutAsync(TDto                       itemBody, 
+    public virtual Task<MlResult<EmptyValue>> PutAsync(TDto                       itemBody, 
                                                   Dictionary<string, string> headers = null!, 
                                                   CancellationToken          ct      = default)
         => _genClientFp.PutAsync(itemBody, headers, ct);
 
-    public virtual Task<MlResult<Empty>> PutByIdAsync(       TDto                       itemBody,
+    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(       TDto                       itemBody,
                                                              Dictionary<string, string> headers = null!, 
                                                              CancellationToken          ct      = default,
                                                       params object[]                   pk)
-        => NotEmptyString.ByString(GetPkValuesString(pk))
+        => NotEmptyString.FromString(GetPkValuesString(pk))
                          .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
 
-    public virtual Task<MlResult<Empty>> PutByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(object[]                   pk,
                                                       TDto                       itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
         => PutByIdAsync(itemBody, headers, ct, pk);
 
-    public virtual Task<MlResult<Empty>> DeleteAsync(TDto                       itemBody, 
+    public virtual Task<MlResult<EmptyValue>> DeleteAsync(TDto                       itemBody, 
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
         => _genClientFp.DeleteAsync(itemBody, headers, ct);
 
-    public virtual Task<MlResult<Empty>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
+    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
                                                                 CancellationToken          ct      = default,
                                                          params object[]                   pk)
-        => NotEmptyString.ByString(GetPkValuesString(pk))
+        => NotEmptyString.FromString(GetPkValuesString(pk))
                             .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
 
-    public virtual Task<MlResult<Empty>> DeleteByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(object[]                   pk,
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
         => DeleteByIdAsync(headers, ct, pk);
@@ -99,7 +99,7 @@ public class GenComplexClientFp<TRequest, TResponse>(ILogger<GenComplexClientFp<
     public virtual async Task<MlResult<TResponse>> GetByIdAsync(       Dictionary<string, string> headers = null!,
                                                                        CancellationToken          ct      = default,
                                                                 params object[]                   pk)
-        => await NotEmptyString.ByString(GetPkValuesString(pk))
+        => await NotEmptyString.FromString(GetPkValuesString(pk))
                                      .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
 
 
@@ -115,36 +115,36 @@ public class GenComplexClientFp<TRequest, TResponse>(ILogger<GenComplexClientFp<
         => _genClientFp.PostAsync(itemBody, headers, ct);
 
 
-    public virtual Task<MlResult<Empty>> PutAsync(TRequest                   itemBody, 
+    public virtual Task<MlResult<EmptyValue>> PutAsync(TRequest                   itemBody, 
                                                   Dictionary<string, string> headers = null!, 
                                                   CancellationToken          ct      = default)
         => _genClientFp.PutAsync(itemBody, headers, ct);
 
-    public virtual Task<MlResult<Empty>> PutByIdAsync(       TRequest                   itemBody,
+    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(       TRequest                   itemBody,
                                                              Dictionary<string, string> headers = null!, 
                                                              CancellationToken          ct      = default,
                                                       params object[]                   pk)
-        => NotEmptyString.ByString(GetPkValuesString(pk))
+        => NotEmptyString.FromString(GetPkValuesString(pk))
                          .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
 
-    public virtual Task<MlResult<Empty>> PutByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> PutByIdAsync(object[]                   pk,
                                                       TRequest                   itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
         => PutByIdAsync(itemBody, headers, ct, pk);
 
-    public virtual Task<MlResult<Empty>> DeleteAsync(TRequest                   itemBody, 
+    public virtual Task<MlResult<EmptyValue>> DeleteAsync(TRequest                   itemBody, 
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
         => _genClientFp.DeleteAsync(itemBody, headers, ct);
 
-    public virtual Task<MlResult<Empty>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
+    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
                                                                 CancellationToken          ct      = default,
                                                          params object[]                   pk)
-        => NotEmptyString.ByString(GetPkValuesString(pk))
+        => NotEmptyString.FromString(GetPkValuesString(pk))
                             .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
 
-    public virtual Task<MlResult<Empty>> DeleteByIdAsync(object[]                   pk,
+    public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(object[]                   pk,
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
         => DeleteByIdAsync(headers, ct, pk);

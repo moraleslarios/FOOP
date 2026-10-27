@@ -12,7 +12,7 @@ public class DecimalLessThanTests
         decimal value = 5.5m;
         decimal length = 8.2m;
 
-        var result = DecimalLessThan.ByDecimalLength(value, length);
+        var result = DecimalLessThan.FromDecimalLength(value, length);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -23,7 +23,7 @@ public class DecimalLessThanTests
         decimal value = 9.1m;
         decimal length = 5.0m;
 
-        var result = DecimalLessThan.ByDecimalLength(value, length);
+        var result = DecimalLessThan.FromDecimalLength(value, length);
 
         result.IsFailure.Should().BeTrue();
     }

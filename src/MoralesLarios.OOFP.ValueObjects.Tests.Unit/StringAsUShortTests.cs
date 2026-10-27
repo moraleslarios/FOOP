@@ -10,7 +10,7 @@ public class StringAsUShortTests
     public void FromString_ValidUShortString_ReturnsValid()
     {
         var value = "45678";
-        StringAsUShort result = StringAsUShort.FromString(value);
+        StringAsUShort result = StringAsUShort.CreateFromString(value);
         ushort expected = 45678;
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -19,7 +19,7 @@ public class StringAsUShortTests
     public void FromString_InvalidUShortString_ThrowsArgumentNullException()
     {
         var value = "ABC";
-        Action act = () => StringAsUShort.FromString(value);
+        Action act = () => StringAsUShort.CreateFromString(value);
         act.Should().Throw<FormatException>();
     }
 
@@ -27,7 +27,7 @@ public class StringAsUShortTests
     public void ByString_ValidUShortString_ReturnsValidResult()
     {
         var value = "60000";
-        var result = StringAsUShort.ByString(value);
+        var result = StringAsUShort.FromString(value);
         result.IsSuccess.Should().BeTrue();
     }
 
@@ -35,7 +35,7 @@ public class StringAsUShortTests
     public void ByString_InvalidUShortString_ReturnsFailResult()
     {
         var value = "XYZ";
-        MlResult<StringAsUShort> result = StringAsUShort.ByString(value);
+        MlResult<StringAsUShort> result = StringAsUShort.FromString(value);
         result.IsFailure.Should().BeTrue();
     }
 }

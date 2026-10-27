@@ -8,18 +8,18 @@ public partial class IntBetween : ValueObject<int>
 {
     protected IntBetween(int value, int minLength, int maxLength) : base(value)
     {
-        if ( ! IsValid(value, minLength, maxLength)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, minLength, maxLength));
+        if ( ! IsValid(value, minLength, maxLength)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value, minLength, maxLength));
     }
 
-    public static string BuildErrorMessage(int value, int minLength, int maxLength) => $"{value} must be between {minLength} and {maxLength}";
+    public static string FormatErrorMessage(int value, int minLength, int maxLength) => $"{value} must be between {minLength} and {maxLength}";
     public static bool IsValid(int value, int minLength, int maxLength) => value > minLength && value < maxLength;
 
 
-    public static IntBetween FromIntLength(int value, int minLength, int maxLength) => new IntBetween(value, minLength, maxLength);
+    public static IntBetween CreateFromIntLength(int value, int minLength, int maxLength) => new IntBetween(value, minLength, maxLength);
 
-    public static MlResult<IntBetween> ByIntLength(int value, int minLength, int maxLength, MlErrorDetails errorsDetails = null!)
+    public static MlResult<IntBetween> FromIntLength(int value, int minLength, int maxLength, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
-                    .Bind( _ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? BuildErrorMessage(value, minLength, maxLength)))
+                    .Bind( _ => EnsureFp.That(value, IsValid(value, minLength, maxLength), errorsDetails ?? FormatErrorMessage(value, minLength, maxLength)))
                     .Map ( _ => new IntBetween(value, minLength, maxLength));
 
     public static implicit operator int (IntBetween valueObject) => valueObject.Value;

@@ -4,20 +4,20 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class Endpoint : RegexValue
+public partial class Endpoint : RegexValue
 {
-    public const string EndpointPattern = @"^https://[A-Za-z0-9.-]+(?::[1-9][0-9]{0,4})?$"; // host + optional port
+    public const string ValidationPattern = @"^https://[A-Za-z0-9.-]+(?::[1-9][0-9]{0,4})?$"; // host + optional port
 
-    protected Endpoint(NotEmptyString value) : base(value, EndpointPattern) { }
+    protected Endpoint(NotEmptyString value) : base(value, ValidationPattern) { }
 
-    public static string BuildErrorMessage(string value) => $"{value} is not a valid endpoint";
-    public static bool   IsValid(string value)          => RegexValue.IsValid(value, EndpointPattern);
+    public static string FormatErrorMessage(string value) => $"{value} is not a valid endpoint";
+    public static bool   IsValid(string value)          => RegexValue.IsValid(value, ValidationPattern);
 
-    public static Endpoint FromString(string value) => new Endpoint(value);
+    public static Endpoint CreateFromString(string value) => new Endpoint(value);
 
-    public static MlResult<Endpoint> ByString(string value, MlErrorDetails errorsDetails = null!)
-        => NotEmptyString.ByString(value)
-                            .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
+    public static MlResult<Endpoint> FromString(string value, MlErrorDetails errorsDetails = null!)
+        => NotEmptyString.FromString(value)
+                            .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? FormatErrorMessage(value)))
                             .Map (_ => new Endpoint(value));
 
     public static implicit operator string  (Endpoint valueObject) => valueObject.Value;

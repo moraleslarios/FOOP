@@ -84,7 +84,7 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 | `Microsoft.EntityFrameworkCore` | 8.0.3 | `DbContext`, `DbSet<T>`, `ToListAsync` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `EnsureFp`, `TryMap`, `FailIfNull` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | `PaginationInfo`, `PaginationResultInfo<T>` |
-| [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | — | `IntNotNegative` (conversiones de paginación) |
+| [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | — | `IntNonNegative` (conversiones de paginación) |
 
 Destino: **`net8.0`**. Versión del paquete: **1.0.14**.
 
@@ -691,7 +691,7 @@ A diferencia de todos los demás repos funcionales, este **accede al `DbContext`
 
 > 💡 **Es en realidad una ventaja**: al no pasar por el motor interno, evita el bug del `OrderBy` tras `Skip` descrito en el punto 5. Pero significa que `EFRepoReaderPagination` (OOP) **queda registrado y sin usar**.
 
-### 10. ⚠️ `IntNotNegative` en `PaginationInfo` con anotaciones incorrectas
+### 10. ⚠️ `IntNonNegative` en `PaginationInfo` con anotaciones incorrectas
 
 ```csharp
 public record PaginationInfo([property: Range(0, int.MinValue)] int PageNumber,   // ⚠️ Range(0, -2147483648)
@@ -1018,7 +1018,7 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 ### Proyectos relacionados
 
 - [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — 🔑 `PaginationInfo` y `PaginationResultInfo<T>`
-- [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `IntNotNegative` y las conversiones de paginación
+- [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `IntNonNegative` y las conversiones de paginación
 - [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validar la entidad antes de persistirla
 - [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — validación con FluentValidation
 - [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — trazar los fallos de acceso a datos

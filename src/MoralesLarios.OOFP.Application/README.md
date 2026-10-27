@@ -503,7 +503,7 @@ Pero la capa HTTP busca la clave **`"ProblemsDetails"`** (la constante de `Helpe
 >           ct, pk: id);
 > ```
 
-### 3. ⚠️ `Constants.ProblemsDetails` es de tipo `Name`, y `MlProblemsDetails` no lo usa
+### 3. ⚠️ `Constants.ProblemsDetails` es de tipo `MemberName`, y `MlProblemsDetails` no lo usa
 
 ```csharp
 // Helpers/Constants.cs — público, tipo Name (value object)

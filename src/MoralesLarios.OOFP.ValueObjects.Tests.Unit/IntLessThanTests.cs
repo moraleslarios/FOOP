@@ -13,7 +13,7 @@ public class IntLessThanTests
         var value     = 5;
         var minLenght = 8;
 
-        var result = IntLessThan.ByIntLength(value, minLenght);
+        var result = IntLessThan.FromIntLength(value, minLenght);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -24,7 +24,7 @@ public class IntLessThanTests
         var value     = 5;
         var minLenght = 2;
 
-        var result = IntLessThan.ByIntLength(value, minLenght);
+        var result = IntLessThan.FromIntLength(value, minLenght);
 
         result.IsFailure.Should().BeTrue();
     }

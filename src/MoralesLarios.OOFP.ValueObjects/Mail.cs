@@ -4,20 +4,20 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class Mail : RegexValue
+public partial class Mail : RegexValue
 {
-    public const string EndpointPattern = @"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$";
+    public const string ValidationPattern = @"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$";
 
-    protected Mail(NotEmptyString value) : base(value, EndpointPattern) { }
+    protected Mail(NotEmptyString value) : base(value, ValidationPattern) { }
 
-    public static string BuildErrorMessage(string value) => $"{value} is not a valid mail";
-    public static bool IsValid(string value) => RegexValue.IsValid(value, EndpointPattern);
+    public static string FormatErrorMessage(string value) => $"{value} is not a valid mail";
+    public static bool IsValid(string value) => RegexValue.IsValid(value, ValidationPattern);
 
-    public static Mail FromString(string value) => new Mail(value);
+    public static Mail CreateFromString(string value) => new Mail(value);
 
-    public static MlResult<Mail> ByString(string value, MlErrorDetails errorsDetails = null!)
-        => NotEmptyString.ByString(value)
-                            .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? BuildErrorMessage(value)))
+    public static MlResult<Mail> FromString(string value, MlErrorDetails errorsDetails = null!)
+        => NotEmptyString.FromString(value)
+                            .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? FormatErrorMessage(value)))
                             .Map (_ => new Mail(value));
 
     public static implicit operator string(Mail valueObject) => valueObject.Value;

@@ -11,7 +11,7 @@ public class EndpointTests
     {
         var value = "https://server:5590";
 
-        var result = Endpoint.ByString(value);
+        var result = Endpoint.FromString(value);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -21,7 +21,7 @@ public class EndpointTests
     {
         var value = string.Empty;
 
-        var result = Endpoint.ByString(value);
+        var result = Endpoint.FromString(value);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -31,7 +31,7 @@ public class EndpointTests
     {
         var value = "http://server:5590"; // Wrong scheme http
 
-        var result = Endpoint.ByString(value);
+        var result = Endpoint.FromString(value);
 
         result.IsFailure.Should().BeTrue();
     }

@@ -7,24 +7,24 @@ namespace MoralesLarios.OOFP.FileSystem;
 public class WrapperIO : IWrapperIO
 {
 
-    public MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr)
+    public MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr)
     {
-        var result = ExistDirectory.ByString(directoryStr)
+        var result = ExistingDirectoryPath.FromPath(directoryStr)
                                     .Map( _     => Directory.EnumerateFiles(directoryStr))
-                                    .Map( files => files.Select(file => ExistsFile.FromString(file)));
+                                    .Map( files => files.Select(file => ExistingFilePath.CreateFromPath(file)));
         return result;
     }
 
     public MlResult<string> ReadAllText(string filePathStr)
     {
-        var result = ExistsFile.ByString(filePathStr)
+        var result = ExistingFilePath.FromPath(filePathStr)
                                 .Map( _ => File.ReadAllText(filePathStr));
         return result;
     }
 
     public MlResult<IEnumerable<string>> ReadAllLines(string filePathStr)
     {
-        var result = ExistsFile.ByString(filePathStr)
+        var result = ExistingFilePath.FromPath(filePathStr)
                                 .Map(_ => File.ReadLines(filePathStr));
         return result;
     }

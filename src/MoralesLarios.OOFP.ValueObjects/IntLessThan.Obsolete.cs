@@ -3,5 +3,7 @@ namespace MoralesLarios.OOFP.ValueObjects;
 public partial class IntLessThan
 {
     [global::System.Obsolete("Renamed to FromIntLength. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static IntLessThan FromIntLenght(int value, int lenght) => FromIntLength(value, lenght);
+    public static IntLessThan FromIntLenght(int value, int lenght) => CreateFromIntLength(value, lenght);
+    [global::System.Obsolete("Renamed to FromIntLength. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public static MlResult<IntLessThan> ByIntLength(int value, int length, MlErrorDetails errorsDetails = null !) => FromIntLength(value, length, errorsDetails);
 }

@@ -13,7 +13,7 @@ public class DoubleBetweenTests
         var minLength = 4.1;
         var maxLength = 35.7;
 
-        var result = DoubleBetween.ByDoubleLength(value, minLength, maxLength);
+        var result = DoubleBetween.FromDoubleLength(value, minLength, maxLength);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -25,7 +25,7 @@ public class DoubleBetweenTests
         var minLength = 4.1;
         var maxLength = 15.0;
 
-        var result = DoubleBetween.ByDoubleLength(value, minLength, maxLength);
+        var result = DoubleBetween.FromDoubleLength(value, minLength, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -37,7 +37,7 @@ public class DoubleBetweenTests
         var minLength = 4.1;
         var maxLength = 15.0;
 
-        var result = DoubleBetween.ByDoubleLength(value, minLength, maxLength);
+        var result = DoubleBetween.FromDoubleLength(value, minLength, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }

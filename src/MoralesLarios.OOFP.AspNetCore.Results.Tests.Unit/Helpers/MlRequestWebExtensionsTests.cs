@@ -35,7 +35,7 @@ public class MlRequestWebExtensionsTests
 
         MlResult<NotEmptyString> result = request.GetHeaderInfo("X-Custom-Header");
 
-        MlResult<NotEmptyString> expected = NotEmptyString.FromString("HeaderValue");
+        MlResult<NotEmptyString> expected = NotEmptyString.CreateFromString("HeaderValue");
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -62,7 +62,7 @@ public class MlRequestWebExtensionsTests
             { "X-Custom-Header", "123" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
+        MlResult<IntNonNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -75,9 +75,9 @@ public class MlRequestWebExtensionsTests
             { "X-Custom-Header", "123" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
+        MlResult<IntNonNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
 
-        MlResult<IntNotNegative> expected = IntNotNegative.FromInt(123);
+        MlResult<IntNonNegative> expected = IntNonNegative.CreateFromInt(123);
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -90,7 +90,7 @@ public class MlRequestWebExtensionsTests
             { "XXX", "123" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
+        MlResult<IntNonNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
 
         result.IsFailure.Should().BeTrue();
     }
@@ -103,7 +103,7 @@ public class MlRequestWebExtensionsTests
             { "X-Page-Number", "1" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderPageNumber();
+        MlResult<IntNonNegative> result = request.GetHeaderPageNumber();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -116,9 +116,9 @@ public class MlRequestWebExtensionsTests
             { "X-Page-Number", "1" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderPageNumber();
+        MlResult<IntNonNegative> result = request.GetHeaderPageNumber();
 
-        MlResult<IntNotNegative> expected = IntNotNegative.FromInt(1);
+        MlResult<IntNonNegative> expected = IntNonNegative.CreateFromInt(1);
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -131,7 +131,7 @@ public class MlRequestWebExtensionsTests
             { "XXX", "1" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderPageNumber();
+        MlResult<IntNonNegative> result = request.GetHeaderPageNumber();
 
         result.IsFailure.Should().BeTrue();
     }
@@ -144,7 +144,7 @@ public class MlRequestWebExtensionsTests
             { "X-Page-Size", "10" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderPageSize();
+        MlResult<IntNonNegative> result = request.GetHeaderPageSize();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -157,9 +157,9 @@ public class MlRequestWebExtensionsTests
             { "X-Page-Size", "10" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderPageSize();
+        MlResult<IntNonNegative> result = request.GetHeaderPageSize();
 
-        MlResult<IntNotNegative> expected = IntNotNegative.FromInt(10);
+        MlResult<IntNonNegative> expected = IntNonNegative.CreateFromInt(10);
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -172,7 +172,7 @@ public class MlRequestWebExtensionsTests
             { "XXX", "10" }
         });
 
-        MlResult<IntNotNegative> result = request.GetHeaderPageSize();
+        MlResult<IntNonNegative> result = request.GetHeaderPageSize();
 
         result.IsFailure.Should().BeTrue();
     }
@@ -186,7 +186,7 @@ public class MlRequestWebExtensionsTests
             { "X-Page-Size", "10" }
         });
 
-        MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> result = request.GetHeaderPageInfo();
+        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetHeaderPageInfo();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -200,9 +200,9 @@ public class MlRequestWebExtensionsTests
             { "X-Page-Size", "10" }
         });
 
-        MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> result = request.GetHeaderPageInfo();
+        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetHeaderPageInfo();
 
-        MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> expected = (1, 10);
+        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> expected = (1, 10);
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -216,7 +216,7 @@ public class MlRequestWebExtensionsTests
             { "YYY", "10" }
         });
 
-        MlResult<(IntNotNegative PageNumber, IntNotNegative PageSize)> result = request.GetHeaderPageInfo();
+        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetHeaderPageInfo();
 
         result.IsFailure.Should().BeTrue();
     }

@@ -14,7 +14,7 @@ public class IntBetweenTests
         var minLength   = 4;
         var maxLength   = 35;
 
-        var result = IntBetween.ByIntLength(value, minLength, maxLength);
+        var result = IntBetween.FromIntLength(value, minLength, maxLength);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -27,7 +27,7 @@ public class IntBetweenTests
         var minLength   = 4;
         var maxLength   = 15;
 
-        var result = IntBetween.ByIntLength(value, minLength, maxLength);
+        var result = IntBetween.FromIntLength(value, minLength, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -39,7 +39,7 @@ public class IntBetweenTests
         var minLength   = 4;
         var maxLength   = 15;
 
-        var result = IntBetween.ByIntLength(value, minLength, maxLength);
+        var result = IntBetween.FromIntLength(value, minLength, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }

@@ -4,20 +4,20 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class DoubleLessThan : ValueObject<double>
+public partial class DoubleLessThan : ValueObject<double>
 {
     protected DoubleLessThan(double value, double length) : base(value)
     {
-        if ( ! IsValid(value, length)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, length));
+        if ( ! IsValid(value, length)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value, length));
     }
 
-    public static string BuildErrorMessage(double value, double length) => $"{value} must be less than {length}";
+    public static string FormatErrorMessage(double value, double length) => $"{value} must be less than {length}";
     public static bool IsValid(double value, double length) => value < length;
 
-    public static DoubleLessThan FromDoubleLength(double value, double length) => new DoubleLessThan(value, length);
-    public static MlResult<DoubleLessThan> ByDoubleLength(double value, double length, MlErrorDetails errorsDetails = null!)
+    public static DoubleLessThan CreateFromDoubleLength(double value, double length) => new DoubleLessThan(value, length);
+    public static MlResult<DoubleLessThan> FromDoubleLength(double value, double length, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
-                   .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
+                   .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? FormatErrorMessage(value, length)))
                    .Map ( _ => new DoubleLessThan(value, length));
 
     public static implicit operator double(DoubleLessThan valueObject) => valueObject.Value;

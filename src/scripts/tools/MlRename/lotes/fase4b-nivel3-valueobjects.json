@@ -1,0 +1,39 @@
+{
+  "id": "fase4b-nivel3-valueobjects",
+  "level": 3,
+  "renames": [
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects", "name": "limit", "new": "MinAllowedValue", "bridge": true, "note": "camelCase siendo publico. Hacerlo private const es cambio de contrato (Fase 12)" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "name": "EndpointPattern", "new": "SearchPattern", "bridge": true, "note": "Endpoint es vocabulario HTTP; es el patron de Directory.GetFiles" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects",            "name": "BuildErrorMessage", "new": "FormatErrorMessage", "bridge": false, "note": "Solo formatea una cadena (Build sugiere un builder). Sin puente: 43 tipos con ocultacion de miembros" },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "name": "BuildErrorMessage", "new": "FormatErrorMessage", "bridge": false },
+
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects", "name": "Key",   "new": "ServiceKey", "bridge": false, "note": "Clave de registro con nombre en DI; Key a secas colisiona con KeyValuePair.Key, claves de diccionario y PK" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects", "name": "Name",  "new": "MemberName", "bridge": false, "note": "Name es de las palabras mas colisionadas de .NET" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects", "name": "Empty", "new": "EmptyValue", "bridge": false, "note": "Empty x se lee como error; colisiona con string.Empty, Array.Empty..." },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects", "match": "NotNegative", "replace": "NonNegative", "bridge": false, "note": "No negativo (>= 0) es NonNegative en ingles tecnico" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects", "name": "RangeEnumValueObject", "new": "EnumRangeValueObject", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects", "name": "StringBetweenLength",  "new": "StringLengthBetween",  "bridge": false, "note": "Longitud de cadena entre X e Y" },
+
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "name": "ExistsFile",     "new": "ExistingFilePath",      "bridge": false, "note": "ExistsFile parecia un metodo bool (File.Exists); es un dato con invariante" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "name": "ExistDirectory", "new": "ExistingDirectoryPath", "bridge": false, "note": "Ademas corrige la conjugacion (Exist -> Exists)" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "name": "MlFile",         "new": "FilePath",              "bridge": false, "note": "Envuelve la ruta, no el fichero" },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem", "name": "MlDirectory",    "new": "DirectoryPath",         "bridge": false },
+
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "name": "KeyTests",   "new": "ServiceKeyTests", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "name": "NameTests",  "new": "MemberNameTests", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "name": "EmptyTests", "new": "EmptyValueTests", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "NotNegative", "replace": "NonNegative", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "^RangeEnumValueObject", "replace": "EnumRangeValueObject", "bridge": false },
+    { "kind": "type", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "^StringBetweenLength",  "replace": "StringLengthBetween",  "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "NotNegative",         "replace": "NonNegative",         "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "^StringBetweenLength", "replace": "StringLengthBetween", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "^RangeEnumValueObject", "replace": "EnumRangeValueObject", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "^Key_",   "replace": "ServiceKey_", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "^Name_",  "replace": "MemberName_", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.Tests.Unit", "match": "^Empty_", "replace": "EmptyValue_", "bridge": false },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit", "match": "^ExistsFile",     "replace": "ExistingFilePath",      "bridge": false },
+    { "kind": "type",   "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit", "match": "^ExistDirectory", "replace": "ExistingDirectoryPath", "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit", "match": "^ExistsFile",     "replace": "ExistingFilePath",      "bridge": false },
+    { "kind": "member", "assembly": "MoralesLarios.OOFP.ValueObjects.FileSystem.Tests.Unit", "match": "^ExistDirectory", "replace": "ExistingDirectoryPath", "bridge": false }
+  ]
+}

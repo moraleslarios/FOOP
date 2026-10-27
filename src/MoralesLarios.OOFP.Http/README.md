@@ -117,10 +117,10 @@ indentado) dentro de `MlErrorDetails`.
 | Dependencia | Para qué se usa aquí |
 |---|---|
 | `Microsoft.Extensions.Http` | `IHttpClientFactory`, `AddHttpClient(name, configure)` y el pool de `HttpMessageHandler`. |
-| `MoralesLarios.OOFP` (núcleo) | `MlResult<T>`, `Bind/Map/TryMap/ExecSelf`, `EnsureFp`, `Empty`. |
+| `MoralesLarios.OOFP` (núcleo) | `MlResult<T>`, `Bind/Map/TryMap/ExecSelf`, `EnsureFp`, `EmptyValue`. |
 | `MoralesLarios.OOFP.Logging` | `LogMlResultInformationAsync`, `MyMethodFinalLogAsync` (logging ferroviario). |
 | `MoralesLarios.OOFP.Shared` | `PaginationResultInfo<T>` (resultado paginado). |
-| `MoralesLarios.OOFP.ValueObjects` | `Key` (nombre del cliente), `Name`, `NotEmptyString`, `IntNotNegative`. |
+| `MoralesLarios.OOFP.ValueObjects` | `ServiceKey` (nombre del cliente), `MemberName`, `NotEmptyString`, `IntNonNegative`. |
 | `MoralesLarios.OOFP.Validation.DataAnnotations` | `DataannotationsValidator.ValidateAsync(parameters)` sobre los records de parámetros. |
 
 > ⚠️ Ten en cuenta que `Microsoft.Extensions.Http` está en la versión **9.0.6** mientras el
@@ -215,21 +215,21 @@ Es la única clase que toca `HttpClient` directamente. Regístrala con `services
 ```csharp
 public interface IHttpClientFactoryManager
 {
-    MlResult<HttpClient> CreateHttpClient(Key httpClientFactoryKey);
+    MlResult<HttpClient> CreateHttpClient(ServiceKey httpClientFactoryKey);
 
-    Task<MlResult<T>>     GetAsync       <T>(Key httpClientFactoryKey, string url = "",
+    Task<MlResult<T>>     GetAsync       <T>(ServiceKey httpClientFactoryKey, string url = "",
                                              Dictionary<string, string> headers = null,
                                              CancellationToken ct = default);
 
-    Task<MlResult<T>>     PostAsync      <T>(Key httpClientFactoryKey, T itemBody, string url = null!,
+    Task<MlResult<T>>     PostAsync      <T>(ServiceKey httpClientFactoryKey, T itemBody, string url = null!,
                                              Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
 
-    Task<MlResult<K>>     PostAsync   <T, K>(Key httpClientFactoryKey, T itemBody, string url = null,
+    Task<MlResult<K>>     PostAsync   <T, K>(ServiceKey httpClientFactoryKey, T itemBody, string url = null,
                                              Dictionary<string, string> headers = null,
                                              CancellationToken ct = default);
 
-    Task<MlResult<TResult>> PostGetAsync<T, TResult>(Key httpClientFactoryKey, T itemBody,
+    Task<MlResult<TResult>> PostGetAsync<T, TResult>(ServiceKey httpClientFactoryKey, T itemBody,
                                                      string url = null!,
                                                      Dictionary<string, string> headers = null!,
                                                      CancellationToken ct = default);
@@ -238,13 +238,13 @@ public interface IHttpClientFactoryManager
         PostGetPaginationAsync<TRequest, TItem>(
             CallRequestPaginationParamsInfo<TRequest> parameters, CancellationToken ct = default);
 
-    Task<MlResult<Empty>> PutAsync       <T>(Key httpClientFactoryKey, T itemBody, string url = null!,
+    Task<MlResult<Empty>> PutAsync       <T>(ServiceKey httpClientFactoryKey, T itemBody, string url = null!,
                                              Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
-    Task<MlResult<Empty>> DeleteAsync    <T>(Key httpClientFactoryKey, T itemBody, string url = null!,
+    Task<MlResult<Empty>> DeleteAsync    <T>(ServiceKey httpClientFactoryKey, T itemBody, string url = null!,
                                              Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
-    Task<MlResult<Empty>> DeleteByIdAsync<T>(Key httpClientFactoryKey, NotEmptyString url, Dictionary<string, string> headers = null!,
+    Task<MlResult<Empty>> DeleteByIdAsync<T>(ServiceKey httpClientFactoryKey, NotEmptyString url, Dictionary<string, string> headers = null!,
                                              CancellationToken ct = default);
 }
 ```
@@ -475,7 +475,7 @@ protected virtual string GetPkValuesString(object[] pkValues)
 | `TimeOnly` | `HH:mm:ss.fff` | `14:30:00.000` |
 | Cualquier otro | `v.ToString()` (cultura actual) | `42`, `ABC` |
 
-El resultado se pasa por `NotEmptyString.ByString(...)`, de modo que una clave vacía produce un
+El resultado se pasa por `NotEmptyString.FromString(...)`, de modo que una clave vacía produce un
 `MlResult` fallido **sin salir a la red**, y después se envía como un único segmento de URL.
 
 > ⚠️ **Tres limitaciones reales:**
@@ -526,7 +526,7 @@ public record CallRequestParamsInfo<TRequest>(
                          CancellationToken           CancellationToken = default);
 
 public record CallRequestPaginationParamsInfo(string Url, Key HttpClientFactoryKey,
-                                              IntNotNegative PageNumber, IntNotNegative PageSize,
+                                              IntNonNegative PageNumber, IntNonNegative PageSize,
                                               Dictionary<string, string>? Headers = null!,
                                               CancellationToken CancellationToken = default)
     : CallRequestParamsInfo(Url, HttpClientFactoryKey, Headers, CancellationToken);
@@ -534,7 +534,7 @@ public record CallRequestPaginationParamsInfo(string Url, Key HttpClientFactoryK
 public record CallRequestPaginationParamsInfo<TRequest>(
                          string Url, Key HttpClientFactoryKey,
     [property: Required] TRequest RequestBody,
-                         IntNotNegative PageNumber, IntNotNegative PageSize,
+                         IntNonNegative PageNumber, IntNonNegative PageSize,
                          Dictionary<string, string>? Headers = null!,
                          CancellationToken CancellationToken = default)
     : CallRequestParamsInfo<TRequest>(Url, HttpClientFactoryKey, RequestBody, Headers, CancellationToken);
@@ -561,7 +561,7 @@ CallRequestPaginationParamsInfo p2 = ("pruebas", "PruebasClient", 1, 20, null, C
 var page = await _manager.GetPaginationAsync<IEnumerable<PruebasDto>>(p2);
 ```
 
-> 💡 `Key`, `IntNotNegative` y `NotEmptyString` son *value objects* con conversiones implícitas desde
+> 💡 `ServiceKey`, `IntNonNegative` y `NotEmptyString` son *value objects* con conversiones implícitas desde
 > `string`/`int`, de ahí que `"PruebasClient"` y `1` funcionen directamente. Consulta
 > [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md).
 
@@ -592,9 +592,9 @@ Extensiones que devuelven `MlResult<…>` en lugar de lanzar. Todas tienen su ge
 ```csharp
 MlResult<HttpClient> SetHeaderInfo     (this HttpClient client, Name headerKey, string headerValue);
 MlResult<HttpClient> SetHeaderInfoAsInt(this HttpClient client, Name headerKey, int    headerValue);
-MlResult<HttpClient> SetHeaderPageNumber(this HttpClient client, IntNotNegative pageNumber); // "X-Page-Number"
-MlResult<HttpClient> SetHeaderPageSize  (this HttpClient client, IntNotNegative pageSize);   // "X-Page-Size"
-MlResult<HttpClient> SetHeaderPageInfo  (this HttpClient client, IntNotNegative pageNumber, IntNotNegative pageSize);
+MlResult<HttpClient> SetHeaderPageNumber(this HttpClient client, IntNonNegative pageNumber); // "X-Page-Number"
+MlResult<HttpClient> SetHeaderPageSize  (this HttpClient client, IntNonNegative pageSize);   // "X-Page-Size"
+MlResult<HttpClient> SetHeaderPageInfo  (this HttpClient client, IntNonNegative pageNumber, IntNonNegative pageSize);
 ```
 
 **Sobre `HttpRequestMessage`:**
@@ -647,7 +647,7 @@ public static IServiceCollection AddHttpClientsFp(this IServiceCollection servic
 
 public static IServiceCollection AddGenClientFp<TService, TImplementation>(
         this IServiceCollection services,
-        Action<Key>        configureHttpClientKey = null!,
+        Action<ServiceKey>        configureHttpClientKey = null!,
         Action<HttpClient> configureClient        = null!)
     where TService : class where TImplementation : class, TService;
 
@@ -662,7 +662,7 @@ public static IServiceCollection AddGenClientDuplexComplexFp<TService, TImplemen
 | Método | Qué registra | Cuándo usarlo |
 |---|---|---|
 | `AddHttpClientsFp()` | `IHttpClientFactoryManager → HttpClientFactoryManager` (**Transient**) | **Siempre**, una sola vez. Es el prerrequisito de todo lo demás. |
-| `AddGenClientFp<TService, TImpl>()` | `AddHttpClient(nombre, configureClient)` + `TService → TImpl` (Transient) con la `Key` inyectada | Cliente de **clave simple** (derivado de `GenClientFp<…>`). |
+| `AddGenClientFp<TService, TImpl>()` | `AddHttpClient(nombre, configureClient)` + `TService → TImpl` (Transient) con la `ServiceKey` inyectada | Cliente de **clave simple** (derivado de `GenClientFp<…>`). |
 | `AddGenClientComplexFp<TService, TImpl, TDto>()` | Lo anterior **más** `IGenClientFp<TDto> → GenClientFp<TDto>` | Cliente de **clave compuesta simplex** (derivado de `GenComplexClientFp<TDto>`). |
 | `AddGenClientDuplexComplexFp<TService, TImpl, TRequest, TResponse>()` | Idem con `IGenClientFp<TRequest, TResponse>` | Cliente de **clave compuesta duplex**. |
 
@@ -685,12 +685,12 @@ builder.Services.AddGenClientComplexFp<IReservasClient, ReservasClient, ReservaD
 > ⚠️⚠️ **NO uses el parámetro `configureHttpClientKey`.** El código es:
 >
 > ```csharp
-> Key httpClientFactoryKey = null!;
+> ServiceKey httpClientFactoryKey = null!;
 > if (configureHttpClientKey is not null) configureHttpClientKey(httpClientFactoryKey);  // ← recibe null y no asigna nada
-> else httpClientFactoryKey = Key.FromString(typeof(TImplementation).Name!);
+> else httpClientFactoryKey = ServiceKey.CreateFromString(typeof(TImplementation).Name!);
 > ```
 >
-> Al ser `Key` un tipo de referencia pasado **por valor**, el `Action<Key>` no puede devolver nada: si
+> Al ser `ServiceKey` un tipo de referencia pasado **por valor**, el `Action<ServiceKey>` no puede devolver nada: si
 > pasas `configureHttpClientKey`, la clave se queda en `null` y el `AddHttpClient(null, …)` posterior
 > revienta. **Usa siempre solo `configureClient`** y deja que la clave se derive del nombre de la
 > implementación (`nameof(PruebasClient)`), que es el comportamiento correcto de la rama `else`.
@@ -1094,7 +1094,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 17. **Para paginación desde una interfaz, usa `PostGetPaginationAsync`.** `GetPaginationAsync` obliga a
     depender de la clase concreta `HttpClientFactoryManager`.
 
-18. **Un `Key` = un `BaseAddress`.** No reutilices el mismo nombre de cliente para dos hosts: la
+18. **Un `ServiceKey` = un `BaseAddress`.** No reutilices el mismo nombre de cliente para dos hosts: la
     configuración de `IHttpClientFactory` es por nombre y la última gana.
 
 ---
@@ -1138,8 +1138,8 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
   genérica del lado servidor.
 - [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — `PaginationResultInfo<T>` y
   `PaginationInfo`, el sobre de los resultados paginados.
-- [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `Key`, `Name`,
-  `NotEmptyString` e `IntNotNegative`, los tipos que blindan los parámetros.
+- [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — `ServiceKey`, `MemberName`,
+  `NotEmptyString` e `IntNonNegative`, los tipos que blindan los parámetros.
 - [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) —
   `DataannotationsValidator`, que valida los records de parámetros antes de salir a la red.
 - [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) — el logging

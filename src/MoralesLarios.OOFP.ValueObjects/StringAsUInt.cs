@@ -4,24 +4,24 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringAsUInt : StringAsNumeric<uint>
+public partial class StringAsUInt : StringAsNumeric<uint>
 {
     protected StringAsUInt(string value) : base(value)
     {
-        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
 
         Value = uint.Parse(value);
     }
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} should be a valid uint";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} should be a valid uint";
     public static bool IsValid(string value) => uint.TryParse(value, out _);
 
-    public static StringAsUInt FromString(string value) => new StringAsUInt(value);
+    public static StringAsUInt CreateFromString(string value) => new StringAsUInt(value);
 
-    public static MlResult<StringAsUInt> ByString(string value)
+    public static MlResult<StringAsUInt> FromString(string value)
         => MlResult.Empty()
-                    .TryBind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)),
-                                            $"{BuildErrorMessage(value)}")
+                    .TryBind(_ => EnsureFp.That(value, IsValid(value), FormatErrorMessage(value)),
+                                            $"{FormatErrorMessage(value)}")
                     .Map(_ => new StringAsUInt(value));
 
     public static implicit operator uint(StringAsUInt ValueObjectFp) => ValueObjectFp.Value;

@@ -13,7 +13,7 @@ public class StringMaxLengthTests
         var validString = "Hello";
         var maxLength   = 10;
 
-        var result = StringMaxLength.ByStringLength(validString, maxLength);
+        var result = StringMaxLength.FromLength(validString, maxLength);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -24,7 +24,7 @@ public class StringMaxLengthTests
         var validString = "";
         var maxLength   = 10;
 
-        var result = StringMaxLength.ByStringLength(validString, maxLength);
+        var result = StringMaxLength.FromLength(validString, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -35,7 +35,7 @@ public class StringMaxLengthTests
         var validString = "XX";
         var maxLength   = 1;
 
-        var result = StringMaxLength.ByStringLength(validString, maxLength);
+        var result = StringMaxLength.FromLength(validString, maxLength);
 
         result.IsFailure.Should().BeTrue();
     }

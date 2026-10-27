@@ -208,7 +208,7 @@ Detalles y reglas de uso en su [README](./MoralesLarios.OOFP.Shared/README.md).
   regresión que fijan el contrato de los códigos HTTP devueltos.
 - **`BuildNotFoundPkError`** — ya usa la clave compartida, de modo que el `ProblemDetails`
   construido en la capa de servicios llega íntegro a la capa web y el **404 se preserva**.
-- **`ExistsFile` / `ExistDirectory`** — corregido el anidamiento de condiciones y el mensaje de
+- **`ExistingFilePath` / `ExistingDirectoryPath`** — corregido el anidamiento de condiciones y el mensaje de
   error, con pruebas que lo demuestran.
 - **Validación con FluentValidation** — igualada en características a la variante de
   DataAnnotations, con su batería de pruebas equivalente.

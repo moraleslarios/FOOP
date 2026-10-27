@@ -10,7 +10,7 @@ public class StringAsByteTests
     public void FromString_ValidByteString_ReturnsValid()
     {
         var value = "123";
-        StringAsByte result = StringAsByte.FromString(value);
+        StringAsByte result = StringAsByte.CreateFromString(value);
         byte expected = 123;
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -19,7 +19,7 @@ public class StringAsByteTests
     public void FromString_InvalidByteString_ThrowsArgumentNullException()
     {
         var value = "ABC";
-        Action act = () => StringAsByte.FromString(value);
+        Action act = () => StringAsByte.CreateFromString(value);
         act.Should().Throw<FormatException>();
     }
 
@@ -27,7 +27,7 @@ public class StringAsByteTests
     public void ByString_ValidByteString_ReturnsValidResult()
     {
         var value = "250";
-        var result = StringAsByte.ByString(value);
+        var result = StringAsByte.FromString(value);
         result.IsSuccess.Should().BeTrue();
     }
 
@@ -35,7 +35,7 @@ public class StringAsByteTests
     public void ByString_InvalidByteString_ReturnsFailResult()
     {
         var value = "XYZ";
-        MlResult<StringAsByte> result = StringAsByte.ByString(value);
+        MlResult<StringAsByte> result = StringAsByte.FromString(value);
         result.IsFailure.Should().BeTrue();
     }
 }

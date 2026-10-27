@@ -4,24 +4,24 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringAsUShort : StringAsNumeric<ushort>
+public partial class StringAsUShort : StringAsNumeric<ushort>
 {
     protected StringAsUShort(string value) : base(value)
     {
-        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
 
         Value = ushort.Parse(value);
     }
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} should be a valid ushort";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} should be a valid ushort";
     public static bool IsValid(string value) => ushort.TryParse(value, out _);
 
-    public static StringAsUShort FromString(string value) => new StringAsUShort(value);
+    public static StringAsUShort CreateFromString(string value) => new StringAsUShort(value);
 
-    public static MlResult<StringAsUShort> ByString(string value)
+    public static MlResult<StringAsUShort> FromString(string value)
         => MlResult.Empty()
-                    .TryBind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)),
-                                            $"{BuildErrorMessage(value)}")
+                    .TryBind(_ => EnsureFp.That(value, IsValid(value), FormatErrorMessage(value)),
+                                            $"{FormatErrorMessage(value)}")
                     .Map(_ => new StringAsUShort(value));
 
     public static implicit operator ushort(StringAsUShort ValueObjectFp) => ValueObjectFp.Value;

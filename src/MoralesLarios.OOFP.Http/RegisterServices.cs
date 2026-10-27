@@ -19,7 +19,7 @@ public static class RegisterServices
 
 
     public static IServiceCollection AddGenClientFp<TService, TImplementation>(this IServiceCollection services,
-                                                                                    Func<Key>      configureHttpClientKey = null!,
+                                                                                    Func<ServiceKey>      configureHttpClientKey = null!,
                                                                                     Action<HttpClient> configureClient    = null!)
         where TService        : class
         where TImplementation : class, TService
@@ -38,7 +38,7 @@ public static class RegisterServices
 
 
     public static IServiceCollection AddGenClientComplexFp<TService, TImplementation, TDto>(this IServiceCollection services,
-                                                                                                 Func<Key>      configureHttpClientKey = null!,
+                                                                                                 Func<ServiceKey>      configureHttpClientKey = null!,
                                                                                                  Action<HttpClient> configureClient    = null!)
         where TService        : class
         where TImplementation : class, TService
@@ -61,7 +61,7 @@ public static class RegisterServices
 
 
     public static IServiceCollection AddGenClientDuplexComplexFp<TService, TImplementation, TRequest, TResponse>(this IServiceCollection services,
-                                                                                                                      Func<Key>      configureHttpClientKey = null!,
+                                                                                                                      Func<ServiceKey>      configureHttpClientKey = null!,
                                                                                                                       Action<HttpClient> configureClient    = null!)
         where TService        : class
         where TImplementation : class, TService
@@ -84,11 +84,11 @@ public static class RegisterServices
     }
 
 
-    private static Key ResolveHttpClientFactoryKey(Func<Key> configureHttpClientKey, string defaultKeyName)
+    private static ServiceKey ResolveHttpClientFactoryKey(Func<ServiceKey> configureHttpClientKey, string defaultKeyName)
     {
         var httpClientFactoryKey = configureHttpClientKey is not null
             ? configureHttpClientKey()
-            : Key.FromString(defaultKeyName);
+            : ServiceKey.CreateFromString(defaultKeyName);
 
         if (httpClientFactoryKey is null)
             throw new InvalidOperationException("httpClientFactoryKey no puede ser null");

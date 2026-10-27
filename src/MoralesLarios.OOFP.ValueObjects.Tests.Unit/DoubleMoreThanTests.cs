@@ -12,7 +12,7 @@ public class DoubleMoreThanTests
         var value = 8.5;
         var length = 5.2;
 
-        var result = DoubleMoreThan.ByDoubleLength(value, length);
+        var result = DoubleMoreThan.FromDoubleLength(value, length);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -23,7 +23,7 @@ public class DoubleMoreThanTests
         var value = 2.1;
         var length = 5.0;
 
-        var result = DoubleMoreThan.ByDoubleLength(value, length);
+        var result = DoubleMoreThan.FromDoubleLength(value, length);
 
         result.IsFailure.Should().BeTrue();
     }

@@ -11,7 +11,7 @@ public class StringAsIntTests
     public void FromString_ValidIntString_ReturnsValid()
     {
         var value = "12345";
-        StringAsInt result = StringAsInt.FromString(value);
+        StringAsInt result = StringAsInt.CreateFromString(value);
         int expected = 12345;
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -20,7 +20,7 @@ public class StringAsIntTests
     public void FromString_InvalidIntString_ThrowsArgumentNullException()
     {
         var value = "ABC";
-        Action act = () => StringAsInt.FromString(value);
+        Action act = () => StringAsInt.CreateFromString(value);
         act.Should().Throw<FormatException>();
     }
 
@@ -28,7 +28,7 @@ public class StringAsIntTests
     public void ByString_ValidIntString_ReturnsValidResult()
     {
         var value = "67890";
-        var result = StringAsInt.ByString(value);
+        var result = StringAsInt.FromString(value);
         result.IsSuccess.Should().BeTrue();
     }
 
@@ -36,7 +36,7 @@ public class StringAsIntTests
     public void ByString_InvalidIntString_ReturnsFailResult()
     {
         var value = "XYZ";
-        MlResult<StringAsInt> result = StringAsInt.ByString(value);
+        MlResult<StringAsInt> result = StringAsInt.FromString(value);
         result.IsFailure.Should().BeTrue();
     }
 

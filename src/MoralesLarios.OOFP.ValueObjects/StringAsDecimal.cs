@@ -4,24 +4,24 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class StringAsDecimal : StringAsNumeric<decimal>
+public partial class StringAsDecimal : StringAsNumeric<decimal>
 {
     protected StringAsDecimal(string value) : base(value)
     {
-        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value));
+        if (!IsValid(value)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value));
 
         Value = decimal.Parse(value);
     }
 
-    public static string BuildErrorMessage(string value) => $"{nameof(value)} should be a valid decimal";
+    public static string FormatErrorMessage(string value) => $"{nameof(value)} should be a valid decimal";
     public static bool IsValid(string value) => decimal.TryParse(value, out _);
 
-    public static StringAsDecimal FromString(string value) => new StringAsDecimal(value);
+    public static StringAsDecimal CreateFromString(string value) => new StringAsDecimal(value);
 
-    public static MlResult<StringAsDecimal> ByString(string value)
+    public static MlResult<StringAsDecimal> FromString(string value)
         => MlResult.Empty()
-                    .TryBind(_ => EnsureFp.That(value, IsValid(value), BuildErrorMessage(value)),
-                                            $"{BuildErrorMessage(value)}")
+                    .TryBind(_ => EnsureFp.That(value, IsValid(value), FormatErrorMessage(value)),
+                                            $"{FormatErrorMessage(value)}")
                     .Map(_ => new StringAsDecimal(value));
 
     public static implicit operator decimal(StringAsDecimal ValueObjectFp) => ValueObjectFp.Value;

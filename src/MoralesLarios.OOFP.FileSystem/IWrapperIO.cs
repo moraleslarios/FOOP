@@ -2,7 +2,7 @@
 
 public interface IWrapperIO
 {
-    MlResult<IEnumerable<ExistsFile>> EnumerateFiles(string directoryStr);
+    MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr);
 
     MlResult<string> ReadAllText(string filePathStr);
 

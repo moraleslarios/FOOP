@@ -233,7 +233,7 @@ public class UnitTest1(IHttpClientFactoryManager _sut)
     //public async Task Test3()    {
     //    Dictionary<string, string> headers = new()
     //    {
-    //        { "nombre", "My Name" }, 
+    //        { "nombre", "My MemberName" }, 
     //        { "comentarios", "Comentarios" }
     //    };
 

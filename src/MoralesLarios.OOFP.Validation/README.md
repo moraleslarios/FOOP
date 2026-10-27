@@ -191,9 +191,9 @@ public class CrearUsuarioRequest : MlValidableFp<CrearUsuarioRequest>
     public int    Edad   { get; init; }
 
     public override MlResult<CrearUsuarioRequest> Validate()
-        => Mail.ByString(Email,  "El email no tiene un formato válido")
-          .Bind(_ => Name.ByString(Nombre, "El nombre debe tener al menos 3 caracteres"))
-          .Bind(_ => Age .ByInt   (Edad,   "La edad no es válida"))
+        => Mail.FromString(Email,  "El email no tiene un formato válido")
+          .Bind(_ => MemberName.FromString(Nombre, "El nombre debe tener al menos 3 caracteres"))
+          .Bind(_ => Age .FromInt   (Edad,   "La edad no es válida"))
           .Map (_ => this);
 }
 ```

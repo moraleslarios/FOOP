@@ -9,7 +9,7 @@ public static class MlResponseWebExtensions
 
     //public static string ToResponseErrorsDescriptionAsync(this HttpResponseMessage response)
     //{
-    //    if (response.IsSuccessStatusCode) return string.Empty;
+    //    if (response.IsSuccessStatusCode) return string.EmptyValue;
         
     //    var result = @$"Se ha producido un error en la llamada al servicio. Código de error: {(int)response.StatusCode}.{Environment.NewLine} 
     //                    Razón: {response.ReasonPhrase}{Environment.NewLine}

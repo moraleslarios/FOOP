@@ -13,11 +13,11 @@ public class UnitTest1
     //{
 
 
-    //    var value = new Data {Id = 1, Name = "Test", CreatedAt = DateTime.UtcNow };
+    //    var value = new Data {Id = 1, MemberName = "Test", CreatedAt = DateTime.UtcNow };
 
     //    var data = new PkComplexOptions<Data>();
 
-    //    var result = data.GetPkValues(new[] { "1", "Test", DateTime.UtcNow.ToString("o") }, d => new object[] { d.Id, d.Name, d.CreatedAt });
+    //    var result = data.GetPkValues(new[] { "1", "Test", DateTime.UtcNow.ToString("o") }, d => new object[] { d.Id, d.MemberName, d.CreatedAt });
 
     //}
 }
@@ -27,7 +27,7 @@ public class UnitTest1
 //public class Data
 //{
 //    public long Id { get; set; }
-//    public string Name { get; set; }
+//    public string MemberName { get; set; }
 //    public DateTime CreatedAt { get; set; }
 //}
 

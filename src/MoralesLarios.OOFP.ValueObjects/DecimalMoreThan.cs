@@ -4,20 +4,20 @@
 
 namespace MoralesLarios.OOFP.ValueObjects;
 
-public class DecimalMoreThan : ValueObject<decimal>
+public partial class DecimalMoreThan : ValueObject<decimal>
 {
     protected DecimalMoreThan(decimal value, decimal length) : base(value)
     {
-        if ( ! IsValid(value, length)) throw new ArgumentNullException(nameof(value), BuildErrorMessage(value, length));
+        if ( ! IsValid(value, length)) throw new ArgumentNullException(nameof(value), FormatErrorMessage(value, length));
     }
 
-    public static string BuildErrorMessage(decimal value, decimal length) => $"{value} must be more than {length}";
+    public static string FormatErrorMessage(decimal value, decimal length) => $"{value} must be more than {length}";
     public static bool IsValid(decimal value, decimal length) => value > length;
 
-    public static DecimalMoreThan FromDecimalLength(decimal value, decimal length) => new DecimalMoreThan(value, length);
-    public static MlResult<DecimalMoreThan> ByDecimalLength(decimal value, decimal length, MlErrorDetails errorsDetails = null!)
+    public static DecimalMoreThan CreateFromDecimalLength(decimal value, decimal length) => new DecimalMoreThan(value, length);
+    public static MlResult<DecimalMoreThan> FromDecimalLength(decimal value, decimal length, MlErrorDetails errorsDetails = null!)
         => MlResult.Empty()
-                   .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? BuildErrorMessage(value, length)))
+                   .Bind( _ => EnsureFp.That(value, IsValid(value, length), errorsDetails ?? FormatErrorMessage(value, length)))
                    .Map ( _ => new DecimalMoreThan(value, length));
 
     public static implicit operator decimal(DecimalMoreThan valueObject) => valueObject.Value;

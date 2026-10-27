@@ -11,7 +11,7 @@ public class AgeTests
     {
         var value     = 8;
 
-        var result = Age.ByInt(value);
+        var result = Age.FromInt(value);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -21,7 +21,7 @@ public class AgeTests
     {
         var value     = -1;
 
-        var result = Age.ByInt(value);
+        var result = Age.FromInt(value);
 
         result.IsFailure.Should().BeTrue();
     }
