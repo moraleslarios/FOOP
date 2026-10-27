@@ -4,9 +4,9 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers;
 
-public class SimpleMlCacheControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEntity, TDto> _genServiceFp,
+public class MlCachedCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
                                                              IOutputCacheStore            _outputCacheStore)
-        : SimpleMlControllerBase<TEntity, TDto, TPk>(_genServiceFp)
+        : MlCrudControllerBase<TEntity, TDto, TPk>(_genServiceFp)
     where TEntity : class
     where TDto    : class
 {
@@ -54,7 +54,7 @@ public class SimpleMlCacheControllerBase<TEntity, TDto, TPk>(IGenServiceFp<TEnti
 
     [HttpGet("clear-cache/now")]
     public virtual async Task EvictControllerCacheAsync(CancellationToken ct = default)
-        => await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
+        => await _outputCacheStore.EvictByTagAsync(ControllerScopedOutputCachePolicy.GetControllerTag(HttpContext), ct);
 
 
 
@@ -130,7 +130,7 @@ public class SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>(IGen
 
     [HttpGet("clear-cache/now")]
     public virtual async Task EvictControllerCacheAsync(CancellationToken ct = default)
-        => await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
+        => await _outputCacheStore.EvictByTagAsync(ControllerScopedOutputCachePolicy.GetControllerTag(HttpContext), ct);
 
 }
 

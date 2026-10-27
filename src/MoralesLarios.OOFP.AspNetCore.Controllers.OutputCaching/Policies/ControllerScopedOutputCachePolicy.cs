@@ -4,13 +4,13 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Policies;
 
-public sealed class PerControllerOutputCachePolicy : IOutputCachePolicy
+public sealed partial class ControllerScopedOutputCachePolicy : IOutputCachePolicy
 {
-    public const string BypassHeader = "X-Bypass-Cache";
+    public const string CacheBypassHeader = "X-Bypass-Cache";
 
-    public static readonly PerControllerOutputCachePolicy Instance = new();
+    public static readonly ControllerScopedOutputCachePolicy Instance = new();
 
-    private PerControllerOutputCachePolicy()
+    private ControllerScopedOutputCachePolicy()
     {
     }
 
@@ -41,7 +41,7 @@ public sealed class PerControllerOutputCachePolicy : IOutputCachePolicy
 
     private static bool ShouldBypassCache(Microsoft.AspNetCore.Http.HttpContext httpContext)
     {
-        if (httpContext.Request.Headers.TryGetValue(BypassHeader, out var bypassValue))
+        if (httpContext.Request.Headers.TryGetValue(CacheBypassHeader, out var bypassValue))
         {
             var v = bypassValue.ToString();
 

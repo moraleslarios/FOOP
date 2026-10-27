@@ -204,9 +204,9 @@ Detalles y reglas de uso en su [README](./MoralesLarios.OOFP.Shared/README.md).
 
 ### 🐛 Correcciones funcionales
 
-- **`ToSimpleRepoPostActionResult`** — se auditó su comportamiento y se añadieron pruebas de
+- **`ToCreatedResult`** — se auditó su comportamiento y se añadieron pruebas de
   regresión que fijan el contrato de los códigos HTTP devueltos.
-- **`BuildNotFoundPkError`** — ya usa la clave compartida, de modo que el `ProblemDetails`
+- **`BuildEntityNotFoundError`** — ya usa la clave compartida, de modo que el `ProblemDetails`
   construido en la capa de servicios llega íntegro a la capa web y el **404 se preserva**.
 - **`ExistingFilePath` / `ExistingDirectoryPath`** — corregido el anidamiento de condiciones y el mensaje de
   error, con pruebas que lo demuestran.

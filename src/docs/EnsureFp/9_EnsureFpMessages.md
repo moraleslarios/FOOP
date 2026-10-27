@@ -305,7 +305,7 @@ fail: e =>
 ```
 
 > En los proyectos `MoralesLarios.OOFP.AspNetCore.Results` y `MoralesLarios.OOFP.Application` esta traducción ya
-> está resuelta mediante `MlProblemsDetails` y la clave compartida
+> está resuelta mediante `MlProblemDetails` y la clave compartida
 > `MoralesLarios.OOFP.Shared.Web.WebErrorDetailsKeys.ProblemsDetails`.
 
 ---

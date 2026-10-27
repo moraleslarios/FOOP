@@ -1,7 +1,7 @@
 ﻿namespace MoralesLarios.OOFP.AspNetCore.Controllers.Controllers;
 
 [ApiController]
-public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntity, TDto> _genServiceFp,
+public class MlCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
                                                             Func<TEntity, object[]>      _pkFields) : ControllerBase
         where TEntity : class
         where TDto    : class
@@ -11,8 +11,8 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     [HttpGet]
     public virtual async Task<IActionResult> GetAllAsync(CancellationToken ct = default!)
     {
-        var result = await _genServiceFp.AllAsync(ct: ct)
-                                        .ToGetPdActionResultAsync();
+        var result = await _genServiceFp.GetPagedAsync(ct: ct)
+                                        .ToOkProblemDetailsResultAsync();
         return result;
     }
 
@@ -31,16 +31,16 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     /// - Para strings: valores literales separados por comas. Ej: `value1,value2`
     /// </remarks>
     [HttpGet("id-str/{ids}", Name = $"[controller]_[action]")]
-    public virtual async Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public virtual async Task<IActionResult> GetByIdAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _ => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
+                                    .TryMapAsync( _ => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .MatchAsync(
-                                                    fail       : _    => MlActionResults.NotFound(detail: $"Row with ids: {ids} not found."),
-                                                    validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                                    fail       : _    => MlResults.NotFound(detail: $"Row with ids: {ids} not found."),
+                                                    validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                                     ct                  : ct,
                                                                                                                     pk                  : idObj)
-                                                                            .ToGetPdActionResultAsync()
+                                                                            .ToOkProblemDetailsResultAsync()
                                                 );
         return result;
     }
@@ -67,17 +67,17 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     /// - Para DateTime: usar ISO 8601 `yyyy-MM-ddTHH:mm:ss.fff`. Ej: `2026-05-16T07:34:29.239`
     /// </remarks>
     [HttpPut("{ids}")]
-    public virtual async Task<IActionResult> PutAsync([FromRoute][PkParameter] string            ids, 
+    public virtual async Task<IActionResult> PutAsync([FromRoute][CompositeKeyParameter] string            ids, 
                                                                  [FromBody]    TDto              dto,
                                                                                CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
-                                    .BindAsync  (idObj => _genServiceFp.UpdateProblemDetailsAsync(dto                 : dto,
-                                                                                                  notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .BindAsync  (idObj => _genServiceFp.UpdateAsync(dto                 : dto,
+                                                                                                  notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
-                                    .ToPutPdActionResultAsync();
+                                    .ToNoContentProblemDetailsResultAsync();
         return result;
     }
 
@@ -85,7 +85,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     public virtual async Task<IActionResult> PutAsync([FromBody] TDto dto, CancellationToken ct = default!)
     {
         var result = await _genServiceFp.UpdateAsync(dto, ct: ct)
-                                        .ToPutPdActionResultAsync();
+                                        .ToNoContentProblemDetailsResultAsync();
         return result;
     }
 
@@ -101,14 +101,14 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     /// - Para DateTime: usar ISO 8601 `yyyy-MM-ddTHH:mm:ss.fff`. Ej: `2026-05-16T07:34:29.239`
     /// </remarks>
     [HttpDelete("{ids}")]
-    public virtual async Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public virtual async Task<IActionResult> DeleteAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
-                                    .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
-                                    .ToDeletePdActionResultAsync();
+                                    .ToDeletedProblemDetailsResultAsync();
         return result;
     }
 
@@ -116,19 +116,19 @@ public class SimpleMlComplexPkControllerBase<TEntity, TDto>(IGenServiceFp<TEntit
     public virtual async Task<IActionResult> DeleteAsync([FromBody] TDto dto, CancellationToken ct = default!)
     {
         var result = await _genServiceFp.DeleteAsync(dto, ct: ct)
-                                        .ToDeletePdActionResultAsync();
+                                        .ToDeletedProblemDetailsResultAsync();
         return result;
     }
 
 
 
 
-    //private object[] InternalGetPkValues(string ids) => GetPkValues(ids.Split(','), _pkFields);
+    //private object[] InternalGetPkValues(string ids) => ParseKeyValues(ids.Split(','), _pkFields);
     //private string InternalGetPkValuesErrorMessage(Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
 
 
 
-    //protected object[] GetPkValues(string[] values, Func<TEntity, object[]> pkFields)
+    //protected object[] ParseKeyValues(string[] values, Func<TEntity, object[]> pkFields)
     //{
     //    var sample = Activator.CreateInstance<TEntity>();   // requiere new() o reflexión
     //    var sampleP = pkFields(sample);                       // todos serán default/null
@@ -169,8 +169,8 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
         [HttpGet]
     public virtual async Task<IActionResult> GetAllAsync(CancellationToken ct = default!)
     {
-        var result = await _genServiceFp.AllAsync(ct: ct)
-                                        .ToGetPdActionResultAsync();
+        var result = await _genServiceFp.GetPagedAsync(ct: ct)
+                                        .ToOkProblemDetailsResultAsync();
         return result;
     }
 
@@ -189,16 +189,16 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
     /// - Para strings: valores literales separados por comas. Ej: `value1,value2`
     /// </remarks>
     [HttpGet("id-str/{ids}", Name = $"[controller]_[action]")]
-    public virtual async Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public virtual async Task<IActionResult> GetByIdAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _ => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
+                                    .TryMapAsync( _ => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
                                     .MatchAsync(
-                                                    fail       : _    => MlActionResults.NotFound(detail: $"Row with ids: {ids} not found."),
-                                                    validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                                    fail       : _    => MlResults.NotFound(detail: $"Row with ids: {ids} not found."),
+                                                    validAsync: idObj => _genServiceFp.FindByIdProblemsDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                                     ct                  : ct,
                                                                                                                     pk                  : idObj)
-                                                                            .ToGetPdActionResultAsync()
+                                                                            .ToOkProblemDetailsResultAsync()
                                                 );
         return result;
     }
@@ -225,17 +225,17 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
     /// - Para DateTime: usar ISO 8601 `yyyy-MM-ddTHH:mm:ss.fff`. Ej: `2026-05-16T07:34:29.239`
     /// </remarks>
     [HttpPut("{ids}")]
-    public virtual async Task<IActionResult> PutAsync([FromRoute][PkParameter] string            ids, 
+    public virtual async Task<IActionResult> PutAsync([FromRoute][CompositeKeyParameter] string            ids, 
                                                                  [FromBody]    TRequest          dto,
                                                                                CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
-                                    .BindAsync  (idObj => _genServiceFp.UpdateProblemDetailsAsync(dtoRequest          : dto,
-                                                                                                  notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .BindAsync  (idObj => _genServiceFp.UpdateAsync(dtoRequest          : dto,
+                                                                                                  notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
-                                    .ToPutPdActionResultAsync();
+                                    .ToNoContentProblemDetailsResultAsync();
         return result;
     }
 
@@ -243,7 +243,7 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
     public virtual async Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!)
     {
         var result = await _genServiceFp.UpdateAsync(dto, ct: ct)
-                                        .ToPutPdActionResultAsync();
+                                        .ToNoContentProblemDetailsResultAsync();
         return result;
     }
 
@@ -259,14 +259,14 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
     /// - Para DateTime: usar ISO 8601 `yyyy-MM-ddTHH:mm:ss.fff`. Ej: `2026-05-16T07:34:29.239`
     /// </remarks>
     [HttpDelete("{ids}")]
-    public virtual async Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public virtual async Task<IActionResult> DeleteAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(ids, $"{nameof(ids)} must not be null")
-                                    .TryMapAsync( _    => ids.GetPkValues(_pkFields), ex => ex.GetPkValuesErrorMessage(ids))
-                                    .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemsDetails.NotFoundError(),
+                                    .TryMapAsync( _    => ids.ParseKeyValues(_pkFields), ex => ex.BuildKeyParseErrorMessage(ids))
+                                    .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
-                                    .ToDeletePdActionResultAsync();
+                                    .ToDeletedProblemDetailsResultAsync();
         return result;
     }
 
@@ -274,19 +274,19 @@ public class SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(IGenS
     public virtual async Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!)
     {
         var result = await _genServiceFp.DeleteAsync(dto, ct: ct)
-                                        .ToDeletePdActionResultAsync();
+                                        .ToDeletedProblemDetailsResultAsync();
         return result;
     }
 
 
 
 
-    //private object[] InternalGetPkValues(string ids) => GetPkValues(ids.Split(','), _pkFields);
+    //private object[] InternalGetPkValues(string ids) => ParseKeyValues(ids.Split(','), _pkFields);
     //private string InternalGetPkValuesErrorMessage(Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
 
 
 
-    //protected object[] GetPkValues(string[] values, Func<TEntity, object[]> pkFields)
+    //protected object[] ParseKeyValues(string[] values, Func<TEntity, object[]> pkFields)
     //{
     //    var sample = Activator.CreateInstance<TEntity>();   // requiere new() o reflexión
     //    var sampleP = pkFields(sample);                       // todos serán default/null

@@ -4,9 +4,9 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching;
 
-public static class RegisterServices
+public static partial class RegisterServices
 {
-    public static IServiceCollection AddWebControllersCache(this IServiceCollection services, Action<OutputCacheOptions> options = null!)
+    public static IServiceCollection AddMlControllersOutputCaching(this IServiceCollection services, Action<OutputCacheOptions> options = null!)
     {
         services.AddOutputCache(outputCacheOptions =>
         {
@@ -14,7 +14,7 @@ public static class RegisterServices
 
             //outputCacheOptions.DefaultExpirationTimeSpan = TimeSpan.FromSeconds(30);
 
-            outputCacheOptions.AddPolicy("PerControllerTag", Policies.PerControllerOutputCachePolicy.Instance);
+            outputCacheOptions.AddPolicy("PerControllerTag", Policies.ControllerScopedOutputCachePolicy.Instance);
         });
 
         return services;

@@ -12,7 +12,7 @@ using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit.Helpers;
 
-public class MlResultWebExtensionsTests
+public class MlResultActionResultExtensionsLegacyTests
 {
 
 
@@ -44,52 +44,52 @@ public class MlResultWebExtensionsTests
     }
 
     [Fact]
-    public void ToSimpleRepoPostActionResult_whenValid_returnsCreated()
+    public void ToCreatedResult_whenValid_returnsCreated()
     {
         MlResult<DummyEntity> source = MlResult<DummyEntity>.Valid(new DummyEntity(1, "created"));
 
-        IActionResult result = source.ToSimpleRepoPostActionResult(TestControllerFactory.Create());
+        IActionResult result = source.ToCreatedResult(TestControllerFactory.Create());
 
         result.Should().BeOfType<CreatedResult>().Which.StatusCode.Should().Be(StatusCodes.Status201Created);
     }
 
     [Fact]
-    public void ToSimpleRepoPostActionResult_whenFail_returnsInternalServerError()
+    public void ToCreatedResult_whenFail_returnsInternalServerError()
     {
         MlResult<DummyEntity> source = MlResult<DummyEntity>.Fail("repository failed");
 
-        IActionResult result = source.ToSimpleRepoPostActionResult(TestControllerFactory.Create());
+        IActionResult result = source.ToCreatedResult(TestControllerFactory.Create());
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
-    public void ToSimpleRepoPostActionResult_whenNotFoundFail_returnsNotFound()
+    public void ToCreatedResult_whenNotFoundFail_returnsNotFound()
     {
         MlResult<DummyEntity> source = MlErrorDetails.FromErrorMessageDetails(
             "not found", new Dictionary<string, object> { { "NotFound", 1 } });
 
-        IActionResult result = source.ToSimpleRepoPostActionResult(TestControllerFactory.Create());
+        IActionResult result = source.ToCreatedResult(TestControllerFactory.Create());
 
         result.Should().BeOfType<NotFoundObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
-    public async Task ToSimpleRepoPostActionResultAsync_whenFail_returnsInternalServerError()
+    public async Task ToCreatedResultAsync_whenFail_returnsInternalServerError()
     {
         MlResult<DummyEntity> source = MlResult<DummyEntity>.Fail("repository failed");
 
-        IActionResult result = await source.ToSimpleRepoPostActionResultAsync(TestControllerFactory.Create());
+        IActionResult result = await source.ToCreatedResultAsync(TestControllerFactory.Create());
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
-    public async Task ToSimpleRepoPostActionResultAsync_fromTask_whenFail_returnsInternalServerError()
+    public async Task ToCreatedResultAsync_fromTask_whenFail_returnsInternalServerError()
     {
         Task<MlResult<DummyEntity>> sourceAsync = Task.FromResult(MlResult<DummyEntity>.Fail("repository failed"));
 
-        IActionResult result = await sourceAsync.ToSimpleRepoPostActionResultAsync(TestControllerFactory.Create());
+        IActionResult result = await sourceAsync.ToCreatedResultAsync(TestControllerFactory.Create());
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }

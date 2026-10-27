@@ -2,7 +2,7 @@
 
 Capa de aplicación que se sitúa entre los repositorios de [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) y los controladores web. Aporta tres cosas en un solo tipo genérico: **CRUD completo**, **mapeo automático entidad ⇄ DTO** con [Mapster](https://github.com/MapsterMapper/Mapster) y **trazado del inicio y del final** de cada operación, todo sobre el raíl de [`MlResult<T>`](../docs/core-types/MlResult.md).
 
-Incluye además `MlProblemsDetails`, una fábrica de errores con la forma de **RFC 7807 (`ProblemDetails`)** para que la capa HTTP los convierta en respuestas sin trabajo adicional.
+Incluye además `MlProblemDetails`, una fábrica de errores con la forma de **RFC 7807 (`ProblemDetails`)** para que la capa HTTP los convierta en respuestas sin trabajo adicional.
 
 ---
 
@@ -13,11 +13,11 @@ Incluye además `MlProblemsDetails`, una fábrica de errores con la forma de **R
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Los dos modos: simple y duplex](#los-dos-modos-simple-y-duplex)
 5. [Anatomía de una operación](#anatomía-de-una-operación)
-6. [`IGenServiceFp<TEntity, TDto>` — modo simple](#igenservicefptentity-tdto--modo-simple)
-7. [`IGenServiceFp<TEntity, TRequest, TResponse>` — modo duplex](#igenservicefptentity-trequest-tresponse--modo-duplex)
+6. [`ICrudServiceFp<TEntity, TDto>` — modo simple](#igenservicefptentity-tdto--modo-simple)
+7. [`ICrudServiceFp<TEntity, TRequest, TResponse>` — modo duplex](#igenservicefptentity-trequest-tresponse--modo-duplex)
 8. [Los parámetros de mensajes](#los-parámetros-de-mensajes)
 9. [Las parejas `Async` / `ProblemDetailsAsync`](#las-parejas-async--problemdetailsasync)
-10. [`MlProblemsDetails` — errores RFC 7807](#mlproblemsdetails--errores-rfc-7807)
+10. [`MlProblemDetails` — errores RFC 7807](#mlproblemsdetails--errores-rfc-7807)
 11. [Registro en el contenedor](#registro-en-el-contenedor)
 12. [Mapeo con Mapster](#mapeo-con-mapster)
 13. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
@@ -60,14 +60,14 @@ public async Task<VinoDto> CreateAsync(VinoDto dto, CancellationToken ct)
 // …y lo mismo para All, FindById, Update y Delete. Por cada entidad.
 ```
 
-✅ **Con `GenServiceFp<TEntity, TDto>`:**
+✅ **Con `CrudServiceFp<TEntity, TDto>`:**
 
 ```csharp
 // No escribes nada: el servicio genérico ya lo hace
 services.AddScopedCrudServicesFpWithoutRepositories();
 
 // Y lo usas directamente
-public class VinosController(IGenServiceFp<Vino, VinoDto> _service)
+public class VinosController(ICrudServiceFp<Vino, VinoDto> _service)
 {
     public Task<MlResult<VinoDto>> Crear(VinoDto dto, CancellationToken ct)
         => _service.CreateAsync(dto, ct);
@@ -90,7 +90,7 @@ public class VinosController(IGenServiceFp<Vino, VinoDto> _service)
 |---|---|---|
 | `Mapster` | 7.4.0 | 🔑 `Adapt<T>()`, el mapeo entidad ⇄ DTO |
 | `Microsoft.Extensions.Configuration.Abstractions` | 9.0.6 | ⚠️ Declarada pero **no se usa** |
-| [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) | — | 🔑 `IEfRepository<TEntity>`, `GetPkValues` |
+| [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) | — | 🔑 `IEfRepository<TEntity>`, `ParseKeyValues` |
 | [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) | — | 🔑 `LogMlResultInformationAsync`, `LogCompletedResultAsync` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | Tipos internos compartidos |
 
@@ -99,8 +99,8 @@ Destino: **`net8.0`**. Versión del paquete: **1.0.10**.
 > ⚠️ **Arrastra `EFCore` como dependencia obligatoria.** El servicio depende de `IEfRepository<TEntity>` en el constructor, así que **no puedes usar esta capa con otro tipo de persistencia** (Dapper, MongoDB, un servicio remoto…) sin implementar tú `IEfRepository<T>`.
 
 ```csharp
-using MoralesLarios.OOFP.Application;             // MlProblemsDetails, RegisterServices
-using MoralesLarios.OOFP.Application.Services;    // IGenServiceFp<,>, GenServiceFp<,>
+using MoralesLarios.OOFP.Application;             // MlProblemDetails, RegisterServices
+using MoralesLarios.OOFP.Application.Services;    // ICrudServiceFp<,>, CrudServiceFp<,>
 ```
 
 ---
@@ -110,13 +110,13 @@ using MoralesLarios.OOFP.Application.Services;    // IGenServiceFp<,>, GenServic
 ```
 MoralesLarios.OOFP.Application/
 ├── Services/
-│   ├── IGenServiceFp.cs         → los dos contratos: <TEntity,TDto> y <TEntity,TRequest,TResponse>
-│   ├── GenServiceFp.cs          → las dos implementaciones (todos los métodos virtual)
+│   ├── ICrudServiceFp.cs         → los dos contratos: <TEntity,TDto> y <TEntity,TRequest,TResponse>
+│   ├── CrudServiceFp.cs          → las dos implementaciones (todos los métodos virtual)
 │   └── GenService.cs            → ⚠️ FICHERO VACÍO
 ├── Helpers/
-│   ├── Extensions.cs            → BuildNotFoundPkError
+│   ├── Extensions.cs            → BuildEntityNotFoundError
 │   └── Constants.cs             → Name ProblemsDetails => "ProblemsDetails"
-├── MlProblemsDetails.cs         → 15 fábricas de errores RFC 7807
+├── MlProblemDetails.cs         → 15 fábricas de errores RFC 7807
 ├── RegisterServices.cs          → 6 extensiones de registro
 └── GlobalUsings.cs
 ```
@@ -129,15 +129,15 @@ MoralesLarios.OOFP.Application/
 
 | Modo | Interfaz | Entrada | Salida | Cuándo |
 |---|---|---|---|---|
-| **Simple** | `IGenServiceFp<TEntity, TDto>` | `TDto` | `TDto` | El mismo DTO sirve para leer y escribir |
-| **Duplex** | `IGenServiceFp<TEntity, TRequest, TResponse>` | `TRequest` | `TResponse` | El DTO de entrada difiere del de salida |
+| **Simple** | `ICrudServiceFp<TEntity, TDto>` | `TDto` | `TDto` | El mismo DTO sirve para leer y escribir |
+| **Duplex** | `ICrudServiceFp<TEntity, TRequest, TResponse>` | `TRequest` | `TResponse` | El DTO de entrada difiere del de salida |
 
 ```csharp
 // Simple: VinoDto entra y sale
-IGenServiceFp<Vino, VinoDto> servicioSimple;
+ICrudServiceFp<Vino, VinoDto> servicioSimple;
 
 // Duplex: entra VinoRequest (sin Id), sale VinoResponse (con Id y campos calculados)
-IGenServiceFp<Vino, VinoRequest, VinoResponse> servicioDuplex;
+ICrudServiceFp<Vino, VinoRequest, VinoResponse> servicioDuplex;
 ```
 
 > 💡 **Usa el modo duplex en APIs públicas**: el DTO de entrada no debería exponer `Id`, campos de auditoría ni claves ajenas internas, mientras que el de salida sí necesita el `Id` generado.
@@ -176,21 +176,21 @@ Es decir, el primer eslabón del raíl es un `MlResult<ILogger>` que envuelve al
 
 > 💡 **Consecuencia práctica**: la traza de entrada se emite **siempre**, incluso si la validación posterior falla. Es intencionado: sabes que la operación se intentó.
 
-> 💡 **Todos los métodos son `virtual`**: puedes heredar de `GenServiceFp<Vino, VinoDto>` y sobrescribir solo `CreateAsync` para añadir una regla de negocio, dejando el resto tal cual.
+> 💡 **Todos los métodos son `virtual`**: puedes heredar de `CrudServiceFp<Vino, VinoDto>` y sobrescribir solo `CreateAsync` para añadir una regla de negocio, dejando el resto tal cual.
 
 ---
 
-## `IGenServiceFp<TEntity, TDto>` — modo simple
+## `ICrudServiceFp<TEntity, TDto>` — modo simple
 
 ```csharp
-public interface IGenServiceFp<TEntity, TDto>
+public interface ICrudServiceFp<TEntity, TDto>
     where TEntity : class
     where TDto    : class
 {
     // Consulta de todos
     Task<MlResult<IEnumerable<TDto>>> AllAsync(CancellationToken ct = default!,
                                                string initialMessage = null!,
-                                               Func<IEnumerable<TDto>, string> validMessageBuilder = null!,
+                                               Func<IEnumerable<TDto>, string> successMessageFactory = null!,
                                                Func<MlErrorDetails, string>   failMessageBuilder  = null!);
 
     // Búsqueda por clave
@@ -203,7 +203,7 @@ public interface IGenServiceFp<TEntity, TDto>
     // Modificación: con y sin comprobación de existencia
     Task<MlResult<TDto>>  UpdateAsync              (TDto dto, …, params object[] keyValues);
     Task<MlResult<TDto>>  UpdateAsync              (TDto dto, …);                       // sin pk
-    Task<MlResult<TDto>>  UpdateProblemDetailsAsync(TDto dto, MlErrorDetails notFoundErrorDetails, …, params object[] keyValues);
+    Task<MlResult<TDto>>  UpdateAsync(TDto dto, MlErrorDetails notFoundErrorDetails, …, params object[] keyValues);
 
     // Borrado: por clave o por entidad
     Task<MlResult<TDto>>  DeleteAsync              (…, params object[] keyValues);
@@ -214,7 +214,7 @@ public interface IGenServiceFp<TEntity, TDto>
 
 | Método | Qué hace | Comprueba existencia |
 |---|---|---|
-| `AllAsync` | `TryAllAsync` → `Adapt<IEnumerable<TDto>>` | — |
+| `GetPagedAsync` | `TryAllAsync` → `Adapt<IEnumerable<TDto>>` | — |
 | `FindByIdAsync` | `TryFindAsync` por PK | ✅ (mensaje por defecto) |
 | `FindByIdProblemsDetailsAsync` | Igual, con tu `MlErrorDetails` | ✅ (tu mensaje) |
 | `CreateAsync` | Valida, mapea e inserta | — |
@@ -227,7 +227,7 @@ public interface IGenServiceFp<TEntity, TDto>
 
 ---
 
-## `IGenServiceFp<TEntity, TRequest, TResponse>` — modo duplex
+## `ICrudServiceFp<TEntity, TRequest, TResponse>` — modo duplex
 
 Mismos 11 métodos, con `TRequest` en la entrada y `TResponse` en la salida:
 
@@ -259,7 +259,7 @@ Cada operación acepta **tres parámetros opcionales** para controlar el trazado
 | Parámetro | Tipo | Cuándo se usa |
 |---|---|---|
 | `initialMessage` | `string` | Traza de entrada. Si es `null`, mensaje por defecto en inglés |
-| `validMessageBuilder` | `Func<TDto, string>` | Traza de éxito, recibe el resultado |
+| `successMessageFactory` | `Func<TDto, string>` | Traza de éxito, recibe el resultado |
 | `failMessageBuilder` | `Func<MlErrorDetails, string>` | Traza de error, recibe los errores |
 
 ```csharp
@@ -267,7 +267,7 @@ await _service.CreateAsync(
           dto,
           ct,
           initialMessage     : $"Alta de vino solicitada por {usuario}",
-          validMessageBuilder: v => $"Vino creado con Id {v.Id}",
+          successMessageFactory: v => $"Vino creado con Id {v.Id}",
           failMessageBuilder : e => $"No se pudo crear el vino: {e.GetErrorsSummary()}");
 ```
 
@@ -279,7 +279,7 @@ Si no los pasas, los mensajes por defecto son genéricos y **en inglés**:
 "An error occurred while creating a new record in the table corresponding to dto VinoDto. Error: …"
 ```
 
-> ⚠️ **`DeleteAsync` no acepta `validMessageBuilder`.** Solo `initialMessage` y `failMessageBuilder`: el mensaje de éxito del borrado **está fijado en el código** y no se puede personalizar. Es una asimetría respecto al resto de operaciones.
+> ⚠️ **`DeleteAsync` no acepta `successMessageFactory`.** Solo `initialMessage` y `failMessageBuilder`: el mensaje de éxito del borrado **está fijado en el código** y no se puede personalizar. Es una asimetría respecto al resto de operaciones.
 
 > 💡 **Los mensajes por defecto exponen el nombre del tipo DTO.** Van al log, no a la respuesta HTTP, así que no hay fuga de información al cliente; pero si el log es accesible, tenlo en cuenta.
 
@@ -293,32 +293,32 @@ Tres operaciones vienen duplicadas, y la diferencia es **quién construye el err
 // Versión corta: el mensaje lo genera la librería
 public virtual Task<MlResult<TDto?>> FindByIdAsync(…, params object[] keyValues)
     => FindByIdProblemsDetailsAsync(
-           notFoundErrorDetails: typeof(TDto).Name.BuildNotFoundPkError(pk),   // 🔑 automático
+           notFoundErrorDetails: typeof(TDto).Name.BuildEntityNotFoundError(pk),   // 🔑 automático
            …);
 ```
 
 Y el helper que lo genera:
 
 ```csharp
-public static MlErrorDetails BuildNotFoundPkError(this string tableName, params object[] keyValues)
+public static MlErrorDetails BuildEntityNotFoundError(this string tableName, params object[] keyValues)
     => MlErrorDetails.FromErrorMessageDetails(
-           $"No data found for the {tableName} table by Id ({pk.GetPkValues()})",
-           new Dictionary<string, object> { ["NotFound"] = $"No data found for the {tableName} table by Id ({pk.GetPkValues()})" });
+           $"No data found for the {tableName} table by Id ({pk.ParseKeyValues()})",
+           new Dictionary<string, object> { ["NotFound"] = $"No data found for the {tableName} table by Id ({pk.ParseKeyValues()})" });
 ```
 
 | Pareja | Usa |
 |---|---|
 | `FindByIdAsync` / `FindByIdProblemsDetailsAsync` | Búsqueda |
-| `UpdateAsync(…, pk)` / `UpdateProblemDetailsAsync` | Modificación |
+| `UpdateAsync(…, pk)` / `UpdateAsync` | Modificación |
 | `DeleteAsync(…, pk)` / `DeleteProblemDetailsAsync` | Borrado |
 
-> ✅ **Usa las variantes `ProblemDetailsAsync` con `MlProblemsDetails.NotFoundError(…)`** cuando el error vaya a convertirse en respuesta HTTP: así obtienes el `Status = 404` y la estructura RFC 7807 completa, mientras que la versión corta solo produce una clave `"NotFound"` sin código de estado.
+> ✅ **Usa las variantes `ProblemDetailsAsync` con `MlProblemDetails.NotFoundError(…)`** cuando el error vaya a convertirse en respuesta HTTP: así obtienes el `Status = 404` y la estructura RFC 7807 completa, mientras que la versión corta solo produce una clave `"NotFound"` sin código de estado.
 
-> ⚠️ **El nombre es engañoso**: `FindByIdProblemsDetailsAsync` no *genera* un `ProblemDetails`, solo **acepta** el `MlErrorDetails` que le pases. Y la versión corta **tampoco** produce un `ProblemDetails` con `Status`: el diccionario que crea `BuildNotFoundPkError` usa la clave `"NotFound"`, no `"ProblemsDetails"`, así que **la capa HTTP no la reconocerá como 404**.
+> ⚠️ **El nombre es engañoso**: `FindByIdProblemsDetailsAsync` no *genera* un `ProblemDetails`, solo **acepta** el `MlErrorDetails` que le pases. Y la versión corta **tampoco** produce un `ProblemDetails` con `Status`: el diccionario que crea `BuildEntityNotFoundError` usa la clave `"NotFound"`, no `"ProblemsDetails"`, así que **la capa HTTP no la reconocerá como 404**.
 
 ---
 
-## `MlProblemsDetails` — errores RFC 7807
+## `MlProblemDetails` — errores RFC 7807
 
 Clase estática con **15 fábricas** que devuelven un `MlErrorDetails` cuyo diccionario de detalles contiene la clave `"ProblemsDetails"` con la forma estándar.
 
@@ -391,21 +391,21 @@ public static MlErrorDetails BadRequestError(string title, string detail, string
 Seis extensiones, tres ciclos de vida × dos modos:
 
 ```csharp
-// Modo simple: IGenServiceFp<,>
-services.AddTransientGenServicesFpWithoutReposGeneral();
+// Modo simple: ICrudServiceFp<,>
+services.AddTransientCrudServicesFpWithoutRepositories();
 services.AddScopedCrudServicesFpWithoutRepositories();      // ⚠️ "Scopedt", con t
-services.AddSingletonGenServicesFpWithoutReposGeneral();
+services.AddSingletonCrudServicesFpWithoutRepositories();
 
-// Modo duplex: IGenServiceFp<,,>
-services.AddTransientGenServicesDuplexFpWithoutReposGeneral();
+// Modo duplex: ICrudServiceFp<,,>
+services.AddTransientCrudServicesDuplexFpWithoutRepositories();
 services.AddScopedCrudServicesDuplexFpWithoutRepositories(); // ⚠️ "Scopedt", con t
-services.AddSingletonGenServicesDuplexFpWithoutReposGeneral();
+services.AddSingletonCrudServicesDuplexFpWithoutRepositories();
 ```
 
 Cada una registra el tipo genérico **abierto**, así que sirve para cualquier combinación de entidad y DTO sin registrar nada más:
 
 ```csharp
-services.AddScoped(typeof(IGenServiceFp<,>), typeof(GenServiceFp<,>));
+services.AddScoped(typeof(ICrudServiceFp<,>), typeof(CrudServiceFp<,>));
 ```
 
 > ⚠️ **Errata en el nombre: `AddScopedt…`** (con una `t` de más). Está así en el código de ambas variantes, simple y duplex. Corregirlo sería un cambio de API, por lo que **debes escribirlo con la errata**.
@@ -459,7 +459,7 @@ TypeAdapterConfig<Vino, VinoDto>.NewConfig()
 
 ## ⚠️ Particularidades reales del código fuente
 
-### 1. ❗ `UpdateProblemDetailsAsync` descarta la entidad recuperada
+### 1. ❗ `UpdateAsync` descarta la entidad recuperada
 
 ```csharp
 .BindAsync  ( _     => _repo.TryFindAsync(notFoundErrorDetails, ct, pk))  // 1️⃣ busca…
@@ -483,7 +483,7 @@ Y para colmo, `TryUpdateAsync(item, notFoundErrorDetails, ct, pk)` del repositor
 
 ### 2. ⚠️ Los mensajes de "no encontrado" no producen un 404 real
 
-`BuildNotFoundPkError` genera el diccionario con la clave **`"NotFound"`**:
+`BuildEntityNotFoundError` genera el diccionario con la clave **`"NotFound"`**:
 
 ```csharp
 new Dictionary<string, object> { ["NotFound"] = "No data found for the …" }
@@ -494,22 +494,22 @@ Pero la capa HTTP busca la clave **`"ProblemsDetails"`** (la constante de `Helpe
 | Llamada | Clave del diccionario | ¿Se traduce a 404? |
 |---|---|---|
 | `FindByIdAsync(ct, id)` | `"NotFound"` | ❌ No: será un 400 o 500 genérico |
-| `FindByIdProblemsDetailsAsync(MlProblemsDetails.NotFoundError(…), ct, id)` | `"ProblemsDetails"` | ✅ Sí |
+| `FindByIdProblemsDetailsAsync(MlProblemDetails.NotFoundError(…), ct, id)` | `"ProblemsDetails"` | ✅ Sí |
 
-> ❗ **Para obtener un 404 correcto, usa siempre las variantes `ProblemDetailsAsync` con `MlProblemsDetails.NotFoundError(…)`:**
+> ❗ **Para obtener un 404 correcto, usa siempre las variantes `ProblemDetailsAsync` con `MlProblemDetails.NotFoundError(…)`:**
 > ```csharp
 > await _service.FindByIdProblemsDetailsAsync(
->           MlProblemsDetails.NotFoundError(detail: $"El vino {id} no existe"),
+>           MlProblemDetails.NotFoundError(detail: $"El vino {id} no existe"),
 >           ct, pk: id);
 > ```
 
-### 3. ⚠️ `Constants.ProblemsDetails` es de tipo `MemberName`, y `MlProblemsDetails` no lo usa
+### 3. ⚠️ `Constants.ProblemsDetails` es de tipo `MemberName`, y `MlProblemDetails` no lo usa
 
 ```csharp
 // Helpers/Constants.cs — público, tipo Name (value object)
 public static Name ProblemsDetails => "ProblemsDetails";
 
-// MlProblemsDetails.cs — constante privada propia, tipo string
+// MlProblemDetails.cs — constante privada propia, tipo string
 private const string ProblemsDetails = nameof(ProblemsDetails);
 ```
 
@@ -519,13 +519,13 @@ Hay **dos definiciones del mismo literal** con tipos distintos. Funcionan porque
 
 ```csharp
 // Modo simple: usa el nombre del DTO
-typeof(TDto).Name.BuildNotFoundPkError(pk)          // "No data found for the VinoDto table…"
+typeof(TDto).Name.BuildEntityNotFoundError(pk)          // "No data found for the VinoDto table…"
 
 // Modo duplex FindById: usa el nombre de la RESPUESTA
-typeof(TResponse).Name.BuildNotFoundPkError(pk)     // "…for the VinoResponse table…"
+typeof(TResponse).Name.BuildEntityNotFoundError(pk)     // "…for the VinoResponse table…"
 
 // Modo duplex Update/Delete: usa el nombre de la ENTIDAD
-typeof(TEntity).Name.BuildNotFoundPkError(pk)       // "…for the Vino table…"
+typeof(TEntity).Name.BuildEntityNotFoundError(pk)       // "…for the Vino table…"
 ```
 
 Tres criterios distintos para el mismo concepto. Además, **ninguno es realmente el nombre de la tabla**: es el nombre del tipo.
@@ -536,7 +536,7 @@ Tres criterios distintos para el mismo concepto. Además, **ninguno es realmente
 validBuildMessage: _ => $"The record was deleted successfully in the table corresponding to dto {typeof(TDto).Name}",
 ```
 
-El parámetro `validMessageBuilder` **no existe** en la firma de `DeleteAsync`, así que el mensaje está fijado. Las otras cuatro operaciones sí lo aceptan.
+El parámetro `successMessageFactory` **no existe** en la firma de `DeleteAsync`, así que el mensaje está fijado. Las otras cuatro operaciones sí lo aceptan.
 
 ### 6. ⚠️ `DeleteAsync(dto, …)` usa `MapAsync` en lugar de `TryMapAsync`
 
@@ -570,7 +570,7 @@ Está en el `.csproj` y en los `GlobalUsings`, pero **ninguna clase usa `IConfig
 
 Fichero de 0 bytes en `Services/`. No hay variante OOP del servicio.
 
-### 11. ⚠️ La segunda mitad de `IGenServiceFp.cs` está escrita en una sola línea por método
+### 11. ⚠️ La segunda mitad de `ICrudServiceFp.cs` está escrita en una sola línea por método
 
 El contrato del modo simple está formateado con alineación cuidadosa; el del modo duplex, y las últimas dos firmas del simple, están en líneas de más de 300 caracteres con `= null` (sin `!`), lo que genera advertencias de nulabilidad. Cosmético.
 
@@ -582,9 +582,9 @@ El contrato del modo simple está formateado con alineación cuidadosa; el del m
 
 ## ⚠️ Lo que NO incluye
 
-> ⚠️ **No hay paginación.** `AllAsync` trae **toda la tabla** y la mapea completa. Aunque [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) ofrece `IEfPagedRepository<T>`, esta capa depende solo de `IEfRepository<T>` y **no expone ningún método paginado**. En una tabla grande, `AllAsync` es un problema de rendimiento serio.
+> ⚠️ **No hay paginación.** `GetPagedAsync` trae **toda la tabla** y la mapea completa. Aunque [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) ofrece `IEfPagedRepository<T>`, esta capa depende solo de `IEfRepository<T>` y **no expone ningún método paginado**. En una tabla grande, `GetPagedAsync` es un problema de rendimiento serio.
 
-> ⚠️ **No hay filtrado ni búsqueda.** No existe un `GetDataAsync(filter)`: solo `AllAsync` y `FindByIdAsync`.
+> ⚠️ **No hay filtrado ni búsqueda.** No existe un `GetDataAsync(filter)`: solo `GetPagedAsync` y `FindByIdAsync`.
 
 > ⚠️ **No hay validación integrada.** El servicio solo comprueba `NotNull`. No invoca [`Validation`](../MoralesLarios.OOFP.Validation/README.md) ni DataAnnotations: debes validar **antes** de llamarlo.
 
@@ -664,14 +664,14 @@ var app = builder.Build();
 ### Ejemplo 2 — Uso directo del servicio genérico
 
 ```csharp
-public class VinosAppService(IGenServiceFp<Vino, VinoDto> _service)
+public class VinosAppService(ICrudServiceFp<Vino, VinoDto> _service)
 {
     public Task<MlResult<IEnumerable<VinoDto>>> TodosAsync(CancellationToken ct)
-        => _service.AllAsync(ct);
+        => _service.GetPagedAsync(ct);
 
     public Task<MlResult<VinoDto?>> BuscarAsync(int id, CancellationToken ct)
         => _service.FindByIdProblemsDetailsAsync(
-                        MlProblemsDetails.NotFoundError(detail: $"El vino {id} no existe"),
+                        MlProblemDetails.NotFoundError(detail: $"El vino {id} no existe"),
                         ct, pk: id);   // 🔑 así sí se traduce a 404
 
     public Task<MlResult<VinoDto>> CrearAsync(VinoDto dto, CancellationToken ct)
@@ -682,14 +682,14 @@ public class VinosAppService(IGenServiceFp<Vino, VinoDto> _service)
 ### Ejemplo 3 — Modo duplex
 
 ```csharp
-public class VinosDuplexService(IGenServiceFp<Vino, VinoRequest, VinoResponse> _service)
+public class VinosDuplexService(ICrudServiceFp<Vino, VinoRequest, VinoResponse> _service)
 {
     public Task<MlResult<VinoResponse>> CrearAsync(VinoRequest request, CancellationToken ct)
         => _service.CreateAsync(
                         request,
                         ct,
                         initialMessage     : $"Alta de vino: {request.Nombre}",
-                        validMessageBuilder: r => $"Vino creado con Id {r.Id}",
+                        successMessageFactory: r => $"Vino creado con Id {r.Id}",
                         failMessageBuilder : e => $"Alta fallida: {e.GetErrorsSummary()}");
 }
 ```
@@ -699,7 +699,7 @@ public class VinosDuplexService(IGenServiceFp<Vino, VinoRequest, VinoResponse> _
 ```csharp
 using MoralesLarios.OOFP.Validation.FluentValidation;
 
-public class VinosValidadosService(IGenServiceFp<Vino, VinoDto> _service,
+public class VinosValidadosService(ICrudServiceFp<Vino, VinoDto> _service,
                                    IValidator<VinoDto>          _validator)
 {
     public Task<MlResult<VinoDto>> CrearAsync(VinoDto dto, CancellationToken ct)
@@ -712,40 +712,40 @@ public class VinosValidadosService(IGenServiceFp<Vino, VinoDto> _service,
 
 ```csharp
 public class VinosServiceConReglas(IEfRepository<Vino>                          repo,
-                                   ILogger<GenServiceFp<Vino, VinoDto>>     logger)
-    : GenServiceFp<Vino, VinoDto>(repo, logger)
+                                   ILogger<CrudServiceFp<Vino, VinoDto>>     logger)
+    : CrudServiceFp<Vino, VinoDto>(repo, logger)
 {
     public override Task<MlResult<VinoDto>> CreateAsync(
             VinoDto dto, CancellationToken ct = default!,
             string initialMessage = null!,
-            Func<VinoDto, string> validMessageBuilder = null!,
+            Func<VinoDto, string> successMessageFactory = null!,
             Func<MlErrorDetails, string> failMessageBuilder = null!)
         => EnsureFp.That(dto, d => d.Anyo <= DateTime.Now.Year,
-                         MlProblemsDetails.UnprocessableContentError(
+                         MlProblemDetails.UnprocessableContentError(
                              detail: "El año de la cosecha no puede ser futuro"))
                    .ToAsync()
                    .BindAsync(d => base.CreateAsync(d, ct, initialMessage,
-                                                    validMessageBuilder, failMessageBuilder));
+                                                    successMessageFactory, failMessageBuilder));
 }
 ```
 
 Registro de la clase derivada (sustituye al genérico para esa entidad):
 
 ```csharp
-builder.Services.AddScoped<IGenServiceFp<Vino, VinoDto>, VinosServiceConReglas>();
+builder.Services.AddScoped<ICrudServiceFp<Vino, VinoDto>, VinosServiceConReglas>();
 ```
 
-### Ejemplo 6 — Errores HTTP con `MlProblemsDetails`
+### Ejemplo 6 — Errores HTTP con `MlProblemDetails`
 
 ```csharp
 // 404 con detalle propio
-MlProblemsDetails.NotFoundError(detail: $"No existe el vino {id}");
+MlProblemDetails.NotFoundError(detail: $"No existe el vino {id}");
 
 // 409 al detectar un duplicado
-MlProblemsDetails.ConflictError(detail: $"Ya existe un vino llamado '{nombre}'");
+MlProblemDetails.ConflictError(detail: $"Ya existe un vino llamado '{nombre}'");
 
 // 400 con errores por campo
-MlProblemsDetails.BadRequestError(
+MlProblemDetails.BadRequestError(
     detail: "Datos inválidos",
     errors: new Dictionary<string, object>
     {
@@ -754,7 +754,7 @@ MlProblemsDetails.BadRequestError(
     });
 
 // Código arbitrario con tu propio type
-MlProblemsDetails.CreateProblemDetails(
+MlProblemDetails.CreateProblemDetails(
     statusCode: 418,
     title     : "I'm a teapot",
     detail    : "Este endpoint no sirve café",
@@ -767,7 +767,7 @@ MlProblemsDetails.CreateProblemDetails(
 
 ```csharp
 // ❌ MAL: Singleton, y el repositorio depende de un DbContext Scoped
-services.AddSingletonGenServicesFpWithoutReposGeneral();
+services.AddSingletonCrudServicesFpWithoutRepositories();
 
 // ✅ BIEN
 services.AddScopedCrudServicesFpWithoutRepositories();
@@ -779,9 +779,9 @@ services.AddScopedCrudServicesFpWithoutRepositories();
 // ❌ MAL: la clave "NotFound" no la interpreta la capa HTTP
 await _service.FindByIdAsync(ct, pk: id);
 
-// ✅ BIEN: MlProblemsDetails genera la clave "ProblemsDetails" con Status 404
+// ✅ BIEN: MlProblemDetails genera la clave "ProblemsDetails" con Status 404
 await _service.FindByIdProblemsDetailsAsync(
-                   MlProblemsDetails.NotFoundError(detail: $"El vino {id} no existe"),
+                   MlProblemDetails.NotFoundError(detail: $"El vino {id} no existe"),
                    ct, pk: id);
 ```
 
@@ -799,7 +799,7 @@ await _service.UpdateAsync(dto, ct);
 
 ```csharp
 // ❌ MAL: AllAsync trae y mapea TODA la tabla
-await _service.AllAsync(ct);
+await _service.GetPagedAsync(ct);
 
 // ✅ BIEN: pagina con el repositorio directamente
 await _repoPaginado.TryGetDataPaginationAsync((1, 25), SortDirection.Ascending, x => x.Id, x => true, ct)
@@ -831,10 +831,10 @@ await _service.CreateAsync(dto, ct,
 
 ```csharp
 // ❌ MAL: usa la URL por defecto del autor de la librería
-MlProblemsDetails.NotFoundError(detail: "No existe");
+MlProblemDetails.NotFoundError(detail: "No existe");
 
 // ✅ BIEN: un URI que identifique el tipo de problema en TU API
-MlProblemsDetails.NotFoundError(detail: "No existe",
+MlProblemDetails.NotFoundError(detail: "No existe",
                                 type  : "https://api.miempresa.com/problems/not-found");
 ```
 
@@ -844,18 +844,18 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 
 | Necesito… | Uso |
 |---|---|
-| CRUD con un solo DTO | `IGenServiceFp<TEntity, TDto>` |
-| DTO de entrada ≠ de salida | `IGenServiceFp<TEntity, TRequest, TResponse>` ✅ en APIs públicas |
-| Listar todo | `AllAsync(ct)` ⚠️ sin paginación |
-| Buscar por PK con 404 correcto | `FindByIdProblemsDetailsAsync(MlProblemsDetails.NotFoundError(…), ct, pk)` ✅ |
+| CRUD con un solo DTO | `ICrudServiceFp<TEntity, TDto>` |
+| DTO de entrada ≠ de salida | `ICrudServiceFp<TEntity, TRequest, TResponse>` ✅ en APIs públicas |
+| Listar todo | `GetPagedAsync(ct)` ⚠️ sin paginación |
+| Buscar por PK con 404 correcto | `FindByIdProblemsDetailsAsync(MlProblemDetails.NotFoundError(…), ct, pk)` ✅ |
 | Crear | `CreateAsync(dto, ct)` |
 | Modificar sin problemas de tracking | `UpdateAsync(dto, ct)` ✅ sin `pk` |
-| Modificar comprobando existencia | `UpdateProblemDetailsAsync(dto, error, ct, …, pk)` ⚠️ ver particularidad 1 |
+| Modificar comprobando existencia | `UpdateAsync(dto, error, ct, …, pk)` ⚠️ ver particularidad 1 |
 | Borrar por PK | `DeleteProblemDetailsAsync(error, ct, …, pk)` |
 | Borrar una entidad que ya tengo | `DeleteAsync(dto, ct)` |
-| Un error 400 con errores por campo | `MlProblemsDetails.BadRequestError(…, validationResults)` |
-| Un código de estado arbitrario | `MlProblemsDetails.CreateProblemDetails(statusCode, …)` |
-| Añadir reglas de negocio | Heredar de `GenServiceFp<,>` y sobrescribir el método |
+| Un error 400 con errores por campo | `MlProblemDetails.BadRequestError(…, validationResults)` |
+| Un código de estado arbitrario | `MlProblemDetails.CreateProblemDetails(statusCode, …)` |
+| Añadir reglas de negocio | Heredar de `CrudServiceFp<,>` y sobrescribir el método |
 | Paginar, filtrar o proyectar | ❌ No disponible: usa `IEfPagedRepository<T>` directamente |
 | Validar | ❌ No lo hace: usa [`Validation`](../MoralesLarios.OOFP.Validation/README.md) antes |
 | Registrar | `AddScopedCrudServicesFpWithoutRepositories()` ✅ (con la errata) |
@@ -867,12 +867,12 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 1. **Usa el modo duplex en APIs públicas**: separa el DTO de entrada del de salida para no exponer `Id` ni campos internos.
 2. **Registra con `AddScopedt…`** (sí, con la errata). Evita `AddSingleton…` por la dependencia cautiva del `DbContext`.
 3. **No olvides `AddOofpRepositories<TEntity, TContext>()`** por cada entidad: el servicio resuelve `IEfRepository<TEntity>` por constructor.
-4. **Usa siempre las variantes `ProblemDetailsAsync` con `MlProblemsDetails`** si el error va a convertirse en respuesta HTTP. Las versiones cortas **no producen un 404 real**.
+4. **Usa siempre las variantes `ProblemDetailsAsync` con `MlProblemDetails`** si el error va a convertirse en respuesta HTTP. Las versiones cortas **no producen un 404 real**.
 5. **Prefiere `UpdateAsync(dto, ct)` sin `pk`** para evitar el doble `Find` y los conflictos de seguimiento.
-6. **No uses `AllAsync` en tablas grandes**: no pagina. Baja al repositorio paginado y mapea con `Adapt`.
+6. **No uses `GetPagedAsync` en tablas grandes**: no pagina. Baja al repositorio paginado y mapea con `Adapt`.
 7. **Valida antes de llamar al servicio**, con [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) o [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md).
 8. **Pasa `failMessageBuilder` con `e => e.GetErrorsSummary()`** para que el log contenga los mensajes reales.
-9. **Pasa siempre tu propio `type`** en `MlProblemsDetails`: el valor por defecto apunta al sitio del autor de la librería.
+9. **Pasa siempre tu propio `type`** en `MlProblemDetails`: el valor por defecto apunta al sitio del autor de la librería.
 10. **Configura y compila los mapeos de Mapster al arrancar** (`TypeAdapterConfig.Global.Compile()`): los errores de mapeo se convierten en `Fail` silenciosos.
 11. **Hereda y sobrescribe** para añadir reglas de negocio en lugar de escribir un servicio nuevo: todos los métodos son `virtual`.
 12. **Personaliza `initialMessage`** con contexto útil (usuario, correlación): los mensajes por defecto son genéricos y en inglés.
@@ -883,12 +883,12 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 ## Resumen
 
 - Servicio de aplicación **genérico** que implementa el CRUD completo sobre `IEfRepository<TEntity>`, mapeando entidad ⇄ DTO con **Mapster** y trazando **entrada y salida** de cada operación en el raíl de `MlResult<T>`.
-- **Dos modos**: simple (`IGenServiceFp<TEntity, TDto>`)
+- **Dos modos**: simple (`ICrudServiceFp<TEntity, TDto>`)
 - Registro con tipos genéricos abiertos: **una sola llamada** sirve para todas las entidades. ⚠️ El nombre tiene la errata `AddScopedt…`.
-- **`MlProblemsDetails`**: 15 fábricas de `MlErrorDetails` con la estructura **RFC 7807** (400, 401, 403, 404, 409, 422, 429, 500…), más una sobrecarga que agrupa `ValidationResult` por propiedad.
-- ❗ **Para obtener un 404 real, usa las variantes `ProblemDetailsAsync` con `MlProblemsDetails.NotFoundError(…)`**: las versiones cortas generan la clave `"NotFound"`, que la capa HTTP no interpreta.
-- ❗ **`UpdateProblemDetailsAsync` hace dos búsquedas y descarta la entidad recuperada**, lo que puede provocar conflictos de seguimiento en EF Core. Prefiere `UpdateAsync(dto, ct)` sin `pk`.
-- ⚠️ **No hay paginación, filtrado ni validación**: `AllAsync` trae toda la tabla, y debes validar antes de llamar al servicio.
+- **`MlProblemDetails`**: 15 fábricas de `MlErrorDetails` con la estructura **RFC 7807** (400, 401, 403, 404, 409, 422, 429, 500…), más una sobrecarga que agrupa `ValidationResult` por propiedad.
+- ❗ **Para obtener un 404 real, usa las variantes `ProblemDetailsAsync` con `MlProblemDetails.NotFoundError(…)`**: las versiones cortas generan la clave `"NotFound"`, que la capa HTTP no interpreta.
+- ❗ **`UpdateAsync` hace dos búsquedas y descarta la entidad recuperada**, lo que puede provocar conflictos de seguimiento en EF Core. Prefiere `UpdateAsync(dto, ct)` sin `pk`.
+- ⚠️ **No hay paginación, filtrado ni validación**: `GetPagedAsync` trae toda la tabla, y debes validar antes de llamar al servicio.
 - ⚠️ **Detalles menores**: `DeleteAsync` no permite personalizar el mensaje de éxito, `DeleteAsync(dto)` usa `MapAsync` sin protección, y `GenService.cs` está vacío.
 - **Todos los métodos son `virtual`**: extiende por herencia para añadir reglas de negocio.
 
@@ -916,7 +916,7 @@ MlProblemsDetails.NotFoundError(detail: "No existe",
 ### Documentación del núcleo útil aquí
 
 - [`MlResult<T>` — el contenedor de éxito/error](../docs/core-types/MlResult.md)
-- [`MlErrorDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md) 🔑 la base de `MlProblemsDetails`
+- [`MlErrorDetails` — mensajes y detalles del error](../docs/core-types/MlResultErrors.md) 🔑 la base de `MlProblemDetails`
 - [`Bind` — encadenar operaciones que pueden fallar](../docs/Bind/3_Bind.md)
 - [`Map` — transformación con cortocircuito](../docs/Map/1_Map.md)
 - [`TryMap` y `TryBind` — capturar excepciones en el raíl](../docs/Map/1_Map.md)

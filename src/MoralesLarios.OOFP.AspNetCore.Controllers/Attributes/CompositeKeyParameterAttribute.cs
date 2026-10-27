@@ -9,7 +9,7 @@ namespace MoralesLarios.OOFP.AspNetCore.Controllers.Attributes;
 /// Proporciona informaci�n sobre el formato esperado de los valores de PK, especialmente para claves compuestas.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
-public class PkParameterAttribute : Attribute
+public class CompositeKeyParameterAttribute : Attribute
 {
     /// <summary>
     /// Descripci�n del formato esperado del par�metro PK.
@@ -17,10 +17,10 @@ public class PkParameterAttribute : Attribute
     public string Description { get; set; }
 
     /// <summary>
-    /// Inicializa una nueva instancia del atributo <see cref="PkParameterAttribute"/>.
+    /// Inicializa una nueva instancia del atributo <see cref="CompositeKeyParameterAttribute"/>.
     /// </summary>
     /// <param name="description">Descripci�n del formato. Si es nulo, usa la descripci�n por defecto.</param>
-    public PkParameterAttribute(string description = null!)
+    public CompositeKeyParameterAttribute(string description = null!)
     {
         Description = description ?? "Valores de la clave primaria separados por comas. " +
                                       "Para DateTime usa formato ISO 8601: yyyy-MM-ddTHH:mm:ss.fff " +

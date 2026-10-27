@@ -81,7 +81,7 @@ public static class WebErrorDetailsKeys
 
 ```mermaid
 flowchart LR
-    A["WebServices<br/>BuildNotFoundPkError"] -->|"AddMetadataOrThrow(ProblemsDetails, pd)"| B["MlErrorDetails.Metadata"]
+    A["WebServices<br/>BuildEntityNotFoundError"] -->|"AddMetadataOrThrow(ProblemsDetails, pd)"| B["MlErrorDetails.Metadata"]
     B -->|"GetMetadataValue&lt;ProblemDetails&gt;()"| C["WebApi<br/>GetProblemDetails"]
     C --> D["404 Not Found"]
 ```

@@ -20,7 +20,7 @@ Actualmente el contrato e implementaci�n est�n vac�os y listos para extend
 
 Si necesitas funcionalidad real, utiliza directamente:
 
-- `MoralesLarios.OOFP.Application` (`IGenServiceFp<,>`) para l�gica CRUD funcional.
+- `MoralesLarios.OOFP.Application` (`ICrudServiceFp<,>`) para l�gica CRUD funcional.
 - `MoralesLarios.OOFP.AspNetCore.Controllers` / `MoralesLarios.OOFP.AspNetCore.Results` para exponer endpoints.
 
 ## Ejemplo de extensi�n
@@ -31,7 +31,7 @@ public interface IApplicationManager<TEntity, TDto>
     Task<MlResult<IEnumerable<TDto>>> GetAllAsync(CancellationToken ct = default);
 }
 
-public class ApplicationManager<TEntity, TDto>(IGenServiceFp<TEntity, TDto> service)
+public class ApplicationManager<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> service)
     : IApplicationManager<TEntity, TDto>
     where TEntity : class
     where TDto : class

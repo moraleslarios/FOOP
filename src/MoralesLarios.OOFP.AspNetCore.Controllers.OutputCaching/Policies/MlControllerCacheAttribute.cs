@@ -5,7 +5,7 @@
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Policies;
 
 /// <summary>
-/// Atributo que aplica la <see cref="PerControllerOutputCachePolicy"/> y permite
+/// Atributo que aplica la <see cref="ControllerScopedOutputCachePolicy"/> y permite
 /// indicar opcionalmente la duraci�n del cache. Si no se especifica duraci�n se usa
 /// la configurada por defecto en <c>AddOutputCache</c> mediante
 /// <see cref="Microsoft.AspNetCore.OutputCaching.OutputCacheOptions.DefaultExpirationTimeSpan"/>.
@@ -26,7 +26,7 @@ public sealed class MlControllerCacheAttribute : Attribute, IOutputCachePolicy
 
     public ValueTask CacheRequestAsync(OutputCacheContext context, CancellationToken cancellationToken)
     {
-        var inner = PerControllerOutputCachePolicy.Instance.CacheRequestAsync(context, cancellationToken);
+        var inner = ControllerScopedOutputCachePolicy.Instance.CacheRequestAsync(context, cancellationToken);
 
         if (_expiration is { } exp && context.EnableOutputCaching)
             context.ResponseExpirationTimeSpan = exp;
@@ -35,8 +35,8 @@ public sealed class MlControllerCacheAttribute : Attribute, IOutputCachePolicy
     }
 
     public ValueTask ServeFromCacheAsync(OutputCacheContext context, CancellationToken cancellationToken)
-        => PerControllerOutputCachePolicy.Instance.ServeFromCacheAsync(context, cancellationToken);
+        => ControllerScopedOutputCachePolicy.Instance.ServeFromCacheAsync(context, cancellationToken);
 
     public ValueTask ServeResponseAsync(OutputCacheContext context, CancellationToken cancellationToken)
-        => PerControllerOutputCachePolicy.Instance.ServeResponseAsync(context, cancellationToken);
+        => ControllerScopedOutputCachePolicy.Instance.ServeResponseAsync(context, cancellationToken);
 }

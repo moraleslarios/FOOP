@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MoralesLarios.OOFP.Application;
 
-public static class MlProblemsDetails
+public static class MlProblemDetails
 {
     public static MlErrorDetails CreateProblemDetails(int                        statusCode, 
                                                        string                     title      = null!, 

@@ -2,10 +2,10 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers;
 
-public static class RegisterServices
+public static partial class RegisterServices
 {
 
-    public static IServiceCollection AddWebControllers(this IServiceCollection services)
+    public static IServiceCollection AddMlControllers(this IServiceCollection services)
     {
         
 

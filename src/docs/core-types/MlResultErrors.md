@@ -288,7 +288,7 @@ public async Task<IActionResult> ObtenerTarifaAsync(string divisa)
 
 ## Relación con Web API
 
-`MlProblemsDetails` (en `MoralesLarios.OOFP.Application`) escribe en `Details["ProblemsDetails"]`.
+`MlProblemDetails` (en `MoralesLarios.OOFP.Application`) escribe en `Details["ProblemsDetails"]`.
 Luego `MlErrorDetailsExtensions.GetProblemDetails()` (en `MoralesLarios.OOFP.AspNetCore.Results`) lo convierte en
 `ProblemDetailsInfo`, permitiendo devolver respuestas conformes a RFC 7807 sin acoplar el núcleo de la
 librería a ASP.NET Core.

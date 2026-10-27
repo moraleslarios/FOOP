@@ -120,7 +120,7 @@ MoralesLarios.OOFP.EntityFrameworkCore/
 │   ├── ThrowingEfPagedRepository.cs, ThrowingEfPagedReadRepository.cs
 │   └── IGetContextable.cs
 ├── Helpers/
-│   ├── Extensions.cs                   → GetPkValues, PrivateOrderBy
+│   ├── Extensions.cs                   → ParseKeyValues, PrivateOrderBy
 │   └── Constants.cs                    → ⚠️ vacío
 ├── Enums/SortDirection.cs                    → Ascending, Descending
 ├── RegisterServices.cs                 → Add{Transient|Scoped|Singleton}OOFPRepos
@@ -483,11 +483,11 @@ await repo.TryFindAsync($"No existe el vino con id {42}", ct, 42);
 await repo.TryFindAsync(MlErrorDetails.FromErrorMessageWithValue(42, "Vino inexistente"), ct, 42);
 ```
 
-Los mensajes por defecto vienen de `GetPkValues`:
+Los mensajes por defecto vienen de `ParseKeyValues`:
 
 ```csharp
-new object[] { 10 }.GetPkValues();        // "10"
-new object[] { 10, "A" }.GetPkValues();   // "(10, A)"
+new object[] { 10 }.ParseKeyValues();        // "10"
+new object[] { 10, "A" }.ParseKeyValues();   // "(10, A)"
 ```
 
 > 💡 **Personaliza el mensaje si va a llegar al usuario final**: los mensajes por defecto están en inglés e incluyen el nombre del tipo de la entidad, lo cual **filtra detalles internos** en una API pública.
@@ -502,7 +502,7 @@ public enum SortDirection { Ascending, Descending }
 
 | Helper | Firma | Uso |
 |---|---|---|
-| `GetPkValues` | `this object[] → string` | Formatea las claves para los mensajes |
+| `ParseKeyValues` | `this object[] → string` | Formatea las claves para los mensajes |
 | `PrivateOrderBy` | `this IQueryable<T> → IQueryable<T>` | Ordenación condicional |
 
 > ⚠️ **`Helpers/Constants.cs` está completamente vacío** (una clase `internal static` sin miembros). Residuo sin efecto.

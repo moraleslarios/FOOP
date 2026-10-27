@@ -102,8 +102,8 @@ Para tipos que usan **constructor primario** (C# 12+) con inyecci�n de depende
 Ejemplo can�nico (clase con constructor primario + DI + gen�ricos restringidos + interfaz):
 
 ```csharp
-public class GenServiceFp<TEntity, TDto>(IEfRepository<TEntity>                   _repo,
-                                         ILogger<GenServiceFp<TEntity, TDto>> _logger) : IGenServiceFp<TEntity, TDto>
+public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                   _repo,
+                                         ILogger<CrudServiceFp<TEntity, TDto>> _logger) : ICrudServiceFp<TEntity, TDto>
     where TEntity : class
     where TDto    : class
 {
@@ -202,8 +202,8 @@ Cuando se invoca un m�todo con **dos o m�s** argumentos con nombre en multil
 ```csharp
 => FindByIdProblemsDetailsAsync(ct                  : ct,
                                 initialMessage      : initialMessage,
-                                notFoundErrorDetails: BuildNotFoundPkError(...),
-                                validMessageBuilder : validMessageBuilder,
+                                notFoundErrorDetails: BuildEntityNotFoundError(...),
+                                successMessageFactory : successMessageFactory,
                                 failMessageBuilder  : failMessageBuilder,
                                 pk                  : pk);
 ```

@@ -1,11 +1,11 @@
 ﻿namespace MoralesLarios.OOFP.Application.Helpers;
 
-public static class Extensions
+public static partial class Extensions
 {
 
 
-    public static MlErrorDetails BuildNotFoundPkError(this string tableName, params object[] pk)
-        => MlProblemsDetails.NotFoundError(
+    public static MlErrorDetails BuildEntityNotFoundError(this string tableName, params object[] pk)
+        => MlProblemDetails.NotFoundError(
             detail: $"No data found for the {tableName} table by Id ({pk.GetPkValues()})");
 
 }

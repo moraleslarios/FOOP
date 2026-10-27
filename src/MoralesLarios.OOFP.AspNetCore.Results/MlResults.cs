@@ -9,7 +9,7 @@ public class ExtendedProblemDetails : ProblemDetails
     public Dictionary<string, object> Errors { get; set; } = new();
 }
 
-public static class MlActionResults
+public static class MlResults
 {
 
     public static IActionResult CreateProblemsDetails(int                       statusCode, 

@@ -2,10 +2,10 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers;
 
-public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(IGenServiceFp<TEntity, TDto> _genServiceFp,
+public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> _genServiceFp,
                                                                Func<TEntity, object[]>      _pkFields,
                                                                IOutputCacheStore            _outputCacheStore)
-        : SimpleMlComplexPkControllerBase<TEntity, TDto>(_genServiceFp, _pkFields)
+        : MlCompositeKeyCrudControllerBase<TEntity, TDto>(_genServiceFp, _pkFields)
      where TEntity : class
      where TDto    : class
 {
@@ -14,7 +14,7 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(IGenServiceFp<TEn
 
 
     [MlControllerCache]
-    public override async Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public override async Task<IActionResult> GetByIdAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
         => await base.GetByIdAsync(ids, ct);
 
 
@@ -28,7 +28,7 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(IGenServiceFp<TEn
 
 
 
-    public override async Task<IActionResult> PutAsync([FromRoute][PkParameter] string            ids, 
+    public override async Task<IActionResult> PutAsync([FromRoute][CompositeKeyParameter] string            ids, 
                                                                   [FromBody]    TDto              dto,
                                                                                 CancellationToken ct = default!)
     {
@@ -45,7 +45,7 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(IGenServiceFp<TEn
     }
 
 
-    public override async Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public override async Task<IActionResult> DeleteAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         await EvictControllerCacheAsync(ct);
 
@@ -63,7 +63,7 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(IGenServiceFp<TEn
 
         [HttpGet("clear-cache/now")]
     public virtual async Task EvictControllerCacheAsync(CancellationToken ct = default)
-        => await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
+        => await _outputCacheStore.EvictByTagAsync(ControllerScopedOutputCachePolicy.GetControllerTag(HttpContext), ct);
 }
 
 
@@ -90,7 +90,7 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IG
 
 
     [MlControllerCache]
-    public override async Task<IActionResult> GetByIdAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public override async Task<IActionResult> GetByIdAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
         => await base.GetByIdAsync(ids, ct);
 
 
@@ -104,7 +104,7 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IG
 
 
 
-    public override async Task<IActionResult> PutAsync([FromRoute][PkParameter] string            ids, 
+    public override async Task<IActionResult> PutAsync([FromRoute][CompositeKeyParameter] string            ids, 
                                                                   [FromBody]    TRequest          dto,
                                                                                 CancellationToken ct = default!)
     {
@@ -121,7 +121,7 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IG
     }
 
 
-    public override async Task<IActionResult> DeleteAsync([FromRoute][PkParameter] string ids, CancellationToken ct = default!)
+    public override async Task<IActionResult> DeleteAsync([FromRoute][CompositeKeyParameter] string ids, CancellationToken ct = default!)
     {
         await EvictControllerCacheAsync(ct);
 
@@ -139,5 +139,5 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IG
 
         [HttpGet("clear-cache/now")]
     public virtual async Task EvictControllerCacheAsync(CancellationToken ct = default)
-        => await _outputCacheStore.EvictByTagAsync(PerControllerOutputCachePolicy.GetControllerTag(HttpContext), ct);
+        => await _outputCacheStore.EvictByTagAsync(ControllerScopedOutputCachePolicy.GetControllerTag(HttpContext), ct);
 }

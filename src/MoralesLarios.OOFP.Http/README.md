@@ -8,7 +8,7 @@ queda encapsulado dentro de una tubería ferroviaria (*railway oriented programm
 
 Está construido sobre `IHttpClientFactory` (por lo que hereda su gestión de pool de conexiones y su
 configuración por nombre) y es el **espejo exacto** de `MoralesLarios.OOFP.AspNetCore.Controllers`: si el servidor
-expone sus CRUD heredando de `SimpleMlControllerBase<TEntity, TDto, TPk>`, el cliente los consume heredando
+expone sus CRUD heredando de `MlCrudControllerBase<TEntity, TDto, TPk>`, el cliente los consume heredando
 de `GenClientFp<TDto>` sin escribir una sola línea de infraestructura.
 
 ---
@@ -620,7 +620,7 @@ MlResult<HttpRequestMessage> SetHeaders   (this HttpRequestMessage request, Dict
 > hace el manager) o `TryAddWithoutValidation` en tu propio código.
 >
 > ⚠️ Las cabeceras `X-Page-Number` y `X-Page-Size` son exactamente las que lee
-> `MlRequestWebExtensions.GetHeaderPaginationInfo()` en [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
+> `HttpRequestPaginationExtensions.GetHeaderPaginationInfo()` en [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
 > Cliente y servidor están acoplados por esos dos literales, duplicados en ambos proyectos.
 
 ### `MlResponseWebExtensions`
@@ -849,7 +849,7 @@ Las cabeceras se aplican al `HttpRequestMessage` de **esa** petición (vía `Set
 ### Ejemplo 5 — Bypass de la caché del servidor
 
 ```csharp
-// Reconocido por PerControllerOutputCachePolicy.BypassHeader en MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.
+// Reconocido por ControllerScopedOutputCachePolicy.CacheBypassHeader en MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.
 // Valores admitidos: "1", "true", "yes", "on", "no-cache", "no-store", "bypass".
 private static readonly Dictionary<string, string> _sinCache = new() { ["X-Bypass-Cache"] = "true" };
 
@@ -987,7 +987,7 @@ public Task<MlResult<PruebasDto>> BienAsync(int id)
 [HttpGet("{id}")]
 public Task<IActionResult> GetAsync(int id)
     => _appService.BienAsync(id)
-                  .ToGetPdActionResultAsync();
+                  .ToOkProblemDetailsResultAsync();
 ```
 
 La regla es siempre la misma: **el `MlResult` no se abre hasta el borde de la aplicación**. Dentro se

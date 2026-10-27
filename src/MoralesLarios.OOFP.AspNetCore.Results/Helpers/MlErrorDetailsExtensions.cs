@@ -4,9 +4,9 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 
-public static class MlErrorDetailsExtensions
+public static partial class MlErrorDetailsExtensions
 {
-    public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorDetails source)
+    public static MlResult<ProblemDetailsData> GetProblemDetails(this MlErrorDetails source)
     {
         var result = MlResult.Empty()
                                 .MapEnsure( _  => source.ContainsMetadata(ProblemsDetails),
@@ -14,12 +14,12 @@ public static class MlErrorDetailsExtensions
                                 .Map      ( _  => source.Metadata[ProblemsDetails])
                                 .MapEnsure(obj => obj is not null, 
                                             _  => "The details ProblemsDetails key has a null object.")
-                                .Bind     (obj => obj.ToProblemsDetailsInfo() );
+                                .Bind     (obj => obj.ToProblemDetails() );
         return result;
     }
 
 
-    public static MlResult<ProblemDetailsInfo> ToProblemsDetailsInfo(this object obj)
+    public static MlResult<ProblemDetailsData> ToProblemDetails(this object obj)
     {
         var result = MlResult.Empty()
                             .MapEnsure(_ => HasRequiredProblemDetailsProperties(obj), 
@@ -36,7 +36,7 @@ public static class MlErrorDetailsExtensions
         return requiredProperties.All(propName => type.GetProperty(propName) != null);
     }
 
-    private static ProblemDetailsInfo ExtractProblemDetailsInfo(object obj)
+    private static ProblemDetailsData ExtractProblemDetailsInfo(object obj)
     {
         var type = obj.GetType();
         
@@ -47,7 +47,7 @@ public static class MlErrorDetailsExtensions
         var errors     = (Dictionary<string, object>?)type.GetProperty("Errors"    )?.GetValue(obj) ?? new Dictionary<string, object>();
         var statusCode = (int?)                       type.GetProperty("StatusCode")?.GetValue(obj) ?? 500;
         
-        return new ProblemDetailsInfo(
+        return new ProblemDetailsData(
             Status    : status,
             Title     : title,
             Detail    : detail,

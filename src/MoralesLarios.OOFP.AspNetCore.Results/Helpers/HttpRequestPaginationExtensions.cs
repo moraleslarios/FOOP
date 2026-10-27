@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 
-public static class MlRequestWebExtensions
+public static class HttpRequestPaginationExtensions
 {
 
     public static MlResult<NotEmptyString> GetHeaderInfo(this HttpRequest request, MemberName headerKey)
@@ -33,7 +33,7 @@ public static class MlRequestWebExtensions
 
     public static MlResult<IntNonNegative> GetHeaderPageNumber(this HttpRequest request)
     {
-        MemberName headerKey = "X-Page-Number";
+        MemberName headerKey = global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageNumber;
 
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind(_ => GetHeaderInfoAsIntNotNegative(request, headerKey));
@@ -45,7 +45,7 @@ public static class MlRequestWebExtensions
 
     public static MlResult<IntNonNegative> GetHeaderPageSize(this HttpRequest request)
     {
-        MemberName headerKey = "X-Page-Size";
+        MemberName headerKey = global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageSize;
 
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind(_ => GetHeaderInfoAsIntNotNegative(request, headerKey));

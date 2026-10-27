@@ -18,7 +18,7 @@ public class MlErrorDetailsExtensionsTests
     {
         MlErrorDetails source = "error without details";
 
-        MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
+        MlResult<ProblemDetailsData> result = source.GetProblemDetails();
 
         result.IsFailure.Should().BeTrue();
     }
@@ -29,7 +29,7 @@ public class MlErrorDetailsExtensionsTests
     {
         MlErrorDetails source = ("error without problems details", new Dictionary<string, object>());
 
-        MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
+        MlResult<ProblemDetailsData> result = source.GetProblemDetails();
 
         result.IsFailure.Should().BeTrue();
     }
@@ -52,7 +52,7 @@ public class MlErrorDetailsExtensionsTests
                           }
                       });
 
-        MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
+        MlResult<ProblemDetailsData> result = source.GetProblemDetails();
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -75,9 +75,9 @@ public class MlErrorDetailsExtensionsTests
                           }
                       });
 
-        MlResult<ProblemDetailsInfo> result = source.GetProblemDetails();
+        MlResult<ProblemDetailsData> result = source.GetProblemDetails();
 
-        MlResult<ProblemDetailsInfo> expected = new ProblemDetailsInfo
+        MlResult<ProblemDetailsData> expected = new ProblemDetailsData
         (
             Status    : 400,
             Title     : "Bad request",

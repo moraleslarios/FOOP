@@ -6,11 +6,11 @@ using System.Globalization;
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.Helpers;
 
-public static class Extensions
+public static partial class Extensions
 {
 
 
-    public static object ConverterTo(this string value, Type property)
+    public static object ConvertToType(this string value, Type property)
     {
 
         string fullNameTipe = property.FullName.Split('`')[0];
@@ -22,7 +22,7 @@ public static class Extensions
             switch (fullNameTipe)
             {
                 //case "System.DateTime": resultado = DateTime.Parse(value); break;
-                case "System.DateTime": resultado = ConvertDateTime(value); break;
+                case "System.DateTime": resultado = ParseDateTimeInvariant(value); break;
                 case "System.Int32"   : resultado = int     .Parse(value); break;
                 case "System.Int16"   : resultado = short   .Parse(value); break;
                 case "System.Char"    : resultado = char    .Parse(value); break;
@@ -43,7 +43,7 @@ public static class Extensions
                     string tipoDelNulable = property.FullName.Split('`')[1];
 
                     //if (tipoDelNulable.Contains("System.DateTime")) resultado = string.IsNullOrEmpty(value) ? null : (DateTime?)DateTime.Parse(value);
-                    if (tipoDelNulable.Contains("System.DateTime")) resultado = ConvertDateTime(value); 
+                    if (tipoDelNulable.Contains("System.DateTime")) resultado = ParseDateTimeInvariant(value); 
                     if (tipoDelNulable.Contains("System.Int32"   )) resultado = string.IsNullOrEmpty(value) ? null : (int?     )int     .Parse(value);
                     if (tipoDelNulable.Contains("System.Int16"   )) resultado = string.IsNullOrEmpty(value) ? null : (short?   )short   .Parse(value);
                     if (tipoDelNulable.Contains("System.Char"    )) resultado = string.IsNullOrEmpty(value) ? null : (char?    )char    .Parse(value);
@@ -72,7 +72,7 @@ public static class Extensions
     }
 
 
-    private static DateTime ConvertDateTime(string value)
+    private static DateTime ParseDateTimeInvariant(string value)
     {
         DateTime result = DateTime.MinValue;
 
@@ -99,18 +99,18 @@ public static class Extensions
 
 
 
-    public static object[] GetPkValues<TEntity>(this string ids, Func<TEntity, object[]> pkFields)
+    public static object[] ParseKeyValues<TEntity>(this string ids, Func<TEntity, object[]> pkFields)
         where TEntity : class
     {
-        var result = GetPkValues(ids.Split(','), pkFields);
+        var result = ParseKeyValues(ids.Split(','), pkFields);
 
         return result;
     }
-    public static string GetPkValuesErrorMessage(this Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
+    public static string BuildKeyParseErrorMessage(this Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
 
 
 
-    public static object[] GetPkValues<TEntity>(string[] values, Func<TEntity, object[]> pkFields)
+    public static object[] ParseKeyValues<TEntity>(string[] values, Func<TEntity, object[]> pkFields)
         where TEntity : class
     {
         var sample = Activator.CreateInstance<TEntity>();   // requiere new() o reflexión

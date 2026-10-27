@@ -32,13 +32,13 @@ public static class MlHttpRequestExtensions
         => client.SetHeaderInfoAsInt(headerKey, headerValue).ToAsync();
 
     public static MlResult<HttpClient> SetHeaderPageNumber(this HttpClient client, IntNonNegative pageNumber)
-        => SetHeaderInfoAsInt(client, "X-Page-Number", (int)pageNumber);
+        => SetHeaderInfoAsInt(client, global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageNumber, (int)pageNumber);
 
     public static Task<MlResult<HttpClient>> SetHeaderPageNumberAsync(this HttpClient client, IntNonNegative pageNumber)
         => client.SetHeaderPageNumber(pageNumber).ToAsync();
 
     public static MlResult<HttpClient> SetHeaderPageSize(this HttpClient client, IntNonNegative pageSize)
-        => SetHeaderInfoAsInt(client, "X-Page-Size", (int)pageSize);
+        => SetHeaderInfoAsInt(client, global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageSize, (int)pageSize);
 
     public static Task<MlResult<HttpClient>> SetHeaderPageSizeAsync(this HttpClient client, IntNonNegative pageSize)
         => client.SetHeaderPageSize(pageSize).ToAsync();

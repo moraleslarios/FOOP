@@ -8,38 +8,38 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit.Helpers;
 
-public class MlResultWebExtensionsPlusTests
+public class MlResultActionResultExtensionsTests
 {
 
 
 
     [Fact]
-    public void ToGetPdActionResult_Should_Return_Ok_When_MlResult_Is_Valid()
+    public void ToOkProblemDetailsResult_Should_Return_Ok_When_MlResult_Is_Valid()
     {
         var mlResult = MlResult<string>.Valid("Hello, World!");
 
-        IActionResult result = mlResult.ToGetPdActionResult();
+        IActionResult result = mlResult.ToOkProblemDetailsResult();
 
         result.Should().BeEquivalentTo(new OkObjectResult("Hello, World!"));
     }
 
 
     [Fact]
-    public void ToGetPdActionResult_When_source_is_fail_without_problemDetailsKey_returns_InternalServerError()
+    public void ToOkProblemDetailsResult_When_source_is_fail_without_problemDetailsKey_returns_InternalServerError()
     {
         var mlResult = MlResult<string>.Fail(new List<string> { "Error 1", "Error 2" });
 
-        IActionResult result = mlResult.ToGetPdActionResult();
+        IActionResult result = mlResult.ToOkProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
     }
 
     [Fact]
-    public void ToGetPdActionResult_WhenServiceBuildsNotFoundPkError_returnsNotFound()
+    public void ToOkProblemDetailsResult_WhenServiceBuildsNotFoundPkError_returnsNotFound()
     {
-        MlResult<string> source = "Users".BuildNotFoundPkError(42);
+        MlResult<string> source = "Users".BuildEntityNotFoundError(42);
 
-        IActionResult result = source.ToGetPdActionResult();
+        IActionResult result = source.ToOkProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
@@ -48,11 +48,11 @@ public class MlResultWebExtensionsPlusTests
     [Theory]
     [InlineData(404)]
     [InlineData(400)]
-    public void ToGetPdActionResultToRepoGetPdActionResult_When_source_is_fail_with_problemDetailsKey_returns_ProblemDetails(int expectedStatusCode)
+    public void ToOkProblemDetailsResultToRepoGetPdActionResult_When_source_is_fail_with_problemDetailsKey_returns_ProblemDetails(int expectedStatusCode)
     {
         var mlResult = CreateFailWithProblemDetails<string>(expectedStatusCode);
 
-        IActionResult result = mlResult.ToGetPdActionResult();
+        IActionResult result = mlResult.ToOkProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(expectedStatusCode);
     }
@@ -60,21 +60,21 @@ public class MlResultWebExtensionsPlusTests
 
 
     [Fact]
-    public async Task ToGetPdActionResultAsync_From_MlResult_Should_Return_Ok_When_Valid()
+    public async Task ToOkProblemDetailsResultAsync_From_MlResult_Should_Return_Ok_When_Valid()
     {
         var mlResult = MlResult<string>.Valid("Hello, World!");
 
-        IActionResult result = await mlResult.ToGetPdActionResultAsync();
+        IActionResult result = await mlResult.ToOkProblemDetailsResultAsync();
 
         result.Should().BeEquivalentTo(new OkObjectResult("Hello, World!"));
     }
 
     [Fact]
-    public async Task ToGetPdActionResultAsync_From_Task_Should_Return_Ok_When_Valid()
+    public async Task ToOkProblemDetailsResultAsync_From_Task_Should_Return_Ok_When_Valid()
     {
         var mlResultTask = Task.FromResult(MlResult<string>.Valid("Hello, World!"));
 
-        IActionResult result = await mlResultTask.ToGetPdActionResultAsync();
+        IActionResult result = await mlResultTask.ToOkProblemDetailsResultAsync();
 
         result.Should().BeEquivalentTo(new OkObjectResult("Hello, World!"));
     }
@@ -85,7 +85,7 @@ public class MlResultWebExtensionsPlusTests
         var mlResult = MlResult<string>.Valid("created");
         var uri = new Uri("https://localhost/api/items/1");
 
-        IActionResult result = mlResult.ToPostPdActionResult(uri);
+        IActionResult result = mlResult.ToCreatedProblemDetailsResult(uri);
 
         result.Should().BeOfType<CreatedResult>().Which.StatusCode.Should().Be(201);
     }
@@ -96,7 +96,7 @@ public class MlResultWebExtensionsPlusTests
         var mlResult = MlResult<string>.Fail("error");
         var uri = new Uri("https://localhost/api/items/1");
 
-        IActionResult result = mlResult.ToPostPdActionResult(uri);
+        IActionResult result = mlResult.ToCreatedProblemDetailsResult(uri);
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
     }
@@ -107,7 +107,7 @@ public class MlResultWebExtensionsPlusTests
         var mlResult = CreateFailWithProblemDetails<string>(409);
         var uri = new Uri("https://localhost/api/items/1");
 
-        IActionResult result = mlResult.ToPostPdActionResult(uri);
+        IActionResult result = mlResult.ToCreatedProblemDetailsResult(uri);
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(409);
     }
@@ -118,7 +118,7 @@ public class MlResultWebExtensionsPlusTests
         var mlResult = MlResult<string>.Valid("created");
         var uri = new Uri("https://localhost/api/items/1");
 
-        IActionResult result = await mlResult.ToPostPdActionResultAsync(uri);
+        IActionResult result = await mlResult.ToCreatedProblemDetailsResultAsync(uri);
 
         result.Should().BeOfType<CreatedResult>().Which.StatusCode.Should().Be(201);
     }
@@ -135,151 +135,151 @@ public class MlResultWebExtensionsPlusTests
     }
 
     [Fact]
-    public void ToPutPdActionResult_Should_Return_NoContent_When_Valid()
+    public void ToNoContentProblemDetailsResult_Should_Return_NoContent_When_Valid()
     {
         var mlResult = MlResult<string>.Valid("ok");
 
-        IActionResult result = mlResult.ToPutPdActionResult();
+        IActionResult result = mlResult.ToNoContentProblemDetailsResult();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public void ToPutPdActionResult_Should_Return_500_When_Fail_Without_ProblemDetails()
+    public void ToNoContentProblemDetailsResult_Should_Return_500_When_Fail_Without_ProblemDetails()
     {
         var mlResult = MlResult<string>.Fail("error");
 
-        IActionResult result = mlResult.ToPutPdActionResult();
+        IActionResult result = mlResult.ToNoContentProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
     }
 
     [Fact]
-    public void ToPutPdActionResult_Should_Return_ProblemDetails_When_Fail_With_ProblemDetails()
+    public void ToNoContentProblemDetailsResult_Should_Return_ProblemDetails_When_Fail_With_ProblemDetails()
     {
         var mlResult = CreateFailWithProblemDetails<string>(422);
 
-        IActionResult result = mlResult.ToPutPdActionResult();
+        IActionResult result = mlResult.ToNoContentProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(422);
     }
 
     [Fact]
-    public async Task ToPutPdActionResultAsync_From_MlResult_Should_Return_NoContent_When_Valid()
+    public async Task ToNoContentProblemDetailsResultAsync_From_MlResult_Should_Return_NoContent_When_Valid()
     {
         var mlResult = MlResult<string>.Valid("ok");
 
-        IActionResult result = await mlResult.ToPutPdActionResultAsync();
+        IActionResult result = await mlResult.ToNoContentProblemDetailsResultAsync();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public async Task ToPutPdActionResultAsync_From_Task_Should_Return_NoContent_When_Valid()
+    public async Task ToNoContentProblemDetailsResultAsync_From_Task_Should_Return_NoContent_When_Valid()
     {
         var mlResultTask = Task.FromResult(MlResult<string>.Valid("ok"));
 
-        IActionResult result = await mlResultTask.ToPutPdActionResultAsync();
+        IActionResult result = await mlResultTask.ToNoContentProblemDetailsResultAsync();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public void ToPatchPdActionResult_Should_Return_NoContent_When_Valid()
+    public void ToPatchedProblemDetailsResult_Should_Return_NoContent_When_Valid()
     {
         var mlResult = MlResult<string>.Valid("ok");
 
-        IActionResult result = mlResult.ToPatchPdActionResult();
+        IActionResult result = mlResult.ToPatchedProblemDetailsResult();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public void ToPatchPdActionResult_Should_Return_500_When_Fail_Without_ProblemDetails()
+    public void ToPatchedProblemDetailsResult_Should_Return_500_When_Fail_Without_ProblemDetails()
     {
         var mlResult = MlResult<string>.Fail("error");
 
-        IActionResult result = mlResult.ToPatchPdActionResult();
+        IActionResult result = mlResult.ToPatchedProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
     }
 
     [Fact]
-    public void ToPatchPdActionResult_Should_Return_ProblemDetails_When_Fail_With_ProblemDetails()
+    public void ToPatchedProblemDetailsResult_Should_Return_ProblemDetails_When_Fail_With_ProblemDetails()
     {
         var mlResult = CreateFailWithProblemDetails<string>(403);
 
-        IActionResult result = mlResult.ToPatchPdActionResult();
+        IActionResult result = mlResult.ToPatchedProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(403);
     }
 
     [Fact]
-    public async Task ToPatchPdActionResultAsync_From_MlResult_Should_Return_NoContent_When_Valid()
+    public async Task ToPatchedProblemDetailsResultAsync_From_MlResult_Should_Return_NoContent_When_Valid()
     {
         var mlResult = MlResult<string>.Valid("ok");
 
-        IActionResult result = await mlResult.ToPatchPdActionResultAsync();
+        IActionResult result = await mlResult.ToPatchedProblemDetailsResultAsync();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public async Task ToPatchPdActionResultAsync_From_Task_Should_Return_NoContent_When_Valid()
+    public async Task ToPatchedProblemDetailsResultAsync_From_Task_Should_Return_NoContent_When_Valid()
     {
         var mlResultTask = Task.FromResult(MlResult<string>.Valid("ok"));
 
-        IActionResult result = await mlResultTask.ToPatchPdActionResultAsync();
+        IActionResult result = await mlResultTask.ToPatchedProblemDetailsResultAsync();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public void ToDeletePdActionResult_Should_Return_NoContent_When_Valid()
+    public void ToDeletedProblemDetailsResult_Should_Return_NoContent_When_Valid()
     {
         var mlResult = MlResult<string>.Valid("ok");
 
-        IActionResult result = mlResult.ToDeletePdActionResult();
+        IActionResult result = mlResult.ToDeletedProblemDetailsResult();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public void ToDeletePdActionResult_Should_Return_500_When_Fail_Without_ProblemDetails()
+    public void ToDeletedProblemDetailsResult_Should_Return_500_When_Fail_Without_ProblemDetails()
     {
         var mlResult = MlResult<string>.Fail("error");
 
-        IActionResult result = mlResult.ToDeletePdActionResult();
+        IActionResult result = mlResult.ToDeletedProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(500);
     }
 
     [Fact]
-    public void ToDeletePdActionResult_Should_Return_ProblemDetails_When_Fail_With_ProblemDetails()
+    public void ToDeletedProblemDetailsResult_Should_Return_ProblemDetails_When_Fail_With_ProblemDetails()
     {
         var mlResult = CreateFailWithProblemDetails<string>(404);
 
-        IActionResult result = mlResult.ToDeletePdActionResult();
+        IActionResult result = mlResult.ToDeletedProblemDetailsResult();
 
         result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(404);
     }
 
     [Fact]
-    public async Task ToDeletePdActionResultAsync_From_MlResult_Should_Return_NoContent_When_Valid()
+    public async Task ToDeletedProblemDetailsResultAsync_From_MlResult_Should_Return_NoContent_When_Valid()
     {
         var mlResult = MlResult<string>.Valid("ok");
 
-        IActionResult result = await mlResult.ToDeletePdActionResultAsync();
+        IActionResult result = await mlResult.ToDeletedProblemDetailsResultAsync();
 
         result.Should().BeOfType<NoContentResult>();
     }
 
     [Fact]
-    public async Task ToDeletePdActionResultAsync_From_Task_Should_Return_NoContent_When_Valid()
+    public async Task ToDeletedProblemDetailsResultAsync_From_Task_Should_Return_NoContent_When_Valid()
     {
         var mlResultTask = Task.FromResult(MlResult<string>.Valid("ok"));
 
-        IActionResult result = await mlResultTask.ToDeletePdActionResultAsync();
+        IActionResult result = await mlResultTask.ToDeletedProblemDetailsResultAsync();
 
         result.Should().BeOfType<NoContentResult>();
     }

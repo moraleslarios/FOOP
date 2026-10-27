@@ -8,7 +8,7 @@ Ofrece:
 - Una **clase base de controlador** con los endpoints CRUD ya cacheados (`GET`)
   e invalidaci�n autom�tica del cach� en escrituras (`POST`, `PUT`, `DELETE`),
   tanto para escenarios de DTO �nico como para escenarios **duplex**.
-- Una **pol�tica de OutputCache por controlador** (`PerControllerOutputCachePolicy`)
+- Una **pol�tica de OutputCache por controlador** (`ControllerScopedOutputCachePolicy`)
   que etiqueta cada respuesta con un *tag* �nico por controlador, lo que permite
   invalidar de forma selectiva sin afectar a otros endpoints.
 - Un **atributo personalizado** (`MlControllerCacheAttribute`) para declarar el
@@ -25,12 +25,12 @@ Ofrece:
 - [Dependencias](#dependencias)
 - [Registro en `Program.cs`](#registro-en-programcs)
 - [Estructura del proyecto](#estructura-del-proyecto)
-- [`PerControllerOutputCachePolicy`](#percontrolleroutputcachepolicy)
+- [`ControllerScopedOutputCachePolicy`](#percontrolleroutputcachepolicy)
 - [`MlControllerCacheAttribute`](#mlcontrollercacheattribute)
-- [`SimpleMlCacheControllerBase<TEntity, TDto, TPk>`](#simplemlcachecontrollerbasetentity-tdto-tpk)
-- [`SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>`](#simplemlcachecontrollerbasetentity-trequest-tresponse-tpk)
-- [`SimpleMlComplexCacheControllerBase<TEntity, TDto>` (PK compuesta)](#simplemlcomplexcachecontrollerbasetentity-tdto-pk-compuesta)
-- [`SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)](#simplemlcomplexcachecontrollerbasetentity-trequest-tresponse-pk-compuesta-duplex)
+- [`MlCachedCrudControllerBase<TEntity, TDto, TPk>`](#simplemlcachecontrollerbasetentity-tdto-tpk)
+- [`MlCachedCrudControllerBase<TEntity, TRequest, TResponse, TPk>`](#simplemlcachecontrollerbasetentity-trequest-tresponse-tpk)
+- [`MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>` (PK compuesta)](#simplemlcomplexcachecontrollerbasetentity-tdto-pk-compuesta)
+- [`MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)](#simplemlcomplexcachecontrollerbasetentity-trequest-tresponse-pk-compuesta-duplex)
 - [Bypass din�mico del cach�](#bypass-din�mico-del-cach�)
 - [Invalidaci�n manual](#invalidaci�n-manual)
 - [Personalizaci�n avanzada](#personalizaci�n-avanzada)
@@ -59,7 +59,7 @@ using MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching;
 var builder = WebApplication.CreateBuilder(args);
 
 // Registra la pol�tica "PerControllerTag" y los servicios de OutputCache.
-builder.Services.AddWebControllersCache(options =>
+builder.Services.AddMlControllersOutputCaching(options =>
 {
     options.DefaultExpirationTimeSpan = TimeSpan.FromMinutes(2); // opcional
 });
@@ -81,17 +81,17 @@ app.Run();
 > `UseRouting` y **antes** de `MapControllers`/`UseEndpoints` para que el
 > middleware sepa qu� endpoint se est� sirviendo.
 
-`AddWebControllersCache` recibe un `Action<OutputCacheOptions>` opcional para
+`AddMlControllersOutputCaching` recibe un `Action<OutputCacheOptions>` opcional para
 configurar el `DefaultExpirationTimeSpan`, registrar otras pol�ticas, etc.
 
 ```csharp
-public static IServiceCollection AddWebControllersCache(
+public static IServiceCollection AddMlControllersOutputCaching(
     this IServiceCollection services,
     Action<OutputCacheOptions> options = null!)
 ```
 
 Internamente registra la pol�tica con el nombre **`"PerControllerTag"`** apuntando
-a `PerControllerOutputCachePolicy.Instance`.
+a `ControllerScopedOutputCachePolicy.Instance`.
 
 ---
 
@@ -100,19 +100,19 @@ a `PerControllerOutputCachePolicy.Instance`.
 ```
 MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching/
 ??? Controllers/
-?   ??? SimpleMlCacheControllerBase.cs            // controlador base con cach� (PK simple)
-?   ??? SimpleMlComplexCacheControllerBase.cs     // controlador base con cach� (PK compuesta)
+?   ??? MlCachedCrudControllerBase.cs            // controlador base con cach� (PK simple)
+?   ??? MlCachedCompositeKeyCrudControllerBase.cs     // controlador base con cach� (PK compuesta)
 ??? Policies/
-?   ??? PerControllerOutputCachePolicy.cs         // pol�tica IOutputCachePolicy
+?   ??? ControllerScopedOutputCachePolicy.cs         // pol�tica IOutputCachePolicy
 ?   ??? MlControllerCacheAttribute.cs             // atributo IOutputCachePolicy
 ??? GlobalUsings.cs
-??? RegisterServices.cs                            // AddWebControllersCache
+??? RegisterServices.cs                            // AddMlControllersOutputCaching
 ??? README.md
 ```
 
 ---
 
-## `PerControllerOutputCachePolicy`
+## `ControllerScopedOutputCachePolicy`
 
 Pol�tica de `OutputCache` (`IOutputCachePolicy`) que se aplica a cada request
 cacheable y se encarga de:
@@ -125,11 +125,11 @@ cacheable y se encarga de:
 ### API p�blica
 
 ```csharp
-public sealed class PerControllerOutputCachePolicy : IOutputCachePolicy
+public sealed class ControllerScopedOutputCachePolicy : IOutputCachePolicy
 {
-    public const string BypassHeader = "X-Bypass-Cache";
+    public const string CacheBypassHeader = "X-Bypass-Cache";
 
-    public static readonly PerControllerOutputCachePolicy Instance;
+    public static readonly ControllerScopedOutputCachePolicy Instance;
 
     public static string GetControllerTag(HttpContext httpContext);
 }
@@ -138,7 +138,7 @@ public sealed class PerControllerOutputCachePolicy : IOutputCachePolicy
 ### Tag por controlador
 
 ```csharp
-PerControllerOutputCachePolicy.GetControllerTag(HttpContext);
+ControllerScopedOutputCachePolicy.GetControllerTag(HttpContext);
 // devuelve "oc:Pruebas" para un PruebasController
 ```
 
@@ -155,7 +155,7 @@ se activa.
 [HttpGet]
 [OutputCache(PolicyName = "PerControllerTag")]
 public Task<IActionResult> GetAllAsync(CancellationToken ct = default)
-    => _service.AllAsync(ct).ToGetPdActionResultAsync();
+    => _service.GetPagedAsync(ct).ToOkProblemDetailsResultAsync();
 ```
 
 ---
@@ -163,7 +163,7 @@ public Task<IActionResult> GetAllAsync(CancellationToken ct = default)
 ## `MlControllerCacheAttribute`
 
 Atributo que **implementa `IOutputCachePolicy`** y delega en
-`PerControllerOutputCachePolicy`. Equivale a
+`ControllerScopedOutputCachePolicy`. Equivale a
 `[OutputCache(PolicyName = "PerControllerTag")]` pero con un constructor adicional
 para indicar la duraci�n solo en ese endpoint.
 
@@ -179,14 +179,14 @@ public sealed class MlControllerCacheAttribute : Attribute, IOutputCachePolicy
 ```
 
 - **Sin par�metros** ? utiliza `OutputCacheOptions.DefaultExpirationTimeSpan`
-  (configurado en `AddWebControllersCache`).
+  (configurado en `AddMlControllersOutputCaching`).
 - **`durationSeconds > 0`** ? fija `ResponseExpirationTimeSpan` solo para ese
   endpoint. Si se pasa `<= 0` se ignora y se usa el por defecto.
 
 ### Ejemplos
 
 ```csharp
-public class PruebasController : SimpleMlCacheControllerBase<Prueba, PruebaDto, int>
+public class PruebasController : MlCachedCrudControllerBase<Prueba, PruebaDto, int>
 {
     // 1. Duraci�n por defecto del proyecto
     [HttpGet("simple")]
@@ -206,9 +206,9 @@ public class PruebasController : SimpleMlCacheControllerBase<Prueba, PruebaDto, 
 
 ---
 
-## `SimpleMlCacheControllerBase<TEntity, TDto, TPk>`
+## `MlCachedCrudControllerBase<TEntity, TDto, TPk>`
 
-Hereda de `SimpleMlControllerBase<TEntity, TDto, TPk>`
+Hereda de `MlCrudControllerBase<TEntity, TDto, TPk>`
 (en `MoralesLarios.OOFP.AspNetCore.Controllers`) y a�ade:
 
 - `[MlControllerCache]` en `GetAllAsync` y `GetByIdAsync`.
@@ -224,9 +224,9 @@ Hereda de `SimpleMlControllerBase<TEntity, TDto, TPk>`
 [ApiController]
 [Route("api/[controller]")]
 public class PruebasController(
-        IGenServiceFp<Prueba, PruebaDto> service,
+        ICrudServiceFp<Prueba, PruebaDto> service,
         IOutputCacheStore                cacheStore)
-    : SimpleMlCacheControllerBase<Prueba, PruebaDto, int>(service, cacheStore)
+    : MlCachedCrudControllerBase<Prueba, PruebaDto, int>(service, cacheStore)
 {
 }
 ```
@@ -261,16 +261,16 @@ public async Task<IActionResult> GetWithCache1(CancellationToken ct = default)
 
 ---
 
-## `SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>`
+## `MlCachedCrudControllerBase<TEntity, TRequest, TResponse, TPk>`
 
-Variante duplex de `SimpleMlCacheControllerBase<TEntity, TDto, TPk>` para escenarios donde la petici�n y la respuesta usan modelos distintos. Hereda de `SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>` y mantiene exactamente las mismas garant�as de cacheado e invalidaci�n.
+Variante duplex de `MlCachedCrudControllerBase<TEntity, TDto, TPk>` para escenarios donde la petici�n y la respuesta usan modelos distintos. Hereda de `MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>` y mantiene exactamente las mismas garant�as de cacheado e invalidaci�n.
 
 ### Firma
 
 ```csharp
-public class SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+public class MlCachedCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
                                                                             IOutputCacheStore                           _outputCacheStore)
-    : SimpleMlControllerBase<TEntity, TRequest, TResponse, TPk>(_genServiceFp)
+    : MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(_genServiceFp)
     where TEntity   : class
     where TRequest  : class
     where TResponse : class
@@ -295,9 +295,9 @@ public class SimpleMlCacheControllerBase<TEntity, TRequest, TResponse, TPk>(IGen
 
 ---
 
-## `SimpleMlComplexCacheControllerBase<TEntity, TDto>` (PK compuesta)
+## `MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>` (PK compuesta)
 
-Variante de `SimpleMlCacheControllerBase<,,>` para entidades con **clave primaria compuesta**. Hereda de `SimpleMlComplexPkControllerBase<TEntity, TDto>` (en `MoralesLarios.OOFP.AspNetCore.Controllers`) y a�ade exactamente las mismas garant�as que `SimpleMlCacheControllerBase`:
+Variante de `MlCachedCrudControllerBase<,,>` para entidades con **clave primaria compuesta**. Hereda de `MlCompositeKeyCrudControllerBase<TEntity, TDto>` (en `MoralesLarios.OOFP.AspNetCore.Controllers`) y a�ade exactamente las mismas garant�as que `MlCachedCrudControllerBase`:
 
 - `[MlControllerCache]` en `GetAllAsync` y `GetByIdAsync`.
 - Invalidaci�n autom�tica del *tag* del controlador en `POST`, `PUT`, `DELETE` antes de delegar en `base.*`.
@@ -306,11 +306,11 @@ Variante de `SimpleMlCacheControllerBase<,,>` para entidades con **clave primari
 ### Firma
 
 ```csharp
-public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(
-        IGenServiceFp<TEntity, TDto> _genServiceFp,
-        Func<TEntity, object[]>      _pkFields,
+public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>(
+        ICrudServiceFp<TEntity, TDto> _genServiceFp,
+        Func<TEntity, object[]>      _keySelector,
         IOutputCacheStore            _outputCacheStore)
-    : SimpleMlComplexPkControllerBase<TEntity, TDto>(_genServiceFp, _pkFields)
+    : MlCompositeKeyCrudControllerBase<TEntity, TDto>(_genServiceFp, _keySelector)
     where TEntity : class
     where TDto    : class
 {
@@ -334,9 +334,9 @@ public class SimpleMlComplexCacheControllerBase<TEntity, TDto>(
 [ApiController]
 [Route("api/[controller]")]
 public class PruebaComplexController(
-        IGenServiceFp<PruebaComplex, PruebaComplexDto> service,
+        ICrudServiceFp<PruebaComplex, PruebaComplexDto> service,
         IOutputCacheStore                              cacheStore)
-    : SimpleMlComplexCacheControllerBase<PruebaComplex, PruebaComplexDto>(
+    : MlCachedCompositeKeyCrudControllerBase<PruebaComplex, PruebaComplexDto>(
           service,
           e => new object[] { e.Nombre, e.Lugar, e.Precio, e.Fecha },
           cacheStore) { }
@@ -359,17 +359,17 @@ Ver detalles del formato de `ids` (PK compuesta con `DateTime`, `DateOnly`, etc.
 
 ---
 
-## `SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)
+## `MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>` (PK compuesta duplex)
 
-Variante duplex de `SimpleMlComplexCacheControllerBase<TEntity, TDto>` para entidades con clave primaria compuesta cuando la petici�n y la respuesta usan modelos distintos. Hereda de `SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>` y mantiene el mismo cacheado por controlador, invalidaci�n autom�tica y endpoint de borrado manual.
+Variante duplex de `MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>` para entidades con clave primaria compuesta cuando la petici�n y la respuesta usan modelos distintos. Hereda de `MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>` y mantiene el mismo cacheado por controlador, invalidaci�n autom�tica y endpoint de borrado manual.
 
 ### Firma
 
 ```csharp
-public class SimpleMlComplexCacheControllerBase<TEntity, TRequest, TResponse>(IGenServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
-                                                                              Func<TEntity, object[]>                     _pkFields,
+public class MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp,
+                                                                              Func<TEntity, object[]>                     _keySelector,
                                                                               IOutputCacheStore                           _outputCacheStore)
-    : SimpleMlComplexPkControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _pkFields)
+    : MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>(_genServiceFp, _keySelector)
     where TEntity   : class
     where TRequest  : class
     where TResponse : class
@@ -425,7 +425,7 @@ con lo que la request **no consulta** el almac�n ni **escribe** sobre �l.
 ```csharp
 var bypass = new Dictionary<string, string>
 {
-    { PerControllerOutputCachePolicy.BypassHeader, "1" }
+    { ControllerScopedOutputCachePolicy.CacheBypassHeader, "1" }
 };
 
 var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebaDto>>(
@@ -442,9 +442,9 @@ var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebaDto>>(
 
 ```csharp
 public class PruebasController(
-        IGenServiceFp<Prueba, PruebaDto> service,
+        ICrudServiceFp<Prueba, PruebaDto> service,
         IOutputCacheStore                store)
-    : SimpleMlCacheControllerBase<Prueba, PruebaDto, int>(service, store)
+    : MlCachedCrudControllerBase<Prueba, PruebaDto, int>(service, store)
 {
     [HttpPost("flush")]
     public Task Flush(CancellationToken ct) => EvictControllerCacheAsync(ct);
@@ -468,7 +468,7 @@ GET /api/Pruebas/clear-cache/now
 ```
 
 Disponible autom�ticamente en todos los controladores que heredan de
-`SimpleMlCacheControllerBase<,,>`.
+`MlCachedCrudControllerBase<,,>`.
 
 ---
 
@@ -477,7 +477,7 @@ Disponible autom�ticamente en todos los controladores que heredan de
 ### Cambiar el `DefaultExpirationTimeSpan`
 
 ```csharp
-services.AddWebControllersCache(o =>
+services.AddMlControllersOutputCaching(o =>
 {
     o.DefaultExpirationTimeSpan = TimeSpan.FromSeconds(30);
 });
@@ -486,7 +486,7 @@ services.AddWebControllersCache(o =>
 ### A�adir m�s pol�ticas custom
 
 ```csharp
-services.AddWebControllersCache(o =>
+services.AddMlControllersOutputCaching(o =>
 {
     o.AddPolicy("LongLived", policy => policy.Expire(TimeSpan.FromHours(1)));
 });
@@ -510,7 +510,7 @@ public Task<IActionResult> GetAllAsync(CancellationToken ct = default!) => /* ..
 
 - Anotas `[MlControllerCache]` (con o sin segundos) ? cach� por controlador con
   tag e invalidaci�n selectiva.
-- Heredas `SimpleMlCacheControllerBase<,,>` ? CRUD cacheado e invalidaci�n
+- Heredas `MlCachedCrudControllerBase<,,>` ? CRUD cacheado e invalidaci�n
   autom�tica gratis.
 - Cliente env�a `X-Bypass-Cache: 1` o `Cache-Control: no-cache` ? respuesta
   fresca solo para esa request.

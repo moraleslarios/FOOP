@@ -6,7 +6,7 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit.Helpers;
 
-public class MlRequestWebExtensionsTests
+public class HttpRequestPaginationExtensionsTests
 {
 
     

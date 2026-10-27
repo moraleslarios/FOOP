@@ -1,6 +1,6 @@
 namespace MoralesLarios.OOFP.AspNetCore.Results.Data;
 
-public record ProblemDetailsInfo(int                        Status,
+public record ProblemDetailsData(int                        Status,
                                  string                     Title,
                                  string                     Detail,
                                  string                     Type,

@@ -8,7 +8,7 @@ namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 /// Provides extension methods for converting <see cref="MlResult{T}"/> results to ASP.NET Core <see cref="IActionResult"/> types for Web API responses.
 /// </summary>
 [Obsolete("This class is deprecated and should not be used.")]
-public static class MlResultWebExtensions
+public static partial class MlResultActionResultExtensionsLegacy
 {
 
     private static IEnumerable<string> notFoundKeys = [NOT_FOUND_KEY, "Not Found", "Not_Found", "not found", "NoEncontrado", "No Encontrado", "No_Encontrado", "no encontrado",
@@ -174,7 +174,7 @@ public static class MlResultWebExtensions
     /// <param name="source">The source result.</param>
     /// <param name="controllerBase">The controller context.</param>
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
-    public static IActionResult ToSimpleRepoPostActionResult<T>(this MlResult<T>    source,
+    public static IActionResult ToCreatedResult<T>(this MlResult<T>    source,
                                                                           ControllerBase controllerBase)
         => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", source.GetValueOrThrow()));
 
@@ -185,9 +185,9 @@ public static class MlResultWebExtensions
     /// <param name="source">The source result.</param>
     /// <param name="controllerBase">The controller context.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/> representing the result of the operation.</returns>
-    public static Task<IActionResult> ToSimpleRepoPostActionResultAsync<T>(this MlResult<T> source,
+    public static Task<IActionResult> ToCreatedResultAsync<T>(this MlResult<T> source,
                                                                                 ControllerBase controllerBase)
-        => source.ToSimpleRepoPostActionResult(controllerBase).ToAsync();
+        => source.ToCreatedResult(controllerBase).ToAsync();
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> from a task to an <see cref="IActionResult"/> for a simple POST request in a repository.
@@ -196,9 +196,9 @@ public static class MlResultWebExtensions
     /// <param name="sourceAsync">The source result as a task.</param>
     /// <param name="controllerBase">The controller context.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/> representing the result of the operation.</returns>
-    public static async Task<IActionResult> ToSimpleRepoPostActionResultAsync<T>(this Task<MlResult<T>> sourceAsync,
+    public static async Task<IActionResult> ToCreatedResultAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                       ControllerBase    controllerBase)
-        => await (await sourceAsync).ToSimpleRepoPostActionResultAsync(controllerBase);
+        => await (await sourceAsync).ToCreatedResultAsync(controllerBase);
 
 
     /// <summary>
@@ -260,7 +260,7 @@ public static class MlResultWebExtensions
 
         var errorResult = errorsDetails switch
         {
-            { } errors when ContieneCombinacion(errors.GetErrorsSummary()!, notFoundKeys.ToArray()) => new NotFoundObjectResult(errors),
+            { } errors when ContainsAnyKey(errors.GetErrorsSummary()!, notFoundKeys.ToArray()) => new NotFoundObjectResult(errors),
             { } errors when errors.ContainsMetadata(NOT_FOUND_KEY)                                        => new NotFoundObjectResult(errors),
             { } errors when errors.ContainsException()                                               => new ObjectResult(errors.ToErrorsDetailsDescription()) { StatusCode = 500 },
             _ => new ObjectResult(errorsDetails.GetErrorsSummary()) { StatusCode = 500 }
@@ -297,7 +297,7 @@ public static class MlResultWebExtensions
 
 
 
-    static bool ContieneCombinacion(string cadena, string[] combinaciones)
+    static bool ContainsAnyKey(string cadena, string[] combinaciones)
     {
         foreach (string combinacion in combinaciones)
         {

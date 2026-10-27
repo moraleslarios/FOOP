@@ -20,9 +20,9 @@ public static partial class RegisterServices
 
 
 
-    public static IServiceCollection AddTransientGenServicesFpWithoutReposGeneral(this IServiceCollection services)
+    public static IServiceCollection AddTransientCrudServicesFpWithoutRepositories(this IServiceCollection services)
     {
-        services.AddTransient(typeof(IGenServiceFp<, >), typeof(GenServiceFp<, >));
+        services.AddTransient(typeof(ICrudServiceFp<, >), typeof(CrudServiceFp<, >));
 
         return services;
     }
@@ -30,21 +30,21 @@ public static partial class RegisterServices
     public static IServiceCollection AddScopedCrudServicesFpWithoutRepositories(this IServiceCollection services)
     {
 
-        services.AddScoped(typeof(IGenServiceFp<, >), typeof(GenServiceFp<, >));
+        services.AddScoped(typeof(ICrudServiceFp<, >), typeof(CrudServiceFp<, >));
 
         return services;
     }
 
 
-    public static IServiceCollection AddSingletonGenServicesFpWithoutReposGeneral(this IServiceCollection services)
+    public static IServiceCollection AddSingletonCrudServicesFpWithoutRepositories(this IServiceCollection services)
     {
-        services.AddSingleton(typeof(IGenServiceFp<, >), typeof(GenServiceFp<, >));
+        services.AddSingleton(typeof(ICrudServiceFp<, >), typeof(CrudServiceFp<, >));
 
         return services;
     }
 
 
-    public static IServiceCollection AddTransientGenServicesDuplexFpWithoutReposGeneral(this IServiceCollection services)
+    public static IServiceCollection AddTransientCrudServicesDuplexFpWithoutRepositories(this IServiceCollection services)
     {
         services.AddTransient(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
 
@@ -60,7 +60,7 @@ public static partial class RegisterServices
     }
 
 
-    public static IServiceCollection AddSingletonGenServicesDuplexFpWithoutReposGeneral(this IServiceCollection services)
+    public static IServiceCollection AddSingletonCrudServicesDuplexFpWithoutRepositories(this IServiceCollection services)
     {
         services.AddSingleton(typeof(IGenServiceFp<,,>), typeof(GenServiceFp<,,>));
 
