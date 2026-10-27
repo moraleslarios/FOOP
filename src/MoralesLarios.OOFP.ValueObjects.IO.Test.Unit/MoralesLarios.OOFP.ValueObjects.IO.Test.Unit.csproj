@@ -36,6 +36,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MoralesLarios.FOOP\MoralesLarios.OOFP.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.ValueObjects.IO\MoralesLarios.OOFP.ValueObjects.IO.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appsettings.test.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -11,3 +11,4 @@ global using System.Text;
 global using System.Threading.Tasks;
 global using Xunit;
 global using MoralesLarios.OOFP.Types;
+global using MoralesLarios.OOFP.ValueObjects.IO;
