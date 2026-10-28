@@ -1,17 +1,17 @@
-# Combine — Acumular valores en una tupla a lo largo del carril
+﻿# CombineAll — Acumular valores en una tupla a lo largo del carril
 
 ## Índice
 
 1. [Introducción](#introducción)
-2. [⚠️ Lo primero: `CombineAll` NO acumula errores](#️-lo-primero-combine-no-acumula-errores)
+2. [⚠️ Lo primero: `CombineAll` NO acumula errores](#️-lo-primero-combineall-no-acumula-errores)
 3. [El problema que resuelve: el infierno de los `Bind` anidados](#el-problema-que-resuelve-el-infierno-de-los-bind-anidados)
-4. [Las tres familias de `CombineAll`](#las-tres-familias-de-combine)
+4. [Las tres familias de `CombineAll`](#las-tres-familias-de-combineall)
 5. [Familia A: `MlResult<T>` + valor(es) sueltos](#familia-a-mlresultt--valores-sueltos)
 6. [Familia B: valor/tupla + `MlResult<T>`](#familia-b-valortupla--mlresultt)
 7. [Familia C: valor/tupla + valor (sin `MlResult`)](#familia-c-valortupla--valor-sin-mlresult)
 8. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 9. [Variantes asíncronas](#variantes-asíncronas)
-10. [Apéndice: `Do`, el operador de escape](#apéndice-do-el-operador-de-escape)
+10. [Apéndice: `Pipe`, el operador de escape](#apéndice-pipe-el-operador-de-escape)
 11. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
 12. [Ejemplos Prácticos](#ejemplos-prácticos)
 13. [Mejores Prácticas](#mejores-prácticas)
@@ -312,26 +312,26 @@ tendría sentido.
 
 ---
 
-## Apéndice: `Do`, el operador de escape
+## Apéndice: `Pipe`, el operador de escape
 
 En el mismo archivo del código fuente, junto a `CombineAll`, vive un método pequeño pero
 llamativo:
 
 ```csharp
-public static MlResult<TResult> Do<T, TResult>(this MlResult<T> source,
+public static MlResult<TResult> Pipe<T, TResult>(this MlResult<T> source,
                                                     Func<MlResult<T>, MlResult<TResult>> action)
     => action(source);
 
-public static async Task<MlResult<TResult>> DoAsync<T, TResult>(this MlResult<T> source,
+public static async Task<MlResult<TResult>> PipeAsync<T, TResult>(this MlResult<T> source,
                                                     Func<MlResult<T>, Task<MlResult<TResult>>> actionAsync)
     => await actionAsync(source);
 
-public static async Task<MlResult<TResult>> DoAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+public static async Task<MlResult<TResult>> PipeAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
                                                     Func<Task<MlResult<T>>, Task<MlResult<TResult>>> actionAsync)
     => await actionAsync(sourceAsync);
 ```
 
-`Do` **invoca tu delegado pasándole el `MlResult` completo**, sin comprobar si es válido o
+`Pipe` **invoca tu delegado pasándole el `MlResult` completo**, sin comprobar si es válido o
 fallido. No usa `Match`, no cortocircuita, no envuelve nada:
 
 | Método | Recibe el delegado | ¿Cortocircuita? |
@@ -339,7 +339,7 @@ fallido. No usa `Match`, no cortocircuita, no envuelve nada:
 | `Map` | El **valor** `T` | ✅ Sí |
 | `Bind` | El **valor** `T` | ✅ Sí |
 | `Match` | Valor **o** errores, según la rama | ✅ Sí (elige rama) |
-| **`Do`** | El **`MlResult<T>` entero** | ❌ **No** |
+| **`Pipe`** | El **`MlResult<T>` entero** | ❌ **No** |
 
 Es un **operador de escape** para insertar en la tubería una función que necesita ver el
 resultado completo, típicamente porque va a decidir por sí misma cómo tratar el fallo:
@@ -357,7 +357,7 @@ var r = await ObtenerClienteAsync(id)
 
 💡 **Cuándo usarlo:** casi nunca. Si tu intención es reaccionar al fallo, usa
 [`MapIfFail`](../Map/4_MapIfFail.md) o [`BindIfFail`](../Bind/6_BindIfFail.md); si es
-observar sin alterar, [`ExecSelf`](../ExecSelf/1_ExecSelf.md). `Do` solo se justifica para
+observar sin alterar, [`ExecSelf`](../ExecSelf/1_ExecSelf.md). `Pipe` solo se justifica para
 integrar funciones externas cuya firma ya trabaja con `MlResult<T>`.
 
 ---
@@ -375,7 +375,7 @@ integrar funciones externas cuya firma ya trabaja con `MlResult<T>`.
 | Más de 8 valores | Define un `record` propio |
 | Transformar el valor | [`Map`](../Map/1_Map.md) |
 | Encadenar una operación que puede fallar | [`Bind`](../Bind/3_Bind.md) |
-| Ver el `MlResult` completo dentro de la tubería | `Do` (raramente necesario) |
+| Ver el `MlResult` completo dentro de la tubería | `Pipe` (raramente necesario) |
 
 ---
 
@@ -464,7 +464,7 @@ public MlResult<AltaCliente> Validar(AltaClienteDto dto)
 Nota: al mezclar familias, los nombres de campo cambian (`value2` en un paso, `Item3` en el
 siguiente). Es un buen recordatorio de por qué conviene deconstruir.
 
-### Ejemplo 4: `Do` para integrar una política externa
+### Ejemplo 4: `Pipe` para integrar una política externa
 
 ```csharp
 // Una función legada que ya trabaja con MlResult y decide su propia estrategia
@@ -475,7 +475,7 @@ private MlResult<Pedido> AplicarPoliticaLegada(MlResult<Pedido> resultado)
                              ? ReintentarUnaVez()
                              : err.ToMlResultFail<Pedido>());
 
-// Do la inserta en la tubería sin adaptadores
+// Pipe la inserta en la tubería sin adaptadores
 public MlResult<PedidoDto> Procesar(int id)
     => ObtenerPedido(id)
             .Pipe(AplicarPoliticaLegada)
@@ -505,7 +505,7 @@ var r = a.CombineAll((b, c, d, e, f, g, h)).Map(t => Calcular(t.Item1, t.Item2, 
 record ContextoCalculo(Cliente Cliente, Tarifa Tarifa, /* … */);
 var r = a.Bind(cliente => ConstruirContexto(cliente)).Map(Calcular);
 
-// ❌ Usar Do para observar el resultado
+// ❌ Usar Pipe para observar el resultado
 var r = resultado.Pipe(res => { _log.LogInformation("{R}", res); return res; });
 
 // ✅ ExecSelf está hecho para eso
@@ -531,7 +531,7 @@ var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
    donde la evaluación anticipada es intencionada.
 7. **Añade `!` en las sobrecargas asíncronas de la familia B** si trabajas con *nullable
    reference types* activados.
-8. **Reserva `Do` para integrar código legado** que ya opera con `MlResult<T>`. Para
+8. **Reserva `Pipe` para integrar código legado** que ya opera con `MlResult<T>`. Para
    observar usa `ExecSelf`; para recuperar, `MapIfFail`/`BindIfFail`.
 9. **Nombra las variables intermedias** cuando la tubería sea larga: `MlResult<(Cliente,
    Tarifa)> conTarifa = ...` es más claro que una cadena de veinte líneas.
@@ -553,16 +553,16 @@ var r = resultado.ExecSelf(v => _log.LogInformation("OK {V}", v),
 - ⚠️ Algunas sobrecargas asíncronas de la familia B están anotadas como nullable sin
   devolver nunca `null`.
 - **No existe `TryCombine`**: no hay delegados de usuario.
-- **Apéndice `Do`**: invoca tu delegado con el `MlResult` **completo**, sin `Match` y sin
+- **Apéndice `Pipe`**: invoca tu delegado con el `MlResult` **completo**, sin `Match` y sin
   cortocircuito. Operador de escape para integrar código externo; raramente necesario.
 
 ---
 
 ## Ver también
 
-- [`FailIfEmpty`](1_EmptyToFailed.md) — fallar si una colección viene vacía
+- [`FailIfEmpty`](1_FailIfEmpty.md) — fallar si una colección viene vacía
 - [`FailIfNull`](2_FailIfNull.md) — fallar si un objeto es `null`
-- [`FailIfFalse`](3_BoolToResult.md) — construir un `MlResult` desde una condición
+- [`FailIfFalse`](3_FailIfFalse.md) — construir un `MlResult` desde una condición
 - [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que pueden fallar
 - [`Map`](../Map/1_Map.md) — transformar el valor del carril
 - [`Bucles y proyecciones`](../loops/Collections.md) — recorrer colecciones acumulando errores

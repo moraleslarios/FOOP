@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.EntityFrameworkCore — Repositorios sobre EF Core en el raíl funcional
+﻿# MoralesLarios.OOFP.EntityFrameworkCore — Repositorios sobre EF Core en el raíl funcional
 
 Capa de repositorios genéricos sobre **Entity Framework Core 8** que convierte el acceso a datos en operaciones que devuelven [`MlResult<T>`](../docs/core-types/MlResult.md): sin `try`/`catch`, sin comprobaciones de `null` y con el "no encontrado" tratado como un `Fail` con mensaje propio en lugar de como una excepción.
 
@@ -14,14 +14,14 @@ Es el proyecto **más grande y ambicioso** de la periferia de la solución: 35 f
 4. [Arquitectura: dos capas paralelas](#arquitectura-dos-capas-paralelas)
 5. [Jerarquía de interfaces](#jerarquía-de-interfaces)
 6. [Registro en el contenedor](#registro-en-el-contenedor)
-7. [`IEfReadRepository<T>` — lectura](#iefrepoReaderfpt--lectura)
-8. [`IEfCreateRepository<T>` — inserción](#iefrepoadderfpt--inserción)
-9. [`IEfUpdateRepository<T>` — modificación](#iefrepoupdaterfpt--modificación)
-10. [`IEfDeleteRepository<T>` — borrado](#iefrepodeleterfpt--borrado)
-11. [`IEfWriteRepository<T>` y `IEfRepository<T>` — agregados](#iefrepowriterfpt-y-iefrepofpt--agregados)
-12. [Paginación: `IEfPaginator<T>`](#paginación-iefpaginatorfpt)
+7. [`IEfReadRepository<T>` — lectura](#iefreadrepositoryt--lectura)
+8. [`IEfCreateRepository<T>` — inserción](#iefcreaterepositoryt--inserción)
+9. [`IEfUpdateRepository<T>` — modificación](#iefupdaterepositoryt--modificación)
+10. [`IEfDeleteRepository<T>` — borrado](#iefdeleterepositoryt--borrado)
+11. [`IEfWriteRepository<T>` y `IEfRepository<T>` — agregados](#iefwriterepositoryt-y-iefrepositoryt--agregados)
+12. [Paginación: `IEfPaginator<T>`](#paginación-iefpaginatort)
 13. [Mensajes de error personalizados](#mensajes-de-error-personalizados)
-14. [Helpers y `SortDirection`](#helpers-y-orderby)
+14. [Helpers y `SortDirection`](#helpers-y-sortdirection)
 15. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 16. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
 17. [Ejemplos prácticos](#ejemplos-prácticos)
@@ -651,7 +651,7 @@ Esto **ordena solo las filas de la página**, no el conjunto completo: el conten
 
 ### 7. ⚠️ `TryUpdate(item, pk)` puede provocar un conflicto de seguimiento
 
-Como se explicó en el [*updater*](#iefrepoupdaterfpt--modificación): `TryFind` deja la entidad **con seguimiento** y luego se llama a `Update(item)` con **otra instancia** de la misma clave.
+Como se explicó en el [*updater*](#iefupdaterepositoryt--modificación): `TryFind` deja la entidad **con seguimiento** y luego se llama a `Update(item)` con **otra instancia** de la misma clave.
 
 ```csharp
 // ⚠️ Riesgo: dos instancias con la misma PK en el change tracker
@@ -698,7 +698,7 @@ public record PageRequest([property: Range(0, int.MinValue)] int PageNumber,   /
                              [property: Range(0, int.MinValue)] int PageSize)
 ```
 
-El máximo del rango es **`int.MinValue`**, menor que el mínimo. La anotación es inválida, pero **no tiene efecto** porque la normalización real la hacen `Math.Max` y `Math.Clamp`, y nadie valida ese atributo. (Reside en [`Internals`](../MoralesLarios.OOFP.Shared/README.md).)
+El máximo del rango es **`int.MinValue`**, menor que el mínimo. La anotación es inválida, pero **no tiene efecto** porque la normalización real la hacen `Math.Max` y `Math.Clamp`, y nadie valida ese atributo. (Reside en [`Shared`](../MoralesLarios.OOFP.Shared/README.md).)
 
 ### 11. Las clases OOP son `internal`, sus interfaces públicas
 

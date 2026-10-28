@@ -44,8 +44,9 @@ entrada **tipada y segura** a ese diccionario.
 | `MergeErrorsDetailsIfFailDifferentTypes<T, T2>(...)` | Igual, pero permitiendo que los dos resultados sean de **tipos distintos**. El resultado conserva el tipo `T`. |
 | `MergeErrorsDetailsIfFailDifferentTypesAsync<T, T2>(...)` (4) | Versiones asíncronas. |
 
-> 📝 El nombre `DiferentTypes` está escrito así en el código fuente (con una sola `f`); se documenta
-> tal cual para que puedas buscarlo.
+> ✅ **Resuelto en 2.0.0:** en la 1.x el nombre estaba escrito `DiferentTypes` (con una sola `f`).
+> Desde la 2.0.0 es **`DifferentTypes`**; el nombre antiguo queda como puente `[Obsolete]` y
+> **se elimina en la 3.0.0**.
 
 ---
 

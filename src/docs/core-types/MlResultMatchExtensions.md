@@ -1,4 +1,4 @@
-# `MlResultMatchExtensions` (`Types/MlResultMatchExtensions.cs`)
+﻿# `MlResultMatchExtensions` (`Types/MlResultMatchExtensions.cs`)
 
 `Match` es la **salida** de la tubería funcional: el único punto donde se abandona el mundo
 `MlResult<T>` y se obtiene un valor concreto, tratando de forma explícita **ambas ramas**
@@ -24,23 +24,23 @@ El fichero fuente contiene dos regiones con comportamientos distintos. Es import
 
 ### Región `Match` — dos funciones, una por rama
 
-Devuelve **directamente `TReturn`** (no lo envuelve en `MlResult`). Es la forma habitual de cerrar
+Devuelve **directamente `TResult`** (no lo envuelve en `MlResult`). Es la forma habitual de cerrar
 una tubería y devolver, por ejemplo, un `IActionResult`, un `string` o un `bool`.
 
 ```csharp
-TReturn Match<T, TReturn>(this MlResult<T> source,
-                          Func<T, TReturn>               valid,
-                          Func<MlErrorDetails, TReturn> fail);
+TResult Match<T, TResult>(this MlResult<T> source,
+                          Func<T, TResult>               valid,
+                          Func<MlErrorDetails, TResult> fail);
 ```
 
 ### Región `MatchAll` — una sola función, sin parámetros
 
-Las sobrecargas de esta región reciben un `Func<TReturn> funcAll` **sin parámetros** y se ejecutan
-igual sea el estado del origen; el resultado sí se envuelve en `MlResult<TReturn>`.
+Las sobrecargas de esta región reciben un `Func<TResult> funcAll` **sin parámetros** y se ejecutan
+igual sea el estado del origen; el resultado sí se envuelve en `MlResult<TResult>`.
 
 ```csharp
-MlResult<TReturn> Match<T, TReturn>(this MlResult<T> source,
-                                    Func<TReturn>    funcAll);
+MlResult<TResult> Match<T, TResult>(this MlResult<T> source,
+                                    Func<TResult>    funcAll);
 ```
 
 > ⚠️ **Aunque la región del fuente se llama `MatchAll`, los métodos se siguen llamando `Match` /
@@ -57,14 +57,14 @@ Si lo que quieres es "ejecutar algo siempre", suele ser más legible usar
 
 | Método | Sobrecargas | Devuelve | Descripción |
 | --- | --- | --- | --- |
-| `Match` (2 funciones) | 1 | `TReturn` | Resolución síncrona de ambas ramas. |
-| `MatchAsync` (2 funciones) | 8 | `Task<TReturn>` | 4 con origen `MlResult<T>` y 4 con origen `Task<MlResult<T>>`; delegados síncronos y/o asíncronos. |
+| `Match` (2 funciones) | 1 | `TResult` | Resolución síncrona de ambas ramas. |
+| `MatchAsync` (2 funciones) | 8 | `Task<TResult>` | 4 con origen `MlResult<T>` y 4 con origen `Task<MlResult<T>>`; delegados síncronos y/o asíncronos. |
 | `TryMatch` (2 funciones) | 2 | `MlResult<TResult>` | Como `Match`, capturando excepciones lanzadas por los delegados. |
 | `TryMatchAsync` (2 funciones) | 8 | `Task<MlResult<TResult>>` | Versiones asíncronas de `TryMatch`. |
-| `Match` (1 función) | 1 | `MlResult<TReturn>` | Ejecuta `funcAll()` sea válido o fallido. |
-| `MatchAsync` (1 función) | 4 | `Task<MlResult<TReturn>>` | Versiones asíncronas. |
-| `TryMatch` (1 función) | 2 | `MlResult<TReturn>` | Idem con captura de excepciones. |
-| `TryMatchAsync` (1 función) | 2 | `Task<MlResult<TReturn>>` | Versiones asíncronas. |
+| `Match` (1 función) | 1 | `MlResult<TResult>` | Ejecuta `funcAll()` sea válido o fallido. |
+| `MatchAsync` (1 función) | 4 | `Task<MlResult<TResult>>` | Versiones asíncronas. |
+| `TryMatch` (1 función) | 2 | `MlResult<TResult>` | Idem con captura de excepciones. |
+| `TryMatchAsync` (1 función) | 2 | `Task<MlResult<TResult>>` | Versiones asíncronas. |
 
 Nombres de los parámetros (útiles para invocación con argumentos nombrados, muy recomendable aquí):
 

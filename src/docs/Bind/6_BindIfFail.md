@@ -54,7 +54,7 @@ var tarifa = ObtenerDeCache(id)
 | Forma | Firma | Qué hace si el resultado es **válido** |
 | --- | --- | --- |
 | **A — Solo recuperación** | `BindIfFail<T>(func)` | **Nada**: devuelve el valor tal cual |
-| **B — Ambos caminos** | `BindIfFail<T, TReturn>(funcValid, funcFail)` | Ejecuta `funcValid` |
+| **B — Ambos caminos** | `BindIfFail<T, TResult>(funcValid, funcFail)` | Ejecuta `funcValid` |
 
 La forma **A** conserva el tipo (`MlResult<T>` → `MlResult<T>`), porque debe poder devolver el valor
 original sin tocarlo. La forma **B** permite cambiar de tipo, ya que ambos caminos están cubiertos.
@@ -70,7 +70,7 @@ MlResult<RespuestaApi> r = ObtenerCliente(id)
                 funcFail : errores => RespuestaApi.Error(errores.GetErrorMessages()));
 ```
 
-📌 La forma B es exactamente [`Match`](../Match/1_Match.md) pero devolviendo `MlResult<TReturn>` en las
+📌 La forma B es exactamente [`Match`](../Match/1_Match.md) pero devolviendo `MlResult<TResult>` en las
 dos ramas. Si una de tus ramas no puede fallar, `Match` suele leerse mejor.
 
 ---
@@ -90,9 +90,9 @@ public static MlResult<T> BindIfFail<T>(this MlResult<T>                        
 ### Forma B
 
 ```csharp
-public static MlResult<TReturn> BindIfFail<T, TReturn>(this MlResult<T>                              source,
-                                                            Func<T              , MlResult<TReturn>> funcValid,
-                                                            Func<MlErrorDetails, MlResult<TReturn>> funcFail)
+public static MlResult<TResult> BindIfFail<T, TResult>(this MlResult<T>                              source,
+                                                            Func<T              , MlResult<TResult>> funcValid,
+                                                            Func<MlErrorDetails, MlResult<TResult>> funcFail)
     => source.Match(
         fail : funcFail,
         valid: funcValid);

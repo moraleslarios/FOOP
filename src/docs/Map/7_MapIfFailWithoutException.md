@@ -136,12 +136,12 @@ MlResult<Tarifa> tarifa = BuscarTarifaCliente(clienteId)
 ### Forma B — transformar ambas ramas a un tipo común
 
 ```csharp
-MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(this MlResult<T>               source,
-                                                            Func<T, TReturn>           funcValid,
-                                                            Func<MlErrorDetails, TReturn> funcFail)
+MlResult<TResult> MapIfFailWithoutException<T, TResult>(this MlResult<T>               source,
+                                                            Func<T, TResult>           funcValid,
+                                                            Func<MlErrorDetails, TResult> funcFail)
 ```
 
-Convergencia de tipos: el éxito se proyecta con `funcValid` y el fallo de negocio con `funcFail`, ambos hacia `TReturn`. Ideal para construir un DTO de respuesta.
+Convergencia de tipos: el éxito se proyecta con `funcValid` y el fallo de negocio con `funcFail`, ambos hacia `TResult`. Ideal para construir un DTO de respuesta.
 
 ```csharp
 MlResult<RespuestaDto> respuesta =
@@ -152,7 +152,7 @@ MlResult<RespuestaDto> respuesta =
     // Si el fallo traía excepción, `respuesta` sigue siendo Fail: no se fabrica un DTO falso
 ```
 
-⚠️ Ojo con la Forma B: **si el fallo trae excepción, `funcValid` tampoco se ejecuta** (obviamente) y el resultado es el `Fail` original convertido a `MlResult<TReturn>`. Es decir, la conversión de tipo se produce, pero sigue siendo un fallo.
+⚠️ Ojo con la Forma B: **si el fallo trae excepción, `funcValid` tampoco se ejecuta** (obviamente) y el resultado es el `Fail` original convertido a `MlResult<TResult>`. Es decir, la conversión de tipo se produce, pero sigue siendo un fallo.
 
 ---
 
@@ -179,9 +179,9 @@ Tres puntos que explican todo el comportamiento:
 ### Forma B (código fuente literal)
 
 ```csharp
-public static MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(this MlResult<T>                    source,
-                                                                           Func<T              , TReturn> funcValid,
-                                                                           Func<MlErrorDetails, TReturn> funcFail)
+public static MlResult<TResult> MapIfFailWithoutException<T, TResult>(this MlResult<T>                    source,
+                                                                           Func<T              , TResult> funcValid,
+                                                                           Func<MlErrorDetails, TResult> funcFail)
     => source.Match(
                 fail : errorsDetails => errorsDetails.GetException().Match(
                                             fail : _ => funcFail(errorsDetails).ToMlResultValid(),
@@ -189,9 +189,9 @@ public static MlResult<TReturn> MapIfFailWithoutException<T, TReturn>(this MlRes
                 valid: x => funcValid(x).ToMlResultValid());
 ```
 
-Idéntica estructura; la única diferencia es que la rama válida pasa por `funcValid` y el tipo de salida es `TReturn`.
+Idéntica estructura; la única diferencia es que la rama válida pasa por `funcValid` y el tipo de salida es `TResult`.
 
-📌 Como los delegados devuelven **valores desnudos** (`T` / `TReturn`, no `MlResult<...>`), esto es `Map` y no `Bind`. Si tu recuperación puede a su vez fallar, necesitas [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md).
+📌 Como los delegados devuelven **valores desnudos** (`T` / `TResult`, no `MlResult<...>`), esto es `Map` y no `Bind`. Si tu recuperación puede a su vez fallar, necesitas [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md).
 
 ---
 
@@ -429,7 +429,7 @@ var stock3 = await _almacen.ConsultarStockAsync(sku)
 - `MapIfFailWithoutException` recupera **solo** los fallos que **no** llevan excepción en `Details["Ex"]`: los fallos de negocio y validación.
 - Si el fallo **sí** trae excepción, el delegado no se ejecuta y **el `Fail` original se devuelve intacto**, con todos sus errores y detalles.
 - Es el **espejo exacto** de [`MapIfFailWithException`](6_MapIfFailWithException.md); juntos cubren todos los fallos y permiten políticas distintas para cada clase.
-- Tiene **dos formas**: A `<T>(Func<MlErrorDetails, T>)` que preserva el tipo y es apilable, y B `<T, TReturn>(funcValid, funcFail)` que hace converger ambas ramas a un tipo común.
+- Tiene **dos formas**: A `<T>(Func<MlErrorDetails, T>)` que preserva el tipo y es apilable, y B `<T, TResult>(funcValid, funcFail)` que hace converger ambas ramas a un tipo común.
 - **No existe** ninguna subfamilia `...Error` ni sobrecargas con `TException`: el delegado ya recibe `MlErrorDetails` y no hay excepción que filtrar.
 - Las variantes `TryMapIfFailWithoutException` protegen el delegado con `TryToMlResult`, pero **no fusionan** los errores originales (a diferencia de su hermana `WithException`).
 - El delegado devuelve un **valor desnudo**; si tu recuperación puede fallar, usa [`BindIfFailWithoutException`](../Bind/9_BindIfFailWithoutException.md).

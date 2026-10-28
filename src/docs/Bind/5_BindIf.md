@@ -54,7 +54,7 @@ es la clave para usar la familia bien.
 
 | Forma | Firma | Qué hace si la condición es `false` |
 | --- | --- | --- |
-| **A — Bifurcación completa** | `BindIf<T, TReturn>(condition, funcTrue, funcFalse)` | Ejecuta `funcFalse` |
+| **A — Bifurcación completa** | `BindIf<T, TResult>(condition, funcTrue, funcFalse)` | Ejecuta `funcFalse` |
 | **B — Paso opcional** | `BindIf<T>(condition, func)` | **No hace nada**: devuelve el valor tal cual |
 
 La forma **B** solo existe cuando el tipo de entrada y de salida coinciden (`MlResult<T>` → `MlResult<T>`),
@@ -79,13 +79,13 @@ MlResult<Pedido> p2 = pedido.BindIf(p => p.Importe > 1000,
 ### Forma A
 
 ```csharp
-public static MlResult<TReturn> BindIf<T, TReturn>(this MlResult<T>                source,
+public static MlResult<TResult> BindIf<T, TResult>(this MlResult<T>                source,
                                                         Func<T, bool>              condition,
-                                                        Func<T, MlResult<TReturn>> funcTrue,
-                                                        Func<T, MlResult<TReturn>> funcFalse)
+                                                        Func<T, MlResult<TResult>> funcTrue,
+                                                        Func<T, MlResult<TResult>> funcFalse)
     => source.Match(
         valid: x => condition(x) ? funcTrue(x) : funcFalse(x),
-        fail :      MlResult<TReturn>.Fail);
+        fail :      MlResult<TResult>.Fail);
 ```
 
 ### Forma B
@@ -145,16 +145,16 @@ usa `TryBindIf`: envuelve la ejecución y convierte la excepción en un fallo, g
 `Details["Ex"]`.
 
 ```csharp
-public static MlResult<TReturn> TryBindIf<T, TReturn>(this MlResult<T>                source,
+public static MlResult<TResult> TryBindIf<T, TResult>(this MlResult<T>                source,
                                                            Func<T, bool>              condition,
-                                                           Func<T, MlResult<TReturn>> funcTrue,
-                                                           Func<T, MlResult<TReturn>> funcFalse,
+                                                           Func<T, MlResult<TResult>> funcTrue,
+                                                           Func<T, MlResult<TResult>> funcFalse,
                                                            Func<Exception, string>    errorMessageBuilder)
     => source.Match(
         valid: x => condition(x)
                         ? funcTrue .TryToMlResult(x, errorMessageBuilder)
                         : funcFalse.TryToMlResult(x, errorMessageBuilder),
-        fail :      MlResult<TReturn>.Fail);
+        fail :      MlResult<TResult>.Fail);
 ```
 
 Existe también la sobrecarga con un `string exceptionAditionalMessage` en lugar del constructor de

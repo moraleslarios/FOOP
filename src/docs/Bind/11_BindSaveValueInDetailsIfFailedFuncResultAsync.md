@@ -9,7 +9,7 @@
 5. [⚠️ Particularidad real del código fuente: la mutación](#️-particularidad-real-del-código-fuente-la-mutación)
 6. [Cómo recuperar el valor guardado](#cómo-recuperar-el-valor-guardado)
 7. [Variantes asíncronas](#variantes-asíncronas)
-8. [`TryBindSaveValueInDetailsIfFailedFuncResult`](#trybindsavevalueindetailsiffaildfuncresult)
+8. [`TryBindSaveValueInDetailsIfFailedFuncResult`](#trybindsavevalueindetailsiffailedfuncresult)
 9. [Comparación con `AddValueIfFail` manual](#comparación-con-addvalueiffail-manual)
 10. [Ejemplos Prácticos](#ejemplos-prácticos)
 11. [Mejores Prácticas](#mejores-prácticas)
@@ -20,7 +20,7 @@
 
 ## Introducción
 
-El nombre es largo y algo enrevesado (incluye incluso una errata de origen: *Faild* en vez de *Failed*), pero la idea es muy sencilla y muy útil:
+El nombre es largo y algo enrevesado (en la 1.x incluía además una errata de origen: *Faild* en vez de *Failed*, ✅ corregida en la 2.0.0), pero la idea es muy sencilla y muy útil:
 
 > **Ejecuta la función si el resultado es válido y, si esa función falla, guarda automáticamente el valor de entrada dentro de los detalles del error.**
 
@@ -71,9 +71,9 @@ Y eso te permite dos cosas que antes eran imposibles:
 ## Firma real e implementación
 
 ```csharp
-public static MlResult<TReturn> BindSaveValueInDetailsIfFailedFuncResult<T, TReturn>(
+public static MlResult<TResult> BindSaveValueInDetailsIfFailedFuncResult<T, TResult>(
                                         this MlResult<T>                source,
-                                             Func<T, MlResult<TReturn>> func)
+                                             Func<T, MlResult<TResult>> func)
     => source.Match
     (
         fail : errorDetails => errorDetails,
@@ -135,7 +135,7 @@ if (result.IsFailure) result.AddValueDetailIfFail(value!);   // ⚠️ el retorn
 return result;                                            // …y aun así funciona
 ```
 
-`AddValueDetailIfFail` **devuelve** un `MlResult<TReturn>` nuevo, pero aquí ese retorno se ignora y se devuelve `result`. ¿Por qué funciona entonces? Porque `AddMetadataOrThrow` no crea un diccionario nuevo, **muta el existente**:
+`AddValueDetailIfFail` **devuelve** un `MlResult<TResult>` nuevo, pero aquí ese retorno se ignora y se devuelve `result`. ¿Por qué funciona entonces? Porque `AddMetadataOrThrow` no crea un diccionario nuevo, **muta el existente**:
 
 ```csharp
 public static MlErrorDetails AddMetadataOrThrow<T>(this MlErrorDetails source, string key, T value)
@@ -198,19 +198,19 @@ Este es el **encaje natural** de los dos métodos: uno guarda el valor al fallar
 
 | Origen | Delegado | Método |
 |---|---|---|
-| `MlResult<T>` | `Func<T, Task<MlResult<TReturn>>>` | `BindSaveValueInDetailsIfFailedFuncResultAsync` |
-| `Task<MlResult<T>>` | `Func<T, Task<MlResult<TReturn>>>` | `BindSaveValueInDetailsIfFailedFuncResultAsync` |
-| `Task<MlResult<T>>` | `Func<T, MlResult<TReturn>>` | `BindSaveValueInDetailsIfFailedFuncResultAsync` |
+| `MlResult<T>` | `Func<T, Task<MlResult<TResult>>>` | `BindSaveValueInDetailsIfFailedFuncResultAsync` |
+| `Task<MlResult<T>>` | `Func<T, Task<MlResult<TResult>>>` | `BindSaveValueInDetailsIfFailedFuncResultAsync` |
+| `Task<MlResult<T>>` | `Func<T, MlResult<TResult>>` | `BindSaveValueInDetailsIfFailedFuncResultAsync` |
 
 La versión con origen síncrono y delegado asíncrono es la única con cuerpo propio; las otras dos delegan en ella (la tercera adaptando el delegado con `func.ToFuncTask()`).
 
 ```csharp
-public static async Task<MlResult<TReturn>> BindSaveValueInDetailsIfFailedFuncResultAsync<T, TReturn>(
+public static async Task<MlResult<TResult>> BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(
                                         this MlResult<T>                      source,
-                                             Func<T, Task<MlResult<TReturn>>> funcAsync)
+                                             Func<T, Task<MlResult<TResult>>> funcAsync)
     => await source.MatchAsync
             (
-                failAsync : errorsDetails => MlResult<TReturn>.FailAsync(errorsDetails),
+                failAsync : errorsDetails => MlResult<TResult>.FailAsync(errorsDetails),
                 validAsync: async value =>
                 {
                     var result = await funcAsync(value);
@@ -231,14 +231,14 @@ public static async Task<MlResult<TReturn>> BindSaveValueInDetailsIfFailedFuncRe
 Como el resto de la biblioteca, hay variantes `Try*` que capturan las excepciones de `func`:
 
 ```csharp
-public static MlResult<TReturn> TryBindSaveValueInDetailsIfFailedFuncResult<T, TReturn>(
+public static MlResult<TResult> TryBindSaveValueInDetailsIfFailedFuncResult<T, TResult>(
                                         this MlResult<T>                source,
-                                             Func<T, MlResult<TReturn>> func,
+                                             Func<T, MlResult<TResult>> func,
                                              Func<Exception, string>    errorMessageBuilder);
 
-public static MlResult<TReturn> TryBindSaveValueInDetailsIfFailedFuncResult<T, TReturn>(
+public static MlResult<TResult> TryBindSaveValueInDetailsIfFailedFuncResult<T, TResult>(
                                         this MlResult<T>                source,
-                                             Func<T, MlResult<TReturn>> func,
+                                             Func<T, MlResult<TResult>> func,
                                              string                     errorMessage = null!);
 ```
 
@@ -248,19 +248,18 @@ La combinación es especialmente potente: el fallo resultante lleva **las dos co
 var r = ObtenerPedido(id)
             .TryBindSaveValueInDetailsIfFailedFuncResult(
                 pedido => _pasarela.Cobrar(pedido),
-                ex     => $"Error de pasarela: {ex.Message}");
+                ex     => $"Error de pasarela: {ex.Message}")
 
-// Y ahora el diagnóstico es completo:
-r.ExecSelfIfFail(errores =>
-{
-    var pedido    = errores.GetMetadataValue<Pedido>();
-    var excepcion = errores.GetException();
+        .ExecSelfIfFail(errores =>
+        {
+            var pedido    = errores.GetMetadataValue<Pedido>();
+            var excepcion = errores.GetException();
 
-    _log.LogError("Cobro fallido | Pedido: {P} | Excepción: {E} | Errores: {Er}",
+            _log.LogError("Cobro fallido | Pedido: {P} | Excepción: {E} | Errores: {Er}",
                   pedido.Match(valid: p => p.Id.ToString(), fail: _ => "desconocido"),
                   excepcion.Match(valid: e => e.GetType().Name, fail: _ => "ninguna"),
                   errores.GetErrorMessages());
-});
+        });
 ```
 
 Hay `TryBindSaveValueInDetailsIfFailedFuncResultAsync` con 8 sobrecargas, combinando origen y delegado síncrono/asíncrono con las dos formas de construir el mensaje de error.
@@ -426,7 +425,7 @@ ObtenerExpediente(id)
 - ⚠️ Internamente funciona por **mutación** del diccionario de detalles, y `Dictionary.Add` **lanza si la clave ya existe**: no apiles dos guardados sobre el mismo fallo.
 - Tiene 3 sobrecargas asíncronas y 4 + 8 variantes `Try*` que además dejan la excepción en `Details["Ex"]`.
 - Su compañero natural es [`BindIfFailWithValue`](7_BindIfFailWithValue.md), que recoge el valor guardado para intentar un plan B.
-- El nombre contiene una errata de origen (*Faild*) que se mantiene por compatibilidad.
+- ✅ **Resuelto en 2.0.0:** la errata de origen del nombre (*Faild* por *Failed*) está corregida; el nombre antiguo se conserva como puente `[Obsolete]` y **se elimina en la 3.0.0**.
 
 ---
 

@@ -1,4 +1,4 @@
-# MoralesLarios.FOOP — Código fuente de la solución
+﻿# MoralesLarios.FOOP — Código fuente de la solución
 
 Esta carpeta contiene **todos los proyectos** de la solución `MoralesLarios.OOFP.sln`: el núcleo
 funcional, las librerías satélite que lo extienden y los proyectos de pruebas que lo verifican.
@@ -16,7 +16,8 @@ funcional, las librerías satélite que lo extienden y los proyectos de pruebas 
 4. [Proyectos de pruebas](#4-proyectos-de-pruebas)
 5. [Novedades destacadas](#5-novedades-destacadas)
 6. [Cómo compilar y ejecutar las pruebas](#6-cómo-compilar-y-ejecutar-las-pruebas)
-7. [Temas pendientes: mejoras, nomenclatura y profesionalización](#-temas-pendientes-mejoras-nomenclatura-y-profesionalización)
+7. [La versión 2.0.0: nomenclatura y guía de contribución](#7-la-versión-200-nomenclatura-y-guía-de-contribución)
+8. [Temas pendientes: mejoras, nomenclatura y profesionalización](#️-temas-pendientes-mejoras-nomenclatura-y-profesionalización)
 
 ---
 
@@ -239,6 +240,24 @@ dotnet test .\MoralesLarios.OOFP.Core.Tests.Unit\MoralesLarios.OOFP.Core.Tests.U
 > ⚠️ Los proyectos de **integración** (`*.Integration.Tests`) pueden requerir recursos externos
 > (base de datos, endpoints HTTP). Revisa el `appsettings.test.json` correspondiente antes de
 > ejecutarlos.
+
+---
+
+## 7. La versión 2.0.0: nomenclatura y guía de contribución
+
+La versión **2.0.0** es, sobre todo, una **versión de nomenclatura**: se renombraron la solución,
+los proyectos, las carpetas, los tipos, los métodos y las propiedades para que toda la superficie
+pública siga un único juego de convenciones. Son **864 cambios**, repartidos en once niveles, con
+puentes `[Obsolete]` en todo lo que se podía mantener compatible.
+
+| Documento | Contenido |
+|---|---|
+| [📋 **Renombrados de la v2.0.0**](./Cambios%20Realizados/Renombrados-v2.0.0.md) | El registro completo: una tabla por nivel con el nombre **antes** y **después**, si tiene puente `[Obsolete]`, la guía de migración rápida, los cambios de contrato y lo que se dejó deliberadamente fuera. |
+| [📐 **CONTRIBUTING.md**](./CONTRIBUTING.md) | La guía de estilo que salió de ese trabajo: sufijos con significado fijo, prefijos prohibidos, parámetros de tipo genérico, booleanos, factorías, diseño de API pública y política de cambios que rompen compatibilidad. |
+| [🧾 `_registro.csv`](./Cambios%20Realizados/_registro.csv) | La fuente de datos en bruto del documento anterior, por si quieres filtrar o procesar los cambios con tus propias herramientas. |
+
+> ⚠️ **Si vienes de la 1.x**, empieza por la *guía de migración rápida* del primer documento: los
+> paquetes NuGet cambiaron de nombre, así que ese es el primer paso obligatorio.
 
 ---
 

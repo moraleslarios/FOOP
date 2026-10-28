@@ -1,16 +1,16 @@
-# FailIfFalse — Convertir una condición en un resultado
+﻿# FailIfFalse — Convertir una condición en un resultado
 
 ## Índice
 
 1. [Introducción](#introducción)
 2. [El problema que resuelve](#el-problema-que-resuelve)
-3. [Las dos familias: `FailIfFalse<T>` y `FailIfFalse`](#las-dos-familias-booltoresultt-y-booltoresult)
-4. [Familia 1: `FailIfFalse<T>` — validar un valor con una condición](#familia-1-booltoresultt--validar-un-valor-con-una-condición)
-5. [Familia 2: `FailIfFalse` — el `bool` como sujeto](#familia-2-booltoresult--el-bool-como-sujeto)
+3. [Las dos familias: `FailIfFalse<T>` y `FailIfFalse`](#las-dos-familias-failiffalset-y-failiffalse)
+4. [Familia 1: `FailIfFalse<T>` — validar un valor con una condición](#familia-1-failiffalset--validar-un-valor-con-una-condición)
+5. [Familia 2: `FailIfFalse` — el `bool` como sujeto](#familia-2-failiffalse--el-bool-como-sujeto)
 6. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 7. [Las cuatro formas de expresar el error](#las-cuatro-formas-de-expresar-el-error)
 8. [Variantes asíncronas](#variantes-asíncronas)
-9. [`FailIfFalse` frente a `EnsureFp.That` y `MapEnsure`](#booltoresult-frente-a-ensurefpthat-y-mapensure)
+9. [`FailIfFalse` frente a `EnsureFp.That` y `MapEnsure`](#failiffalse-frente-a-ensurefpthat-y-mapensure)
 10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
 11. [Ejemplos Prácticos](#ejemplos-prácticos)
 12. [Mejores Prácticas](#mejores-prácticas)
@@ -117,7 +117,7 @@ Puntos importantes:
 | El valor válido es `source` tal cual | No se transforma ni se copia |
 | No comprueba `null` | Un `source` `null` con `condition == true` produce un `MlResult` válido que contiene `null` |
 | Todas las sobrecargas delegan en la de `MlErrorDetails` | Comportamiento uniforme |
-| No existe `TryBoolToResult` | No hay delegado de usuario que pueda lanzar |
+| No existe `TryFailIfFalse` | No hay delegado de usuario que pueda lanzar |
 
 ---
 
@@ -316,9 +316,9 @@ y por tanto no puede cortocircuitar nada. Con condiciones costosas, prefiere `Ma
 | Validar cuando ya estoy en el carril | [`MapEnsure`](../Map/2_MapEnsure.md) |
 | Validar argumentos al entrar en un método | `EnsureFp.That(x, cond, "...")` |
 | Fallar si algo es `null` | [`FailIfNull`](2_FailIfNull.md) |
-| Fallar si una colección viene vacía | [`FailIfEmpty`](1_EmptyToFailed.md) |
+| Fallar si una colección viene vacía | [`FailIfEmpty`](1_FailIfEmpty.md) |
 | Elegir entre dos ramas según la condición | [`MapIf`](../Map/3_MapIf.md) o [`BindIf`](../Bind/5_BindIf.md) |
-| Acumular **todos** los errores, no cortocircuitar | [`CombineAll`](4_Combine.md) |
+| Acumular **todos** los errores, no cortocircuitar | [`CombineAll`](4_CombineAll.md) |
 
 ---
 
@@ -470,7 +470,7 @@ var r = pedido.ToMlResultValid()
 8. **Resuelve las condiciones asíncronas antes** de llamar (no existe sobrecarga con
    `Task<bool>` como condición) o usa `BindAsync` con un lambda asíncrono.
 9. **Si necesitas acumular todos los errores** en lugar de cortocircuitar en el primero,
-   usa [`CombineAll`](4_Combine.md).
+   usa [`CombineAll`](4_CombineAll.md).
 10. **Nombra las reglas** (`"PED-013"`, `"TRF-001"`) en los `Details`: facilita el soporte
     y las pruebas.
 
@@ -491,15 +491,15 @@ var r = pedido.ToMlResultValid()
   [`MapEnsure`](../Map/2_MapEnsure.md).
 - ⚠️ **No comprueba `null`**: combínalo con [`FailIfNull`](2_FailIfNull.md).
 - ⚠️ En la familia 2, el valor válido es siempre `true`: no lo leas.
-- **No existe `TryBoolToResult`**: no hay delegado de usuario que pueda lanzar.
+- **No existe `TryFailIfFalse`**: no hay delegado de usuario que pueda lanzar.
 
 ---
 
 ## Ver también
 
-- [`FailIfEmpty`](1_EmptyToFailed.md) — fallar si una colección viene vacía
+- [`FailIfEmpty`](1_FailIfEmpty.md) — fallar si una colección viene vacía
 - [`FailIfNull`](2_FailIfNull.md) — fallar si un objeto es `null`
-- [`CombineAll`](4_Combine.md) — acumular los errores de varias validaciones
+- [`CombineAll`](4_CombineAll.md) — acumular los errores de varias validaciones
 - [`MapEnsure`](../Map/2_MapEnsure.md) — validar con predicado diferido dentro del carril
 - [`MapIf`](../Map/3_MapIf.md) y [`BindIf`](../Bind/5_BindIf.md) — bifurcar según una condición
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — `That`, `NotNull`, `NotEmpty` para validar argumentos

@@ -1,15 +1,15 @@
-# Bucles y proyecciones — Recorrer colecciones dentro del carril
+﻿# Bucles y proyecciones — Recorrer colecciones dentro del carril
 
 ## Índice
 
 1. [Introducción](#introducción)
 2. [El problema: `IEnumerable<MlResult<T>>` no sirve de nada](#el-problema-ienumerablemlresultt-no-sirve-de-nada)
 3. [Las cuatro estrategias de proyección](#las-cuatro-estrategias-de-proyección)
-4. [`Traverse` — procesar todo y acumular errores](#projection--procesar-todo-y-acumular-errores)
-5. [`TraverseWhile` — parar en el primer fallo](#projectionwhile--parar-en-el-primer-fallo)
+4. [`Traverse` — procesar todo y acumular errores](#traverse--procesar-todo-y-acumular-errores)
+5. [`TraverseWhile` — parar en el primer fallo](#traversewhile--parar-en-el-primer-fallo)
 6. [`ProjectionParallelAsync` — concurrencia real](#projectionparallelasync--concurrencia-real)
-7. [`TraverseSplit` — separar aciertos de fallos](#projectionsplit--separar-aciertos-de-fallos)
-8. [Los agregadores: `MergeFailureErrors`, `MergeErrorsIfExists`, `VerifiedEnumerableResultData`](#los-agregadores-fusionfailerros-fusionerrosifexists-verifiedenumerableresultdata)
+7. [`TraverseSplit` — separar aciertos de fallos](#traversesplit--separar-aciertos-de-fallos)
+8. [Los agregadores: `MergeFailureErrors`, `MergeErrorsIfExists`, `VerifiedEnumerableResultData`](#los-agregadores-mergefailureerrors-mergeerrorsifexists-verifiedenumerableresultdata)
 9. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 10. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
 11. [Ejemplos Prácticos](#ejemplos-prácticos)
@@ -25,7 +25,7 @@
 hacer cuando la operación que aplicas a cada elemento puede fallar**.
 
 Es la única familia de la librería que **sí acumula errores** de verdad (recuerda que
-[`CombineAll`](../Several/4_Combine.md) **no** lo hace: cortocircuita).
+[`CombineAll`](../Several/4_CombineAll.md) **no** lo hace: cortocircuita).
 
 ```csharp
 // Validar 500 líneas de un fichero importado y saber TODAS las que están mal
@@ -300,7 +300,7 @@ desapercibido. Devuelve **dos diccionarios**, indexados por el elemento original
 - `fails`: elemento original → errores.
 
 ```csharp
-var r = await pedidos.ProjectionSplitAsync(p => ProcesarAsync(p));
+var r = await pedidos.TraverseSplitAsync(p => ProcesarAsync(p));
 
 var (procesados, rechazados) = r.GetValueOrThrow();
 
@@ -344,7 +344,7 @@ var r = lineas.Select((l, i) => (Indice: i, Linea: l))
               .TraverseSplit(t => Validar(t.Linea));
 ```
 
-⚠️ La variante con delegado asíncrono (`ProjectionSplitAsync` con
+⚠️ La variante con delegado asíncrono (`TraverseSplitAsync` con
 `Func<T, Task<MlResult<TResult>>>`) recorre **en secuencia** con `foreach` + `await`. No hay
 versión paralela de `TraverseSplit`.
 
@@ -398,34 +398,40 @@ Hace lo mismo que `VerifiedEnumerableResultData` pero usando `GetValueOrThrow()`
 `.Value`, y **maneja correctamente el caso "ninguno falló"**. Es la opción más robusta de las
 tres.
 
-### `MergeFailureErrors` — ⚠️ tiene un bug: exige que haya fallos
+### `MergeFailureErrors` — ✅ bug corregido en 2.0.0
 
 ```csharp
 public static MlResult<IEnumerable<T>> MergeFailureErrors<T>(this IEnumerable<MlResult<T>> source)
 {
     var partialResult = source.Where(x => x.IsFailure).ToList();
 
-    if (!partialResult.Any()) MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
-    //                        ↑ ⚠️ FALTA EL 'return': el resultado se descarta
+    if (!partialResult.Any()) return MlResult<IEnumerable<T>>.Fail("No elements found in failed state to merge");
+    //                        ↑ ✅ el 'return' que faltaba en la 1.x
 
-    MlErrorDetails result = partialResult.First().FailureDetails;   // ⚠️ lanza si está vacío
-    // …
+    MlErrorDetails result = partialResult.First().FailureDetails;
+
+    foreach (var item in partialResult.Skip(1))
+        result = result.Merge(item.FailureDetails);
+
+    return result;
 }
 ```
 
-⚠️⚠️ **Aviso importante:** en la comprobación de "no hay fallos" **falta el `return`**. El
-`MlResult.Fail(...)` se construye y se descarta, y la ejecución continúa hasta
-`partialResult.First()`, que **lanza `InvalidOperationException`** sobre una lista vacía.
+✅ **Resuelto en 2.0.0:** en la 1.x **faltaba el `return`** en la comprobación de "no hay fallos":
+el `MlResult.Fail(...)` se construía y se descartaba, y la ejecución continuaba hasta
+`partialResult.First()`, que **lanzaba `InvalidOperationException`** sobre una lista vacía. Desde
+la 2.0.0 el método **devuelve un fallo controlado** (`"No elements found in failed state to merge"`)
+en vez de lanzar.
 
-🔑 **Consecuencia práctica:** **nunca llames a `MergeFailureErrors` directamente** salvo que
-estés seguro de que hay al menos un fallo. Las proyecciones internas lo hacen bien (siempre
-comprueban `Any(x => x.IsFailure)` antes), pero tú no tienes por qué acordarte.
+🔑 **Aun así, fíjate en la semántica:** `MergeFailureErrors` está pensado para **fusionar fallos**.
+Si todos los resultados son válidos **no hay nada que fusionar** y por eso devuelve un fallo. No es
+un bug: es su contrato. Para el caso general usa los otros dos.
 
 ```csharp
-// ❌ Si todos los resultados son válidos, LANZA InvalidOperationException
+// ⚠️ Si todos los resultados son válidos, devuelve un FALLO (no lanza, pero no es lo que quieres)
 var r = resultados.MergeFailureErrors();
 
-// ✅ Usa cualquiera de estos dos, que sí manejan el caso vacío
+// ✅ Usa cualquiera de estos dos, que devuelven válido cuando no hay fallos
 var r = resultados.VerifiedEnumerableResultData();
 var r = resultados.MergeErrorsIfExists();
 ```
@@ -433,8 +439,10 @@ var r = resultados.MergeErrorsIfExists();
 Los tres tienen variantes `*Async` (envolturas `.ToAsync()` y sobrecargas desde
 `Task<IEnumerable<MlResult<T>>>`.
 
-💡 Nótese la errata en el nombre: **`MergeFailureErrors`**, sin la `e` de "Errors". Está así en
-la API pública.
+✅ **Resuelto en 2.0.0:** en la 1.x estos agregadores se llamaban `FusionFailErros`,
+`FusionErrosIfExists` y `VerifyedEnumerableResultData`. Desde la 2.0.0 los nombres correctos son
+**`MergeFailureErrors`**, **`MergeErrorsIfExists`** y **`VerifiedEnumerableResultData`**. Los
+nombres antiguos se conservan como puentes `[Obsolete]` y **se eliminan en la 3.0.0**.
 
 ---
 
@@ -461,15 +469,18 @@ elementos van al diccionario `fails`.
 `ArgumentException` con elementos duplicados** (ojo con los `record`, cuya igualdad es
 estructural).
 
-**8. ⚠️ `MergeFailureErrors` tiene un bug**: falta el `return` en el caso "no hay fallos", así
-que **lanza `InvalidOperationException`** si se lo llamas con una colección sin fallos. Usa
-`VerifiedEnumerableResultData` o `MergeErrorsIfExists`.
+**8. ✅ Resuelto en 2.0.0: `MergeFailureErrors` ya no lanza.** En la 1.x faltaba el `return` en el
+caso "no hay fallos" y lanzaba `InvalidOperationException`. Ahora devuelve un **fallo controlado**
+(`"No elements found in failed state to merge"`). Si lo que quieres es el valor cuando todo va bien,
+sigue usando `VerifiedEnumerableResultData` o `MergeErrorsIfExists`.
 
 **9. `VerifiedEnumerableResultData` enumera la colección dos veces** (`Any` + `Select`).
 Materializa las consultas diferidas.
 
-**10. Erratas en los nombres públicos:** `MergeFailureErrors` y `MergeErrorsIfExists` (falta
-una `e` en "Errors" en ambos). Están así en la API.
+**10. ✅ Resuelto en 2.0.0: las erratas de los nombres públicos.** En la 1.x eran
+`FusionFailErros` / `FusionErrosIfExists` / `VerifyedEnumerableResultData`; ahora son
+`MergeFailureErrors` / `MergeErrorsIfExists` / `VerifiedEnumerableResultData`, con puentes
+`[Obsolete]` que desaparecen en la 3.0.0.
 
 **11. Hay mucho código comentado** en el archivo (versiones antiguas con
 `Func<T, MlResult<T>>` en lugar de `Func<T, MlResult<TResult>>`). Todas las versiones activas
@@ -492,7 +503,7 @@ paralela.
 | Ya tengo un `IEnumerable<MlResult<T>>` | `VerifiedEnumerableResultData` |
 | Lo mismo, con manejo robusto del caso vacío | `MergeErrorsIfExists` |
 | Fusionar errores de una colección con fallos garantizados | `MergeFailureErrors` (⚠️ lanza si no hay fallos) |
-| Rechazar una colección vacía | [`FailIfEmpty`](../Several/1_EmptyToFailed.md) |
+| Rechazar una colección vacía | [`FailIfEmpty`](../Several/1_FailIfEmpty.md) |
 
 ---
 
@@ -532,7 +543,7 @@ public class ImportadorCsv
 ```csharp
 public async Task<MlResult<IEnumerable<Script>>> AplicarMigracionesAsync(IEnumerable<Script> scripts)
     // Los scripts son dependientes: si el 3 falla, aplicar el 4 corrompería la BD
-    => await scripts.ProjectionWhileAsync(async s =>
+    => await scripts.TraverseWhileAsync(async s =>
        {
            Func<Script, Task> ejecutar = _db.EjecutarAsync;
 
@@ -581,7 +592,7 @@ public class ProcesadorNominas
         // Clave única explícita para evitar el problema de duplicados
         var indexados = empleados.Select((e, i) => (Id: $"{e.Nif}#{i}", Empleado: e)).ToList();
 
-        var r = await indexados.ProjectionSplitAsync(t => CalcularNominaAsync(t.Empleado));
+        var r = await indexados.TraverseSplitAsync(t => CalcularNominaAsync(t.Empleado));
 
         return r.Map(split =>
         {
@@ -708,8 +719,9 @@ var r = _db.Pedidos.Where(p => p.Abierto).ToList().Traverse(Validar);
   única).
 - ⚠️ **`TraverseAsync` con delegado asíncrono es SECUENCIAL**, no paralelo.
 - **`VerifiedEnumerableResultData`** y **`MergeErrorsIfExists`** son los agregadores seguros.
-- ⚠️⚠️ **`MergeFailureErrors` tiene un bug** (falta un `return`): **lanza
-  `InvalidOperationException`** si la colección no tiene fallos. No lo llames directamente.
+- OK **`MergeFailureErrors`: bug corregido en 2.0.0** (le faltaba un `return` y lanzaba
+  `InvalidOperationException` con colecciones sin fallos). Ahora devuelve un fallo controlado,
+  pero por contrato sigue estando pensado **solo para fusionar fallos**.
 - Todas las variantes tienen **sobrecarga con índice**, muy útil para mensajes con número de
   línea.
 
@@ -717,8 +729,8 @@ var r = _db.Pedidos.Where(p => p.Abierto).ToList().Traverse(Validar);
 
 ## Ver también
 
-- [`FailIfEmpty`](../Several/1_EmptyToFailed.md) — rechazar colecciones vacías antes de proyectar
-- [`CombineAll`](../Several/4_Combine.md) — ⚠️ **no** acumula errores, a diferencia de `Traverse`
+- [`FailIfEmpty`](../Several/1_FailIfEmpty.md) — rechazar colecciones vacías antes de proyectar
+- [`CombineAll`](../Several/4_CombineAll.md) — ⚠️ **no** acumula errores, a diferencia de `Traverse`
 - [`MlResultErrors`](../core-types/MlResultErrors.md) — `Merge`, `GetErrorsSummary`, `GetErrorMessages`
 - [`Transformations`](../Transformations/Transformations.md) — `TryToMlResultAsync`, `GetValueOrThrow`
 - [`Bind`](../Bind/3_Bind.md) — el cortocircuito de un solo valor

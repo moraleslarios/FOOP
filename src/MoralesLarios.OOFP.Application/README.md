@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.Application — Servicios CRUD genéricos con DTOs y ProblemDetails
+﻿# MoralesLarios.OOFP.Application — Servicios CRUD genéricos con DTOs y ProblemDetails
 
 Capa de aplicación que se sitúa entre los repositorios de [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) y los controladores web. Aporta tres cosas en un solo tipo genérico: **CRUD completo**, **mapeo automático entidad ⇄ DTO** con [Mapster](https://github.com/MapsterMapper/Mapster) y **trazado del inicio y del final** de cada operación, todo sobre el raíl de [`MlResult<T>`](../docs/core-types/MlResult.md).
 
@@ -13,11 +13,11 @@ Incluye además `MlProblemDetails`, una fábrica de errores con la forma de **RF
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Los dos modos: simple y duplex](#los-dos-modos-simple-y-duplex)
 5. [Anatomía de una operación](#anatomía-de-una-operación)
-6. [`ICrudServiceFp<TEntity, TDto>` — modo simple](#igenservicefptentity-tdto--modo-simple)
-7. [`ICrudServiceFp<TEntity, TRequest, TResponse>` — modo duplex](#igenservicefptentity-trequest-tresponse--modo-duplex)
+6. [`ICrudServiceFp<TEntity, TDto>` — modo simple](#icrudservicefptentity-tdto--modo-simple)
+7. [`ICrudServiceFp<TEntity, TRequest, TResponse>` — modo duplex](#icrudservicefptentity-trequest-tresponse--modo-duplex)
 8. [Los parámetros de mensajes](#los-parámetros-de-mensajes)
 9. [Las parejas `Async` / `ProblemDetailsAsync`](#las-parejas-async--problemdetailsasync)
-10. [`MlProblemDetails` — errores RFC 7807](#mlproblemsdetails--errores-rfc-7807)
+10. [`MlProblemDetails` — errores RFC 7807](#mlproblemdetails--errores-rfc-7807)
 11. [Registro en el contenedor](#registro-en-el-contenedor)
 12. [Mapeo con Mapster](#mapeo-con-mapster)
 13. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
@@ -96,7 +96,7 @@ public class VinosController(ICrudServiceFp<Vino, VinoDto> _service)
 
 Destino: **`net8.0`**. Versión del paquete: **1.0.10**.
 
-> ⚠️ **Arrastra `EFCore` como dependencia obligatoria.** El servicio depende de `IEfRepository<TEntity>` en el constructor, así que **no puedes usar esta capa con otro tipo de persistencia** (Dapper, MongoDB, un servicio remoto…) sin implementar tú `IEfRepository<T>`.
+> ⚠️ **Arrastra `EntityFrameworkCore` como dependencia obligatoria.** El servicio depende de `IEfRepository<TEntity>` en el constructor, así que **no puedes usar esta capa con otro tipo de persistencia** (Dapper, MongoDB, un servicio remoto…) sin implementar tú `IEfRepository<T>`.
 
 ```csharp
 using MoralesLarios.OOFP.Application;             // MlProblemDetails, RegisterServices
@@ -121,7 +121,7 @@ MoralesLarios.OOFP.Application/
 └── GlobalUsings.cs
 ```
 
-> ⚠️ **`Services/GenService.cs` está completamente vacío** (0 bytes). Aparece en el proyecto pero no aporta nada: **no existe ninguna variante OOP** del servicio, a diferencia de lo que ocurre en `EFCore`.
+> ⚠️ **`Services/GenService.cs` está completamente vacío** (0 bytes). Aparece en el proyecto pero no aporta nada: **no existe ninguna variante OOP** del servicio, a diferencia de lo que ocurre en `EntityFrameworkCore`.
 
 ---
 
@@ -393,12 +393,12 @@ Seis extensiones, tres ciclos de vida × dos modos:
 ```csharp
 // Modo simple: ICrudServiceFp<,>
 services.AddTransientCrudServicesFpWithoutRepositories();
-services.AddScopedCrudServicesFpWithoutRepositories();      // ⚠️ "Scopedt", con t
+services.AddScopedCrudServicesFpWithoutRepositories();
 services.AddSingletonCrudServicesFpWithoutRepositories();
 
 // Modo duplex: ICrudServiceFp<,,>
 services.AddTransientCrudServicesDuplexFpWithoutRepositories();
-services.AddScopedCrudServicesDuplexFpWithoutRepositories(); // ⚠️ "Scopedt", con t
+services.AddScopedCrudServicesDuplexFpWithoutRepositories();
 services.AddSingletonCrudServicesDuplexFpWithoutRepositories();
 ```
 
@@ -408,9 +408,14 @@ Cada una registra el tipo genérico **abierto**, así que sirve para cualquier c
 services.AddScoped(typeof(ICrudServiceFp<,>), typeof(CrudServiceFp<,>));
 ```
 
-> ⚠️ **Errata en el nombre: `AddScopedt…`** (con una `t` de más). Está así en el código de ambas variantes, simple y duplex. Corregirlo sería un cambio de API, por lo que **debes escribirlo con la errata**.
+> ✅ **Resuelto en 2.0.0:** los nombres de la 1.x eran `AddScopedtGenServicesFpWithoutReposGeneral` y
+> compañía — con la errata **`Scopedt`** (una `t` de más), el prefijo redundante `Gen` y el sufijo
+> `ReposGeneral`. Ahora son `Add{Lifetime}CrudServices[Duplex]FpWithoutRepositories`. Los nombres
+> antiguos se conservan como puentes `[Obsolete]` y **se eliminan en la 3.0.0**.
 
-> ⚠️ **El nombre `WithoutReposGeneral` sugiere que existe una variante `WithRepos`, y no existe.** Solo hay estas seis. También hay un `AddWebServices` completamente comentado.
+> ⚠️ Solo existen estas seis sobrecargas: **no hay una variante "con repositorios"** (los
+> repositorios se registran aparte). También queda un `AddWebServices` completamente comentado en
+> `RegisterServices.cs`.
 
 ### Configuración completa mínima
 
@@ -426,7 +431,7 @@ builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 
 > 🔑 **El registro de repositorios es por entidad; el del servicio, una sola vez.** El servicio genérico resuelve `IEfRepository<TEntity>` por constructor, así que si olvidas el `AddOofpRepositories<TEntity, TContext>()` la inyección del servicio fallará al resolverse.
 
-> ⚠️ **Evita `AddSingleton…`**: el servicio depende de `IEfRepository<TEntity>`, que a su vez depende del `DbContext` (`Scoped`). Es una *captive dependency*, igual que en [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
+> ⚠️ **Evita `AddSingleton…`**: el servicio depende de `IEfRepository<TEntity>`, que a su vez depende del `DbContext` (`Scoped`). Es una *captive dependency*, igual que en [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
 
 ---
 
@@ -582,7 +587,7 @@ El contrato del modo simple está formateado con alineación cuidadosa; el del m
 
 ## ⚠️ Lo que NO incluye
 
-> ⚠️ **No hay paginación.** `GetPagedAsync` trae **toda la tabla** y la mapea completa. Aunque [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) ofrece `IEfPagedRepository<T>`, esta capa depende solo de `IEfRepository<T>` y **no expone ningún método paginado**. En una tabla grande, `GetPagedAsync` es un problema de rendimiento serio.
+> ⚠️ **No hay paginación.** `GetPagedAsync` trae **toda la tabla** y la mapea completa. Aunque [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) ofrece `IEfPagedRepository<T>`, esta capa depende solo de `IEfRepository<T>` y **no expone ningún método paginado**. En una tabla grande, `GetPagedAsync` es un problema de rendimiento serio.
 
 > ⚠️ **No hay filtrado ni búsqueda.** No existe un `GetDataAsync(filter)`: solo `GetPagedAsync` y `FindByIdAsync`.
 
@@ -590,7 +595,7 @@ El contrato del modo simple está formateado con alineación cuidadosa; el del m
 
 > ⚠️ **No hay operaciones por lotes.** No hay `CreateRangeAsync` ni equivalentes, aunque el repositorio los ofrece.
 
-> ⚠️ **No hay transacciones.** Hereda la limitación de `EFCore`: cada operación confirma por su cuenta.
+> ⚠️ **No hay transacciones.** Hereda la limitación de `EntityFrameworkCore`: cada operación confirma por su cuenta.
 
 > ⚠️ **No hay caché.**
 
@@ -655,7 +660,7 @@ builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddOofpRepositories<Vino, AppDbContext>();
 
 // Servicios genéricos: una sola vez cada modo
-builder.Services.AddScopedCrudServicesFpWithoutRepositories();        // ⚠️ "Scopedt"
+builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 builder.Services.AddScopedCrudServicesDuplexFpWithoutRepositories();
 
 var app = builder.Build();
@@ -865,7 +870,7 @@ MlProblemDetails.NotFoundError(detail: "No existe",
 ## Mejores prácticas
 
 1. **Usa el modo duplex en APIs públicas**: separa el DTO de entrada del de salida para no exponer `Id` ni campos internos.
-2. **Registra con `AddScopedt…`** (sí, con la errata). Evita `AddSingleton…` por la dependencia cautiva del `DbContext`.
+2. **Registra con `AddScopedCrudServicesFpWithoutRepositories()`.** Evita `AddSingleton…` por la dependencia cautiva del `DbContext`.
 3. **No olvides `AddOofpRepositories<TEntity, TContext>()`** por cada entidad: el servicio resuelve `IEfRepository<TEntity>` por constructor.
 4. **Usa siempre las variantes `ProblemDetailsAsync` con `MlProblemDetails`** si el error va a convertirse en respuesta HTTP. Las versiones cortas **no producen un 404 real**.
 5. **Prefiere `UpdateAsync(dto, ct)` sin `pk`** para evitar el doble `Find` y los conflictos de seguimiento.
@@ -884,7 +889,7 @@ MlProblemDetails.NotFoundError(detail: "No existe",
 
 - Servicio de aplicación **genérico** que implementa el CRUD completo sobre `IEfRepository<TEntity>`, mapeando entidad ⇄ DTO con **Mapster** y trazando **entrada y salida** de cada operación en el raíl de `MlResult<T>`.
 - **Dos modos**: simple (`ICrudServiceFp<TEntity, TDto>`)
-- Registro con tipos genéricos abiertos: **una sola llamada** sirve para todas las entidades. ⚠️ El nombre tiene la errata `AddScopedt…`.
+- Registro con tipos genéricos abiertos: **una sola llamada** sirve para todas las entidades.
 - **`MlProblemDetails`**: 15 fábricas de `MlErrorDetails` con la estructura **RFC 7807** (400, 401, 403, 404, 409, 422, 429, 500…), más una sobrecarga que agrupa `ValidationResult` por propiedad.
 - ❗ **Para obtener un 404 real, usa las variantes `ProblemDetailsAsync` con `MlProblemDetails.NotFoundError(…)`**: las versiones cortas generan la clave `"NotFound"`, que la capa HTTP no interpreta.
 - ❗ **`UpdateAsync` hace dos búsquedas y descarta la entidad recuperada**, lo que puede provocar conflictos de seguimiento en EF Core. Prefiere `UpdateAsync(dto, ct)` sin `pk`.

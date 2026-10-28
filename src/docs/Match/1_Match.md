@@ -1,4 +1,4 @@
-# MlResult Match - Pattern Matching Funcional
+﻿# MlResult Match - Pattern Matching Funcional
 
 ## Índice
 1. [Introducción](#introducción)
@@ -16,11 +16,11 @@
 
 ## Introducción
 
-Los métodos `Match` implementan el patrón de **pattern matching funcional** sobre `MlResult<T>`, permitiendo transformar el resultado en un tipo completamente diferente (`TReturn`) con lógica específica para casos de éxito y fallo.
+Los métodos `Match` implementan el patrón de **pattern matching funcional** sobre `MlResult<T>`, permitiendo transformar el resultado en un tipo completamente diferente (`TResult`) con lógica específica para casos de éxito y fallo.
 
 ### Propósito Principal
 
-- **Transformación Condicional**: Convertir `MlResult<T>` a cualquier tipo `TReturn`
+- **Transformación Condicional**: Convertir `MlResult<T>` a cualquier tipo `TResult`
 - **Manejo Bifurcado**: Lógica diferente para éxito vs fallo
 - **Finalización de Cadenas**: Terminar pipelines de `MlResult` extrayendo valores
 - **Mapeo a Tipos de Respuesta**: Convertir a DTOs, responses HTTP, etc.
@@ -32,15 +32,15 @@ Los métodos `Match` implementan el patrón de **pattern matching funcional** so
 ### Filosofía del Pattern Matching
 
 ```
-MlResult<T> → Match(validFunc, failFunc) → TReturn
+MlResult<T> → Match(validFunc, failFunc) → TResult
    ↓                     ↓                    ↓
-Éxito → validFunc(value) → TReturn
-Fallo → failFunc(errorsDetails) → TReturn
+Éxito → validFunc(value) → TResult
+Fallo → failFunc(errorsDetails) → TResult
 ```
 
 ### Características Principales
 
-1. **Transformación Total**: Siempre produce un `TReturn`, nunca `MlResult`
+1. **Transformación Total**: Siempre produce un `TResult`, nunca `MlResult`
 2. **Bifurcación Funcional**: Dos funciones para dos caminos
 3. **Finalización**: Extrae valores del contexto `MlResult`
 4. **Soporte Asíncrono Completo**: Todas las combinaciones async/sync
@@ -63,20 +63,20 @@ Fallo → failFunc(errorsDetails) → TReturn
 > | La excepción capturada por un `Try*` | `errores.GetException()` → `MlResult<Exception>` |
 > | Un dato adjunto | `errores.GetMetadataValue<T>()` / `errores.GetDetail<T>("clave")` |
 
-### `Match<T, TReturn>()`
+### `Match<T, TResult>()`
 
-**Propósito**: transformar un `MlResult<T>` en un `TReturn` con lógica específica para éxito y fallo.
+**Propósito**: transformar un `MlResult<T>` en un `TResult` con lógica específica para éxito y fallo.
 
 ```csharp
-public static TReturn Match<T, TReturn>(this MlResult<T>               source,
-                                        Func<T, TReturn>               valid,
-                                        Func<MlErrorDetails, TReturn> fail)
+public static TResult Match<T, TResult>(this MlResult<T>               source,
+                                        Func<T, TResult>               valid,
+                                        Func<MlErrorDetails, TResult> fail)
 ```
 
 **Comportamiento**:
 - Si `source` es válido: ejecuta `valid(value)` y devuelve su resultado.
 - Si `source` es fallido: ejecuta `fail(errorsDetails)` y devuelve su resultado.
-- El valor devuelto es un `TReturn` **crudo**: aquí *sales* del mundo `MlResult`. Por eso `Match` es la
+- El valor devuelto es un `TResult` **crudo**: aquí *sales* del mundo `MlResult`. Por eso `Match` es la
   operación natural del **borde** de la aplicación (controladores, handlers, `Main`).
 
 **Ejemplo Básico**:
@@ -137,13 +137,13 @@ IActionResult respuesta = resultado.Match(
 
 ## Variantes Asíncronas
 
-### `MatchAsync<T, TReturn>()` - Ambas Funciones Asíncronas
+### `MatchAsync<T, TResult>()` - Ambas Funciones Asíncronas
 
 ```csharp
-public static async Task<TReturn> MatchAsync<T, TReturn>(
+public static async Task<TResult> MatchAsync<T, TResult>(
     this MlResult<T> source,
-    Func<T, Task<TReturn>> validAsync,
-    Func<MlErrorDetails, Task<TReturn>> failAsync)
+    Func<T, Task<TResult>> validAsync,
+    Func<MlErrorDetails, Task<TResult>> failAsync)
 ```
 
 **Ejemplo**:
@@ -155,38 +155,38 @@ var notification = await result.MatchAsync(
 );
 ```
 
-### `MatchAsync<T, TReturn>()` - Solo Función de Fallo Asíncrona
+### `MatchAsync<T, TResult>()` - Solo Función de Fallo Asíncrona
 
 ```csharp
-public static async Task<TReturn> MatchAsync<T, TReturn>(
+public static async Task<TResult> MatchAsync<T, TResult>(
     this MlResult<T> source,
-    Func<T, TReturn> valid,
-    Func<MlErrorDetails, Task<TReturn>> failAsync)
+    Func<T, TResult> valid,
+    Func<MlErrorDetails, Task<TResult>> failAsync)
 ```
 
-### `MatchAsync<T, TReturn>()` - Solo Función de Éxito Asíncrona
+### `MatchAsync<T, TResult>()` - Solo Función de Éxito Asíncrona
 
 ```csharp
-public static async Task<TReturn> MatchAsync<T, TReturn>(
+public static async Task<TResult> MatchAsync<T, TResult>(
     this MlResult<T> source,
-    Func<T, Task<TReturn>> validAsync,
-    Func<MlErrorDetails, TReturn> fail)
+    Func<T, Task<TResult>> validAsync,
+    Func<MlErrorDetails, TResult> fail)
 ```
 
 ### Variantes con Fuente Asíncrona
 
 ```csharp
 // Task<MlResult<T>> con funciones asíncronas
-public static async Task<TReturn> MatchAsync<T, TReturn>(
+public static async Task<TResult> MatchAsync<T, TResult>(
     this Task<MlResult<T>> sourceAsync,
-    Func<T, Task<TReturn>> validAsync,
-    Func<MlErrorDetails, Task<TReturn>> failAsync)
+    Func<T, Task<TResult>> validAsync,
+    Func<MlErrorDetails, Task<TResult>> failAsync)
 
 // Task<MlResult<T>> con funciones síncronas
-public static async Task<TReturn> MatchAsync<T, TReturn>(
+public static async Task<TResult> MatchAsync<T, TResult>(
     this Task<MlResult<T>> sourceAsync,
-    Func<T, TReturn> valid,
-    Func<MlErrorDetails, TReturn> fail)
+    Func<T, TResult> valid,
+    Func<MlErrorDetails, TResult> fail)
 ```
 
 ---
@@ -485,11 +485,11 @@ public class ResultadoNotificacion
 
 | Quieres… | Usa | Devuelve |
 | --- | --- | --- |
-| Continuar la tubería con otra operación que puede fallar | `Bind` | `MlResult<TReturn>` |
-| Continuar la tubería transformando el valor (no falla) | `Map` | `MlResult<TReturn>` |
+| Continuar la tubería con otra operación que puede fallar | `Bind` | `MlResult<TResult>` |
+| Continuar la tubería transformando el valor (no falla) | `Map` | `MlResult<TResult>` |
 | Observar sin cambiar nada (log, métrica) | `ExecSelf*` | El mismo `MlResult<T>` |
 | Recuperarte de un fallo con un valor alternativo | `MapIfFail` / `BindIfFail` | `MlResult<T>` |
-| **Salir** del mundo `MlResult` con un valor concreto | `Match` | `TReturn` crudo |
+| **Salir** del mundo `MlResult` con un valor concreto | `Match` | `TResult` crudo |
 
 Regla práctica: **`Match` va al final**. Si aparece en medio de una tubería, casi siempre lo que
 querías era `Bind`, `Map`, `MapIfFail` o `ExecSelf*`.
@@ -524,7 +524,7 @@ Existe una sobrecarga para cada combinación, de modo que **nunca necesitas `awa
 ### 4. Ambas ramas deben devolver el mismo tipo
 
 Es un requisito del compilador, pero conviene recordarlo: si las ramas devuelven tipos distintos,
-declara explícitamente `TReturn` (por ejemplo `Match<Pedido, IActionResult>`) o convierte ambas a un
+declara explícitamente `TResult` (por ejemplo `Match<Pedido, IActionResult>`) o convierte ambas a un
 tipo común (`IActionResult`, una interfaz propia, etc.).
 
 ---
@@ -535,13 +535,13 @@ tipo común (`IActionResult`, una interfaz propia, etc.).
 
 | Operación | Recibe | Devuelve | ¿Sigue en la tubería? | ¿Se ejecuta si hay fallo? |
 | --- | --- | --- | :---: | :---: |
-| `Bind` | `T` | `MlResult<TReturn>` | Sí | No |
-| `Map` | `T` | `MlResult<TReturn>` | Sí | No |
+| `Bind` | `T` | `MlResult<TResult>` | Sí | No |
+| `Map` | `T` | `MlResult<TResult>` | Sí | No |
 | `MapIfFail` | `MlErrorDetails` | `MlResult<T>` | Sí | **Solo** si hay fallo |
 | `ExecSelf` | `T` o los errores | El mismo `MlResult<T>` | Sí | Según la variante |
-| `Match(valid, fail)` | `T` **y** los errores | `TReturn` **crudo** | **No** | Sí (rama `fail`) |
+| `Match(valid, fail)` | `T` **y** los errores | `TResult` **crudo** | **No** | Sí (rama `fail`) |
 | `TryMatch(valid, fail, …)` | `T` **y** los errores | `MlResult<TResult>` | Sí | Sí (rama `fail`) |
-| `Match(funcAll)` | Nada | `MlResult<TReturn>` | Sí | Sí (ignora el estado) |
+| `Match(funcAll)` | Nada | `MlResult<TResult>` | Sí | Sí (ignora el estado) |
 
 ### Ejemplo Comparativo
 
@@ -558,7 +558,7 @@ La misma necesidad, «obtener un pedido y devolver una respuesta HTTP», resuelt
 ## Resumen
 
 - `Match` es el **pattern matching** de la librería: una función para el caso válido y otra para el
-  caso fallido, y devuelve un `TReturn` **crudo**.
+  caso fallido, y devuelve un `TResult` **crudo**.
 - Es la operación del **borde** de la aplicación: donde se abandona el mundo `MlResult`.
 - Es también la forma correcta de leer el contenido, porque `MlResult<T>.Value` es
   `internal protected` a propósito.
@@ -570,7 +570,7 @@ La misma necesidad, «obtener un pedido y devolver una respuesta HTTP», resuelt
 
 ## Ver también
 
-- [`2_MatchAll.md`](2_MatchAll.md) — la sobrecarga incondicional (`Func<TReturn>` sin parámetros).
+- [`2_MatchAll.md`](2_MatchAll.md) — la sobrecarga incondicional (`Func<TResult>` sin parámetros).
 - [`../Types/MlResultMatchExtensions.md`](../core-types/MlResultMatchExtensions.md) — referencia completa del archivo fuente.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — el sistema de errores (`MlError`, `MlErrorDetails`).
 - [`../Types/MlResultErrorDetailsExtensions.md`](../core-types/MlResultErrorDetailsExtensions.md) — `GetException`, `GetMetadataValue<T>`, `GetDetail<T>`.

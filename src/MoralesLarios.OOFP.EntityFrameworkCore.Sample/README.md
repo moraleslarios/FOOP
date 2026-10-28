@@ -1,15 +1,15 @@
-# MoralesLarios.OOFP.EntityFrameworkCore.Sample
+﻿# MoralesLarios.OOFP.EntityFrameworkCore.Sample
 
-Proyecto de integraci�n entre `MoralesLarios.OOFP.EntityFrameworkCore` y capa Web API.
+Proyecto de integración entre `MoralesLarios.OOFP.EntityFrameworkCore` y capa Web API.
 
-> Estado actual: **base/skeleton** (m�nimo).
+> Estado actual: **base/skeleton** (mínimo).
 
-## Qu� contiene
+## Qué contiene
 
 - `Managers/IApplicationManager<TEntity, TDto>`
 - `Managers/ApplicationManager<TEntity, TDto>`
 
-Actualmente el contrato e implementaci�n est�n vac�os y listos para extender con l�gica de aplicaci�n espec�fica (orquestaci�n de repos EF + mapping DTO + respuestas web).
+Actualmente el contrato e implementación están vacíos y listos para extender con lógica de aplicación específica (orquestación de repos EF + mapping DTO + respuestas web).
 
 ## Dependencias
 
@@ -20,10 +20,10 @@ Actualmente el contrato e implementaci�n est�n vac�os y listos para extend
 
 Si necesitas funcionalidad real, utiliza directamente:
 
-- `MoralesLarios.OOFP.Application` (`ICrudServiceFp<,>`) para l�gica CRUD funcional.
+- `MoralesLarios.OOFP.Application` (`ICrudServiceFp<,>`) para lógica CRUD funcional.
 - `MoralesLarios.OOFP.AspNetCore.Controllers` / `MoralesLarios.OOFP.AspNetCore.Results` para exponer endpoints.
 
-## Ejemplo de extensi�n
+## Ejemplo de extensión
 
 ```csharp
 public interface IApplicationManager<TEntity, TDto>

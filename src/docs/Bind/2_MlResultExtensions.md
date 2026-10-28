@@ -5,7 +5,7 @@
 2. [Mapa de la clase](#mapa-de-la-clase)
 3. [Enriquecer errores: `AddMlErrorDetailIfFail` y `AddValueDetailIfFail`](#enriquecer-errores-addmlerrordetailiffail-y-addvaluedetailiffail)
 4. [Completar con datos: la familia `CompleteWithData*`](#completar-con-datos-la-familia-completewithdata)
-5. [Acceso seguro: `GetValueOrThrow` y `GetFailureDetailsOrThrow`](#acceso-seguro-securevalidvalue-y-securefailerrorsdetails)
+5. [Acceso seguro: `GetValueOrThrow` y `GetFailureDetailsOrThrow`](#acceso-seguro-getvalueorthrow-y-getfailuredetailsorthrow)
 6. [Composición cruda: `CreateCompleteMlResult`](#composición-cruda-createcompletemlresult)
 7. [Ejemplos Prácticos](#ejemplos-prácticos)
 8. [Mejores Prácticas](#mejores-prácticas)

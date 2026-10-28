@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.Shared
+﻿# MoralesLarios.OOFP.Shared
 
 Proyecto **transversal de constantes compartidas** del ecosistema **MoralesLarios.FOOP**.
 
@@ -81,8 +81,8 @@ public static class WebErrorDetailsKeys
 
 ```mermaid
 flowchart LR
-    A["WebServices<br/>BuildEntityNotFoundError"] -->|"AddMetadataOrThrow(ProblemsDetails, pd)"| B["MlErrorDetails.Metadata"]
-    B -->|"GetMetadataValue&lt;ProblemDetails&gt;()"| C["WebApi<br/>GetProblemDetails"]
+    A["Application<br/>BuildEntityNotFoundError"] -->|"AddMetadataOrThrow(ProblemsDetails, pd)"| B["MlErrorDetails.Metadata"]
+    B -->|"GetMetadataValue&lt;ProblemDetails&gt;()"| C["AspNetCore.Results<br/>GetProblemDetails"]
     C --> D["404 Not Found"]
 ```
 
@@ -168,8 +168,8 @@ Es la pieza que permite que un repositorio de EF Core, un servicio de aplicació
 1. [¿Qué problema resuelve?](#qué-problema-resuelve)
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
-4. [`PageRequest` — la petición de página](#paginationinfo--la-petición-de-página)
-5. [`PagedResult<T>` — la respuesta paginada](#paginationresultinfot--la-respuesta-paginada)
+4. [`PageRequest` — la petición de página](#pagerequest--la-petición-de-página)
+5. [`PagedResult<T>` — la respuesta paginada](#pagedresultt--la-respuesta-paginada)
 6. [Conversiones implícitas desde tuplas](#conversiones-implícitas-desde-tuplas)
 7. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 8. [⚠️ Lo que estos tipos NO incluyen](#️-lo-que-estos-tipos-no-incluyen)
@@ -185,7 +185,7 @@ Es la pieza que permite que un repositorio de EF Core, un servicio de aplicació
 
 Sin un tipo compartido, la paginación se propaga por la aplicación como una nube de parámetros suelos que **nadie valida** y que cada capa interpreta a su manera:
 
-❌ **Sin `Internals`:**
+❌ **Sin `Shared`:**
 
 ```csharp
 // El repositorio recibe enteros crudos: nada garantiza que sean válidos.
@@ -201,7 +201,7 @@ var items      = await GetPageAsync(2, 20);
 var totalCount = await CountAsync();       // dos viajes, dos verdades
 ```
 
-✅ **Con `Internals`:**
+✅ **Con `Shared`:**
 
 ```csharp
 // Un único parámetro que YA viene normalizado y es imposible de construir mal.
@@ -213,7 +213,7 @@ var resultado = await repo.GetPageAsync((pageNumber: 2, pageSize: 20));
 // Y la respuesta viaja completa: datos + posición + total, en un solo objeto.
 ```
 
-> 💡 **La idea de fondo**: `Internals` no valida "reglas de negocio", **normaliza**. Un `PageRequest` recién construido es siempre coherente, así que ninguna capa posterior necesita volver a comprobarlo. Es el mismo espíritu que los [value objects](../MoralesLarios.OOFP.ValueObjects/README.md): *estados imposibles, imposibles de representar*.
+> 💡 **La idea de fondo**: `Shared` no valida "reglas de negocio", **normaliza**. Un `PageRequest` recién construido es siempre coherente, así que ninguna capa posterior necesita volver a comprobarlo. Es el mismo espíritu que los [value objects](../MoralesLarios.OOFP.ValueObjects/README.md): *estados imposibles, imposibles de representar*.
 
 ---
 
@@ -344,7 +344,7 @@ public record PagedResult<T>(                         IEnumerable<T> Items,
 El tipo es un contenedor puro; no ofrece propiedades calculadas. Si las necesitas, un método de extensión propio es la vía limpia:
 
 ```csharp
-public static class PaginationResultInfoExtensions
+public static class PagedResultExtensions
 {
     public static int TotalPages<T>(this PagedResult<T> source)
         => (int)Math.Ceiling(source.TotalCount / (double)source.PageSize);
@@ -459,7 +459,7 @@ Console.WriteLine($"Mostrando {resultado.Items.Count()} de {resultado.TotalCount
 
 ### Ejemplo 2 — Paginar sobre EF Core devolviendo `MlResult<T>`
 
-Aquí se ve por qué `Internals` es una librería aparte: el repositorio la usa como contrato de entrada y salida, y el núcleo funcional aporta el manejo de errores.
+Aquí se ve por qué `Shared` es una librería aparte: el repositorio la usa como contrato de entrada y salida, y el núcleo funcional aporta el manejo de errores.
 
 ```csharp
 using MoralesLarios.OOFP.Shared.Pagination;
@@ -605,7 +605,7 @@ using MoralesLarios.OOFP.Shared.Pagination;
 - **Conversiones implícitas desde tuplas** para que las llamadas queden legibles.
 - **Sin lógica de negocio, sin propiedades calculadas, sin dependencias pesadas**: solo el contrato.
 
-La consumen principalmente [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) (repositorios paginados), [`WebServices`](../MoralesLarios.OOFP.Application/README.md) (servicios de aplicación), [`WebControllers`](../MoralesLarios.OOFP.AspNetCore.Controllers/README.md) (endpoints REST genéricos) y [`HttpClients`](../MoralesLarios.OOFP.Http/README.md) (consumo tipado).
+La consumen principalmente [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) (repositorios paginados), [`Application`](../MoralesLarios.OOFP.Application/README.md) (servicios de aplicación), [`AspNetCore.Controllers`](../MoralesLarios.OOFP.AspNetCore.Controllers/README.md) (endpoints REST genéricos) y [`HttpClients`](../MoralesLarios.OOFP.Http/README.md) (consumo tipado).
 
 ---
 

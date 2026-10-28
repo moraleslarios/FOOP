@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP - Documentación Técnica Completa
+﻿# MoralesLarios.OOFP - Documentación Técnica Completa
 
 ## Tabla de Contenidos
 
@@ -264,7 +264,7 @@ Ejemplos leídos con la fórmula:
 
 #### **Bind** — Composición y encadenamiento
 
-El delegado **devuelve `MlResult<TReturn>`**. Se usa cuando el siguiente paso puede fallar.
+El delegado **devuelve `MlResult<TResult>`**. Se usa cuando el siguiente paso puede fallar.
 
 ```csharp
 MlResult<Factura> resultado = ValidarPedido(pedido)      // MlResult<Pedido>
@@ -757,7 +757,7 @@ public async Task<InformeImportacion> ImportarAsync(Stream csv)
 {
     var lineas = await LeerLineasAsync(csv);
 
-    var (importados, rechazados) = await lineas.ProjectionSplitAsync(
+    var (importados, rechazados) = await lineas.TraverseSplitAsync(
         async linea => await ParsearAsync(linea)
                                 .BindAsync(_repo.InsertarAsync));
 
@@ -845,10 +845,10 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 
 | # | Documento | Tema |
 |---|-----------|------|
-| 1 | [`1_EmptyToFailed.md`](Several/1_EmptyToFailed.md) | Rechazar colecciones vacías |
-| 2 | [`2_NullToFailed.md`](Several/2_FailIfNull.md) | Convertir `null` en fallo explícito |
-| 3 | [`3_BoolToResult.md`](Several/3_BoolToResult.md) | Convertir un `bool` en `MlResult` |
-| 4 | [`4_Combine.md`](Several/4_Combine.md) | `CombineAll` y `Do` ⚠️ (**no** acumula errores) |
+| 1 | [`1_FailIfEmpty.md`](Several/1_FailIfEmpty.md) | Rechazar colecciones vacías |
+| 2 | [`2_FailIfNull.md`](Several/2_FailIfNull.md) | Convertir `null` en fallo explícito |
+| 3 | [`3_FailIfFalse.md`](Several/3_FailIfFalse.md) | Convertir un `bool` en `MlResult` |
+| 4 | [`4_CombineAll.md`](Several/4_CombineAll.md) | `CombineAll` y `Do` ⚠️ (**no** acumula errores) |
 
 #### `EnsureFp` — precondiciones antes de entrar al carril
 
@@ -895,8 +895,8 @@ Un documento por cada archivo fuente, con **todas** las sobrecargas reales.
 **Si necesitas manejar colecciones:**
 
 1. [`Bucle/Bucles.md`](loops/Collections.md) — las cuatro estrategias de proyección
-2. [`Several/1_EmptyToFailed.md`](Several/1_EmptyToFailed.md) — rechazar lo vacío
-3. [`Several/4_Combine.md`](Several/4_Combine.md) — ⚠️ ojo: `CombineAll` **no** acumula errores
+2. [`Several/1_FailIfEmpty.md`](Several/1_FailIfEmpty.md) — rechazar lo vacío
+3. [`Several/4_CombineAll.md`](Several/4_CombineAll.md) — ⚠️ ojo: `CombineAll` **no** acumula errores
 
 **Si estás depurando un fallo y quieres recuperarte:**
 

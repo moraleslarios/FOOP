@@ -1,4 +1,4 @@
-# EnsureFp — Guardas de entrada al carril funcional
+﻿# EnsureFp — Guardas de entrada al carril funcional
 
 > Documento índice de la familia. Archivos fuente: `Helpers/EnsureFp.cs`,
 > `EnsureFp.Core.cs`, `EnsureFp.Aggregation.cs`, `EnsureFp.Strings.cs`, `EnsureFp.Numbers.cs`,
@@ -12,7 +12,7 @@
 4. [Mapa de la familia: las nueve páginas](#mapa-de-la-familia-las-nueve-páginas)
 5. [Las tres variantes de cada regla](#las-tres-variantes-de-cada-regla)
 6. [Panorámica de la API por familias](#panorámica-de-la-api-por-familias)
-7. [`EnsureFp` frente a `FailIfNull`, `FailIfEmpty` y `FailIfFalse`](#ensurefp-frente-a-nulltofailed-emptytofailed-y-booltoresult)
+7. [`EnsureFp` frente a `FailIfNull`, `FailIfEmpty` y `FailIfFalse`](#ensurefp-frente-a-failifnull-failifempty-y-failiffalse)
 8. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
 9. [Ejemplos prácticos](#ejemplos-prácticos)
 10. [Mejores prácticas](#mejores-prácticas)
@@ -220,9 +220,9 @@ uso**:
 | `EnsureFp.NotNull` | Estático | `string`, `MlErrorDetails`, `…Arg` | `is not null` (estricto) |
 | [`FailIfNull`](../Several/2_FailIfNull.md) | Extensión | 4 formas | `== null` (respeta `operator==`) |
 | `EnsureFp.NotEmpty` | Estático | `string`, `MlErrorDetails`, `…Arg` | `!= null && Any()` |
-| [`FailIfEmpty`](../Several/1_EmptyToFailed.md) | Extensión | 3 formas | `!= null && Any()` |
+| [`FailIfEmpty`](../Several/1_FailIfEmpty.md) | Extensión | 3 formas | `!= null && Any()` |
 | `EnsureFp.That` | Estático | `string`, `MlErrorDetails`, perezosas, `…Arg` | — |
-| [`FailIfFalse`](../Several/3_BoolToResult.md) | Extensión | 4 formas | — |
+| [`FailIfFalse`](../Several/3_FailIfFalse.md) | Extensión | 4 formas | — |
 | [`MapEnsure`](../Map/2_MapEnsure.md) | Extensión de `MlResult<T>` | varias | Predicado **diferido** |
 
 🔑 **Criterio práctico:**
@@ -232,7 +232,7 @@ uso**:
 - **Cuando quieres informar de todos los errores a la vez** → `EnsureFp.All`.
 - **Ya dentro del carril** → `MapEnsure`.
 - **Si prefieres sintaxis fluida desde el primer momento** → los métodos de
-  [`Several`](../Several/1_EmptyToFailed.md), que son extensiones.
+  [`Several`](../Several/1_FailIfEmpty.md), que son extensiones.
 
 ```csharp
 // Estilo A: EnsureFp para la puerta de entrada (guardas explícitas)
@@ -277,7 +277,7 @@ Ambos son correctos. Elige uno **y sé consistente en todo el proyecto**.
 | Detenerse en el primer error | `AllOrFirst(dto, reglas…)` |
 | Aceptar si cumple al menos una alternativa | `Any(dto, reglas…)` |
 | Validar **ya dentro** del carril | [`MapEnsure`](../Map/2_MapEnsure.md) |
-| Sintaxis fluida en lugar de estática | [`FailIfNull`](../Several/2_FailIfNull.md), [`FailIfFalse`](../Several/3_BoolToResult.md) |
+| Sintaxis fluida en lugar de estática | [`FailIfNull`](../Several/2_FailIfNull.md), [`FailIfFalse`](../Several/3_FailIfFalse.md) |
 | Validar con reglas de FluentValidation o DataAnnotations | Paquetes `MoralesLarios.OOFP.Validation.*` |
 
 ---
@@ -478,6 +478,6 @@ EnsureFp.InRangeArg(dto.Edad, 18, 120);
 
 - [Introducción general a la librería](../1_Intro.md)
 - [`MapEnsure` — validar dentro del carril](../Map/2_MapEnsure.md)
-- [`FailIfEmpty`](../Several/1_EmptyToFailed.md) · [`FailIfNull`](../Several/2_FailIfNull.md) · [`FailIfFalse`](../Several/3_BoolToResult.md) · [`CombineAll`](../Several/4_Combine.md)
+- [`FailIfEmpty`](../Several/1_FailIfEmpty.md) · [`FailIfNull`](../Several/2_FailIfNull.md) · [`FailIfFalse`](../Several/3_FailIfFalse.md) · [`CombineAll`](../Several/4_CombineAll.md)
 - [`Bind` — encadenar operaciones que pueden fallar](../Bind/3_Bind.md)
 - [`MlResultErrors` — anatomía de `MlErrorDetails`](../core-types/MlResultErrors.md)

@@ -1,4 +1,4 @@
-# `MlResultMapExtensions` (`Types/MlResultMapExtensions.cs`)
+﻿# `MlResultMapExtensions` (`Types/MlResultMapExtensions.cs`)
 
 Familia de extensiones para **transformar el valor válido** de un `MlResult<T>` sin alterar la
 estructura de error. Es la operación más frecuente de toda la librería: convertir entidades a DTOs,
@@ -10,7 +10,7 @@ proyectar campos, formatear textos, calcular totales…
 
 | Estado de `source` | Comportamiento de `Map` |
 | --- | --- |
-| `IsSuccess == true` | Ejecuta la función y devuelve `MlResult<TReturn>` válido con el nuevo valor. |
+| `IsSuccess == true` | Ejecuta la función y devuelve `MlResult<TResult>` válido con el nuevo valor. |
 | `IsFailure == true` | **No ejecuta nada**: propaga tal cual el `MlErrorDetails` original, cambiando solo el tipo genérico. |
 
 Es decir, `Map` es un **cortocircuito**: los errores viajan intactos por la tubería hasta el
@@ -24,9 +24,9 @@ La diferencia está únicamente en **lo que devuelve tu función**:
 
 | Lo que devuelve tu función | Método correcto | Motivo |
 | --- | --- | --- |
-| `TReturn` (un valor normal, no puede fallar) | `Map` | La operación es total: siempre produce un resultado. |
-| `MlResult<TReturn>` (puede fallar) | [`Bind`](MlResultBindExtensions.md) | La operación es parcial: hay que unir dos capas de `MlResult`. |
-| `TReturn` pero **puede lanzar excepción** | `TryMap` | Convierte la excepción en `Fail`, guardándola en `Details["Ex"]`. |
+| `TResult` (un valor normal, no puede fallar) | `Map` | La operación es total: siempre produce un resultado. |
+| `MlResult<TResult>` (puede fallar) | [`Bind`](MlResultBindExtensions.md) | La operación es parcial: hay que unir dos capas de `MlResult`. |
+| `TResult` pero **puede lanzar excepción** | `TryMap` | Convierte la excepción en `Fail`, guardándola en `Details["Ex"]`. |
 
 ```csharp
 // ✅ Map: proyección pura, nunca falla.
@@ -80,9 +80,9 @@ Todas las familias siguen la convención `[Try] Map [Contexto] [Async]`.
 > implementar mientras se desarrolla; se comporta siempre como un fallo y su aparición en el log es
 > la señal de que hay código pendiente.
 
-> 📝 **Nota sobre un nombre del código fuente:** además de `TryMapIfAsync`, en el fuente existen tres
-> sobrecargas con el nombre `TryMapIAsyncf` (errata tipográfica original). Son funcionalmente
-> equivalentes; se recomienda usar `TryMapIfAsync`.
+> ✅ **Resuelto en 2.0.0:** las tres sobrecargas que en la 1.x se llamaban `TryMapIAsyncf` (errata
+> tipográfica original) ahora se llaman **`TryMapIfAsync`**. El nombre antiguo se conserva como
+> puente `[Obsolete]` y **se elimina en la 3.0.0**.
 
 ---
 
@@ -91,7 +91,7 @@ Todas las familias siguen la convención `[Try] Map [Contexto] [Async]`.
 Cada familia se multiplica por tres ejes independientes:
 
 1. **Origen:** `MlResult<T>` (síncrono) o `Task<MlResult<T>>` (asíncrono).
-2. **Delegado:** `Func<T, TReturn>` (síncrono) o `Func<T, Task<TReturn>>` (asíncrono).
+2. **Delegado:** `Func<T, TResult>` (síncrono) o `Func<T, Task<TResult>>` (asíncrono).
 3. **Mensaje de error** (solo en las variantes `Try*`): `string` fijo o `Func<Exception, string>` que
    construye el mensaje a partir de la excepción capturada.
 

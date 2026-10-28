@@ -1,8 +1,8 @@
-# MoralesLarios.OOFP.AspNetCore.Controllers — CRUD REST completo heredando de una sola clase
+﻿# MoralesLarios.OOFP.AspNetCore.Controllers — CRUD REST completo heredando de una sola clase
 
 Este proyecto es la **última capa** de la pila FOOP para aplicaciones web. Su única responsabilidad es ofrecer **controladores base genéricos** de ASP.NET Core que ya traen implementado el CRUD HTTP completo: rutas, verbos, conversión de la clave primaria, delegación en el servicio y traducción de errores a `ProblemDetails`. Tú solo declaras la clase derivada y eliges los tipos.
 
-La cadena completa queda así: **ruta HTTP → `WebControllers` → `WebServices` (`ICrudServiceFp`) → `EFCore` (repositorio funcional) → base de datos**, y el error viaja de vuelta por el mismo raíl `MlResult<T>` hasta convertirse en un `ProblemDetails` con el código de estado correcto. Nada de `try/catch`, nada de `if (x == null) return NotFound()`.
+La cadena completa queda así: **ruta HTTP → `AspNetCore.Controllers` → `Application` (`ICrudServiceFp`) → `EntityFrameworkCore` (repositorio funcional) → base de datos**, y el error viaja de vuelta por el mismo raíl `MlResult<T>` hasta convertirse en un `ProblemDetails` con el código de estado correcto. Nada de `try/catch`, nada de `if (x == null) return NotFound()`.
 
 ```csharp
 [Route("api/[controller]")]
@@ -20,11 +20,11 @@ Esas tres líneas publican siete endpoints funcionando.
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Arquitectura: de la ruta HTTP al repositorio](#arquitectura-de-la-ruta-http-al-repositorio)
-5. [`MlCrudControllerBase<TEntity, TDto, TPk>`](#simplemlcontrollerbasetentity-tdto-tpk)
-6. [`MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>`](#simplemlcontrollerbasetentity-trequest-tresponse-tpk)
-7. [`MlCompositeKeyCrudControllerBase<TEntity, TDto>`](#simplemlcomplexpkcontrollerbasetentity-tdto)
-8. [`MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>`](#simplemlcomplexpkcontrollerbasetentity-trequest-tresponse)
-9. [`CompositeKeyParameterAttribute`](#pkparameterattribute)
+5. [`MlCrudControllerBase<TEntity, TDto, TPk>`](#mlcrudcontrollerbasetentity-tdto-tpk)
+6. [`MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>`](#mlcrudcontrollerbasetentity-trequest-tresponse-tpk)
+7. [`MlCompositeKeyCrudControllerBase<TEntity, TDto>`](#mlcompositekeycrudcontrollerbasetentity-tdto)
+8. [`MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>`](#mlcompositekeycrudcontrollerbasetentity-trequest-tresponse)
+9. [`CompositeKeyParameterAttribute`](#compositekeyparameterattribute)
 10. [`Helpers.Extensions` — conversión de claves](#helpersextensions--conversión-de-claves)
 11. [`RegisterServices`](#registerservices)
 12. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
@@ -41,7 +41,7 @@ Esas tres líneas publican siete endpoints funcionando.
 
 En cualquier API REST con varias entidades se repite el mismo controlador una y otra vez: siete acciones idénticas salvo por los tipos, con la misma conversión del `id` de la ruta, los mismos `if` de comprobación y los mismos códigos de estado.
 
-**❌ Sin `WebControllers` — un controlador por entidad, todo repetido:**
+**❌ Sin `AspNetCore.Controllers` — un controlador por entidad, todo repetido:**
 ```csharp
 [ApiController]
 [Route("api/[controller]")]
@@ -75,7 +75,7 @@ public class UsersController : ControllerBase
 }
 ```
 
-**✅ Con `WebControllers` — una clase por entidad, cero cuerpo:**
+**✅ Con `AspNetCore.Controllers` — una clase por entidad, cero cuerpo:**
 ```csharp
 [Route("api/[controller]")]
 public class UsersController(ICrudServiceFp<User, UserDto> svc)
@@ -104,9 +104,9 @@ public class OrdersController(ICrudServiceFp<Order, OrderDto> svc)
 | `MoralesLarios.OOFP.AspNetCore.Results` | Proyecto | `MlResults`, `MlResultActionResultExtensions`, `ProblemDetailsInfo` |
 | `MoralesLarios.OOFP.Application` | Proyecto | `ICrudServiceFp<,>`, `ICrudServiceFp<,,>`, `MlProblemDetails` |
 
-Por transitividad llegan también el núcleo `MoralesLarios.OOFP`, `Internals`, `ValueObjects` y `EFCore`.
+Por transitividad llegan también el núcleo `MoralesLarios.OOFP`, `Shared`, `ValueObjects` y `EntityFrameworkCore`.
 
-> ⚠️ **Sobre el paquete MVC.** Igual que en `WebApi`, se referencia el paquete NuGet `Microsoft.AspNetCore.Mvc.Core` en lugar de usar `<FrameworkReference Include="Microsoft.AspNetCore.App" />`. La versión aquí (2.3.9) es más moderna que la de `WebApi` (2.1.0), pero la mezcla de ambas en el mismo grafo puede producir avisos de resolución de ensamblados. En una aplicación ASP.NET Core real el `FrameworkReference` ya está presente y todo funciona; en bibliotecas intermedias es la fuente habitual de conflictos.
+> ⚠️ **Sobre el paquete MVC.** Igual que en `AspNetCore.Results`, se referencia el paquete NuGet `Microsoft.AspNetCore.Mvc.Core` en lugar de usar `<FrameworkReference Include="Microsoft.AspNetCore.App" />`. La versión aquí (2.3.9) es más moderna que la de `AspNetCore.Results` (2.1.0), pero la mezcla de ambas en el mismo grafo puede producir avisos de resolución de ensamblados. En una aplicación ASP.NET Core real el `FrameworkReference` ya está presente y todo funciona; en bibliotecas intermedias es la fuente habitual de conflictos.
 
 **Namespaces relevantes:**
 ```csharp
@@ -132,10 +132,10 @@ MoralesLarios.OOFP.AspNetCore.Controllers/
 ├── Helpers/
 │   └── Extensions.cs                     // ConvertToType, ParseDateTimeInvariant, ParseKeyValues
 ├── GlobalUsings.cs
-└── RegisterServices.cs                   // AddMlControllers() — actualmente vacío
+└── RegisterServices.cs                   // AddMlControllers() — no-op marcado [Obsolete]
 ```
 
-Cuatro clases base, un atributo y un puñado de utilidades de conversión. Todo el peso real está en `WebServices` y `WebApi`.
+Cuatro clases base, un atributo y un puñado de utilidades de conversión. Todo el peso real está en `Application` y `AspNetCore.Results`.
 
 | Archivo | Clases públicas |
 |---|---|
@@ -315,7 +315,7 @@ public class OrdersController(ICrudServiceFp<Order, OrderRequest, OrderResponse>
     : MlCrudControllerBase<Order, OrderRequest, OrderResponse, int>(svc) { }
 ```
 
-> ⚠️ Recuerda que el mapeo `TRequest → TEntity → TResponse` lo hace **Mapster** en `WebServices`. Si los nombres no coinciden, necesitas un `TypeAdapterConfig` propio; el controlador no interviene en el mapeo.
+> ⚠️ Recuerda que el mapeo `TRequest → TEntity → TResponse` lo hace **Mapster** en `Application`. Si los nombres no coinciden, necesitas un `TypeAdapterConfig` propio; el controlador no interviene en el mapeo.
 
 ---
 
@@ -544,16 +544,19 @@ public static string BuildKeyParseErrorMessage(this Exception ex, string ids)
 ## `RegisterServices`
 
 ```csharp
-public static class RegisterServices
+public static partial class RegisterServices
 {
+    [Obsolete("No-op: this library registers no services of its own. Remove the call. " +
+              "Will be removed in 3.0.0.")]
     public static IServiceCollection AddMlControllers(this IServiceCollection services)
-    {
-        return services;   // ← no registra nada
-    }
+        => services;   // ← no registra nada
 }
 ```
 
-> ❗ **`AddMlControllers()` es un *no-op***: existe el método pero el cuerpo está vacío. Llamarlo no rompe nada, pero tampoco hace nada. **No lo necesitas.** Lo que sí debes registrar es:
+> ✅ **Cambio en 2.0.0.** `AddMlControllers()` nunca ha registrado nada: los controladores de esta
+> librería no necesitan servicios propios. Ahora está marcado como **`[Obsolete]`** para que el
+> compilador te avise, y **se eliminará en la 3.0.0**. **Borra la llamada de tu `Program.cs`.**
+> Lo que sí debes registrar es:
 
 ```csharp
 // 1) DbContext
@@ -609,22 +612,24 @@ Con eso, cualquier controlador que herede de las clases base ya resuelve su `ICr
 
 16. **Código muerto.** `MlCompositeKeyCrudControllerBase.cs` conserva unas veinte líneas comentadas con una versión anterior de `ParseKeyValues` y sus helpers. `RegisterServices.AddMlControllers` está vacío.
 
-17. **`CompositeKeyParameterAttribute.cs` está guardado con una codificación que no es UTF-8.** Sus comentarios XML muestran caracteres corruptos (`parmetros`, `Descripcin`), lo que ensucia el IntelliSense y la documentación generada.
+17. ✅ **Resuelto en 2.0.0.** `CompositeKeyParameterAttribute.cs` estaba guardado con una codificación que no era UTF-8 y sus comentarios XML mostraban caracteres corruptos (`parmetros`, `Descripcin`). Ahora el fichero está en UTF-8 y la documentación XML se lee correctamente.
 
-18. **`Description` es `string` no anulable pero se inicializa desde un parámetro `null!`.** Funciona porque hay un valor por defecto, pero el `null!` desactiva la comprobación del compilador.
+18. ✅ **Resuelto en 2.0.0.** `CompositeKeyParameterAttribute.Description` era `string` no anulable inicializado desde un parámetro `null!`. Ahora es **`string?`** y el parámetro del constructor es `string? description = null`, sin `null!`.
+
+19. ✅ **Resuelto en 2.0.0.** Las ocho clases base de controlador son ahora **`abstract`**: no tiene sentido instanciarlas ni registrarlas directamente, solo derivar de ellas.
 
 ---
 
 ## ⚠️ Lo que NO incluye
 
-- ❌ **Paginación** en `GetAllAsync` → usa `PageRequest` de [`Internals`](../MoralesLarios.OOFP.Shared/README.md) y las cabeceras de [`WebApi`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
-- ❌ **Filtrado, ordenación o búsqueda** → añade endpoints propios llamando al repositorio de [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
+- ❌ **Paginación** en `GetAllAsync` → usa `PageRequest` de [`Shared`](../MoralesLarios.OOFP.Shared/README.md) y las cabeceras de [`AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
+- ❌ **Filtrado, ordenación o búsqueda** → añade endpoints propios llamando al repositorio de [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
 - ❌ **Autenticación ni autorización** → aplica `[Authorize]` en tus clases derivadas.
 - ❌ **Caché HTTP e invalidación** → eso lo cubre `MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching`.
 - ❌ **Validación del DTO más allá de `NotNull`** → intégrala con [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) o [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md).
 - ❌ **Versionado de API, HATEOAS, `ETag` ni `If-Match`.**
 - ❌ **Documentación OpenAPI automática** → declara `[ProducesResponseType]` tú mismo.
-- ❌ **Registro de dependencias** → `AddMlControllers()` está vacío; registra `EFCore` y `WebServices`.
+- ❌ **Registro de dependencias** → `AddMlControllers()` no registra nada (está `[Obsolete]`); registra `EntityFrameworkCore` y `Application`.
 - ❌ **Endpoints por lotes** (`PATCH` parcial, `POST` masivo, borrado múltiple).
 
 ---
@@ -910,10 +915,10 @@ public override Task<IActionResult> GetAllAsync(CancellationToken ct = default!)
 
 **Registrar `AddMlControllers()` esperando que haga algo:**
 ```csharp
-// ❌ el método existe pero su cuerpo está vacío: no registra nada
+// ❌ el método existe pero no registra nada: desde la 2.0.0 el compilador te avisa con CS0618
 builder.Services.AddMlControllers();
 
-// ✅ registra lo que de verdad hace falta
+// ✅ bórralo y registra lo que de verdad hace falta
 builder.Services.AddOofpRepositories<User, AppDbContext>();
 builder.Services.AddScopedCrudServicesFpWithoutRepositories();
 builder.Services.AddControllers();
@@ -961,7 +966,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 | PK de un campo, DTO de entrada ≠ DTO de salida | `MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>` |
 | PK compuesta, un solo DTO | `MlCompositeKeyCrudControllerBase<TEntity, TDto>` |
 | PK compuesta, entrada ≠ salida | `MlCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>` |
-| Necesito caché HTTP con invalidación | `MlCachedCrudControllerBase<,,>` (`WebControllers.Cache`) |
+| Necesito caché HTTP con invalidación | `MlCachedCrudControllerBase<,,>` (`AspNetCore.Controllers.OutputCaching`) |
 | PK de tipo `Guid`, `DateOnly`, `TimeOnly` o `enum` | Base de PK simple **sobreescribiendo** la conversión, o endpoint a mano |
 | Nada encaja | `ControllerBase` + `ICrudServiceFp<,>` + `MlResultActionResultExtensions` |
 
@@ -978,7 +983,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 | Paginar | Endpoint propio con `GetHeaderPaginationInfo` + `IEfPagedReadRepository<T>` |
 | Proteger la API | `[Authorize]` en la derivada o política global |
 | Documentar en Swagger | `[ProducesResponseType]` + `IOperationFilter` para `CompositeKeyParameterAttribute` |
-| Validar el DTO | `ValidateObject()` / `MlSelfValidatable<T>` antes del `BindAsync` al servicio |
+| Validar el DTO | `ValidateObject()` / `IMlSelfValidatable<T>` antes del `BindAsync` al servicio |
 | Que un "no existe" devuelva `404` | Que el servicio use `MlProblemDetails.NotFoundError()` (así lo hacen ya las bases) |
 | Traducir mensajes de error al español | `MapIfFail` / `MapIfFailAsync` antes de la extensión `To*ActionResult*` |
 
@@ -1022,26 +1027,26 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 
 12. **No expones los mensajes de error tal cual** si tu API es pública: reescríbelos con `MapIfFail` para no filtrar textos internos en inglés defectuoso.
 
-13. **No llames a `AddMlControllers()`**: está vacío. Registra `AddOofpRepositories<,>` y `AddScopedCrudServicesFpWithoutRepositories()`.
+13. **No llames a `AddMlControllers()`**: no registra nada y está marcado `[Obsolete]` (desaparece en la 3.0.0). Registra `AddOofpRepositories<,>` y `AddScopedCrudServicesFpWithoutRepositories()`.
 
 14. **Añade un endpoint paginado** en cuanto una tabla pueda crecer: `GetAllAsync` trae la tabla completa.
 
 15. **Prefiere las variantes con `{id}`/`{ids}`** frente a las que reciben el DTO por el cuerpo en `PUT`/`DELETE`: son más REST y no dependen de que la infraestructura respete el cuerpo de un `DELETE`.
 
-16. **Si necesitas el servicio en tu código**, captúralo en tu propio constructor primario: el `_genServiceFp` de la base no es accesible desde la derivada.
+16. **Código muerto.** `MlCompositeKeyCrudControllerBase.cs` conserva unas veinte líneas comentadas con una versión anterior de `ParseKeyValues` y sus helpers. `RegisterServices.AddMlControllers` no registra nada (✅ marcado `[Obsolete]` en la 2.0.0; se elimina en la 3.0.0).
 
 ---
 
 ## Resumen
 
-- **`WebControllers` es la capa HTTP de la pila FOOP:** cuatro clases base genéricas que publican un CRUD REST completo (7 endpoints) heredando y nada más.
+- **`AspNetCore.Controllers` es la capa HTTP de la pila FOOP:** cuatro clases base genéricas **`abstract`** que publican un CRUD REST completo (7 endpoints) heredando y nada más.
 - **Dos ejes de variación:** PK simple (`TPk`) frente a PK compuesta (`Func<TEntity, object[]>`), y DTO único frente a par `TRequest`/`TResponse`.
 - **Todas las acciones son `virtual`:** puedes quedarte con las que valen y sobreescribir las que no, o añadir endpoints propios.
 - **El controlador no decide códigos de estado.** Los toma del detalle `"ProblemsDetails"` que el servicio adjunta con `MlProblemDetails.*`; el único código que decide por su cuenta es el `404` del `GET` con `id` no convertible.
 - **La conversión de la PK es el punto delicado:** `ConvertToType` depende de la cultura del hilo para `DateTime`, y `ParseKeyValues` exige `IConvertible` más un constructor sin parámetros.
-- **Hay que conocer tres asperezas del código:** el `Location` literal del `201`, el `500` (en lugar de `404`/`400`) de `PUT`/`DELETE` con `id` inválido, y que `AddMlControllers()` no registra nada.
+- **Hay que conocer tres asperezas del código:** el `Location` literal del `201` y el `500` (en lugar de `404`/`400`) de `PUT`/`DELETE` con `id` inválido. ✅ La tercera —que `AddMlControllers()` no registra nada— ya avisa sola: en la 2.0.0 está marcado `[Obsolete]`.
 - **Falta todo lo transversal:** paginación, filtrado, autorización, caché, versionado y `[ProducesResponseType]`. Se añaden en la clase derivada.
-- **Regla práctica:** empieza heredando; en el momento en que necesites tocar más de dos acciones, es más limpio escribir el controlador a mano usando directamente `ICrudServiceFp<,>` y las extensiones de `WebApi`.
+- **Regla práctica:** empieza heredando; en el momento en que necesites tocar más de dos acciones, es más limpio escribir el controlador a mano usando directamente `ICrudServiceFp<,>` y las extensiones de `AspNetCore.Results`.
 
 ---
 

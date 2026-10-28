@@ -1,4 +1,4 @@
-# Transformations — Fábricas, conversiones y captura de excepciones
+﻿# Transformations — Fábricas, conversiones y captura de excepciones
 
 ## Índice
 
@@ -149,16 +149,16 @@ maquinaria que usan por debajo todos los operadores `Try*` (`TryMap`, `TryBind`,
 
 ```csharp
 // Delegado con argumento
-public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn> source,
+public static MlResult<TResult> TryToMlResult<T, TResult>(this Func<T, TResult> source,
                                                                T                value,
                                                                string           exceptionAditionalMessage = null!)
 
-public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn>        source,
+public static MlResult<TResult> TryToMlResult<T, TResult>(this Func<T, TResult>        source,
                                                                T                       value,
                                                                Func<Exception, string> errorMessageBuilder)
 
 // El delegado ya devuelve MlResult
-public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, MlResult<TReturn>> source,
+public static MlResult<TResult> TryToMlResult<T, TResult>(this Func<T, MlResult<TResult>> source,
                                                                T                          value, /* … */)
 
 // Sin argumentos
@@ -212,7 +212,7 @@ var r = guardar.TryToMlResult(pedido, ex => $"No se pudo guardar el pedido: {ex.
 
 ### Variantes asíncronas
 
-Cada firma tiene su `TryToMlResultAsync` correspondiente: `Func<T, Task<TReturn>>`,
+Cada firma tiene su `TryToMlResultAsync` correspondiente: `Func<T, Task<TResult>>`,
 `Func<Task<T>>`, `Func<Task<MlResult<T>>>`, `Func<T, Task>`, `Func<Task>`. Todas capturan la
 excepción **después del `await`**, que es lo correcto.
 
@@ -266,13 +266,13 @@ También existen `TryToMlResultErrors<T>(this Action source, …)` y las version
 
 ## Grupo 5: cambio de tipo del carril
 
-### `ToMlResultFail<T, TReturn>` — cambiar el tipo conservando los errores
+### `ToMlResultFail<T, TResult>` — cambiar el tipo conservando los errores
 
 ```csharp
-public static MlResult<TReturn> ToMlResultFail<T, TReturn>(this MlResult<T> source)
+public static MlResult<TResult> ToMlResultFail<T, TResult>(this MlResult<T> source)
     => source.Match(
            fail : errorDetails => errorDetails,
-           valid: _           => MlResult<TReturn>.Fail("Don't change MlResult Fail of valid source.")
+           valid: _           => MlResult<TResult>.Fail("Don't change MlResult Fail of valid source.")
        );
 ```
 
@@ -291,7 +291,7 @@ if (!validacion.IsSuccess)
 ```
 
 💡 En la práctica, dentro de una tubería es más idiomático usar `Match` o
-`ErrorsDetails.ToMlResultFail<TReturn>()`, que no tienen esta trampa.
+`ErrorsDetails.ToMlResultFail<TResult>()`, que no tienen esta trampa.
 
 ---
 
@@ -398,7 +398,7 @@ contiene `null`. Usa [`FailIfNull`](../Several/2_FailIfNull.md) si quieres recha
 **3. Las 4 sobrecargas de tupla de `ToMlResultFail` pasan desapercibidas** y son la forma
 más concisa de adjuntar `Details`.
 
-**4. `ToMlResultFail<T, TReturn>` devuelve un fallo con mensaje en inglés
+**4. `ToMlResultFail<T, TResult>` devuelve un fallo con mensaje en inglés
 (`"Don't change MlResult Fail of valid source."`) si el origen es válido.** Comprueba
 `IsSuccess` antes de llamarlo.
 
@@ -423,7 +423,7 @@ al comportamiento.
 **10. `ToMlTaskResult` existe pero es redundante:**
 
 ```csharp
-public static async Task<MlResult<TReturn>> ToMlTaskResult<T, TReturn>(this Func<T, Task<TReturn>> sourceAsync, T value)
+public static async Task<MlResult<TResult>> ToMlTaskResult<T, TResult>(this Func<T, Task<TResult>> sourceAsync, T value)
 ```
 Hace exactamente lo mismo que `ToMlResultAsync`. Prefiere el segundo por coherencia de
 nombres.
@@ -441,7 +441,7 @@ nombres.
 | Envolver código que lanza | `func.TryToMlResult(valor, ex => "...")` |
 | Envolver un efecto lateral que lanza | `accion.TryToMlResult(valor, ex => "...")` |
 | Ejecutar algo en la rama de fallo sin perder errores | `accion.TryToMlResultErrors<T>(errores, ...)` |
-| Propagar errores cambiando el tipo | `errorsDetails.ToMlResultFail<TReturn>()` |
+| Propagar errores cambiando el tipo | `errorsDetails.ToMlResultFail<TResult>()` |
 | Pasar al mundo `object` | `.ToMlResultObject()` |
 | Volver del mundo `object` con seguridad | `.FromMlResultObject<T>()` |
 | Rechazar un `null` | [`FailIfNull`](../Several/2_FailIfNull.md) |
@@ -575,7 +575,7 @@ var r = clienteNulo.ToMlResultValid();      // Valid(null)
 var r = clienteNulo.FailIfNull("El cliente es obligatorio");
 
 
-// ❌ ToMlResultFail<T, TReturn> sobre un resultado válido
+// ❌ ToMlResultFail<T, TResult> sobre un resultado válido
 var r = validacionValida.ToMlResultFail<Cliente, PedidoDto>();
 //      → Fail("Don't change MlResult Fail of valid source.")  ¡mensaje inútil!
 
@@ -610,7 +610,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
    (`ErroresPedido.NoEncontrado<T>(id)`): mensajes consistentes y códigos de regla en un
    único sitio.
 4. **Recuerda que `ToMlResultValid` no filtra `null`.**
-5. **Comprueba `IsSuccess` antes de usar `ToMlResultFail<T, TReturn>`**, o prefiere `Match`.
+5. **Comprueba `IsSuccess` antes de usar `ToMlResultFail<T, TResult>`**, o prefiere `Match`.
 6. **Recupera las excepciones con los operadores `*WithException`**, no accediendo a
    `Details` directamente.
 7. **`FromMlResultObject<T>` en lugar de castear**: devuelve un fallo descriptivo si el tipo
@@ -637,7 +637,7 @@ var dto = resultado.Match(valid: p => p.ToDto(), fail: _ => null);
   `Details[ExceptionMetadataKey]` y construye el mensaje con `BuildErrorMessage`.
 - **`TryToMlResultErrors`** siempre devuelve `Fail` y **nunca pierde los errores
   originales**: si la acción lanza, los amplía con `AppendExErrorDetail`.
-- ⚠️ **`ToMlResultFail<T, TReturn>`** devuelve un fallo con el mensaje
+- ⚠️ **`ToMlResultFail<T, TResult>`** devuelve un fallo con el mensaje
   `"Don't change MlResult Fail of valid source."` si el origen es válido.
 - **`ToMlResultObject` / `FromMlResultObject`** permiten ir y volver del mundo `object`; el
   segundo comprueba el tipo y falla de forma descriptiva en lugar de lanzar.

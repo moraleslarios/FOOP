@@ -1,4 +1,4 @@
-# Sistema de errores (`Types/Errors/*.cs`)
+﻿# Sistema de errores (`Types/Errors/*.cs`)
 
 El sistema de errores de la librería está formado por **tres tipos** y **dos clases de extensiones**.
 Su diseño es deliberadamente minimalista: la información obligatoria es un simple mensaje, y todo lo
@@ -217,8 +217,8 @@ else
 | Método | Descripción |
 | --- | --- |
 | `Merge(...)` (2 sobrecargas) | Une dos `MlErrorDetails` en uno (errores y detalles). |
-| `MergeErrorsDetails<T, TReturn>(...)` | Fusiona y devuelve un `MlResult<TReturn>` fallido con el resultado. |
-| `MergeErrorsDetailsAsync<T, TReturn>(...)` (4 sobrecargas) | Versiones asíncronas. |
+| `MergeErrorsDetails<T, TResult>(...)` | Fusiona y devuelve un `MlResult<TResult>` fallido con el resultado. |
+| `MergeErrorsDetailsAsync<T, TResult>(...)` (4 sobrecargas) | Versiones asíncronas. |
 
 Fusionar es lo que permite **acumular** errores en operaciones como
 [`CombineAll`](MlResultSeveralExtensions.md) o `TryBindBuild`, en lugar de perder todos menos el primero.

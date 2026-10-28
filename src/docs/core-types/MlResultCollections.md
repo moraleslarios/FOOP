@@ -1,4 +1,4 @@
-# `MlResultCollections` (`Types/MlResultCollections.cs`)
+﻿# `MlResultCollections` (`Types/MlResultCollections.cs`)
 
 Operaciones funcionales sobre colecciones con semántica `MlResult`. Permiten transformar `IEnumerable<T>` en `MlResult<IEnumerable<TResult>>`, aplicando una función por elemento y centralizando la gestión de errores.
 
@@ -19,10 +19,10 @@ Operaciones funcionales sobre colecciones con semántica `MlResult`. Permiten tr
 | `Traverse` | Secuencial síncrono | `Func<T, int, MlResult<TResult>>` | Sí | Procesa todos los elementos y fusiona todos los errores. |
 | `TraverseAsync` | Secuencial asíncrono | Fuente `IEnumerable<T>` o `Task<IEnumerable<T>>`; transformación síncrona o asíncrona | Sí/No | Procesa todos los elementos y fusiona todos los errores. |
 | `TraverseWhile` | Secuencial síncrono | `Func<T, MlResult<TResult>>` o `Func<T, int, MlResult<TResult>>` | Sí/No | Se detiene en el primer error. |
-| `ProjectionWhileAsync` | Secuencial asíncrono | Fuente `IEnumerable<T>` o `Task<IEnumerable<T>>`; transformación síncrona o asíncrona | Sí/No | Se detiene en el primer error. |
+| `TraverseWhileAsync` | Secuencial asíncrono | Fuente `IEnumerable<T>` o `Task<IEnumerable<T>>`; transformación síncrona o asíncrona | Sí/No | Se detiene en el primer error. |
 | `ProjectionParallelAsync` | Paralelo asíncrono | `Func<T, Task<MlResult<TResult>>>` o `Func<T, int, Task<MlResult<TResult>>>` | Sí/No | Lanza todas las tareas y fusiona todos los errores. No es *fail-fast*. |
 | `TraverseSplit` | Secuencial síncrono | `Func<T, MlResult<TResult>>` | No | **No falla nunca**: separa aciertos y fallos en dos colecciones. |
-| `ProjectionSplitAsync` | Secuencial asíncrono | Fuente `IEnumerable<T>` o `Task<IEnumerable<T>>`; transformación síncrona o asíncrona | No | **No falla nunca**: separa aciertos y fallos en dos colecciones. |
+| `TraverseSplitAsync` | Secuencial asíncrono | Fuente `IEnumerable<T>` o `Task<IEnumerable<T>>`; transformación síncrona o asíncrona | No | **No falla nunca**: separa aciertos y fallos en dos colecciones. |
 
 ## `Traverse`
 
@@ -117,12 +117,12 @@ Diferencia principal frente a `Traverse`:
 - `Traverse`: evalúa todos los elementos y fusiona todos los errores encontrados.
 - `TraverseWhile`: evalúa hasta el primer error y devuelve ese fallo fusionado.
 
-## `ProjectionWhileAsync`
+## `TraverseWhileAsync`
 
-`ProjectionWhileAsync` mantiene el comportamiento *fail-fast* de `TraverseWhile`, pero permite fuentes y transformaciones asíncronas.
+`TraverseWhileAsync` mantiene el comportamiento *fail-fast* de `TraverseWhile`, pero permite fuentes y transformaciones asíncronas.
 
 ```csharp
-MlResult<IEnumerable<ProcessedFile>> result = await files.ProjectionWhileAsync(async (file, index) =>
+MlResult<IEnumerable<ProcessedFile>> result = await files.TraverseWhileAsync(async (file, index) =>
 {
 	bool exists = await storage.ExistsAsync(file.Path);
 
@@ -159,7 +159,7 @@ Aspectos importantes:
 - Conviene usarla solo cuando las operaciones sean independientes y el servicio externo pueda soportar la concurrencia.
 - Si se necesita limitar concurrencia, se recomienda aplicar una estrategia externa de particionado o control antes de llamar a este método.
 
-## `TraverseSplit` y `ProjectionSplitAsync`
+## `TraverseSplit` y `TraverseSplitAsync`
 
 A diferencia del resto de las familias, `TraverseSplit` **nunca devuelve un `Fail` global**. En lugar
 de aplicar la política *todo o nada*, **separa** la colección en dos: los elementos que se
@@ -187,7 +187,7 @@ _log.LogInformation("Importación: {Ok} correctas, {Ko} rechazadas",
 Versión asíncrona, con transformación que llama a un servicio externo:
 
 ```csharp
-var (sincronizados, rechazados) = await pedidos.ProjectionSplitAsync(
+var (sincronizados, rechazados) = await pedidos.TraverseSplitAsync(
     async pedido => await _erp.SincronizarAsync(pedido));
 
 if (rechazados.Any())
@@ -278,9 +278,9 @@ En código de aplicación, empieza siempre por `MergeErrorsIfExists`.
 | Transformar todos los elementos incluyendo posición/fila | `Traverse` con `Func<T, int, ...>` |
 | Usar `await` por elemento de forma secuencial | `TraverseAsync` |
 | Detener en el primer error | `TraverseWhile` |
-| Detener en el primer error con operaciones asíncronas | `ProjectionWhileAsync` |
+| Detener en el primer error con operaciones asíncronas | `TraverseWhileAsync` |
 | Ejecutar transformaciones asíncronas independientes en paralelo | `ProjectionParallelAsync` |
-| Procesar todo lo posible y reportar los elementos rechazados | `TraverseSplit` / `ProjectionSplitAsync` |
+| Procesar todo lo posible y reportar los elementos rechazados | `TraverseSplit` / `TraverseSplitAsync` |
 | Fusionar una colección ya calculada de `MlResult<T>` | `MergeErrorsIfExists` o `VerifiedEnumerableResultData` |
 
 ## Enlace de detalle

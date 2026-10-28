@@ -1,10 +1,10 @@
-# MlResult MatchAll - Ejecución Incondicional con Transformación
+﻿# MlResult MatchAll - Ejecución Incondicional con Transformación
 
 > ⚠️ **Aviso importante sobre los nombres.** En el código fuente existe una región llamada
 > `#region MatchAll` dentro de `Types/MlResultMatchExtensions.cs`, pero **no existe ningún método público
 > llamado `MatchAll`**. Los métodos de esa región se llaman igualmente
 > `Match` / `MatchAsync` / `TryMatch` / `TryMatchAsync`; lo que los distingue es su **firma**: reciben
-> un único delegado **sin parámetros** (`Func<TReturn> funcAll`) y devuelven `MlResult<TReturn>`.
+> un único delegado **sin parámetros** (`Func<TResult> funcAll`) y devuelven `MlResult<TResult>`.
 > A lo largo de este documento hablamos de «la sobrecarga *match-all*» para referirnos a ellos.
 
 ## Índice
@@ -23,12 +23,12 @@
 
 La sobrecarga *match-all* de `Match` proporciona un patrón de **ejecución incondicional con
 transformación**: ejecuta una función independientemente del estado del `MlResult<T>` (válido o fallido)
-y devuelve un `MlResult<TReturn>` **nuevo**, desligado del estado anterior.
+y devuelve un `MlResult<TResult>` **nuevo**, desligado del estado anterior.
 
 ### Propósito Principal
 
 - **Ejecución Independiente del Estado**: la función se ejecuta sin importar si el resultado es válido o fallido.
-- **Transformación Consistente**: convierte cualquier entrada en `MlResult<TReturn>`.
+- **Transformación Consistente**: convierte cualquier entrada en `MlResult<TResult>`.
 - **Operaciones de Finalización**: ideal para *cleanup*, cierre de sesión, generación de informes o telemetría de cierre.
 - **Reset de Contexto**: crear un resultado nuevo cuando el estado anterior ya no aporta información útil.
 
@@ -36,8 +36,8 @@ y devuelve un `MlResult<TReturn>` **nuevo**, desligado del estado anterior.
 
 | Sobrecarga | Firma | Devuelve |
 | --- | --- | --- |
-| Clásica (dos ramas) | `Match<T, TReturn>(Func<T, TReturn> valid, Func<MlErrorDetails, TReturn> fail)` | `TReturn` **crudo** (sale del `MlResult`) |
-| *match-all* | `Match<T, TReturn>(Func<TReturn> funcAll)` | `MlResult<TReturn>` (**sigue** en la tubería) |
+| Clásica (dos ramas) | `Match<T, TResult>(Func<T, TResult> valid, Func<MlErrorDetails, TResult> fail)` | `TResult` **crudo** (sale del `MlResult`) |
+| *match-all* | `Match<T, TResult>(Func<TResult> funcAll)` | `MlResult<TResult>` (**sigue** en la tubería) |
 
 El compilador resuelve una u otra según el número de delegados que le pases, así que no hay ambigüedad
 en el código real.
@@ -49,7 +49,7 @@ en el código real.
 ### Filosofía de la sobrecarga *match-all*
 
 ```
-MlResult<T> (cualquier estado) → Match(funcAll) → MlResult<TReturn>
+MlResult<T> (cualquier estado) → Match(funcAll) → MlResult<TResult>
                 ↓                      ↓                    ↓
      Válido/Fallido        → funcAll() →       nuevo resultado válido
 ```
@@ -57,19 +57,19 @@ MlResult<T> (cualquier estado) → Match(funcAll) → MlResult<TReturn>
 Implementación real (simplificada):
 
 ```csharp
-public static MlResult<TReturn> Match<T, TReturn>(this MlResult<T> source,
-                                                  Func<TReturn>    funcAll)
+public static MlResult<TResult> Match<T, TResult>(this MlResult<T> source,
+                                                  Func<TResult>    funcAll)
     => funcAll();
 ```
 
-Literalmente **ignora `source`**. El valor devuelto se convierte en `MlResult<TReturn>` gracias a la
+Literalmente **ignora `source`**. El valor devuelto se convierte en `MlResult<TResult>` gracias a la
 conversión implícita del tipo.
 
 ### Características Principales
 
 1. **Ejecución Incondicional**: se ejecuta siempre, sin importar el estado.
 2. **Ignora la Entrada**: no recibe el valor ni los errores del `MlResult<T>` original.
-3. **Nuevo Contexto**: genera un `MlResult<TReturn>` completamente nuevo.
+3. **Nuevo Contexto**: genera un `MlResult<TResult>` completamente nuevo.
 4. **Reset de Estado**: los errores previos **se pierden**. Si los necesitas, regístralos antes con
    `ExecSelfIfFail` o consérvalos con `MergeErrorsDetailsIfFail`.
 5. **Transformación Total**: cambia tanto el tipo como el contexto del resultado.
@@ -81,20 +81,20 @@ conversión implícita del tipo.
 
 ## Métodos MatchAll Básicos
 
-### `Match<T, TReturn>(Func<TReturn> funcAll)`
+### `Match<T, TResult>(Func<TResult> funcAll)`
 
 **Propósito**: ejecutar una función independientemente del estado del resultado y crear un nuevo
-`MlResult<TReturn>`.
+`MlResult<TResult>`.
 
 ```csharp
-public static MlResult<TReturn> Match<T, TReturn>(this MlResult<T> source,
-                                                  Func<TReturn>    funcAll)
+public static MlResult<TResult> Match<T, TResult>(this MlResult<T> source,
+                                                  Func<TResult>    funcAll)
 ```
 
 **Comportamiento**:
 - Ignora por completo el estado y el contenido de `source`.
 - Ejecuta `funcAll()` incondicionalmente.
-- Devuelve un `MlResult<TReturn>` válido con el valor obtenido.
+- Devuelve un `MlResult<TResult>` válido con el valor obtenido.
 
 **Ejemplo Básico**:
 ```csharp
@@ -123,9 +123,9 @@ MlResult<Acuse> acuse = await _importador.ImportarAsync(fichero)
 ### `MatchAsync` con función asíncrona
 
 ```csharp
-public static Task<MlResult<TReturn>> MatchAsync<T, TReturn>(
+public static Task<MlResult<TResult>> MatchAsync<T, TResult>(
     this MlResult<T>     source,
-    Func<Task<TReturn>>  funcAllAsync)
+    Func<Task<TResult>>  funcAllAsync)
 ```
 
 **Ejemplo**:
@@ -140,14 +140,14 @@ MlResult<Notificacion> aviso = await resultado.MatchAsync(
 
 ```csharp
 // Fuente asíncrona + función asíncrona
-public static Task<MlResult<TReturn>> MatchAsync<T, TReturn>(
+public static Task<MlResult<TResult>> MatchAsync<T, TResult>(
     this Task<MlResult<T>> sourceAsync,
-    Func<Task<TReturn>>    funcAllAsync)
+    Func<Task<TResult>>    funcAllAsync)
 
 // Fuente asíncrona + función síncrona
-public static Task<MlResult<TReturn>> MatchAsync<T, TReturn>(
+public static Task<MlResult<TResult>> MatchAsync<T, TResult>(
     this Task<MlResult<T>> sourceAsync,
-    Func<TReturn>          funcAll)
+    Func<TResult>          funcAll)
 ```
 
 **Ejemplo** (sin `await` intermedios, la tubería no se rompe):
@@ -163,27 +163,27 @@ En total hay **cuatro** sobrecargas asíncronas, combinando fuente (síncrona / 
 
 ## Métodos TryMatchAll - Captura de Excepciones
 
-### `TryMatch<T, TReturn>(Func<TReturn> funcAll, ...)`
+### `TryMatch<T, TResult>(Func<TResult> funcAll, ...)`
 
 ```csharp
 // Mensaje construido a partir de la excepción
-public static MlResult<TReturn> TryMatch<T, TReturn>(
+public static MlResult<TResult> TryMatch<T, TResult>(
     this MlResult<T>        source,
-    Func<TReturn>           funcAll,
+    Func<TResult>           funcAll,
     Func<Exception, string> errorMessageBuilder)
 
 // Mensaje fijo
-public static MlResult<TReturn> TryMatch<T, TReturn>(
+public static MlResult<TResult> TryMatch<T, TResult>(
     this MlResult<T> source,
-    Func<TReturn>    funcAll,
+    Func<TResult>    funcAll,
     string           exceptionAditionalMessage = null!)
 ```
 
 **Comportamiento**:
 - Ejecuta `funcAll()` incondicionalmente.
-- Si lanza una excepción, devuelve un `MlResult<TReturn>` fallido **con la excepción guardada** en
+- Si lanza una excepción, devuelve un `MlResult<TResult>` fallido **con la excepción guardada** en
   `Details["Ex"]`, recuperable después con `GetException()`.
-- Si termina bien, devuelve un `MlResult<TReturn>` válido.
+- Si termina bien, devuelve un `MlResult<TResult>` válido.
 
 **Detalle de implementación relevante**: internamente conserva los errores previos cuando `source` venía
 fallido, porque delega en `funcAll.TryToMlResult(errorDetails, errorMessageBuilder)`. Es decir,
@@ -202,15 +202,15 @@ MlResult<Informe> informe = resultado.TryMatch(
 
 ```csharp
 // Fuente síncrona + función asíncrona
-public static Task<MlResult<TReturn>> TryMatchAsync<T, TReturn>(
+public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(
     this MlResult<T>        source,
-    Func<Task<TReturn>>     funcAllAsync,
+    Func<Task<TResult>>     funcAllAsync,
     Func<Exception, string> errorMessageBuilder)
 
 // Fuente asíncrona + función asíncrona
-public static Task<MlResult<TReturn>> TryMatchAsync<T, TReturn>(
+public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(
     this Task<MlResult<T>>  sourceAsync,
-    Func<Task<TReturn>>     funcAllAsync,
+    Func<Task<TResult>>     funcAllAsync,
     Func<Exception, string> errorMessageBuilder)
 ```
 
@@ -343,7 +343,7 @@ MlResult<string> cierre = resultado.Match(() => "Finalizado");
 | --- | --- | --- |
 | Delegados | 2 (`valid`, `fail`) | 1 (`funcAll`, sin parámetros) |
 | Acceso al valor / errores | Sí | No |
-| Tipo de retorno | `TReturn` | `MlResult<TReturn>` |
+| Tipo de retorno | `TResult` | `MlResult<TResult>` |
 | Conserva el estado de fallo | Lo trata explícitamente | **Lo descarta** (`Match`) / lo fusiona (`TryMatch`) |
 
 ### 3. Usa `TryMatch` para operaciones con riesgo
@@ -372,11 +372,11 @@ Como la sobrecarga *match-all* de `Match` descarta los errores, **siempre** enca
 
 | Operación | ¿Se ejecuta siempre? | ¿Recibe el valor? | ¿Recibe los errores? | Devuelve | Altera el resultado |
 | --- | :---: | :---: | :---: | --- | :---: |
-| `Match(valid, fail)` | Sí | Sí | Sí | `TReturn` crudo | Sale de la tubería |
-| `Match(funcAll)` | Sí | No | No | `MlResult<TReturn>` | Sí (contexto nuevo) |
-| `TryMatch(funcAll, …)` | Sí | No | No (los fusiona) | `MlResult<TReturn>` | Sí |
-| `MapAlways(funcAlways)` | Sí | No | No | `MlResult<TReturn>` | Sí |
-| `BindAlways(funcAlways)` | Sí | No | No | `MlResult<TReturn>` | Sí |
+| `Match(valid, fail)` | Sí | Sí | Sí | `TResult` crudo | Sale de la tubería |
+| `Match(funcAll)` | Sí | No | No | `MlResult<TResult>` | Sí (contexto nuevo) |
+| `TryMatch(funcAll, …)` | Sí | No | No (los fusiona) | `MlResult<TResult>` | Sí |
+| `MapAlways(funcAlways)` | Sí | No | No | `MlResult<TResult>` | Sí |
+| `BindAlways(funcAlways)` | Sí | No | No | `MlResult<TResult>` | Sí |
 | `ExecSelf(...)` | Sí | Sí | Sí | El **mismo** `MlResult<T>` | **No** |
 | `ExecSelfIfValid` | Solo si válido | Sí | — | El mismo | **No** |
 | `ExecSelfIfFail` | Solo si fallido | — | Sí | El mismo | **No** |
@@ -409,7 +409,7 @@ MlResult<Acuse> acuse = resultado.Match(() => new Acuse(_reloj.Ahora));
 ## Resumen
 
 - **No hay ningún método llamado `MatchAll`**: son sobrecargas de `Match` / `TryMatch` que reciben un
-  `Func<TReturn>` sin parámetros y devuelven `MlResult<TReturn>`.
+  `Func<TResult>` sin parámetros y devuelven `MlResult<TResult>`.
 - Se ejecutan **siempre**, ignorando el estado y el contenido del resultado de origen.
 - `Match(funcAll)` **descarta** los errores previos; `TryMatch(funcAll, …)` los **fusiona** con el nuevo
   fallo si lo hubiera.

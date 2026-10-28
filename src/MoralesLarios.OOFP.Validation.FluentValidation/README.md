@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.Validation.FluentValidation — FluentValidation en el raíl funcional
+﻿# MoralesLarios.OOFP.Validation.FluentValidation — FluentValidation en el raíl funcional
 
 Puente entre [FluentValidation](https://docs.fluentvalidation.net/) y el modelo funcional de la solución: ejecuta un `AbstractValidator<T>` y traduce su `ValidationResult` a un **[`MlResult<T>`](../docs/core-types/MlResult.md)** encadenable.
 
@@ -14,7 +14,7 @@ Es el proyecto adecuado cuando las reglas son demasiado ricas para los atributos
 4. [API pública](#api-pública)
 5. [Cómo funciona la conversión, paso a paso](#cómo-funciona-la-conversión-paso-a-paso)
 6. [Restricciones genéricas: qué exigen y por qué](#restricciones-genéricas-qué-exigen-y-por-qué)
-7. [Combinación con `MlSelfValidatable<T>`](#combinación-con-mlvalidablefpt)
+7. [Combinación con `IMlSelfValidatable<T>`](#combinación-con-imlselfvalidatablet)
 8. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 9. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
 10. [Ejemplos prácticos](#ejemplos-prácticos)
@@ -207,16 +207,16 @@ Si necesitas dependencias, resuelve el validador tú mismo desde el contenedor y
 
 ---
 
-## Combinación con `MlSelfValidatable<T>`
+## Combinación con `IMlSelfValidatable<T>`
 
-El patrón recomendado: el DTO hereda de [`MlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md) y su `Validate()` delega en el validador de FluentValidation. Así el resto de la aplicación **no necesita saber qué motor de validación se usa**.
+El patrón recomendado: el DTO implementa [`IMlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md) y su `Validate()` delega en el validador de FluentValidation. Así el resto de la aplicación **no necesita saber qué motor de validación se usa**.
 
 ```csharp
 using FluentValidation;
 using MoralesLarios.OOFP.Validation;
 using MoralesLarios.OOFP.Validation.FluentValidation.Helpers;
 
-public class CrearPedidoDto : MlSelfValidatable<CrearPedidoDto>
+public class CrearPedidoDto : IMlSelfValidatable<CrearPedidoDto>
 {
     public string       ClienteId { get; init; } = string.Empty;
     public List<Linea>  Lineas    { get; init; } = new();
@@ -537,7 +537,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 |---|---|
 | Reglas ricas (condicionales, colecciones, anidados) sin dependencias | `dto.ValidateWitHFluentValidations<T, TValidator>()` |
 | Lo mismo dentro de una cadena `async` | `…Async<T, TValidator>()` |
-| Que el consumidor no sepa qué motor uso | `MlSelfValidatable<T>.Validate()` delegando en la extensión |
+| Que el consumidor no sepa qué motor uso | `IMlSelfValidatable<T>.Validate()` delegando en la extensión |
 | Comprobar antes que el objeto no es nulo | `EnsureFp.NotNull(dto, "…").Bind(d => d.ValidateWitH…)` |
 | Validar una lista acumulando errores | `Select(...).AddMlErrorDetailIfFail("fila", i)` + `MergeErrorsIfExists()` |
 | Validador con dependencias del contenedor | Resolverlo por DI + conversión manual (Ejemplo 6) |
@@ -555,7 +555,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 3. **Incluye el nombre del campo en cada `WithMessage`**: el `PropertyName` se pierde en la conversión.
 4. **Escribe los mensajes en el idioma del usuario final** y personalízalos todos: los de FluentValidation por defecto están en inglés.
 5. **Un validador por DTO, en su propio fichero**, con el sufijo `Validator`.
-6. **Delega desde `MlSelfValidatable<T>.Validate()`** para no acoplar el resto del código a FluentValidation.
+6. **Delega desde `IMlSelfValidatable<T>.Validate()`** para no acoplar el resto del código a FluentValidation.
 7. **Comprueba los nulos tú mismo** con `EnsureFp.NotNull` y un mensaje propio.
 8. **Separa error técnico de error de negocio** con `GetException()` antes de responder al cliente.
 9. **No uses estas extensiones con reglas asíncronas o validadores con dependencias**: convierte el `ValidationResult` a mano.
@@ -575,7 +575,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 - **Todos los errores llegan juntos** (uno por `MlError`), pero **solo sobrevive `ErrorMessage`**: pon el nombre del campo en el texto.
 - ⚠️ Erratas y límites reales: el nombre lleva **`WitH`**; el método `Async` **no es asíncrono**; **no soporta reglas asíncronas, `RuleSet`s ni validadores con dependencias**; **no comprueba `null`**; **no filtra por severidad**.
 - Los fallos técnicos se distinguen de los de negocio porque **llevan excepción en `Details`** (`GetException()`).
-- Combínalo con [`MlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md) para que el consumidor no dependa del motor de validación.
+- Combínalo con [`IMlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md) para que el consumidor no dependa del motor de validación.
 
 ---
 
@@ -589,7 +589,7 @@ public async Task<MlResult<PedidoDto>> Validar(PedidoDto dto)
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — el contrato base `MlSelfValidatable<T>`
+- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — el contrato base `IMlSelfValidatable<T>`
 - [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — alternativa con atributos
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — reglas encapsuladas en tipos
 - [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos donde encadenar la validación

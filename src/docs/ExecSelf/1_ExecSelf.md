@@ -371,12 +371,12 @@ Una tubería con un `ExecSelf` entre cada paso se vuelve ilegible. Instrumenta l
 
 | Operación | Delegado recibe | Devuelve | ¿Puede cambiar el estado? |
 | --- | --- | --- | :---: |
-| `Bind` | `T` | `MlResult<TReturn>` | Sí |
-| `Map` | `T` | `MlResult<TReturn>` | Sí (el tipo) |
+| `Bind` | `T` | `MlResult<TResult>` | Sí |
+| `Map` | `T` | `MlResult<TResult>` | Sí (el tipo) |
 | `MapIfFail` | `MlErrorDetails` | `MlResult<T>` | Sí (recupera) |
 | `ExecSelf*` | `T` y/o `MlErrorDetails` | **El mismo `MlResult<T>`** | **No** |
 | `TryExecSelf*` | `T` y/o `MlErrorDetails` | `MlResult<T>` | Solo si el delegado lanza |
-| `Match` | `T` y `MlErrorDetails` | `TReturn` crudo | Sale de la tubería |
+| `Match` | `T` y `MlErrorDetails` | `TResult` crudo | Sale de la tubería |
 
 ---
 

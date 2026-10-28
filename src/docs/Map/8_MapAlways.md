@@ -4,7 +4,7 @@
 
 1. [Introducción](#introducción)
 2. [Las dos formas de `MapAlways`](#las-dos-formas-de-mapalways)
-3. [Forma A: `Func<TReturn>` — descartar por completo el estado anterior](#forma-a-functreturn--descartar-por-completo-el-estado-anterior)
+3. [Forma A: `Func<TResult>` — descartar por completo el estado anterior](#forma-a-functresult--descartar-por-completo-el-estado-anterior)
 4. [⚠️ Particularidad real del código fuente: la sobrecarga que no espera al origen](#️-particularidad-real-del-código-fuente-la-sobrecarga-que-no-espera-al-origen)
 5. [Forma B: `funcValidAlways` + `funcFailAlways` — convergencia de ramas](#forma-b-funcvalidalways--funcfailalways--convergencia-de-ramas)
 6. [`MapAlways` frente a `Match`](#mapalways-frente-a-match)
@@ -43,7 +43,7 @@ MlResult<RespuestaDto> r2 = tuberia.MapAlways(
 
 | | Forma A | Forma B |
 |---|---|---|
-| Firma del delegado | `Func<TReturn>` (sin parámetros) | `Func<T, TResult>` + `Func<MlErrorDetails, TResult>` |
+| Firma del delegado | `Func<TResult>` (sin parámetros) | `Func<T, TResult>` + `Func<MlErrorDetails, TResult>` |
 | ¿Accede al valor válido? | ❌ No | ✅ Sí (`funcValidAlways`) |
 | ¿Accede a los errores? | ❌ No | ✅ Sí (`funcFailAlways`) |
 | ¿Conserva los errores previos? | ❌ No, se descartan | ❌ No, pero los recibes para transformarlos |
@@ -54,13 +54,13 @@ MlResult<RespuestaDto> r2 = tuberia.MapAlways(
 
 ---
 
-## Forma A: `Func<TReturn>` — descartar por completo el estado anterior
+## Forma A: `Func<TResult>` — descartar por completo el estado anterior
 
 El código fuente es literalmente esta línea:
 
 ```csharp
-public static MlResult<TReturn> MapAlways<T, TReturn>(this MlResult<T>   source,
-                                                           Func<TReturn> funcAlways)
+public static MlResult<TResult> MapAlways<T, TResult>(this MlResult<T>   source,
+                                                           Func<TResult> funcAlways)
     => funcAlways();
 ```
 
@@ -97,13 +97,13 @@ Dos de las sobrecargas asíncronas de la Forma A tienen una implementación que 
 
 ```csharp
 // ✅ Esta espera el origen antes de invocar el delegado
-public static async Task<MlResult<TReturn>> MapAlwaysAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                            Func<TReturn>     funcAlways)
+public static async Task<MlResult<TResult>> MapAlwaysAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                                            Func<TResult>     funcAlways)
     => (await sourceAsync).MapAlways(funcAlways);
 
 // ⚠️ Esta NO espera el origen: ejecuta el delegado directamente
-public static async Task<MlResult<TReturn>> MapAlwaysAsync<T, TReturn>(this Task<MlResult<T>>   sourceAsync,
-                                                                            Func<Task<TReturn>> funcAlwaysAsync)
+public static async Task<MlResult<TResult>> MapAlwaysAsync<T, TResult>(this Task<MlResult<T>>   sourceAsync,
+                                                                            Func<Task<TResult>> funcAlwaysAsync)
     => await funcAlwaysAsync();       // sourceAsync nunca se hace await
 ```
 
@@ -163,7 +163,7 @@ La Forma B y `Match` hacen esencialmente lo mismo. La diferencia está en el tip
 
 | | `Match` | `MapAlways` (Forma B) |
 |---|---|---|
-| Devuelve | `TReturn` **desnudo** | `MlResult<TResult>` |
+| Devuelve | `TResult` **desnudo** | `MlResult<TResult>` |
 | ¿Sigues en el carril? | ❌ No, sales del `MlResult` | ✅ Sí, puedes seguir encadenando |
 | Uso típico | último paso: convertir a `IActionResult`, a un valor, etc. | paso intermedio: normalizar y continuar |
 
@@ -190,9 +190,9 @@ MlResult<Informe> informe = resultado.MapAlways(
 Un dato que ayuda a entender el diseño: la Forma A de `MapAlways` es **exactamente el mismo cuerpo** que otras dos APIs de la librería:
 
 ```csharp
-MapAlways<T, TReturn>(source, Func<TReturn> funcAlways)  => funcAlways();
-BindAlways<T, TReturn>(source, Func<TReturn> funcAlways) => funcAlways();   // ../Bind/10_BindAlways.md
-Match<T, TReturn>(source, Func<TReturn> funcAll)         => funcAll();      // ../Match/2_MatchAll.md
+MapAlways<T, TResult>(source, Func<TResult> funcAlways)  => funcAlways();
+BindAlways<T, TResult>(source, Func<TResult> funcAlways) => funcAlways();   // ../Bind/10_BindAlways.md
+Match<T, TResult>(source, Func<TResult> funcAll)         => funcAll();      // ../Match/2_MatchAll.md
 ```
 
 Las tres ignoran por completo el `source`. Existen como nombres distintos por **legibilidad de intención** dentro de una cadena, no por diferencia de comportamiento. Elige el nombre que mejor comunique lo que estás haciendo en ese punto:
@@ -208,8 +208,8 @@ Las tres ignoran por completo el `source`. Existen como nombres distintos por **
 A diferencia de la Forma A base, `TryMapAlways` **sí consulta el estado del origen**, porque en la rama fallida pasa los `errorDetails` al mecanismo de captura:
 
 ```csharp
-public static MlResult<TReturn> TryMapAlways<T, TReturn>(this MlResult<T>             source,
-                                                              Func<TReturn>           funcAlways,
+public static MlResult<TResult> TryMapAlways<T, TResult>(this MlResult<T>             source,
+                                                              Func<TResult>           funcAlways,
                                                               Func<Exception, string> errorMessageBuilder)
     => source.Match(valid: _            => funcAlways.TryToMlResult(errorMessageBuilder),
                     fail : errorDetails => funcAlways.TryToMlResult(errorDetails, errorMessageBuilder));
@@ -245,9 +245,9 @@ Ambas formas cubren las combinaciones habituales de origen y delegados:
 
 | Forma | Origen | Delegado(s) | Método |
 |---|---|---|---|
-| A | `MlResult<T>` | `Func<Task<TReturn>>` | `MapAlwaysAsync` |
-| A | `Task<MlResult<T>>` | `Func<Task<TReturn>>` | `MapAlwaysAsync` ⚠️ *(no espera el origen)* |
-| A | `Task<MlResult<T>>` | `Func<TReturn>` | `MapAlwaysAsync` |
+| A | `MlResult<T>` | `Func<Task<TResult>>` | `MapAlwaysAsync` |
+| A | `Task<MlResult<T>>` | `Func<Task<TResult>>` | `MapAlwaysAsync` ⚠️ *(no espera el origen)* |
+| A | `Task<MlResult<T>>` | `Func<TResult>` | `MapAlwaysAsync` |
 | B | `MlResult<T>` | ambos asíncronos | `MapAlwaysAsync` |
 | B | `Task<MlResult<T>>` | ambos asíncronos | `MapAlwaysAsync` |
 | B | `Task<MlResult<T>>` | válido sincrónico + fallido asíncrono | `MapAlwaysAsync` |
@@ -264,7 +264,7 @@ Existe la batería equivalente de `TryMapAlwaysAsync` para las dos formas, con l
 
 | Necesito… | Método |
 |---|---|
-| Un valor **constante o independiente** al final de la tubería | `MapAlways(Func<TReturn>)` (Forma A) |
+| Un valor **constante o independiente** al final de la tubería | `MapAlways(Func<TResult>)` (Forma A) |
 | **Unificar** éxito y fallo en un tipo común y **seguir encadenando** | `MapAlways(funcValid, funcFail)` (Forma B) |
 | Unificar éxito y fallo y **salir** del `MlResult` | [`Match`](../Match/1_Match.md) |
 | Lo mismo pero el delegado devuelve `MlResult` | [`BindAlways`](../Bind/10_BindAlways.md) |
@@ -402,7 +402,7 @@ var r5 = ObtenerCliente(id)
 
 3. **Coloca `MapAlways` al final de la tubería**, no en el medio. En el medio convierte un fallo en éxito y las operaciones posteriores trabajarán sobre datos que nunca se validaron.
 
-4. **Cuidado con `MapAlwaysAsync(Task<MlResult<T>>, Func<Task<TReturn>>)`**: no espera al origen. Si el orden importa, haz `await` explícito del origen o usa la sobrecarga con delegado síncrono.
+4. **Cuidado con `MapAlwaysAsync(Task<MlResult<T>>, Func<Task<TResult>>)`**: no espera al origen. Si el orden importa, haz `await` explícito del origen o usa la sobrecarga con delegado síncrono.
 
 5. **Elige entre `MapAlways` y `Match` según si sigues en el carril.** `MapAlways` devuelve `MlResult<TResult>` (encadenable); `Match` devuelve el valor desnudo (salida definitiva).
 
@@ -419,9 +419,9 @@ var r5 = ObtenerCliente(id)
 ## Resumen
 
 - `MapAlways` produce un valor **con independencia** del estado del `MlResult` de entrada; es el punto donde el carril de error se cierra.
-- Tiene **dos formas**: A `Func<TReturn>` (ignora por completo el origen: su cuerpo es literalmente `=> funcAlways();`) y B `(funcValidAlways, funcFailAlways)` (delega en `source.Match` y da acceso al valor y a los errores).
+- Tiene **dos formas**: A `Func<TResult>` (ignora por completo el origen: su cuerpo es literalmente `=> funcAlways();`) y B `(funcValidAlways, funcFailAlways)` (delega en `source.Match` y da acceso al valor y a los errores).
 - La Forma A **descarta todos los errores sin dejar rastro**: regístralos antes con `ExecSelfIfFail`.
-- ⚠️ La sobrecarga `MapAlwaysAsync(Task<MlResult<T>>, Func<Task<TReturn>>)` **no hace `await` del origen**; si el orden importa, espera el origen explícitamente o usa la sobrecarga con delegado síncrono.
+- ⚠️ La sobrecarga `MapAlwaysAsync(Task<MlResult<T>>, Func<Task<TResult>>)` **no hace `await` del origen**; si el orden importa, espera el origen explícitamente o usa la sobrecarga con delegado síncrono.
 - La Forma A comparte cuerpo exacto con [`BindAlways(funcAlways)`](../Bind/10_BindAlways.md) y con [`Match(funcAll)`](../Match/2_MatchAll.md): son alias por legibilidad.
 - Frente a `Match`, `MapAlways` devuelve `MlResult<TResult>` y por tanto **permite seguir encadenando**.
 - `TryMapAlways` protege los delegados con `TryToMlResult` y, en la rama fallida, **arrastra los errores originales** si el delegado lanza.
@@ -437,7 +437,7 @@ var r5 = ObtenerCliente(id)
 - [`1_Map.md`](1_Map.md) — la operación base de transformación.
 - [`../Bind/10_BindAlways.md`](../Bind/10_BindAlways.md) — la versión `Bind`, cuando el delegado devuelve `MlResult`.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — salir del carril con un valor desnudo.
-- [`../Match/2_MatchAll.md`](../Match/2_MatchAll.md) — la sobrecarga `Match(Func<TReturn>)`, gemela de la Forma A.
+- [`../Match/2_MatchAll.md`](../Match/2_MatchAll.md) — la sobrecarga `Match(Func<TResult>)`, gemela de la Forma A.
 - [`../ExecSelf/1_ExecSelf.md`](../ExecSelf/1_ExecSelf.md) — efectos secundarios en ambas ramas sin alterar el resultado.
 - [`../Types/MlResultMapExtensions.md`](../core-types/MlResultMapExtensions.md) — inventario completo de la familia `Map`.
 - [`../Types/MlResultErrors.md`](../core-types/MlResultErrors.md) — estructura real de `MlError` y `MlErrorDetails`.

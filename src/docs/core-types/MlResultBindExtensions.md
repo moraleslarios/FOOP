@@ -1,9 +1,9 @@
-# `MlResultBindExtensions` (`Types/MlResultBindExtensions.cs`)
+﻿# `MlResultBindExtensions` (`Types/MlResultBindExtensions.cs`)
 
 Familia **monádica**: encadena operaciones cuyo resultado es, a su vez, un `MlResult`.
 
 ```text
-MlResult<T> → (T → MlResult<TReturn>) → MlResult<TReturn>
+MlResult<T> → (T → MlResult<TResult>) → MlResult<TResult>
 ```
 
 ---
@@ -18,8 +18,8 @@ MlResult<T> → (T → MlResult<TReturn>) → MlResult<TReturn>
 
 | La función que quieres aplicar devuelve... | Usa |
 |---|---|
-| `MlResult<TReturn>` (puede fallar) | `Bind` |
-| `TReturn` (nunca falla) | [`Map`](MlResultMapExtensions.md) |
+| `MlResult<TResult>` (puede fallar) | `Bind` |
+| `TResult` (nunca falla) | [`Map`](MlResultMapExtensions.md) |
 
 ---
 
@@ -64,7 +64,7 @@ MlResult<T> → (T → MlResult<TReturn>) → MlResult<TReturn>
 | `TryBindBuildTuple` / `TryBindBuildTupleAsync` | muchos | Igual que `TryBindBuild`, pero el resultado es una **tupla** (`(TR1, TR2)`, `(TR1, TR2, TR3)`, …) en lugar de un tipo con constructor. |
 
 > Nota sobre `BindAlways`: existen **dos formas** distintas.
-> - `BindAlways<T, TReturn>(Func<MlResult<TReturn>> funcAlways)`: la función **no recibe nada**; se ejecuta igual en válido y en fallido.
+> - `BindAlways<T, TResult>(Func<MlResult<TResult>> funcAlways)`: la función **no recibe nada**; se ejecuta igual en válido y en fallido.
 > - `BindAlways<T, TResult>(Func<T, MlResult<TResult>> funcValidAlways, Func<MlErrorDetails, MlResult<TResult>> funcFailAlways)`: dos funciones, una para cada rama, pero **ambas devuelven `MlResult<TResult>`**, por lo que la cadena continúa siempre en el mismo tipo.
 
 ---

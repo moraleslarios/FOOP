@@ -1,4 +1,4 @@
-# `MlResultChangeReturnResult` (`Types/MlResultChangeReturnResult.cs`)
+﻿# `MlResultChangeReturnResult` (`Types/MlResultChangeReturnResult.cs`)
 
 Familia de extensiones para **cambiar el tipo de retorno** de un `MlResult<T>` sin necesidad de
 transformar el valor que transporta.
@@ -16,9 +16,10 @@ MlResult<Confirmacion> r = guardado.Map(_ => new Confirmacion("OK"));
 MlResult<Confirmacion> r = guardado.ChangeReturnResult(new Confirmacion("OK"));
 ```
 
-> ⚠️ **Ojo con la ortografía del código fuente:** las familias "siempre" están escritas como
-> **`Alwais`**, no `Always`: `ChangeReturnResultAlwaysValid`, `ChangeReturnResultAlwaysFail`. Se
-> documentan tal cual para que los encuentres al escribir código.
+> ✅ **Resuelto en 2.0.0:** en la 1.x las familias "siempre" estaban escritas como **`Alwais`**
+> (`ChangeReturnResultAlwaisValid`, `ChangeReturnResultAlwaisFail`). Desde la 2.0.0 el nombre
+> correcto es **`Always`**: `ChangeReturnResultAlwaysValid`, `ChangeReturnResultAlwaysFail`. Los
+> nombres antiguos se conservan como puentes `[Obsolete]` y **se eliminan en la 3.0.0**.
 
 ---
 
@@ -26,7 +27,7 @@ MlResult<Confirmacion> r = guardado.ChangeReturnResult(new Confirmacion("OK"));
 
 | Familia | Sobrecargas | Actúa cuando | Resultado |
 | --- | --- | --- | --- |
-| `ChangeReturnResult` | 4 | Siempre | Conserva el estado; solo cambia el tipo `T` → `TReturn`. |
+| `ChangeReturnResult` | 4 | Siempre | Conserva el estado; solo cambia el tipo `T` → `TResult`. |
 | `ChangeReturnResultAsync` | 5 | Siempre | Versiones asíncronas. |
 | `ChangeReturnResultAlwaysValid` | 1 | Siempre | Devuelve **válido** sea cual sea el estado de origen. |
 | `ChangeReturnResultAlwaysValidAsync` | 2 | Siempre | Versiones asíncronas. |
@@ -56,8 +57,8 @@ MlResult<string> mensaje = filasAfectadas
 // Si Actualizar falló, `mensaje` es Fail con los errores originales.
 ```
 
-Las 4 sobrecargas te permiten indicar el nuevo valor como valor directo, como `Func<TReturn>`, o como
-`MlResult<TReturn>` ya construido:
+Las 4 sobrecargas te permiten indicar el nuevo valor como valor directo, como `Func<TResult>`, o como
+`MlResult<TResult>` ya construido:
 
 ```csharp
 // a) Valor directo.
@@ -148,7 +149,7 @@ Usa `ChangeReturnResultIfFailToValid` cuando el motivo del fallo **da igual**; u
 
 Descartan por completo el estado de origen.
 
-### `AlwaisValid`
+### `AlwaysValid`
 
 ```csharp
 // Operación "best effort": la limpieza de caché nunca debe romper la petición.
@@ -156,7 +157,7 @@ MlResult<Unit> resultado = _cache.Invalidar(clave)
     .ChangeReturnResultAlwaysValid(Unit.Value);
 ```
 
-### `AlwaisFail`
+### `AlwaysFail`
 
 ```csharp
 // Un endpoint deshabilitado temporalmente: hagas lo que hagas, falla.
@@ -185,7 +186,7 @@ Es útil también en **pruebas** y en *feature flags*, donde quieres forzar una 
 | Que un éxito se convierta en error | `ChangeReturnResultIfValidToFail` |
 | Un valor por defecto si falla, sin mirar el error | `ChangeReturnResultIfFailToValid` |
 | Un valor por defecto **calculado a partir** del error | [`MapIfFail`](MlResultMapExtensions.md) |
-| Ignorar el estado y devolver siempre válido / fallido | `ChangeReturnResultAlwaysValid` / `...AlwaisFail` |
+| Ignorar el estado y devolver siempre válido / fallido | `ChangeReturnResultAlwaysValid` / `...AlwaysFail` |
 | Salir de `MlResult` con un valor concreto | [`Match`](MlResultMatchExtensions.md) |
 
 ---

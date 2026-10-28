@@ -108,26 +108,32 @@ Mail directo = "otro@empresa.com";
 
 El nombre del método `From…` depende del tipo primitivo de origen. Merece la pena tenerlo a mano:
 
-| VO | Creación segura | Creación directa |
+| VO | Creación segura (`MlResult<T>`) | Creación directa (lanza) |
 |---|---|---|
-| `NotEmptyString`, `MemberName`, `ServiceKey`, `Mail`, `Endpoint` | `ByString(value, errorsDetails?)` | `FromString(value)` |
-| `RegexValue` | `ByRegex(value, pattern, errorsDetails?)` | `FromRegex(value, pattern)` |
-| `StringMinLength`, `StringMaxLength` | `ByStringLength(value, length, errorsDetails?)` | `FromStringLength(value, length)` |
-| `StringLengthBetween` | `ByStringLength(value, min, max, errorsDetails?)` | `FromStringLength(value, min, max)` |
-| `IntMoreThan`, `IntLessThan` | `ByIntLength(value, length, errorsDetails?)` | `FromIntLength(value, length)` |
-| `IntBetween` | `ByIntLength(value, min, max, errorsDetails?)` | `FromIntLength(value, min, max)` |
-| `IntNonNegative`, `Age`, `IdLite` | `ByInt(value, errorsDetails?)` | `FromInt(value)` |
-| `DecimalMoreThan`, `DecimalLessThan` | `ByDecimalLength(value, length, errorsDetails?)` | `FromDecimalLength(value, length)` |
-| `DecimalBetween` | `ByDecimalLength(value, min, max, errorsDetails?)` | `FromDecimalLength(value, min, max)` |
-| `DecimalNonNegative` | `ByDecimal(value, errorsDetails?)` | `FromDecimal(value)` |
-| `DoubleMoreThan`, `DoubleLessThan` | `ByDoubleLength(value, length, errorsDetails?)` | `FromDoubleLength(value, length)` |
-| `DoubleBetween` | `ByDoubleLength(value, min, max, errorsDetails?)` | `FromDoubleLength(value, min, max)` |
-| `DoubleNonNegative` | `ByDouble(value, errorsDetails?)` | `FromDouble(value)` |
-| `Id` | `Bydouble(value, errorsDetails?)` | `Fromdouble(value)` |
-| `StringAsInt`, `StringAsLong`, … | `ByString(value)` *(sin `errorsDetails`)* | `FromString(value)` |
+| `NotEmptyString`, `MemberName`, `ServiceKey`, `Mail`, `Endpoint` | `FromString(value, errorsDetails?)` | `CreateFromString(value)` |
+| `RegexValue` | `FromRegex(value, pattern, errorsDetails?)` | `CreateFromRegex(value, pattern)` |
+| `StringMinLength`, `StringMaxLength` | `FromLength(value, length, errorsDetails?)` | `CreateFromLength(value, length)` |
+| `StringLengthBetween` | `FromLength(value, min, max, errorsDetails?)` | `CreateFromLength(value, min, max)` |
+| `IntMoreThan`, `IntLessThan` | `FromIntLength(value, length, errorsDetails?)` | `CreateFromIntLength(value, length)` |
+| `IntBetween` | `FromIntLength(value, min, max, errorsDetails?)` | `CreateFromIntLength(value, min, max)` |
+| `IntNonNegative`, `Age`, `IdLite` | `FromInt(value, errorsDetails?)` | `CreateFromInt(value)` |
+| `DecimalMoreThan`, `DecimalLessThan` | `FromDecimalLength(value, length, errorsDetails?)` | `CreateFromDecimalLength(value, length)` |
+| `DecimalBetween` | `FromDecimalLength(value, min, max, errorsDetails?)` | `CreateFromDecimalLength(value, min, max)` |
+| `DecimalNonNegative` | `FromDecimal(value, errorsDetails?)` | `CreateFromDecimal(value)` |
+| `DoubleMoreThan`, `DoubleLessThan` | `FromDoubleLength(value, length, errorsDetails?)` | `CreateFromDoubleLength(value, length)` |
+| `DoubleBetween` | `FromDoubleLength(value, min, max, errorsDetails?)` | `CreateFromDoubleLength(value, min, max)` |
+| `DoubleNonNegative` | `FromDouble(value, errorsDetails?)` | `CreateFromDouble(value)` |
+| `Id` | `ByDouble(value, errorsDetails?)` | `FromDouble(value)` |
+| `StringAsInt`, `StringAsLong`, … | `FromString(value)` *(sin `errorsDetails`)* | `CreateFromString(value)` |
 | `EmptyValue`, `Void` | — | `Create()` |
 
-> ⚠️ Ojo con los nombres: `Id` usa **`Bydouble` / `Fromdouble`** en minúscula (así está en el código fuente), y `FromIntLength` / `FromStringLength` llevan la errata *"Lenght"*. Son los nombres reales, hay que escribirlos tal cual.
+> ✅ **Resuelto en 2.0.0:** en la 1.x las factorías seguras se llamaban `By…` (`ByString`, `ByIntLength`,
+> `ByStringLength`…) y varias llevaban la errata *"Lenght"* (`FromIntLenght`, `FromStringLenght`).
+> Desde la 2.0.0 el patrón es uniforme: **`From…` devuelve `MlResult<T>`** y **`CreateFrom…` lanza**.
+> Los nombres antiguos se conservan como puentes `[Obsolete]` y **se eliminan en la 3.0.0**.
+
+> ⚠️ **Única excepción pendiente:** `Id` sigue invertido (`FromDouble` es la directa y `ByDouble` la
+> segura). Se normalizará en una versión futura.
 
 ### Personalizar el mensaje de error
 
@@ -260,13 +266,13 @@ Y la implementación de `From…` es siempre una tubería funcional del núcleo:
 
 ```csharp
 // Caso simple (numéricos): arranca de MlResult.Empty()
-public static MlResult<IntNonNegative> ByInt(int value, MlErrorDetails errorsDetails = null!)
+public static MlResult<IntNonNegative> FromInt(int value, MlErrorDetails errorsDetails = null!)
     => MlResult.Empty()
                .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? FormatErrorMessage(value)))
                .Map (_ => new IntNonNegative(value));
 
 // Caso compuesto (texto): valida primero el VO padre y luego la regla propia
-public static MlResult<Mail> ByString(string value, MlErrorDetails errorsDetails = null!)
+public static MlResult<Mail> FromString(string value, MlErrorDetails errorsDetails = null!)
     => NotEmptyString.FromString(value)
                      .Bind(_ => EnsureFp.That(value, IsValid(value), errorsDetails ?? FormatErrorMessage(value)))
                      .Map (_ => new Mail(value));
@@ -311,7 +317,7 @@ public static MlResult<Mail> ByString(string value, MlErrorDetails errorsDetails
 | `DecimalLessThan` / `DoubleLessThan` | `value < length` | Estricto |
 | `DecimalBetween` / `DoubleBetween` | `value > min && value < max` | Ambos exclusivos |
 | `DecimalNonNegative` / `DoubleNonNegative` | `value < limit` (con `limit = 0`) | ⚠️ **La condición está invertida** — ver [particularidades](#️-particularidades-reales-del-código-fuente) |
-| `Id` | `value > 0` (sobre `double`) | Métodos `Bydouble` / `Fromdouble` |
+| `Id` | `value > 0` (sobre `double`) | Métodos `ByDouble` (segura) / `FromDouble` (directa) |
 
 ### Parseo desde texto
 
@@ -329,7 +335,7 @@ int valor = cantidad.Match(valid: c => (int)c, fail: _ => 0);
 
 Los concretos tienen doble conversión de salida: **al número** (`implicit operator int`) y **al texto** (`implicit operator string`, que hace `Value.ToString()`).
 
-> ⚠️ La entrada se convierte con `int.TryParse` en los tipos concretos, pero `StringAsNumeric<TValue>` genérico usa `Convert.ChangeType`, que **lanza** en vez de devolver `false`. Por eso su `ByString` usa `TryBind` en lugar de `Bind`. Prefiere siempre los tipos concretos (`StringAsInt`) al genérico.
+> ⚠️ La entrada se convierte con `int.TryParse` en los tipos concretos, pero `StringAsNumeric<TValue>` genérico usa `Convert.ChangeType`, que **lanza** en vez de devolver `false`. Por eso su `FromString` usa `TryBind` en lugar de `Bind`. Prefiere siempre los tipos concretos (`StringAsInt`) al genérico.
 
 ### Especiales
 
@@ -381,78 +387,44 @@ RegexValue           codigo   = (value: "AB-123", pattern: @"^[A-Z]{2}-\d{3}$");
 
 Observaciones sobre el código tal y como está hoy. **Conviene conocerlas antes de confiar en un tipo.**
 
-### 1. 🐛 `DecimalNonNegative` y `DoubleNonNegative` tienen la condición invertida
+### 1. ✅ `DecimalNonNegative` y `DoubleNonNegative` ya funcionan (corregido en 2.0.0)
 
 ```csharp
 // DecimalNonNegative.cs
-public static decimal MinAllowedValue { get; private set; } = 0m;
-public static bool IsValid(decimal value) => value < limit;   // ← "menor que 0"
+private const decimal MinAllowedValue = 0m;
+public static bool IsValid(decimal value) => value >= MinAllowedValue;   // ← "cero o mayor"
 ```
 
-El nombre promete *"no negativo"*, pero la validación acepta **solo los negativos**. Además, al llamar al constructor base `DecimalMoreThan(value, 0)`, este exige `value > 0`, así que **las dos condiciones son incompatibles**: cualquier valor que pase una fallará la otra.
+En versiones anteriores la condición estaba **invertida** (`value < limit`, es decir, *solo negativos*) y además chocaba con el constructor base `DecimalMoreThan(value, 0)`, que exige `value > 0`: las dos condiciones eran incompatibles y **el tipo no se podía construir**.
 
-> ⚠️ **En la práctica, `DecimalNonNegative` y `DoubleNonNegative` no se pueden construir con éxito.** Hasta que se corrijan, usa `DecimalMoreThan.FromDecimalLength(value, -1)` o valida a mano con `EnsureFp.That(value, value >= 0, "…")`.
+> ✅ **Corregido en 2.0.0.** La validación es `value >= 0` y el constructor base recibe `MinAllowedValue - 1`, igual que `IntNonNegative`. Ya puedes usar `DecimalNonNegative.FromDecimal(importe)` y `DoubleNonNegative.FromDouble(valor)` con normalidad.
+
+### 2. ✅ Los límites ya no son estado global mutable (corregido en 2.0.0)
+
+```csharp
+private const int     Limit           = 0;    // IntNonNegative
+private const decimal MinAllowedValue = 0m;   // DecimalNonNegative
+private const double  MinAllowedValue = 0;    // DoubleNonNegative
+```
+
+Antes eran `public static` (en `IntNonNegative`, incluso un campo sin `readonly`), así que cualquier código podía escribir `IntNonNegative.MinAllowedValue = 100;` y **cambiar la validación de toda la aplicación en caliente**.
+
+> ✅ **Corregido en 2.0.0.** Los tres límites son `private const`: están fijados en compilación y no hay forma de alterarlos. Si necesitas un umbral propio, usa el tipo paramétrico (`IntMoreThan`, `DecimalMoreThan`, `DoubleMoreThan`).
 >
-> `IntNonNegative` **sí funciona** correctamente (`value >= limit` con `limit = 0`).
+> Los puentes `DecimalNonNegative.limit` y `DoubleNonNegative.limit` se conservan marcados como `[Obsolete]` y se eliminarán en la 3.0.0.
 
-### 2. ⚠️ `IntNonNegative.MinAllowedValue` es un campo público mutable
+### 3. ⚠️ Los constructores públicos han pasado a `protected` (2.0.0)
 
-```csharp
-public static int MinAllowedValue;      // sin readonly, sin private set
-```
-
-Cualquier código puede escribir `IntNonNegative.MinAllowedValue = 100;` y **cambiar la validación de toda la aplicación en caliente**. No lo hagas. (En `DecimalNonNegative` y `DoubleNonNegative` sí es `{ get; private set; }`.)
-
-### 3. Los límites de longitud son exclusivos (y no siempre simétricos)
-
-| Tipo | Mínimo | Máximo |
-|---|---|---|
-| `StringMinLength` | **inclusivo** (`>=`) | — |
-| `StringMaxLength` | — | **exclusivo** (`<`) |
-| `StringLengthBetween` | **exclusivo** (`>`) | **exclusivo** (`<`) |
-
-Es decir: `StringMaxLength.FromLength("abcde", 5)` **falla**, porque exige `Length < 5`. Si quieres "hasta 5 caracteres", pasa `6`.
-
-Lo mismo con `IntBetween`: para el rango 1..10 inclusive hay que pedir `(value, 0, 11)`.
-
-### 4. `StringLengthBetween.FormatErrorMessage` invierte los límites en el texto
+`Age`, `Id` e `IdLite` tenían constructor `public` que lanzaba `ArgumentOutOfRangeException`. Como eso contradice el propio planteamiento de la librería (los errores viajan en `MlResult`, no como excepciones), ahora son `protected`.
 
 ```csharp
-=> $"{value} must be between {maxLength} and {minLength}";   // ← max primero
-```
+// ❌ Ya no compila
+var edad = new Age(30);
 
-El mensaje dirá *"must be between 20 and 2"*. Si el mensaje se muestra al usuario, **pasa tu propio `errorsDetails`**.
-
-### 5. `ServiceKey.IsValid` y `MemberName.IsValid` ignoran el parámetro `length`
-
-```csharp
-public static new bool IsValid(string value, int length) => StringMinLength.IsValid(value, MinLength);
-```
-
-Pasan su constante interna (`1` para `ServiceKey`, `3` para `MemberName`) y descartan lo que le pases. Es coherente con el propósito del tipo, pero la firma engaña: **el segundo argumento no tiene efecto**.
-
-### 6. Los constructores de `ServiceKey` y `MemberName` son públicos
-
-A diferencia del resto de la librería (donde el constructor es `protected` para forzar el uso de las fábricas), `ServiceKey` y `MemberName` se pueden instanciar con `new Key("x")`. Sigue siendo válido, pero por coherencia usa `FromString` / `ByString`.
-
-### 7. Los mensajes de error por defecto están en inglés
-
-`"{value} cannot be null or empty"`, `"{value} is not a valid mail"`, `"{value} must be More than 0"`… Si esos textos van a llegar al usuario final, **pasa siempre tu propio `MlErrorDetails` en español**.
-
-### 8. `RegexValue.Pattern` es una propiedad de instancia
-
-Puedes preguntarle a un `RegexValue` con qué patrón se validó (`miValor.Pattern`), pero **`Mail` y `Endpoint` no lo exponen como estático**; para eso están las constantes `Mail.ValidationPattern` y `Endpoint.ValidationPattern` (nombre heredado, aunque en `Mail` valide correos).
-
-### 9. `Endpoint` es más restrictivo de lo que parece
-
-El patrón `^https://[A-Za-z0-9.-]+(?::[1-9][0-9]{0,4})?$` **exige `https`** y **no admite ruta**:
-
-```csharp
-Endpoint.IsValid("https://api.empresa.com");        // ✅
-Endpoint.IsValid("https://api.empresa.com:8443");   // ✅
-Endpoint.IsValid("http://api.empresa.com");         // ❌ no es https
-Endpoint.IsValid("https://api.empresa.com/v1");     // ❌ lleva ruta
-Endpoint.IsValid("https://localhost:5001");         // ✅
+// ✅ Vía de construcción correcta
+MlResult<Age> edad  = Age.FromInt(30);        // datos externos → MlResult
+Age           edad2 = Age.CreateFromInt(30);  // literal propio → lanza si es inválido
+Age           edad3 = 30;                     // operador implícito (puede lanzar)
 ```
 
 ---
@@ -591,21 +563,19 @@ var titulo = StringMaxLength.FromLength("12345", 5);      // FALLA: exige Length
 var titulo = StringMaxLength.FromLength("12345", 6);
 
 
-// ❌ MAL: contar con DecimalNonNegative / DoubleNonNegative
-var importe = DecimalNonNegative.FromDecimal(10m);              // no se puede construir (bug conocido)
+// ❌ MAL: construir un value object con new
+var edad = new Age(30);                   // no compila: el constructor es protected
 
-// ✅ BIEN: usar el tipo paramétrico o EnsureFp
-var importe = DecimalMoreThan.FromDecimalLength(10m, -1m);
-// o bien
-var importe2 = EnsureFp.That(10m, 10m >= 0m, "El importe no puede ser negativo");
+// ✅ BIEN: usar la factoría
+MlResult<Age> edad  = Age.FromInt(30, "La edad no puede ser negativa");
+Age           edad2 = Age.CreateFromInt(30);   // solo para literales propios
 
 
-// ❌ MAL: modificar el límite estático global
-IntNonNegative.MinAllowedValue = 10;      // cambia la validación de TODA la aplicación
+// ❌ MAL: intentar cambiar el umbral de un tipo NonNegative
+IntNonNegative.MinAllowedValue = 10;      // no compila: es private const
 
 // ✅ BIEN: usar el tipo paramétrico para límites propios
 var vo = IntMoreThan.FromIntLength(valor, 9);
-
 
 // ❌ MAL: buscar EnumRangeValueObject
 // (el fichero está completamente comentado: el tipo no existe)
@@ -633,7 +603,8 @@ var estado = EnsureFp.That(texto, Enum.TryParse<EstadoPedido>(texto, true, out _
 | Edad | `Age` |
 | Identificador numérico `double` | `Id` |
 | Entero con límite propio | `IntMoreThan` / `IntLessThan` / `IntBetween` |
-| Importe monetario con límite | `DecimalMoreThan` / `DecimalBetween` ⚠️ (evita `DecimalNonNegative`) |
+| Importe monetario con límite | `DecimalMoreThan` / `DecimalBetween` |
+| Importe monetario no negativo (cero incluido) | `DecimalNonNegative` / `DoubleNonNegative` |
 | Convertir texto de entrada en número | `StringAsInt`, `StringAsDecimal`, … |
 | Señalar "sin valor de retorno" en una tubería | `EmptyValue` / `Void` |
 | Validar contra un `enum` | `EnsureFp.That(…, Enum.TryParse<T>(…), …)` |
@@ -649,8 +620,8 @@ var estado = EnsureFp.That(texto, Enum.TryParse<EstadoPedido>(texto, true, out _
 5. **Recuerda que los máximos y los rangos son exclusivos**; ajusta el límite en uno.
 6. **Encadena con `Bind`** cuando una validación dependa de la anterior, y usa el último `Map` para construir el agregado.
 7. **Nombra los elementos de las tuplas** en las conversiones paramétricas.
-8. **No toques `IntNonNegative.MinAllowedValue`**: es estado global mutable.
-9. **Evita `DecimalNonNegative` y `DoubleNonNegative`** hasta que se corrija la condición invertida.
+8. **No construyas los VO con `new`**: los constructores son `protected` o `private` y lanzan. Usa `From…` o `CreateFrom…`.
+9. **Si necesitas un umbral distinto de cero**, usa el tipo paramétrico (`IntMoreThan`, `DecimalMoreThan`, `DoubleMoreThan`): los límites de los tipos `NonNegative` son `private const` y no se pueden cambiar.
 10. **Prefiere `StringAsInt` frente a `StringAsNumeric<int>`**: el concreto usa `TryParse`, el genérico usa `Convert.ChangeType` y lanza.
 11. **`IsValid` es tu amigo para consultas**: si solo quieres saber si algo sería válido, no construyas el objeto.
 12. **Usa `EmptyValue` / `Void`** en lugar de `MlResult<bool>` para operaciones que no devuelven dato: expresan mejor la intención.
@@ -666,9 +637,10 @@ var estado = EnsureFp.That(texto, Enum.TryParse<EstadoPedido>(texto, true, out _
 - **Composición por herencia**: los VO de texto con longitud se construyen sobre `NotEmptyString`, así que la ausencia de vacíos está garantizada por el tipo.
 - **Familias**: texto (9 tipos), enteros (6), decimales y dobles (9), parseo desde texto (12), especiales (2).
 - **Conversiones implícitas** hacia el primitivo (siempre seguras) y desde el primitivo o desde tuplas (pueden lanzar).
-- ⚠️ **Puntos a vigilar**: la condición invertida de `DecimalNonNegative`/`DoubleNonNegative`, los máximos exclusivos, el `limit` público mutable de `IntNonNegative`, los mensajes en inglés y `EnumRangeValueObject` (comentado, inexistente).
+- ✅ **Corregido en 2.0.0**: la condición invertida de `DecimalNonNegative`/`DoubleNonNegative` (ya se pueden construir) y los límites públicos mutables (ahora `private const`). Los constructores de `Age`, `Id` e `IdLite` han pasado a `protected`.
+- ⚠️ **Puntos a vigilar**: los máximos y rangos son exclusivos, los mensajes por defecto están en inglés y `EnumRangeValueObject` sigue comentado (inexistente).
 
-Esta librería es la base de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) (rutas y ficheros), aporta `IntNonNegative` a [`Internals`](../MoralesLarios.OOFP.Shared/README.md) (paginación) y se combina de forma natural con [`Validation`](../MoralesLarios.OOFP.Validation/README.md).
+Esta librería es la base de [`ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) (rutas y ficheros), aporta `IntNonNegative` a [`Shared`](../MoralesLarios.OOFP.Shared/README.md) (paginación) y se combina de forma natural con [`Validation`](../MoralesLarios.OOFP.Validation/README.md).
 
 ---
 
@@ -683,7 +655,7 @@ Esta librería es la base de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObje
 ### Proyectos relacionados
 
 - [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) — value objects de rutas y ficheros (`FilePath`, `DirectoryPath`)
-- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validación funcional con `MlSelfValidatable<T>`
+- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — validación funcional con `IMlSelfValidatable<T>`
 - [`MoralesLarios.OOFP.Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) — validación por atributos
 - [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — integración con FluentValidation
 - [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) — usa `IntNonNegative` en la paginación

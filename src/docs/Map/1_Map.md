@@ -26,8 +26,8 @@ La diferencia con [`Bind`](../Bind/3_Bind.md) está en el tipo del delegado, y e
 
 | | Delegado | Se usa cuando… |
 |---|---|---|
-| `Map` | `Func<T, TReturn>` | La transformación **no puede fallar** |
-| `Bind` | `Func<T, MlResult<TReturn>>` | La transformación **puede fallar** |
+| `Map` | `Func<T, TResult>` | La transformación **no puede fallar** |
+| `Bind` | `Func<T, MlResult<TResult>>` | La transformación **puede fallar** |
 
 ```csharp
 // Map: formatear un importe no puede fallar
@@ -64,20 +64,20 @@ La regla práctica es mecánica:
 ## Firma real e implementación
 
 ```csharp
-public static MlResult<TReturn> Map<T, TReturn>(this MlResult<T>      source,
-                                                     Func<T, TReturn> func)
+public static MlResult<TResult> Map<T, TResult>(this MlResult<T>      source,
+                                                     Func<T, TResult> func)
     => source.Match
     (
-        fail : MlResult<TReturn>.Fail,
+        fail : MlResult<TResult>.Fail,
         valid: value => func(value)
     );
 ```
 
 Dos observaciones sobre este cuerpo:
 
-1. **La rama de fallo cambia el tipo genérico pero conserva los errores intactos.** `MlResult<TReturn>.Fail` se pasa como *grupo de métodos*: recibe los `MlErrorDetails` originales y los reempaqueta en el nuevo tipo. Ni un mensaje ni un detalle se pierden.
+1. **La rama de fallo cambia el tipo genérico pero conserva los errores intactos.** `MlResult<TResult>.Fail` se pasa como *grupo de métodos*: recibe los `MlErrorDetails` originales y los reempaqueta en el nuevo tipo. Ni un mensaje ni un detalle se pierden.
 
-2. **La rama válida se apoya en la conversión implícita.** `func(value)` devuelve un `TReturn` desnudo, que se convierte automáticamente en `MlResult<TReturn>` válido gracias al operador implícito definido en `MlResult<T>`.
+2. **La rama válida se apoya en la conversión implícita.** `func(value)` devuelve un `TResult` desnudo, que se convierte automáticamente en `MlResult<TResult>` válido gracias al operador implícito definido en `MlResult<T>`.
 
 | Estado de entrada | `func` | Resultado |
 |---|---|---|
@@ -112,18 +112,18 @@ MlResult<Factura> bien = ObtenerPedido(id)
 Una transformación puede no devolver `MlResult` y aun así romperse: un `int.Parse`, un acceso a un índice, una división. Para eso está `TryMap`, que envuelve la llamada en un `try/catch` y convierte la excepción en un fallo.
 
 ```csharp
-public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T>             source,
-                                                        Func<T, TReturn>        func,
+public static MlResult<TResult> TryMap<T, TResult>(this MlResult<T>             source,
+                                                        Func<T, TResult>        func,
                                                         Func<Exception, string> errorMessageBuilder)
     => source.Match
     (
-        fail : MlResult<TReturn>.Fail,
+        fail : MlResult<TResult>.Fail,
         valid: value => func.TryToMlResult(source.Value, errorMessageBuilder)
     );
 
 // Sobrecarga cómoda con mensaje fijo
-public static MlResult<TReturn> TryMap<T, TReturn>(this MlResult<T>      source,
-                                                        Func<T, TReturn> func,
+public static MlResult<TResult> TryMap<T, TResult>(this MlResult<T>      source,
+                                                        Func<T, TResult> func,
                                                         string           exceptionAditionalMessage = null!)
     => TryMap(source, func, _ => exceptionAditionalMessage!);
 ```
@@ -154,10 +154,10 @@ Las dos formas de construir el mensaje aparecen en toda la biblioteca:
 
 | Origen | Delegado | Método |
 |---|---|---|
-| `MlResult<T>` | `Func<T, TReturn>` | `MapAsync` (envuelve con `ToAsync()`) |
-| `MlResult<T>` | `Func<T, Task<TReturn>>` | `MapAsync` |
-| `Task<MlResult<T>>` | `Func<T, Task<TReturn>>` | `MapAsync` |
-| `Task<MlResult<T>>` | `Func<T, TReturn>` | `MapAsync` |
+| `MlResult<T>` | `Func<T, TResult>` | `MapAsync` (envuelve con `ToAsync()`) |
+| `MlResult<T>` | `Func<T, Task<TResult>>` | `MapAsync` |
+| `Task<MlResult<T>>` | `Func<T, Task<TResult>>` | `MapAsync` |
+| `Task<MlResult<T>>` | `Func<T, TResult>` | `MapAsync` |
 
 Y `TryMapAsync` tiene 8, porque cada combinación se duplica según cómo se construya el mensaje de error (`string` o `Func<Exception, string>`).
 
@@ -303,7 +303,7 @@ resultado.ExecSelf(p => _log.LogInformation("{P}", p));
 ## Resumen
 
 - `Map` transforma el valor de un resultado válido y propaga los fallos sin tocarlos.
-- Implementación real: `source.Match(fail: MlResult<TReturn>.Fail, valid: value => func(value))`.
+- Implementación real: `source.Match(fail: MlResult<TResult>.Fail, valid: value => func(value))`.
 - La rama de fallo **cambia el tipo genérico pero conserva errores y detalles intactos**.
 - Usa `Map` para funciones que **no fallan**; usa [`Bind`](../Bind/3_Bind.md) para las que devuelven `MlResult`.
 - El anidamiento `MlResult<MlResult<T>>` es la señal inequívoca de haber usado `Map` en lugar de `Bind`.

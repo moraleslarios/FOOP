@@ -1,4 +1,4 @@
-# `EnsureFp` — Agregación de reglas: `All`, `AllOrFirst`, `Any`
+﻿# `EnsureFp` — Agregación de reglas: `All`, `AllOrFirst`, `Any`
 
 > Archivo fuente: `Helpers/EnsureFp.Aggregation.cs`.
 
@@ -243,7 +243,7 @@ restricciones se satisface trivialmente.
 > ℹ️ Comparación con [`BindMulti`](../Bind/4_BindMulti.md): `BindMulti` acumula errores de varias
 > funciones que pueden devolver **tipos distintos** dentro de una cadena ya iniciada. `All` opera
 > sobre **un mismo valor y un mismo tipo** y es el punto de entrada natural desde un DTO.
-> Y a diferencia de [`CombineAll`](../Several/4_Combine.md), esta familia **sí** acumula errores.
+> Y a diferencia de [`CombineAll`](../Several/4_CombineAll.md), esta familia **sí** acumula errores.
 
 ---
 
@@ -342,6 +342,6 @@ public async Task<MlResult<Pedido>> ProcesarAsync(Pedido pedido) =>
 - [1. Núcleo: `That`, `TryThat`, `*Arg`](1_EnsureFpCore.md)
 - [8. Variantes asíncronas](8_EnsureFpAsync.md)
 - [`BindMulti`](../Bind/4_BindMulti.md) — acumular errores con tipos distintos
-- [`CombineAll`](../Several/4_Combine.md) — ⚠️ **no** acumula errores
+- [`CombineAll`](../Several/4_CombineAll.md) — ⚠️ **no** acumula errores
 - [`Bucles`](../loops/Collections.md) — validar elemento a elemento
 - [Modelo de errores](../core-types/MlResultErrors.md) · [`Details`](../core-types/MlResultErrorDetailsExtensions.md)

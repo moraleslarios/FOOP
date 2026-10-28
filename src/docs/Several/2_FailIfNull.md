@@ -1,4 +1,4 @@
-# FailIfNull — Convertir un `null` en un fallo explícito
+﻿# FailIfNull — Convertir un `null` en un fallo explícito
 
 ## Índice
 
@@ -9,7 +9,7 @@
 5. [Las cuatro formas de expresar el error](#las-cuatro-formas-de-expresar-el-error)
 6. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 7. [Variantes asíncronas](#variantes-asíncronas)
-8. [`FailIfNull` frente a las alternativas](#nulltofailed-frente-a-las-alternativas)
+8. [`FailIfNull` frente a las alternativas](#failifnull-frente-a-las-alternativas)
 9. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
 10. [Ejemplos Prácticos](#ejemplos-prácticos)
 11. [Mejores Prácticas](#mejores-prácticas)
@@ -71,7 +71,7 @@ el `NullReferenceException` tres capas más arriba, ya has perdido el contexto.
 
 🔑 `FailIfNull` es una extensión de **`T`** (cualquier tipo), no de `MlResult<T>`.
 Pertenece a la misma familia de "constructores" que
-[`FailIfEmpty`](1_EmptyToFailed.md) y [`FailIfFalse`](3_BoolToResult.md).
+[`FailIfEmpty`](1_FailIfEmpty.md) y [`FailIfFalse`](3_FailIfFalse.md).
 
 ```csharp
 // ✅ Sobre un valor normal
@@ -120,7 +120,7 @@ Puntos que conviene retener:
 | La comprobación es `source == null` (no `is null`) | Para tipos con `operator ==` sobrecargado se usa **ese** operador, no la comparación de referencias |
 | El valor válido es `source`, tal cual | No hay copia, transformación ni normalización |
 | Todas las sobrecargas delegan en la de `MlErrorDetails` | Un único punto de verdad; sin divergencias de comportamiento |
-| No existe `TryNullToFailed` | No hace falta: el método no invoca ningún delegado tuyo |
+| No existe `TryFailIfNull` | No hace falta: el método no invoca ningún delegado tuyo |
 | No existe una sobrecarga con `Func<...>` para el mensaje | El mensaje se **evalúa siempre**, aunque el valor no sea `null` (ver particularidades) |
 
 ---
@@ -192,7 +192,7 @@ public record Codigo(string Valor)
 **3. Con tipos de valor no anulables la llamada es inútil.**
 `int`, `DateTime`, `decimal`… nunca son `null`, por lo que `FailIfNull` siempre devuelve
 `Valid`. Para esos casos usa
-[`FailIfFalse`](3_BoolToResult.md) o `EnsureFp.That(...)`:
+[`FailIfFalse`](3_FailIfFalse.md) o `EnsureFp.That(...)`:
 
 ```csharp
 // ❌ Nunca falla: un int no puede ser null
@@ -251,8 +251,8 @@ var resultado = await _repo.ObtenerAsync(id)
 |-------------|---------------|------------------|
 | `FailIfNull` | El dato viene de fuera del carril y puede ser `null` | Constructor: entra al carril |
 | `EnsureFp.NotNull(x, "...")` | Validación de argumentos al principio de un método | Método **estático**, no extensión; misma semántica |
-| [`FailIfEmpty`](1_EmptyToFailed.md) | El dato es una colección y el vacío también es un problema | Cubre `null` **y** vacío |
-| [`FailIfFalse`](3_BoolToResult.md) | La condición no es "ser null" | Cualquier predicado |
+| [`FailIfEmpty`](1_FailIfEmpty.md) | El dato es una colección y el vacío también es un problema | Cubre `null` **y** vacío |
+| [`FailIfFalse`](3_FailIfFalse.md) | La condición no es "ser null" | Cualquier predicado |
 | [`MapEnsure`](../Map/2_MapEnsure.md) | Ya estás en el carril y quieres validar el valor | Operador del carril, no constructor |
 | `??` de C# | Quieres un **valor por defecto**, no un fallo | No genera error; oculta el motivo |
 
@@ -270,7 +270,7 @@ método, y `FailIfNull` para **encadenar** resultados de consultas.
 | Fallar si un objeto es `null`, con varios mensajes | `FailIfNull(new[] { "...", "..." })` |
 | Fallar si es `null` y adjuntar diagnóstico | `FailIfNull(MlErrorDetails.FromErrorMessageDetails(...))` |
 | Lo mismo, partiendo de un `Task<T>` | `FailIfNullAsync("...")` |
-| Fallar si una colección viene vacía o `null` | [`FailIfEmpty`](1_EmptyToFailed.md) |
+| Fallar si una colección viene vacía o `null` | [`FailIfEmpty`](1_FailIfEmpty.md) |
 | Validar un `int`, `decimal`, `DateTime`… | `EnsureFp.That(x, condición, "...")` |
 | Comprobar un campo cuando ya estoy en el carril | `.Bind(c => c.Campo.FailIfNull("..."))` |
 | Sustituir el `null` por un valor por defecto (sin fallar) | `valor ?? porDefecto` |
@@ -402,7 +402,7 @@ var r = cliente.FailIfNull(MlErrorDetails.FromErrorMessageDetails(
 2. **Reserva el fallo para los `null` que bloquean el proceso.** Si hay un valor por
    defecto razonable, usa `??`.
 3. **No lo uses con tipos de valor no anulables**: nunca fallará. Usa
-   `EnsureFp.That` o [`FailIfFalse`](3_BoolToResult.md).
+   `EnsureFp.That` o [`FailIfFalse`](3_FailIfFalse.md).
 4. **Prefiere la sobrecarga de `MlErrorDetails`** en servicios: los `Details`
    (`NoEncontrado`, identificadores, capa) permiten decidir la respuesta HTTP al final.
 5. **Usa la sobrecarga de `IEnumerable<string>`** para mensajes orientados al usuario:
@@ -429,7 +429,7 @@ var r = cliente.FailIfNull(MlErrorDetails.FromErrorMessageDetails(
   `IEnumerable<string>`) y **8 asíncronas** (las mismas cuatro sobre `T`, que son meras
   envolturas, y sobre `Task<T>`, que sí esperan el origen).
 - El método **base** es el de `MlErrorDetails`; todos los demás delegan en él.
-- **No existe `TryNullToFailed`**: el método no invoca delegados de usuario.
+- **No existe `TryFailIfNull`**: el método no invoca delegados de usuario.
 - ⚠️ Usa `source == null` (respeta `operator ==` sobrecargados) y **evalúa el mensaje
   siempre**.
 - ⚠️ Con tipos de valor no anulables es una operación inútil: nunca falla.
@@ -439,9 +439,9 @@ var r = cliente.FailIfNull(MlErrorDetails.FromErrorMessageDetails(
 
 ## Ver también
 
-- [`FailIfEmpty`](1_EmptyToFailed.md) — el equivalente para colecciones
-- [`FailIfFalse`](3_BoolToResult.md) — construir un `MlResult` desde una condición
-- [`CombineAll`](4_Combine.md) — fusionar varios `MlResult`
+- [`FailIfEmpty`](1_FailIfEmpty.md) — el equivalente para colecciones
+- [`FailIfFalse`](3_FailIfFalse.md) — construir un `MlResult` desde una condición
+- [`CombineAll`](4_CombineAll.md) — fusionar varios `MlResult`
 - [`EnsureFp`](../EnsureFp/EnsureFp.md) — `NotNull`, `NotEmpty`, `That` y compañía
 - [`MapEnsure`](../Map/2_MapEnsure.md) — validar el contenido sin salir del carril
 - [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que devuelven `MlResult`

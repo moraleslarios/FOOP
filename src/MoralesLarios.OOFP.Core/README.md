@@ -1,8 +1,8 @@
-# MoralesLarios.OOFP / MoralesLarios.FOOP
+﻿# MoralesLarios.OOFP / MoralesLarios.FOOP
 
 `MoralesLarios.OOFP` es el núcleo funcional del ecosistema. Su objetivo es centralizar la validación, el control de errores y el flujo de negocio con un patrón consistente basado en `MlResult<T>` y composición funcional.
 
-La librería se usa de base por capas posteriores como `ValueObjects`, `Validation`, `EFCore`, `WebServices`, `WebApi`, clientes HTTP y utilidades. La idea principal es evitar que los errores se conviertan en un mecanismo de control principal, y en su lugar transportar el estado explícito del flujo con resultados y detalles estructurados.
+La librería se usa de base por capas posteriores como `ValueObjects`, `Validation`, `EntityFrameworkCore`, `Application`, `AspNetCore.Results`, clientes HTTP y utilidades. La idea principal es evitar que los errores se conviertan en un mecanismo de control principal, y en su lugar transportar el estado explícito del flujo con resultados y detalles estructurados.
 
 ---
 
@@ -57,20 +57,20 @@ MoralesLarios.OOFP.Core/
 ## Índice de contenidos
 
 1. [El tipo central: `MlResult<T>`](#1-el-tipo-central-mlresultt)
-2. [`MlError` y `MlErrorDetails`](#2-mlerror-y-mlerrorsdetails)
+2. [`MlError` y `MlErrorDetails`](#2-mlerror-y-mlerrordetails)
 3. [`EnsureFp`: validaciones funcionales](#3-ensurefp-validaciones-funcionales)
 4. [`Bind`: encadenar operaciones](#4-bind-encadenar-operaciones)
 5. [`Map`: transformar el valor válido](#5-map-transformar-el-valor-válido)
 6. [`Match`: decidir por rama válida o errónea](#6-match-decidir-por-rama-válida-o-errónea)
 7. [`ExecSelf`: ejecutar efectos secundarios sin perder el flujo](#7-execself-ejecutar-efectos-secundarios-sin-perder-el-flujo)
-8. [Utilidades de `MlResultExtensions`](#8-utilidades-de-mlresultactions)
-9. [`MlResultSeveralExtensions`](#9-mlresultactionsseveral)
-10. [`MlResultConversions`](#10-mlresulttransformations)
-11. [`MlResultCollections`: proyección y fusión con colecciones](#11-mlresultbucles-proyección-y-fusión-con-colecciones)
+8. [Utilidades de `MlResultExtensions`](#8-utilidades-de-mlresultextensions)
+9. [`MlResultSeveralExtensions`](#9-mlresultseveralextensions)
+10. [`MlResultConversions`](#10-mlresultconversions)
+11. [`MlResultCollections`: proyección y fusión con colecciones](#11-mlresultcollections-proyección-y-fusión-con-colecciones)
 12. [Extensiones genéricas de ayuda](#12-extensiones-genéricas-de-ayuda)
 13. [Patrón recomendado](#13-patrón-recomendado)
 14. [Cuándo usar cada familia](#14-cuándo-usar-cada-familia)
-15. [Documentación adicional del núcleo](#15-documentación-adicional-del-núcleo)
+15. [Documentación adicional del núcleo](#15-documentación-adicional)
 16. [Resumen](#16-resumen)
 
 ---
@@ -1557,7 +1557,7 @@ var d = registros.TraverseSplit(Convertir);
 var e = resultadosSueltos.MergeErrorsIfExists();
 ```
 
-Todas las variantes disponen de su versión `*Async` (`TraverseAsync`, `ProjectionWhileAsync`, `ProjectionSplitAsync`, `MergeFailureErrorsAsync`, `MergeErrorsIfExistsAsync`) y aceptan tanto una colección síncrona como un `Task<IEnumerable<T>>` de entrada, de modo que encajan sin fricción en cualquier punto de una cadena asíncrona.
+Todas las variantes disponen de su versión `*Async` (`TraverseAsync`, `TraverseWhileAsync`, `TraverseSplitAsync`, `MergeFailureErrorsAsync`, `MergeErrorsIfExistsAsync`) y aceptan tanto una colección síncrona como un `Task<IEnumerable<T>>` de entrada, de modo que encajan sin fricción en cualquier punto de una cadena asíncrona.
 
 ---
 
@@ -1837,7 +1837,7 @@ filosofía, convención de nombres y el
 
 **`Bind` — encadenar operaciones que devuelven `MlResult`**
 
-- [`3_Bind`](../docs/Bind/3_Bind.md) ⭐ · [`2_MlResultActions`](../docs/Bind/2_MlResultExtensions.md) ·
+- [`3_Bind`](../docs/Bind/3_Bind.md) ⭐ · [`2_MlResultExtensions`](../docs/Bind/2_MlResultExtensions.md) ·
   [`4_BindMulti`](../docs/Bind/4_BindMulti.md) · [`5_BindIf`](../docs/Bind/5_BindIf.md)
 - Recuperación: [`6_BindIfFail`](../docs/Bind/6_BindIfFail.md) ·
   [`7_BindIfFailWithValue`](../docs/Bind/7_BindIfFailWithValue.md) ·
@@ -1871,10 +1871,10 @@ filosofía, convención de nombres y el
 
 **`Several` — puentes desde el mundo imperativo**
 
-- [`1_EmptyToFailed`](../docs/Several/1_EmptyToFailed.md) ·
-  [`2_NullToFailed`](../docs/Several/2_FailIfNull.md) ·
-  [`3_BoolToResult`](../docs/Several/3_BoolToResult.md) ·
-  [`4_Combine`](../docs/Several/4_Combine.md) ⚠️ (**no** acumula errores)
+- [`1_FailIfEmpty`](../docs/Several/1_FailIfEmpty.md) ·
+  [`2_FailIfNull`](../docs/Several/2_FailIfNull.md) ·
+  [`3_FailIfFalse`](../docs/Several/3_FailIfFalse.md) ·
+  [`4_Combine`](../docs/Several/4_CombineAll.md) ⚠️ (**no** acumula errores)
 
 **Utilidades y colecciones**
 
@@ -1945,7 +1945,7 @@ central cabe en una frase:
 
 ### Errores frecuentes que conviene recordar
 
-1. **No leas `Value` directamente**: usa `Match` (o `GetValueOrThrow()` solo cuando ya has
+1. **No leas `Value` directamente**: usa `Match` (o `GetValueOrThrow()` sólo cuando ya has
    garantizado la validez).
 2. **`CombineAll` no acumula errores**: cortocircuita. Si necesitas acumular, usa
    [`Traverse`](../docs/loops/Collections.md).

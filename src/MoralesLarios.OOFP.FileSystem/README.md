@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.FileSystem — Entrada/salida en el raíl funcional
+﻿# MoralesLarios.OOFP.FileSystem — Entrada/salida en el raíl funcional
 
 El proyecto **más pequeño de toda la solución**: una interfaz con **tres métodos** que envuelven operaciones de `System.IO` para que **la ruta se valide antes de tocar el disco** y el resultado viaje como [`MlResult<T>`](../docs/core-types/MlResult.md).
 
@@ -12,9 +12,9 @@ Su valor no está en la cantidad de operaciones que cubre —cubre muy pocas—,
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Registro en el contenedor](#registro-en-el-contenedor)
-5. [`IMlFileSystem` — los tres métodos](#iwrapperio--los-tres-métodos)
+5. [`IMlFileSystem` — los tres métodos](#imlfilesystem--los-tres-métodos)
 6. [El patrón: validar la ruta, luego actuar](#el-patrón-validar-la-ruta-luego-actuar)
-7. [Relación con `ValueObjects.IO`](#relación-con-valueobjectsio)
+7. [Relación con `ValueObjects.FileSystem`](#relación-con-valueobjectsfilesystem)
 8. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 9. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
 10. [Cómo extenderlo](#cómo-extenderlo)
@@ -174,7 +174,7 @@ public MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directorySt
 
 ---
 
-## Relación con `ValueObjects.IO`
+## Relación con `ValueObjects.FileSystem`
 
 Los dos objetos de valor que usa (`ExistingFilePath` y `ExistingDirectoryPath`) viven en [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) y ambos heredan de `NotEmptyString`:
 
@@ -342,14 +342,14 @@ Como la superficie es tan reducida, es probable que necesites más operaciones. 
 using MoralesLarios.OOFP.Types;
 using MoralesLarios.OOFP.ValueObjects.FileSystem;
 
-public interface IWrapperIOExtendido : IMlFileSystem
+public interface IMlFileSystemExtendido : IMlFileSystem
 {
     MlResult<string>              WriteAllText   (string filePathStr, string contenido);
     Task<MlResult<string>>        ReadAllTextAsync(string filePathStr);
     MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr, string patron);
 }
 
-public class WrapperIOExtendido : MlFileSystem, IWrapperIOExtendido
+public class MlFileSystemExtendido : MlFileSystem, IMlFileSystemExtendido
 {
     // ✅ Escritura: valida el DIRECTORIO padre, no el fichero (aún no existe)
     public MlResult<string> WriteAllText(string filePathStr, string contenido)
@@ -505,7 +505,7 @@ var texto = MlResult.TryMap(() => _io.ReadAllText(rutaProtegida), "Sin acceso al
 | Lectura asíncrona | ❌ No disponible: [extiéndelo](#cómo-extenderlo) |
 | Recorrer subcarpetas | ❌ No disponible |
 | Una codificación concreta | ❌ Usa `ExistingFilePath.FromPath` + `TryMap` con `File.ReadAllText(ruta, encoding)` |
-| Solo validar que existe | `ExistingFilePath.FromPath(ruta)` de [`ValueObjects.IO`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) |
+| Solo validar que existe | `ExistingFilePath.FromPath(ruta)` de [`ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) |
 | Cubrir permisos, bloqueos, etc. | Envolver la llamada en `MlResult.TryMap(…)` |
 
 ---

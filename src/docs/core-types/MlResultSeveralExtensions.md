@@ -1,4 +1,4 @@
-# `MlResultSeveralExtensions` (`Types/MlResultSeveralExtensions.cs`)
+﻿# `MlResultSeveralExtensions` (`Types/MlResultSeveralExtensions.cs`)
 
 Utilidades de **entrada y composición**: convierten valores del mundo imperativo (`null`, colecciones
 vacías, `bool`) en `MlResult<T>`, y combinan varios resultados en uno solo.
@@ -143,10 +143,10 @@ MlResult<Informe> informeAsync = await ObtenerDatosAsync(rango)
 
 ## Documentación detallada por concepto
 
-- [1. `FailIfEmpty`](../Several/1_EmptyToFailed.md)
+- [1. `FailIfEmpty`](../Several/1_FailIfEmpty.md)
 - [2. `FailIfNull`](../Several/2_FailIfNull.md)
-- [3. `FailIfFalse`](../Several/3_BoolToResult.md)
-- [4. `CombineAll`](../Several/4_Combine.md)
+- [3. `FailIfFalse`](../Several/3_FailIfFalse.md)
+- [4. `CombineAll`](../Several/4_CombineAll.md)
 
 ## Ver también
 

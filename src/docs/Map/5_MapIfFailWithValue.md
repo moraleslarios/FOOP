@@ -114,11 +114,11 @@ var resultado = ValidarPedido(pedido)              // puede fallar
 
 | | **Forma A** — recuperación en el mismo tipo | **Forma B** — proyección de las dos ramas |
 |---|---|---|
-| Genéricos | `<T>` | `<T, TValue, TReturn>` |
-| Delegados | `Func<T, T> func` | `Func<T, TReturn> funcValid` + `Func<TValue, TReturn> funcFail` |
+| Genéricos | `<T>` | `<T, TValue, TResult>` |
+| Delegados | `Func<T, T> func` | `Func<T, TResult> funcValid` + `Func<TValue, TResult> funcFail` |
 | Rama válida | se devuelve el valor tal cual | se transforma con `funcValid` |
 | Rama fallida | se lee `Details["Value"]` como `T` y se transforma con `func` | se lee `Details["Value"]` como `TValue` y se transforma con `funcFail` |
-| Tipo de salida | `MlResult<T>` | `MlResult<TReturn>` |
+| Tipo de salida | `MlResult<T>` | `MlResult<TResult>` |
 | Uso típico | degradar el objeto sin cambiar de forma | traducir a un modelo de vista/DTO cubriendo éxito y fracaso |
 
 La diferencia clave frente a `MapIfFail`: aquí el valor guardado puede ser **de otro tipo**
@@ -155,12 +155,12 @@ Léelo despacio, porque toda la semántica está en una línea:
 Como `func` devuelve un `T` desnudo (no un `MlResult<T>`), la recuperación es **infalible**:
 cuando el valor se recupera, la salida es siempre válida.
 
-### Forma B — `MapIfFailWithValue<T, TValue, TReturn>`
+### Forma B — `MapIfFailWithValue<T, TValue, TResult>`
 
 ```csharp
-public static MlResult<TReturn> MapIfFailWithValue<T, TValue, TReturn>(this MlResult<T>            source,
-                                                                            Func<T     , TReturn> funcValid,
-                                                                            Func<TValue, TReturn> funcFail)
+public static MlResult<TResult> MapIfFailWithValue<T, TValue, TResult>(this MlResult<T>            source,
+                                                                            Func<T     , TResult> funcValid,
+                                                                            Func<TValue, TResult> funcFail)
     => source.Match
                     (
                         fail : errorsDetails => errorsDetails.GetMetadataValue<TValue>().Map(value => funcFail(value)),
@@ -168,7 +168,7 @@ public static MlResult<TReturn> MapIfFailWithValue<T, TValue, TReturn>(this MlRe
                     );
 ```
 
-Aquí las dos ramas convergen en un mismo `TReturn`. Es el equivalente de `Match`, pero con
+Aquí las dos ramas convergen en un mismo `TResult`. Es el equivalente de `Match`, pero con
 la rama de fallo alimentada por el valor guardado en lugar de por los errores.
 
 ### Tabla de comportamiento
@@ -227,7 +227,7 @@ var r = ValidarPedido(pedido).MapIfFail(_ => Pedido.Vacio);
 | Método | Qué recibe el delegado de fallo | Qué devuelve el delegado | ¿Puede volver a fallar la recuperación? |
 |---|---|---|---|
 | `MapIfFail` | `MlErrorDetails` | `T` desnudo | No (salvo que lance) |
-| `MapIfFailWithValue` | el valor guardado (`T` o `TValue`) | `T`/`TReturn` desnudo | Solo si el valor no estaba |
+| `MapIfFailWithValue` | el valor guardado (`T` o `TValue`) | `T`/`TResult` desnudo | Solo si el valor no estaba |
 | `BindIfFailWithValue` | el valor guardado | `MlResult<…>` | Sí, la recuperación decide |
 
 Regla práctica:
@@ -252,9 +252,9 @@ Regla práctica:
 
 | Sobrecarga | Origen | Delegados |
 |---|---|---|
-| `MapIfFailWithValueAsync<T, TValue, TReturn>` | `MlResult<T>` | ambos asíncronos |
-| `MapIfFailWithValueAsync<T, TValue, TReturn>` | `Task<MlResult<T>>` | ambos asíncronos |
-| `MapIfFailWithValueAsync<T, TValue, TReturn>` | `MlResult<T>` | mezclas síncrono/asíncrono |
+| `MapIfFailWithValueAsync<T, TValue, TResult>` | `MlResult<T>` | ambos asíncronos |
+| `MapIfFailWithValueAsync<T, TValue, TResult>` | `Task<MlResult<T>>` | ambos asíncronos |
+| `MapIfFailWithValueAsync<T, TValue, TResult>` | `MlResult<T>` | mezclas síncrono/asíncrono |
 
 En total, la región publica **2 sobrecargas síncronas** de `MapIfFailWithValue` y **7
 asíncronas**, más las de `TryMapIfFailWithValue` (4 síncronas y más de veinte asíncronas).
@@ -298,9 +298,9 @@ public static MlResult<T> TryMapIfFailWithValue<T>(this MlResult<T> source,
 Y la Forma B protege **las dos ramas**:
 
 ```csharp
-public static MlResult<TReturn> TryMapIfFailWithValue<T, TValue, TReturn>(this MlResult<T>             source,
-                                                                               Func<T     , TReturn>   funcValid,
-                                                                               Func<TValue, TReturn>   funcFail,
+public static MlResult<TResult> TryMapIfFailWithValue<T, TValue, TResult>(this MlResult<T>             source,
+                                                                               Func<T     , TResult>   funcValid,
+                                                                               Func<TValue, TResult>   funcFail,
                                                                                Func<Exception, string> errorMessageBuilder)
     => source.Match
                     (
@@ -441,7 +441,7 @@ resultado.ExecSelfIfFail(e => _log.LogError("{Detalle}", e.GetErrorsSummary()));
    paso previo desde fuera: el resultado fallido ya viene «cargado».
 2. **Un solo `AddValueDetailIfFail` por resultado.** El diccionario `Details` lanza si la
    clave `"Value"` se repite.
-3. **Sé explícito con los genéricos en la Forma B** (`<T, TValue, TReturn>`); la inferencia
+3. **Sé explícito con los genéricos en la Forma B** (`<T, TValue, TResult>`); la inferencia
    con tres parámetros suele fallar y el mensaje del compilador no ayuda.
 4. **Registra antes de recuperar.** Una vez recuperas, el error desaparece del resultado:
    `.ExecSelfIfFail(e => _log.LogWarning("{D}", e.GetErrorsSummary()))`.
@@ -482,7 +482,7 @@ producción.**
   original**, no los errores.
 - El valor se lee de `Details["Value"]`, así que **hay que haberlo guardado antes** con
   `AddValueDetailIfFail`, `AddValueIfFail` o `MlErrorDetails.FromErrorMessageWithValue`.
-- Hay **dos formas**: la A (`<T>`, misma forma de salida) y la B (`<T, TValue, TReturn>`,
+- Hay **dos formas**: la A (`<T>`, misma forma de salida) y la B (`<T, TValue, TResult>`,
   proyecta las dos ramas a un tipo común y permite que el valor guardado sea de otro tipo).
 - Si el valor **no está** o **no es del tipo pedido**, el delegado no se ejecuta y el error
   original se sustituye por el de «no hay valor».

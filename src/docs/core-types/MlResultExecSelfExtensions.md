@@ -1,4 +1,4 @@
-# `MlResultExecSelfExtensions` (`Types/MlResultExecSelfExtensions.cs`)
+﻿# `MlResultExecSelfExtensions` (`Types/MlResultExecSelfExtensions.cs`)
 
 Familia para ejecutar **efectos laterales** (logs, métricas, auditoría, notificaciones, invalidación
 de caché…) **sin modificar** el `MlResult` que recorre la tubería.
@@ -11,10 +11,10 @@ Todos los métodos `ExecSelf*` devuelven **el mismo `MlResult` que recibieron**,
 
 | Operación | Transforma el valor | Cambia el estado | Devuelve |
 | --- | --- | --- | --- |
-| [`Map`](MlResultMapExtensions.md) | Sí | No (salvo `Try*`) | `MlResult<TReturn>` |
-| [`Bind`](MlResultBindExtensions.md) | Sí | Sí | `MlResult<TReturn>` |
+| [`Map`](MlResultMapExtensions.md) | Sí | No (salvo `Try*`) | `MlResult<TResult>` |
+| [`Bind`](MlResultBindExtensions.md) | Sí | Sí | `MlResult<TResult>` |
 | **`ExecSelf`** | **No** | **No** | **`MlResult<T>` original** |
-| [`Match`](MlResultMatchExtensions.md) | Sí | — (sale de la tubería) | `TReturn` |
+| [`Match`](MlResultMatchExtensions.md) | Sí | — (sale de la tubería) | `TResult` |
 
 Esto lo convierte en el punto ideal para **instrumentar** una tubería sin contaminar su lógica:
 puedes insertar y quitar `ExecSelf` sin que el resto de la cadena cambie ni un tipo.

@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.Http — consumo de APIs REST sin `try/catch` y sin excepciones
+﻿# MoralesLarios.OOFP.Http — consumo de APIs REST sin `try/catch` y sin excepciones
 
 `MoralesLarios.OOFP.Http` es la **capa cliente** de la solución: convierte cualquier llamada HTTP
 (`GET`, `POST`, `PUT`, `DELETE`, paginada o no) en un **`MlResult<T>`**. Nunca lanza excepciones al llamador,
@@ -19,10 +19,10 @@ de `RestClientFp<TDto>` sin escribir una sola línea de infraestructura.
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Arquitectura: las tres capas de cliente](#arquitectura-las-tres-capas-de-cliente)
-5. [`IHttpApiInvoker` — la capa de transporte](#ihttpclientfactorymanager--la-capa-de-transporte)
-6. [`RestClientFp<TDto>` — cliente CRUD de clave simple](#genclientfptdto--cliente-crud-de-clave-simple)
-7. [`CompositeKeyRestClientFp<TDto>` — cliente CRUD de clave compuesta](#gencomplexclientfptdto--cliente-crud-de-clave-compuesta)
-8. [Records de parámetros: `ApiCallOptions` y paginación](#records-de-parámetros-callrequestparamsinfo-y-paginación)
+5. [`IHttpApiInvoker` — la capa de transporte](#ihttpapiinvoker--la-capa-de-transporte)
+6. [`RestClientFp<TDto>` — cliente CRUD de clave simple](#restclientfptdto--cliente-crud-de-clave-simple)
+7. [`CompositeKeyRestClientFp<TDto>` — cliente CRUD de clave compuesta](#compositekeyrestclientfptdto--cliente-crud-de-clave-compuesta)
+8. [Records de parámetros: `ApiCallOptions` y paginación](#records-de-parámetros-apicalloptions-y-paginación)
 9. [Helpers de cabeceras y de respuestas](#helpers-de-cabeceras-y-de-respuestas)
 10. [`RegisterServices` — registro en el contenedor](#registerservices--registro-en-el-contenedor)
 11. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
@@ -190,9 +190,9 @@ await MlResult.EmptyAsync()
         .TryMapAsync         ( _       => _httpClientFactory.CreateClient(clientName))
         .ExecSelfIfValidAsync(client   => _logger.LogMlResultInformationAsync($"Haciendo post a la url …"))
         .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
-        .BindAsync           (response => response.IsSuccessStatusCode
+        .BindAsync           (async response => response.IsSuccessStatusCode
                                             ? response.ToMlResultValid()
-                                            : response.ToResponseErrorsDescription()
+                                            : (await response.ReadErrorDescriptionAsync())
                                                       .ToMlResultFail<HttpResponseMessage>())
         .TryMapAsync         (response => response.Content.ReadFromJsonAsync<T>(cancellationToken: ct))
                 .MyMethodFinalLogAsync(_logger, $"{nameof(PostAsync)}<{typeof(T).Name}");
@@ -275,7 +275,7 @@ Para usarlas tienes que inyectar la **clase concreta** (`HttpApiInvoker`) o exte
 
 ### Cómo se transforma un error del servidor
 
-Cuando `IsSuccessStatusCode` es `false`, el pipeline llama a `ToResponseErrorsDescription()`
+Cuando `IsSuccessStatusCode` es `false`, el pipeline llama a `ReadErrorDescriptionAsync()`
 (`Helpers/MlResponseWebExtensions.cs`), que produce un mensaje con **tres datos**:
 
 ```text
@@ -626,17 +626,19 @@ MlResult<HttpRequestMessage> TrySetHeaders   (this HttpRequestMessage request, D
 ### `MlResponseWebExtensions`
 
 ```csharp
-string       ToResponseErrorsDescription     (this HttpResponseMessage response);
-Task<string> ToResponseErrorsDescriptionAsync(this HttpResponseMessage response);
+Task<string> ReadErrorDescriptionAsync(this HttpResponseMessage response);
 ```
 
-Ambas devuelven `string.Empty` si la respuesta fue correcta y, si no, el bloque de tres líneas
+Devuelve `string.Empty` si la respuesta fue correcta y, si no, el bloque de tres líneas
 (código, razón, detalle) descrito [más arriba](#cómo-se-transforma-un-error-del-servidor).
 
-> ⚠️ La versión **sincrónica** hace `response.Content.ReadAsStringAsync().Result`, y es precisamente la que
-> usan todas las tuberías del `HttpApiInvoker`. Es un bloqueo de hilo dentro de un método `async`:
-> en un servidor con carga puede agotar el *thread pool*. Lo correcto sería usar
-> `ToResponseErrorsDescriptionAsync` con `BindAsync`.
+> ✅ **Cambio en 2.0.0.** Antes había dos miembros: `ToResponseErrorsDescription()` (síncrono) y
+> `ToResponseErrorsDescriptionAsync()`. El síncrono hacía `response.Content.ReadAsStringAsync().Result`
+> dentro de tuberías `async` —un bloqueo de hilo que podía agotar el *thread pool*— y era el que usaba
+> todo el `HttpApiInvoker`. **Se ha eliminado.** El asíncrono se ha renombrado a
+> `ReadErrorDescriptionAsync` y es el único disponible; el `HttpApiInvoker` la consume con
+> `await` dentro de `BindAsync`. El nombre antiguo se conserva como puente `[Obsolete]` y
+> desaparecerá en la 3.0.0.
 
 ---
 
@@ -710,7 +712,7 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
 2. **El `ILogger<>` inyectado en `RestClientFp<…>` y en `CompositeKeyRestClientFp<…>` nunca se usa.** El logging
    real ocurre una capa más abajo, en `HttpApiInvoker` (que sí usa su logger).
 3. **`GetByIdAsync` usa el prefijo `id-str/` pero `PutByIdAsync` y `DeleteByIdAsync` no.** Encaja con
-   `WebControllers`, pero es una asimetría que sorprende.
+   `AspNetCore.Controllers`, pero es una asimetría que sorprende.
 4. **El `DeleteByIdAsync` duplex llama a `DeleteByIdAsync<TResponse>` mientras el simplex llama a
    `DeleteByIdAsync<TDto>`.** El genérico solo se usa para el texto del log, así que es inocuo, pero es
    incoherente.
@@ -719,7 +721,9 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
    tampoco están en `IHttpApiInvoker`.** Son públicos en la clase concreta, inaccesibles por DI.
 7. **El código HTTP de error se pierde como dato estructurado**: viaja dentro del texto del mensaje.
    No hay 404 vs 500 distinguible sin *string matching*.
-8. **`ToResponseErrorsDescription()` (síncrono) usa `.Result`** dentro de tuberías `async`: bloqueo de hilo.
+8. **`ToResponseErrorsDescription()` (síncrono) usaba `.Result` dentro de tuberías
+   `async`: bloqueo de hilo. Se ha eliminado; ahora solo existe `ReadErrorDescriptionAsync()` y el
+   `HttpApiInvoker` la consume con `await`.
 9. **Ni `HttpResponseMessage` ni `HttpRequestMessage` se liberan.** En `InternalHttpActionAsync` hay una
    línea `//.ExecSelfIfValidAsync(response => response.Dispose())` comentada. En .NET moderno el
    `HttpClient` cierra el socket, pero el patrón correcto sería `using`.
@@ -983,7 +987,7 @@ public Task<MlResult<PruebasDto>> BienAsync(int id)
     => _client.GetByIdAsync($"{id}")
               .ExecSelfIfFailAsync(error => _logger.LogMlResultFailAsync(error));
 
-// ✅ BIEN: en el controlador, la traducción a HTTP la hace WebApi
+// ✅ BIEN: en el controlador, la traducción a HTTP la hace AspNetCore.Results
 [HttpGet("{id}")]
 public Task<IActionResult> GetAsync(int id)
     => _appService.BienAsync(id)
@@ -1109,14 +1113,14 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
   deserialización se convierten en errores componibles con código, razón y cuerpo del error.
 - **Cuatro líneas por cliente**: heredar de `RestClientFp<TDto>` y llamar a `AddRestClient<IX, X>()` te da
   siete verbos CRUD con logging incluido.
-- **Espejo de `WebControllers`**: las rutas que genera (`""`, `id-str/{id}`, `{id}`) encajan con las que
+- **Espejo de `AspNetCore.Controllers`**: las rutas que genera (`""`, `id-str/{id}`, `{id}`) encajan con las que
   publican los controladores base del lado servidor, y las cabeceras `X-Page-Number` / `X-Page-Size` con
-  las que lee `WebApi`.
+  las que lee `AspNetCore.Results`.
 - **Puerta de escape siempre disponible**: `CreateHttpClient(key)` y `GetIHttpClientFactoryManager()` te
   devuelven al `HttpClient` crudo, ya envuelto en `MlResult`, para todo lo que la librería no cubre.
-- **Con aristas conocidas**: `clientNameFactory` no funciona, el status HTTP no viaja estructurado, no
-  hay control del JSON ni resiliencia integrada y `ToResponseErrorsDescription` bloquea con `.Result`.
-
+- **Con aristas conocidas**: `clientNameFactory` no funciona, el status HTTP no viaja estructurado y no
+  hay control del JSON ni resiliencia integrada. ✅ El bloqueo con `.Result` de
+  `ToResponseErrorsDescription` se ha eliminado en la 2.0.0 (ahora `ReadErrorDescriptionAsync`).
 ---
 
 ## Ver también

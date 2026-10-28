@@ -48,9 +48,9 @@ var r = dto.ToMlResultValid()
 Esta es la implementación literal de la sobrecarga más simple:
 
 ```csharp
-public static MlResult<TReturn> BindMulti<T, TReturn>(this   MlResult<T>                  source,
-                                                             Func<T, MlResult<TReturn>>   returnFunc,
-                                                      params Func<T, MlResult<TReturn>>[] funcs)
+public static MlResult<TResult> BindMulti<T, TResult>(this   MlResult<T>                  source,
+                                                             Func<T, MlResult<TResult>>   returnFunc,
+                                                      params Func<T, MlResult<TResult>>[] funcs)
     => source.Match(
         fail : errors => errors,
         valid: value  => value.ToMlResultValid()
@@ -87,9 +87,9 @@ La más sencilla. Las funciones de `funcs` actúan como puras validaciones: solo
 sus valores se descartan.
 
 ```csharp
-public static MlResult<TReturn> BindMulti<T, TReturn>(this   MlResult<T>                  source,
-                                                             Func<T, MlResult<TReturn>>   returnFunc,
-                                                      params Func<T, MlResult<TReturn>>[] funcs)
+public static MlResult<TResult> BindMulti<T, TResult>(this   MlResult<T>                  source,
+                                                             Func<T, MlResult<TResult>>   returnFunc,
+                                                      params Func<T, MlResult<TResult>>[] funcs)
 ```
 
 ### Forma 2: `returnFunc` recibe el valor **y los resultados** de `funcs`
@@ -97,23 +97,23 @@ public static MlResult<TReturn> BindMulti<T, TReturn>(this   MlResult<T>        
 Cuando sí te interesa lo que produjeron las funciones intermedias:
 
 ```csharp
-public static MlResult<TReturn> BindMulti<T, TReturn>(this   MlResult<T>                  source,
+public static MlResult<TResult> BindMulti<T, TResult>(this   MlResult<T>                  source,
                                                              Func<T,
-                                                                  IEnumerable<TReturn>,
-                                                                  MlResult<TReturn>>      returnFunc,
-                                                      params Func<T, MlResult<TReturn>>[] funcs)
+                                                                  IEnumerable<TResult>,
+                                                                  MlResult<TResult>>      returnFunc,
+                                                      params Func<T, MlResult<TResult>>[] funcs)
 ```
 
 ### Forma 3: tipo intermedio distinto (`TFuncColec`)
 
 La más general: las funciones producen un tipo (`TFuncColec`) diferente del resultado final
-(`TReturn`).
+(`TResult`).
 
 ```csharp
-public static MlResult<TReturn> BindMulti<T, TReturn, TFuncColec>(this   MlResult<T>                     source,
+public static MlResult<TResult> BindMulti<T, TResult, TFuncColec>(this   MlResult<T>                     source,
                                                                          Func<T,
                                                                               IEnumerable<TFuncColec>,
-                                                                              MlResult<TReturn>>         returnFunc,
+                                                                              MlResult<TResult>>         returnFunc,
                                                                   params Func<T, MlResult<TFuncColec>>[] funcs)
 ```
 
@@ -123,7 +123,7 @@ Internamente hace lo mismo, pero pasa a `returnFunc` únicamente los valores vá
 returnFunc(value, resultsData.Where(x => x.IsSuccess).Select(y => y.GetValueOrThrow()))
 ```
 
-📌 Las formas 1 y 2 son en realidad atajos que delegan en la forma 3 con `TFuncColec = TReturn`.
+📌 Las formas 1 y 2 son en realidad atajos que delegan en la forma 3 con `TFuncColec = TResult`.
 
 ---
 
@@ -308,7 +308,7 @@ compensa. Las variantes asíncronas ayudan, pero recuerda que se ejecutan todas 
 ### 4. Usa la forma 3 cuando los tipos no coinciden
 
 Forzar `MlResult<Cliente>.Valid(null!)` en un validador que en realidad no produce un cliente es un
-olor a código. Con `BindMulti<T, TReturn, TFuncColec>` puedes usar el tipo que de verdad corresponda,
+olor a código. Con `BindMulti<T, TResult, TFuncColec>` puedes usar el tipo que de verdad corresponda,
 por ejemplo `MlResult<Unit>` o `MlResult<string>`.
 
 ### 5. Añade contexto al conjunto, no a cada función
@@ -335,7 +335,7 @@ ensuciar cada validador.
 - [`3_Bind.md`](3_Bind.md) — el encadenamiento con cortocircuito.
 - [`5_BindIf.md`](5_BindIf.md) — ejecución condicional de un único paso.
 - [`../Types/MlResultCollections.md`](../core-types/MlResultCollections.md) — `MergeFailureErrors` y `MergeErrorsIfExists`, la fusión de errores en detalle.
-- [`../Several/4_Combine.md`](../Several/4_Combine.md) — combinar varios resultados en una tupla.
+- [`../Several/4_CombineAll.md`](../Several/4_CombineAll.md) — combinar varios resultados en una tupla.
 - [`../Types/MlResultBindExtensions.md`](../core-types/MlResultBindExtensions.md) — referencia con todas las sobrecargas.
 - [`../EnsureFp/EnsureFp.md`](../EnsureFp/EnsureFp.md) — construir validaciones concisas.
 - [`../Match/1_Match.md`](../Match/1_Match.md) — traducir el resultado acumulado a una respuesta HTTP.

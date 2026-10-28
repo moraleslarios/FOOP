@@ -148,9 +148,9 @@ La región publica cuatro variantes que combinan dos ejes: **si el tipo de salid
 | | Genéricos | Delegados | Salida |
 |---|---|---|---|
 | **Forma A** | `<T>` | `Func<Exception, T> funcException` | `MlResult<T>` |
-| **Forma B** | `<T, TReturn>` | `Func<T, TReturn> funcValid` + `Func<Exception, TReturn> funcFail` | `MlResult<TReturn>` |
+| **Forma B** | `<T, TResult>` | `Func<T, TResult> funcValid` + `Func<Exception, TResult> funcFail` | `MlResult<TResult>` |
 | **Forma C** | `<T, TException>` | `Func<TException, T> funcException` | `MlResult<T>` |
-| **Forma D** | `<T, TReturn, TException>` | `Func<T, TReturn> funcValid` + `Func<TException, TReturn> funcFail` | `MlResult<TReturn>` |
+| **Forma D** | `<T, TResult, TException>` | `Func<T, TResult> funcValid` + `Func<TException, TResult> funcFail` | `MlResult<TResult>` |
 
 Las formas **C** y **D** llevan la restricción `where TException : Exception`.
 
@@ -180,15 +180,15 @@ Fíjate en el `Match` anidado: el interno decide si hay excepción. En la rama `
 devuelve el fallo, y en la `valid` interna se ejecuta la recuperación, que **siempre produce
 un resultado válido** porque `funcException` devuelve un `T` desnudo.
 
-### Forma B — las dos ramas convergen en `TReturn`
+### Forma B — las dos ramas convergen en `TResult`
 
 ```csharp
-public static MlResult<TReturn> MapIfFailWithException<T, TReturn>(this MlResult<T>              source,
-                                                                        Func<T        , TReturn> funcValid,
-                                                                        Func<Exception, TReturn> funcFail)
+public static MlResult<TResult> MapIfFailWithException<T, TResult>(this MlResult<T>              source,
+                                                                        Func<T        , TResult> funcValid,
+                                                                        Func<Exception, TResult> funcFail)
     => source.Match(
                         fail : errorsDetails => errorsDetails.GetException().Match(
-                                                    fail : _  => errorsDetails.ToMlResultFail<TReturn>(),
+                                                    fail : _  => errorsDetails.ToMlResultFail<TResult>(),
                                                     valid: ex => funcFail(ex).ToMlResultValid()
                                                 ),
                         valid: x => funcValid(x).ToMlResultValid()
@@ -233,7 +233,7 @@ var resultado = LeerConfiguracion(ruta)
 ```
 
 > ⚠️ Los genéricos de las formas C y D **casi nunca se infieren**: al indicar `TException`
-> tienes que escribir también `T` (y `TReturn` en la forma D). Es el motivo por el que en los
+> tienes que escribir también `T` (y `TResult` en la forma D). Es el motivo por el que en los
 > ejemplos aparecen siempre explícitos.
 
 ---
@@ -272,8 +272,8 @@ var r = SincronizarAsync(lote)
             });
 ```
 
-La subfamilia replica las mismas cuatro formas: `<T>`, `<T, TReturn>`, `<T, TException>` y
-`<T, TReturn, TException>`, cada una con sus variantes `Async` y `Try`.
+La subfamilia replica las mismas cuatro formas: `<T>`, `<T, TResult>`, `<T, TException>` y
+`<T, TResult, TException>`, cada una con sus variantes `Async` y `Try`.
 
 ---
 
@@ -307,7 +307,7 @@ public static async Task<MlResult<T>> MapIfFailWithExceptionAsync<T>(this MlResu
 ```
 
 > ⚠️ **Particularidad real del código fuente:** en el fichero hay un bloque de sobrecargas
-> **comentadas** de `TryMapIfFailWithExceptionAsync<T, TReturn>` con origen `Task<MlResult<T>>`.
+> **comentadas** de `TryMapIfFailWithExceptionAsync<T, TResult>` con origen `Task<MlResult<T>>`.
 > Si el compilador te dice que no encuentra la combinación exacta que buscas para la Forma B
 > asíncrona, no es tu culpa: espera el `Task` con `await` y llama a la versión síncrona.
 >
@@ -366,9 +366,9 @@ necesitas trazabilidad completa de una cadena de respaldos, esta es la familia a
 | Situación | Método |
 |---|---|
 | Recuperarme de cualquier excepción, mismo tipo | `MapIfFailWithException<T>` |
-| Proyectar éxito y excepción a un tipo común | `MapIfFailWithException<T, TReturn>` |
+| Proyectar éxito y excepción a un tipo común | `MapIfFailWithException<T, TResult>` |
 | Reaccionar solo a `SqlException`, `TimeoutException`… | `MapIfFailWithException<T, TException>` |
-| Igual que la anterior, cambiando de tipo | `MapIfFailWithException<T, TReturn, TException>` |
+| Igual que la anterior, cambiando de tipo | `MapIfFailWithException<T, TResult, TException>` |
 | Necesito los mensajes **y** la excepción | `MapIfFailWithExceptionError<…>` |
 | La recuperación puede lanzar | `Try…` (conserva el error original vía `MergeErrorsDetailsIfFail`) |
 | Quiero recuperarme de fallos **de negocio** | `MapIfFailWithoutException` |
@@ -504,7 +504,7 @@ resultado.ExecSelfIfFail(e => e.GetException()
 2. **Filtra por `TException` siempre que sepas qué tratar.** Recuperarse de «cualquier
    excepción» suele esconder un `catch (Exception)` disfrazado.
 3. **Escribe los genéricos completos** en las formas C y D (`<T, TException>`,
-   `<T, TReturn, TException>`); la inferencia no funciona.
+   `<T, TResult, TException>`); la inferencia no funciona.
 4. **Registra antes de recuperar** con `ExecSelfIfFail`: una vez recuperado, el resultado es
    válido y nadie sabrá que hubo un incidente.
 5. **Marca el valor degradado** (`EsFiable = false`, `MotivoCache`, un aviso) para que el
@@ -526,7 +526,7 @@ resultado.ExecSelfIfFail(e => e.GetException()
 - `MapIfFailWithException` recupera **solo si el fallo trae una excepción** en
   `Details["Ex"]`; si no la trae, devuelve el fallo **intacto** (a diferencia de otras
   familias, no añade ni sustituye errores).
-- Hay **cuatro formas**: `<T>`, `<T, TReturn>`, `<T, TException>` y `<T, TReturn, TException>`;
+- Hay **cuatro formas**: `<T>`, `<T, TResult>`, `<T, TException>` y `<T, TResult, TException>`;
   las dos últimas filtran por tipo de excepción con `where TException : Exception`.
 - Existe una **subfamilia `MapIfFailWithExceptionError`** con las mismas cuatro formas, cuyo
   delegado recibe el `MlErrorDetails` completo en lugar de la excepción; la excepción sigue

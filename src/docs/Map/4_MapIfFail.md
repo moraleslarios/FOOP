@@ -45,9 +45,9 @@ Como en tantas familias de la biblioteca, hay **dos formas** con propósitos dis
 
 | | Forma A — solo recuperación | Forma B — punto de convergencia |
 |---|---|---|
-| **Genéricos** | `<T>` | `<T, TReturn>` |
+| **Genéricos** | `<T>` | `<T, TResult>` |
 | **Delegados** | `Func<MlErrorDetails, T> func` | `funcValid` **y** `funcFail` |
-| **Tipo de salida** | El mismo: `MlResult<T>` | Puede cambiar: `MlResult<TReturn>` |
+| **Tipo de salida** | El mismo: `MlResult<T>` | Puede cambiar: `MlResult<TResult>` |
 | **Rama válida** | El valor pasa **intacto** | Se transforma con `funcValid` |
 | **Lectura** | «si falla, usa esto» | «unifica los dos carriles en un tipo común» |
 
@@ -80,12 +80,12 @@ public static MlResult<T> MapIfFail<T>(this MlResult<T>              source,
 
 Es literalmente un `Match` en el que la rama válida es la identidad. El delegado recibe **el `MlErrorDetails` completo**, así que puedes usar los errores para decidir el valor de reemplazo.
 
-### Forma B — `<T, TReturn>`, punto de convergencia
+### Forma B — `<T, TResult>`, punto de convergencia
 
 ```csharp
-public static MlResult<TReturn> MapIfFail<T, TReturn>(this MlResult<T>                    source,
-                                                           Func<T,               TReturn> funcValid,
-                                                           Func<MlErrorDetails, TReturn> funcFail)
+public static MlResult<TResult> MapIfFail<T, TResult>(this MlResult<T>                    source,
+                                                           Func<T,               TResult> funcValid,
+                                                           Func<MlErrorDetails, TResult> funcFail)
     => source.Match
                     (
                         fail : funcFail,
@@ -110,7 +110,7 @@ Tres formas de tratar la rama de fallo, con niveles de compromiso muy distintos:
 |---|---|---|---|
 | `MapIfFail` | Un valor desnudo (`T`) | **No** | No |
 | [`BindIfFail`](../Bind/6_BindIfFail.md) | Un `MlResult<T>` | **Sí** | No |
-| [`Match`](../Match/1_Match.md) | Cualquier tipo `TReturn` crudo | — | **Sí** |
+| [`Match`](../Match/1_Match.md) | Cualquier tipo `TResult` crudo | — | **Sí** |
 
 ```csharp
 // MapIfFail: la recuperación es infalible (valor en memoria)
@@ -129,10 +129,10 @@ Tres formas de tratar la rama de fallo, con niveles de compromiso muy distintos:
 La Forma B de `MapIfFail` y `Match` se parecen mucho, pero hay una diferencia esencial:
 
 ```csharp
-// Match devuelve TReturn CRUDO: sales de la tubería
+// Match devuelve TResult CRUDO: sales de la tubería
 string texto = resultado.Match(valid: s => $"{s:C}", fail: e => "no disponible");
 
-// MapIfFail Forma B devuelve MlResult<TReturn>: sigues dentro
+// MapIfFail Forma B devuelve MlResult<TResult>: sigues dentro
 MlResult<string> envuelto = resultado.MapIfFail(s => $"{s:C}", e => "no disponible");
 // ...y por eso puedes continuar:
                                      .MapEnsure(t => t.Length < 50, "Texto demasiado largo");
@@ -201,9 +201,9 @@ var saldo = _repo.ConsultarSaldo(cuenta)
 Combinaciones de origen (`MlResult<T>` / `Task<MlResult<T>>`) con la asincronía de `funcValid` y `funcFail`. Las mixtas se homogeneizan con `ToFuncTask()`, un helper de la biblioteca que convierte un `Func<A, B>` en un `Func<A, Task<B>>`:
 
 ```csharp
-public static async Task<MlResult<TReturn>> MapIfFailAsync<T, TReturn>(this Task<MlResult<T>>              sourceAsync,
-                                                                            Func<T,               TReturn> funcValid,
-                                                                            Func<MlErrorDetails, Task<TReturn>> funcFailAsync)
+public static async Task<MlResult<TResult>> MapIfFailAsync<T, TResult>(this Task<MlResult<T>>              sourceAsync,
+                                                                            Func<T,               TResult> funcValid,
+                                                                            Func<MlErrorDetails, Task<TResult>> funcFailAsync)
     => await (await sourceAsync).MapIfFailAsync(funcValid.ToFuncTask(), funcFailAsync);
 ```
 
@@ -236,9 +236,9 @@ public static MlResult<T> TryMapIfFail<T>(this MlResult<T> source, Func<MlErrorD
 ### Forma B
 
 ```csharp
-public static MlResult<TReturn> TryMapIfFail<T, TReturn>(this MlResult<T>                    source,
-                                                              Func<T,               TReturn> funcValid,
-                                                              Func<MlErrorDetails, TReturn> funcFail,
+public static MlResult<TResult> TryMapIfFail<T, TResult>(this MlResult<T>                    source,
+                                                              Func<T,               TResult> funcValid,
+                                                              Func<MlErrorDetails, TResult> funcFail,
                                                               Func<Exception, string>        errorMessageBuilder)
     => source.Match
                     (
@@ -396,11 +396,11 @@ var bien4 = Principal().ExecSelfIfFail(e => _log.LogWarning("{D}", e.GetErrorsSu
 ## Resumen
 
 - `MapIfFail` **recupera un fallo con un valor de reemplazo infalible**: el delegado devuelve `T` desnudo, no `MlResult<T>`.
-- Hay **dos formas**: la **A** (`<T>`, solo recuperación, la rama válida pasa intacta) y la **B** (`<T, TReturn>`, con `funcValid` y `funcFail`, punto de convergencia que puede cambiar el tipo).
+- Hay **dos formas**: la **A** (`<T>`, solo recuperación, la rama válida pasa intacta) y la **B** (`<T, TResult>`, con `funcValid` y `funcFail`, punto de convergencia que puede cambiar el tipo).
 - Ambas son un `Match` con conversión implícita: **si la entrada era fallida, la salida es válida**. Los errores desaparecen.
 - Recuento: `MapIfFail` **2** síncronas y **12** asíncronas; `TryMapIfFail` **4** síncronas y **24** asíncronas.
 - `TryMapIfFail` protege la recuperación con `TryToMlResult` (excepción a `Details["Ex"]`), pero **pierde los errores originales** si el delegado lanza.
-- La Forma B se diferencia de [`Match`](../Match/1_Match.md) en que **devuelve `MlResult<TReturn>`** y permite seguir la tubería, mientras que `Match` devuelve el tipo crudo y sale de ella.
+- La Forma B se diferencia de [`Match`](../Match/1_Match.md) en que **devuelve `MlResult<TResult>`** y permite seguir la tubería, mientras que `Match` devuelve el tipo crudo y sale de ella.
 - Es la operación más peligrosa de la familia: **combínala siempre con `ExecSelfIfFail`** y haz visible que el valor es degradado.
 - Si el plan B puede fallar → [`BindIfFail`](../Bind/6_BindIfFail.md). Si solo debe recuperarse ante fallos de negocio → [`MapIfFailWithoutException`](7_MapIfFailWithoutException.md).
 

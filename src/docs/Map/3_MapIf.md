@@ -9,7 +9,7 @@
 5. [`MapIf` frente a `BindIf` y `MapEnsure`](#mapif-frente-a-bindif-y-mapensure)
 6. [Variantes asíncronas](#variantes-asíncronas)
 7. [`TryMapIf` — cuando la transformación puede lanzar](#trymapif--cuando-la-transformación-puede-lanzar)
-8. [⚠️ Particularidad real del código fuente: `TryMapIAsyncf`](#️-particularidad-real-del-código-fuente-trymapiasyncf)
+8. [✅ Resuelto en 2.0.0: `TryMapIAsyncf` → `TryMapIfAsync`](#-resuelto-en-200-trymapiasyncf--trymapifasync)
 9. [Ejemplos Prácticos](#ejemplos-prácticos)
 10. [Mejores Prácticas](#mejores-prácticas)
 11. [Resumen](#resumen)
@@ -50,9 +50,9 @@ La región `MapIf` del fuente contiene **dos familias distintas**, y confundirla
 
 | | Forma A — bifurcación | Forma B — transformación opcional |
 |---|---|---|
-| **Genéricos** | `<T, TReturn>` | `<T>` |
+| **Genéricos** | `<T, TResult>` | `<T>` |
 | **Delegados** | `funcTrue` **y** `funcFalse` | solo `func` |
-| **Tipo de salida** | Puede cambiar: `MlResult<TReturn>` | **El mismo**: `MlResult<T>` |
+| **Tipo de salida** | Puede cambiar: `MlResult<TResult>` | **El mismo**: `MlResult<T>` |
 | **Si la condición es falsa** | Ejecuta `funcFalse(x)` | Devuelve `x` **sin tocarlo** |
 | **Lectura** | «una cosa **o** la otra» | «aplica esto **solo si**…» |
 
@@ -75,17 +75,17 @@ El propio autor lo dejó escrito como comentario en el fuente, justo antes de la
 
 ## Firmas reales e implementación
 
-### Forma A — `<T, TReturn>` con las dos ramas
+### Forma A — `<T, TResult>` con las dos ramas
 
 ```csharp
-public static MlResult<TReturn> MapIf<T, TReturn>(this MlResult<T>      source,
+public static MlResult<TResult> MapIf<T, TResult>(this MlResult<T>      source,
                                                        Func<T, bool>    condition,
-                                                       Func<T, TReturn> funcTrue,
-                                                       Func<T, TReturn> funcFalse)
+                                                       Func<T, TResult> funcTrue,
+                                                       Func<T, TResult> funcFalse)
 {
     var result = source.Match(
                                  valid: x => condition(x) ? funcTrue(x) : funcFalse(x),
-                                 fail :      MlResult<TReturn>.Fail
+                                 fail :      MlResult<TResult>.Fail
                            );
     return result;
 }
@@ -108,8 +108,8 @@ public static MlResult<T> MapIf<T>(this MlResult<T>   source,
 
 Fíjate en dos detalles del código real:
 
-1. **`fail: MlResult<TReturn>.Fail` es un grupo de métodos**, no una lambda. Se apoya en la sobrecarga que recibe `MlErrorDetails`, así que **los errores y todos sus detalles se conservan íntegros** al cambiar de tipo genérico.
-2. Los delegados devuelven `TReturn`/`T` **desnudo**, no `MlResult<...>`. La conversión implícita del tipo hace el resto. Esto es lo que convierte a `MapIf` en un `Map` condicional y no en un `Bind`.
+1. **`fail: MlResult<TResult>.Fail` es un grupo de métodos**, no una lambda. Se apoya en la sobrecarga que recibe `MlErrorDetails`, así que **los errores y todos sus detalles se conservan íntegros** al cambiar de tipo genérico.
+2. Los delegados devuelven `TResult`/`T` **desnudo**, no `MlResult<...>`. La conversión implícita del tipo hace el resto. Esto es lo que convierte a `MapIf` en un `Map` condicional y no en un `Bind`.
 
 | Estado de entrada | `condition(x)` | Forma A | Forma B |
 |---|---|---|---|
@@ -121,7 +121,7 @@ Fíjate en dos detalles del código real:
 
 ## Por qué la Forma B no necesita `funcFalse`
 
-Porque en la Forma B **entrada y salida son el mismo tipo `T`**, y por tanto existe una «rama falsa» obvia y única: *no hacer nada*. En la Forma A eso es imposible: si `T` es `Pedido` y `TReturn` es `string`, no hay forma automática de convertir un `Pedido` en `string` cuando la condición no se cumple, así que la rama falsa es obligatoria.
+Porque en la Forma B **entrada y salida son el mismo tipo `T`**, y por tanto existe una «rama falsa» obvia y única: *no hacer nada*. En la Forma A eso es imposible: si `T` es `Pedido` y `TResult` es `string`, no hay forma automática de convertir un `Pedido` en `string` cuando la condición no se cumple, así que la rama falsa es obligatoria.
 
 Consecuencia práctica muy útil: **la Forma B es apilable**, porque conserva el tipo.
 
@@ -143,8 +143,8 @@ Tres operaciones condicionales que responden a preguntas distintas:
 
 | Operación | Pregunta que responde | Devuelve el delegado |
 |---|---|---|
-| `MapIf` | «¿qué **transformación** aplico?» | Un valor desnudo (`TReturn`) |
-| [`BindIf`](../Bind/5_BindIf.md) | «¿qué **operación que puede fallar** ejecuto?» | Un `MlResult<TReturn>` |
+| `MapIf` | «¿qué **transformación** aplico?» | Un valor desnudo (`TResult`) |
+| [`BindIf`](../Bind/5_BindIf.md) | «¿qué **operación que puede fallar** ejecuto?» | Un `MlResult<TResult>` |
 | [`MapEnsure`](2_MapEnsure.md) | «¿el valor **es válido**?» | Nada: solo un `bool` |
 
 ```csharp
@@ -191,15 +191,15 @@ Tres operaciones condicionales que responden a preguntas distintas:
 Las combinaciones mixtas usan un pequeño truco para homogeneizar tipos: la rama síncrona se envuelve con `.ToAsync()`.
 
 ```csharp
-public static async Task<MlResult<TReturn>> MapIfAsync<T, TReturn>(this MlResult<T>            source,
+public static async Task<MlResult<TResult>> MapIfAsync<T, TResult>(this MlResult<T>            source,
                                                                         Func<T, bool>          condition,
-                                                                        Func<T, Task<TReturn>> funcTrueAsync,
-                                                                        Func<T, TReturn>       funcFalse)
+                                                                        Func<T, Task<TResult>> funcTrueAsync,
+                                                                        Func<T, TResult>       funcFalse)
 {
-    var result = await source.MatchAsync<T, MlResult<TReturn>>(
+    var result = await source.MatchAsync<T, MlResult<TResult>>(
                                        validAsync: async x => condition(x) ? await funcTrueAsync(x)
                                                                            : await funcFalse(x).ToAsync(),
-                                       fail      :            MlResult<TReturn>.Fail
+                                       fail      :            MlResult<TResult>.Fail
                                   );
     return result;
 }
@@ -214,24 +214,24 @@ public static async Task<MlResult<TReturn>> MapIfAsync<T, TReturn>(this MlResult
 `TryMapIf` envuelve **las dos ramas** en captura de excepciones. La clave está en `TryToMlResult`:
 
 ```csharp
-public static MlResult<TReturn> TryMapIf<T, TReturn>(this MlResult<T>             source,
+public static MlResult<TResult> TryMapIf<T, TResult>(this MlResult<T>             source,
                                                           Func<T, bool>           condition,
-                                                          Func<T, TReturn>        funcTrue,
-                                                          Func<T, TReturn>        funcFalse,
+                                                          Func<T, TResult>        funcTrue,
+                                                          Func<T, TResult>        funcFalse,
                                                           Func<Exception, string> errorMessageBuilder)
 {
     var result = source.Match(
                                  valid: x => condition(x)
                                                 ? funcTrue .TryToMlResult(x, errorMessageBuilder)
                                                 : funcFalse.TryToMlResult(x, errorMessageBuilder),
-                                 fail :      MlResult<TReturn>.Fail
+                                 fail :      MlResult<TResult>.Fail
                            );
     return result;
 }
 
 // Sobrecarga con mensaje fijo
-public static MlResult<TReturn> TryMapIf<T, TReturn>(this MlResult<T> source, Func<T, bool> condition,
-                                                          Func<T, TReturn> funcTrue, Func<T, TReturn> funcFalse,
+public static MlResult<TResult> TryMapIf<T, TResult>(this MlResult<T> source, Func<T, bool> condition,
+                                                          Func<T, TResult> funcTrue, Func<T, TResult> funcFalse,
                                                           string exceptionAditionalMessage = null!)
     => source.TryMapIf(condition, funcTrue, funcFalse, _ => exceptionAditionalMessage!);
 ```
@@ -257,29 +257,25 @@ Recuento de sobrecargas `Try`: **Forma A** 2 síncronas y 19 asíncronas; **Form
 
 ---
 
-## ⚠️ Particularidad real del código fuente: `TryMapIAsyncf`
+## ✅ Resuelto en 2.0.0: `TryMapIAsyncf` → `TryMapIfAsync`
 
-En la región `MapIf` existen **tres métodos con el nombre mal escrito**: `TryMapIAsyncf` en lugar de `TryMapIfAsync` (líneas 483, 498 y 505 del fuente).
+Hasta la 1.x, en la región `MapIf` existían **tres métodos con el nombre mal escrito**: `TryMapIAsyncf` en lugar de `TryMapIfAsync`. Eran las sobrecargas para **origen asíncrono** de la Forma A, y no aparecían en IntelliSense al escribir `TryMapIfAsync` sobre un `Task<MlResult<T>>`.
+
+**En la 2.0.0 el nombre está corregido:**
 
 ```csharp
-public static async Task<MlResult<TReturn>> TryMapIAsyncf<T, TReturn>(this Task<MlResult<T>> sourceAsync,
+public static async Task<MlResult<TResult>> TryMapIfAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
                                                                           ...
 ```
 
-Son las sobrecargas para **origen asíncrono** de la Forma A. Funcionan perfectamente, pero:
-
-- **No las encontrarás** escribiendo `TryMapIfAsync` y esperando que IntelliSense las ofrezca para un `Task<MlResult<T>>`.
-- Si un día se corrige el nombre, será un **cambio incompatible**.
-
-**Recomendación práctica**: evita depender de ese nombre. Aísla el `await` y llama a la versión síncrona de origen:
+Los nombres antiguos se conservan como puentes `[Obsolete]` (`[EditorBrowsable(Never)]`) y **se eliminarán en la 3.0.0**:
 
 ```csharp
-// ❌ Depende del nombre erróneo
+// ❌ nombre antiguo: compila con aviso CS0618, desaparece en la 3.0.0
 await tareaResultado.TryMapIAsyncf(cond, funcTrue, funcFalse, "mensaje");
 
-// ✅ Estable frente a la corrección del typo
-var resultado = await tareaResultado;
-var final     = resultado.TryMapIf(cond, funcTrue, funcFalse, "mensaje");
+// ✅ nombre correcto desde la 2.0.0
+await tareaResultado.TryMapIfAsync(cond, funcTrue, funcFalse, "mensaje");
 ```
 
 ---
@@ -385,11 +381,10 @@ var bien3 = dato.TryMap(d => int.Parse(d.Codigo), ex => $"Código no numérico: 
                 .MapIf(c => c > 100, c => c * 2, c => c);
 
 
-// ❌ 4. Depender del nombre mal escrito TryMapIAsyncf
+// ❌ 4. Usar el nombre antiguo mal escrito TryMapIAsyncf (CS0618; desaparece en la 3.0.0)
 await tarea.TryMapIAsyncf(cond, fT, fF, "msg");
-// ✅ Resuelve el await y usa el nombre estable
-var r = await tarea;
-var f = r.TryMapIf(cond, fT, fF, "msg");
+// ✅ Nombre correcto desde la 2.0.0
+await tarea.TryMapIfAsync(cond, fT, fF, "msg");
 ```
 
 ---
@@ -408,7 +403,7 @@ var f = r.TryMapIf(cond, fT, fF, "msg");
 
 6. **Con `TryMapIf`, usa el `Func<Exception, string>`** en lugar del `string` fijo: el mensaje de la excepción es casi siempre la parte más útil del diagnóstico.
 
-7. **Evita `TryMapIAsyncf`** en código nuevo: aísla el `await` y llama a `TryMapIf`.
+7. **No uses `TryMapIAsyncf`** en código nuevo: desde la 2.0.0 el nombre correcto es `TryMapIfAsync` y el antiguo está marcado `[Obsolete]`.
 
 8. **Si ambas ramas comparten casi todo el código**, probablemente lo que quieres es un `Map` con la condición dentro del cálculo. `MapIf` brilla cuando las ramas son realmente distintas.
 
@@ -417,13 +412,13 @@ var f = r.TryMapIf(cond, fT, fF, "msg");
 ## Resumen
 
 - `MapIf` aplica una **transformación pura** condicionada al valor, sin salir de la tubería.
-- Hay **dos formas**: la **A** (`<T, TReturn>`, con `funcTrue` y `funcFalse`, el tipo puede cambiar) y la **B** (`<T>`, con un solo `func`, el tipo se mantiene y si la condición es falsa el valor pasa intacto).
+- Hay **dos formas**: la **A** (`<T, TResult>`, con `funcTrue` y `funcFalse`, el tipo puede cambiar) y la **B** (`<T>`, con un solo `func`, el tipo se mantiene y si la condición es falsa el valor pasa intacto).
 - La Forma B no necesita `funcFalse` porque «no hacer nada» es una rama falsa válida cuando entrada y salida son del mismo tipo; por eso **es apilable**.
-- Si el resultado ya venía **fallido**, la condición **no se evalúa** y el fallo se propaga con todos sus detalles (`fail: MlResult<TReturn>.Fail` es un grupo de métodos).
+- Si el resultado ya venía **fallido**, la condición **no se evalúa** y el fallo se propaga con todos sus detalles (`fail: MlResult<TResult>.Fail` es un grupo de métodos).
 - Recuento: `MapIf` **2** síncronas y **12** asíncronas; `TryMapIf` **4** síncronas y **19 + 6** asíncronas.
 - **La condición nunca es asíncrona** ni está protegida contra excepciones.
 - `TryMapIf` protege **las dos ramas** con `TryToMlResult` y deja la excepción en `Details["Ex"]`.
-- ⚠️ Tres sobrecargas del fuente se llaman **`TryMapIAsyncf`** (typo por `TryMapIfAsync`): úsalas con cautela o evítalas.
+- ✅ **Resuelto en 2.0.0:** las tres sobrecargas que se llamaban **`TryMapIAsyncf`** (typo por `TryMapIfAsync`) están renombradas a **`TryMapIfAsync`**; el nombre antiguo queda como puente `[Obsolete]` y se elimina en la 3.0.0.
 - Si el delegado devuelve `MlResult<...>`, la herramienta correcta es [`BindIf`](../Bind/5_BindIf.md); si solo quieres validar, [`MapEnsure`](2_MapEnsure.md).
 
 ---

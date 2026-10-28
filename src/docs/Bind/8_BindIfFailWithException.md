@@ -101,8 +101,8 @@ catch (Exception ex)
 |---|---|---|
 | **A — Recuperación simple** | `BindIfFailWithException<T>(funcException)` | Intentar volver al camino válido usando la excepción. Mismo tipo de entrada y salida. |
 | **B — Recuperación filtrada por tipo** | `BindIfFailWithException<T, TException>(funcException)` | Igual que A, pero **solo actúa si la excepción es del tipo `TException`**. |
-| **C — Ambos caminos** | `BindIfFailWithException<T, TReturn>(funcValid, funcFail)` | Transformar tanto el éxito como el fallo, cambiando de tipo. |
-| **D — Ambos caminos filtrados** | `BindIfFailWithException<T, TReturn, TException>(funcValid, funcFail)` | Como C, con el filtro de tipo de excepción. |
+| **C — Ambos caminos** | `BindIfFailWithException<T, TResult>(funcValid, funcFail)` | Transformar tanto el éxito como el fallo, cambiando de tipo. |
+| **D — Ambos caminos filtrados** | `BindIfFailWithException<T, TResult, TException>(funcValid, funcFail)` | Como C, con el filtro de tipo de excepción. |
 
 ```csharp
 // Forma A — recuperar sin mirar el tipo
@@ -136,23 +136,23 @@ public static MlResult<T> BindIfFailWithException<T>(this MlResult<T>           
             valid: value         => value);
 
 // FORMA C
-public static MlResult<TReturn> BindIfFailWithException<T, TReturn>(this MlResult<T>                        source,
-                                                                         Func<T        , MlResult<TReturn>> funcValid,
-                                                                         Func<Exception, MlResult<TReturn>> funcFail)
+public static MlResult<TResult> BindIfFailWithException<T, TResult>(this MlResult<T>                        source,
+                                                                         Func<T        , MlResult<TResult>> funcValid,
+                                                                         Func<Exception, MlResult<TResult>> funcFail)
     => source.Match(
             fail : errorsDetails => errorsDetails.GetException().Match(
-                                            fail : _ => errorsDetails.ToMlResultFail<TReturn>(),
+                                            fail : _ => errorsDetails.ToMlResultFail<TResult>(),
                                             valid:      funcFail),
             valid: funcValid);
 
 // FORMA D (la B es su equivalente de un solo camino)
-public static MlResult<TReturn> BindIfFailWithException<T, TReturn, TException>(this MlResult<T>                         source,
-                                                                                     Func<T         , MlResult<TReturn>> funcValid,
-                                                                                     Func<TException, MlResult<TReturn>> funcFail)
+public static MlResult<TResult> BindIfFailWithException<T, TResult, TException>(this MlResult<T>                         source,
+                                                                                     Func<T         , MlResult<TResult>> funcValid,
+                                                                                     Func<TException, MlResult<TResult>> funcFail)
     where TException : Exception
     => source.Match(
             fail : errorsDetails => errorsDetails.GetException<TException>().Match(
-                                            fail : _ => errorsDetails.ToMlResultFail<TReturn>(),
+                                            fail : _ => errorsDetails.ToMlResultFail<TResult>(),
                                             valid:      funcFail),
             valid: funcValid);
 ```
@@ -163,7 +163,7 @@ public static MlResult<TReturn> BindIfFailWithException<T, TReturn, TException>(
 |---|---|---|
 | Válido | — | Forma A/B: el valor intacto · Forma C/D: `funcValid(value)` |
 | Fallo | presente y del tipo esperado | Se ejecuta tu función de recuperación |
-| Fallo | ausente | Forma A/B: el fallo intacto · Forma C/D: el fallo convertido a `MlResult<TReturn>` |
+| Fallo | ausente | Forma A/B: el fallo intacto · Forma C/D: el fallo convertido a `MlResult<TResult>` |
 | Fallo | presente pero de otro tipo (formas B/D) | Igual que si estuviera ausente: tu función **no** se ejecuta |
 
 ---
@@ -211,7 +211,7 @@ var resultado = await ProcesarPagoAsync(dto)
                         });
 ```
 
-Igual que la familia principal, tiene sus cuatro formas: `<T>`, `<T, TException>`, `<T, TReturn>` y `<T, TReturn, TException>`.
+Igual que la familia principal, tiene sus cuatro formas: `<T>`, `<T, TException>`, `<T, TResult>` y `<T, TResult, TException>`.
 
 ---
 
@@ -412,7 +412,7 @@ var r2 = "El importe no puede ser negativo".ToMlResultFail<Factura>()
 ## Resumen
 
 - `BindIfFailWithException` ejecuta tu función de recuperación **solo si el fallo lleva una excepción** en `Details["Ex"]`, y te la entrega ya extraída.
-- Tiene **cuatro formas**: recuperación simple `<T>`, recuperación filtrada `<T, TException>`, ambos caminos `<T, TReturn>` y ambos caminos filtrados `<T, TReturn, TException>`.
+- Tiene **cuatro formas**: recuperación simple `<T>`, recuperación filtrada `<T, TException>`, ambos caminos `<T, TResult>` y ambos caminos filtrados `<T, TResult, TException>`.
 - A diferencia de `BindIfFailWithValue`, cuando **no hay** excepción **devuelve el fallo intacto**: no añade ningún error nuevo, pero tampoco te avisa.
 - La familia gemela `BindIfFailWithExceptionError` se dispara con la misma condición pero recibe el `MlErrorDetails` completo.
 - Las variantes `Try*` protegen el propio camino de recuperación; la nueva excepción se acumula como `Details["Ex2"]`.

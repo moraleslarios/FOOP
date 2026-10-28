@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP — Documentación por tipos (`Types`)
+﻿# MoralesLarios.OOFP — Documentación por tipos (`Types`)
 
 Esta sección documenta la librería **por clase/archivo**, y complementa la documentación por conceptos (`../Bind`, `../Map`, `../Match`, `../ExecSelf`, `../Several`, `../Bucle`, `../Transformations`, `../EnsureFp`, `../Extensions`).
 - Si buscas **"qué métodos existen en un archivo concreto"** → usa esta sección.
@@ -137,10 +137,10 @@ malas prácticas a evitar. **Si estás aprendiendo, empieza por aquí.**
 
 | Documento | Tema |
 |-----------|------|
-| [`1_EmptyToFailed`](../Several/1_EmptyToFailed.md) | Rechazar colecciones vacías |
-| [`2_NullToFailed`](../Several/2_FailIfNull.md) | Convertir `null` en fallo explícito |
-| [`3_BoolToResult`](../Several/3_BoolToResult.md) | Convertir un `bool` en `MlResult` |
-| [`4_Combine`](../Several/4_Combine.md) | `CombineAll` y `Do` ⚠️ (**no** acumula errores) |
+| [`1_FailIfEmpty`](../Several/1_FailIfEmpty.md) | Rechazar colecciones vacías |
+| [`2_FailIfNull`](../Several/2_FailIfNull.md) | Convertir `null` en fallo explícito |
+| [`3_FailIfFalse`](../Several/3_FailIfFalse.md) | Convertir un `bool` en `MlResult` |
+| [`4_Combine`](../Several/4_CombineAll.md) | `CombineAll` y `Do` ⚠️ (**no** acumula errores) |
 
 ### Utilidades y colecciones
 

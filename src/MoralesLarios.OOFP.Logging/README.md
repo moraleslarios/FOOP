@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.Logging — Logging sin romper la cadena
+﻿# MoralesLarios.OOFP.Logging — Logging sin romper la cadena
 
 Extensiones que permiten **registrar trazas en medio de un pipeline funcional** sin interrumpirlo. Cada método recibe un [`MlResult<T>`](../docs/core-types/MlResult.md), escribe en el `ILogger` y **devuelve el mismo `MlResult<T>` intacto**, de modo que la cadena continúa exactamente igual que si el log no existiera.
 
@@ -15,7 +15,7 @@ Es el equivalente funcional del "punto de observación": no transforma, no valid
 5. [Familia 1 — `LogMlResult` con `LogLevel` explícito](#familia-1--logmlresult-con-loglevel-explícito)
 6. [Familia 2 — `LogMlResultIfValid` / `LogMlResultIfFail`](#familia-2--logmlresultifvalid--logmlresultiffail)
 7. [Familia 3 — Filtrado por contenido de `Details`](#familia-3--filtrado-por-contenido-de-details)
-8. [Familia 4 — `LogCompletedResult` y `LogGeneralErrorIfFail`](#familia-4--logmlresultfinal-y-loggeneralerroriffail)
+8. [Familia 4 — `LogCompletedResult` y `LogGeneralErrorIfFail`](#familia-4--logcompletedresult-y-loggeneralerroriffail)
 9. [Familia 5 — Los seis ficheros por nivel](#familia-5--los-seis-ficheros-por-nivel)
 10. [Familia 6 — `MyMethodFinalLog`](#familia-6--mymethodfinallog)
 11. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
@@ -516,7 +516,7 @@ El mensaje llega **ya interpolado**, como una cadena plana. Ver [Lo que NO inclu
 
 > ⚠️ **No hay `IfValidWithValue`** ni variantes de filtrado por contenido en la rama válida: el filtrado por `Details` solo aplica a fallos.
 
-> ⚠️ **No incluye `RegisterServices`.** A diferencia de [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md), aquí no hay nada que registrar.
+> ⚠️ **No incluye `RegisterServices`.** A diferencia de [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md), aquí no hay nada que registrar.
 
 ---
 

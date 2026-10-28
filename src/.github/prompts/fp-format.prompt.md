@@ -1,4 +1,4 @@
----
+ï»¿---
 mode: agent
 description: Reformatea cï¿½digo C# siguiendo el estilo "FP-aligned" del proyecto MoralesLarios.OOFP (alineaciï¿½n por columnas, cadenas fluent alineadas, named arguments alineados, etc.).
 ---
@@ -32,11 +32,11 @@ Cuando un mï¿½todo tenga **mï¿½s de un parï¿½metro**, o el usuario lo pida explï
 
 > ? **Antipatrï¿½n frecuente**: dejar 2 ï¿½ 3 espacios entre el tipo mï¿½s largo y su nombre "para respirar". **Estï¿½ prohibido** ï¿½ debe ser exactamente 1 espacio. Si lo dejas mayor, las cadenas fluent y named-args que se construyen sobre estos parï¿½metros se desalinean.
 
-Ejemplo (tipo mï¿½s largo `Func<T, MlResult<TReturn>>` ? 1 espacio antes de `func`; los demï¿½s se padean):
+Ejemplo (tipo mï¿½s largo `Func<T, MlResult<TResult>>` ? 1 espacio antes de `func`; los demï¿½s se padean):
 
 ```csharp
-public static MlResult<TReturn> TryBind<T, TReturn>(this MlResult<T>                source,
-                                                         Func<T, MlResult<TReturn>> func,
+public static MlResult<TResult> TryBind<T, TResult>(this MlResult<T>                source,
+                                                         Func<T, MlResult<TResult>> func,
                                                          string                     exceptionAditionalMessage = null!)
 ```
 
@@ -80,14 +80,14 @@ public Task<MlResult<TDto>> DeleteProblemDetailsAsync(       MlErrorDetails     
 Ejemplo con `this` al inicio (las lï¿½neas posteriores insertan 5 espacios):
 
 ```csharp
-public static async Task<MlResult<TReturn>> TryBindIfAsync<T, TReturn>(this Task<MlResult<T>>                sourceAsync,
+public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                             Func<T, bool>                    condition,
-                                                                            Func<T, Task<MlResult<TReturn>>> funcTrueAsync,
-                                                                            Func<T,      MlResult<TReturn>>  funcFalse,
+                                                                            Func<T, Task<MlResult<TResult>>> funcTrueAsync,
+                                                                            Func<T,      MlResult<TResult>>  funcFalse,
                                                                             Func<Exception, string>          errorMessageBuilder)
 ```
 
-Observa ademï¿½s, en este ï¿½ltimo ejemplo, el padding **interno** del genï¿½rico: `Func<T,      MlResult<TReturn>>` lleva espacios extra **detrï¿½s de la coma interna** para que su anchura visual coincida con la del mï¿½s largo (`Func<T, Task<MlResult<TReturn>>>`). Esa tï¿½cnica de "padding intra-genï¿½rico" es vï¿½lida y preferible cuando padear sï¿½lo el final del tipo no permite alinear el nombre del parï¿½metro.
+Observa ademï¿½s, en este ï¿½ltimo ejemplo, el padding **interno** del genï¿½rico: `Func<T,      MlResult<TResult>>` lleva espacios extra **detrï¿½s de la coma interna** para que su anchura visual coincida con la del mï¿½s largo (`Func<T, Task<MlResult<TResult>>>`). Esa tï¿½cnica de "padding intra-genï¿½rico" es vï¿½lida y preferible cuando padear sï¿½lo el final del tipo no permite alinear el nombre del parï¿½metro.
 
 ## 3. Constructor primario, genï¿½ricos, restricciones (`where`) e implementaciï¿½n de interfaces
 
@@ -246,7 +246,7 @@ Si el mï¿½todo anidado tiene ademï¿½s **named args en otras invocaciones** de la
 ```csharp
 => source.Match
 (
-    fail : MlResult<TReturn>.Fail,
+    fail : MlResult<TResult>.Fail,
     valid: value => func(value)
 );
 ```
@@ -254,7 +254,7 @@ Si el mï¿½todo anidado tiene ademï¿½s **named args en otras invocaciones** de la
 ```csharp
 => await source.MatchAsync
 (
-    failAsync :       errorsDetails =>       Task.FromResult(MlResult<TReturn>.Fail(errorsDetails)),
+    failAsync :       errorsDetails =>       Task.FromResult(MlResult<TResult>.Fail(errorsDetails)),
     validAsync: async value         => await funcAsync(value)
 );
 ```
@@ -426,12 +426,12 @@ Motivo: con sangrï¿½as profundas la lï¿½nea en blanco rompe la lectura visual de
 ## Ejemplo completo de salida esperada
 
 ```csharp
-public static async Task<MlResult<TReturn>> TryBindAsync<T, TReturn>(this MlResult<T>                      source,
-                                                                          Func<T, Task<MlResult<TReturn>>> funcAsync,
+public static async Task<MlResult<TResult>> TryBindAsync<T, TResult>(this MlResult<T>                      source,
+                                                                          Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                           Func<Exception, string>          errorMessageBuilder)
     => await source.MatchAsync
     (
-        failAsync :       errorsDetails =>       MlResult<TReturn>.Fail(errorsDetails).ToAsync(),
+        failAsync :       errorsDetails =>       MlResult<TResult>.Fail(errorsDetails).ToAsync(),
         validAsync: async value         => await funcAsync.TryToMlResultAsync(source.Value, errorMessageBuilder)
     );
 ```

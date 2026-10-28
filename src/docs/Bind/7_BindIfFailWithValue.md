@@ -81,10 +81,10 @@ return MlResult<Registro>.Fail(
 | Forma | Firma | Si el resultado es **válido** |
 | --- | --- | --- |
 | **A — Solo recuperación** | `BindIfFailWithValue<T>(funcValue)` | Devuelve el valor tal cual |
-| **B — Ambos caminos** | `BindIfFailWithValue<T, TValue, TReturn>(funcValid, funcFail)` | Ejecuta `funcValid` |
+| **B — Ambos caminos** | `BindIfFailWithValue<T, TValue, TResult>(funcValid, funcFail)` | Ejecuta `funcValid` |
 
 En la forma **A** el valor recuperado es del **mismo tipo `T`** que el resultado. En la forma **B**
-puedes recuperar un tipo distinto (`TValue`) y devolver un tercero (`TReturn`), lo cual es lo habitual:
+puedes recuperar un tipo distinto (`TValue`) y devolver un tercero (`TResult`), lo cual es lo habitual:
 falla un `MlResult<Registro>` pero lo que guardaste es la `LineaCsv` de entrada.
 
 ```csharp
@@ -116,9 +116,9 @@ public static MlResult<T> BindIfFailWithValue<T>(this MlResult<T>          sourc
 ### Forma B
 
 ```csharp
-public static MlResult<TReturn> BindIfFailWithValue<T, TValue, TReturn>(this MlResult<T>                    source,
-                                                                             Func<T     , MlResult<TReturn>> funcValid,
-                                                                             Func<TValue, MlResult<TReturn>> funcFail)
+public static MlResult<TResult> BindIfFailWithValue<T, TValue, TResult>(this MlResult<T>                    source,
+                                                                             Func<T     , MlResult<TResult>> funcValid,
+                                                                             Func<TValue, MlResult<TResult>> funcFail)
     => source.Match(
         fail : errorsDetails => errorsDetails.GetMetadataValue<TValue>().Bind(value => funcFail(value)),
         valid: value         => funcValid(value));
@@ -364,7 +364,7 @@ a lo largo de la tubería, usa una **tupla** o un objeto de contexto en el camin
   provocó (o precedió a) el fallo.
 - 🔑 **Requiere que alguien haya guardado ese valor antes**, normalmente con `AddValueIfFail` o con la
   factoría `MlErrorDetails.FromErrorMessageWithValue`.
-- Dos formas: **A** (`funcValue`, mismo tipo) y **B** (`funcValid` + `funcFail`, con `TValue` y `TReturn`
+- Dos formas: **A** (`funcValue`, mismo tipo) y **B** (`funcValid` + `funcFail`, con `TValue` y `TResult`
   independientes).
 - Internamente hace `errorsDetails.GetMetadataValue<TValue>().Bind(...)`: si el valor no está o el tipo no
   coincide, **tu función no se ejecuta** y se devuelve ese fallo.

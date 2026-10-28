@@ -44,7 +44,7 @@ var respuesta = resultado.BindAlways(
 
 | Forma | Firma resumida | Qué recibe | Para qué sirve |
 |---|---|---|---|
-| **A — Descartar y sustituir** | `BindAlways<T, TReturn>(funcAlways)` | **nada** | Producir un resultado nuevo ignorando por completo lo anterior. |
+| **A — Descartar y sustituir** | `BindAlways<T, TResult>(funcAlways)` | **nada** | Producir un resultado nuevo ignorando por completo lo anterior. |
 | **B — Bifurcar y converger** | `BindAlways<T, TResult>(funcValidAlways, funcFailAlways)` | el valor o los errores | Tratar los dos caminos por separado y unificar el tipo de salida. |
 
 ```csharp
@@ -65,8 +65,8 @@ MlResult<Informe> informe = resultado.BindAlways(
 
 ```csharp
 // FORMA A
-public static MlResult<TReturn> BindAlways<T, TReturn>(this MlResult<T>              source,
-                                                            Func<MlResult<TReturn>> funcAlways)
+public static MlResult<TResult> BindAlways<T, TResult>(this MlResult<T>              source,
+                                                            Func<MlResult<TResult>> funcAlways)
     => funcAlways();
 
 // FORMA B
@@ -171,7 +171,7 @@ Ambas formas tienen su familia asíncrona completa, combinando origen síncrono/
 
 | Forma | Método | Sobrecargas asíncronas |
 |---|---|---|
-| A | `BindAlwaysAsync<T, TReturn>(Func<Task<MlResult<TReturn>>>)` | 4 |
+| A | `BindAlwaysAsync<T, TResult>(Func<Task<MlResult<TResult>>>)` | 4 |
 | B | `BindAlwaysAsync<T, TResult>(funcValidAlwaysAsync, funcFailAlwaysAsync)` | 4 |
 | A | `TryBindAlwaysAsync` | 8 |
 | B | `TryBindAlwaysAsync` | 8 |
@@ -194,12 +194,12 @@ public Task<MlResult<RespuestaApi>> ProcesarAsync(SolicitudDto dto)
 Los pasos de convergencia suelen tocar infraestructura (recargar, contar, publicar un evento), así que también pueden lanzar. Las variantes `Try*` lo capturan:
 
 ```csharp
-public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T>              source,
-                                                               Func<MlResult<TReturn>> funcAlways,
+public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>              source,
+                                                               Func<MlResult<TResult>> funcAlways,
                                                                Func<Exception, string> errorMessageBuilder);
 
-public static MlResult<TReturn> TryBindAlways<T, TReturn>(this MlResult<T>              source,
-                                                               Func<MlResult<TReturn>> funcAlways,
+public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>              source,
+                                                               Func<MlResult<TResult>> funcAlways,
                                                                string                  errorMessage = null!);
 ```
 
@@ -219,12 +219,12 @@ Este es el punto donde más se confunden las herramientas, así que aquí está 
 
 | Necesito… | Herramienta | Devuelve |
 |---|---|---|
-| Salir del mundo `MlResult` con un valor crudo | `Match(valid, fail)` | `TReturn` (crudo) |
+| Salir del mundo `MlResult` con un valor crudo | `Match(valid, fail)` | `TResult` (crudo) |
 | Decidir en ambas ramas y **seguir** en `MlResult`, con función que **puede fallar** | `BindAlways(funcValid, funcFail)` | `MlResult<TResult>` |
 | Decidir en ambas ramas y seguir en `MlResult`, con función que **no puede fallar** | `MapAlways(funcValid, funcFail)` | `MlResult<TResult>` |
-| Producir un resultado nuevo ignorando el anterior | `BindAlways(funcAlways)` | `MlResult<TReturn>` |
+| Producir un resultado nuevo ignorando el anterior | `BindAlways(funcAlways)` | `MlResult<TResult>` |
 | Observar ambas ramas sin alterar nada | `ExecSelf(actionValid, actionFail)` | el `MlResult<T>` original |
-| Continuar solo si es válido | `Bind` / `Map` | `MlResult<TReturn>` |
+| Continuar solo si es válido | `Bind` / `Map` | `MlResult<TResult>` |
 | Continuar solo si ha fallado | `BindIfFail` / `MapIfFail` | `MlResult<T>` |
 
 > 📌 Curiosidad reveladora: en el código fuente, `BindAlways(funcAlways)`, `MapAlways(funcAlways)` y `Match(funcAll)` (el de la región `MatchAll`) están implementados **exactamente igual**: invocan el delegado y devuelven su resultado. Elige el nombre que mejor exprese tu intención.

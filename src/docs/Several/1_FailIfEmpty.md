@@ -1,4 +1,4 @@
-# FailIfEmpty — Convertir una colección vacía en un fallo
+﻿# FailIfEmpty — Convertir una colección vacía en un fallo
 
 ## Índice
 
@@ -116,7 +116,7 @@ Puntos que conviene retener:
 | La comprobación es `items != null && items.Any()` | Cubre el `null` **y** el vacío en una sola llamada; no necesitas `FailIfNull` antes |
 | El valor válido es `items`, tal cual | No hay copia ni materialización: la pereza de LINQ se conserva |
 | La sobrecarga de `string` delega en la de `MlError` | Un único punto de verdad: no hay divergencias de comportamiento entre sobrecargas |
-| No existe `TryEmptyToFailed` | No hace falta: el método no invoca ningún delegado tuyo, así que no puede lanzar excepciones de usuario |
+| No existe `TryFailIfEmpty` | No hace falta: el método no invoca ningún delegado tuyo, así que no puede lanzar excepciones de usuario |
 
 ---
 
@@ -220,7 +220,7 @@ var resultado = await _repo.PendientesAsync(clienteId)
 |-----------|-----|
 | Fallar si la colección viene vacía o `null` | `FailIfEmpty(...)` |
 | Fallar si un objeto individual es `null` | [`FailIfNull`](2_FailIfNull.md) |
-| Fallar según una condición booleana arbitraria | [`FailIfFalse`](3_BoolToResult.md) |
+| Fallar según una condición booleana arbitraria | [`FailIfFalse`](3_FailIfFalse.md) |
 | Validar el contenido, no la cantidad | [`MapEnsure`](../Map/2_MapEnsure.md) |
 | Comprobar el vacío cuando ya estoy en el carril | `.Bind(items => items.FailIfEmpty("...")!)` |
 | Comprobar el vacío sin salir del carril y sin cambiar el tipo | `.MapEnsure(items => items.Any(), "...")` |
@@ -391,7 +391,7 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
 - **3 sobrecargas síncronas** (`MlError`, `MlErrorDetails`, `string`) y **6 asíncronas**
   (las mismas tres sobre `IEnumerable<T>`, que son meras envolturas, y sobre
   `Task<IEnumerable<T>>`, que sí esperan el origen).
-- **No existe `TryEmptyToFailed`**: el método no invoca delegados de usuario.
+- **No existe `TryFailIfEmpty`**: el método no invoca delegados de usuario.
 - ⚠️ El tipo de retorno está anotado como nullable aunque nunca devuelve `null`.
 - ⚠️ Llama a `Any()`, con el consiguiente riesgo de doble enumeración en fuentes diferidas.
 - Alternativa idiomática cuando ya estás en el carril: `MapEnsure(items => items.Any(), "...")`.
@@ -401,8 +401,8 @@ var clientes = resultado.Match(valid: cs => cs, fail: _ => Enumerable.Empty<Clie
 ## Ver también
 
 - [`FailIfNull`](2_FailIfNull.md) — el equivalente para objetos individuales
-- [`FailIfFalse`](3_BoolToResult.md) — construir un `MlResult` a partir de una condición
-- [`CombineAll`](4_Combine.md) — fusionar varios `MlResult`
+- [`FailIfFalse`](3_FailIfFalse.md) — construir un `MlResult` a partir de una condición
+- [`CombineAll`](4_CombineAll.md) — fusionar varios `MlResult`
 - [`MapEnsure`](../Map/2_MapEnsure.md) — validar sin salir del carril
 - [`Bind`](../Bind/3_Bind.md) — encadenar operaciones que devuelven `MlResult`
 - [`Bucles y proyecciones`](../loops/Collections.md) — recorrer colecciones dentro del carril

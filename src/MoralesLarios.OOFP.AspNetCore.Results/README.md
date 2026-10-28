@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.AspNetCore.Results — el puente entre el raíl `MlResult<T>` y ASP.NET Core MVC
+﻿# MoralesLarios.OOFP.AspNetCore.Results — el puente entre el raíl `MlResult<T>` y ASP.NET Core MVC
 
 Este proyecto es la **capa de salida HTTP** del ecosistema FOOP. Su única responsabilidad es traducir un `MlResult<T>` —el tipo del raíl funcional del núcleo— en un `IActionResult` de ASP.NET Core, con el código de estado correcto y un cuerpo `ProblemDetails` (RFC 7807) enriquecido. También ofrece el camino inverso: leer cabeceras HTTP y convertirlas en *value objects* validados que entran limpiamente en el raíl.
 
@@ -13,12 +13,12 @@ La idea de fondo es simple: **tu controlador no debería contener ni un solo `if
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Arquitectura: el flujo completo de un error](#arquitectura-el-flujo-completo-de-un-error)
 5. [`ExtendedProblemDetails`](#extendedproblemdetails)
-6. [`MlResults` — fábrica de respuestas de error](#mlactionresults--fábrica-de-respuestas-de-error)
+6. [`MlResults` — fábrica de respuestas de error](#mlresults--fábrica-de-respuestas-de-error)
 7. [`ProblemDetailsInfo`](#problemdetailsinfo)
-8. [`MlErrorDetailsExtensions` — el puente por reflexión](#mlerrorsdetailsextensions--el-puente-por-reflexión)
-9. [`MlResultActionResultExtensions` — la capa recomendada](#mlresultwebextensionsplus--la-capa-recomendada)
-10. [`HttpRequestPaginationExtensions` — cabeceras HTTP al raíl](#mlrequestwebextensions--cabeceras-http-al-raíl)
-11. [`MlResultActionResultExtensionsLegacy` — capa legacy (`[Obsolete]`)](#mlresultwebextensions--capa-legacy-obsolete)
+8. [`MlErrorDetailsExtensions` — el puente por reflexión](#mlerrordetailsextensions--el-puente-por-reflexión)
+9. [`MlResultActionResultExtensions` — la capa recomendada](#mlresultactionresultextensions--la-capa-recomendada)
+10. [`HttpRequestPaginationExtensions` — cabeceras HTTP al raíl](#httprequestpaginationextensions--cabeceras-http-al-raíl)
+11. [`MlResultActionResultExtensionsLegacy` — capa legacy (`[Obsolete]`)](#mlresultactionresultextensionslegacy--capa-legacy-obsolete)
 12. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 13. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
 14. [Ejemplos prácticos](#ejemplos-prácticos)
@@ -137,9 +137,9 @@ Tres bloques funcionales bien separados:
 Para entender este proyecto hay que ver el recorrido completo de un error desde el repositorio hasta el JSON que recibe el cliente:
 
 ```text
-1. EFCore                 TryFindAsync(id) devuelve fail
+1. EntityFrameworkCore    TryFindAsync(id) devuelve fail
                               │
-2. WebServices            MlProblemDetails.NotFoundError("Cliente 7 no existe")
+2. Application            MlProblemDetails.NotFoundError("Cliente 7 no existe")
    (MlProblemDetails)    crea un MlErrorDetails con:
                               Errors  = [ "Cliente 7 no existe" ]
                               Details = { ["ProblemsDetails"] = new {
@@ -147,19 +147,15 @@ Para entender este proyecto hay que ver el recorrido completo de un error desde 
                                              Detail = "...", Type = "...",
                                              Errors = {...}, StatusCode = 404 } }
                               │
-3. WebApi                 errors.GetProblemDetails()
+3. AspNetCore.Results     errors.GetProblemDetails()
    (MlErrorDetails-        → lee Details["ProblemsDetails"]
     Extensions)            → por reflexión lo convierte en ProblemDetailsInfo
                               │
-4. WebApi                 pdInfo.ToMlActionResult()
+4. AspNetCore.Results     pdInfo.ToMlActionResult()
    (MlResults)       → ObjectResult(ExtendedProblemDetails) { StatusCode = 404 }
-                              │
-5. ASP.NET Core           HTTP/1.1 404 Not Found
-                          { "status":404, "title":"...", "detail":"...",
-                            "type":"...", "errors":{...} }
 ```
 
-> ❗ **El punto crítico está en el paso 2.** Si la capa de servicio **no** adjunta el detalle `"ProblemsDetails"`, el paso 3 falla y `MlResultActionResultExtensions` cae al *fallback*: `MlResults.InternalServerError()`. Es decir: **un error de negocio perfectamente legítimo se convierte en un 500**. Por eso en `WebServices` debes usar los métodos con sufijo `ProblemsDetails` (`FindByIdProblemsDetailsAsync`, `UpdateAsync`, `DeleteProblemDetailsAsync`) y construir tus errores con `MlProblemDetails.*`.
+> ❗ **El punto crítico está en el paso 2.** Si la capa de servicio **no** adjunta el detalle `"ProblemsDetails"`, el paso 3 falla y `MlResultActionResultExtensions` cae al *fallback*: `MlResults.InternalServerError()`. Es decir: **un error de negocio perfectamente legítimo se convierte en un 500**. Por eso en `Application` debes usar los métodos con sufijo `ProblemsDetails` (`FindByIdProblemsDetailsAsync`, `UpdateAsync`, `DeleteProblemDetailsAsync`) y construir tus errores con `MlProblemDetails.*`.
 
 ---
 
@@ -309,7 +305,7 @@ public static MlResult<ProblemDetailsInfo> GetProblemDetails(this MlErrorDetails
 
 Recibe un `object` (en la práctica, el **tipo anónimo** que crea `MlProblemDetails`) y lo convierte a `ProblemDetailsInfo` **leyendo sus propiedades por reflexión**: `Status`, `Title`, `Detail`, `Type`, `Errors` y `StatusCode`. Si una propiedad no existe o no se puede convertir, aplica un valor por defecto (`500`, `"Error"`, cadena vacía, diccionario vacío).
 
-> ⚠️ **Contrato implícito y frágil.** El acoplamiento entre `MlProblemDetails` (proyecto `WebServices`) y este método es **por nombre de propiedad, en tiempo de ejecución, sin interfaz común**. Renombrar `StatusCode` en un lado degrada silenciosamente a `500` en el otro, sin error de compilación y sin excepción. Es una de las deudas técnicas más relevantes de la solución (ver [Particularidades](#️-particularidades-reales-del-código-fuente)).
+> ⚠️ **Contrato implícito y frágil.** El acoplamiento entre `MlProblemDetails` (proyecto `Application`) y este método es **por nombre de propiedad, en tiempo de ejecución, sin interfaz común**. Renombrar `StatusCode` en un lado degrada silenciosamente a `500` en el otro, sin error de compilación y sin excepción. Es una de las deudas técnicas más relevantes de la solución (ver [Particularidades](#️-particularidades-reales-del-código-fuente)).
 
 **Uso manual** (cuando escribes tu propio *mapper* de errores):
 
@@ -364,7 +360,7 @@ public static async Task<IActionResult> ToPostActionResultAsync   <T>(this Task<
 public static async Task<IActionResult> ToPostActionResultAsync   <T>(this Task<MlResult<T>> source);
 ```
 
-> ⚠️ **Nomenclatura asimétrica en POST.** Las sobrecargas que reciben `Task<MlResult<T>>` se llaman `ToPostActionResultAsync` (**sin `Pd`**), mientras que el resto de verbos sí conservan el `Pd` (`ToNoContentProblemDetailsResultAsync`). Si buscas `ToCreatedProblemDetailsResultAsync` sobre un `Task`, no lo encontrarás.
+> ⚠️ **Nomenclatura asimétrica en POST.** Las sobrecargas que reciben `Task<MlResult<T>>` se llaman `ToPostActionResultAsync` (**sin `Pd`**), mientras que el resto de verbos sí conserva el `Pd` (`ToNoContentProblemDetailsResultAsync`). Si buscas `ToCreatedProblemDetailsResultAsync` sobre un `Task`, no lo encontrarás.
 
 ### Puente auxiliar
 
@@ -523,7 +519,7 @@ Cosas que **no** deducirías de las firmas y que conviene conocer antes de apoya
 
 5. **Nomenclatura asimétrica en las sobrecargas asíncronas de POST**: `ToPostActionResultAsync` (sobre `Task<MlResult<T>>`) frente a `ToCreatedProblemDetailsResultAsync` (sobre `MlResult<T>`). El `Pd` desaparece justo en las sobrecargas de `Task`.
 
-6. **El puente `MlErrorDetails` → `ProblemDetailsInfo` funciona por reflexión.** `ToProblemDetails` lee propiedades por nombre de un **tipo anónimo** creado en otro proyecto (`MlProblemDetails`, en `WebServices`). No hay interfaz ni contrato compilado: un renombrado degrada silenciosamente el resultado a `500` / `"Error"`.
+6. **El puente `MlErrorDetails` → `ProblemDetailsInfo` funciona por reflexión.** `ToProblemDetails` lee propiedades por nombre de un **tipo anónimo** creado en otro proyecto (`MlProblemDetails`, en `Application`). No hay interfaz ni contrato compilado: un renombrado degrada silenciosamente el resultado a `500` / `"Error"`.
 
 7. **El *fallback* a 500 oculta errores de negocio.** Si el `MlErrorDetails` no trae el detalle `"ProblemsDetails"`, `MlResultActionResultExtensions` devuelve `InternalServerError()` **sin incluir el mensaje original**. Un 404 legítimo se convierte en un 500 mudo. Ocurre, por ejemplo, con los errores que genera `MoralesLarios.OOFP.Application.Helpers.Extensions.BuildEntityNotFoundError`, que usa la clave `"NotFound"` en vez de `"ProblemsDetails"`.
 
@@ -822,7 +818,7 @@ return resultado.ToOkProblemDetailsResult();
 
 1. **Usa siempre `MlResultActionResultExtensions`, nunca `MlResultActionResultExtensionsLegacy`.** La segunda está `[Obsolete]` al completo y adivina los códigos de estado comparando cadenas.
 
-2. **Que el error nazca ya clasificado.** El código de estado es una decisión de negocio: constrúyelo con `MlProblemDetails.*` (proyecto `WebServices`) en el momento en que detectas el problema, no en el controlador.
+2. **Que el error nazca ya clasificado.** El código de estado es una decisión de negocio: constrúyelo con `MlProblemDetails.*` (proyecto `Application`) en el momento en que detectas el problema, no en el controlador.
 
 3. **Prefiere los métodos `…ProblemsDetails…` de la capa de servicio** (`FindByIdProblemsDetailsAsync`, `UpdateAsync`, `DeleteProblemDetailsAsync`). Los que no llevan ese sufijo generan errores sin el detalle `"ProblemsDetails"` y acaban en un `500`.
 

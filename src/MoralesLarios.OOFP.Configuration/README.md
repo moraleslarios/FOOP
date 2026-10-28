@@ -1,6 +1,6 @@
-# MoralesLarios.OOFP.Configuration — Configuración como `MlResult<T>`
+﻿# MoralesLarios.OOFP.Configuration — Configuración como `MlResult<T>`
 
-Proyecto **muy pequeño y muy concreto**: una única abstracción, [`IMlConfigurationReader`](#imlconfigmanager), que envuelve `IConfiguration` para que **leer una clave de configuración devuelva un `MlResult<T>` en lugar de un `null` silencioso**.
+Proyecto **muy pequeño y muy concreto**: una única abstracción, [`IMlConfigurationReader`](#imlconfigurationreader), que envuelve `IConfiguration` para que **leer una clave de configuración devuelva un `MlResult<T>` en lugar de un `null` silencioso**.
 
 Es la puerta de entrada de la configuración al raíl funcional: si la clave no existe, no obtienes `null` ni una excepción a los diez minutos, obtienes un `Fail` con un mensaje que dice exactamente qué clave falta.
 
@@ -12,7 +12,7 @@ Es la puerta de entrada de la configuración al raíl funcional: si la clave no 
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
 4. [Registro en el contenedor](#registro-en-el-contenedor)
-5. [`IMlConfigurationReader`](#imlconfigmanager)
+5. [`IMlConfigurationReader`](#imlconfigurationreader)
 6. [Los tres métodos de lectura](#los-tres-métodos-de-lectura)
 7. [Las dos formas de personalizar el error](#las-dos-formas-de-personalizar-el-error)
 8. [Cómo funciona internamente](#cómo-funciona-internamente)
@@ -212,7 +212,7 @@ Lee de la sección `ConnectionStrings` (`GetConnectionString` es azúcar para `c
 }
 ```
 
-> 💡 **Combínalo con [`EFCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md)**: leer la cadena de conexión en el raíl funcional y encadenar el registro del `DbContext` es un uso natural.
+> 💡 **Combínalo con [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md)**: leer la cadena de conexión en el raíl funcional y encadenar el registro del `DbContext` es un uso natural.
 
 ---
 
@@ -586,7 +586,7 @@ foreach (var item in items) { /* usa urlResult.Value */ }
 
 ## Mejores prácticas
 
-1. **Valida toda la configuración crítica en el arranque**, no en la primera petición (ver [Ejemplo 3](#ejemplo-3--validación-al-arranque-patrón-recomendado)).
+1. **Valida toda la configuración crítica en el arranque**, no en la primera petición (ver [Ejemplo 3](#ejemplo-3--validación-al-arrancar-patrón-recomendado)).
 2. **Usa tipos anulables (`int?`, `bool?`) para tipos valor**: es la única forma de distinguir "ausente" de "cero".
 3. **Prefiere `ReadAppSettingKey<T>` sobre la versión no genérica**: `MlResult<object>` pierde la seguridad de tipos.
 4. **Lee cada clave una sola vez** y pasa el valor: no llames al gestor dentro de bucles.
