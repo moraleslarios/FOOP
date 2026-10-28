@@ -43,12 +43,36 @@ public static partial class EnsureFp
     public static MlResult<T> That<T>(T value, Func<T, bool> predicate, string errorMessage)
         => That(value, EvaluatePredicate(value, predicate), errorMessage);
 
+    /// <summary>
+    /// Ejecuta <c>That</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="value">Valor sobre el que se opera.</param>
+    /// <param name="predicate">Condición que debe cumplirse.</param>
+    /// <param name="errorsDetails">Detalles del error, con su mensaje y metadatos asociados.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> That<T>(T value, Func<T, bool> predicate, MlErrorDetails errorsDetails)
         => That(value, EvaluatePredicate(value, predicate), errorsDetails);
 
+    /// <summary>
+    /// Ejecuta <c>That</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="value">Valor sobre el que se opera.</param>
+    /// <param name="predicate">Condición que debe cumplirse.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<string> errorMessageBuilder)
         => That(value, EvaluatePredicate(value, predicate), errorMessageBuilder);
 
+    /// <summary>
+    /// Ejecuta <c>That</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="value">Valor sobre el que se opera.</param>
+    /// <param name="predicate">Condición que debe cumplirse.</param>
+    /// <param name="errorsDetailsBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> That<T>(T value, Func<T, bool> predicate, Func<MlErrorDetails> errorsDetailsBuilder)
         => That(value, EvaluatePredicate(value, predicate), errorsDetailsBuilder);
 

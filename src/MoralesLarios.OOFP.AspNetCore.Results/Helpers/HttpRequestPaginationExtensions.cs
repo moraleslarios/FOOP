@@ -4,9 +4,18 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 
+/// <summary>
+/// Métodos de extension de <c>HttpRequestPagination</c>.
+/// </summary>
 public static partial class HttpRequestPaginationExtensions
 {
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>Header</c>.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <param name="headerKey">Clave identificativa.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<NotEmptyString> GetHeader(this HttpRequest request, MemberName headerKey)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
@@ -15,9 +24,21 @@ public static partial class HttpRequestPaginationExtensions
         return result;
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>Header</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <param name="headerKey">Clave identificativa.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<NotEmptyString>> GetHeaderAsync(this HttpRequest request, MemberName headerKey)
         => request.GetHeader(headerKey).ToAsync();
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>IntHeader</c>.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <param name="headerKey">Clave identificativa.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IntNonNegative> GetIntHeader(this HttpRequest request, MemberName headerKey)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
@@ -28,9 +49,20 @@ public static partial class HttpRequestPaginationExtensions
         return result;
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>IntHeader</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <param name="headerKey">Clave identificativa.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IntNonNegative>> GetIntHeaderAsync(this HttpRequest request, MemberName headerKey)
         => request.GetIntHeader(headerKey).ToAsync();
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PageNumberHeader</c>.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IntNonNegative> GetPageNumberHeader(this HttpRequest request)
     {
         MemberName headerKey = global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageNumber;
@@ -40,9 +72,19 @@ public static partial class HttpRequestPaginationExtensions
         return result;
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PageNumberHeader</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IntNonNegative>> GetPageNumberHeaderAsync(this HttpRequest request)
         => request.GetPageNumberHeader().ToAsync();
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PageSizeHeader</c>.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IntNonNegative> GetPageSizeHeader(this HttpRequest request)
     {
         MemberName headerKey = global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageSize;
@@ -52,9 +94,19 @@ public static partial class HttpRequestPaginationExtensions
         return result;
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PageSizeHeader</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IntNonNegative>> GetPageSizeHeaderAsync(this HttpRequest request)
         => request.GetPageSizeHeader().ToAsync();
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PaginationHeaders</c>.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetPaginationHeaders(this HttpRequest request)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
@@ -64,6 +116,11 @@ public static partial class HttpRequestPaginationExtensions
         return result;
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PaginationHeaders</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)>> GetPaginationHeadersAsync(this HttpRequest request)
         => request.GetPaginationHeaders().ToAsync();
 
@@ -81,6 +138,11 @@ public static partial class HttpRequestPaginationExtensions
 
 
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PageRequest</c>.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<PageRequest> GetPageRequest(this HttpRequest request)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
@@ -90,6 +152,11 @@ public static partial class HttpRequestPaginationExtensions
         return result;
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>PageRequest</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="request">Petición que se envia.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<PageRequest>> GetPageRequestAsync(this HttpRequest request)
         => request.GetPageRequest().ToAsync();
 

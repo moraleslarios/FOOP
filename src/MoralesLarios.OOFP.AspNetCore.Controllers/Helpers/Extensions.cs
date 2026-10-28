@@ -6,10 +6,19 @@ using System.Globalization;
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.Helpers;
 
+/// <summary>
+/// Métodos de extension de <c></c>.
+/// </summary>
 public static partial class Extensions
 {
 
 
+    /// <summary>
+    /// Convierte el valor al tipo solicitado de <c>ToType</c>.
+    /// </summary>
+    /// <param name="value">Valor sobre el que se opera.</param>
+    /// <param name="property">Valor de <c>property</c>.</param>
+    /// <returns>Valor de tipo <c>object</c> obtenido por la operación.</returns>
     public static object ConvertToType(this string value, Type property)
     {
 
@@ -97,6 +106,13 @@ public static partial class Extensions
 
 
 
+    /// <summary>
+    /// Convierte el texto en el tipo solicitado de <c>KeyValues</c>.
+    /// </summary>
+    /// <typeparam name="TEntity">Tipo de la entidad de datos.</typeparam>
+    /// <param name="ids">Identificadores de las entidades.</param>
+    /// <param name="pkFields">Función a aplicar.</param>
+    /// <returns>Colección con los elementos obtenidos.</returns>
     public static object[] ParseKeyValues<TEntity>(this string ids, Func<TEntity, object[]> pkFields)
         where TEntity : class
     {
@@ -104,10 +120,23 @@ public static partial class Extensions
 
         return result;
     }
+    /// <summary>
+    /// Construye la instancia solicitada de <c>KeyParseErrorMessage</c>.
+    /// </summary>
+    /// <param name="ex">Excepción capturada.</param>
+    /// <param name="ids">Identificadores de las entidades.</param>
+    /// <returns>Representación textual obtenida.</returns>
     public static string BuildKeyParseErrorMessage(this Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
 
 
 
+    /// <summary>
+    /// Convierte el texto en el tipo solicitado de <c>KeyValues</c>.
+    /// </summary>
+    /// <typeparam name="TEntity">Tipo de la entidad de datos.</typeparam>
+    /// <param name="values">Valores sobre los que se opera.</param>
+    /// <param name="pkFields">Función a aplicar.</param>
+    /// <returns>Colección con los elementos obtenidos.</returns>
     public static object[] ParseKeyValues<TEntity>(string[] values, Func<TEntity, object[]> pkFields)
         where TEntity : class
     {

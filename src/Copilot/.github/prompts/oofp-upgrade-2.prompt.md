@@ -347,6 +347,149 @@ Los constructores de `Age`, `Id` e `IdLite` pasaron de `public` a **`protected`*
 > pasó a llamarse `AddOofpRepositories`. Revisa cuál quieres: `AddOofpRepositories()` registra con el *lifetime*
 > por defecto; `AddOofpRepositoriesScoped()` es el antiguo `AddScopedOOFPRepos()`.
 
+### 3.3 Cambios de COMPORTAMIENTO por corrección de bugs (auditoría 2.0.0) ⚠️⚠️
+
+Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correcciones son deliberadamente
+**rupturas de comportamiento**: el código del consumidor sigue compilando en casi todos los casos, pero
+**la salida observable cambia**. Si tienes tests que fijan la salida antigua (la incorrecta), fallarán.
+
+> 🧭 Cómo leer la tabla: **«Rompe compilación»** = el consumidor tiene que tocar código o `.csproj`.
+> **«Rompe contrato»** = compila igual, pero cambia lo que ve el cliente HTTP, la base de datos o el log.
+
+| # | Qué cambió | 1.x (antes) | 2.0.0 (ahora) | Tipo de ruptura |
+| -- | --- | --- | --- | --- |
+| 17 | Cuerpo del error HTTP en el mensaje de fallo | se incrustaba el body **completo** | se **trunca a 2.048 caracteres** y se puede desactivar | Contrato (mensajes de log/fallo) |
+| 27 | Composición de la URL en `Http` | `Path.Combine` → `api\users\3` en Windows | `Uri` → `api/users/3` siempre | Contrato (URL emitida) |
+| 28 | Formato de las claves compuestas en la ruta | cultura **del hilo**, tipos limitados | `InvariantCulture` + `DateTimeOffset`/`TimeSpan`/`Guid`/`bool`/`IFormattable`, `null` → `""` | Contrato (URL emitida) |
+| 29 | Cabeceras de paginación | en `HttpClient.DefaultRequestHeaders` | en el `HttpRequestMessage` de cada llamada | Contrato (ya no «se pegan» al cliente) |
+| 31 | `Location` de los `201 Created` | `https://www.netalpunto.net` / `"NotUri"` | `/` (`WebErrorDetailsKeys.DefaultCreatedLocation`) | Contrato (cabecera `Location`) |
+| 32 | `type` de `ProblemDetails` | `https://www.puntonetalpunto.net/` | `about:blank` (`WebErrorDetailsKeys.DefaultProblemType`) | Contrato (cuerpo RFC 9457) |
+| 34 | Referencia a MVC en `AspNetCore.Results` y `AspNetCore.Controllers` | `PackageReference Microsoft.AspNetCore.Mvc.Core` 2.x | `FrameworkReference Microsoft.AspNetCore.App` | **Compilación** (transitividad) |
+| 35 | `TryRemoveRangeAsync` | guarda sincrónica, `Task` sin `await` | guarda asíncrona esperada | Contrato (ahora sí corta con `null`) |
+| 36 | `TotalCount` de la paginación sincrónica | contaba la tabla **completa**, ignorando el filtro | cuenta **con el filtro aplicado** | Contrato (nº de páginas) |
+| 37 | Paginación imperativa | `OrderBy` **después** de `Skip`/`Take` | `OrderBy` **antes** de `Skip`/`Take` | Contrato (contenido de cada página) |
+
+#### 17 — El cuerpo del error HTTP se trunca
+
+`ReadErrorDescriptionAsync` ya no incrusta cuerpos de error sin límite (antes un *stack trace* o un HTML de
+error de 2 MB acababa íntegro en el log y en el mensaje de fallo).
+
+```csharp
+// Opción A: subir el límite en una llamada concreta
+var d = await response.ReadErrorDescriptionAsync(maxBodyLength: 32_768);
+
+// Opción B: desactivar globalmente la inclusión del cuerpo (Program.cs, arranque)
+MlResponseWebExtensions.IncludeResponseBodyInErrors = false;   // útil si el body puede traer datos personales
+```
+
+**Qué revisar en tu código:** tests o alertas que hagan `Assert.Contains("<texto del body>", error)` sobre
+respuestas de error largas, y cualquier parseo del mensaje de fallo. Si truncas, aparece el sufijo
+`… [truncado: N caracteres omitidos]`.
+
+#### 27 y 28 — Las URL que se generan son distintas
+
+```
+1.x (Windows) :  https://api/v1\clientes\3,14        ← '\' y coma decimal de es-ES
+2.0.0         :  https://api/v1/clientes/3.14        ← '/' y punto decimal invariante
+```
+
+**Qué revisar en tu código:**
+- Rutas del servidor que hicieran *matching* sobre el formato antiguo (p. ej. un `[Route]` que esperase
+  `3,14`). Con la 2.0.0 hay que aceptar el formato invariante.
+- Si tu `url` empezaba por `/` contando con que `Path.Combine` **descartase** la `BaseAddress`, ahora ya no se
+  descarta: la URL se compone correctamente contra la base. **Cambia tus rutas relativas.**
+- Si pasas una URL **absoluta** en el parámetro `url`, ahora gana sobre la `BaseAddress` (antes el resultado
+  era basura).
+- Tests que comparen la URL literal.
+
+#### 29 — Las cabeceras de paginación ya no se quedan pegadas al `HttpClient`
+
+Si tu código hacía esto, **deja de funcionar**:
+
+```csharp
+// 1.x — PATRÓN YA NO VÁLIDO
+client.SetHeaderPageNumber(1);            // escribía en DefaultRequestHeaders…
+var r = await client.GetAsync(url);       // …y la siguiente llamada la heredaba
+```
+
+En la 2.0.0 hay sobrecargas sobre `HttpRequestMessage`:
+
+```csharp
+using var request = new HttpRequestMessage(HttpMethod.Get, url);
+request.AddPaginationHeaders(pageNumber, pageSize);     // o AddPageNumberHeader / AddPageSizeHeader
+var response = await client.SendAsync(request, ct);
+```
+
+Las sobrecargas sobre `HttpClient` **siguen existiendo** para no romper la compilación, pero están
+**desaconsejadas**: filtran cabeceras entre peticiones y no son seguras entre hilos. Migra a las de
+`HttpRequestMessage`.
+
+#### 31 y 32 — `Location` y `type` ya no apuntan al dominio del autor
+
+Esto es un **cambio en la respuesta HTTP pública de tu API**:
+
+```diff
+- HTTP/1.1 201 Created
+- Location: https://www.netalpunto.net
++ HTTP/1.1 201 Created
++ Location: /
+```
+```diff
+  Content-Type: application/problem+json
+- { "type": "https://www.puntonetalpunto.net/", "title": "...", "status": 400 }
++ { "type": "about:blank", "title": "...", "status": 400 }
+```
+
+**Qué revisar en tu código:**
+- **Tests de API** (integración, contract tests, snapshots de Swagger/Pact) que fijen `type` o `Location`.
+  Hay que actualizar el valor esperado a `about:blank` y `/`.
+- **Clientes** que decidan en función de `problem.type`. Si tu API necesita un `type` propio y estable,
+  **pásalo explícitamente**; no te apoyes en el valor por defecto.
+- **`Location` correcto**: `/` es un relleno válido, no una URI útil. Usa las sobrecargas que reciben `Uri`
+  (`ToPostActionResultAsync(uri)`) o `CreatedAtAction`/`CreatedAtRoute`. Si no tienes URI del recurso creado,
+  considera devolver `200 OK` en lugar de un `201` con `Location` inventado.
+
+#### 34 — MVC llega por el framework compartido, no por el paquete 2.x
+
+`MoralesLarios.OOFP.AspNetCore.Results` y `MoralesLarios.OOFP.AspNetCore.Controllers` ya **no** arrastran
+`Microsoft.AspNetCore.Mvc.Core` (estaba fuera de soporte desde 2018 y provocaba conflictos de versión).
+
+**Esto rompe la compilación** si tu proyecto consumía tipos de MVC (`IActionResult`, `ControllerBase`,
+`ProblemDetails`) **por transitividad** y su `.csproj` usa `Microsoft.NET.Sdk` (librería de clases normal).
+Arréglalo de una de estas dos formas:
+
+```xml
+<!-- Opción A (recomendada si es un proyecto web) -->
+<Project Sdk="Microsoft.NET.Sdk.Web">
+```
+```xml
+<!-- Opción B (librería de clases que necesita tipos de ASP.NET Core) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+</Project>
+```
+
+> ❌ **No** vuelvas a añadir `<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.*" />`.
+> Es la causa original del problema.
+
+#### 35, 36 y 37 — La paginación de EF Core devuelve datos distintos (correctos)
+
+| Síntoma 1.x | Causa | Efecto de la corrección |
+| --- | --- | --- |
+| El total de páginas no cuadraba con el filtro | el `Count` ignoraba el predicado | `TotalCount` **baja** al valor correcto; se muestran menos páginas |
+| Al pasar de página se repetían o faltaban filas | `OrderBy` iba después de `Skip`/`Take` | cada página devuelve **otras filas** (las correctas) |
+| `TryRemoveRangeAsync(null)` podía seguir | guarda sincrónica mal encadenada | ahora **corta** y devuelve un fallo |
+
+**Qué revisar en tu código:** tests que fijen `TotalCount`, el número de páginas o el contenido exacto de una
+página; capturas de pantalla o *snapshots* de listados paginados; y cualquier sitio donde se pasara `null`
+al borrado por lotes contando con que no fallara.
+
+> 📌 Si la 1.x **no** aplicaba orden y tú tampoco lo indicas, la 2.0.0 sigue sin poder inventarlo: **indica
+> siempre una ordenación estable** (idealmente por clave primaria) en las consultas paginadas. Sin `ORDER BY`,
+> SQL Server no garantiza el reparto en páginas.
+
 ---
 
 ## Fase 4 — Compilar y resolver iterativamente
@@ -393,7 +536,9 @@ dotnet build --nologo /p:WarningLevel=4
    dotnet test --nologo
    ```
    Compara con la línea base de la Fase 0. Si algún test que pasaba ahora falla, **investígalo**: lo más
-   probable es un cambio semántico de la sección 3.2 (fechas con cultura invariante, factorías, nulabilidad).
+   probable es un cambio semántico de la sección 3.2 (fechas con cultura invariante, factorías, nulabilidad)
+   o un cambio de comportamiento de la sección 3.3 (URL, cabeceras de paginación, `Location`, `type` de
+   `ProblemDetails`, `TotalCount` y orden de las consultas paginadas).
 3. **Barrido final de nombres antiguos**. Busca en todo el código que no quede ningún nombre 1.x:
    ```
    MoralesLarios.OOFP.WebApi|MoralesLarios.OOFP.WebControllers|MoralesLarios.OOFP.WebServices
@@ -413,7 +558,21 @@ dotnet build --nologo /p:WarningLevel=4
    ```
    ⚠️ Algunos (`IsValid`, `Value`, `Name`, `Key`, `Empty`, `OrderBy`, `Combine`, `Do`) son palabras muy comunes:
    revisa cada coincidencia a mano y **descarta las que no provengan de la librería**.
-4. **Diff**:
+4. **Revisión de los cambios de comportamiento (sección 3.3)**. Busca y revisa a mano:
+   ```
+   PackageReference Include="Microsoft.AspNetCore.Mvc.Core"
+   SetHeaderPageNumber|SetHeaderPageSize|AddPageNumberHeader|AddPageSizeHeader
+   DefaultRequestHeaders
+   netalpunto|puntonetalpunto
+   TotalCount|ToResponseErrorsDescription|ReadErrorDescription
+   ```
+   - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
+     `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
+   - Si se añaden cabeceras de paginación sobre `HttpClient`, migra a las sobrecargas de
+     `HttpRequestMessage`.
+   - Si hay tests o *snapshots* que fijen `Location`, `type`, URL compuestas o `TotalCount`, actualiza el
+     valor esperado al comportamiento correcto de la 2.0.0.
+5. **Diff**:
    ```powershell
    git diff --stat
    ```
@@ -429,11 +588,14 @@ Entrega al usuario, **en español**, un informe con:
 2. **Ficheros modificados**: número total y desglose por proyecto.
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
-5. **Resultado del build**: errores y avisos, antes y después.
-6. **Resultado de los tests**: pasados/fallados, antes y después.
-7. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
+5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
+   36 y 37 indicando, para cada uno, si **afecta** al proyecto, qué se cambió y **qué debe validar el usuario**
+   (en especial: URL emitidas, cabecera `Location`, `type` de `ProblemDetails` y resultados paginados).
+6. **Resultado del build**: errores y avisos, antes y después.
+7. **Resultado de los tests**: pasados/fallados, antes y después.
+8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
    y cualquier decisión que requiera al usuario.
-8. **Siguientes pasos sugeridos**: confirmar el commit, revisar el diff, ejecutar la aplicación.
+9. **Siguientes pasos sugeridos**: confirmar el commit, revisar el diff, ejecutar la aplicación.
 
 No afirmes que la migración está completa si queda **cualquier** error de compilación, test roto nuevo,
 `CS0618` sin resolver o `TODO` pendiente. En ese caso, dilo explícitamente y enumera lo que falta.
@@ -450,6 +612,8 @@ No afirmes que la migración está completa si queda **cualquier** error de comp
 - ❌ No toques `Program.cs`, `appsettings*.json` ni ficheros de configuración salvo que contengan nombres de la librería.
 - ❌ No instales *prereleases* sin permiso.
 - ❌ No des la migración por buena sin compilar.
+- ⚠️ **Avisa SIEMPRE al usuario de los cambios de comportamiento de la sección 3.3**, aunque el build y los
+  tests queden en verde: cambian la respuesta HTTP pública de su API y el contenido de sus listados paginados.
 
 > 📚 Referencia completa de los 888 cambios: `Cambios Realizados/Renombrados-v2.0.0.md` en el repositorio
 > de MoralesLarios.OOFP. Convenciones de nomenclatura de la 2.0.0: `CONTRIBUTING.md`.

@@ -4,6 +4,16 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 
+/// <summary>
+/// Contrato imperativo de repositorio de solo lectura sobre Entity Framework Core.
+/// Expone las consultas de búsqueda y recuperación de la entidad <typeparamref name="T"/>.
+/// </summary>
+/// <remarks>
+/// Las implementaciones lanzan excepciones ante errores en lugar de devolver <c>MlResult</c>.
+/// Para la variante funcional utilice los repositorios equivalentes del espacio de nombres
+/// <c>MoralesLarios.OOFP.EntityFrameworkCore.Repositories</c>.
+/// </remarks>
+/// <typeparam name="T">Tipo de la entidad consultada por el repositorio.</typeparam>
 internal interface IThrowingEfReadRepository<T>
     where T : class
 {

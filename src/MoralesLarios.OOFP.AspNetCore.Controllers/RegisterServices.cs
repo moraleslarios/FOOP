@@ -2,6 +2,9 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers;
 
+/// <summary>
+/// Representa <c>RegisterServices</c>.
+/// </summary>
 public static partial class RegisterServices
 {
 

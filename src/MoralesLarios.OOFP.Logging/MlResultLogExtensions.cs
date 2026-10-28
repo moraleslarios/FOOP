@@ -8,6 +8,9 @@
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MoralesLarios.OOFP.Logging;
+/// <summary>
+/// Métodos de extension de <c>MlResultLog</c>.
+/// </summary>
 public static partial class MlResultLogExtensions
 {
 
@@ -16,6 +19,13 @@ public static partial class MlResultLogExtensions
     #region LogMlResult
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>.
+    /// </summary>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="message">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<ILogger> LogMlResult(this ILogger  logger, 
                                                      LogLevel logLevel, 
                                                      string   message)
@@ -25,6 +35,13 @@ public static partial class MlResultLogExtensions
         return logger.ToMlResultValid();
     }
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="message">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<ILogger>> LogMlResultAsync(this ILogger  logger, 
                                                                 LogLevel logLevel, 
                                                                 string   message)
@@ -35,6 +52,16 @@ public static partial class MlResultLogExtensions
     }
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validBuilMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResult<T>(this MlResult<T>                   source, 
                                                   ILogger                       logger, 
                                                   LogLevel                      logLevel, 
@@ -49,6 +76,16 @@ public static partial class MlResultLogExtensions
         return source;
     }
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validBuilMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogMlResultAsync<T>(this MlResult<T>                   source, 
                                                              ILogger                       logger, 
                                                              LogLevel                      logLevel, 
@@ -57,6 +94,16 @@ public static partial class MlResultLogExtensions
         => source.LogMlResult(logger, logLevel, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage).ToAsync();
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validBuilMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultAsync<T>(this Task<MlResult<T>>             sourceAsync, 
                                                                    ILogger                       logger, 
                                                                    LogLevel                      logLevel, 
@@ -65,6 +112,16 @@ public static partial class MlResultLogExtensions
         => (await sourceAsync).LogMlResult(logger, logLevel, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage);
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResult<T>(this MlResult<T> source, 
                                                   ILogger     logger, 
                                                   LogLevel    logLevel, 
@@ -75,6 +132,16 @@ public static partial class MlResultLogExtensions
                                  validBuilMessage: _ => validMessage, 
                                  failBuildMessage: _ => failMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultAsync<T>(this MlResult<T> source, 
                                                                    ILogger     logger, 
                                                                    LogLevel    logLevel, 
@@ -85,6 +152,16 @@ public static partial class MlResultLogExtensions
                                             validBuilMessage: _ => validMessage, 
                                             failBuildMessage: _ => failMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultAsync<T>(this Task<MlResult<T>> sourceAsync, 
                                                                    ILogger           logger, 
                                                                    LogLevel          logLevel, 
@@ -98,6 +175,15 @@ public static partial class MlResultLogExtensions
 
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="message">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResult<T>(this MlResult<T> source, 
                                                   ILogger     logger, 
                                                   LogLevel    logLevel, 
@@ -108,6 +194,15 @@ public static partial class MlResultLogExtensions
         return source;
     }
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="message">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogMlResultAsync<T>(this MlResult<T> source, 
                                                              ILogger     logger, 
                                                              LogLevel    logLevel, 
@@ -119,6 +214,15 @@ public static partial class MlResultLogExtensions
     }
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="message">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultAsync<T>(this Task<MlResult<T>> source, 
                                                                    ILogger           logger, 
                                                                    LogLevel          logLevel, 
@@ -135,6 +239,15 @@ public static partial class MlResultLogExtensions
 
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResult<T>(this MlResult<T>                                                     source, 
                                                   ILogger                                                         logger, 
                                                   (LogLevel logLevel, Func<T              , string> buildMessage) validBuildMessage,
@@ -149,12 +262,30 @@ public static partial class MlResultLogExtensions
     }
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogMlResultAsync<T>(this MlResult<T>                                                     source, 
                                                              ILogger                                                         logger, 
                                                              (LogLevel logLevel, Func<T              , string> buildMessage) validBuildMessage,
                                                              (LogLevel logLevel, Func<MlErrorDetails, string> buildMessage) failBuildMessage)
         => source.LogMlResult(logger, validBuildMessage, failBuildMessage).ToAsync();
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<T>> LogMlResultAsync<T>(this Task<MlResult<T>>                                               sourceAsync, 
                                                                    ILogger                                                         logger, 
                                                                    (LogLevel logLevel, Func<T              , string> buildMessage) validBuildMessage,
@@ -163,6 +294,15 @@ public static partial class MlResultLogExtensions
 
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>CompletedResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogCompletedResult<T>(this MlResult<T>                   source,
                                                        ILogger                       logger,
                                                        Func<T, string>               validBuildMessage,
@@ -171,18 +311,45 @@ public static partial class MlResultLogExtensions
                               (LogLevel.Information, validBuildMessage),
                               (LogLevel.Error      , failBuildMessage));
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>CompletedResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogCompletedResultAsync<T>(this MlResult<T>                   source,
                                                                   ILogger                       logger,
                                                                   Func<T, string>               validBuildMessage,
                                                                   Func<MlErrorDetails, string> failBuildMessage)
         => source.LogCompletedResult(logger, validBuildMessage, failBuildMessage).ToAsync();
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>CompletedResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogCompletedResultAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                         ILogger                       logger,
                                                                         Func<T, string>               validBuildMessage,
                                                                         Func<MlErrorDetails, string> failBuildMessage)
         => await (await sourceAsync).LogCompletedResultAsync(logger, validBuildMessage, failBuildMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>CompletedResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogCompletedResult<T>(this MlResult<T>  source,
                                                        ILogger      logger,
                                                        string       validMessage,
@@ -191,6 +358,15 @@ public static partial class MlResultLogExtensions
                                    _ => validMessage,
                                    _ => failMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>CompletedResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>>  sourceAsync,
                                                                    ILogger            logger,
                                                                    string             validMessage,
@@ -207,6 +383,16 @@ public static partial class MlResultLogExtensions
     #region LogMlResultIfValid
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// válido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfValid<T>(this MlResult<T> source,
                                                          ILogger     logger,
                                                          LogLevel    logLevel,
@@ -215,12 +401,32 @@ public static partial class MlResultLogExtensions
                               logLevel, 
                               validBuilMessage: x => validMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// válido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogMlResultIfValidAsync<T>(this MlResult<T> source,
                                                                     ILogger     logger,
                                                                     LogLevel    logLevel,
                                                                     string      validMessage)
         => source.LogMlResultIfValid(logger, logLevel, validMessage).ToAsync();
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// válido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfValidAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                           ILogger           logger,
                                                                           LogLevel          logLevel,
@@ -229,6 +435,16 @@ public static partial class MlResultLogExtensions
                                            logLevel, 
                                            validBuilMessage: x => validMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// válido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfValid<T>(this MlResult<T>     source,
                                                          ILogger         logger,
                                                          LogLevel        logLevel,
@@ -238,12 +454,32 @@ public static partial class MlResultLogExtensions
                             fail : errors => source
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// válido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogMlResultIfValidAsync<T>(this MlResult<T>     source,
                                                                     ILogger         logger,
                                                                     LogLevel        logLevel,
                                                                     Func<T, string> validBuildMessage)
         => source.LogMlResultIfValid(logger, logLevel, validBuildMessage).ToAsync();
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// válido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="validBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfValidAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                           ILogger           logger,
                                                                           LogLevel          logLevel,
@@ -256,6 +492,16 @@ public static partial class MlResultLogExtensions
 
     #region LogMlResultIfFail
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFail<T>(this MlResult<T> source,
                                                         ILogger     logger,
                                                         LogLevel    logLevel,
@@ -264,12 +510,32 @@ public static partial class MlResultLogExtensions
                               logLevel, 
                               failBuildMessage: errors => errorMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogMlResultIfFailAsync<T>(this MlResult<T> source,
                                                                    ILogger     logger,
                                                                    LogLevel    logLevel,
                                                                    string      errorMessage)
         => source.LogMlResultIfFail(logger, logLevel, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                          ILogger           logger,
                                                                          LogLevel          logLevel,
@@ -277,6 +543,16 @@ public static partial class MlResultLogExtensions
         => (await sourceAsync).LogMlResult<T>(logger, 
                                               logLevel, 
                                               failBuildMessage: errors => failMessage);
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFail<T>(this MlResult<T>                   source,
                                                         ILogger                       logger,
                                                         LogLevel                      logLevel,
@@ -287,6 +563,16 @@ public static partial class MlResultLogExtensions
                             fail : errors => source.LogMlResult(logger, logLevel, failBuildMessage(errors))
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogMlResultIfFailAsync<T>(this MlResult<T>                   source,
                                                                    ILogger                       logger,
                                                                    LogLevel                      logLevel,
@@ -294,6 +580,16 @@ public static partial class MlResultLogExtensions
 
         => source.LogMlResultIfFail(logger, logLevel, failBuildMessage).ToAsync();
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<T>> LogMlResultIfFailAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                          ILogger                       logger,
                                                                          LogLevel                      logLevel,
@@ -307,6 +603,16 @@ public static partial class MlResultLogExtensions
     #region LogMlResultIfFailWithValue
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithValue<T>(this MlResult<T>                   source,
                                                                  ILogger                       logger,
                                                                  LogLevel                      logLevel,
@@ -317,6 +623,16 @@ public static partial class MlResultLogExtensions
                                                         .Bind( _ => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails)))
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithValue<T>(this MlResult<T> source,
                                                                  ILogger     logger,
                                                                  LogLevel    logLevel,
@@ -326,6 +642,16 @@ public static partial class MlResultLogExtensions
 
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueAsync<T>(this MlResult<T>                   source,
                                                                                   ILogger                       logger,
                                                                                   LogLevel                      logLevel,
@@ -336,18 +662,48 @@ public static partial class MlResultLogExtensions
                                                                         .BindAsync( _ => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails)))
                                     );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="faildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueAsync<T>(this MlResult<T> source,
                                                                                   ILogger     logger,
                                                                                   LogLevel    logLevel,
                                                                                   string      faildMessage)
         => await source.LogMlResultIfFailWithValueAsync(logger, logLevel, _ => faildMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                                   ILogger                       logger,
                                                                                   LogLevel                      logLevel,
                                                                                   Func<MlErrorDetails, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, logLevel, failBuildMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="faildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                   ILogger           logger,
                                                                                   LogLevel          logLevel,
@@ -359,6 +715,17 @@ public static partial class MlResultLogExtensions
 
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithValue<T, TValue>(this MlResult<T>                           source,
                                                                          ILogger                               logger,
                                                                          LogLevel                              logLevel,
@@ -369,6 +736,17 @@ public static partial class MlResultLogExtensions
                                                         .Bind( value => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails, value)))
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueAsync<T, TValue>(this MlResult<T>                           source,
                                                                                           ILogger                               logger,
                                                                                           LogLevel                              logLevel,
@@ -379,6 +757,17 @@ public static partial class MlResultLogExtensions
                                                                         .BindAsync( value => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails, value)))
                                     );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido, recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueAsync<T, TValue>(this Task<MlResult<T>>                     sourceAsync,
                                                                                           ILogger                               logger,
                                                                                           LogLevel                              logLevel,
@@ -393,6 +782,16 @@ public static partial class MlResultLogExtensions
     #region LogMlResultIfFailWithException
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithException<T>(this MlResult<T>                   source,
                                                                      ILogger                       logger,
                                                                      LogLevel                      logLevel,
@@ -403,6 +802,16 @@ public static partial class MlResultLogExtensions
                                                         .Bind( _ => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails)))
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithException<T>(this MlResult<T> source,
                                                                      ILogger     logger,
                                                                      LogLevel    logLevel,
@@ -412,6 +821,16 @@ public static partial class MlResultLogExtensions
 
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionAsync<T>(this MlResult<T>                   source,
                                                                                       ILogger                       logger,
                                                                                       LogLevel                      logLevel,
@@ -422,18 +841,48 @@ public static partial class MlResultLogExtensions
                                                                         .BindAsync( _ => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails)))
                                     );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="faildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionAsync<T>(this MlResult<T> source,
                                                                                       ILogger     logger,
                                                                                       LogLevel    logLevel,
                                                                                       string      faildMessage)
         => await source.LogMlResultIfFailWithExceptionAsync(logger, logLevel, _ => faildMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                                       ILogger                       logger,
                                                                                       LogLevel                      logLevel,
                                                                                       Func<MlErrorDetails, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithExceptionAsync(logger, logLevel, failBuildMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="faildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                       ILogger           logger,
                                                                                       LogLevel          logLevel,
@@ -445,6 +894,16 @@ public static partial class MlResultLogExtensions
 
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithException<T>(this MlResult<T>                              source,
                                                                      ILogger                                  logger,
                                                                      LogLevel                                 logLevel,
@@ -455,6 +914,16 @@ public static partial class MlResultLogExtensions
                                                         .Bind( ex => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails, ex)))
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionAsync<T>(this MlResult<T>                              source,
                                                                                       ILogger                                  logger,
                                                                                       LogLevel                                 logLevel,
@@ -465,6 +934,16 @@ public static partial class MlResultLogExtensions
                                                                         .BindAsync( ex => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails, ex)))
                                     );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionAsync<T>(this Task<MlResult<T>>                            sourceAsync,
                                                                                           ILogger                                  logger,
                                                                                           LogLevel                                 logLevel,
@@ -480,6 +959,16 @@ public static partial class MlResultLogExtensions
     #region LogMlResultIfFailWithoutException
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error NO contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithoutException<T>(this MlResult<T>                   source,
                                                                         ILogger                       logger,
                                                                         LogLevel                      logLevel,
@@ -493,6 +982,16 @@ public static partial class MlResultLogExtensions
                                                                     )
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error NO contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogMlResultIfFailWithoutException<T>(this MlResult<T>                   source,
                                                                         ILogger                       logger,
                                                                         LogLevel                      logLevel,
@@ -500,6 +999,16 @@ public static partial class MlResultLogExtensions
         => source.LogMlResultIfFailWithoutException(logger, logLevel, _ => failMessage);
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithoutExceptionAsync<T>(this MlResult<T>                   source,
                                                                                          ILogger                       logger,
                                                                                          LogLevel                      logLevel,
@@ -513,18 +1022,48 @@ public static partial class MlResultLogExtensions
                                                                                 )
                         );
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithoutExceptionAsync<T>(this MlResult<T> source,
                                                                                          ILogger     logger,
                                                                                          LogLevel    logLevel,
                                                                                          string      failMessage)
         => await source.LogMlResultIfFailWithoutExceptionAsync(logger, logLevel, _ => failMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failBuildMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>             sourceAsync,
                                                                                          ILogger                       logger,
                                                                                          LogLevel                      logLevel,
                                                                                          Func<MlErrorDetails, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithoutExceptionAsync(logger, logLevel, failBuildMessage);
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
+    /// fallido y su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <param name="logLevel">Nivel de severidad de la traza.</param>
+    /// <param name="failMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogMlResultIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>> source,
                                                                                          ILogger           logger,
                                                                                          LogLevel          logLevel,
@@ -538,12 +1077,36 @@ public static partial class MlResultLogExtensions
     #region LogGeneralErrorIfFail
 
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>GeneralError</c> unicamente cuando el resultado de origen es
+    /// fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogGeneralErrorIfFail<T>(this MlResult<T> source, ILogger logger)
         => source.LogMlResultErrorIfFail(logger, failBuildMessage : errorDetals => errorDetals.GetErrorsSummary());
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>GeneralError</c> unicamente cuando el resultado de origen es
+    /// fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogGeneralErrorIfFailAsync<T>(this MlResult<T> source, ILogger logger)
         => source.LogMlResultErrorIfFail(logger, failBuildMessage : errorDetals => errorDetals.GetErrorsSummary()).ToAsync();
 
+    /// <summary>
+    /// Registra una traza del resultado de <c>GeneralError</c> unicamente cuando el resultado de origen es
+    /// fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envian las trazas.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogGeneralErrorIfFailAsync<T>(this Task<MlResult<T>> sourceAsync, ILogger logger)
         => (await sourceAsync).LogMlResultErrorIfFail(logger, failBuildMessage : errorDetals => errorDetals.GetErrorsSummary());
 

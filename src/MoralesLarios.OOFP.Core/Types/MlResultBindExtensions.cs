@@ -3,6 +3,9 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.Types;
+/// <summary>
+/// Métodos de extension de <c>MlResultBind</c>.
+/// </summary>
 public static partial class MlResultBindExtensions
 {
 
@@ -17,7 +20,7 @@ public static partial class MlResultBindExtensions
     /// <typeparam name="T">Input Type</typeparam>
     /// <typeparam name="TResult">Return Type</typeparam>
     /// <param name="source">MlResult source</param>
-    /// <param name="func">Method to execute (return MlResult<TResult>)</param>
+    /// <param name="func">Method to execute (returns <see cref="MlResult{TResult}"/>).</param>
     /// <returns></returns>
     public static MlResult<TResult> Bind<T, TResult>(this MlResult<T>                source, 
                                                           Func<T, MlResult<TResult>> func)
@@ -27,6 +30,14 @@ public static partial class MlResultBindExtensions
             valid: value => func(value)
         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindAsync<T, TResult>(this MlResult<T>                source, 
                                                                      Func<T, MlResult<TResult>> func)
         => source.Bind(func).ToAsync();
@@ -50,6 +61,14 @@ public static partial class MlResultBindExtensions
         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                            Func<T, Task<MlResult<TResult>>> funcAsync)
     {
@@ -64,6 +83,14 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync,
                                                                            Func<T, MlResult<TResult>> func)
         => await (await sourceAsync).BindAsync(func.ToFuncTask());
@@ -85,12 +112,32 @@ public static partial class MlResultBindExtensions
                                                              string                     exceptionAdditionalMessage = null!)
         => TryBind(source, func, _ => exceptionAdditionalMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAsync<T, TResult>(this MlResult<T>                source,
                                                                         Func<T, MlResult<TResult>> func,
                                                                         string                     exceptionAdditionalMessage = null!)
         => source.TryBind(func, exceptionAdditionalMessage).ToAsync();
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBind<T, TResult>(this MlResult<T>                source,
                                                              Func<T, MlResult<TResult>> func,
                                                              Func<Exception, string>    errorMessageBuilder)
@@ -100,18 +147,48 @@ public static partial class MlResultBindExtensions
             valid: value => func.TryToMlResult(value, errorMessageBuilder)
         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAsync<T, TResult>(this MlResult<T>                source,
                                                                         Func<T, MlResult<TResult>> func,
                                                                         Func<Exception, string>    errorMessageBuilder)
         => source.TryBind(func, errorMessageBuilder).ToAsync();
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAsync<T, TResult>(this MlResult<T>                      source,
                                                                               Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                               string                           exceptionAdditionalMessage = null!)
         => await TryBindAsync(source, funcAsync, _ => exceptionAdditionalMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAsync<T, TResult>(this MlResult<T>                      source,
                                                                               Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                               Func<Exception, string>          errorMessageBuilder)
@@ -122,11 +199,31 @@ public static partial class MlResultBindExtensions
         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                               Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                               string                           exceptionAdditionalMessage = null!)
         => await TryBindAsync(sourceAsync, funcAsync, _ => exceptionAdditionalMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                               Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                               Func<Exception, string>          errorMessageBuilder)
@@ -142,11 +239,31 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync,
                                                                               Func<T, MlResult<TResult>> func,
                                                                               Func<Exception, string>    errorMessageBuilder)
         => await (await sourceAsync).TryBindAsync(func.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync,
                                                                               Func<T, MlResult<TResult>> func,
                                                                               string                     exceptionAdditionalMessage = null!)
@@ -164,6 +281,15 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindMulti<T, TResult>(this   MlResult<T>                  source,
                                                                  Func<T, MlResult<TResult>>   returnFunc,
                                                           params Func<T, MlResult<TResult>>[] funcs)
@@ -176,12 +302,30 @@ public static partial class MlResultBindExtensions
                                                                             : returnFunc(value)));
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   MlResult<T>                  source,
                                                                             Func<T, MlResult<TResult>>   returnFunc,
                                                                      params Func<T, MlResult<TResult>>[] funcs)
         => source.BindMulti(returnFunc, funcs).ToAsync();
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   MlResult<T>                      source,
                                                                                   Func<T, Task<MlResult<TResult>>> returnFuncAsync,
                                                                            params Func<T, MlResult<TResult>>[]     funcs)
@@ -199,6 +343,15 @@ public static partial class MlResultBindExtensions
         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   MlResult<T>                        source,
                                                                                   Func<T, Task<MlResult<TResult>>>   returnFuncAsync,
                                                                            params Func<T, Task<MlResult<TResult>>>[] funcsAsync)
@@ -223,16 +376,43 @@ public static partial class MlResultBindExtensions
             }
         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   Task<MlResult<T>>            sourceAsync,
                                                                                   Func<T, MlResult<TResult>>   returnFunc,
                                                                            params Func<T, MlResult<TResult>>[] funcs)
         => await (await sourceAsync).BindMultiAsync(returnFunc, funcs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   Task<MlResult<T>>                sourceAsync,
                                                                                   Func<T, Task<MlResult<TResult>>> returnFuncAsync,
                                                                            params Func<T, MlResult<TResult>>[]     funcs)
         => await (await sourceAsync).BindMultiAsync(returnFuncAsync, funcs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   Task<MlResult<T>>                  sourceAsync,
                                                                                   Func<T, Task<MlResult<TResult>>>   returnFuncAsync,
                                                                            params Func<T, Task<MlResult<TResult>>>[] funcsAsync)
@@ -244,6 +424,15 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindMulti<T, TResult>(this   MlResult<T>                  source,
                                                                  Func<T,
                                                                       IEnumerable<TResult>,
@@ -252,6 +441,15 @@ public static partial class MlResultBindExtensions
         => source.BindMulti<T, TResult, TResult>(returnFunc, funcs);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this MlResult<T>                    source,
                                                                             Func<T,
                                                                             IEnumerable<TResult>,
@@ -259,6 +457,15 @@ public static partial class MlResultBindExtensions
                                                                      params Func<T, MlResult<TResult>>[] funcs)
         => source.BindMulti<T, TResult, TResult>(returnFunc, funcs).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this MlResult<T> source,
                                                                                   Func<T,
                                                                                        IEnumerable<TResult>,
@@ -266,6 +473,15 @@ public static partial class MlResultBindExtensions
                                                                            params Func<T, MlResult<TResult>>[] funcs)
         => await source.BindMultiAsync<T, TResult, TResult>(returnFuncAsync, funcs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   MlResult<T>                        source,
                                                                                   Func<T,
                                                                                        IEnumerable<TResult>,
@@ -273,6 +489,15 @@ public static partial class MlResultBindExtensions
                                                                            params Func<T, Task<MlResult<TResult>>>[] funcsAsync)
         => await source.BindMultiAsync<T, TResult, TResult>(returnFuncAsync, funcsAsync);   
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   Task<MlResult<T>>            sourceAsync,
                                                                                   Func<T,
                                                                                        IEnumerable<TResult>,
@@ -280,6 +505,15 @@ public static partial class MlResultBindExtensions
                                                                            params Func<T, MlResult<TResult>>[] funcs)
         => await (await sourceAsync).BindMultiAsync<T, TResult, TResult>(returnFunc, funcs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   Task<MlResult<T>>             sourceAsync,
                                                                                   Func<T,
                                                                                        IEnumerable<TResult>,
@@ -288,6 +522,15 @@ public static partial class MlResultBindExtensions
         => await (await sourceAsync).BindMultiAsync<T, TResult, TResult>(returnFuncAsync, funcs);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this Task<MlResult<T>>                    sourceAsync,
                                                                                   Func<T,
                                                                                        IEnumerable<TResult>,
@@ -303,6 +546,16 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TFuncColec">Tipo genérico TFuncColec.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindMulti<T, TResult, TFuncColec>(this   MlResult<T>                     source,
                                                                              Func<T,
                                                                                   IEnumerable<TFuncColec>,
@@ -329,6 +582,16 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TFuncColec">Tipo genérico TFuncColec.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult, TFuncColec>(this   MlResult<T>                     source,
                                                                                         Func<T,
                                                                                              IEnumerable<TFuncColec>,
@@ -337,6 +600,16 @@ public static partial class MlResultBindExtensions
         => source.BindMulti(returnFunc, funcs).ToAsync();
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TFuncColec">Tipo genérico TFuncColec.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult, TFuncColec>(this   MlResult<T>                     source,
                                                                                         Func<T,
                                                                                              IEnumerable<TFuncColec>,
@@ -356,6 +629,16 @@ public static partial class MlResultBindExtensions
             }
         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TFuncColec">Tipo genérico TFuncColec.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult, TFuncColec>(this   MlResult<T>                           source,
                                                                                         Func<T,
                                                                                              IEnumerable<TFuncColec>,
@@ -380,6 +663,16 @@ public static partial class MlResultBindExtensions
             }
         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TFuncColec">Tipo genérico TFuncColec.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult, TFuncColec>(this   Task<MlResult<T>>               sourceAsync,
                                                                                               Func<T,
                                                                                                    IEnumerable<TFuncColec>,
@@ -388,6 +681,16 @@ public static partial class MlResultBindExtensions
         => await (await sourceAsync).BindMultiAsync(returnFunc, funcs);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TFuncColec">Tipo genérico TFuncColec.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult, TFuncColec>(this Task<MlResult<T>>                 sourceAsync,
                                                                                               Func<T,
                                                                                                    IEnumerable<TFuncColec>,
@@ -395,6 +698,16 @@ public static partial class MlResultBindExtensions
                                                                                        params Func<T, MlResult<TFuncColec>>[] funcs)
         => await (await sourceAsync).BindMultiAsync(returnFuncAsync, funcs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Multi</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TFuncColec">Tipo genérico TFuncColec.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFuncAsync">Función a aplicar.</param>
+    /// <param name="funcs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindMultiAsync<T, TResult, TFuncColec>(this   Task<MlResult<T>> sourceAsync,
                                                                                               Func<T,
                                                                                                    IEnumerable<TFuncColec>,
@@ -440,6 +753,15 @@ public static partial class MlResultBindExtensions
         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                      source, 
                                                                                                               Func<T, Task<MlResult<TResult>>> funcAsync)
         => await source.MatchAsync
@@ -456,15 +778,43 @@ public static partial class MlResultBindExtensions
                                 );
                 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync, 
                                                                                                               Func<T, Task<MlResult<TResult>>> funcAsync)
         => await (await sourceAsync).BindSaveValueInDetailsIfFailedFuncResultAsync(funcAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync, 
                                                                                                               Func<T, MlResult<TResult>> func)
         => await (await sourceAsync).BindSaveValueInDetailsIfFailedFuncResultAsync(func.ToFuncTask());
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindSaveValueInDetailsIfFailedFuncResult<T, TResult>(this MlResult<T>                source, 
                                                                                                 Func<T, MlResult<TResult>> func,
                                                                                                 Func<Exception, string>    errorMessageBuilder)
@@ -481,31 +831,91 @@ public static partial class MlResultBindExtensions
             }
         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindSaveValueInDetailsIfFailedFuncResult<T, TResult>(this MlResult<T>                source, 
                                                                                                 Func<T, MlResult<TResult>> func,
                                                                                                 string                     errorMessage = null!)
         => source.TryBindSaveValueInDetailsIfFailedFuncResult(func, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                source, 
                                                                                                            Func<T, MlResult<TResult>> func,
                                                                                                            Func<Exception, string>    errorMessageBuilder)
         => TryBindSaveValueInDetailsIfFailedFuncResult(source, func, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                source, 
                                                                                                            Func<T, MlResult<TResult>> func,
                                                                                                            string                     errorMessage = null!)
         => TryBindSaveValueInDetailsIfFailedFuncResult(source, func, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync, 
                                                                                                                  Func<T, MlResult<TResult>> func,
                                                                                                                  Func<Exception, string>    errorMessageBuilder)
         => (await sourceAsync).TryBindSaveValueInDetailsIfFailedFuncResult(func, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync, 
                                                                                                                  Func<T, MlResult<TResult>> func,
                                                                                                                  string                     errorMessage = null!)
         => (await sourceAsync).TryBindSaveValueInDetailsIfFailedFuncResult(func, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync, 
                                                                                                                  Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                                                                  Func<Exception, string>          errorMessageBuilder)
@@ -522,16 +932,45 @@ public static partial class MlResultBindExtensions
             }
         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync, 
                                                                                                                  Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                                                                  string                           errorMessage = null!)
         => await sourceAsync.TryBindSaveValueInDetailsIfFailedFuncResultAsync(funcAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                source,
                                                                                                         Func<T, MlResult<TResult>> func)
         => source.BindSaveValueInDetailsIfFailedFuncResult(func).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                      source,
                                                                                                                  Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                                                                  Func<Exception, string>          errorMessageBuilder)
@@ -546,6 +985,16 @@ public static partial class MlResultBindExtensions
                                     }
                                 );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFailedFuncResult</c>.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                      source,
                                                                                                                  Func<T, Task<MlResult<TResult>>> funcAsync,
                                                                                                                  string                           errorMessage = null!)
@@ -560,6 +1009,16 @@ public static partial class MlResultBindExtensions
     #region BindIf
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIf<T, TResult>(this MlResult<T>                source,
                                                             Func<T, bool>              condition,
                                                             Func<T, MlResult<TResult>> funcTrue,
@@ -572,12 +1031,32 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfAsync<T, TResult>(this MlResult<T>                source,
                                                                        Func<T, bool>              condition,
                                                                        Func<T, MlResult<TResult>> funcTrue,
                                                                        Func<T, MlResult<TResult>> funcFalse)
         => source.BindIf(condition, funcTrue, funcFalse).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                              Func<T, bool>                    condition,
                                                                              Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -592,6 +1071,16 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                              Func<T, bool>                    condition,
                                                                              Func<T,      MlResult<TResult>>  funcTrue,
@@ -606,6 +1095,16 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                              Func<T, bool>                    condition,
                                                                              Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -620,18 +1119,48 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                              Func<T, bool>                    condition,
                                                                              Func<T, Task<MlResult<TResult>>> funcTrueAsync,
                                                                              Func<T,      MlResult<TResult>>  funcFalse)
         => await (await sourceAsync).BindIfAsync(condition, funcTrueAsync, funcFalse);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                              Func<T, bool>                    condition,
                                                                              Func<T,      MlResult<TResult>>  funcTrue,
                                                                              Func<T, Task<MlResult<TResult>>> funcFalseAsync)
         => await (await sourceAsync).BindIfAsync(condition, funcTrue, funcFalseAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                              Func<T, bool>                    condition,
                                                                              Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -640,6 +1169,14 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> BindIf<T>(this MlResult<T>          source,
                                              Func<T, bool>        condition,
                                              Func<T, MlResult<T>> func)
@@ -653,11 +1190,27 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfAsync<T>(this MlResult<T>          source,
                                                         Func<T, bool>        condition,
                                                         Func<T, MlResult<T>> func)
         => source.BindIf(condition, func).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfAsync<T>(this MlResult<T>                source,
                                                               Func<T, bool>              condition,
                                                               Func<T, Task<MlResult<T>>> funcAsync)
@@ -671,11 +1224,27 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfAsync<T>(this Task<MlResult<T>>          sourceAsync,
                                                               Func<T, bool>              condition,
                                                               Func<T, Task<MlResult<T>>> funcAsync)
         => await (await sourceAsync).BindIfAsync(condition, funcAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfAsync<T>(this Task<MlResult<T>>    sourceAsync,
                                                               Func<T, bool>        condition,
                                                               Func<T, MlResult<T>> func)
@@ -683,6 +1252,18 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIf<T, TResult>(this MlResult<T>                source,
                                                                Func<T, bool>              condition,
                                                                Func<T, MlResult<TResult>> funcTrue,
@@ -698,6 +1279,18 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                source,
                                                                           Func<T, bool>              condition,
                                                                           Func<T, MlResult<TResult>> funcTrue,
@@ -705,6 +1298,18 @@ public static partial class MlResultBindExtensions
                                                                           Func<Exception, string>    errorMessageBuilder)
         => source.TryBindIf(condition, funcTrue, funcFalse, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                source,
                                                                           Func<T, bool>              condition,
                                                                           Func<T, MlResult<TResult>> funcTrue,
@@ -712,6 +1317,18 @@ public static partial class MlResultBindExtensions
                                                                           string                     exceptionAdditionalMessage = null!)
         => source.TryBindIf(condition, funcTrue, funcFalse, _ => exceptionAdditionalMessage!).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -727,6 +1344,18 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -734,6 +1363,18 @@ public static partial class MlResultBindExtensions
                                                                                 string                           exceptionAdditionalMessage = null!)
         => await source.TryBindIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAdditionalMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T,      MlResult<TResult>>  funcTrue,
@@ -749,6 +1390,18 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T,      MlResult<TResult>>  funcTrue,
@@ -756,6 +1409,18 @@ public static partial class MlResultBindExtensions
                                                                                 string                           exceptionAdditionalMessage = null!)
         => await source.TryBindIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -771,6 +1436,18 @@ public static partial class MlResultBindExtensions
         return result;
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                      source,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -778,6 +1455,18 @@ public static partial class MlResultBindExtensions
                                                                                 string                           exceptionAdditionalMessage = null!)
         => await source.TryBindIfAsync(condition, funcTrueAsync, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync,
                                                                                 Func<T, bool>              condition,
                                                                                 Func<T, MlResult<TResult>> funcTrue,
@@ -785,6 +1474,18 @@ public static partial class MlResultBindExtensions
                                                                                 Func<Exception, string>    errorMessageBuilder)
         => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalse, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>          sourceAsync,
                                                                                 Func<T, bool>              condition,
                                                                                 Func<T, MlResult<TResult>> funcTrue,
@@ -793,6 +1494,18 @@ public static partial class MlResultBindExtensions
         => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalse, _ => exceptionAdditionalMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -800,6 +1513,18 @@ public static partial class MlResultBindExtensions
                                                                                 Func<Exception, string>          errorMessageBuilder)
         => await (await sourceAsync).TryBindIfAsync(condition, funcTrueAsync, funcFalse, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalse">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -807,6 +1532,18 @@ public static partial class MlResultBindExtensions
                                                                                 string                           exceptionAdditionalMessage = null!)
         => await (await sourceAsync).TryBindIfAsync(condition, funcTrueAsync, funcFalse, _ => exceptionAdditionalMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T,      MlResult<TResult>>  funcTrue,
@@ -814,6 +1551,18 @@ public static partial class MlResultBindExtensions
                                                                                 Func<Exception, string>          errorMessageBuilder)
         => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalseAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrue">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T,      MlResult<TResult>>  funcTrue,
@@ -822,6 +1571,18 @@ public static partial class MlResultBindExtensions
         => await (await sourceAsync).TryBindIfAsync(condition, funcTrue, funcFalseAsync, _ => exceptionAdditionalMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -829,6 +1590,18 @@ public static partial class MlResultBindExtensions
                                                                                 Func<Exception, string>          errorMessageBuilder)
         => await (await sourceAsync).TryBindIfAsync(condition, funcTrueAsync, funcFalseAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcTrueAsync">Función a aplicar.</param>
+    /// <param name="funcFalseAsync">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this Task<MlResult<T>>                sourceAsync,
                                                                                 Func<T, bool>                    condition,
                                                                                 Func<T, Task<MlResult<TResult>>> funcTrueAsync,
@@ -838,6 +1611,16 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIf<T>(this MlResult<T>             source,
                                                 Func<T, bool>           condition,
                                                 Func<T, MlResult<T>>    func,
@@ -850,24 +1633,64 @@ public static partial class MlResultBindExtensions
                             fail: MlResult<T>.Fail
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIf<T>(this MlResult<T>             source,
                                                 Func<T, bool>           condition,
                                                 Func<T, MlResult<T>>    func,
                                                 string                  errorMessage = null!)
         => source.TryBindIf(condition, func, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfAsync<T>(this MlResult<T>             source,
                                                            Func<T, bool>           condition,
                                                            Func<T, MlResult<T>>    func,
                                                            Func<Exception, string> errorMessageBuilder)
         => source.TryBindIf(condition, func, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfAsync<T>(this MlResult<T>             source,
                                                            Func<T, bool>           condition,
                                                            Func<T, MlResult<T>>    func,
                                                            string                  errorMessage = null!)
         => source.TryBindIf(condition, func, _ => errorMessage!).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfAsync<T>(this MlResult<T>                source,
                                                                  Func<T, bool>              condition,
                                                                  Func<T, Task<MlResult<T>>> funcAsync,
@@ -879,18 +1702,48 @@ public static partial class MlResultBindExtensions
                                         fail       : MlResult<T>.Fail
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfAsync<T>(this MlResult<T>                source,
                                                                  Func<T, bool>              condition,
                                                                  Func<T, Task<MlResult<T>>> funcAsync,
                                                                  string                     errorMessage = null!)
         => await source.TryBindIfAsync(condition, funcAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfAsync<T>(this Task<MlResult<T>>          sourceAsync,
                                                                  Func<T, bool>              condition,
                                                                  Func<T, Task<MlResult<T>>> funcAsync,
                                                                  Func<Exception, string>    errorMessageBuilder)
         => await (await sourceAsync).TryBindIfAsync(condition, funcAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfAsync<T>(this Task<MlResult<T>>          sourceAsync,
                                                                  Func<T, bool>              condition,
                                                                  Func<T, Task<MlResult<T>>> funcAsync,
@@ -898,12 +1751,32 @@ public static partial class MlResultBindExtensions
         => await (await sourceAsync).TryBindIfAsync(condition, funcAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfAsync<T>(this Task<MlResult<T>>       sourceAsync,
                                                                  Func<T, bool>           condition,
                                                                  Func<T, MlResult<T>>    func,
                                                                  Func<Exception, string> errorMessageBuilder)
         => (await sourceAsync).TryBindIf(condition, func, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>If</c>. Captura cualquier excepción producida y
+    /// la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="condition">Condición que debe cumplirse.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfAsync<T>(this Task<MlResult<T>>    sourceAsync,
                                                                  Func<T, bool>        condition,
                                                                  Func<T, MlResult<T>> func,
@@ -936,6 +1809,14 @@ public static partial class MlResultBindExtensions
                         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailAsync<T>(this MlResult<T>                              source, 
                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcAsync)
         => await source.MatchAsync
@@ -944,29 +1825,80 @@ public static partial class MlResultBindExtensions
                             validAsync: value => value.ToMlResultValidAsync()
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailAsync<T>(this Task<MlResult<T>>                        sourceAsync, 
                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcAsync)
         => await (await sourceAsync).BindIfFailAsync(funcAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailAsync<T>(this Task<MlResult<T>>                  sourceAsync, 
                                                                   Func<MlErrorDetails, MlResult<T>> func)
         => await (await sourceAsync).BindIfFailAsync(func.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailAsync<T>(this MlResult<T>                  source,
                                                             Func<MlErrorDetails, MlResult<T>> func)
         => source.BindIfFail(func).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                        source,
                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                Func<Exception, string>            errorMessageBuilder)
         => source.TryBindIfFail(func, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                        source,
                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                string                             errorMessage = null!)
         => source.TryBindIfFail(func, errorMessage).ToAsync();
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFail<T>(this MlResult<T>                        source, 
                                                     Func<MlErrorDetails, MlResult<T>> func,
                                                     Func<Exception, string>            errorMessageBuilder)
@@ -977,12 +1909,30 @@ public static partial class MlResultBindExtensions
                         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFail<T>(this MlResult<T>                        source, 
                                                     Func<MlErrorDetails, MlResult<T>> func,
                                                     string                             errorMessage = null!)
         => source.TryBindIfFail(func, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                              source, 
                                                                      Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                      Func<Exception, string>                  errorMessageBuilder)
@@ -992,6 +1942,15 @@ public static partial class MlResultBindExtensions
                             validAsync: value        => value.ToMlResultValidAsync()
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                              source, 
                                                                      Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                      string                                   errorMessage = null!)
@@ -999,21 +1958,57 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailAsync<T>(this Task<MlResult<T>>                        sourceAsync, 
                                                                      Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                      Func<Exception, string>                  errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailAsync(funcAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailAsync<T>(this Task<MlResult<T>>                        sourceAsync, 
                                                                      Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                      string                                   errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailAsync(funcAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailAsync<T>(this Task<MlResult<T>>                  sourceAsync, 
                                                                      Func<MlErrorDetails, MlResult<T>> func,
                                                                      Func<Exception, string>            errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailAsync(func.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailAsync<T>(this Task<MlResult<T>>                  sourceAsync, 
                                                                      Func<MlErrorDetails, MlResult<T>> func,
                                                                      string                             errorMessage = null!)
@@ -1022,6 +2017,15 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFail<T, TResult>(this MlResult<T>                              source,
                                                                 Func<T              , MlResult<TResult>> funcValid,
                                                                 Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -1031,6 +2035,16 @@ public static partial class MlResultBindExtensions
                             valid: funcValid
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
@@ -1040,6 +2054,16 @@ public static partial class MlResultBindExtensions
                             validAsync: funcValidAsync
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
@@ -1047,6 +2071,17 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFail<T, TResult>(this MlResult<T>                              source,
                                                                    Func<T              , MlResult<TResult>> funcValid,
                                                                    Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -1056,12 +2091,34 @@ public static partial class MlResultBindExtensions
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFail<T, TResult>(this MlResult<T>                              source,
                                                                    Func<T              , MlResult<TResult>> funcValid,
                                                                    Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                    string                                   errorMessage = null!)
         => source.TryBindIfFail(funcValid, funcFail, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -1071,54 +2128,153 @@ public static partial class MlResultBindExtensions
                             validAsync: x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                     string                                         errorMessage = null!)
         => await source.TryBindIfFailAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailAsync(funcValidAsync, funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailAsync(funcValidAsync, funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                     Func<T              , MlResult<TResult>>       funcValid,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                     Func<T              , MlResult<TResult>>       funcValid,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails, MlResult<TResult>>       funcFail,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails, MlResult<TResult>>       funcFail,
                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                     Func<T              , MlResult<TResult>> funcValid,
                                                                                     Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                     Func<Exception, string>                  errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                     Func<T              , MlResult<TResult>> funcValid,
                                                                                     Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -1126,67 +2282,193 @@ public static partial class MlResultBindExtensions
         => await (await sourceAsync).TryBindIfFailAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask(), errorMessage);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this MlResult<T>                              source,
                                                                            Func<T              , MlResult<TResult>> funcValid,
                                                                            Func<MlErrorDetails, MlResult<TResult>> funcFail)
         => source.BindIfFail(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                  Func<MlErrorDetails,      MlResult<TResult>>  funcFail)
         => await source.BindIfFailAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                  Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await source.BindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this Task<MlResult<T>>                  sourceAsync,
                                                                                  Func<T              , MlResult<TResult>> funcValid,
                                                                                  Func<MlErrorDetails, MlResult<TResult>> funcFail)
         => (await sourceAsync).BindIfFail(funcValid, funcFail);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                  Func<MlErrorDetails,      MlResult<TResult>>  funcFail)
         => await (await sourceAsync).BindIfFailAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                  Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                               Func<Exception, string>                  errorMessageBuilder)
         => source.TryBindIfFail(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                               string                                   errorMessage = null!)
         => source.TryBindIfFail(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await source.TryBindIfFailAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
                                                                                     string                                         errorMessage = null!)
         => await source.TryBindIfFailAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await source.TryBindIfFailAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido.
+    /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -1205,11 +2487,10 @@ public static partial class MlResultBindExtensions
     /// Execute the function if the source is fail, otherwise return the source.
     /// source parameter has a previous 'SuccessValue' execution
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="funcValue"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Value type of the source result.</typeparam>
+    /// <param name="source">Source result.</param>
+    /// <param name="funcValue">Function executed with the value recovered from the failure details.</param>
+    /// <returns>The result produced by <paramref name="funcValue"/>, or the source if it is valid.</returns>
     public static MlResult<T> BindIfFailWithValue<T>(this MlResult<T> source,
                                                           Func<T, MlResult<T>> funcValue)
         => source.Match
@@ -1220,6 +2501,14 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValueAsync">Función asíncrona que recibe el valor del resultado de origen.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithValueAsync<T>(this MlResult<T>                source,
                                                                            Func<T, Task<MlResult<T>>> funcValueAsync)
         => await source.MatchAsync
@@ -1229,16 +2518,42 @@ public static partial class MlResultBindExtensions
                         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValueAsync">Función asíncrona que recibe el valor del resultado de origen.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithValueAsync<T>(this Task<MlResult<T>>          sourceAsync,
                                                                            Func<T, Task<MlResult<T>>> funcValueAsync)
         => await (await sourceAsync).BindIfFailWithValueAsync(funcValueAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithValueAsync<T>(this Task<MlResult<T>>    sourceAsync,
                                                                            Func<T, MlResult<T>> funcValue)
         => await (await sourceAsync).BindIfFailWithValueAsync(funcValue.ToFuncTask());
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithValue<T>(this MlResult<T>             source,
                                                              Func<T, MlResult<T>>    funcValue,
                                                              Func<Exception, string> errorMessageBuilder)
@@ -1248,11 +2563,31 @@ public static partial class MlResultBindExtensions
                             valid: value         => value
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithValue<T>(this MlResult<T>          source,
                                                              Func<T, MlResult<T>> funcValue,
                                                              string               errorMessage = null!)
         => source.TryBindIfFailWithValue(funcValue, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValueAsync">Función asíncrona que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>                source,
                                                                               Func<T, Task<MlResult<T>>> funcValueAsync,
                                                                               Func<Exception, string>    errorMessageBuilder)
@@ -1262,41 +2597,119 @@ public static partial class MlResultBindExtensions
                             validAsync: value         => value.ToMlResultValidAsync()
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValueAsync">Función asíncrona que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>                source,
                                                                               Func<T, Task<MlResult<T>>> funcValueAsync,
                                                                               string                     errorMessage = null!)
         => await source.TryBindIfFailWithValueAsync(funcValueAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValueAsync">Función asíncrona que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this Task<MlResult<T>>          sourceAsync,
                                                                               Func<T, Task<MlResult<T>>> funcValueAsync,
                                                                               Func<Exception, string>    errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValueAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValueAsync">Función asíncrona que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this Task<MlResult<T>>          sourceAsync,
                                                                               Func<T, Task<MlResult<T>>> funcValueAsync,
                                                                               string                     errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValueAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this Task<MlResult<T>>       sourceAsync,
                                                                               Func<T, MlResult<T>>    funcValue,
                                                                               Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValue.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this Task<MlResult<T>>       sourceAsync,
                                                                               Func<T, MlResult<T>>    funcValue,
                                                                               string                  errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValue.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailWithValueAsync<T>(this MlResult<T>          source,
                                                                     Func<T, MlResult<T>> funcValue)
         => source.BindIfFailWithValue(funcValue).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>             source,
                                                                         Func<T, MlResult<T>>    funcValue,
                                                                         Func<Exception, string> errorMessageBuilder)
         => source.TryBindIfFailWithValue(funcValue, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>          source,
                                                                         Func<T, MlResult<T>> funcValue,
                                                                         string               errorMessage = null!)
@@ -1325,6 +2738,17 @@ public static partial class MlResultBindExtensions
                         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                   Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                   Func<TValue, Task<MlResult<TResult>>> funcFailAsync)
@@ -1335,43 +2759,133 @@ public static partial class MlResultBindExtensions
                         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                   Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                   Func<TValue, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithValueAsync(funcValidAsync, funcFailAsync);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                            Func<T     , MlResult<TResult>> funcValid,
                                                                                            Func<TValue, MlResult<TResult>> funcFail)
         => source.BindIfFailWithValue(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                   Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                   Func<TValue,      MlResult<TResult>>  funcFail)
         => await source.BindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                   Func<T     ,      MlResult<TResult>>  funcValid,
                                                                                                   Func<TValue, Task<MlResult<TResult>>> funcFailAsync)
         => await source.BindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>               sourceAsync,
                                                                                                   Func<T     , MlResult<TResult>> funcValid,
                                                                                                   Func<TValue, MlResult<TResult>> funcFail)
         => (await sourceAsync).BindIfFailWithValue(funcValid, funcFail);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                   Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                   Func<TValue,      MlResult<TResult>>  funcFail)
         => await (await sourceAsync).BindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                   Func<T     ,      MlResult<TResult>>  funcValid,
                                                                                                   Func<TValue, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithValue<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                     Func<T     , MlResult<TResult>> funcValid,
                                                                                     Func<TValue, MlResult<TResult>> funcFail,
@@ -1382,6 +2896,19 @@ public static partial class MlResultBindExtensions
                             valid: value         => funcValid.TryToMlResult(value, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithValue<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                     Func<T     , MlResult<TResult>> funcValid,
                                                                                     Func<TValue, MlResult<TResult>> funcFail,
@@ -1389,6 +2916,19 @@ public static partial class MlResultBindExtensions
         => source.TryBindIfFailWithValue(funcValid, funcFail, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
@@ -1400,6 +2940,19 @@ public static partial class MlResultBindExtensions
                                  );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
@@ -1407,48 +2960,152 @@ public static partial class MlResultBindExtensions
         => await source.TryBindIfFailWithValueAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                      Func<Exception, string>               errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValidAsync, funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                      string                                errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValidAsync, funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                      Func<T     , MlResult<TResult>>       funcValid,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                      Func<Exception, string>               errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                      Func<T     , MlResult<TResult>>       funcValid,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                      string                                errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue, MlResult<TResult>>       funcFail,
                                                                                                      Func<Exception, string>               errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>                     sourceAsync,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue, MlResult<TResult>>       funcFail,
                                                                                                      string                                errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>               sourceAsync,
                                                                                                      Func<T     , MlResult<TResult>> funcValid,
                                                                                                      Func<TValue, MlResult<TResult>> funcFail,
                                                                                                      Func<Exception, string>         errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this Task<MlResult<T>>               sourceAsync,
                                                                                                      Func<T     , MlResult<TResult>> funcValid,
                                                                                                      Func<TValue, MlResult<TResult>> funcFail,
@@ -1456,36 +3113,114 @@ public static partial class MlResultBindExtensions
         => await (await sourceAsync).TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask(), errorMessage);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                                Func<T     , MlResult<TResult>> funcValid,
                                                                                                Func<TValue, MlResult<TResult>> funcFail,
                                                                                                Func<Exception, string>         errorMessageBuilder)
         => source.TryBindIfFailWithValue(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                                Func<T     , MlResult<TResult>> funcValid,
                                                                                                Func<TValue, MlResult<TResult>> funcFail,
                                                                                                string                          errorMessage = null!)
         => source.TryBindIfFailWithValue(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue,      MlResult<TResult>>  funcFail,
                                                                                                      Func<Exception, string>               errorMessageBuilder)
         => await source.TryBindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                      Func<T     , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                      Func<TValue,      MlResult<TResult>>  funcFail,
                                                                                                      string                                errorMessage = null!)
         => await source.TryBindIfFailWithValueAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                      Func<T     ,      MlResult<TResult>>  funcValid,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                      Func<Exception, string>               errorMessageBuilder)
         => await source.TryBindIfFailWithValueAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido,
+    /// recuperando el valor almacenado en el detalle del error. Captura cualquier excepción producida y la
+    /// convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                           source,
                                                                                                      Func<T     ,      MlResult<TResult>>  funcValid,
                                                                                                      Func<TValue, Task<MlResult<TResult>>> funcFailAsync,
@@ -1512,11 +3247,10 @@ public static partial class MlResultBindExtensions
     /// Execute the function if the source is fail, otherwise return the source.
     /// source parameter has a previous Exception execution or 'ex' ErrorDetail
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="func"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Value type of the source result.</typeparam>
+    /// <param name="source">Source result.</param>
+    /// <param name="funcException">Function executed with the exception captured in the failure details.</param>
+    /// <returns>The result produced by <paramref name="funcException"/>, or the source if it has no exception.</returns>
     public static MlResult<T> BindIfFailWithException<T>(this MlResult<T>                  source,
                                                               Func<Exception, MlResult<T>> funcException)
         => source.Match(
@@ -1527,6 +3261,14 @@ public static partial class MlResultBindExtensions
                             valid: value         => value
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionAsync<T>(this MlResult<T>                        source,
                                                                                Func<Exception, Task<MlResult<T>>> funcExceptionAsync)
         => await source.MatchAsync(
@@ -1538,14 +3280,40 @@ public static partial class MlResultBindExtensions
                                     );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                Func<Exception, Task<MlResult<T>>> funcExceptionAsync)
         => await (await sourceAsync).BindIfFailWithExceptionAsync(funcExceptionAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionAsync<T>(this Task<MlResult<T>>            sourceAsync,
                                                                                Func<Exception, MlResult<T>> funcException)
         => await (await sourceAsync).BindIfFailWithExceptionAsync(funcException.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithException<T>(this MlResult<T>                  source,
                                                                  Func<Exception, MlResult<T>> funcException,
                                                                  Func<Exception, string>      errorMessageBuilder)
@@ -1558,12 +3326,32 @@ public static partial class MlResultBindExtensions
                             valid: value         => value
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithException<T>(this MlResult<T>                  source,
                                                                  Func<Exception, MlResult<T>> funcException,
                                                                  string                       errorMessage = null!)
         => source.TryBindIfFailWithException(funcException, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                        source,
                                                                                   Func<Exception, Task<MlResult<T>>> funcExceptionAsync,
                                                                                   Func<Exception, string>            errorMessageBuilder)
@@ -1576,27 +3364,77 @@ public static partial class MlResultBindExtensions
                                         validAsync: value         => value.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                        source,
                                                                                   Func<Exception, Task<MlResult<T>>> funcExceptionAsync,
                                                                                   string                             errorMessage = null!)
         => await source.TryBindIfFailWithExceptionAsync(funcExceptionAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                   Func<Exception, Task<MlResult<T>>> funcExceptionAsync,
                                                                                   Func<Exception, string>            errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithExceptionAsync(funcExceptionAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                   Func<Exception, Task<MlResult<T>>> funcExceptionAsync,
                                                                                   string                             errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithExceptionAsync(funcExceptionAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this Task<MlResult<T>>            sourceAsync,
                                                                                   Func<Exception, MlResult<T>> funcException,
                                                                                   Func<Exception, string>      errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithExceptionAsync(funcException.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this Task<MlResult<T>>            sourceAsync,
                                                                                   Func<Exception, MlResult<T>> funcException,
                                                                                   string                       errorMessage = null!)
@@ -1607,6 +3445,16 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFailWithException<T, TResult>(this MlResult<T>                        source,
                                                                              Func<T        , MlResult<TResult>> funcValid,
                                                                              Func<Exception, MlResult<TResult>> funcFail)
@@ -1618,6 +3466,16 @@ public static partial class MlResultBindExtensions
                             valid: funcValid
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                               Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<Exception, Task<MlResult<TResult>>> funcFailAsync)
@@ -1629,26 +3487,78 @@ public static partial class MlResultBindExtensions
                             validAsync: funcValidAsync
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                               Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<Exception, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithExceptionAsync(funcValidAsync, funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                               Func<T        , MlResult<TResult>>       funcValid,
                                                                                               Func<Exception, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                               Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<Exception, MlResult<TResult>>       funcFail)
         => await (await sourceAsync).BindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                  sourceAsync,
                                                                                               Func<T        , MlResult<TResult>> funcValid,
                                                                                               Func<Exception, MlResult<TResult>> funcFail)
         => await (await sourceAsync).BindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithException<T, TResult>(this MlResult<T>                        source,
                                                                                 Func<T        , MlResult<TResult>> funcValid,
                                                                                 Func<Exception, MlResult<TResult>> funcFail,
@@ -1662,6 +3572,18 @@ public static partial class MlResultBindExtensions
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithException<T, TResult>(this MlResult<T>                        source,
                                                                                 Func<T        , MlResult<TResult>> funcValid,
                                                                                 Func<Exception, MlResult<TResult>> funcFail,
@@ -1669,18 +3591,54 @@ public static partial class MlResultBindExtensions
         => source.TryBindIfFailWithException(funcValid, funcFail, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                  sourceAsync,
                                                                                                  Func<T        , MlResult<TResult>> funcValid,
                                                                                                  Func<Exception, MlResult<TResult>> funcFail,
                                                                                                  Func<Exception, string>            errorMessageBuilder)
         => (await sourceAsync).TryBindIfFailWithException(funcValid, funcFail, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                  sourceAsync,
                                                                                                  Func<T        , MlResult<TResult>> funcValid,
                                                                                                  Func<Exception, MlResult<TResult>> funcFail,
                                                                                                  string                             errorMessage = null!)
         => await sourceAsync.TryBindIfFailWithExceptionAsync(funcValid, funcFail, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<Exception, Task<MlResult<TResult>>> funcFailAsync,
@@ -1694,30 +3652,90 @@ public static partial class MlResultBindExtensions
                             validAsync: x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<Exception, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  string                                   errorMessage = null!)
         => await sourceAsync.TryBindIfFailWithExceptionAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , MlResult<TResult>>       funcValid,
                                                                                                  Func<Exception, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  Func<Exception, string>                  errorMessageBuilder)
         => await sourceAsync.TryBindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , MlResult<TResult>>       funcValid,
                                                                                                  Func<Exception, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  string                                   errorMessage = null!)
         => await sourceAsync.TryBindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<Exception, MlResult<TResult>>       funcFail,
                                                                                                  Func<Exception, string>                  errorMessageBuilder)
         => await sourceAsync.TryBindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<Exception, MlResult<TResult>>       funcFail,
@@ -1733,6 +3751,15 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> BindIfFailWithException<T, TException>(this MlResult<T>                   source,
                                                                           Func<TException, MlResult<T>> funcException)
         where TException : Exception
@@ -1749,6 +3776,15 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                         source,
                                                                                            Func<TException, Task<MlResult<T>>> funcExceptionAsync)
         where TException : Exception
@@ -1761,11 +3797,29 @@ public static partial class MlResultBindExtensions
                                     );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionAsync<T, TException>(this Task<MlResult<T>>                   sourceAsync,
                                                                                            Func<TException, Task<MlResult<T>>> funcExceptionAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionAsync<T, TException>(funcExceptionAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionAsync<T, TException>(this Task<MlResult<T>>             sourceAsync,
                                                                                            Func<TException, MlResult<T>> funcException)
         where TException : Exception
@@ -1781,6 +3835,17 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithException<T, TException>(this MlResult<T>                   source,
                                                                              Func<TException, MlResult<T>> funcException,
                                                                              Func<Exception, string>       errorMessageBuilder)
@@ -1794,6 +3859,17 @@ public static partial class MlResultBindExtensions
                             valid: value         => value
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithException<T, TException>(this MlResult<T>                   source,
                                                                              Func<TException, MlResult<T>> funcException,
                                                                              string                        errorMessage = null!)
@@ -1801,6 +3877,17 @@ public static partial class MlResultBindExtensions
         => source.TryBindIfFailWithException<T, TException>(funcException, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                         source,
                                                                                               Func<TException, Task<MlResult<T>>> funcExceptionAsync,
                                                                                               Func<Exception, string>             errorMessageBuilder)
@@ -1814,6 +3901,17 @@ public static partial class MlResultBindExtensions
                                         validAsync: value         => value.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                         source,
                                                                                               Func<TException, Task<MlResult<T>>> funcExceptionAsync,
                                                                                               string                              errorMessage = null!)
@@ -1821,24 +3919,68 @@ public static partial class MlResultBindExtensions
         => await source.TryBindIfFailWithExceptionAsync<T, TException>(funcExceptionAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this Task<MlResult<T>>                   sourceAsync,
                                                                                               Func<TException, Task<MlResult<T>>> funcExceptionAsync,
                                                                                               Func<Exception, string>             errorMessageBuilder)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithExceptionAsync<T, TException>(funcExceptionAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcExceptionAsync">Función asíncrona que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this Task<MlResult<T>>                   sourceAsync,
                                                                                               Func<TException, Task<MlResult<T>>> funcExceptionAsync,
                                                                                               string                              errorMessage = null!)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithExceptionAsync<T, TException>(funcExceptionAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this Task<MlResult<T>>             sourceAsync,
                                                                                               Func<TException, MlResult<T>> funcException,
                                                                                               Func<Exception, string>       errorMessageBuilder)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithExceptionAsync<T, TException>(funcException.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this Task<MlResult<T>>             sourceAsync,
                                                                                               Func<TException, MlResult<T>> funcException,
                                                                                               string                        errorMessage = null!)
@@ -1850,6 +3992,17 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFailWithException<T, TResult, TException>(this MlResult<T>                         source,
                                                                                          Func<T         , MlResult<TResult>> funcValid,
                                                                                          Func<TException, MlResult<TResult>> funcFail)
@@ -1862,6 +4015,17 @@ public static partial class MlResultBindExtensions
                             valid: funcValid
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                               source,
                                                                                                           Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                           Func<TException, Task<MlResult<TResult>>> funcFailAsync)
@@ -1874,30 +4038,87 @@ public static partial class MlResultBindExtensions
                             validAsync: funcValidAsync
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                           Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                           Func<TException, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionAsync<T, TResult, TException>(funcValidAsync, funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                           Func<T        , MlResult<TResult>>        funcValid,
                                                                                                           Func<TException, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                           Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                           Func<TException, MlResult<TResult>>       funcFail)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                   sourceAsync,
                                                                                                           Func<T         , MlResult<TResult>> funcValid,
                                                                                                           Func<TException, MlResult<TResult>> funcFail)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithException<T, TResult, TException>(this MlResult<T>                         source,
                                                                                             Func<T         , MlResult<TResult>> funcValid,
                                                                                             Func<TException, MlResult<TResult>> funcFail,
@@ -1912,6 +4133,19 @@ public static partial class MlResultBindExtensions
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithException<T, TResult, TException>(this MlResult<T>                         source,
                                                                                             Func<T         , MlResult<TResult>> funcValid,
                                                                                             Func<TException, MlResult<TResult>> funcFail,
@@ -1920,6 +4154,19 @@ public static partial class MlResultBindExtensions
         => source.TryBindIfFailWithException<T, TResult, TException>(funcValid, funcFail, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                   sourceAsync,
                                                                                                              Func<T         , MlResult<TResult>> funcValid,
                                                                                                              Func<TException, MlResult<TResult>> funcFail,
@@ -1927,6 +4174,19 @@ public static partial class MlResultBindExtensions
         where TException : Exception
         => (await sourceAsync).TryBindIfFailWithException<T, TResult, TException>(funcValid, funcFail, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                   sourceAsync,
                                                                                                              Func<T         , MlResult<TResult>> funcValid,
                                                                                                              Func<TException, MlResult<TResult>> funcFail,
@@ -1934,6 +4194,19 @@ public static partial class MlResultBindExtensions
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValid, funcFail, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                              Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<TException, Task<MlResult<TResult>>> funcFailAsync,
@@ -1948,6 +4221,19 @@ public static partial class MlResultBindExtensions
                             validAsync: x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                              Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<TException, Task<MlResult<TResult>>> funcFailAsync,
@@ -1955,6 +4241,19 @@ public static partial class MlResultBindExtensions
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                              Func<T         , MlResult<TResult>>       funcValid,
                                                                                                              Func<TException, Task<MlResult<TResult>>> funcFailAsync,
@@ -1962,6 +4261,19 @@ public static partial class MlResultBindExtensions
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                              Func<T        , MlResult<TResult>>        funcValid,
                                                                                                              Func<TException, Task<MlResult<TResult>>> funcFailAsync,
@@ -1969,6 +4281,19 @@ public static partial class MlResultBindExtensions
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                              Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<TException, MlResult<TResult>>       funcFail,
@@ -1976,6 +4301,19 @@ public static partial class MlResultBindExtensions
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                         sourceAsync,
                                                                                                              Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<TException, MlResult<TResult>>       funcFail,
@@ -1993,6 +4331,13 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> BindIfFailWithExceptionError<T>(this MlResult<T>                        source,
                                                               Func<MlErrorDetails, MlResult<T>> funcFail)
         => source.Match(
@@ -2005,6 +4350,14 @@ public static partial class MlResultBindExtensions
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                              source,
                                                                                Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync)
         => await source.MatchAsync(
@@ -2016,14 +4369,39 @@ public static partial class MlResultBindExtensions
                                     );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T>(this Task<MlResult<T>>                        sourceAsync,
                                                                                Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync(funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                Func<MlErrorDetails, MlResult<T>> funcFail)
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync(funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>                        source,
                                                                  Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                  Func<Exception, string>            errorMessageBuilder)
@@ -2036,12 +4414,30 @@ public static partial class MlResultBindExtensions
                             valid: value         => value
                         );
 
+/// <summary>
+/// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+/// excepción producida y la convierte en un resultado fallido.
+/// </summary>
+/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+/// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+/// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+/// <param name="errorMessage">Mensaje descriptivo del error.</param>
+/// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
 public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>                        source,
                                                              Func<MlErrorDetails, MlResult<T>> funcFail,
                                                              string                             errorMessage = null!)
         => source.TryBindIfFailWithExceptionError(funcFail, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                              source,
                                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                   Func<Exception, string>                  errorMessageBuilder)
@@ -2054,27 +4450,72 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: value         => value.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                              source,
                                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                   string                                   errorMessage = null!)
         => await source.TryBindIfFailWithExceptionErrorAsync(funcFailAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this Task<MlResult<T>>                        sourceAsync,
                                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                   Func<Exception, string>                  errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithExceptionErrorAsync(funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this Task<MlResult<T>>                        sourceAsync,
                                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                   string                                   errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithExceptionErrorAsync(funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                   Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                   Func<Exception, string>            errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithExceptionErrorAsync(funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                   Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                   string                             errorMessage = null!)
@@ -2085,6 +4526,15 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFailWithExceptionError<T, TResult>(this MlResult<T>                              source,
                                                                              Func<T              , MlResult<TResult>> funcValid,
                                                                              Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -2096,6 +4546,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: funcValid
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
@@ -2107,26 +4567,77 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             validAsync: funcValidAsync
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync(funcValidAsync, funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                               Func<T              , MlResult<TResult>>       funcValid,
                                                                                               Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<MlErrorDetails, MlResult<TResult>>       funcFail)
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail)
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithExceptionError<T, TResult>(this MlResult<T>                              source,
                                                                                 Func<T              , MlResult<TResult>> funcValid,
                                                                                 Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2140,6 +4651,17 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithExceptionError<T, TResult>(this MlResult<T>                              source,
                                                                                 Func<T              , MlResult<TResult>> funcValid,
                                                                                 Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2147,18 +4669,51 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.TryBindIfFailWithExceptionError(funcValid, funcFail, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T              , MlResult<TResult>> funcValid,
                                                                                                  Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                                  Func<Exception, string>                  errorMessageBuilder)
         => (await sourceAsync).TryBindIfFailWithExceptionError(funcValid, funcFail, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T        , MlResult<TResult>>       funcValid,
                                                                                                  Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                                  string                                   errorMessage = null!)
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync(funcValid, funcFail, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2172,30 +4727,85 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             validAsync: x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  string                                         errorMessage = null!)
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T        , MlResult<TResult>>             funcValid,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  Func<Exception, string>                        errorMessageBuilder)
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , MlResult<TResult>>       funcValid,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  string                                         errorMessage = null!)
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, MlResult<TResult>>       funcFail,
                                                                                                  Func<Exception, string>                        errorMessageBuilder)
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, MlResult<TResult>>       funcFail,
@@ -2211,6 +4821,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> BindIfFailWithExceptionError<T, TException>(this MlResult<T>                         source,
                                                                           Func<MlErrorDetails, MlResult<T>> funcFail)
         where TException : Exception
@@ -2227,6 +4845,15 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                        source,
                                                                                            Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync)
         where TException : Exception
@@ -2239,11 +4866,29 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                     );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                            Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync<T, TException>(funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
                                                                                            Func<MlErrorDetails, MlResult<T>> funcFail)
         where TException : Exception
@@ -2259,6 +4904,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithExceptionError<T, TException>(this MlResult<T>                        source,
                                                                              Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                              Func<Exception, string>            errorMessageBuilder)
@@ -2272,6 +4927,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: value         => value
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithExceptionError<T, TException>(this MlResult<T>                        source,
                                                                              Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                              string                             errorMessage = null!)
@@ -2279,6 +4944,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.TryBindIfFailWithExceptionError<T, TException>(funcFail, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                              source,
                                                                                               Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                               Func<Exception, string>                  errorMessageBuilder)
@@ -2292,6 +4967,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: value         => value.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                              source,
                                                                                               Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                               string                                   errorMessage = null!)
@@ -2299,24 +4984,64 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await source.TryBindIfFailWithExceptionErrorAsync<T, TException>(funcFailAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                               Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                               Func<Exception, string>                  errorMessageBuilder)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithExceptionErrorAsync<T, TException>(funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                               Func<MlErrorDetails, Task<MlResult<T>>> funcFailAsync,
                                                                                               string                                   errorMessage = null!)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithExceptionErrorAsync<T, TException>(funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
                                                                                               Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                               Func<Exception, string>            errorMessageBuilder)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithExceptionErrorAsync<T, TException>(funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
                                                                                               Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                               string                             errorMessage = null!)
@@ -2328,6 +5053,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFailWithExceptionError<T, TResult, TException>(this MlResult<T>                              source,
                                                                                          Func<T              , MlResult<TResult>> funcValid,
                                                                                          Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -2340,6 +5075,17 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: funcValid
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                           Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                           Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
@@ -2352,30 +5098,86 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             validAsync: funcValidAsync
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                           Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                           Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValidAsync, funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                           Func<T              , MlResult<TResult>>       funcValid,
                                                                                                           Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                           Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                           Func<MlErrorDetails, MlResult<TResult>>       funcFail)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                           Func<T              , MlResult<TResult>> funcValid,
                                                                                                           Func<MlErrorDetails, MlResult<TResult>> funcFail)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithExceptionError<T, TResult, TException>(this MlResult<T>                              source,
                                                                                             Func<T              , MlResult<TResult>> funcValid,
                                                                                             Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2390,6 +5192,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: x => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithExceptionError<T, TResult, TException>(this MlResult<T>                              source,
                                                                                             Func<T              , MlResult<TResult>> funcValid,
                                                                                             Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2398,6 +5212,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.TryBindIfFailWithExceptionError<T, TResult, TException>(funcValid, funcFail, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                              Func<T              , MlResult<TResult>> funcValid,
                                                                                                              Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2405,6 +5231,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => (await sourceAsync).TryBindIfFailWithExceptionError<T, TResult, TException>(funcValid, funcFail, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                              Func<T              , MlResult<TResult>> funcValid,
                                                                                                              Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2412,6 +5250,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValid, funcFail, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2426,6 +5276,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             validAsync: x => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T        , Task<MlResult<TResult>>>       funcValidAsync,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2433,6 +5295,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , MlResult<TResult>>       funcValid,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2440,6 +5314,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , MlResult<TResult>>       funcValid,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2447,6 +5333,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails, MlResult<TResult>>       funcFail,
@@ -2454,6 +5352,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await sourceAsync.TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails, MlResult<TResult>>       funcFail,
@@ -2464,15 +5374,43 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithException<T> ───────────────
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
                                                                          Func<Exception, MlResult<T>> funcException)
         => source.BindIfFailWithException(funcException).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
                                                                             Func<Exception, MlResult<T>> funcException,
                                                                             Func<Exception, string>      errorMessageBuilder)
         => source.TryBindIfFailWithException(funcException, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
                                                                             Func<Exception, MlResult<T>> funcException,
                                                                             string                       errorMessage = null!)
@@ -2481,51 +5419,153 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithException<T, TResult> ──────
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                        source,
                                                                                        Func<T        , MlResult<TResult>> funcValid,
                                                                                        Func<Exception, MlResult<TResult>> funcFail)
         => source.BindIfFailWithException(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                               Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<Exception,      MlResult<TResult>>  funcFail)
         => await source.BindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                               Func<T        ,      MlResult<TResult>>  funcValid,
                                                                                               Func<Exception, Task<MlResult<TResult>>> funcFailAsync)
         => await source.BindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                        source,
                                                                                           Func<T        , MlResult<TResult>> funcValid,
                                                                                           Func<Exception, MlResult<TResult>> funcFail,
                                                                                           Func<Exception, string>            errorMessageBuilder)
         => source.TryBindIfFailWithException(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                        source,
                                                                                           Func<T        , MlResult<TResult>> funcValid,
                                                                                           Func<Exception, MlResult<TResult>> funcFail,
                                                                                           string                             errorMessage = null!)
         => source.TryBindIfFailWithException(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                                  Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<Exception,      MlResult<TResult>>  funcFail,
                                                                                                  Func<Exception, string>                  errorMessageBuilder)
         => await source.ToAsync().TryBindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                                  Func<T        , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<Exception,      MlResult<TResult>>  funcFail,
                                                                                                  string                                   errorMessage = null!)
         => await source.ToAsync().TryBindIfFailWithExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                                  Func<T        ,      MlResult<TResult>>  funcValid,
                                                                                                  Func<Exception, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  Func<Exception, string>                  errorMessageBuilder)
         => await source.ToAsync().TryBindIfFailWithExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                                  Func<T        ,      MlResult<TResult>>  funcValid,
                                                                                                  Func<Exception, Task<MlResult<TResult>>> funcFailAsync,
@@ -2535,17 +5575,48 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithException<T, TException> ───
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
                                                                                      Func<TException, MlResult<T>> funcException)
         where TException : Exception
         => source.BindIfFailWithException<T, TException>(funcException).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
                                                                                         Func<TException, MlResult<T>> funcException,
                                                                                         Func<Exception, string>       errorMessageBuilder)
         where TException : Exception
         => source.TryBindIfFailWithException<T, TException>(funcException, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
                                                                                         Func<TException, MlResult<T>> funcException,
                                                                                         string                        errorMessage = null!)
@@ -2555,24 +5626,70 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithException<T, TResult, TException> ──
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                         source,
                                                                                                    Func<T         , MlResult<TResult>> funcValid,
                                                                                                    Func<TException, MlResult<TResult>> funcFail)
         where TException : Exception
         => source.BindIfFailWithException<T, TResult, TException>(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                               source,
                                                                                                          Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                          Func<TException,      MlResult<TResult>>  funcFail)
         where TException : Exception
         => await source.BindIfFailWithExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                               source,
                                                                                                          Func<T         ,      MlResult<TResult>>  funcValid,
                                                                                                          Func<TException, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await source.BindIfFailWithExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                         source,
                                                                                                        Func<T         , MlResult<TResult>> funcValid,
                                                                                                        Func<TException, MlResult<TResult>> funcFail,
@@ -2580,6 +5697,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => source.TryBindIfFailWithException<T, TResult, TException>(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                         source,
                                                                                                        Func<T         , MlResult<TResult>> funcValid,
                                                                                                        Func<TException, MlResult<TResult>> funcFail,
@@ -2587,6 +5717,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => source.TryBindIfFailWithException<T, TResult, TException>(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                               source,
                                                                                                              Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<TException,      MlResult<TResult>>  funcFail,
@@ -2594,6 +5737,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.ToAsync().TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                               source,
                                                                                                              Func<T         , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<TException,      MlResult<TResult>>  funcFail,
@@ -2601,6 +5757,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.ToAsync().TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                               source,
                                                                                                              Func<T         ,      MlResult<TResult>>  funcValid,
                                                                                                              Func<TException, Task<MlResult<TResult>>> funcFailAsync,
@@ -2608,6 +5777,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.ToAsync().TryBindIfFailWithExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error contiene una excepción. Captura cualquier excepción producida y la convierte en
+    /// un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                               source,
                                                                                                              Func<T         ,      MlResult<TResult>>  funcValid,
                                                                                                              Func<TException, Task<MlResult<TResult>>> funcFailAsync,
@@ -2618,15 +5800,41 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T> ──────────
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
                                                                           Func<MlErrorDetails, MlResult<T>> funcFail)
         => source.BindIfFailWithExceptionError(funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
                                                                              Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                              Func<Exception, string>            errorMessageBuilder)
         => source.TryBindIfFailWithExceptionError(funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
                                                                              Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                              string                             errorMessage = null!)
@@ -2635,51 +5843,147 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T, TResult> ─
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                              source,
                                                                                          Func<T              , MlResult<TResult>> funcValid,
                                                                                          Func<MlErrorDetails, MlResult<TResult>> funcFail)
         => source.BindIfFailWithExceptionError(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                               Func<MlErrorDetails,      MlResult<TResult>>  funcFail)
         => await source.BindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                               Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                               Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await source.BindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                              source,
                                                                                             Func<T              , MlResult<TResult>> funcValid,
                                                                                             Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                             Func<Exception, string>                  errorMessageBuilder)
         => source.TryBindIfFailWithExceptionError(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                              source,
                                                                                             Func<T              , MlResult<TResult>> funcValid,
                                                                                             Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                             string                                   errorMessage = null!)
         => source.TryBindIfFailWithExceptionError(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
                                                                                                  Func<Exception, string>                        errorMessageBuilder)
         => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
                                                                                                  string                                         errorMessage = null!)
         => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                  Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                  Func<Exception, string>                        errorMessageBuilder)
         => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                  Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2689,17 +5993,46 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T, TException> ──
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                         source,
                                                                                       Func<MlErrorDetails, MlResult<T>> funcFail)
         where TException : Exception
         => source.BindIfFailWithExceptionError<T, TException>(funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                        source,
                                                                                          Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                          Func<Exception, string>            errorMessageBuilder)
         where TException : Exception
         => source.TryBindIfFailWithExceptionError<T, TException>(funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                        source,
                                                                                          Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                          string                             errorMessage = null!)
@@ -2709,24 +6042,69 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithExceptionError<T, TResult, TException> ──
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                      Func<T              , MlResult<TResult>> funcValid,
                                                                                                      Func<MlErrorDetails, MlResult<TResult>> funcFail)
         where TException : Exception
         => source.BindIfFailWithExceptionError<T, TResult, TException>(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                           Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                           Func<MlErrorDetails,      MlResult<TResult>>  funcFail)
         where TException : Exception
         => await source.BindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                           Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                           Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await source.BindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                         Func<T              , MlResult<TResult>> funcValid,
                                                                                                         Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2734,6 +6112,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => source.TryBindIfFailWithExceptionError<T, TResult, TException>(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                         Func<T              , MlResult<TResult>> funcValid,
                                                                                                         Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2741,6 +6131,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => source.TryBindIfFailWithExceptionError<T, TResult, TException>(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
@@ -2748,6 +6150,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
@@ -2755,6 +6169,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                              Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2762,6 +6188,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.ToAsync().TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>IfFailWithExceptionError</c>. Captura cualquier
+    /// excepción producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                              Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2809,11 +6247,10 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// Execute the function if the source is fail, otherwise return the source.
     /// The previous run cannot have raised an Exception. If this case occurs, the 'func' will not be executed
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="func"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Value type of the source result.</typeparam>
+    /// <param name="source">Source result.</param>
+    /// <param name="func">Function executed when the failure details carry no exception.</param>
+    /// <returns>The result produced by <paramref name="func"/>, or the source failure if it carries an exception.</returns>
     public static MlResult<T> BindIfFailWithoutException<T>(this MlResult<T>                        source,
                                                                  Func<MlErrorDetails, MlResult<T>> func)
         => source.Match(
@@ -2825,6 +6262,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T>(this MlResult<T>                              source,
                                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcAsync)
         => await source.MatchAsync(
@@ -2835,14 +6280,40 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: value         => value.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>                        sourceAsync,
                                                                                   Func<MlErrorDetails, Task<MlResult<T>>> funcAsync)
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync(funcAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                   Func<MlErrorDetails, MlResult<T>> funcAsync)
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync(funcAsync.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithoutException<T>(this MlResult<T>                        source,
                                                                     Func<MlErrorDetails, MlResult<T>> func,
                                                                     Func<Exception, string>            errorMessageBuilder)
@@ -2854,11 +6325,31 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: x             => x
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithoutException<T>(this MlResult<T>                        source,
                                                                     Func<MlErrorDetails, MlResult<T>> func,
                                                                     string                             errorMessage = null!)
         => source.TryBindIfFailWithoutException(func, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                              source,
                                                                                      Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                      Func<Exception, string>                  errorMessageBuilder)
@@ -2870,27 +6361,76 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: x             => x.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                              source,
                                                                                      Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                      string                                   errorMessage = null!)
         => await source.TryBindIfFailWithoutExceptionAsync(funcAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>                        sourceAsync,
                                                                                      Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                      Func<Exception, string>                  errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Ex</c> unicamente cuando el resultado de origen
+    /// es fallido y su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindExIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>                        sourceAsync,
                                                                                     Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                     string                                   errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                      Func<MlErrorDetails, MlResult<T>> funcAsync,
                                                                                      Func<Exception, string>            errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcAsync.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this Task<MlResult<T>>                  sourceAsync,
                                                                                      Func<MlErrorDetails, MlResult<T>> funcAsync,
                                                                                      string                             errorMessage = null!)
@@ -2899,6 +6439,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFailWithoutException<T, TResult>(this MlResult<T>                              source,
                                                                                 Func<T              , MlResult<TResult>> funcValid,
                                                                                 Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -2910,6 +6460,16 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: funcValid
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
@@ -2921,26 +6481,78 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: funcValidAsync
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , MlResult<TResult>>       funcValid,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, MlResult<TResult>>       funcFail)
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<T              , MlResult<TResult>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, MlResult<TResult>> funcFail)
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync(funcValidAsync.ToFuncTask(), funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithoutException<T, TResult>(this MlResult<T>                              source,
                                                                                    Func<T              , MlResult<TResult>> funcValid,
                                                                                    Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2953,12 +6565,36 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: x             => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithoutException<T, TResult>(this MlResult<T>                              source,
                                                                                    Func<T              , MlResult<TResult>> funcValid,
                                                                                    Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                    string                                   errorMessage = null!)
         => source.TryBindIfFailWithoutException(funcValid, funcFail, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -2971,54 +6607,162 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: x             => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                     string                                         errorMessage = null!)
         => await source.TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , MlResult<TResult>>       funcValid,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , MlResult<TResult>>       funcValid,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, MlResult<TResult>>       funcFail,
                                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, MlResult<TResult>>       funcFail,
                                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                     Func<T              , MlResult<TResult>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                                     Func<Exception, string>                  errorMessageBuilder)
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync(funcValidAsync.ToFuncTask(), funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                     Func<T              , MlResult<TResult>> funcValidAsync,
                                                                                                     Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -3035,15 +6779,15 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
- /// <summary>
+    /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
     /// The previous run cannot have raised an Exception. If this case occurs, the 'func' will not be executed
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="func"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Value type of the source result.</typeparam>
+    /// <typeparam name="TException">Exception type searched for in the failure details.</typeparam>
+    /// <param name="source">Source result.</param>
+    /// <param name="func">Function executed when the failure details carry no exception of that type.</param>
+    /// <returns>The result produced by <paramref name="func"/>, or the source failure otherwise.</returns>
     public static MlResult<T> BindIfFailWithoutException<T, TException>(this MlResult<T>                        source,
                                                                              Func<MlErrorDetails, MlResult<T>> func)
         where TException : Exception
@@ -3056,6 +6800,15 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                         );
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                              source,
                                                                                               Func<MlErrorDetails, Task<MlResult<T>>> funcAsync)
         where TException : Exception
@@ -3067,16 +6820,45 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: value         => value.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                               Func<MlErrorDetails, Task<MlResult<T>>> funcAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync<T, TException>(funcAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
                                                                                               Func<MlErrorDetails, MlResult<T>> funcAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync<T, TException>(funcAsync.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithoutException<T, TException>(this MlResult<T>                        source,
                                                                                 Func<MlErrorDetails, MlResult<T>> func,
                                                                                 Func<Exception, string>            errorMessageBuilder)
@@ -3089,12 +6871,34 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: x             => x
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryBindIfFailWithoutException<T, TException>(this MlResult<T>                        source,
                                                                                 Func<MlErrorDetails, MlResult<T>> func,
                                                                                 string                             errorMessage = null!)
         where TException : Exception
         => source.TryBindIfFailWithoutException<T, TException>(func, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                              source,
                                                                                                  Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                                  Func<Exception, string>                  errorMessageBuilder)
@@ -3107,6 +6911,17 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: x             => x.ToMlResultValidAsync()
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                              source,
                                                                                                  Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                                  string                                   errorMessage = null!)
@@ -3114,24 +6929,68 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => await source.TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                                  Func<Exception, string>                  errorMessageBuilder)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                  Func<MlErrorDetails, Task<MlResult<T>>> funcAsync,
                                                                                                  string                                   errorMessage = null!)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
                                                                                                  Func<MlErrorDetails, MlResult<T>> funcAsync,
                                                                                                  Func<Exception, string>            errorMessageBuilder)
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TException>(funcAsync.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this Task<MlResult<T>>                  sourceAsync,
                                                                                                  Func<MlErrorDetails, MlResult<T>> funcAsync,
                                                                                                  string                             errorMessage = null!)
@@ -3141,6 +7000,17 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFailWithoutException<T, TResult, TException>(this MlResult<T>                              source,
                                                                                             Func<T              , MlResult<TResult>> funcValid,
                                                                                             Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -3153,6 +7023,17 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: funcValid
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
@@ -3165,30 +7046,87 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: funcValidAsync
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , MlResult<TResult>>       funcValid,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails, MlResult<TResult>>       funcFail)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                              Func<T              , MlResult<TResult>> funcValidAsync,
                                                                                                              Func<MlErrorDetails, MlResult<TResult>> funcFail)
         where TException : Exception
         => await (await sourceAsync).BindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync.ToFuncTask(), funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithoutException<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                Func<T              , MlResult<TResult>> funcValid,
                                                                                                Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -3202,6 +7140,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             valid: x             => funcValid.TryToMlResult(x, errorMessageBuilder)
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindIfFailWithoutException<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                Func<T              , MlResult<TResult>> funcValid,
                                                                                                Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -3209,6 +7160,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => source.TryBindIfFailWithoutException<T, TResult, TException>(funcValid, funcFail, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3222,6 +7186,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                         validAsync: x             => funcValidAsync.TryToMlResultAsync(x, errorMessageBuilder)
                                     );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3229,6 +7206,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFailAsync, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3236,6 +7226,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3243,6 +7246,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                     Func<T              , MlResult<TResult>>       funcValid,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3250,6 +7266,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                                 Func<T              , MlResult<TResult>>       funcValid,
                                                                                                                 Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3257,6 +7286,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, MlResult<TResult>>       funcFail,
@@ -3264,6 +7306,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                              sourceAsync,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, MlResult<TResult>>       funcFail,
@@ -3271,6 +7326,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                                 Func<T              , MlResult<TResult>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -3278,6 +7346,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await (await sourceAsync).TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync.ToFuncTask(), funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this Task<MlResult<T>>                        sourceAsync,
                                                                                                                 Func<T              , MlResult<TResult>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -3288,15 +7369,43 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithoutException<T> ────────────
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T>(this MlResult<T>                  source,
                                                                             Func<MlErrorDetails, MlResult<T>> func)
         => source.BindIfFailWithoutException(func).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                        source,
                                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                                Func<Exception, string>            errorMessageBuilder)
         => source.TryBindIfFailWithoutException(func, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                        source,
                                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                                string                             errorMessage = null!)
@@ -3305,51 +7414,153 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithoutException<T, TResult> ───
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                            Func<T              , MlResult<TResult>> funcValid,
                                                                                            Func<MlErrorDetails, MlResult<TResult>> funcFail)
         => source.BindIfFailWithoutException(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                  Func<MlErrorDetails,      MlResult<TResult>>  funcFail)
         => await source.BindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                  Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         => await source.BindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                               Func<Exception, string>                  errorMessageBuilder)
         => source.TryBindIfFailWithoutException(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
                                                                                               string                                   errorMessage = null!)
         => source.TryBindIfFailWithoutException(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
                                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await source.TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
                                                                                                     string                                         errorMessage = null!)
         => await source.TryBindIfFailWithoutExceptionAsync(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                     Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
                                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await source.TryBindIfFailWithoutExceptionAsync(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                                     Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3359,17 +7570,48 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithoutException<T, TException> ─
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
                                                                                         Func<MlErrorDetails, MlResult<T>> func)
         where TException : Exception
         => source.BindIfFailWithoutException<T, TException>(func).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
                                                                                            Func<MlErrorDetails, MlResult<T>> func,
                                                                                            Func<Exception, string>            errorMessageBuilder)
         where TException : Exception
         => source.TryBindIfFailWithoutException<T, TException>(func, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
                                                                                            Func<MlErrorDetails, MlResult<T>> func,
                                                                                            string                             errorMessage = null!)
@@ -3379,24 +7621,70 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source overloads for BindIfFailWithoutException<T, TResult, TException> ──
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                        Func<T              , MlResult<TResult>> funcValid,
                                                                                                        Func<MlErrorDetails, MlResult<TResult>> funcFail)
         where TException : Exception
         => source.BindIfFailWithoutException<T, TResult, TException>(funcValid, funcFail).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                              Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                              Func<MlErrorDetails,      MlResult<TResult>>  funcFail)
         where TException : Exception
         => await source.BindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                              Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                              Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync)
         where TException : Exception
         => await source.BindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                           Func<T              , MlResult<TResult>> funcValid,
                                                                                                           Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -3404,6 +7692,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => source.TryBindIfFailWithoutException<T, TResult, TException>(funcValid, funcFail, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                           Func<T              , MlResult<TResult>> funcValid,
                                                                                                           Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -3411,6 +7712,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => source.TryBindIfFailWithoutException<T, TResult, TException>(funcValid, funcFail, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
@@ -3418,6 +7732,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAsync">Función asíncrona que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                                 Func<T              , Task<MlResult<TResult>>> funcValidAsync,
                                                                                                                 Func<MlErrorDetails,      MlResult<TResult>>  funcFail,
@@ -3425,6 +7752,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValidAsync, funcFail.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                                 Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                                 Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3432,6 +7772,19 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         where TException : Exception
         => await source.TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(funcValid.ToFuncTask(), funcFailAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado unicamente cuando el resultado de origen es fallido y
+    /// su detalle de error NO contiene una excepción. Captura cualquier excepción producida y la convierte
+    /// en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFailAsync">Función asíncrona que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                                    source,
                                                                                                                 Func<T              ,      MlResult<TResult>>  funcValid,
                                                                                                                 Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAsync,
@@ -3446,18 +7799,54 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindAlways<T, TResult>(this MlResult<T>             source, 
                                                                 Func<MlResult<TResult>> funcAlways)
         => funcAlways();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>             source, 
                                                                            Func<MlResult<TResult>> funcAlways)
         => source.BindAlways(funcAlways).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlwaysAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                   source, 
                                                                                  Func<Task<MlResult<TResult>>> funcAlwaysAsync)
         => await funcAlwaysAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAlwaysAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this Task<MlResult<T>>             sourceAsync, 
                                                                                  Func<Task<MlResult<TResult>>> funcAlwaysAsync)
     {
@@ -3466,35 +7855,110 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         return await funcAlwaysAsync();
     }
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this Task<MlResult<T>>       sourceAsync, 
                                                                                  Func<MlResult<TResult>> funcAlways)
          => await (await sourceAsync).BindAlwaysAsync<T, TResult>(funcAlways);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>             source,
                                                                    Func<MlResult<TResult>> funcAlways,
                                                                    Func<Exception, string> errorMessageBuilder)
         => funcAlways.TryToMlResult(errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>             source,
                                                                    Func<MlResult<TResult>> funcAlways,
                                                                    string                  errorMessage = null!)
         => source.TryBindAlways(funcAlways, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>             source,
                                                                               Func<MlResult<TResult>> funcAlways,
                                                                               Func<Exception, string> errorMessageBuilder)
         => funcAlways.TryToMlResult(errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>             source,
                                                                               Func<MlResult<TResult>> funcAlways,
                                                                               string                  errorMessage = null!)
         => source.TryBindAlwaysAsync(funcAlways, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                   source,
                                                                               Func<Task<MlResult<TResult>>> funcAlwaysAsync,
                                                                               Func<Exception, string>       errorMessageBuilder)
         => funcAlwaysAsync.TryToMlResultAsync(errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                   source,
                                                                               Func<Task<MlResult<TResult>>> funcAlwaysAsync,
                                                                               string                        errorMessage = null!)
@@ -3510,21 +7974,65 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>             sourceAsync,
                                                                                     Func<Task<MlResult<TResult>>> funcAlwaysAsync,
                                                                                     Func<Exception, string>       errorMessageBuilder)
         => await (await sourceAsync).TryBindAlwaysAsync(funcAlwaysAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>             sourceAsync,
                                                                                     Func<Task<MlResult<TResult>>> funcAlwaysAsync,
                                                                                     string                        errorMessage = null!)
         => await (await sourceAsync).TryBindAlwaysAsync(funcAlwaysAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>       sourceAsync,
                                                                                     Func<MlResult<TResult>> funcAlways,
                                                                                     Func<Exception, string> errorMessageBuilder)
         => (await sourceAsync).TryBindAlways<T, TResult>(funcAlways, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>       sourceAsync,
                                                                                     Func<MlResult<TResult>> funcAlways,
                                                                                     string                  errorMessage = null!)
@@ -3554,37 +8062,109 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                             fail : funcFailAlways
                         );
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
                                                                            Func<T              , MlResult<TResult>> funcValidAlways,
                                                                            Func<MlErrorDetails, MlResult<TResult>> funcFailAlways)
         => source.BindAlways(funcValidAlways, funcFailAlways).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync)
         => await source.MatchAsync(validAsync: funcValidAlwaysAsync,
                                    failAsync : funcFailAlwaysAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync)
         => await (await sourceAsync).BindAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                  Func<T              ,      MlResult<TResult>>  funcValidAlways,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync)
         => await (await sourceAsync).BindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                    sourceAsync, 
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                  Func<MlErrorDetails,      MlResult<TResult>>  funcFailAlways)
         => await (await sourceAsync).BindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync, 
                                                                                  Func<T              , MlResult<TResult>> funcValidAlways,
                                                                                  Func<MlErrorDetails, MlResult<TResult>> funcFailAlways)
         => (await sourceAsync).BindAlways(funcValidAlways, funcFailAlways);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>                              source, 
                                                                    Func<T              , MlResult<TResult>> funcValidAlways,
                                                                    Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
@@ -3592,12 +8172,36 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.Match(valid: value        => funcValidAlways.TryToMlResult(value       , errorMessageBuilder),
                         fail : errorDetails => funcFailAlways .TryToMlResult(errorDetails, errorMessageBuilder));
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindAlways<T, TResult>(this MlResult<T>                              source, 
                                                                    Func<T              , MlResult<TResult>> funcValidAlways,
                                                                    Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
                                                                    string                                   errorMessage = null!)
         => source.TryBindAlways(funcValidAlways, funcFailAlways, _ => errorMessage!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source, 
                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                               Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
@@ -3605,6 +8209,18 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.MatchAsync(validAsync: value        => funcValidAlwaysAsync.TryToMlResultAsync(value       , errorMessageBuilder),
                              failAsync : errorDetails => funcFailAlwaysAsync .TryToMlResultAsync(errorDetails, errorMessageBuilder));
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source, 
                                                                               Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                               Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
@@ -3612,48 +8228,144 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync, _ => errorMessage!);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlwaysAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                     Func<T              ,      MlResult<TResult>>  funcValidAlways,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
                                                                                     Func<Exception, string>              errorMessageBuilder)
         => await (await sourceAsync).TryBindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                     Func<T              ,      MlResult<TResult>>  funcValidAlways,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
                                                                                     string                               errorMessage = null!)
         => await (await sourceAsync).TryBindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync, errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFailAlways,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await (await sourceAsync).TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                              sourceAsync, 
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFailAlways,
                                                                                     string                                         errorMessage = null!)
         => await (await sourceAsync).TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync, 
                                                                                     Func<T              , MlResult<TResult>> funcValidAlways,
                                                                                     Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
                                                                                     Func<Exception, string>                  errorMessageBuilder)
         => (await sourceAsync).TryBindAlways(funcValidAlways, funcFailAlways, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public async static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this Task<MlResult<T>>                        sourceAsync, 
                                                                                     Func<T              , MlResult<TResult>> funcValidAlways,
                                                                                     Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
@@ -3663,46 +8375,138 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     // ─── Missing sync-source mixed overloads for BindAlways<T, TResult> ─────────────
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                  Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                  Func<MlErrorDetails,      MlResult<TResult>>  funcFailAlways)
         => await source.BindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask());
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                  Func<T              ,      MlResult<TResult>>  funcValidAlways,
                                                                                  Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync)
         => await source.BindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValidAlways,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
                                                                               Func<Exception, string>                  errorMessageBuilder)
         => source.TryBindAlways(funcValidAlways, funcFailAlways, errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValidAlways,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
                                                                               string                                   errorMessage = null!)
         => source.TryBindAlways(funcValidAlways, funcFailAlways, errorMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFailAlways,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await source.TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask(), errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlwaysAsync">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              , Task<MlResult<TResult>>> funcValidAlwaysAsync,
                                                                                     Func<MlErrorDetails,      MlResult<TResult>>  funcFailAlways,
                                                                                     string                                         errorMessage = null!)
         => await source.TryBindAlwaysAsync(funcValidAlwaysAsync, funcFailAlways.ToFuncTask(), errorMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              ,      MlResult<TResult>>  funcValidAlways,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
                                                                                     Func<Exception, string>                        errorMessageBuilder)
         => await source.TryBindAlwaysAsync(funcValidAlways.ToFuncTask(), funcFailAlwaysAsync, errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado, ejecutando siempre la operación indicada con
+    /// independencia del estado del resultado. Captura cualquier excepción producida y la convierte en un
+    /// resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlwaysAsync">Función a aplicar.</param>
+    /// <param name="errorMessage">Mensaje descriptivo del error.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                                    source,
                                                                                     Func<T              ,      MlResult<TResult>>  funcValidAlways,
                                                                                     Func<MlErrorDetails, Task<MlResult<TResult>>> funcFailAlwaysAsync,
@@ -3714,58 +8518,174 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
     #region TryBindBuild
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Build</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
                                                              params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuild<T, TResult>(false, errorMessageBuilder: null!, funcArgs: funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Build</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
                                                                     Func<Exception, string>     errorMessageBuilder,
                                                              params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuild<T, TResult>(false, errorMessageBuilder, funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Build</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindBuild<T, TResult>(this   MlResult<T>                 source,
                                                                     string                      exceptionAdditionalMessage,
                                                              params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuild<T, TResult>(false, exceptionAdditionalMessage, funcArgs);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildSync</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
                                                                             params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder: null!, funcArgs: funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildSync</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
                                                                                    Func<Exception, string>     errorMessageBuilder,
                                                                             params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder, funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildSync</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   MlResult<T>                 source,
                                                                                    string                      exceptionAdditionalMessage,
                                                                             params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAdditionalMessage, funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildSync</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                   params Func<T, MlResult<object>>[] funcArgs)
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder: null!, funcArgs: funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildSync</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                          Func<Exception, string>     errorMessageBuilder,
                                                                                   params Func<T, MlResult<object>>[] funcArgs)
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, errorMessageBuilder, funcArgs);
 
+        /// <summary>
+        /// Encadena una función que devuelve un resultado de <c>BuildSync</c>. Captura cualquier excepción
+        /// producida y la convierte en un resultado fallido. Versión asíncrona.
+        /// </summary>
+        /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+        /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+        /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+        /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+        /// <param name="funcArgs">Función a aplicar.</param>
+        /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
         public static async Task<MlResult<TResult>> TryBindBuildSyncAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                              string                      exceptionAdditionalMessage,
                                                                                       params Func<T, MlResult<object>>[] funcArgs)
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(false, exceptionAdditionalMessage, funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Build</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcArgsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                               params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
         => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, errorMessageBuilder: null!, funcArgsAsync: funcArgsAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Build</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <param name="funcArgsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                      Func<Exception, string>           errorMessageBuilder,
                                                                               params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
         => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(false, errorMessageBuilder, funcArgsAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>Build</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <param name="funcArgsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                      string                            exceptionAdditionalMessage,
                                                                               params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
@@ -3849,21 +8769,66 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                            Func<T, MlResult<TR1>>  funcBuild1,
                                                                            Func<T, MlResult<TR2>>  funcBuild2)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                            Func<T,          TR1 >  funcBuild1,
                                                                            Func<T, MlResult<TR2>>  funcBuild2)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                            Func<T, MlResult<TR1>>  funcBuild1,
                                                                            Func<T,          TR2 >  funcBuild2)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                            Func<T, MlResult<TR1>>  funcBuild1,
                                                                            Func<T, MlResult<TR2>>  funcBuild2,
@@ -3871,12 +8836,36 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                            Func<T,          TR1 >  funcBuild1,
                                                                            Func<T, MlResult<TR2>>  funcBuild2,
                                                                            Func<Exception, string> errorMessageBuilder)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
 
+        /// <summary>
+        /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+        /// producida y la convierte en un resultado fallido.
+        /// </summary>
+        /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+        /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+        /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+        /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+        /// <param name="funcBuild1">Función a aplicar.</param>
+        /// <param name="funcBuild2">Función a aplicar.</param>
+        /// <param name="errorMessageBuilder">Función a aplicar.</param>
+        /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
         public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>             source,
                                                                                Func<T, MlResult<TR1>>  funcBuild1,
                                                                                Func<T,          TR2 >  funcBuild2,
@@ -3884,18 +8873,54 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>            source,
                                                                            Func<T, MlResult<TR1>> funcBuild1,
                                                                            Func<T, MlResult<TR2>> funcBuild2,
                                                                            string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>            source,
                                                                            Func<T,          TR1 > funcBuild1,
                                                                            Func<T, MlResult<TR2>> funcBuild2,
                                                                            string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2)> TryBindBuildTuple<T, TR1, TR2>(this MlResult<T>            source,
                                                                            Func<T, MlResult<TR1>> funcBuild1,
                                                                            Func<T,          TR2 > funcBuild2,
@@ -3913,51 +8938,156 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /* Continuar haciendo los métodos compatibles con MlResult<T> y con <T>*/
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>             source,
                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                       Func<T, MlResult<TR2>>  funcBuild2)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>             source,
                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                       Func<T, MlResult<TR2>>  funcBuild2,
                                                                                       Func<Exception, string> errorMessageBuilder)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>            source,
                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                       Func<T, MlResult<TR2>> funcBuild2,
                                                                                       string                 exceptionAdditionalMessage)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
                                                                                             Func<T, MlResult<TR1>> funcBuild1,
                                                                                             Func<T, MlResult<TR2>> funcBuild2)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>       sourceAsync,
                                                                                             Func<T, MlResult<TR1>>  funcBuild1,
                                                                                             Func<T, MlResult<TR2>>  funcBuild2,
                                                                                             Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>      sourceAsync,
                                                                                             Func<T, MlResult<TR1>> funcBuild1,
                                                                                             Func<T, MlResult<TR2>> funcBuild2,
                                                                                             string                 exceptionAdditionalMessage)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                       Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                       Func<T, Task<MlResult<TR2>>> funcBuild2Async)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                       Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                       Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                       Func<Exception, string>      errorMessageBuilder)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this Task<MlResult<T>>            sourceAsync,
                                                                                       Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                       Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -3966,12 +9096,39 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
     // TR3
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3)> TryBindBuildTuple<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
                                                                                      Func<T, MlResult<TR3>>  funcBuild3)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3)> TryBindBuildTuple<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
@@ -3979,6 +9136,20 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                      Func<Exception, string> errorMessageBuilder)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3)> TryBindBuildTuple<T, TR1, TR2, TR3>(this MlResult<T>            source,
                                                                                      Func<T, MlResult<TR1>> funcBuild1,
                                                                                      Func<T, MlResult<TR2>> funcBuild2,
@@ -3986,12 +9157,39 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                      string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
                                                                                                 Func<T, MlResult<TR3>>  funcBuild3)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
@@ -3999,6 +9197,20 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                 Func<Exception, string> errorMessageBuilder)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>            source,
                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                                 Func<T, MlResult<TR2>> funcBuild2,
@@ -4006,12 +9218,39 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                 string                 exceptionAdditionalMessage)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>      sourceAsync,
                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                                       Func<T, MlResult<TR2>> funcBuild2,
                                                                                                       Func<T, MlResult<TR3>> funcBuild3)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>       sourceAsync,
                                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                       Func<T, MlResult<TR2>>  funcBuild2,
@@ -4019,6 +9258,20 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                       Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>      sourceAsync,
                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                                       Func<T, MlResult<TR2>> funcBuild2,
@@ -4026,12 +9279,39 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                       string                 exceptionAdditionalMessage)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                            Func<T, Task<MlResult<TR2>>> funcBuild2Async,
                                                                                            Func<T, Task<MlResult<TR3>>> funcBuild3Async)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                            Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4039,6 +9319,20 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                            Func<Exception, string>      errorMessageBuilder)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this Task<MlResult<T>>            sourceAsync,
                                                                                            Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                            Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4047,6 +9341,21 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR4
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
@@ -4054,6 +9363,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                           Func<T, MlResult<TR4>>  funcBuild4)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
@@ -4062,6 +9387,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                           Func<Exception, string> errorMessageBuilder)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4>(this MlResult<T>            source,
                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                           Func<T, MlResult<TR2>> funcBuild2,
@@ -4070,6 +9411,21 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                           string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
@@ -4077,6 +9433,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                      Func<T, MlResult<TR4>>  funcBuild4)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
@@ -4085,6 +9457,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                      Func<Exception, string> errorMessageBuilder)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>            source,
                                                                                                      Func<T, MlResult<TR1>> funcBuild1,
                                                                                                      Func<T, MlResult<TR2>> funcBuild2,
@@ -4093,6 +9481,21 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                      string                 exceptionAdditionalMessage)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>      sourceAsync,
                                                                                                             Func<T, MlResult<TR1>> funcBuild1,
                                                                                                             Func<T, MlResult<TR2>> funcBuild2,
@@ -4100,6 +9503,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                             Func<T, MlResult<TR4>> funcBuild4)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>       sourceAsync,
                                                                                                             Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                             Func<T, MlResult<TR2>>  funcBuild2,
@@ -4108,6 +9527,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                             Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>      sourceAsync,
                                                                                                             Func<T, MlResult<TR1>> funcBuild1,
                                                                                                             Func<T, MlResult<TR2>> funcBuild2,
@@ -4116,6 +9551,21 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                             string                 exceptionAdditionalMessage)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
                                                                                                      Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                      Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4123,6 +9573,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                      Func<T, Task<MlResult<TR4>>> funcBuild4Async)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
                                                                                                      Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                      Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4131,6 +9597,22 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                      Func<Exception, string>      errorMessageBuilder)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this Task<MlResult<T>>            sourceAsync,
                                                                                                      Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                      Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4140,6 +9622,23 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR5
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                     Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                     Func<T, MlResult<TR2>>  funcBuild2,
@@ -4148,6 +9647,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                     Func<T, MlResult<TR5>>  funcBuild5)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                     Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                     Func<T, MlResult<TR2>>  funcBuild2,
@@ -4157,6 +9674,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                     Func<Exception, string> errorMessageBuilder)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>            source,
                                                                                                     Func<T, MlResult<TR1>> funcBuild1,
                                                                                                     Func<T, MlResult<TR2>> funcBuild2,
@@ -4166,6 +9701,23 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                     string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                Func<T, MlResult<TR2>>  funcBuild2,
@@ -4174,6 +9726,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                Func<T, MlResult<TR5>>  funcBuild5)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                Func<T, MlResult<TR2>>  funcBuild2,
@@ -4183,6 +9753,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                Func<Exception, string> errorMessageBuilder)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>            source,
                                                                                                                Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                Func<T, MlResult<TR2>> funcBuild2,
@@ -4192,6 +9780,23 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                string                 exceptionAdditionalMessage)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                       Func<T, MlResult<TR2>> funcBuild2,
@@ -4200,6 +9805,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                       Func<T, MlResult<TR5>> funcBuild5)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                       Func<T, MlResult<TR2>>  funcBuild2,
@@ -4209,6 +9832,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                       Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                       Func<T, MlResult<TR2>> funcBuild2,
@@ -4218,6 +9859,23 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                       string                 exceptionAdditionalMessage)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4226,6 +9884,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                Func<T, Task<MlResult<TR5>>> funcBuild5Async)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4235,6 +9911,24 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                Func<Exception, string>      errorMessageBuilder)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4245,6 +9939,25 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR6
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                               Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                               Func<T, MlResult<TR2>>  funcBuild2,
@@ -4254,6 +9967,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                               Func<T, MlResult<TR6>>  funcBuild6)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                               Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                               Func<T, MlResult<TR2>>  funcBuild2,
@@ -4264,6 +9997,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                               Func<Exception, string> errorMessageBuilder)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>            source,
                                                                                                               Func<T, MlResult<TR1>> funcBuild1,
                                                                                                               Func<T, MlResult<TR2>> funcBuild2,
@@ -4274,6 +10027,25 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                               string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                                          Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                          Func<T, MlResult<TR2>>  funcBuild2,
@@ -4283,6 +10055,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                          Func<T, MlResult<TR6>>  funcBuild6)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                                          Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                          Func<T, MlResult<TR2>>  funcBuild2,
@@ -4293,6 +10085,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                          Func<Exception, string> errorMessageBuilder)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>            source,
                                                                                                                          Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                          Func<T, MlResult<TR2>> funcBuild2,
@@ -4303,6 +10115,25 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                          string                 exceptionAdditionalMessage)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                 Func<T, MlResult<TR2>> funcBuild2,
@@ -4312,6 +10143,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                 Func<T, MlResult<TR6>> funcBuild6)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
@@ -4322,6 +10173,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                 Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                 Func<T, MlResult<TR2>> funcBuild2,
@@ -4332,6 +10203,25 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                 string                 exceptionAdditionalMessage)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                          Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4341,6 +10231,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                          Func<T, Task<MlResult<TR6>>> funcBuild6Async)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                          Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4351,6 +10261,26 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                          Func<Exception, string>      errorMessageBuilder)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                          Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                          Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4362,6 +10292,27 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
     // TR7
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
@@ -4372,6 +10323,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         Func<T, MlResult<TR7>>  funcBuild7)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
@@ -4383,6 +10356,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         Func<Exception, string> errorMessageBuilder)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>            source,
                                                                                                                         Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>> funcBuild2,
@@ -4394,6 +10389,27 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
@@ -4404,6 +10420,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, MlResult<TR7>>  funcBuild7)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
@@ -4415,6 +10453,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<Exception, string> errorMessageBuilder)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this MlResult<T>            source,
                                                                                                                                    Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>> funcBuild2,
@@ -4426,6 +10486,27 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    string                 exceptionAdditionalMessage)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
@@ -4436,6 +10517,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           Func<T, MlResult<TR7>> funcBuild7)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
@@ -4447,6 +10550,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
@@ -4458,6 +10583,27 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           string                 exceptionAdditionalMessage)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="funcBuild7Async">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4468,6 +10614,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, Task<MlResult<TR7>>> funcBuild7Async)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="funcBuild7Async">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4479,6 +10647,28 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<Exception, string>      errorMessageBuilder)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="funcBuild7Async">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4494,6 +10684,29 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
 
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
@@ -4505,6 +10718,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         Func<T, MlResult<TR8>>  funcBuild8)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                         Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>>  funcBuild2,
@@ -4517,6 +10754,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         Func<Exception, string> errorMessageBuilder)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)> TryBindBuildTuple<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>            source,
                                                                                                                         Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                         Func<T, MlResult<TR2>> funcBuild2,
@@ -4529,6 +10790,29 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                         string                 exceptionAdditionalMessage)
         => source.InternalTryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
@@ -4540,6 +10824,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, MlResult<TR8>> funcBuild8)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>             source,
                                                                                                                                    Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>>  funcBuild2,
@@ -4552,6 +10860,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<Exception, string> errorMessageBuilder)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this MlResult<T>            source,
                                                                                                                                    Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                    Func<T, MlResult<TR2>> funcBuild2,
@@ -4564,6 +10896,29 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    string                 exceptionAdditionalMessage)
         => source.TryBindBuildTuple(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAdditionalMessage).ToAsync();
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
@@ -4575,6 +10930,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           Func<T, MlResult<TR8>> funcBuild8)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>       sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>>  funcBuild2,
@@ -4587,6 +10966,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           Func<Exception, string> errorMessageBuilder)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1">Función a aplicar.</param>
+    /// <param name="funcBuild2">Función a aplicar.</param>
+    /// <param name="funcBuild3">Función a aplicar.</param>
+    /// <param name="funcBuild4">Función a aplicar.</param>
+    /// <param name="funcBuild5">Función a aplicar.</param>
+    /// <param name="funcBuild6">Función a aplicar.</param>
+    /// <param name="funcBuild7">Función a aplicar.</param>
+    /// <param name="funcBuild8">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>      sourceAsync,
                                                                                                                                           Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                                           Func<T, MlResult<TR2>> funcBuild2,
@@ -4599,6 +11002,29 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                           string                 exceptionAdditionalMessage)
         => await (await sourceAsync).TryBindBuildTupleAsync(funcBuild1, funcBuild2, funcBuild3, funcBuild4, funcBuild5, funcBuild6, funcBuild7, funcBuild8, errorMessageBuilder: ex => exceptionAdditionalMessage);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="funcBuild7Async">Función a aplicar.</param>
+    /// <param name="funcBuild8Async">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4610,6 +11036,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<T, Task<MlResult<TR8>>> funcBuild8Async)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: null!);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="funcBuild7Async">Función a aplicar.</param>
+    /// <param name="funcBuild8Async">Función a aplicar.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -4622,6 +11072,30 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
                                                                                                                                    Func<Exception, string>      errorMessageBuilder)
         => sourceAsync.InternalTryBindBuildTupleAsync(funcBuild1Async, funcBuild2Async, funcBuild3Async, funcBuild4Async, funcBuild5Async, funcBuild6Async, funcBuild7Async, funcBuild8Async, errorMessageBuilder: errorMessageBuilder);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildTuple</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TR1">Tipo genérico TR1.</typeparam>
+    /// <typeparam name="TR2">Tipo genérico TR2.</typeparam>
+    /// <typeparam name="TR3">Tipo genérico TR3.</typeparam>
+    /// <typeparam name="TR4">Tipo genérico TR4.</typeparam>
+    /// <typeparam name="TR5">Tipo genérico TR5.</typeparam>
+    /// <typeparam name="TR6">Tipo genérico TR6.</typeparam>
+    /// <typeparam name="TR7">Tipo genérico TR7.</typeparam>
+    /// <typeparam name="TR8">Tipo genérico TR8.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcBuild1Async">Función a aplicar.</param>
+    /// <param name="funcBuild2Async">Función a aplicar.</param>
+    /// <param name="funcBuild3Async">Función a aplicar.</param>
+    /// <param name="funcBuild4Async">Función a aplicar.</param>
+    /// <param name="funcBuild5Async">Función a aplicar.</param>
+    /// <param name="funcBuild6Async">Función a aplicar.</param>
+    /// <param name="funcBuild7Async">Función a aplicar.</param>
+    /// <param name="funcBuild8Async">Función a aplicar.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8>(this Task<MlResult<T>>            sourceAsync,
                                                                                                                                    Func<T, Task<MlResult<TR1>>> funcBuild1Async,
                                                                                                                                    Func<T, Task<MlResult<TR2>>> funcBuild2Async,
@@ -5476,59 +11950,175 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     #region TryBindBuildWhile
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
                                                                       params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuild<T, TResult>(true, errorMessageBuilder: null!, funcArgs: funcArgs);
 
+        /// <summary>
+        /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+        /// producida y la convierte en un resultado fallido.
+        /// </summary>
+        /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+        /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+        /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+        /// <param name="errorMessageBuilder">Función a aplicar.</param>
+        /// <param name="funcArgs">Función a aplicar.</param>
+        /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
         public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
                                                                              Func<Exception, string>     errorMessageBuilder,
                                                                       params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuild<T, TResult>(true, errorMessageBuilder, funcArgs);
 
+        /// <summary>
+        /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+        /// producida y la convierte en un resultado fallido.
+        /// </summary>
+        /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+        /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+        /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+        /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+        /// <param name="funcArgs">Función a aplicar.</param>
+        /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
         public static MlResult<TResult> TryBindBuildWhile<T, TResult>(this   MlResult<T>                 source,
                                                                              string                      exceptionAdditionalMessage,
                                                                       params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuild<T, TResult>(true, exceptionAdditionalMessage, funcArgs);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
                                                                              params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder: null!, funcArgs: funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
                                                                                     Func<Exception, string>     errorMessageBuilder,
                                                                              params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder, funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   MlResult<T>                 source,
                                                                                     string                      exceptionAdditionalMessage,
                                                                              params Func<T, MlResult<object>>[] funcArgs)
         => source.InternalTryBindBuildSyncAsync<T, TResult>(true, ex => exceptionAdditionalMessage, funcArgs);
 
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                    params Func<T, MlResult<object>>[] funcArgs)
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder: null!, funcArgs: funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                           Func<Exception, string>     errorMessageBuilder,
                                                                                    params Func<T, MlResult<object>>[] funcArgs)
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, errorMessageBuilder, funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <param name="funcArgs">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>           sourceAsync,
                                                                                           string                      exceptionAdditionalMessage,
                                                                                    params Func<T, MlResult<object>>[] funcArgs)
         => await sourceAsync.InternalTryBindBuildSyncAsync<T, TResult>(true, exceptionAdditionalMessage, funcArgs);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="funcArgsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                    params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
         => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, errorMessageBuilder: null!, funcArgsAsync: funcArgsAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <param name="funcArgsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                           Func<Exception, string>           errorMessageBuilder,
                                                                                    params Func<T, Task<MlResult<object>>>[] funcArgsAsync)
         => await sourceAsync.InternalTryBindBuildAsync<T, TResult>(true, errorMessageBuilder, funcArgsAsync);
 
+    /// <summary>
+    /// Encadena una función que devuelve un resultado de <c>BuildWhile</c>. Captura cualquier excepción
+    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <param name="funcArgsAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> TryBindBuildWhileAsync<T, TResult>(this   Task<MlResult<T>>                 sourceAsync,
                                                                                           string                            exceptionAdditionalMessage,
                                                                                    params Func<T, Task<MlResult<object>>>[] funcArgsAsync)

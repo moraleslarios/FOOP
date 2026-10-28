@@ -6,6 +6,10 @@ using MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
+/// <summary>
+/// Contrato de <c>IEfPagedRepository</c>.
+/// </summary>
+/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
 public interface IEfPagedRepository<T> : IEfRepository<T>, IEfPaginator<T>
     where T : class
 {

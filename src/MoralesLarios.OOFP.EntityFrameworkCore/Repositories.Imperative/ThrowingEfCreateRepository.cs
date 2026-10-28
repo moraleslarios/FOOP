@@ -4,6 +4,16 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 
+/// <summary>
+/// Implementación imperativa del repositorio de altas sobre Entity Framework Core.
+/// Da soporte a la inserción individual y por lotes de la entidad <typeparamref name="T"/>.
+/// </summary>
+/// <remarks>
+/// Lanza excepciones ante errores en lugar de devolver <c>MlResult</c>. Para la variante
+/// funcional utilice <c>EfCreateRepository</c>.
+/// </remarks>
+/// <typeparam name="T">Tipo de la entidad persistida por el repositorio.</typeparam>
+/// <typeparam name="TContext">Tipo del contexto de Entity Framework Core utilizado.</typeparam>
 internal class ThrowingEfCreateRepository<T, TContext> : ThrowingEfRepository, IThrowingEfCreateRepository<T>
     where T : class
     where TContext : DbContext

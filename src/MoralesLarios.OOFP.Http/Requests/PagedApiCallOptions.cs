@@ -4,6 +4,15 @@
 
 
 
+/// <summary>
+/// Opciones de configuración de <c>PagedApiCall</c>.
+/// </summary>
+/// <param name="Url">Valor de <c>Url</c>.</param>
+/// <param name="ClientName">Nombre del elemento.</param>
+/// <param name="PageNumber">Valor de <c>PageNumber</c>.</param>
+/// <param name="PageSize">Valor de <c>PageSize</c>.</param>
+/// <param name="Headers">Valor de <c>Headers</c>.</param>
+/// <param name="CancellationToken">Token para cancelar la operación.</param>
 public record PagedApiCallOptions(string                      Url,
                                               ServiceKey                         ClientName,
                                               IntNonNegative              PageNumber,
@@ -12,6 +21,11 @@ public record PagedApiCallOptions(string                      Url,
                                               CancellationToken           CancellationToken = default)
     : ApiCallOptions(Url, ClientName, Headers,  CancellationToken)
 {
+    /// <summary>
+    /// Realiza la conversión implícita a <c>PagedApiCallOptions</c>.
+    /// </summary>
+    /// <param name="value">Valor sobre el que se opera.</param>
+    /// <returns>Valor de tipo <c>PagedApiCallOptions</c> obtenido por la operación.</returns>
     public static implicit operator PagedApiCallOptions((string                      url,
                                                                      ServiceKey                         clientName,
                                                                      IntNonNegative              pageNumber,
@@ -26,6 +40,17 @@ public record PagedApiCallOptions(string                      Url,
 
 
 
+/// <summary>
+/// Opciones de configuración de <c>PagedApiCall</c>.
+/// </summary>
+/// <typeparam name="TRequest">Tipo de la petición.</typeparam>
+/// <param name="Url">Valor de <c>Url</c>.</param>
+/// <param name="ClientName">Nombre del elemento.</param>
+/// <param name="RequestBody">Valor de <c>RequestBody</c>.</param>
+/// <param name="PageNumber">Valor de <c>PageNumber</c>.</param>
+/// <param name="PageSize">Valor de <c>PageSize</c>.</param>
+/// <param name="Headers">Valor de <c>Headers</c>.</param>
+/// <param name="CancellationToken">Token para cancelar la operación.</param>
 public record PagedApiCallOptions<TRequest>(                     string                      Url,
                                                                              ServiceKey                         ClientName,
                                                         [property: Required] TRequest                    RequestBody,
@@ -35,6 +60,11 @@ public record PagedApiCallOptions<TRequest>(                     string         
                                                                              CancellationToken           CancellationToken = default)
     : ApiCallOptions<TRequest>(Url, ClientName, RequestBody, Headers, CancellationToken)
 {
+    /// <summary>
+    /// Realiza la conversión implícita a <c>PagedApiCallOptions&lt;TRequest&gt;</c>.
+    /// </summary>
+    /// <param name="value">Valor sobre el que se opera.</param>
+    /// <returns>Valor de tipo <c>PagedApiCallOptions&lt;TRequest&gt;</c> obtenido por la operación.</returns>
     public static implicit operator PagedApiCallOptions<TRequest>((string                      url,
                                                                                ServiceKey                         clientName,
                                                                                TRequest                    requestBody,

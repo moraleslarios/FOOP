@@ -3,6 +3,9 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.Types;
+/// <summary>
+/// Representa <c>MlResultChangeReturnResult</c>.
+/// </summary>
 public static partial class MlResultChangeReturnResult
 {
 
@@ -10,6 +13,15 @@ public static partial class MlResultChangeReturnResult
     #region ChangeReturnResult
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T>     source,
                                                                         TResult         validValue,
                                                                         MlErrorDetails failValue)
@@ -18,22 +30,58 @@ public static partial class MlResultChangeReturnResult
                             fail : errors => failValue.ToMlResultFail<TResult>()
                         );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T> source,
                                                                         TResult     validValue,
                                                                         MlError     failValue)
         => ChangeReturnResult(source, validValue, failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T>         source,
                                                                         TResult             validValue,
                                                                         IEnumerable<string> failValue)
         => ChangeReturnResult(source, validValue, failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T> source,
                                                                         TResult     validValue,
                                                                         string      failValue)
         => ChangeReturnResult(source, validValue, failValue.ToMlErrorsDetails());
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this MlResult<T>     source,
                                                                                          TResult         validValue,
                                                                                          MlErrorDetails failValue)
@@ -42,6 +90,15 @@ public static partial class MlResultChangeReturnResult
                                         failAsync : errors => failValue.ToMlResultFailAsync<TResult>()
                                     );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
                                                                                          TResult           validValue,
                                                                                          MlErrorDetails   failValue)
@@ -50,16 +107,43 @@ public static partial class MlResultChangeReturnResult
                                         fail : errors => failValue.ToMlResultFail<TResult>()
                                     );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
                                                                                          TResult           validValue,
                                                                                          MlError           failValue)
         => await ChangeReturnResultAsync<T, TResult>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
                                                                                          TResult           validValue,
                                                                                          IEnumerable<string> failValue)
         => await ChangeReturnResultAsync<T, TResult>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
                                                                                          TResult           validValue,
                                                                                          string            failValue)
@@ -75,6 +159,15 @@ public static partial class MlResultChangeReturnResult
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysValid</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResultAlwaysValid<T, TResult>(this MlResult<T> source,
                                                                                    TResult     validValue,
                                                                                    TResult     failValidValue)
@@ -83,6 +176,15 @@ public static partial class MlResultChangeReturnResult
                             fail : errors => failValidValue.ToMlResultValid()
                         );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysValid</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysValidAsync<T, TResult>(this MlResult<T> source,
                                                                                                     TResult     validValue,
                                                                                                     TResult     failValidValue)
@@ -91,6 +193,15 @@ public static partial class MlResultChangeReturnResult
                                     failAsync : errors => failValidValue.ToMlResultValidAsync()
                                 );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysValid</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validValue">Valor sobre el que se opera.</param>
+    /// <param name="failValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysValidAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
                                                                                                     TResult     validValue,
                                                                                                     TResult     failValidValue)
@@ -109,6 +220,15 @@ public static partial class MlResultChangeReturnResult
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T>     source,
                                                                                   MlErrorDetails validFailValue,
                                                                                   MlErrorDetails failValue)
@@ -117,16 +237,43 @@ public static partial class MlResultChangeReturnResult
                             fail : errors => failValue     .ToMlResultFail<TResult>()
                         );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T> source,
                                                                                   MlError     validFailValue,
                                                                                   MlError     failValue)
         => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T>         source,
                                                                                   IEnumerable<string> validFailValue,
                                                                                   IEnumerable<string> failValue)
         => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T> source,
                                                                                   string      validFailValue,
                                                                                   string      failValue)
@@ -135,6 +282,15 @@ public static partial class MlResultChangeReturnResult
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T>     source,
                                                                                                    MlErrorDetails validFailValue,
                                                                                                    MlErrorDetails failValue)
@@ -143,16 +299,43 @@ public static partial class MlResultChangeReturnResult
                                         failAsync : errors => failValue     .ToMlResultFailAsync<TResult>()
                                   );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T>     source,
                                                                                                    MlError     validFailValue,
                                                                                                    MlError     failValue)
         => await ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T>        source,
                                                                                                   IEnumerable<string> validFailValue,
                                                                                                   IEnumerable<string> failValue)
         => await ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T> source,
                                                                                                    string      validFailValue,
                                                                                                    string      failValue)
@@ -160,6 +343,15 @@ public static partial class MlResultChangeReturnResult
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   MlErrorDetails validFailValue,
                                                                                   MlErrorDetails failValue)
@@ -168,16 +360,43 @@ public static partial class MlResultChangeReturnResult
                                         fail : errors => failValue     .ToMlResultFail<TResult>()
                                     );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   MlError     validFailValue,
                                                                                   MlError     failValue)
         => await ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   IEnumerable<string> validFailValue,
                                                                                   IEnumerable<string> failValue)
         => await ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultAlwaysFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="validFailValue">Valor sobre el que se opera.</param>
+    /// <param name="failValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   string      validFailValue,
                                                                                   string      failValue)
@@ -193,6 +412,13 @@ public static partial class MlResultChangeReturnResult
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c> unicamente cuando el resultado de origen es válido.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> ChangeReturnResultIfValid<T>(this MlResult<T> source,
                                                                 T           returnValidValue)
         => source.Match(
@@ -201,6 +427,14 @@ public static partial class MlResultChangeReturnResult
                         );
     
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c> unicamente cuando el resultado de origen es válido. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidAsync<T>(this MlResult<T> source,
                                                                                  T           returnValidValue)
         => await source.MatchAsync(
@@ -209,6 +443,14 @@ public static partial class MlResultChangeReturnResult
                                   );
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResult</c> unicamente cuando el resultado de origen es válido. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                  T                 returnValidValue)
         => (await sourceAsync).Match(
@@ -224,6 +466,13 @@ public static partial class MlResultChangeReturnResult
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> ChangeReturnResultIfValidToFail<T>(this MlResult<T>     source,
                                                                       MlErrorDetails returnFailValue)
         => source.Match(
@@ -231,20 +480,48 @@ public static partial class MlResultChangeReturnResult
                             fail : errors => errors.ToMlResultFail<T>()
                         );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> ChangeReturnResultIfValidToFail<T>(this MlResult<T> source,
                                                                       MlError     returnFailValue)
         => ChangeReturnResultIfValidToFail(source, returnFailValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValues">Colección de <c>returnFailValues</c>.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> ChangeReturnResultIfValidToFail<T>(this MlResult<T>         source,
                                                                       IEnumerable<string> returnFailValues)
         => ChangeReturnResultIfValidToFail(source, returnFailValues.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> ChangeReturnResultIfValidToFail<T>(this MlResult<T> source,
                                                                       string      returnFailValue)
         => ChangeReturnResultIfValidToFail(source, returnFailValue.ToMlErrorsDetails());
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this MlResult<T>     source,
                                                                                        MlErrorDetails returnFailValue)
         => await source.MatchAsync(
@@ -252,20 +529,48 @@ public static partial class MlResultChangeReturnResult
                             failAsync : errors => errors         .ToMlResultFailAsync<T>()
                         );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this MlResult<T>     source,
                                                                       MlError     returnFailValue)
         => await ChangeReturnResultIfValidToFailAsync(source, returnFailValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValues">Colección de <c>returnFailValues</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this MlResult<T>     source,
                                                                       IEnumerable<string> returnFailValues)
         => await ChangeReturnResultIfValidToFailAsync(source, returnFailValues.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this MlResult<T>     source,
                                                                       string      returnFailValue)
         => await ChangeReturnResultIfValidToFailAsync(source, returnFailValue.ToMlErrorsDetails());
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                        MlErrorDetails   returnFailValue)
         => (await sourceAsync).Match(
@@ -273,14 +578,35 @@ public static partial class MlResultChangeReturnResult
                                         fail : errors => errors.ToMlResultFail<T>()
                                     );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                        MlError           returnFailValue)
         => await ChangeReturnResultIfValidToFailAsync(sourceAsync, returnFailValue.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFailValues">Colección de <c>returnFailValues</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this Task<MlResult<T>>   sourceAsync,
                                                                                        IEnumerable<string> returnFailValues)
         => await ChangeReturnResultIfValidToFailAsync(sourceAsync, returnFailValues.ToMlErrorsDetails());
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfValidToFail</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnFailValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfValidToFailAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                        string            returnFailValue)
         => await ChangeReturnResultIfValidToFailAsync(sourceAsync, returnFailValue.ToMlErrorsDetails());
@@ -297,6 +623,13 @@ public static partial class MlResultChangeReturnResult
 
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfFailToValid</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> ChangeReturnResultIfFailToValid<T>(this MlResult<T> source,
                                                                       T           returnValidValue)
         => source.Match(
@@ -305,6 +638,13 @@ public static partial class MlResultChangeReturnResult
                         );
 
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfFailToValid</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="returnValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfFailToValidAsync<T>(this MlResult<T> source,
                                                                                        T           returnValidValue)
         => await source.MatchAsync(
@@ -312,6 +652,13 @@ public static partial class MlResultChangeReturnResult
                             failAsync : errors => returnValidValue.ToMlResultValidAsync()
                         );
 
+    /// <summary>
+    /// Ejecuta <c>ChangeReturnResultIfFailToValid</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="returnValidValue">Valor sobre el que se opera.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> ChangeReturnResultIfFailToValidAsync<T>(this Task<MlResult<T>> sourceAsync,
                                                                                        T                 returnValidValue)
         => (await sourceAsync).ChangeReturnResultIfFailToValid(returnValidValue);

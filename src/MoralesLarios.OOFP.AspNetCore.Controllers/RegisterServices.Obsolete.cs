@@ -2,8 +2,20 @@
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers;
+/// <summary>
+/// Representa <c>RegisterServices</c>.
+/// </summary>
 public static partial class RegisterServices
 {
+    /// <summary>
+    /// Añade el elemento indicado de <c>WebControllers</c>.
+    /// </summary>
+    /// <remarks>
+    /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
+    /// <c>Obsolete</c>.
+    /// </remarks>
+    /// <param name="services">Colección de servicios donde se registran las dependencias.</param>
+    /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
     [global::System.Obsolete("Renamed to AddMlControllers, which is itself a no-op. Remove the call. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static IServiceCollection AddWebControllers(this IServiceCollection services) => services;
 }

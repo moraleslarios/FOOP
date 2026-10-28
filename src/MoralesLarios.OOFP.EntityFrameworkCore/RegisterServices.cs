@@ -3,6 +3,9 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore;
+/// <summary>
+/// Representa <c>RegisterServices</c>.
+/// </summary>
 public static partial class RegisterServices
 {
 
@@ -13,11 +16,23 @@ public static partial class RegisterServices
         get => _services?.BuildServiceProvider() ?? throw new ArgumentNullException("The field Provider is null");
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>Repository</c>.
+    /// </summary>
+    /// <typeparam name="TRepo">Tipo genérico TRepo.</typeparam>
+    /// <returns>Valor de tipo <c>TRepo</c> obtenido por la operación.</returns>
     public static TRepo GetRepository<TRepo>()
             => ServiceProvider.GetService<TRepo>() 
                     ?? throw new ArgumentException($"{typeof(TRepo).Name} is not registered in the IServiceCollection. It must be registered individually or using one of the AddOofpRepositoriesTransient<T, TContext>, AddOofpRepositories<T, TContext>, or AddOofpRepositoriesSingleton<T, TContext> methods.");
 
 
+    /// <summary>
+    /// Añade el elemento indicado de <c>OofpRepositoriesTransient</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
+    /// <param name="services">Colección de servicios donde se registran las dependencias.</param>
+    /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
     public static IServiceCollection AddOofpRepositoriesTransient<T, TContext>(this IServiceCollection services)
         where T        : class
         where TContext : DbContext
@@ -51,6 +66,13 @@ public static partial class RegisterServices
     }
 
 
+    /// <summary>
+    /// Añade el elemento indicado de <c>OofpRepositories</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
+    /// <param name="services">Colección de servicios donde se registran las dependencias.</param>
+    /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
     public static IServiceCollection AddOofpRepositories<T, TContext>(this IServiceCollection services)
         where T        : class
         where TContext : DbContext
@@ -83,6 +105,13 @@ public static partial class RegisterServices
     }
 
 
+    /// <summary>
+    /// Añade el elemento indicado de <c>OofpRepositoriesSingleton</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
+    /// <param name="services">Colección de servicios donde se registran las dependencias.</param>
+    /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
     public static IServiceCollection AddOofpRepositoriesSingleton<T, TContext>(this IServiceCollection services)
         where T        : class
         where TContext : DbContext

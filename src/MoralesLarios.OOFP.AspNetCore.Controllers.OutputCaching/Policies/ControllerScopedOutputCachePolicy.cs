@@ -4,16 +4,31 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Policies;
 
+/// <summary>
+/// Representa <c>ControllerScopedOutputCachePolicy</c>.
+/// </summary>
 public sealed partial class ControllerScopedOutputCachePolicy : IOutputCachePolicy
 {
+    /// <summary>
+    /// Constante con cache bypass header.
+    /// </summary>
     public const string CacheBypassHeader = "X-Bypass-Cache";
 
+    /// <summary>
+    /// Valor de <c>Instance</c>.
+    /// </summary>
     public static readonly ControllerScopedOutputCachePolicy Instance = new();
 
     private ControllerScopedOutputCachePolicy()
     {
     }
 
+    /// <summary>
+    /// Ejecuta <c>CacheRequest</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="context">Contexto de ejecucion.</param>
+    /// <param name="cancellationToken">Token para cancelar la operación.</param>
+    /// <returns>Tarea que representa la operación asíncrona.</returns>
     public ValueTask CacheRequestAsync(OutputCacheContext context, CancellationToken cancellationToken)
     {
         if (ShouldBypassCache(context.HttpContext))
@@ -65,9 +80,21 @@ public sealed partial class ControllerScopedOutputCachePolicy : IOutputCachePoli
         return false;
     }
 
+    /// <summary>
+    /// Ejecuta <c>ServeFromCache</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="context">Contexto de ejecucion.</param>
+    /// <param name="cancellationToken">Token para cancelar la operación.</param>
+    /// <returns>Tarea que representa la operación asíncrona.</returns>
     public ValueTask ServeFromCacheAsync(OutputCacheContext context, CancellationToken cancellationToken)
         => ValueTask.CompletedTask;
 
+    /// <summary>
+    /// Ejecuta <c>ServeResponse</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="context">Contexto de ejecucion.</param>
+    /// <param name="cancellationToken">Token para cancelar la operación.</param>
+    /// <returns>Tarea que representa la operación asíncrona.</returns>
     public ValueTask ServeResponseAsync(OutputCacheContext context, CancellationToken cancellationToken)
     {
         if (context.HttpContext.Response.StatusCode == Microsoft.AspNetCore.Http.StatusCodes.Status200OK)
@@ -78,6 +105,11 @@ public sealed partial class ControllerScopedOutputCachePolicy : IOutputCachePoli
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>ControllerTag</c>.
+    /// </summary>
+    /// <param name="httpContext">Contexto de ejecucion.</param>
+    /// <returns>Representación textual obtenida.</returns>
     public static string GetControllerTag(Microsoft.AspNetCore.Http.HttpContext httpContext)
     {
         var controller = httpContext.Request.RouteValues.TryGetValue("controller", out var controllerValue)

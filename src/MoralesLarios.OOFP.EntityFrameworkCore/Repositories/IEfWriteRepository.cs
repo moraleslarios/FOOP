@@ -6,6 +6,10 @@ using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
+/// <summary>
+/// Contrato de <c>IEfWriteRepository</c>.
+/// </summary>
+/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
 public interface IEfWriteRepository<T> : IEfCreateRepository<T>, IEfUpdateRepository<T>, IEfDeleteRepository<T>
     where T : class
 {

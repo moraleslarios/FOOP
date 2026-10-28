@@ -7,10 +7,19 @@ using Microsoft.Extensions.DependencyInjection;
 using MoralesLarios.OOFP.Configuration.Config;
 
 namespace MoralesLarios.OOFP.Configuration;
+/// <summary>
+/// Representa <c>RegisterServices</c>.
+/// </summary>
 public static partial class RegisterServices
 {
 
 
+    /// <summary>
+    /// Añade el elemento indicado de <c>MlConfigurationReader</c>.
+    /// </summary>
+    /// <param name="services">Colección de servicios donde se registran las dependencias.</param>
+    /// <param name="configuration">Configuración de la aplicacion.</param>
+    /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
     public static IServiceCollection AddMlConfigurationReader(this IServiceCollection services, IConfiguration configuration)
     {
         

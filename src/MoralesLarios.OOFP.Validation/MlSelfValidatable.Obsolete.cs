@@ -12,6 +12,10 @@ public abstract class MlSelfValidatable<T> : IMlSelfValidatable<T>
     where T : class
 {
 
+    /// <summary>
+    /// Válida el valor.
+    /// </summary>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public abstract MlResult<T> Validate();
 
 }

@@ -142,7 +142,7 @@ public static partial class MlResultActionResultExtensionsLegacy
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static IActionResult ToRepoPostActionResult<T>(this MlResult<T>    source, 
                                                                ControllerBase controllerBase)
-        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", new object()));
+        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created(DefaultCreatedLocation, new object()));
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> to an <see cref="IActionResult"/> for a simple POST request in a repository.
@@ -153,7 +153,7 @@ public static partial class MlResultActionResultExtensionsLegacy
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static Task<IActionResult> ToRepoPostActionResultAsync<T>(this MlResult<T>    source, 
                                                                           ControllerBase controllerBase)
-        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", new object())).ToAsync();
+        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created(DefaultCreatedLocation, new object())).ToAsync();
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> from a task to an <see cref="IActionResult"/> for a simple POST request in a repository.
@@ -164,7 +164,7 @@ public static partial class MlResultActionResultExtensionsLegacy
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static Task<IActionResult> ToRepoPostActionResult<T>(this Task<MlResult<T>> sourceAsync, 
                                                                      ControllerBase    controllerBase)
-        => sourceAsync.ToRepoActionResultAsync(controllerBase, () => controllerBase.Created("NotUri", new object()));
+        => sourceAsync.ToRepoActionResultAsync(controllerBase, () => controllerBase.Created(DefaultCreatedLocation, new object()));
 
 
     /// <summary>
@@ -176,7 +176,7 @@ public static partial class MlResultActionResultExtensionsLegacy
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
     public static IActionResult ToCreatedResult<T>(this MlResult<T>    source,
                                                                           ControllerBase controllerBase)
-        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created("NotUri", source.GetValueOrThrow()));
+        => source.ToRepoActionResult(controllerBase, () => controllerBase.Created(DefaultCreatedLocation, source.GetValueOrThrow()));
 
     /// <summary>
     /// Asynchronously converts the <see cref="MlResult{T}"/> to an <see cref="IActionResult"/> for a simple POST request in a repository.

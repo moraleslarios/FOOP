@@ -1,5 +1,17 @@
 ﻿namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 
+/// <summary>
+/// Contrato imperativo de repositorio CRUD completo sobre Entity Framework Core.
+/// Agrupa las operaciones de lectura, alta, modificación y borrado de la entidad
+/// <typeparamref name="T"/> en una única abstracción.
+/// </summary>
+/// <remarks>
+/// Las implementaciones de este contrato siguen el estilo imperativo clásico: lanzan
+/// excepciones ante errores en lugar de devolver <c>MlResult</c>. Para la variante funcional
+/// utilice los repositorios equivalentes del espacio de nombres
+/// <c>MoralesLarios.OOFP.EntityFrameworkCore.Repositories</c>.
+/// </remarks>
+/// <typeparam name="T">Tipo de la entidad gestionada por el repositorio.</typeparam>
 internal interface IThrowingEfRepository<T>
 {
     Task<IEnumerable<T>> AllAsync { get; }

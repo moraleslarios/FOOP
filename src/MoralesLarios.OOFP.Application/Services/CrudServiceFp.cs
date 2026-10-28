@@ -6,11 +6,24 @@ using MoralesLarios.OOFP.Application.Helpers;
 
 namespace MoralesLarios.OOFP.Application.Services;
 
+/// <summary>
+/// Representa <c>CrudServiceFp</c>.
+/// </summary>
+/// <typeparam name="TEntity">Tipo de la entidad de datos.</typeparam>
+/// <typeparam name="TDto">Tipo del objeto de transferencia de datos.</typeparam>
 public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                   _repo,
                                          ILogger<CrudServiceFp<TEntity, TDto>> _logger) : ICrudServiceFp<TEntity, TDto>
     where TEntity  : class
     where TDto     : class
 {
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>Paged</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<IEnumerable<TDto>>> GetPagedAsync(CancellationToken               ct                  = default!,
                                                               string                          initialMessage      = null!,
                                                               Func<IEnumerable<TDto>, string> successMessageFactory = null!,
@@ -25,6 +38,15 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
         return result;
     }
 
+    /// <summary>
+    /// Busca el elemento solicitado de <c>ById</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto?>> FindByIdAsync(CancellationToken             ct                  = default!,
                                                        string                        initialMessage      = null!,
                                                        Func<TDto, string>            successMessageFactory = null!,
@@ -37,6 +59,16 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                          failMessageBuilder  : failMessageBuilder,
                          pk                  : pk);
 
+    /// <summary>
+    /// Busca el elemento solicitado de <c>ByIdProblemsDetails</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto?>> FindByIdProblemsDetailsAsync(MlErrorDetails               notFoundErrorDetails,
                                                                       CancellationToken             ct                   = default!,
                                                                       string                        initialMessage       = null!,
@@ -63,6 +95,15 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
 
 
 
+    /// <summary>
+    /// Crea la instancia solicitada. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto>> CreateAsync(TDto                          dto,
                                                     CancellationToken             ct                  = default!,
                                                     string                        initialMessage      = null!,
@@ -81,6 +122,16 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
     }
 
 
+    /// <summary>
+    /// Actualiza el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
                                                     CancellationToken             ct                  = default!,
                                                     string                        initialMessage      = null!,
@@ -90,6 +141,17 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
         => UpdateAsync(dto, typeof(TDto).Name.BuildEntityNotFoundError(pk), ct, initialMessage, successMessageFactory, failMessageBuilder, pk);
 
 
+    /// <summary>
+    /// Actualiza el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
                                                                   MlErrorDetails               notFoundErrorDetails,
                                                                   CancellationToken             ct                  = default!,
@@ -120,6 +182,15 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
 
 
 
+    /// <summary>
+    /// Actualiza el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto>> UpdateAsync(TDto                          dto,
                                                     CancellationToken             ct                  = default!,
                                                     string                        initialMessage      = null!,
@@ -138,6 +209,14 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
     }
 
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto>> DeleteAsync(CancellationToken             ct                  = default!,
                                                     string                        initialMessage      = null!,
                                                     Func<MlErrorDetails, string> failMessageBuilder  = null!,
@@ -145,6 +224,15 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
         => DeleteProblemDetailsAsync(typeof(TDto).Name.BuildEntityNotFoundError(pk), ct, initialMessage, failMessageBuilder, pk);
 
 
+    /// <summary>
+    /// Elimina el elemento indicado de <c>ProblemDetails</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto>> DeleteProblemDetailsAsync(       MlErrorDetails               notFoundErrorDetails,
                                                                          CancellationToken             ct                  = default!,
                                                                          string                        initialMessage      = null!,
@@ -165,6 +253,14 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
     }
 
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TDto>> DeleteAsync(TDto                          dto,
                                                     CancellationToken             ct                  = default!,
                                                     string                        initialMessage      = null!,
@@ -201,6 +297,12 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
 
 
 
+/// <summary>
+/// Representa <c>CrudServiceFp</c>.
+/// </summary>
+/// <typeparam name="TEntity">Tipo de la entidad de datos.</typeparam>
+/// <typeparam name="TRequest">Tipo de la petición.</typeparam>
+/// <typeparam name="TResponse">Tipo de la respuesta.</typeparam>
 public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity>                                  _repo,
                                                         ILogger<CrudServiceFp<TEntity, TRequest, TResponse>> _logger) : ICrudServiceFp<TEntity, TRequest, TResponse>
     where TEntity   : class
@@ -209,6 +311,14 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
 {
 
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>Paged</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<IEnumerable<TResponse>>> GetPagedAsync(CancellationToken                    ct                  = default!,
                                                                    string                               initialMessage      = null!,
                                                                    Func<IEnumerable<TResponse>, string> successMessageFactory = null!,
@@ -225,6 +335,15 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
 
 
 
+    /// <summary>
+    /// Busca el elemento solicitado de <c>ById</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse?>> FindByIdAsync(CancellationToken             ct                  = default!,
                                                             string                        initialMessage      = null!,
                                                             Func<TResponse, string>       successMessageFactory = null!,
@@ -237,6 +356,16 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
                                         failMessageBuilder  : failMessageBuilder,
                                         pk                  : pk);
 
+    /// <summary>
+    /// Busca el elemento solicitado de <c>ByIdProblemsDetails</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse?>> FindByIdProblemsDetailsAsync(MlErrorDetails               notFoundErrorDetails,
                                                                            CancellationToken             ct                   = default!,
                                                                            string                        initialMessage       = null!,
@@ -263,6 +392,15 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
 
 
 
+    /// <summary>
+    /// Crea la instancia solicitada. Versión asíncrona.
+    /// </summary>
+    /// <param name="dtoRequest">Valor de <c>dtoRequest</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse>> CreateAsync(TRequest                      dtoRequest,
                                                          CancellationToken             ct                  = default!,
                                                          string                        initialMessage      = null!,
@@ -281,6 +419,16 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
     }
 
 
+    /// <summary>
+    /// Actualiza el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dtoRequest">Valor de <c>dtoRequest</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse>> UpdateAsync(       TRequest                      dtoRequest,
                                                                 CancellationToken             ct                  = default!,
                                                                 string                        initialMessage      = null!,
@@ -290,6 +438,17 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
         => UpdateAsync(dtoRequest, typeof(TEntity).Name.BuildEntityNotFoundError(pk), ct, initialMessage, successMessageFactory, failMessageBuilder, pk);
 
 
+    /// <summary>
+    /// Actualiza el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dtoRequest">Valor de <c>dtoRequest</c>.</param>
+    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse>> UpdateAsync(       TRequest                      dtoRequest,
                                                                               MlErrorDetails               notFoundErrorDetails,
                                                                               CancellationToken             ct                  = default!,
@@ -320,6 +479,15 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
 
 
 
+    /// <summary>
+    /// Actualiza el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dtoRequest">Valor de <c>dtoRequest</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="successMessageFactory">Función que crea la instancia solicitada.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse>> UpdateAsync(TRequest                      dtoRequest,
                                                          CancellationToken             ct                  = default!,
                                                          string                        initialMessage      = null!,
@@ -338,6 +506,14 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
     }
 
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse>> DeleteAsync(       CancellationToken             ct                  = default!,
                                                                 string                        initialMessage      = null!,
                                                                 Func<MlErrorDetails, string> failMessageBuilder  = null!,
@@ -345,6 +521,15 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
         => DeleteProblemDetailsAsync(typeof(TEntity).Name.BuildEntityNotFoundError(pk), ct, initialMessage, failMessageBuilder, pk);
 
 
+    /// <summary>
+    /// Elimina el elemento indicado de <c>ProblemDetails</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <param name="pk">Colección de <c>pk</c>.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse>> DeleteProblemDetailsAsync(       MlErrorDetails               notFoundErrorDetails,
                                                                               CancellationToken             ct                  = default!,
                                                                               string                        initialMessage      = null!,
@@ -365,6 +550,14 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
     }
 
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dtoRequest">Valor de <c>dtoRequest</c>.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <param name="initialMessage">Mensaje descriptivo.</param>
+    /// <param name="failMessageBuilder">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual Task<MlResult<TResponse>> DeleteAsync(TRequest                      dtoRequest,
                                                          CancellationToken             ct                  = default!,
                                                          string                        initialMessage      = null!,

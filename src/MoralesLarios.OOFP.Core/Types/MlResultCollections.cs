@@ -4,6 +4,9 @@
 
 namespace MoralesLarios.OOFP.Types;
 
+/// <summary>
+/// Representa <c>MlResultCollections</c>.
+/// </summary>
 public static partial class MlResultCollections
 {
 
@@ -81,6 +84,14 @@ public static partial class MlResultCollections
 
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IEnumerable<TResult>> Traverse<T, TResult>(this IEnumerable<T>             source,
                                                                              Func<T, MlResult<TResult>> completeFuncTransform)
     {
@@ -99,6 +110,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IEnumerable<TResult>> Traverse<T, TResult>(this IEnumerable<T>                  source,
                                                                              Func<T, int, MlResult<TResult>> completeFuncTransform)
     {
@@ -120,15 +139,39 @@ public static partial class MlResultCollections
 
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                         Func<T, MlResult<TResult>> completeFuncTransform)
         => source.Traverse(completeFuncTransform).ToAsync();
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this IEnumerable<T>                  source,
                                                                                         Func<T, int, MlResult<TResult>> completeFuncTransform)
         => source.Traverse(completeFuncTransform).ToAsync();
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                               Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -155,6 +198,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this Task<IEnumerable<T>>                  sourceAsync,
                                                                                               Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -182,16 +233,40 @@ public static partial class MlResultCollections
 
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                               Func<T, MlResult<TResult>> completeFuncTransform)
         => await (await sourceAsync).TraverseAsync(completeFuncTransform);
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                               Func<T, int, MlResult<TResult>> completeFuncTransform)
         => await (await sourceAsync).TraverseAsync(completeFuncTransform);
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                               Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -216,6 +291,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>Traverse</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                               Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -321,6 +404,14 @@ public static partial class MlResultCollections
     //    return result;
     //}
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IEnumerable<TResult>> TraverseWhile<T, TResult>(this IEnumerable<T>             source,
                                                                                   Func<T, MlResult<TResult>> completeFuncTransform)
     {
@@ -346,6 +437,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IEnumerable<TResult>> TraverseWhile<T, TResult>(this IEnumerable<T>                  source,
                                                                                   Func<T, int, MlResult<TResult>> completeFuncTransform)
     {
@@ -373,17 +472,41 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                              Func<T, MlResult<TResult>> completeFuncTransform)
         => source.TraverseWhile(completeFuncTransform).ToAsync();
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                              Func<T, int, MlResult<TResult>> completeFuncTransform)
         => source.TraverseWhile(completeFuncTransform).ToAsync();
 
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                    Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -411,6 +534,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this Task<IEnumerable<T>>                  sourceAsync,
                                                                                                    Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -441,16 +572,40 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                    Func<T, MlResult<TResult>> completeFuncTransform)
         => await (await sourceAsync).TraverseWhileAsync(completeFuncTransform);
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                    Func<T, int, MlResult<TResult>> completeFuncTransform)
         => await (await sourceAsync).TraverseWhileAsync(completeFuncTransform);
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                    Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -476,6 +631,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseWhile</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                    Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -549,6 +712,14 @@ public static partial class MlResultCollections
     //    return result;
     //}
 
+    /// <summary>
+    /// Ejecuta <c>TraverseParallel</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseParallelAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                       Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -572,6 +743,14 @@ public static partial class MlResultCollections
         return result;
     }
 
+    /// <summary>
+    /// Ejecuta <c>TraverseParallel</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseParallelAsync<T, TResult>(this Task<IEnumerable<T>>                  sourceAsync,
                                                                                                       Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -596,6 +775,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseParallel</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseParallelAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                       Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -619,6 +806,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseParallel</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<TResult>>> TraverseParallelAsync<T, TResult>(this IEnumerable<T>                        source,
                                                                                                       Func<T, int, Task<MlResult<TResult>>> completeFuncTransformAsync)
     {
@@ -643,6 +838,14 @@ public static partial class MlResultCollections
 
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplit</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)> TraverseSplit<T, TResult>(this IEnumerable<T>             source,
                                                                                                                                    Func<T, MlResult<TResult>> completeFuncTransform)
         where T : notnull
@@ -661,18 +864,42 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplit</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> TraverseSplitAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                                                                               Func<T, MlResult<TResult>> completeFuncTransform)
         where T : notnull
         => source.TraverseSplit(completeFuncTransform).ToAsync();
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplit</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> TraverseSplitAsync<T, TResult>(this Task<IEnumerable<T>>       sourceAsync,
                                                                                                                                                     Func<T, MlResult<TResult>> completeFuncTransform)
         where T : notnull
         => await (await sourceAsync).TraverseSplitAsync(completeFuncTransform);
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplit</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> TraverseSplitAsync<T, TResult>(this IEnumerable<T>                   source,
                                                                                                                                               Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
         where T : notnull
@@ -697,6 +924,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplit</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> TraverseSplitAsync<T, TResult>(this Task<IEnumerable<T>>             sourceAsync,
                                                                                                                                                     Func<T, Task<MlResult<TResult>>> completeFuncTransformAsync)
         where T : notnull
@@ -705,6 +940,14 @@ public static partial class MlResultCollections
 
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplitWithKeys</c>.
+    /// </summary>
+    /// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<(IEnumerable<TraverseSplitSuccess<TKey, TResult>> valids, IEnumerable<TraverseSplitFailure<TKey>> fails)> TraverseSplitWithKeys<TKey, TResult>(this IEnumerable<TKey> source,
                                                                                                                                                                               Func<TKey, MlResult<TResult>> completeFuncTransform)
         where TKey : notnull
@@ -724,18 +967,42 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplitWithKeys</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(IEnumerable<TraverseSplitSuccess<TKey, TResult>> valids, IEnumerable<TraverseSplitFailure<TKey>> fails)>> TraverseSplitWithKeysAsync<TKey, TResult>(this IEnumerable<TKey>             source,
                                                                                                                                                                                          Func<TKey, MlResult<TResult>> completeFuncTransform)
         where TKey : notnull
         => source.TraverseSplitWithKeys(completeFuncTransform).ToAsync();
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplitWithKeys</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransform">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(IEnumerable<TraverseSplitSuccess<TKey, TResult>> valids, IEnumerable<TraverseSplitFailure<TKey>> fails)>> TraverseSplitWithKeysAsync<TKey, TResult>(this Task<IEnumerable<TKey>>       sourceAsync,
                                                                                                                                                                                                Func<TKey, MlResult<TResult>> completeFuncTransform)
         where TKey : notnull
         => await (await sourceAsync).TraverseSplitWithKeysAsync(completeFuncTransform);
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplitWithKeys</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<(IEnumerable<TraverseSplitSuccess<TKey, TResult>> valids, IEnumerable<TraverseSplitFailure<TKey>> fails)>> TraverseSplitWithKeysAsync<TKey, TResult>(this IEnumerable<TKey>                   source,
                                                                                                                                                                                          Func<TKey, Task<MlResult<TResult>>> completeFuncTransformAsync)
         where TKey : notnull
@@ -762,6 +1029,14 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>TraverseSplitWithKeys</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="completeFuncTransformAsync">Función a aplicar.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<(IEnumerable<TraverseSplitSuccess<TKey, TResult>> valids, IEnumerable<TraverseSplitFailure<TKey>> fails)>> TraverseSplitWithKeysAsync<TKey, TResult>(this Task<IEnumerable<TKey>>             sourceAsync,
                                                                                                                                                                                                Func<TKey, Task<MlResult<TResult>>> completeFuncTransformAsync)
         where TKey : notnull
@@ -772,6 +1047,12 @@ public static partial class MlResultCollections
 
 
 
+    /// <summary>
+    /// Combina los resultados de <c>FailureErrors</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IEnumerable<T>> MergeFailureErrors<T>(this IEnumerable<MlResult<T>> source)
     {
         var partialResult = source.Where(x => x.IsFailure).ToList();
@@ -789,15 +1070,33 @@ public static partial class MlResultCollections
     }
 
 
+    /// <summary>
+    /// Combina los resultados de <c>FailureErrors</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IEnumerable<T>>> MergeFailureErrorsAsync<T>(this IEnumerable<MlResult<T>> source)
         => source.MergeFailureErrors().ToAsync();
 
+    /// <summary>
+    /// Combina los resultados de <c>FailureErrors</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<T>>> MergeFailureErrorsAsync<T>(this Task<IEnumerable<MlResult<T>>> sourceAsync)
         => await (await sourceAsync).MergeFailureErrorsAsync();
 
 
 
 
+    /// <summary>
+    /// Combina los resultados de <c>ErrorsIfExists</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IEnumerable<T>> MergeErrorsIfExists<T>(this IEnumerable<MlResult<T>> source)
     {
         var partialResult = source.Where(x => x.IsFailure).ToList();
@@ -818,9 +1117,21 @@ public static partial class MlResultCollections
 
     }
 
+    /// <summary>
+    /// Combina los resultados de <c>ErrorsIfExists</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<IEnumerable<T>>> MergeErrorsIfExistsAsync<T>(this IEnumerable<MlResult<T>> source)
         => source.MergeErrorsIfExists().ToAsync();
 
+    /// <summary>
+    /// Combina los resultados de <c>ErrorsIfExists</c>. Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<IEnumerable<T>>> MergeErrorsIfExistsAsync<T>(this Task<IEnumerable<MlResult<T>>> sourceAsync)
         => await (await sourceAsync).MergeErrorsIfExistsAsync();
 
@@ -828,6 +1139,12 @@ public static partial class MlResultCollections
 
 
 
+    /// <summary>
+    /// Ejecuta <c>VerifiedEnumerableResultData</c>.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<IEnumerable<T>> VerifiedEnumerableResultData<T>(this IEnumerable<MlResult<T>> source)
         => source.Any(x => x.IsFailure) ?
            MergeFailureErrors(source)   :
@@ -839,6 +1156,19 @@ public static partial class MlResultCollections
 }
 
 
+/// <summary>
+/// Representa <c>TraverseSplitSuccess</c>.
+/// </summary>
+/// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
+/// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+/// <param name="Key">Valor de <c>Key</c>.</param>
+/// <param name="Value">Valor de <c>Value</c>.</param>
 public record TraverseSplitSuccess<TKey, TResult>(TKey Key, TResult Value);
 
+/// <summary>
+/// Representa <c>TraverseSplitFailure</c>.
+/// </summary>
+/// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
+/// <param name="Key">Valor de <c>Key</c>.</param>
+/// <param name="Errors">Valor de <c>Errors</c>.</param>
 public record TraverseSplitFailure<TKey>(TKey Key, MlErrorDetails Errors);

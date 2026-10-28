@@ -4,8 +4,16 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 
+/// <summary>
+/// Métodos de extension de <c>MlErrorDetails</c>.
+/// </summary>
 public static partial class MlErrorDetailsExtensions
 {
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>ProblemDetails</c>.
+    /// </summary>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<ProblemDetailsData> GetProblemDetails(this MlErrorDetails source)
     {
         var result = MlResult.Empty()
@@ -19,6 +27,11 @@ public static partial class MlErrorDetailsExtensions
     }
 
 
+    /// <summary>
+    /// Ejecuta <c>ToProblemDetails</c>.
+    /// </summary>
+    /// <param name="obj">Obj.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<ProblemDetailsData> ToProblemDetails(this object obj)
     {
         var result = MlResult.Empty()

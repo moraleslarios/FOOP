@@ -17,3 +17,4 @@ global using MoralesLarios.OOFP.Shared.Pagination;
 global using System.Net.Http.Json;
 global using MoralesLarios.OOFP.Http.Requests;
 global using MoralesLarios.OOFP.Http.Helpers;
+global using System.Globalization;

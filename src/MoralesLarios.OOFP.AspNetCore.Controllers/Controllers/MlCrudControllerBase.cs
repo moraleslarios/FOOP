@@ -4,12 +4,23 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Controllers.Controllers;
 
+/// <summary>
+/// Representa <c>MlCrudControllerBase</c>.
+/// </summary>
+/// <typeparam name="TEntity">Tipo de la entidad de datos.</typeparam>
+/// <typeparam name="TDto">Tipo del objeto de transferencia de datos.</typeparam>
+/// <typeparam name="TPk">Tipo genérico TPk.</typeparam>
 [ApiController]
 public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TEntity, TDto> _genServiceFp) : ControllerBase
     where TEntity : class
     where TDto    : class
 {
 
+    /// <summary>
+    /// Obtiene todos los elementos. Versión asíncrona.
+    /// </summary>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpGet]
     public virtual async Task<IActionResult> GetAllAsync(CancellationToken ct = default!)
     {
@@ -19,6 +30,12 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
     }
 
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>ById</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="id">Identificador de la entidad.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpGet("id-str/{id}", Name = $"[controller]_[action]")]
     public virtual async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!)
     {
@@ -35,6 +52,12 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
         return result;
     }
 
+    /// <summary>
+    /// Envia la petición mediante el verbo HTTP POST. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpPost]
     public virtual async Task<IActionResult> PostAsync([FromBody] TDto dto, CancellationToken ct = default!)
     {
@@ -43,6 +66,13 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
         return result;
     }
 
+    /// <summary>
+    /// Envia la petición mediante el verbo HTTP PUT. Versión asíncrona.
+    /// </summary>
+    /// <param name="id">Identificador de la entidad.</param>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpPut("{id}")]
     public virtual async Task<IActionResult> PutAsync(string id, [FromBody] TDto dto, CancellationToken ct = default!)
     {
@@ -56,6 +86,12 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
         return result;
     }
 
+    /// <summary>
+    /// Envia la petición mediante el verbo HTTP PUT. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpPut]
     public virtual async Task<IActionResult> PutAsync([FromBody] TDto dto, CancellationToken ct = default!)
     {
@@ -65,6 +101,12 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
     }
 
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="id">Identificador de la entidad.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpDelete("{id}")]
     public virtual async Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default!)
     {
@@ -77,6 +119,12 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
         return result;
     }
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpDelete]
     public virtual async Task<IActionResult> DeleteAsync([FromBody] TDto dto, CancellationToken ct = default!)
     {
@@ -97,6 +145,13 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
 
 
 
+/// <summary>
+/// Representa <c>MlCrudControllerBase</c>.
+/// </summary>
+/// <typeparam name="TEntity">Tipo de la entidad de datos.</typeparam>
+/// <typeparam name="TRequest">Tipo de la petición.</typeparam>
+/// <typeparam name="TResponse">Tipo de la respuesta.</typeparam>
+/// <typeparam name="TPk">Tipo genérico TPk.</typeparam>
 [ApiController]
 public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(ICrudServiceFp<TEntity, TRequest, TResponse> _genServiceFp) : ControllerBase
     where TEntity   : class
@@ -104,6 +159,11 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
     where TResponse : class
 {
 
+     /// <summary>
+     /// Obtiene todos los elementos. Versión asíncrona.
+     /// </summary>
+     /// <param name="ct">Token para cancelar la operación.</param>
+     /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
      [HttpGet]
     public virtual async Task<IActionResult> GetAllAsync(CancellationToken ct = default!)
     {
@@ -113,6 +173,12 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
     }
 
 
+    /// <summary>
+    /// Obtiene el elemento solicitado de <c>ById</c>. Versión asíncrona.
+    /// </summary>
+    /// <param name="id">Identificador de la entidad.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpGet("id-str/{id}", Name = $"[controller]_[action]")]
     public virtual async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!)
     {
@@ -129,6 +195,12 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
         return result;
     }
 
+    /// <summary>
+    /// Envia la petición mediante el verbo HTTP POST. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpPost]
     public virtual async Task<IActionResult> PostAsync([FromBody] TRequest dto, CancellationToken ct = default!)
     {
@@ -137,6 +209,13 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
         return result;
     }
 
+    /// <summary>
+    /// Envia la petición mediante el verbo HTTP PUT. Versión asíncrona.
+    /// </summary>
+    /// <param name="id">Identificador de la entidad.</param>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpPut("{id}")]
     public virtual async Task<IActionResult> PutAsync(string id, [FromBody] TRequest dto, CancellationToken ct = default!)
     {
@@ -150,6 +229,12 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
         return result;
     }
 
+    /// <summary>
+    /// Envia la petición mediante el verbo HTTP PUT. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpPut]
     public virtual async Task<IActionResult> PutAsync([FromBody] TRequest dto, CancellationToken ct = default!)
     {
@@ -159,6 +244,12 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
     }
 
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="id">Identificador de la entidad.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpDelete("{id}")]
     public virtual async Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default!)
     {
@@ -171,6 +262,12 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
         return result;
     }
 
+    /// <summary>
+    /// Elimina el elemento indicado. Versión asíncrona.
+    /// </summary>
+    /// <param name="dto">Objeto de transferencia de datos.</param>
+    /// <param name="ct">Token para cancelar la operación.</param>
+    /// <returns>Tarea que produce el valor de tipo <c>IActionResult</c> obtenido por la operación.</returns>
     [HttpDelete]
     public virtual async Task<IActionResult> DeleteAsync([FromBody] TRequest dto, CancellationToken ct = default!)
     {

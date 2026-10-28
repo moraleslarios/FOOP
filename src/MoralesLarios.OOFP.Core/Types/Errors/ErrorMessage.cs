@@ -18,4 +18,8 @@ namespace MoralesLarios.OOFP.Types.Errors;
 //}
 
 
+/// <summary>
+/// Representa <c>ErrorMessage</c>.
+/// </summary>
+/// <param name="Message">Valor de <c>Message</c>.</param>
 public record ErrorMessage(string Message);

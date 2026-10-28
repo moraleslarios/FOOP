@@ -6,9 +6,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MoralesLarios.OOFP.FileSystem;
 
+/// <summary>
+/// Representa <c>RegisterServices</c>.
+/// </summary>
 public static class RegisterServices
 {
 
+    /// <summary>
+    /// Añade el elemento indicado de <c>OOFPIO</c>.
+    /// </summary>
+    /// <param name="services">Colección de servicios donde se registran las dependencias.</param>
+    /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
     public static IServiceCollection AddOOFPIO(this IServiceCollection services)
     {
         services.AddSingleton<IMlFileSystem, MlFileSystem>();

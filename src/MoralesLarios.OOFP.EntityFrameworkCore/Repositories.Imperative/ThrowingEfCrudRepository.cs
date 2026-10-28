@@ -6,6 +6,17 @@ using MoralesLarios.OOFP.EntityFrameworkCore;
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 
+/// <summary>
+/// Implementación imperativa del repositorio CRUD completo sobre Entity Framework Core.
+/// Reúne en una única clase las operaciones de lectura, alta, modificación y borrado de la
+/// entidad <typeparamref name="T"/>.
+/// </summary>
+/// <remarks>
+/// Lanza excepciones ante errores en lugar de devolver <c>MlResult</c>. Para la variante
+/// funcional utilice <c>EfCrudRepository</c>.
+/// </remarks>
+/// <typeparam name="T">Tipo de la entidad gestionada por el repositorio.</typeparam>
+/// <typeparam name="TContext">Tipo del contexto de Entity Framework Core utilizado.</typeparam>
 internal class ThrowingEfCrudRepository<T, TContext> : ThrowingEfRepository, IThrowingEfRepository<T>
     where T : class
     where TContext : DbContext

@@ -4,9 +4,17 @@
 
 namespace MoralesLarios.OOFP.FileSystem;
 
+/// <summary>
+/// Representa <c>MlFileSystem</c>.
+/// </summary>
 public class MlFileSystem : IMlFileSystem
 {
 
+    /// <summary>
+    /// Ejecuta <c>EnumerateFiles</c>.
+    /// </summary>
+    /// <param name="directoryStr">Valor de <c>directoryStr</c>.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public MlResult<IEnumerable<ExistingFilePath>> EnumerateFiles(string directoryStr)
     {
         var result = ExistingDirectoryPath.FromPath(directoryStr)
@@ -15,6 +23,11 @@ public class MlFileSystem : IMlFileSystem
         return result;
     }
 
+    /// <summary>
+    /// Lee el contenido de <c>AllText</c>.
+    /// </summary>
+    /// <param name="filePathStr">Valor de <c>filePathStr</c>.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public MlResult<string> ReadAllText(string filePathStr)
     {
         var result = ExistingFilePath.FromPath(filePathStr)
@@ -22,6 +35,11 @@ public class MlFileSystem : IMlFileSystem
         return result;
     }
 
+    /// <summary>
+    /// Lee el contenido de <c>AllLines</c>.
+    /// </summary>
+    /// <param name="filePathStr">Valor de <c>filePathStr</c>.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public MlResult<IEnumerable<string>> ReadAllLines(string filePathStr)
     {
         var result = ExistingFilePath.FromPath(filePathStr)

@@ -4,6 +4,16 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 
+/// <summary>
+/// Implementación imperativa del repositorio de borrados sobre Entity Framework Core.
+/// Da soporte a la eliminación individual y por lotes de la entidad <typeparamref name="T"/>.
+/// </summary>
+/// <remarks>
+/// Lanza excepciones ante errores en lugar de devolver <c>MlResult</c>. Para la variante
+/// funcional utilice <c>EfDeleteRepository</c>.
+/// </remarks>
+/// <typeparam name="T">Tipo de la entidad eliminada por el repositorio.</typeparam>
+/// <typeparam name="TContext">Tipo del contexto de Entity Framework Core utilizado.</typeparam>
 internal class ThrowingEfDeleteRepository<T, TContext> : ThrowingEfRepository, IThrowingEfDeleteRepository<T>
     where T : class
     where TContext : DbContext
