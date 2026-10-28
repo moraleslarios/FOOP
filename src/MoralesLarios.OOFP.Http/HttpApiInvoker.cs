@@ -11,7 +11,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 {
 
     public virtual async Task<MlResult<T>> GetAsync<T>(ServiceKey                        clientName,
-                                                       string                     url     = "", // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                       string                     url     = "", // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                        Dictionary<string, string> headers = null!,
                                                        CancellationToken          ct      = default)
     {
@@ -22,7 +22,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
     }
 
     public virtual async Task<MlResult<T>> GetAsync<T>(ApiCallOptions parameters, CancellationToken ct = default)
-        => await GetAsync<T>(parameters.HttpClientFactoryKey, parameters.Url, parameters.Headers!, ct);
+        => await GetAsync<T>(parameters.ClientName, parameters.Url, parameters.Headers!, ct);
 
 
 
@@ -30,7 +30,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
     public virtual async Task<MlResult<T>> GetPagedAsync<T>(PagedApiCallOptions parameters, CancellationToken ct = default)
     {
         var result = await DataAnnotationsValidator.ValidateAsync(parameters)
-                                    .TryMapAsync         ( _     => _httpClientFactory.CreateClient(parameters.HttpClientFactoryKey))
+                                    .TryMapAsync         ( _     => _httpClientFactory.CreateClient(parameters.ClientName))
                                     .ExecSelfIfValidAsync(client => InternalLogUrlPagination(_logger, 
                                                                                              client.BaseAddress?.ToString()!, 
                                                                                              parameters.Url, 
@@ -48,7 +48,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
     public virtual async Task<MlResult<TResult>> PostAndReadAsync<T, TResult>(ServiceKey                        clientName,
                                                                           T                          itemBody,
-                                                                          string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                                          string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                                           Dictionary<string, string> headers = null!,
                                                                           CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
@@ -69,7 +69,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
     public virtual async Task<MlResult<PagedResult<TItem>>> PostAndReadPagedAsync<TRequest, TItem>(PagedApiCallOptions<TRequest> parameters, CancellationToken ct = default!)
     {
         var result = await DataAnnotationsValidator.ValidateAsync(parameters)
-                                    .TryMapAsync         ( _     => _httpClientFactory.CreateClient(parameters.HttpClientFactoryKey))
+                                    .TryMapAsync         ( _     => _httpClientFactory.CreateClient(parameters.ClientName))
                                     .ExecSelfIfValidAsync(client => _logger.LogInformation($"Consultando datos paginados a la url {Path.Combine(client.BaseAddress?.ToString() ?? string.Empty, parameters.Url ?? string.Empty)}. PageNumber {parameters.PageNumber}, PageSize {parameters.PageSize}"))
                                             .LogMlResultInformationAsync(_logger, $"Añadiendo información a las cabeceras del httpClient: PageNumber {parameters.PageNumber}, PageSize {parameters.PageSize}")
                                     .BindAsync   (client => client.AddPaginationHeadersAsync(parameters.PageNumber, parameters.PageSize))
@@ -81,7 +81,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
     public virtual async Task<MlResult<T>> PostAsync<T>(ServiceKey                        clientName,
                                                         T                          itemBody,
-                                                        string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                        string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                         Dictionary<string, string> headers = null!,
                                                         CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
@@ -97,7 +97,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
     public virtual async Task<MlResult<TResponse>> PostAsync<T, TResponse>(ServiceKey                        clientName,
                                                            T                          itemBody,
-                                                           string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                           string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                            Dictionary<string, string> headers = null!,
                                                            CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
@@ -114,7 +114,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
     public virtual async Task<MlResult<EmptyValue>> PutAsync<T>(ServiceKey                        clientName,
                                                            T                          itemBody,
-                                                           string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                           string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                            Dictionary<string, string> headers = null!,
                                                            CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
@@ -132,7 +132,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
     public virtual async Task<MlResult<EmptyValue>> DeleteAsync<T>(ServiceKey                        clientName,
                                                               T                          itemBody,
-                                                              string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                              string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                               Dictionary<string, string> headers = null!,
                                                               CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
@@ -228,7 +228,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
     protected virtual async Task<MlResult<T>> ActionPostAsync<T>(ServiceKey                clientName,
                                                                  HttpRequestMessage requestMessage,
-                                                                 string             url = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                                 string             url = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                                  CancellationToken  ct  = default)
     {
         var result = await MlResult.EmptyAsync()
@@ -247,7 +247,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
     protected virtual async Task<MlResult<EmptyValue>> ActionEmptyAsync<T>(ServiceKey                clientName,
                                                                       string             action,
                                                                       HttpRequestMessage requestMessage,
-                                                                      string             url = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                                      string             url = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                                       CancellationToken  ct  = default)
     {
         var result = await MlResult.EmptyAsync()

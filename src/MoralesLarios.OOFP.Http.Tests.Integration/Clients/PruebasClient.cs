@@ -7,14 +7,14 @@ using System.Reflection.PortableExecutable;
 namespace MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
 public class PruebasClient(ILogger<PruebasClient>    _logger,
-                           IHttpApiInvoker _httpClientFactoryManager,
-                           ServiceKey                       _httpClientFactoryKey) : RestClientFp<PruebasDto>(_logger, _httpClientFactoryManager, _httpClientFactoryKey), IPruebasClient
+                           IHttpApiInvoker _apiInvoker,
+                           ServiceKey                       _clientName) : RestClientFp<PruebasDto>(_logger, _apiInvoker, _clientName), IPruebasClient
 {
 
 
     public async Task<MlResult<PruebasDto>> MyGetAsync(NotEmptyString data)
     {
-        var result = await _httpClientFactoryManager.GetAsync<PruebasDto>(_httpClientFactoryKey, 
+        var result = await _apiInvoker.GetAsync<PruebasDto>(_clientName, 
                                                                            $"with-header",
                                                                            new Dictionary<string, string> { {"data", data } });
         return result;
@@ -40,16 +40,16 @@ public class PruebasClient(ILogger<PruebasClient>    _logger,
 
     public async Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithCache2Async()
     {
-        var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebasDto>>(_httpClientFactoryKey, "with-cache1");
+        var result = await _apiInvoker.GetAsync<IEnumerable<PruebasDto>>(_clientName, "with-cache1");
 
-        //var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebasDto>>(_httpClientFactoryKey);
+        //var result = await _apiInvoker.GetAsync<IEnumerable<PruebasDto>>(_clientName);
 
         return result;
     }
 
     public async Task<MlResult<IEnumerable<PruebasDto>>> MyGetAllwithoutCache2Async()
     {
-        var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebasDto>>(_httpClientFactoryKey, "with-cache1", new Dictionary<string, string> { { "X-Bypass-Cache", "no-cache" } });
+        var result = await _apiInvoker.GetAsync<IEnumerable<PruebasDto>>(_clientName, "with-cache1", new Dictionary<string, string> { { "X-Bypass-Cache", "no-cache" } });
 
         return result;
     }

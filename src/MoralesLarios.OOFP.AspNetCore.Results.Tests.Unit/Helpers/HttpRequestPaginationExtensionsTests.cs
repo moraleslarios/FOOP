@@ -13,27 +13,27 @@ public class HttpRequestPaginationExtensionsTests
 
 
     [Fact]
-    public void GetHeaderInfo_withExistHeader_returnValid()
+    public void GetHeader_withExistHeader_returnValid()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Custom-Header", "HeaderValue" }
         });
 
-        MlResult<NotEmptyString> result = request.GetHeaderInfo("X-Custom-Header");
+        MlResult<NotEmptyString> result = request.GetHeader("X-Custom-Header");
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderInfo_withExistHeader_returnValidHeaderValue()
+    public void GetHeader_withExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Custom-Header", "HeaderValue" }
         });
 
-        MlResult<NotEmptyString> result = request.GetHeaderInfo("X-Custom-Header");
+        MlResult<NotEmptyString> result = request.GetHeader("X-Custom-Header");
 
         MlResult<NotEmptyString> expected = NotEmptyString.CreateFromString("HeaderValue");
 
@@ -41,41 +41,41 @@ public class HttpRequestPaginationExtensionsTests
     }
 
     [Fact]
-    public void GetHeaderInfo_withNotExistHeader_returnValidHeaderValue()
+    public void GetHeader_withNotExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "XXX", "HeaderValue" }
         });
 
-        MlResult<NotEmptyString> result = request.GetHeaderInfo("X-Custom-Header");
+        MlResult<NotEmptyString> result = request.GetHeader("X-Custom-Header");
 
         result.IsFailure.Should().BeTrue();
     }
 
 
     [Fact]
-    public void GetHeaderInfoAsInt_withExistHeader_returnValid()
+    public void GetIntHeader_withExistHeader_returnValid()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Custom-Header", "123" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
+        MlResult<IntNonNegative> result = request.GetIntHeader("X-Custom-Header");
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderInfoAsInt_withExistHeader_returnValidHeaderValue()
+    public void GetIntHeader_withExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Custom-Header", "123" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
+        MlResult<IntNonNegative> result = request.GetIntHeader("X-Custom-Header");
 
         MlResult<IntNonNegative> expected = IntNonNegative.CreateFromInt(123);
 
@@ -83,40 +83,40 @@ public class HttpRequestPaginationExtensionsTests
     }
 
     [Fact]
-    public void GetHeaderInfoAsInt_withNotExistHeader_returnValidHeaderValue()
+    public void GetIntHeader_withNotExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "XXX", "123" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderInfoAsIntNotNegative("X-Custom-Header");
+        MlResult<IntNonNegative> result = request.GetIntHeader("X-Custom-Header");
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderPageNumber_withExistHeader_returnValid()
+    public void GetPageNumberHeader_withExistHeader_returnValid()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Page-Number", "1" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderPageNumber();
+        MlResult<IntNonNegative> result = request.GetPageNumberHeader();
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderPageNumber_withExistHeader_returnValidHeaderValue()
+    public void GetPageNumberHeader_withExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Page-Number", "1" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderPageNumber();
+        MlResult<IntNonNegative> result = request.GetPageNumberHeader();
 
         MlResult<IntNonNegative> expected = IntNonNegative.CreateFromInt(1);
 
@@ -124,40 +124,40 @@ public class HttpRequestPaginationExtensionsTests
     }
 
     [Fact]
-    public void GetHeaderPageNumber_withNotExistHeader_returnValidHeaderValue()
+    public void GetPageNumberHeader_withNotExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "XXX", "1" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderPageNumber();
+        MlResult<IntNonNegative> result = request.GetPageNumberHeader();
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderPageSize_withExistHeader_returnValid()
+    public void GetPageSizeHeader_withExistHeader_returnValid()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Page-Size", "10" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderPageSize();
+        MlResult<IntNonNegative> result = request.GetPageSizeHeader();
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderPageSize_withExistHeader_returnValidHeaderValue()
+    public void GetPageSizeHeader_withExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "X-Page-Size", "10" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderPageSize();
+        MlResult<IntNonNegative> result = request.GetPageSizeHeader();
 
         MlResult<IntNonNegative> expected = IntNonNegative.CreateFromInt(10);
 
@@ -165,20 +165,20 @@ public class HttpRequestPaginationExtensionsTests
     }
 
     [Fact]
-    public void GetHeaderPageSize_withNotExistHeader_returnValidHeaderValue()
+    public void GetPageSizeHeader_withNotExistHeader_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
             { "XXX", "10" }
         });
 
-        MlResult<IntNonNegative> result = request.GetHeaderPageSize();
+        MlResult<IntNonNegative> result = request.GetPageSizeHeader();
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderPageInfo_withExistHeaders_returnValid()
+    public void GetPaginationHeaders_withExistHeaders_returnValid()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
@@ -186,13 +186,13 @@ public class HttpRequestPaginationExtensionsTests
             { "X-Page-Size", "10" }
         });
 
-        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetHeaderPageInfo();
+        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetPaginationHeaders();
 
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public void GetHeaderPageInfo_withExistHeaders_returnValidHeaderValue()
+    public void GetPaginationHeaders_withExistHeaders_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
@@ -200,7 +200,7 @@ public class HttpRequestPaginationExtensionsTests
             { "X-Page-Size", "10" }
         });
 
-        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetHeaderPageInfo();
+        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetPaginationHeaders();
 
         MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> expected = (1, 10);
 
@@ -208,7 +208,7 @@ public class HttpRequestPaginationExtensionsTests
     }
 
     [Fact]
-    public void GetHeaderPageInfo_withNotExistHeaders_returnValidHeaderValue()
+    public void GetPaginationHeaders_withNotExistHeaders_returnValidHeaderValue()
     {
         var request = BuildHttpRequest(new Dictionary<string, string>
         {
@@ -216,7 +216,7 @@ public class HttpRequestPaginationExtensionsTests
             { "YYY", "10" }
         });
 
-        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetHeaderPageInfo();
+        MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> result = request.GetPaginationHeaders();
 
         result.IsFailure.Should().BeTrue();
     }

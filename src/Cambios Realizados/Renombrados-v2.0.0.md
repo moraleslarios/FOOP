@@ -24,8 +24,8 @@ Este documento recoge **todos** los cambios de nomenclatura aplicados a la soluc
 
 | Concepto | Valor |
 |---|---|
-| Total de cambios registrados | **864** |
-| Cambios de nomenclatura | **845** |
+| Total de cambios registrados | **888** |
+| Cambios de nomenclatura | **869** |
 | Cambios de contrato (Fase 12) | **19** |
 | Proyectos de la solución | 30 |
 | Commits de la rama `release/2.0.0-nomenclatura` | 10 |
@@ -52,6 +52,7 @@ Este documento recoge **todos** los cambios de nomenclatura aplicados a la soluc
 | `fase11d-residuos` | 1 | 9 |
 | `fase13-docs` | 13 | 19 |
 | `fase13-genericos` | 13 | 10 |
+| `fase14-residuos` | 14 | 24 |
 | `fase12-contratos` | 12 | 19 |
 
 ---
@@ -1098,6 +1099,37 @@ La columna **Puente** indica si el nombre antiguo sigue disponible:
 | 8 | Generico | Core | `MlResultChangeReturnResult.Obsolete` | `TReturn` | `TResult` | No | Unificacion D-10. Puentes Obsolete |
 | 9 | Generico | Core | `MlErrorDetailsActions` | `TReturn` | `TResult` | No | Unificacion D-10 |
 | 10 | Mencion doc |  | `CONTRIBUTING.md` | *(inexistente)* | `CONTRIBUTING.md` | No | Paso 13.1. Guia de estilo de nomenclatura de la 2.0.0 |
+
+### Fase 14 → Residuos de los sufijos `...Manager` y `...Info` en `Http` y `AspNetCore.Results`
+
+<sub>Lote `fase14-residuos` → 24 cambios</sub>
+
+| # | Tipo | Proyecto | Contenedor | Antes | Después | Puente | Nota |
+|---:|---|---|---|---|---|:-:|---|
+| 1 | Metodo | Http | `IRestClientFp(TDto)` | `GetIHttpClientFactoryManager` | `GetApiInvoker` | No | Sufijo Manager prohibido. Devuelve el IHttpApiInvoker subyacente |
+| 2 | Metodo | Http | `IRestClientFp(TRequest, TResponse)` | `GetIHttpClientFactoryManager` | `GetApiInvoker` | No | Sufijo Manager prohibido. Devuelve el IHttpApiInvoker subyacente |
+| 3 | Metodo | Http | `RestClientFp(TDto)` | `GetIHttpClientFactoryManager` | `GetApiInvoker` | Sí | Sufijo Manager prohibido. Puente Obsolete en RestClientFp.Obsolete.cs |
+| 4 | Metodo | Http | `RestClientFp(TRequest, TResponse)` | `GetIHttpClientFactoryManager` | `GetApiInvoker` | Sí | Sufijo Manager prohibido. Puente Obsolete en RestClientFp.Obsolete.cs |
+| 5 | Metodo | Http | `RestClientFp(TDto)` | `GetHttpClientFactoryKey` | `GetClientName` | Sí | Puente Obsolete anadido tambien a la clase de un generico |
+| 6 | Propiedad | Http | `ApiCallOptions` | `HttpClientFactoryKey` | `ClientName` | No | Coherente con GetClientName e IHttpClientFactory.CreateClient(name) |
+| 7 | Propiedad | Http | `PagedApiCallOptions` | `HttpClientFactoryKey` | `ClientName` | No | Coherente con ApiCallOptions.ClientName |
+| 8 | Campo | Http | `RestClientFp(TDto)` | `_httpClientFactoryManager` | `_apiInvoker` | No | Campo del constructor primario. Coherente con IHttpApiInvoker |
+| 9 | Campo | Http | `RestClientFp(TDto)` | `_httpClientFactoryKey` | `_clientName` | No | Campo del constructor primario. Coherente con GetClientName |
+| 10 | Campo | Http | `HttpApiInvoker` | `_httpClientFactoryManager` | `_apiInvoker` | No | Campo interno |
+| 11 | Metodo | Http | `RegisterServices` | `ResolveHttpClientFactoryKey` | `ResolveClientName` | No | Helper interno de registro. Coherente con ClientName |
+| 12 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderInfo` | `GetHeader` | Sí | Sufijo Info prohibido. Simetrico de AddHeader |
+| 13 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderInfoAsync` | `GetHeaderAsync` | Sí | Sufijo Info prohibido. Simetrico de AddHeader |
+| 14 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderInfoAsIntNotNegative` | `GetIntHeader` | Sí | Sufijo Info prohibido. Simetrico de AddIntHeader |
+| 15 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderInfoAsIntNotNegativeAsync` | `GetIntHeaderAsync` | Sí | Sufijo Info prohibido. Simetrico de AddIntHeader |
+| 16 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPageNumber` | `GetPageNumberHeader` | Sí | Simetrico de AddPageNumberHeader |
+| 17 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPageNumberAsync` | `GetPageNumberHeaderAsync` | Sí | Simetrico de AddPageNumberHeader |
+| 18 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPageSize` | `GetPageSizeHeader` | Sí | Simetrico de AddPageSizeHeader |
+| 19 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPageSizeAsync` | `GetPageSizeHeaderAsync` | Sí | Simetrico de AddPageSizeHeader |
+| 20 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPageInfo` | `GetPaginationHeaders` | Sí | Sufijo Info prohibido. Simetrico de AddPaginationHeaders |
+| 21 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPageInfoAsync` | `GetPaginationHeadersAsync` | Sí | Sufijo Info prohibido. Simetrico de AddPaginationHeaders |
+| 22 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPaginationInfo` | `GetPageRequest` | Sí | Sufijo Info prohibido. Devuelve un PageRequest |
+| 23 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPaginationInfoAsync` | `GetPageRequestAsync` | Sí | Sufijo Info prohibido. Devuelve un PageRequest |
+| 24 | Fichero | AspNetCore.Results | `Helpers` | *(inexistente)* | `HttpRequestPaginationExtensions.Obsolete.cs` | No | Nuevo fichero con los 12 puentes Obsolete de la clase |
 
 ---
 

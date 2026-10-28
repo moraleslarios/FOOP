@@ -428,8 +428,8 @@ var bypass = new Dictionary<string, string>
     { ControllerScopedOutputCachePolicy.CacheBypassHeader, "1" }
 };
 
-var result = await _httpClientFactoryManager.GetAsync<IEnumerable<PruebaDto>>(
-    httpClientFactoryKey,
+var result = await _apiInvoker.GetAsync<IEnumerable<PruebaDto>>(
+    clientName,
     "with-cache1",
     bypass);
 ```

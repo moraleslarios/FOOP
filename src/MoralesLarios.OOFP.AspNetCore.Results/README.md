@@ -82,7 +82,7 @@ Referencias de proyecto:
 | Proyecto referenciado | Para qué |
 |---|---|
 | `MoralesLarios.OOFP` | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind`, `Map`, `MapEnsure` |
-| `MoralesLarios.OOFP.Shared` | `PageRequest` (resultado de `GetHeaderPaginationInfo`) |
+| `MoralesLarios.OOFP.Shared` | `PageRequest` (resultado de `GetPageRequest`) |
 | `MoralesLarios.OOFP.ValueObjects` | `MemberName`, `NotEmptyString`, `IntNonNegative` (tipos de las cabeceras) |
 
 > ⚠️ **Aviso sobre el paquete NuGet.** El proyecto compila contra `net8.0` pero referencia `Microsoft.AspNetCore.Mvc.Core` **2.1.0**, un paquete de la era .NET Core 2.1. En una aplicación ASP.NET Core moderna eso genera duplicidad de ensamblados y advertencias de resolución: lo correcto sería `<FrameworkReference Include="Microsoft.AspNetCore.App" />`. Ver [Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente).
@@ -409,38 +409,38 @@ La dirección contraria: leer cabeceras de un `HttpRequest` y devolverlas **ya v
 
 ```csharp
 // Cabecera genérica
-public static MlResult<NotEmptyString> GetHeaderInfo(this HttpRequest source, Name headerKey);
-public static Task<MlResult<NotEmptyString>> GetHeaderInfoAsync(this HttpRequest source, Name headerKey);
+public static MlResult<NotEmptyString> GetHeader(this HttpRequest source, Name headerKey);
+public static Task<MlResult<NotEmptyString>> GetHeaderAsync(this HttpRequest source, Name headerKey);
 
 // Cabecera genérica convertida a entero no negativo
-public static MlResult<IntNonNegative> GetHeaderInfoAsIntNonNegative(this HttpRequest source, Name headerKey);
-public static Task<MlResult<IntNonNegative>> GetHeaderInfoAsIntNotNegativeAsync(this HttpRequest source, Name headerKey);
+public static MlResult<IntNonNegative> GetIntHeader(this HttpRequest source, Name headerKey);
+public static Task<MlResult<IntNonNegative>> GetIntHeaderAsync(this HttpRequest source, Name headerKey);
 
 // Cabeceras de paginación (nombres fijos)
-public static MlResult<IntNonNegative> GetHeaderPageNumber(this HttpRequest source);   // "X-Page-Number"
-public static MlResult<IntNonNegative> GetHeaderPageSize  (this HttpRequest source);   // "X-Page-Size"
+public static MlResult<IntNonNegative> GetPageNumberHeader(this HttpRequest source);   // "X-Page-Number"
+public static MlResult<IntNonNegative> GetPageSizeHeader  (this HttpRequest source);   // "X-Page-Size"
 
 // Combinaciones
-public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetHeaderPageInfo(this HttpRequest source);
-public static MlResult<PageRequest> GetHeaderPaginationInfo(this HttpRequest source);
+public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetPaginationHeaders(this HttpRequest source);
+public static MlResult<PageRequest> GetPageRequest(this HttpRequest source);
 ```
 
 *(todos tienen su variante `…Async` que devuelve `Task<MlResult<…>>`)*
 
 | Método | Devuelve | Cabecera(s) leída(s) |
 |---|---|---|
-| `GetHeaderInfo` | `NotEmptyString` | la que indiques |
-| `GetHeaderInfoAsIntNonNegative` | `IntNonNegative` | la que indiques |
-| `GetHeaderPageNumber` | `IntNonNegative` | `X-Page-Number` |
-| `GetHeaderPageSize` | `IntNonNegative` | `X-Page-Size` |
-| `GetHeaderPageInfo` | tupla `(PageNumber, PageSize)` | ambas |
-| `GetHeaderPaginationInfo` | `PageRequest` | ambas |
+| `GetHeader` | `NotEmptyString` | la que indiques |
+| `GetIntHeader` | `IntNonNegative` | la que indiques |
+| `GetPageNumberHeader` | `IntNonNegative` | `X-Page-Number` |
+| `GetPageSizeHeader` | `IntNonNegative` | `X-Page-Size` |
+| `GetPaginationHeaders` | tupla `(PageNumber, PageSize)` | ambas |
+| `GetPageRequest` | `PageRequest` | ambas |
 
 **Ejemplo — endpoint paginado que lee la paginación de las cabeceras:**
 ```csharp
 [HttpGet]
 public Task<IActionResult> All()
-    => Request.GetHeaderPaginationInfo()                       // MlResult<PageRequest>
+    => Request.GetPageRequest()                       // MlResult<PageRequest>
               .BindAsync(pag => _repo.TryAllPaginationAsync(pag.PageNumber, pag.PageSize))
               .ToOkProblemDetailsResultAsync();
 ```
@@ -451,7 +451,7 @@ Si el cliente envía `X-Page-Size: abc`, el raíl se corta en la primera etapa y
 ```csharp
 [HttpGet("informe")]
 public Task<IActionResult> Informe()
-    => Request.GetHeaderInfo("X-Tenant-Id")                    // MlResult<NotEmptyString>
+    => Request.GetHeader("X-Tenant-Id")                    // MlResult<NotEmptyString>
               .Bind(tenant => _service.ValidarTenant(tenant))
               .BindAsync(t  => _service.GenerarInformeAsync(t))
               .ToOkProblemDetailsResultAsync();
@@ -632,7 +632,7 @@ public async Task<IActionResult> PostValidado(ClienteDto dto)
 ```csharp
 [HttpGet]
 public Task<IActionResult> All()
-    => Request.GetHeaderPaginationInfo()
+    => Request.GetPageRequest()
               .BindAsync(pag => _repo.TryAllPaginationAsync(pag.PageNumber, pag.PageSize))
               .MapAsync (res => new
                                 {
@@ -659,7 +659,7 @@ Si falta `X-Page-Size`, la respuesta es un `500` con el mensaje del fallo (porqu
 ```csharp
 [HttpGet("resumen")]
 public Task<IActionResult> Resumen()
-    => Request.GetHeaderInfo("X-Tenant-Id")
+    => Request.GetHeader("X-Tenant-Id")
               .Bind     (t => _tenants.Validar(t))
               .BindAsync(t => _service.ResumenAsync(t))
               .ToOkProblemDetailsResultAsync();
@@ -743,13 +743,13 @@ return await _service.FindByIdProblemsDetailsAsync(id).ToOkProblemDetailsResultA
 
 **Enriquecer un error de cabecera para que no acabe en 500:**
 ```csharp
-// ❌ el fail de GetHeaderPaginationInfo no lleva "ProblemsDetails" → 500
-return await Request.GetHeaderPaginationInfo()
+// ❌ el fail de GetPageRequest no lleva "ProblemsDetails" → 500
+return await Request.GetPageRequest()
                     .BindAsync(p => _repo.TryAllPaginationAsync(p.PageNumber, p.PageSize))
                     .ToOkProblemDetailsResultAsync();
 
 // ✅ se reclasifica como 400 antes de salir del raíl
-return await Request.GetHeaderPaginationInfo()
+return await Request.GetPageRequest()
                     .MapIfFail(errors => MlProblemDetails.BadRequestError(
                                              "Cabeceras de paginación no válidas",
                                              errors.GetErrorsSummary()))
@@ -803,12 +803,12 @@ return resultado.ToOkProblemDetailsResult();
 | Devolver algo que **no** es JSON (`File`, `Redirect`…) | `Match(valid: …, fail: errors => errors.GetProblemDetails()…)` |
 | Extraer el `ProblemDetails` real de un `MlErrorDetails` | `errors.GetProblemDetails()` |
 | Convertir un `ProblemDetailsInfo` en `IActionResult` | `pdInfo.ToMlActionResult()` |
-| Leer una cabecera obligatoria como texto | `Request.GetHeaderInfo("X-…")` |
-| Leer una cabecera obligatoria como entero | `Request.GetHeaderInfoAsIntNonNegative("X-…")` |
-| Leer solo el número de página | `Request.GetHeaderPageNumber()` |
-| Leer solo el tamaño de página | `Request.GetHeaderPageSize()` |
-| Leer ambas como tupla | `Request.GetHeaderPageInfo()` |
-| Leer ambas como `PageRequest` normalizado | `Request.GetHeaderPaginationInfo()` |
+| Leer una cabecera obligatoria como texto | `Request.GetHeader("X-…")` |
+| Leer una cabecera obligatoria como entero | `Request.GetIntHeader("X-…")` |
+| Leer solo el número de página | `Request.GetPageNumberHeader()` |
+| Leer solo el tamaño de página | `Request.GetPageSizeHeader()` |
+| Leer ambas como tupla | `Request.GetPaginationHeaders()` |
+| Leer ambas como `PageRequest` normalizado | `Request.GetPageRequest()` |
 | Que un error de negocio salga con su código real | Genera el error con `MlProblemDetails.*` en la capa de servicio |
 | Migrar código antiguo | Sustituye `ToRepo*ActionResult` por su equivalente `*Pd*` |
 

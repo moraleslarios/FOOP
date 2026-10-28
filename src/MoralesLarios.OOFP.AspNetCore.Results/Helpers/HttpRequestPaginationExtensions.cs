@@ -4,10 +4,10 @@
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Helpers;
 
-public static class HttpRequestPaginationExtensions
+public static partial class HttpRequestPaginationExtensions
 {
 
-    public static MlResult<NotEmptyString> GetHeaderInfo(this HttpRequest request, MemberName headerKey)
+    public static MlResult<NotEmptyString> GetHeader(this HttpRequest request, MemberName headerKey)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind( _          => InternalReadHeaderRequest(request, headerKey))
@@ -15,10 +15,10 @@ public static class HttpRequestPaginationExtensions
         return result;
     }
 
-    public static Task<MlResult<NotEmptyString>> GetHeaderInfoAsync(this HttpRequest request, MemberName headerKey)
-        => request.GetHeaderInfo(headerKey).ToAsync();
+    public static Task<MlResult<NotEmptyString>> GetHeaderAsync(this HttpRequest request, MemberName headerKey)
+        => request.GetHeader(headerKey).ToAsync();
 
-    public static MlResult<IntNonNegative> GetHeaderInfoAsIntNotNegative(this HttpRequest request, MemberName headerKey)
+    public static MlResult<IntNonNegative> GetIntHeader(this HttpRequest request, MemberName headerKey)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
                                 .Bind( _          => InternalReadHeaderRequest(request, headerKey))
@@ -28,44 +28,44 @@ public static class HttpRequestPaginationExtensions
         return result;
     }
 
-    public static Task<MlResult<IntNonNegative>> GetHeaderInfoAsIntNotNegativeAsync(this HttpRequest request, MemberName headerKey)
-        => request.GetHeaderInfoAsIntNotNegative(headerKey).ToAsync();
+    public static Task<MlResult<IntNonNegative>> GetIntHeaderAsync(this HttpRequest request, MemberName headerKey)
+        => request.GetIntHeader(headerKey).ToAsync();
 
-    public static MlResult<IntNonNegative> GetHeaderPageNumber(this HttpRequest request)
+    public static MlResult<IntNonNegative> GetPageNumberHeader(this HttpRequest request)
     {
         MemberName headerKey = global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageNumber;
 
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
-                                .Bind(_ => GetHeaderInfoAsIntNotNegative(request, headerKey));
+                                .Bind(_ => GetIntHeader(request, headerKey));
         return result;
     }
 
-    public static Task<MlResult<IntNonNegative>> GetHeaderPageNumberAsync(this HttpRequest request)
-        => request.GetHeaderPageNumber().ToAsync();
+    public static Task<MlResult<IntNonNegative>> GetPageNumberHeaderAsync(this HttpRequest request)
+        => request.GetPageNumberHeader().ToAsync();
 
-    public static MlResult<IntNonNegative> GetHeaderPageSize(this HttpRequest request)
+    public static MlResult<IntNonNegative> GetPageSizeHeader(this HttpRequest request)
     {
         MemberName headerKey = global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageSize;
 
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
-                                .Bind(_ => GetHeaderInfoAsIntNotNegative(request, headerKey));
+                                .Bind(_ => GetIntHeader(request, headerKey));
         return result;
     }
 
-    public static Task<MlResult<IntNonNegative>> GetHeaderPageSizeAsync(this HttpRequest request)
-        => request.GetHeaderPageSize().ToAsync();
+    public static Task<MlResult<IntNonNegative>> GetPageSizeHeaderAsync(this HttpRequest request)
+        => request.GetPageSizeHeader().ToAsync();
 
-    public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetHeaderPageInfo(this HttpRequest request)
+    public static MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> GetPaginationHeaders(this HttpRequest request)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
-                                .Bind( _             => GetHeaderPageNumber(request)
-                                                            .CreateCompleteMlResult(GetHeaderPageSize(request)))
+                                .Bind( _             => GetPageNumberHeader(request)
+                                                            .CreateCompleteMlResult(GetPageSizeHeader(request)))
                                 .Map (paginationInfo => (PageNumber: paginationInfo.Item1, PageSize: paginationInfo.Item2));
         return result;
     }
 
-    public static Task<MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)>> GetHeaderPageInfoAsync(this HttpRequest request)
-        => request.GetHeaderPageInfo().ToAsync();
+    public static Task<MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)>> GetPaginationHeadersAsync(this HttpRequest request)
+        => request.GetPaginationHeaders().ToAsync();
 
 
     private static MlResult<string> InternalReadHeaderRequest(this HttpRequest request, MemberName headerKey)
@@ -81,17 +81,17 @@ public static class HttpRequestPaginationExtensions
 
 
 
-    public static MlResult<PageRequest> GetHeaderPaginationInfo(this HttpRequest request)
+    public static MlResult<PageRequest> GetPageRequest(this HttpRequest request)
     {
         var result = EnsureFp.NotNull(request, $"{nameof(request)} cannot be null if we want to get information from the header. ")
-                                .Bind(_ => GetHeaderPageNumber(request)
-                                                            .CreateCompleteMlResult(GetHeaderPageSize(request)))
+                                .Bind(_ => GetPageNumberHeader(request)
+                                                            .CreateCompleteMlResult(GetPageSizeHeader(request)))
                                 .Map(paginationInfo => new PageRequest(paginationInfo.Item1, paginationInfo.Item2));
         return result;
     }
 
-    public static Task<MlResult<PageRequest>> GetHeaderPaginationInfoAsync(this HttpRequest request)
-        => request.GetHeaderPaginationInfo().ToAsync();
+    public static Task<MlResult<PageRequest>> GetPageRequestAsync(this HttpRequest request)
+        => request.GetPageRequest().ToAsync();
 
 
 

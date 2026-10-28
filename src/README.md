@@ -247,7 +247,7 @@ dotnet test .\MoralesLarios.OOFP.Core.Tests.Unit\MoralesLarios.OOFP.Core.Tests.U
 
 La versión **2.0.0** es, sobre todo, una **versión de nomenclatura**: se renombraron la solución,
 los proyectos, las carpetas, los tipos, los métodos y las propiedades para que toda la superficie
-pública siga un único juego de convenciones. Son **864 cambios**, repartidos en once niveles, con
+pública siga un único juego de convenciones. Son **888 cambios**, repartidos en catorce fases, con
 puentes `[Obsolete]` en todo lo que se podía mantener compatible.
 
 | Documento | Contenido |

@@ -5,49 +5,49 @@
 namespace MoralesLarios.OOFP.Http;
 
 public partial class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
-                               IHttpApiInvoker  _httpClientFactoryManager,
-                               ServiceKey                        _httpClientFactoryKey) : IRestClientFp<TDto>
+                               IHttpApiInvoker  _apiInvoker,
+                               ServiceKey                        _clientName) : IRestClientFp<TDto>
 { 
 
-    public IHttpApiInvoker GetIHttpClientFactoryManager() => _httpClientFactoryManager;
-    public ServiceKey                       GetClientName()      => _httpClientFactoryKey;
+    public IHttpApiInvoker GetApiInvoker() => _apiInvoker;
+    public ServiceKey                       GetClientName()      => _clientName;
 
 
     public virtual Task<MlResult<IEnumerable<TDto>>> GetAllAsync(Dictionary<string, string> headers = null!, 
                                                                  CancellationToken          ct      = default)
-        => _httpClientFactoryManager.GetAsync<IEnumerable<TDto>>(_httpClientFactoryKey, string.Empty, headers, ct);
+        => _apiInvoker.GetAsync<IEnumerable<TDto>>(_clientName, string.Empty, headers, ct);
 
     public virtual Task<MlResult<TDto>> GetByIdAsync(NotEmptyString             idStr,
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
-        => _httpClientFactoryManager.GetAsync<TDto>(_httpClientFactoryKey, $"id-str/{idStr}", headers, ct);
+        => _apiInvoker.GetAsync<TDto>(_clientName, $"id-str/{idStr}", headers, ct);
 
     public virtual Task<MlResult<TDto>> PostAsync(TDto                       itemBody, 
                                                   Dictionary<string, string> headers = null!, 
                                                   CancellationToken          ct      = default)
-        => _httpClientFactoryManager.PostAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+        => _apiInvoker.PostAsync(_clientName, itemBody, string.Empty, headers, ct);
 
     public virtual Task<MlResult<EmptyValue>> PutAsync(TDto                       itemBody, 
                                                   Dictionary<string, string> headers = null!, 
                                                   CancellationToken          ct      = default)
-        => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+        => _apiInvoker.PutAsync(_clientName, itemBody, string.Empty, headers, ct);
 
     public virtual Task<MlResult<EmptyValue>> PutByIdAsync(NotEmptyString             idStr, 
                                                       TDto                       itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
-        => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, idStr, headers, ct);
+        => _apiInvoker.PutAsync(_clientName, itemBody, idStr, headers, ct);
 
 
     public virtual Task<MlResult<EmptyValue>> DeleteAsync(TDto                       itemBody, 
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
-        => _httpClientFactoryManager.DeleteAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+        => _apiInvoker.DeleteAsync(_clientName, itemBody, string.Empty, headers, ct);
 
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(NotEmptyString             idStr, 
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
-        => _httpClientFactoryManager.DeleteByIdAsync<TDto>(_httpClientFactoryKey, $"{idStr}", headers, ct);
+        => _apiInvoker.DeleteByIdAsync<TDto>(_clientName, $"{idStr}", headers, ct);
 
 
 
@@ -66,49 +66,49 @@ public partial class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
 
 
 public partial class RestClientFp<TRequest, TResponse>(ILogger<RestClientFp<TRequest, TResponse>> _logger,
-                                              IHttpApiInvoker                 _httpClientFactoryManager,
-                                              ServiceKey                                       _httpClientFactoryKey) : IRestClientFp<TRequest, TResponse>
+                                              IHttpApiInvoker                 _apiInvoker,
+                                              ServiceKey                                       _clientName) : IRestClientFp<TRequest, TResponse>
 { 
 
-    public IHttpApiInvoker GetIHttpClientFactoryManager() => _httpClientFactoryManager;
-    public ServiceKey                       GetClientName()      => _httpClientFactoryKey;
+    public IHttpApiInvoker GetApiInvoker() => _apiInvoker;
+    public ServiceKey                       GetClientName()      => _clientName;
 
 
     public virtual Task<MlResult<IEnumerable<TResponse>>> GetAllAsync(Dictionary<string, string> headers = null!, 
                                                                  CancellationToken          ct      = default)
-        => _httpClientFactoryManager.GetAsync<IEnumerable<TResponse>>(_httpClientFactoryKey, string.Empty, headers, ct);
+        => _apiInvoker.GetAsync<IEnumerable<TResponse>>(_clientName, string.Empty, headers, ct);
 
     public virtual Task<MlResult<TResponse>> GetByIdAsync(NotEmptyString             idStr,
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
-        => _httpClientFactoryManager.GetAsync<TResponse>(_httpClientFactoryKey, $"id-str/{idStr}", headers, ct);
+        => _apiInvoker.GetAsync<TResponse>(_clientName, $"id-str/{idStr}", headers, ct);
 
     public virtual Task<MlResult<TResponse>> PostAsync(TRequest                   itemBody, 
                                                        Dictionary<string, string> headers = null!, 
                                                        CancellationToken          ct      = default)
-        => _httpClientFactoryManager.PostAsync<TRequest, TResponse>(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+        => _apiInvoker.PostAsync<TRequest, TResponse>(_clientName, itemBody, string.Empty, headers, ct);
 
     public virtual Task<MlResult<EmptyValue>> PutAsync(TRequest                   itemBody, 
                                                   Dictionary<string, string> headers = null!, 
                                                   CancellationToken          ct      = default)
-        => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+        => _apiInvoker.PutAsync(_clientName, itemBody, string.Empty, headers, ct);
 
     public virtual Task<MlResult<EmptyValue>> PutByIdAsync(NotEmptyString             idStr,
                                                       TRequest                   itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
-        => _httpClientFactoryManager.PutAsync(_httpClientFactoryKey, itemBody, idStr, headers, ct);
+        => _apiInvoker.PutAsync(_clientName, itemBody, idStr, headers, ct);
 
 
     public virtual Task<MlResult<EmptyValue>> DeleteAsync(TRequest                   itemBody, 
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
-        => _httpClientFactoryManager.DeleteAsync(_httpClientFactoryKey, itemBody, string.Empty, headers, ct);
+        => _apiInvoker.DeleteAsync(_clientName, itemBody, string.Empty, headers, ct);
 
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(NotEmptyString             idStr, 
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
-        => _httpClientFactoryManager.DeleteByIdAsync<TResponse>(_httpClientFactoryKey, $"{idStr}", headers, ct);
+        => _apiInvoker.DeleteByIdAsync<TResponse>(_clientName, $"{idStr}", headers, ct);
 
 
 

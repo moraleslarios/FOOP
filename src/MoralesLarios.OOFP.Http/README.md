@@ -308,12 +308,12 @@ Dos clases hermanas con la misma forma: **simplex** (un solo DTO para ida y vuel
 
 ```csharp
 public class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
-                               IHttpApiInvoker  _httpClientFactoryManager,
-                               Key                        _httpClientFactoryKey) : IRestClientFp<TDto>
+                               IHttpApiInvoker  _apiInvoker,
+                               Key                        _clientName) : IRestClientFp<TDto>
 
 public class RestClientFp<TRequest, TResponse>(ILogger<RestClientFp<TRequest, TResponse>> _logger,
-                                              IHttpApiInvoker                 _httpClientFactoryManager,
-                                              Key                                       _httpClientFactoryKey)
+                                              IHttpApiInvoker                 _apiInvoker,
+                                              Key                                       _clientName)
     : IRestClientFp<TRequest, TResponse>
 ```
 
@@ -329,7 +329,7 @@ public interface IRestClientFp<TDto>
     Task<MlResult<Empty>>             PutByIdAsync  (NotEmptyString idStr, TDto itemBody, Dictionary<string, string> headers = null!, CancellationToken ct = default);
     Task<MlResult<Empty>>             DeleteAsync   (TDto itemBody, Dictionary<string, string> headers = null!, CancellationToken ct = default);
     Task<MlResult<Empty>>             DeleteByIdAsync(NotEmptyString idStr, Dictionary<string, string> headers = null!, CancellationToken ct = default);
-    IHttpApiInvoker         GetIHttpClientFactoryManager();
+    IHttpApiInvoker         GetApiInvoker();
 }
 ```
 
@@ -360,11 +360,11 @@ Esta tabla es la parte que de verdad importa, porque define el contrato de rutas
 ### Miembros de infraestructura
 
 ```csharp
-public IHttpApiInvoker GetIHttpClientFactoryManager();   // en la interfaz
+public IHttpApiInvoker GetApiInvoker();   // en la interfaz
 public Key                       GetClientName();        // ⚠️ NO está en la interfaz
 ```
 
-`GetIHttpClientFactoryManager()` es la vía oficial para bajar al nivel 1 desde un cliente derivado
+`GetApiInvoker()` es la vía oficial para bajar al nivel 1 desde un cliente derivado
 (por ejemplo para llamar a un endpoint que no es CRUD). `GetClientName()` existe en la clase
 pero **no en `IRestClientFp<>`**, así que solo es accesible desde dentro de la jerarquía o con la clase concreta.
 
@@ -385,14 +385,14 @@ public class PruebasClient(ILogger<RestClientFp<PruebasDto>> logger,
 {
     // Endpoint que no es CRUD: bajamos al nivel 1 con el manager heredado
     public Task<MlResult<IEnumerable<PruebasDto>>> GetActivasAsync(CancellationToken ct = default)
-        => GetIHttpClientFactoryManager()
+        => GetApiInvoker()
                .GetAsync<IEnumerable<PruebasDto>>(GetClientName(), "activas", null!, ct);
 
     // Sobrescribimos un verbo para adaptar la ruta al servidor real
     public override Task<MlResult<PruebasDto>> GetByIdAsync(NotEmptyString idStr,
                                                             Dictionary<string, string> headers = null!,
                                                             CancellationToken ct = default)
-        => GetIHttpClientFactoryManager()
+        => GetApiInvoker()
                .GetAsync<PruebasDto>(GetClientName(), $"{idStr}", headers, ct);
 }
 ```
@@ -514,35 +514,35 @@ pasarlos como parámetros posicionales es frágil. El proyecto ofrece cuatro `re
 
 ```csharp
 public record ApiCallOptions(string                      Url,
-                                    Key                         HttpClientFactoryKey,
+                                    Key                         ClientName,
                                     Dictionary<string, string>? Headers           = null!,
                                     CancellationToken           CancellationToken = default);
 
 public record ApiCallOptions<TRequest>(
                          string                      Url,
-                         Key                         HttpClientFactoryKey,
+                         Key                         ClientName,
     [property: Required] TRequest                    RequestBody,
                          Dictionary<string, string>? Headers           = null!,
                          CancellationToken           CancellationToken = default);
 
-public record PagedApiCallOptions(string Url, Key HttpClientFactoryKey,
+public record PagedApiCallOptions(string Url, Key ClientName,
                                               IntNonNegative PageNumber, IntNonNegative PageSize,
                                               Dictionary<string, string>? Headers = null!,
                                               CancellationToken CancellationToken = default)
-    : ApiCallOptions(Url, HttpClientFactoryKey, Headers, CancellationToken);
+    : ApiCallOptions(Url, ClientName, Headers, CancellationToken);
 
 public record PagedApiCallOptions<TRequest>(
-                         string Url, Key HttpClientFactoryKey,
+                         string Url, Key ClientName,
     [property: Required] TRequest RequestBody,
                          IntNonNegative PageNumber, IntNonNegative PageSize,
                          Dictionary<string, string>? Headers = null!,
                          CancellationToken CancellationToken = default)
-    : ApiCallOptions<TRequest>(Url, HttpClientFactoryKey, RequestBody, Headers, CancellationToken);
+    : ApiCallOptions<TRequest>(Url, ClientName, RequestBody, Headers, CancellationToken);
 ```
 
 | Record | Hereda de | Añade | Se usa en |
 |---|---|---|---|
-| `ApiCallOptions` | — | `Url`, `HttpClientFactoryKey`, `Headers`, `CancellationToken` | `HttpApiInvoker.GetAsync<T>(parameters, ct)`. |
+| `ApiCallOptions` | — | `Url`, `ClientName`, `Headers`, `CancellationToken` | `HttpApiInvoker.GetAsync<T>(parameters, ct)`. |
 | `ApiCallOptions<TRequest>` | — | `RequestBody` con `[Required]` | `SendAndReadAsync` (protegido). |
 | `PagedApiCallOptions` | `ApiCallOptions` | `PageNumber`, `PageSize` | `GetPagedAsync<T>(parameters, ct)`. |
 | `PagedApiCallOptions<TRequest>` | `ApiCallOptions<TRequest>` | `PageNumber`, `PageSize` | `PostAndReadPagedAsync<TRequest, TItem>`. |
@@ -571,7 +571,7 @@ var page = await _manager.GetPagedAsync<IEnumerable<PruebasDto>>(p2);
 
 ```csharp
 await DataAnnotationsValidator.ValidateAsync(parameters)
-        .TryMapAsync(_ => _httpClientFactory.CreateClient(parameters.HttpClientFactoryKey))
+        .TryMapAsync(_ => _httpClientFactory.CreateClient(parameters.ClientName))
         …
 ```
 
@@ -620,7 +620,7 @@ MlResult<HttpRequestMessage> TrySetHeaders   (this HttpRequestMessage request, D
 > hace el manager) o `TryAddWithoutValidation` en tu propio código.
 >
 > ⚠️ Las cabeceras `X-Page-Number` y `X-Page-Size` son exactamente las que lee
-> `HttpRequestPaginationExtensions.GetHeaderPaginationInfo()` en [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
+> `HttpRequestPaginationExtensions.GetPageRequest()` en [`MoralesLarios.OOFP.AspNetCore.Results`](../MoralesLarios.OOFP.AspNetCore.Results/README.md).
 > Cliente y servidor están acoplados por esos dos literales, duplicados en ambos proyectos.
 
 ### `MlResponseWebExtensions`
@@ -919,7 +919,7 @@ public class PruebasPagedService(HttpApiInvoker _manager)   // ← clase concret
 ```
 
 El manager añade `X-Page-Number` y `X-Page-Size` al `HttpClient` antes de llamar, exactamente las
-cabeceras que lee `GetHeaderPaginationInfo()` en el servidor.
+cabeceras que lee `GetPageRequest()` en el servidor.
 
 > ⚠️ Recuerda: `GetPagedAsync` **no** está en `IHttpApiInvoker`, así que hay que inyectar
 > `HttpApiInvoker`. Si prefieres depender de la interfaz, usa
@@ -1010,7 +1010,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 | CRUD con PK de un solo campo y DTOs distintos de ida/vuelta | `RestClientFp<TRequest, TResponse>` | Hereda + `AddRestClient<IX, X>()`. |
 | CRUD con **PK compuesta** | `CompositeKeyRestClientFp<TDto>` | Hereda + `AddCompositeKeyRestClient<IX, X, TDto>()`. |
 | CRUD con PK compuesta y DTOs distintos | `CompositeKeyRestClientFp<TRequest, TResponse>` | Hereda + `AddCompositeKeyRestClient<…>()`. |
-| Endpoint suelto que no es CRUD | `IHttpApiInvoker` | Inyéctalo directo o usa `GetIHttpClientFactoryManager()`. |
+| Endpoint suelto que no es CRUD | `IHttpApiInvoker` | Inyéctalo directo o usa `GetApiInvoker()`. |
 | Consulta con muchos filtros | `PostAndReadAsync<TFiltro, TResultado>` | El filtro viaja como JSON en el cuerpo. |
 | Listado paginado | `PostAndReadPagedAsync<…>` (interfaz) o `GetPagedAsync<T>` (clase) | Con `PagedApiCallOptions`. |
 | Descarga binaria, `PATCH`, `multipart`, *streaming* | `CreateHttpClient(key)` + `TryMapAsync` | Puerta de escape al `HttpClient` crudo. |
@@ -1116,7 +1116,7 @@ compone; en la frontera (controlador, UI, cola) se traduce con `Match` o con las
 - **Espejo de `AspNetCore.Controllers`**: las rutas que genera (`""`, `id-str/{id}`, `{id}`) encajan con las que
   publican los controladores base del lado servidor, y las cabeceras `X-Page-Number` / `X-Page-Size` con
   las que lee `AspNetCore.Results`.
-- **Puerta de escape siempre disponible**: `CreateHttpClient(key)` y `GetIHttpClientFactoryManager()` te
+- **Puerta de escape siempre disponible**: `CreateHttpClient(key)` y `GetApiInvoker()` te
   devuelven al `HttpClient` crudo, ya envuelto en `MlResult`, para todo lo que la librería no cubre.
 - **Con aristas conocidas**: `clientNameFactory` no funciona, el status HTTP no viaja estructurado y no
   hay control del JSON ni resiliencia integrada. ✅ El bloqueo con `.Result` de

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Juan Francisco Morales Larios
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
@@ -14,10 +14,10 @@ public class RegisterServicesTests
     {
         public static ServiceKey? CapturedKey { get; private set; }
 
-        public TestClient(ILogger<RestClientFp<string>> logger, IHttpApiInvoker httpClientFactoryManager, ServiceKey httpClientFactoryKey)
-            : base(logger, httpClientFactoryManager, httpClientFactoryKey)
+        public TestClient(ILogger<RestClientFp<string>> logger, IHttpApiInvoker apiInvoker, ServiceKey clientName)
+            : base(logger, apiInvoker, clientName)
         {
-            CapturedKey = httpClientFactoryKey;
+            CapturedKey = clientName;
         }
     }
 
@@ -25,10 +25,10 @@ public class RegisterServicesTests
     {
         public static ServiceKey? CapturedKey { get; private set; }
 
-        public DuplexService(ILogger<RestClientFp<string, string>> logger, IHttpApiInvoker httpClientFactoryManager, ServiceKey httpClientFactoryKey)
-            : base(logger, httpClientFactoryManager, httpClientFactoryKey)
+        public DuplexService(ILogger<RestClientFp<string, string>> logger, IHttpApiInvoker apiInvoker, ServiceKey clientName)
+            : base(logger, apiInvoker, clientName)
         {
-            CapturedKey = httpClientFactoryKey;
+            CapturedKey = clientName;
         }
     }
 
@@ -89,7 +89,7 @@ public class RegisterServicesTests
         Action act = () => services.AddCompositeKeyRestClient<ITestClient, TestClient, string>(() => null!);
 
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("httpClientFactoryKey no puede ser null");
+            .WithMessage("clientName no puede ser null");
     }
 
     [Fact]
@@ -102,6 +102,6 @@ public class RegisterServicesTests
         Action act = () => services.AddCompositeKeyRestClient<ITestClient, DuplexService, string, string>(() => null!);
 
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("httpClientFactoryKey no puede ser null");
+            .WithMessage("clientName no puede ser null");
     }
 }

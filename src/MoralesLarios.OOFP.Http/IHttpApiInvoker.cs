@@ -9,7 +9,7 @@ public interface IHttpApiInvoker
     //Task<MlResult<TResponse?>> PostAndReadAsync<TRequest, TResponse>(ApiCallOptions<TRequest> parameters);
     Task<MlResult<TResult>> PostAndReadAsync<T, TResult>(ServiceKey                        clientName,
                                                      T                          itemBody,
-                                                     string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress en el HttpClientFactoryKey
+                                                     string                     url     = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                      Dictionary<string, string> headers = null!,
                                                      CancellationToken          ct      = default);
     Task<MlResult<PagedResult<TItem>>> PostAndReadPagedAsync<TRequest, TItem>(PagedApiCallOptions<TRequest> parameters, CancellationToken ct = default);

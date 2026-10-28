@@ -24,14 +24,14 @@ public static partial class RegisterServices
         where TService        : class
         where TImplementation : class, TService
     {
-        var httpClientFactoryKey = ResolveHttpClientFactoryKey(clientNameFactory, typeof(TImplementation).Name!);
+        var clientName = ResolveClientName(clientNameFactory, typeof(TImplementation).Name!);
 
-        services.AddHttpClient(httpClientFactoryKey, client =>
+        services.AddHttpClient(clientName, client =>
         {
             if (configureClient is not null) configureClient(client);
         });
 
-        services.AddTransient<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp, httpClientFactoryKey));
+        services.AddTransient<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp, clientName));
 
         return services;
     }
@@ -45,16 +45,16 @@ public static partial class RegisterServices
         where TDto            : class
     {
 
-        var httpClientFactoryKey = ResolveHttpClientFactoryKey(clientNameFactory, typeof(TImplementation).Name!);
+        var clientName = ResolveClientName(clientNameFactory, typeof(TImplementation).Name!);
 
-        services.AddHttpClient(httpClientFactoryKey, client =>
+        services.AddHttpClient(clientName, client =>
         {
             if (configureClient is not null) configureClient(client);
         });
 
 
-        services.AddTransient<IRestClientFp<TDto>>(sp => ActivatorUtilities.CreateInstance<RestClientFp<TDto>>(sp, httpClientFactoryKey));
-        services.AddTransient<TService          >(sp => ActivatorUtilities.CreateInstance<TImplementation  >(sp, httpClientFactoryKey));
+        services.AddTransient<IRestClientFp<TDto>>(sp => ActivatorUtilities.CreateInstance<RestClientFp<TDto>>(sp, clientName));
+        services.AddTransient<TService          >(sp => ActivatorUtilities.CreateInstance<TImplementation  >(sp, clientName));
 
         return services;
     }
@@ -69,31 +69,31 @@ public static partial class RegisterServices
         where TResponse       : class
     {
 
-        var httpClientFactoryKey = ResolveHttpClientFactoryKey(clientNameFactory, typeof(TImplementation).Name!);
+        var clientName = ResolveClientName(clientNameFactory, typeof(TImplementation).Name!);
 
-        services.AddHttpClient(httpClientFactoryKey, client =>
+        services.AddHttpClient(clientName, client =>
         {
             if (configureClient is not null) configureClient(client);
         });
 
 
-        services.AddTransient<IRestClientFp<TRequest, TResponse>>(sp => ActivatorUtilities.CreateInstance<RestClientFp<TRequest, TResponse>>(sp, httpClientFactoryKey));
-        services.AddTransient<TService                         >(sp => ActivatorUtilities.CreateInstance<TImplementation                 >(sp, httpClientFactoryKey));
+        services.AddTransient<IRestClientFp<TRequest, TResponse>>(sp => ActivatorUtilities.CreateInstance<RestClientFp<TRequest, TResponse>>(sp, clientName));
+        services.AddTransient<TService                         >(sp => ActivatorUtilities.CreateInstance<TImplementation                 >(sp, clientName));
 
         return services;
     }
 
 
-    private static ServiceKey ResolveHttpClientFactoryKey(Func<ServiceKey> clientNameFactory, string defaultKeyName)
+    private static ServiceKey ResolveClientName(Func<ServiceKey> clientNameFactory, string defaultKeyName)
     {
-        var httpClientFactoryKey = clientNameFactory is not null
+        var clientName = clientNameFactory is not null
             ? clientNameFactory()
             : ServiceKey.CreateFromString(defaultKeyName);
 
-        if (httpClientFactoryKey is null)
-            throw new InvalidOperationException("httpClientFactoryKey no puede ser null");
+        if (clientName is null)
+            throw new InvalidOperationException("clientName no puede ser null");
 
-        return httpClientFactoryKey;
+        return clientName;
     }
 
 

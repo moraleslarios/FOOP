@@ -1,35 +1,35 @@
-namespace MoralesLarios.OOFP.Http.Requests;
+﻿namespace MoralesLarios.OOFP.Http.Requests;
 
 
 public record ApiCallOptions(string                      Url,
-                                    ServiceKey                         HttpClientFactoryKey,
+                                    ServiceKey                         ClientName,
                                     Dictionary<string, string>? Headers           = null!,
                                     CancellationToken           CancellationToken = default
 )
 {
     public static implicit operator ApiCallOptions((NotEmptyString              url,
-                                                           ServiceKey                         httpClientFactoryKey,
+                                                           ServiceKey                         clientName,
                                                            Dictionary<string, string>? headers,
                                                            CancellationToken           cancellationToken) value) 
-        => new (value.url, value.httpClientFactoryKey, value.headers,  value.cancellationToken);
+        => new (value.url, value.clientName, value.headers,  value.cancellationToken);
 }
 
 
 
 
 public record ApiCallOptions<TRequest>(                     string                      Url,
-                                                                   ServiceKey                         HttpClientFactoryKey,
+                                                                   ServiceKey                         ClientName,
                                               [property: Required] TRequest                    RequestBody,
                                                                    Dictionary<string, string>? Headers           = null!,
                                                                    CancellationToken           CancellationToken = default
 )
 {
     public static implicit operator ApiCallOptions<TRequest>((string                      url,
-                                                                     ServiceKey                         httpClientFactoryKey,
+                                                                     ServiceKey                         clientName,
                                                                      TRequest                    requestBody,
                                                                      Dictionary<string, string>? headers,
                                                                      CancellationToken           cancellationToken) value) 
-        => new (value.url, value.httpClientFactoryKey, value.requestBody, value.headers, value.cancellationToken);
+        => new (value.url, value.clientName, value.requestBody, value.headers, value.cancellationToken);
 
 
 }

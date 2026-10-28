@@ -18,7 +18,10 @@ $viejos = @(
  'MoralesLarios.OOFP.WebControllers','MoralesLarios.OOFP.WebServices',
  'MoralesLarios.OOFP.EFCore','MoralesLarios.OOFP.ValueObjects.IO',
  'MoralesLarios.OOFP.Internals','AddScopedtGenServicesFp','AddTransientGenServicesFp',
- 'AddSingletonGenServicesFp'
+ 'AddSingletonGenServicesFp',
+ 'GetIHttpClientFactoryManager','HttpClientFactoryKey','httpClientFactoryManager',
+ 'GetHeaderInfo','GetHeaderPageInfo','GetHeaderPaginationInfo','GetHeaderPageNumber',
+ 'GetHeaderPageSize','ResolveHttpClientFactoryKey'
 )
 
 $out = New-Object System.Collections.Generic.List[string]

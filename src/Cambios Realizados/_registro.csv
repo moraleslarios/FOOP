@@ -863,3 +863,27 @@ fase13-genericos;13;Generico;Core;MlResultBindExtensions.Obsolete;TReturn;TResul
 fase13-genericos;13;Generico;Core;MlResultChangeReturnResult.Obsolete;TReturn;TResult;0;51;Unificacion D-10. Puentes Obsolete
 fase13-genericos;13;Generico;Core;MlErrorDetailsActions;TReturn;TResult;0;14;Unificacion D-10
 fase13-genericos;13;Mencion doc;-;CONTRIBUTING.md;(inexistente);CONTRIBUTING.md;0;1;Paso 13.1. Guia de estilo de nomenclatura de la 2.0.0
+fase14-residuos;14;Metodo;Http;IRestClientFp(TDto);GetIHttpClientFactoryManager;GetApiInvoker;0;2;Sufijo Manager prohibido. Devuelve el IHttpApiInvoker subyacente
+fase14-residuos;14;Metodo;Http;IRestClientFp(TRequest, TResponse);GetIHttpClientFactoryManager;GetApiInvoker;0;2;Sufijo Manager prohibido. Devuelve el IHttpApiInvoker subyacente
+fase14-residuos;14;Metodo;Http;RestClientFp(TDto);GetIHttpClientFactoryManager;GetApiInvoker;1;2;Sufijo Manager prohibido. Puente Obsolete en RestClientFp.Obsolete.cs
+fase14-residuos;14;Metodo;Http;RestClientFp(TRequest, TResponse);GetIHttpClientFactoryManager;GetApiInvoker;1;2;Sufijo Manager prohibido. Puente Obsolete en RestClientFp.Obsolete.cs
+fase14-residuos;14;Metodo;Http;RestClientFp(TDto);GetHttpClientFactoryKey;GetClientName;1;0;Puente Obsolete anadido tambien a la clase de un generico
+fase14-residuos;14;Propiedad;Http;ApiCallOptions;HttpClientFactoryKey;ClientName;0;14;Coherente con GetClientName e IHttpClientFactory.CreateClient(name)
+fase14-residuos;14;Propiedad;Http;PagedApiCallOptions;HttpClientFactoryKey;ClientName;0;8;Coherente con ApiCallOptions.ClientName
+fase14-residuos;14;Campo;Http;RestClientFp(TDto);_httpClientFactoryManager;_apiInvoker;0;38;Campo del constructor primario. Coherente con IHttpApiInvoker
+fase14-residuos;14;Campo;Http;RestClientFp(TDto);_httpClientFactoryKey;_clientName;0;38;Campo del constructor primario. Coherente con GetClientName
+fase14-residuos;14;Campo;Http;HttpApiInvoker;_httpClientFactoryManager;_apiInvoker;0;11;Campo interno
+fase14-residuos;14;Metodo;Http;RegisterServices;ResolveHttpClientFactoryKey;ResolveClientName;0;19;Helper interno de registro. Coherente con ClientName
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderInfo;GetHeader;1;32;Sufijo Info prohibido. Simetrico de AddHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderInfoAsync;GetHeaderAsync;1;0;Sufijo Info prohibido. Simetrico de AddHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderInfoAsIntNotNegative;GetIntHeader;1;0;Sufijo Info prohibido. Simetrico de AddIntHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderInfoAsIntNotNegativeAsync;GetIntHeaderAsync;1;0;Sufijo Info prohibido. Simetrico de AddIntHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPageNumber;GetPageNumberHeader;1;0;Simetrico de AddPageNumberHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPageNumberAsync;GetPageNumberHeaderAsync;1;0;Simetrico de AddPageNumberHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPageSize;GetPageSizeHeader;1;0;Simetrico de AddPageSizeHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPageSizeAsync;GetPageSizeHeaderAsync;1;0;Simetrico de AddPageSizeHeader
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPageInfo;GetPaginationHeaders;1;0;Sufijo Info prohibido. Simetrico de AddPaginationHeaders
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPageInfoAsync;GetPaginationHeadersAsync;1;0;Sufijo Info prohibido. Simetrico de AddPaginationHeaders
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPaginationInfo;GetPageRequest;1;13;Sufijo Info prohibido. Devuelve un PageRequest
+fase14-residuos;14;Metodo;AspNetCore.Results;HttpRequestPaginationExtensions;GetHeaderPaginationInfoAsync;GetPageRequestAsync;1;2;Sufijo Info prohibido. Devuelve un PageRequest
+fase14-residuos;14;Fichero;AspNetCore.Results;Helpers;(inexistente);HttpRequestPaginationExtensions.Obsolete.cs;12;0;Nuevo fichero con los 12 puentes Obsolete de la clase

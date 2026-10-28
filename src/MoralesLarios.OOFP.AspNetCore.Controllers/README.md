@@ -861,7 +861,7 @@ public class UsersController(ICrudServiceFp<User, UserDto> svc,
     [HttpGet("paged")]
     [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPagedAsync(CancellationToken ct = default)
-        => await Request.GetHeaderPaginationInfoAsync()
+        => await Request.GetPageRequestAsync()
                         .MapIfFailAsync(errors => MlProblemDetails.BadRequestError(
                                                       detail: errors.GetErrorsSummary()))
                         .BindAsync(pag => repoPag.TryGetInternalDataAsync(pag, ct: ct))
@@ -980,7 +980,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 | Quitar un endpoint heredado | Sobreescribirlo y devolver `MlResults.MethodNotAllowed()` (o no usar estas bases) |
 | Un `Location` correcto en el `201` | Sobreescribir `PostAsync` y usar `ToCreatedProblemDetailsResult(uri)` |
 | `400` en vez de `404`/`500` para un `id` inválido | Sobreescribir con `MlResults.BadRequest` o `MlProblemDetails.BadRequestError` |
-| Paginar | Endpoint propio con `GetHeaderPaginationInfo` + `IEfPagedReadRepository<T>` |
+| Paginar | Endpoint propio con `GetPageRequest` + `IEfPagedReadRepository<T>` |
 | Proteger la API | `[Authorize]` en la derivada o política global |
 | Documentar en Swagger | `[ProducesResponseType]` + `IOperationFilter` para `CompositeKeyParameterAttribute` |
 | Validar el DTO | `ValidateObject()` / `IMlSelfValidatable<T>` antes del `BindAsync` al servicio |
