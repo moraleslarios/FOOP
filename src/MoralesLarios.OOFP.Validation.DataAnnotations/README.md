@@ -1,4 +1,4 @@
-# MoralesLarios.OOFP.Validation.DataAnnotations — DataAnnotations sin excepciones
+﻿# MoralesLarios.OOFP.Validation.DataAnnotations — DataAnnotations sin excepciones
 
 Puente entre los atributos clásicos de `System.ComponentModel.DataAnnotations` (`[Required]`, `[Range]`, `[EmailAddress]`, `[StringLength]`…) y el modelo funcional de la solución: en lugar de rellenar un `ModelState` o lanzar una `ValidationException`, **devuelve un [`MlResult<T>`](../docs/core-types/MlResult.md)** listo para encadenar.
 
@@ -15,7 +15,7 @@ Permite reutilizar las anotaciones que ya tienen tus DTOs — sin reescribir reg
 5. [`Helpers.Extensions` — los métodos de extensión](#helpersextensions--los-métodos-de-extensión)
 6. [Cómo se convierten los errores](#cómo-se-convierten-los-errores)
 7. [Objetos individuales vs. colecciones](#objetos-individuales-vs-colecciones)
-8. [Combinación con `MlSelfValidatable<T>`](#combinación-con-mlvalidablefpt)
+8. [Combinación con `IMlSelfValidatable<T>`](#combinación-con-imlselfvalidatablet)
 9. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
 10. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
 11. [Ejemplos prácticos](#ejemplos-prácticos)
@@ -251,16 +251,16 @@ filas.ValidateWithDataAnnotations()
 
 ---
 
-## Combinación con `MlSelfValidatable<T>`
+## Combinación con `IMlSelfValidatable<T>`
 
-Este proyecto **no obliga** a heredar de [`MlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md) — funciona con cualquier clase. Pero la combinación de ambos es el patrón más potente: **atributos para lo declarativo, código para lo que los atributos no saben expresar**.
+Este proyecto **no obliga** a implementar [`IMlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md) — funciona con cualquier clase. Pero la combinación de ambos es el patrón más potente: **atributos para lo declarativo, código para lo que los atributos no saben expresar**.
 
 ```csharp
 using MoralesLarios.OOFP.Validation;
 using MoralesLarios.OOFP.Validation.DataAnnotations.Helpers;
 using System.ComponentModel.DataAnnotations;
 
-public class ReservaRequest : MlSelfValidatable<ReservaRequest>
+public class ReservaRequest : IMlSelfValidatable<ReservaRequest>
 {
     [Required(ErrorMessage = "El nombre del titular es obligatorio")]
     [StringLength(80, ErrorMessage = "El titular no puede superar los 80 caracteres")]
@@ -503,7 +503,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 | Validar lo que devuelve una `Task` | `DataAnnotationsValidator.ValidateAsync(tarea)` |
 | Obtener los `ValidationResult` completos (con `MemberNames`) | `dto.ValidateDataAnnotations()` |
 | Saber a qué elemento pertenece cada error | `Select((x,i) => …AddMlErrorDetailIfFail("fila", i))` + `MergeErrorsIfExists()` |
-| Reglas entre varios campos | `MlSelfValidatable<T>.Validate()` + `EnsureFp.That` |
+| Reglas entre varios campos | `IMlSelfValidatable<T>.Validate()` + `EnsureFp.That` |
 | Reglas complejas, condicionales o con dependencias | [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) |
 | Reglas reutilizables por tipo de dato | [`ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) |
 
@@ -518,7 +518,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 5. **Valida los objetos anidados explícitamente**: el motor no baja de nivel.
 6. **No importes a la vez** `MoralesLarios.OOFP.Helpers.Extensions` y `…Dataannotations.Helpers` en el mismo fichero si vas a usar `ValidateObject`.
 7. **No confíes en las sobrecargas `Async` para valores que puedan ser nulos**: no comprueban nada.
-8. **Combina atributos con `MlSelfValidatable<T>`**: declarativo para el campo, código para las relaciones entre campos.
+8. **Combina atributos con `IMlSelfValidatable<T>`**: declarativo para el campo, código para las relaciones entre campos.
 9. **No dupliques la validación con la automática de MVC**: elige un mecanismo por proyecto y sé coherente.
 10. **Añade contexto con `AddMlErrorDetailIfFail`** (índice de fila, identificador, fichero) cuando el error deba diagnosticarse en logs.
 11. **No uses atributos personalizados con servicios inyectados**: aquí el `ValidationContext` no tiene `IServiceProvider`.
@@ -533,7 +533,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 - `validateAllProperties: true` viene fijado: **todos los atributos se evalúan** y **todos los errores se devuelven** juntos, sin cortocircuito.
 - Para colecciones, `MergeErrorsIfExists` **acumula** los errores de todos los elementos (pero pierde el índice: añádelo con `AddMlErrorDetailIfFail`).
 - ⚠️ Las sobrecargas `Async` **no comprueban `null`** y **no son asíncronas de verdad**; `ValidateObject` **colisiona** con el homónimo del núcleo; **no valida objetos anidados**; el `ValidationContext` **no tiene `IServiceProvider`**.
-- Encaja perfectamente con [`MlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md): atributos para lo declarativo, `Validate()` para las reglas entre campos.
+- Encaja perfectamente con [`IMlSelfValidatable<T>`](../MoralesLarios.OOFP.Validation/README.md): atributos para lo declarativo, `Validate()` para las reglas entre campos.
 
 ---
 
@@ -547,7 +547,7 @@ await EnsureFp.NotNull(dto, "DTO obligatorio").BindAsync(d => d.ValidateWithData
 
 ### Proyectos relacionados
 
-- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — el contrato base `MlSelfValidatable<T>`
+- [`MoralesLarios.OOFP.Validation`](../MoralesLarios.OOFP.Validation/README.md) — el contrato base `IMlSelfValidatable<T>`
 - [`MoralesLarios.OOFP.Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md) — alternativa con reglas fluidas
 - [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) — reglas encapsuladas en tipos
 - [`MoralesLarios.OOFP.Application`](../MoralesLarios.OOFP.Application/README.md) — servicios genéricos donde encadenar la validación

@@ -65,7 +65,7 @@ Los 4 warnings que quedan son `CS8604` en `Helpers/EnsureFp.Strings.cs` (líneas
 
 ## 🔴 R1 — Erratas en nombres públicos (no renombradas)
 
-- [ ] **R1. Tres erratas en identificadores públicos de `MlResult`**
+- [x] **R1. Tres erratas en identificadores públicos de `MlResult`**
     - **Proyecto:** `MoralesLarios.OOFP`
     - **Archivo / clase:** `Types/MlResultActionsBind.cs`, `Types/MlResultActionsMap.cs`,
       `Types/MlResultActionsErrorsDetails.cs`, `Types/MlResultBucles.cs`
@@ -93,6 +93,11 @@ Los 4 warnings que quedan son `CS8604` en `Helpers/EnsureFp.Strings.cs` (líneas
         4. Eliminar el viejo en la siguiente mayor.
     - **Nota:** este punto se solapa con
       [`Consejos-Nomenclatura.md`](Consejos-Nomenclatura.md); consolidar allí antes de ejecutarlo.
+    - ✅ **CERRADO en la 2.0.0.** Se aplicó exactamente la propuesta de migración: los tres nombres
+      se corrigieron (`…IfFailed…`, `…Different…`, `MergeFailureErrors`) y los antiguos quedaron
+      como puentes `[Obsolete]` en los ficheros `*.Obsolete.cs`, vigentes durante toda la rama 2.x.
+      Detalle en
+      [`Cambios Realizados/Renombrados-v2.0.0.md`](../Cambios%20Realizados/Renombrados-v2.0.0.md).
 
 ---
 

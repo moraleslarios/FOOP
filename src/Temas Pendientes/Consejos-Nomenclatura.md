@@ -1,4 +1,4 @@
-# Consejos de nomenclatura para MoralesLarios.OOFP
+﻿# Consejos de nomenclatura para MoralesLarios.OOFP
 
 > 📌 **Este documento no cambia ni una línea de código.** Es una propuesta de renombrados,
 > ordenada por proyecto, con el nombre actual, el nombre sugerido y el motivo. Sirve como
@@ -700,27 +700,27 @@ juntos en la misma versión mayor**.
 
 Marca cada nivel cuando esté cerrado (renombrado + `[Obsolete]` + docs actualizadas + tests en verde).
 
-- [ ] **Nivel 0** — Carpeta `MoralesLarios.FOOP\` → `MoralesLarios.OOFP\`, `.sln` duplicados
+- [x] **Nivel 0** — Carpeta `MoralesLarios.FOOP\` → `MoralesLarios.OOFP\`, `.sln` duplicados
       eliminados, proyectos y carpetas renombrados, ficheros vacíos borrados.
-- [ ] **Nivel 1** — Erratas ortográficas corregidas con `[Obsolete]` en las públicas
+- [x] **Nivel 1** — Erratas ortográficas corregidas con `[Obsolete]` en las públicas
       (`TryMapIAsyncf`, `Alwais`, `Lenght`, `Bydouble`, `Scopedt`, `TEnumrableResponse`,
       `BaseAdress`, `soported`, `diferent`, `Bucles`).
-- [ ] **Nivel 2** — Núcleo: `IsValid`/`IsFail`, `MlErrorsDetails`, constantes en `PascalCase`,
+- [x] **Nivel 2** — Núcleo: `IsValid`/`IsFail`, `MlErrorsDetails`, constantes en `PascalCase`,
       sufijos de familia revisados.
-- [ ] **Nivel 3** — `ValueObjects` y `ValueObjects.IO`: tipos de nombre corto con contexto,
+- [x] **Nivel 3** — `ValueObjects` y `ValueObjects.IO`: tipos de nombre corto con contexto,
       fábricas homogéneas, `EndpointPattern` renombrado.
-- [ ] **Nivel 4** — `Validation`, `DataAnnotations` (con la A mayúscula) y `FluentValidations`.
-- [ ] **Nivel 5** — `Shared`, `FileSystem`, `Configuration` y `Logging`.
-- [ ] **Nivel 6** — `EntityFrameworkCore`: familias de repositorio, `SortDirection`,
+- [x] **Nivel 4** — `Validation`, `DataAnnotations` (con la A mayúscula) y `FluentValidations`.
+- [x] **Nivel 5** — `Shared`, `FileSystem`, `Configuration` y `Logging`.
+- [x] **Nivel 6** — `EntityFrameworkCore`: familias de repositorio, `SortDirection`,
       `GetRepository`, `keySelector`.
-- [ ] **Nivel 7** — `Application`: `ICrudServiceFp`, `MlProblemDetails`, sin `Duplex`.
-- [ ] **Nivel 8** — `AspNetCore.Results`: clase `…Plus` retirada, `ToCreatedProblemDetailsResult`,
+- [x] **Nivel 7** — `Application`: `ICrudServiceFp`, `MlProblemDetails`, sin `Duplex`.
+- [x] **Nivel 8** — `AspNetCore.Results`: clase `…Plus` retirada, `ToCreatedProblemDetailsResult`,
       cabeceras de paginación como constantes compartidas, `ContainsAnyKey`.
-- [ ] **Nivel 9** — `AspNetCore.Controllers`: `MlCrudControllerBase`,
+- [x] **Nivel 9** — `AspNetCore.Controllers`: `MlCrudControllerBase`,
       `MlCompositeKeyCrudControllerBase`, `ParseKeyValues`, `ConvertToType`, rutas homogéneas.
-- [ ] **Nivel 10** — `Http`: `IRestClientFp`, `IHttpApiInvoker`, `PostAndReadAsync`,
+- [x] **Nivel 10** — `Http`: `IRestClientFp`, `IHttpApiInvoker`, `PostAndReadAsync`,
       `ApiCallOptions`, `clientName`.
-- [ ] **Cierre** — Reglas de la [guía de estilo](#guía-de-estilo-resultante) escritas en
+- [x] **Cierre** — Reglas de la [guía de estilo](#guía-de-estilo-resultante) escritas en
       `CONTRIBUTING.md`, `__Doc/` sin referencias a nombres antiguos, y los `[Obsolete]` del
       ciclo anterior eliminados.
 

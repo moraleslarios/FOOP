@@ -815,8 +815,8 @@ fase11d-residuos;7;Parametro;MoralesLarios.OOFP.AspNetCore.Controllers;MoralesLa
 fase11d-residuos;7;Parametro;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers.MlCachedCompositeKeyCrudControllerBase;_pkFields;_keySelector;0;4;Es una funcion selectora, no una lista de campos
 fase11d-residuos;8;Campo;MoralesLarios.OOFP.AspNetCore.Results;MoralesLarios.OOFP.AspNetCore.Results.Helpers.MlResultActionResultExtensionsLegacy;notFoundKeys;NotFoundDetailKeys;0;2;Campo estatico pasado a readonly y PascalCase
 fase11d-residuos;10;Literal;MoralesLarios.OOFP.Http;MoralesLarios.OOFP.Http.HttpApiInvoker.GetPagedAsync;"GetPaginationAsync<...>";"GetPagedAsync<...>";0;1;Literal de traza de log desincronizado con el nombre del metodo
-fase12-contratos;12;Miembro;MoralesLarios.OOFP.ValueObjects;DecimalNonNegative;public static decimal MinAllowedValue { get; private set; };private const decimal MinAllowedValue;1;0;C3: el limite deja de ser estado mutable publico. El puente estatico limit sigue existiendo en DecimalNonNegative.Obsolete.cs.
-fase12-contratos;12;Miembro;MoralesLarios.OOFP.ValueObjects;DoubleNonNegative;public static double MinAllowedValue { get; private set; };private const double MinAllowedValue;1;0;C3: el limite deja de ser estado mutable publico. El puente estatico limit sigue existiendo en DoubleNonNegative.Obsolete.cs.
+fase12-contratos;12;Miembro;MoralesLarios.OOFP.ValueObjects;DecimalNonNegative;public static decimal MinAllowedValue { get, private set };private const decimal MinAllowedValue;1;0;C3: el limite deja de ser estado mutable publico. El puente estatico limit sigue existiendo en DecimalNonNegative.Obsolete.cs.
+fase12-contratos;12;Miembro;MoralesLarios.OOFP.ValueObjects;DoubleNonNegative;public static double MinAllowedValue { get, private set };private const double MinAllowedValue;1;0;C3: el limite deja de ser estado mutable publico. El puente estatico limit sigue existiendo en DoubleNonNegative.Obsolete.cs.
 fase12-contratos;12;Miembro;MoralesLarios.OOFP.ValueObjects;Age;public Age(int value);protected Age(int value);0;0;C4: el constructor lanzaba excepcion. Se usa la factoria FromInt/ByInt.
 fase12-contratos;12;Miembro;MoralesLarios.OOFP.ValueObjects;Id;public Id(double value);protected Id(double value);0;0;C4: el constructor lanzaba excepcion. Se usa la factoria FromDouble/ByDouble.
 fase12-contratos;12;Miembro;MoralesLarios.OOFP.ValueObjects;IdLite;public IdLite(int value);protected IdLite(int value);0;0;C4: el constructor lanzaba excepcion. Se usa la factoria FromInt/ByInt.
@@ -830,7 +830,36 @@ fase12-contratos;12;Tipo;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching
 fase12-contratos;12;Tipo;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers;public class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>;public abstract class MlCachedCompositeKeyCrudControllerBase<TEntity, TDto>;0;0;C10.
 fase12-contratos;12;Tipo;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching;MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching.Controllers;public class MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>;public abstract class MlCachedCompositeKeyCrudControllerBase<TEntity, TRequest, TResponse>;0;0;C10.
 fase12-contratos;12;Metodo;MoralesLarios.OOFP.Http;MoralesLarios.OOFP.Http.Helpers.MlResponseWebExtensions;ToResponseErrorsDescriptionAsync;ReadErrorDescriptionAsync;1;5;C11: el nombre no indicaba que lee el cuerpo de la respuesta.
-fase12-contratos;12;Metodo;MoralesLarios.OOFP.Http;MoralesLarios.OOFP.Http.Helpers.MlResponseWebExtensions;ToResponseErrorsDescription (sincrono, usaba .Result);ReadErrorDescriptionAsync (unica version, asincrona);1;5;C11: se elimina la version sincrona que bloqueaba con .Result; las 5 llamadas de HttpApiInvoker pasan a await.
-fase12-contratos;12;Metodo;MoralesLarios.OOFP.AspNetCore.Controllers;MoralesLarios.OOFP.AspNetCore.Controllers.RegisterServices;AddMlControllers (no-op sin marcar);AddMlControllers [Obsolete] no-op;1;0;C12: no registraba nada; se marca Obsolete para que el consumidor retire la llamada. El puente AddWebControllers ya no delega.
+fase12-contratos;12;Metodo;MoralesLarios.OOFP.Http;MoralesLarios.OOFP.Http.Helpers.MlResponseWebExtensions;ToResponseErrorsDescription (sincrono, usaba .Result);ReadErrorDescriptionAsync (unica version, asincrona);1;5;C11: se elimina la version sincrona que bloqueaba con .Result. Las 5 llamadas de HttpApiInvoker pasan a await.
+fase12-contratos;12;Metodo;MoralesLarios.OOFP.AspNetCore.Controllers;MoralesLarios.OOFP.AspNetCore.Controllers.RegisterServices;AddMlControllers (no-op sin marcar);AddMlControllers [Obsolete] no-op;1;0;C12: no registraba nada. Se marca Obsolete para que el consumidor retire la llamada. El puente AddWebControllers ya no delega.
 fase12-contratos;12;Miembro;MoralesLarios.OOFP.AspNetCore.Controllers;CompositeKeyParameterAttribute;public string Description (string description = null!);public string? Description (string? description = null);0;0;C14: anulabilidad correcta en lugar del supresor null!.
 fase12-contratos;12;Comportamiento;MoralesLarios.OOFP.AspNetCore.Controllers;MoralesLarios.OOFP.AspNetCore.Controllers.Helpers.Extensions;DateTime.TryParse/TryParseExact con CurrentCulture;con CultureInfo.InvariantCulture;0;0;C16: el parseo de claves de URL dependia de la cultura del servidor.
+fase13-docs;13;Fichero doc;-;docs/Several;1_EmptyToFailed.md;1_FailIfEmpty.md;0;64;Renombrado con git mv; 64 referencias actualizadas en los .md
+fase13-docs;13;Fichero doc;-;docs/Several;3_BoolToResult.md;3_FailIfFalse.md;0;;Renombrado con git mv
+fase13-docs;13;Fichero doc;-;docs/Several;4_Combine.md;4_CombineAll.md;0;;Renombrado con git mv
+fase13-docs;13;Mencion doc;-;docs/core-types/MlResultCollections.md;ProjectionWhileAsync;TraverseWhileAsync;0;5;Alineado con el nombre real del API
+fase13-docs;13;Mencion doc;-;docs/core-types/MlResultCollections.md;ProjectionSplitAsync;TraverseSplitAsync;0;4;Alineado con el nombre real del API
+fase13-docs;13;Mencion doc;-;docs/loops/Collections.md;ProjectionWhileAsync;TraverseWhileAsync;0;1;
+fase13-docs;13;Mencion doc;-;docs/loops/Collections.md;ProjectionSplitAsync;TraverseSplitAsync;0;3;
+fase13-docs;13;Mencion doc;-;docs/1_Intro.md;ProjectionSplitAsync;TraverseSplitAsync;0;1;
+fase13-docs;13;Mencion doc;-;MoralesLarios.OOFP.Core/README.md;ProjectionWhileAsync;TraverseWhileAsync;0;1;
+fase13-docs;13;Mencion doc;-;MoralesLarios.OOFP.Core/README.md;ProjectionSplitAsync;TraverseSplitAsync;0;1;
+fase13-docs;13;Mencion doc;-;MoralesLarios.OOFP.FileSystem/README.md;IWrapperIOExtendido;IMlFileSystemExtendido;0;2;Ejemplo de extension del contrato
+fase13-docs;13;Mencion doc;-;MoralesLarios.OOFP.FileSystem/README.md;WrapperIOExtendido;MlFileSystemExtendido;0;1;Ejemplo de extension del contrato
+fase13-docs;13;Mencion doc;-;MoralesLarios.OOFP.Shared/README.md;PaginationResultInfoExtensions;PagedResultExtensions;0;1;Ejemplo de extensiones sobre PagedResult<T>
+fase13-docs;13;Mencion doc;-;docs/Several/1_FailIfEmpty.md;TryEmptyToFailed;TryFailIfEmpty;0;2;Nota "no existe Try..."
+fase13-docs;13;Mencion doc;-;docs/Several/2_FailIfNull.md;TryNullToFailed;TryFailIfNull;0;2;Nota "no existe Try..."
+fase13-docs;13;Mencion doc;-;docs/Several/3_FailIfFalse.md;TryBoolToResult;TryFailIfFalse;0;2;Nota "no existe Try..."
+fase13-docs;13;Ancla doc;-;18 ficheros .md;anclas con nombres de la 1.x;anclas con nombres de la 2.0.0;0;59;59 anclas internas corregidas: de 57 rotas a 0
+fase13-docs;13;Codificacion;-;AspNetCore.Controllers.OutputCaching/README.md;98 caracteres U+FFFD (mojibake preexistente);texto correcto UTF-8;0;;Dano preexistente de commits de abril-junio; tambien 17 lineas con el arbol de ficheros, flechas y emojis restaurados
+fase13-docs;13;Codificacion;-;EntityFrameworkCore.Sample/README.md;12 caracteres U+FFFD (mojibake preexistente);texto correcto UTF-8;0;;Dano preexistente
+fase13-genericos;13;Generico;Core;MlResultBindExtensions;TReturn;TResult;0;1287;Unificacion D-10. El plan exigia uno de los dos. Se elige TResult por coherencia con Func(T, TResult) del BCL. El nombre de un parametro de tipo no forma parte de la firma: no hay ruptura binaria ni de codigo fuente
+fase13-genericos;13;Generico;Core;MlResultMapExtensions;TReturn;TResult;0;1135;Unificacion D-10
+fase13-genericos;13;Generico;Core;MlResultMatchExtensions;TReturn;TResult;0;75;Unificacion D-10
+fase13-genericos;13;Generico;Core;MlResultChangeReturnResult;TReturn;TResult;0;200;Unificacion D-10
+fase13-genericos;13;Generico;Core;MlResultConversions;TReturn;TResult;0;80;Unificacion D-10
+fase13-genericos;13;Generico;Core;MlResultExtensions;TReturn;TResult;0;40;Unificacion D-10
+fase13-genericos;13;Generico;Core;MlResultBindExtensions.Obsolete;TReturn;TResult;0;60;Unificacion D-10. Puentes Obsolete
+fase13-genericos;13;Generico;Core;MlResultChangeReturnResult.Obsolete;TReturn;TResult;0;51;Unificacion D-10. Puentes Obsolete
+fase13-genericos;13;Generico;Core;MlErrorDetailsActions;TReturn;TResult;0;14;Unificacion D-10
+fase13-genericos;13;Mencion doc;-;CONTRIBUTING.md;(inexistente);CONTRIBUTING.md;0;1;Paso 13.1. Guia de estilo de nomenclatura de la 2.0.0
