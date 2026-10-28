@@ -10,60 +10,60 @@ public static partial class MlResultChangeReturnResult
     #region ChangeReturnResult
 
 
-    public static MlResult<TReturn> ChangeReturnResult<T, TReturn>(this MlResult<T>     source,
-                                                                        TReturn         validValue,
+    public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T>     source,
+                                                                        TResult         validValue,
                                                                         MlErrorDetails failValue)
         => source.Match(
                             valid: x      => validValue.ToMlResultValid(),
-                            fail : errors => failValue.ToMlResultFail<TReturn>()
+                            fail : errors => failValue.ToMlResultFail<TResult>()
                         );
 
-    public static MlResult<TReturn> ChangeReturnResult<T, TReturn>(this MlResult<T> source,
-                                                                        TReturn     validValue,
+    public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T> source,
+                                                                        TResult     validValue,
                                                                         MlError     failValue)
         => ChangeReturnResult(source, validValue, failValue.ToMlErrorsDetails());
 
-    public static MlResult<TReturn> ChangeReturnResult<T, TReturn>(this MlResult<T>         source,
-                                                                        TReturn             validValue,
+    public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T>         source,
+                                                                        TResult             validValue,
                                                                         IEnumerable<string> failValue)
         => ChangeReturnResult(source, validValue, failValue.ToMlErrorsDetails());
 
-    public static MlResult<TReturn> ChangeReturnResult<T, TReturn>(this MlResult<T> source,
-                                                                        TReturn     validValue,
+    public static MlResult<TResult> ChangeReturnResult<T, TResult>(this MlResult<T> source,
+                                                                        TResult     validValue,
                                                                         string      failValue)
         => ChangeReturnResult(source, validValue, failValue.ToMlErrorsDetails());
 
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this MlResult<T>     source,
-                                                                                         TReturn         validValue,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this MlResult<T>     source,
+                                                                                         TResult         validValue,
                                                                                          MlErrorDetails failValue)
         => await source.MatchAsync(
                                         validAsync: x      => validValue.ToMlResultValidAsync(),
-                                        failAsync : errors => failValue.ToMlResultFailAsync<TReturn>()
+                                        failAsync : errors => failValue.ToMlResultFailAsync<TResult>()
                                     );
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                                         TReturn           validValue,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                                                         TResult           validValue,
                                                                                          MlErrorDetails   failValue)
         => (await sourceAsync).Match(
                                         valid: x      => validValue.ToMlResultValid(),
-                                        fail : errors => failValue.ToMlResultFail<TReturn>()
+                                        fail : errors => failValue.ToMlResultFail<TResult>()
                                     );
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                                         TReturn           validValue,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                                                         TResult           validValue,
                                                                                          MlError           failValue)
-        => await ChangeReturnResultAsync<T, TReturn>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAsync<T, TResult>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                                         TReturn           validValue,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                                                         TResult           validValue,
                                                                                          IEnumerable<string> failValue)
-        => await ChangeReturnResultAsync<T, TReturn>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAsync<T, TResult>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                                         TReturn           validValue,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                                                         TResult           validValue,
                                                                                          string            failValue)
-        => await ChangeReturnResultAsync<T, TReturn>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAsync<T, TResult>(sourceAsync, validValue, failValue.ToMlErrorsDetails());
 
 
 
@@ -75,25 +75,25 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    public static MlResult<TReturn> ChangeReturnResultAlwaysValid<T, TReturn>(this MlResult<T> source,
-                                                                                   TReturn     validValue,
-                                                                                   TReturn     failValidValue)
+    public static MlResult<TResult> ChangeReturnResultAlwaysValid<T, TResult>(this MlResult<T> source,
+                                                                                   TResult     validValue,
+                                                                                   TResult     failValidValue)
         => source.Match(
                             valid: x      => validValue    .ToMlResultValid(),
                             fail : errors => failValidValue.ToMlResultValid()
                         );
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysValidAsync<T, TReturn>(this MlResult<T> source,
-                                                                                                    TReturn     validValue,
-                                                                                                    TReturn     failValidValue)
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysValidAsync<T, TResult>(this MlResult<T> source,
+                                                                                                    TResult     validValue,
+                                                                                                    TResult     failValidValue)
         => await source.MatchAsync(
                                     validAsync: x      => validValue    .ToMlResultValidAsync(),
                                     failAsync : errors => failValidValue.ToMlResultValidAsync()
                                 );
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysValidAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                                                    TReturn     validValue,
-                                                                                                    TReturn     failValidValue)
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysValidAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                                                                    TResult     validValue,
+                                                                                                    TResult     failValidValue)
         => (await sourceAsync).Match(
                                         valid: x      => validValue    .ToMlResultValid(),
                                         fail : errors => failValidValue.ToMlResultValid()
@@ -109,79 +109,79 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    public static MlResult<TReturn> ChangeReturnResultAlwaysFail<T, TReturn>(this MlResult<T>     source,
+    public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T>     source,
                                                                                   MlErrorDetails validFailValue,
                                                                                   MlErrorDetails failValue)
         => source.Match(
-                            valid: x      => validFailValue.ToMlResultFail<TReturn>(),
-                            fail : errors => failValue     .ToMlResultFail<TReturn>()
+                            valid: x      => validFailValue.ToMlResultFail<TResult>(),
+                            fail : errors => failValue     .ToMlResultFail<TResult>()
                         );
 
-    public static MlResult<TReturn> ChangeReturnResultAlwaysFail<T, TReturn>(this MlResult<T> source,
+    public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T> source,
                                                                                   MlError     validFailValue,
                                                                                   MlError     failValue)
-        => ChangeReturnResultAlwaysFail<T, TReturn>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
-    public static MlResult<TReturn> ChangeReturnResultAlwaysFail<T, TReturn>(this MlResult<T>         source,
+    public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T>         source,
                                                                                   IEnumerable<string> validFailValue,
                                                                                   IEnumerable<string> failValue)
-        => ChangeReturnResultAlwaysFail<T, TReturn>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
-    public static MlResult<TReturn> ChangeReturnResultAlwaysFail<T, TReturn>(this MlResult<T> source,
+    public static MlResult<TResult> ChangeReturnResultAlwaysFail<T, TResult>(this MlResult<T> source,
                                                                                   string      validFailValue,
                                                                                   string      failValue)
-        => ChangeReturnResultAlwaysFail<T, TReturn>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
 
 
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this MlResult<T>     source,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T>     source,
                                                                                                    MlErrorDetails validFailValue,
                                                                                                    MlErrorDetails failValue)
         => await source.MatchAsync(
-                                        validAsync: x      => validFailValue.ToMlResultFailAsync<TReturn>(),
-                                        failAsync : errors => failValue     .ToMlResultFailAsync<TReturn>()
+                                        validAsync: x      => validFailValue.ToMlResultFailAsync<TResult>(),
+                                        failAsync : errors => failValue     .ToMlResultFailAsync<TResult>()
                                   );
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this MlResult<T>     source,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T>     source,
                                                                                                    MlError     validFailValue,
                                                                                                    MlError     failValue)
-        => await ChangeReturnResultAlwaysFailAsync<T, TReturn>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this MlResult<T>        source,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T>        source,
                                                                                                   IEnumerable<string> validFailValue,
                                                                                                   IEnumerable<string> failValue)
-        => await ChangeReturnResultAlwaysFailAsync<T, TReturn>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this MlResult<T> source,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this MlResult<T> source,
                                                                                                    string      validFailValue,
                                                                                                    string      failValue)
-        => await ChangeReturnResultAlwaysFailAsync<T, TReturn>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
 
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this Task<MlResult<T>>     sourceAsync,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   MlErrorDetails validFailValue,
                                                                                   MlErrorDetails failValue)
         => (await sourceAsync).Match(
-                                        valid: x      => validFailValue.ToMlResultFail<TReturn>(),
-                                        fail : errors => failValue     .ToMlResultFail<TReturn>()
+                                        valid: x      => validFailValue.ToMlResultFail<TResult>(),
+                                        fail : errors => failValue     .ToMlResultFail<TResult>()
                                     );
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this Task<MlResult<T>>     sourceAsync,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   MlError     validFailValue,
                                                                                   MlError     failValue)
-        => await ChangeReturnResultAlwaysFailAsync<T, TReturn>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this Task<MlResult<T>>     sourceAsync,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   IEnumerable<string> validFailValue,
                                                                                   IEnumerable<string> failValue)
-        => await ChangeReturnResultAlwaysFailAsync<T, TReturn>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
-    public static async Task<MlResult<TReturn>> ChangeReturnResultAlwaysFailAsync<T, TReturn>(this Task<MlResult<T>>     sourceAsync,
+    public static async Task<MlResult<TResult>> ChangeReturnResultAlwaysFailAsync<T, TResult>(this Task<MlResult<T>>     sourceAsync,
                                                                                   string      validFailValue,
                                                                                   string      failValue)
-        => await ChangeReturnResultAlwaysFailAsync<T, TReturn>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
+        => await ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue.ToMlErrorsDetails(), failValue.ToMlErrorsDetails());
 
 
 
@@ -327,7 +327,7 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    //public static MlResult<TReturn> ResultSimpleReturn<T>(this MlResult<TReturn> source,
+    //public static MlResult<TResult> ResultSimpleReturn<T>(this MlResult<TResult> source,
     //                                             T validValue,
     //                                             IEnumerable<string> failValue)
     //=> source.Match<T, T>(
@@ -336,7 +336,7 @@ public static partial class MlResultChangeReturnResult
     //                     );
 
 
-    //public static MlResult<TReturn> ResultSimpleReturn<T>(this MlResult<TReturn> source,
+    //public static MlResult<TResult> ResultSimpleReturn<T>(this MlResult<TResult> source,
     //                                             T         validValue,
     //                                             T         failValidValue)
     //    => source.Match<T, T>(
@@ -344,7 +344,7 @@ public static partial class MlResultChangeReturnResult
     //                            fail: errors => failValidValue.ToMlResultValid()
     //                         );
 
-    //public static MlResult<TReturn> ResultSimpleReturn<T>(this MlResult<TReturn>           source,
+    //public static MlResult<TResult> ResultSimpleReturn<T>(this MlResult<TResult>           source,
     //                                             IEnumerable<string> validFailValue,
     //                                             IEnumerable<string> failValue)
     //    => source.Match<T, T>(
@@ -353,14 +353,14 @@ public static partial class MlResultChangeReturnResult
     //                               );
 
 
-    //public static MlResult<TReturn> ResultSimpleReturnSuccess<T>(this MlResult<TReturn> source,
+    //public static MlResult<TResult> ResultSimpleReturnSuccess<T>(this MlResult<TResult> source,
     //                                                    T         returnValidValue)
     //    => source.Match<T, T>(
     //                                    valid: x      => returnValidValue.ToMlResultValid(),
     //                                    fail: errors => errors.ToMlResultFail<T>()
     //                               );
 
-    //public static MlResult<TReturn> ResultSimpleReturnSuccess<T>(this MlResult<TReturn>           source,
+    //public static MlResult<TResult> ResultSimpleReturnSuccess<T>(this MlResult<TResult>           source,
     //                                                    IEnumerable<string> returnFailValue)
     //    => source.Match<T, T>(
     //                                    valid: x      => returnFailValue.ToMlResultFail<T>(),
@@ -368,14 +368,14 @@ public static partial class MlResultChangeReturnResult
     //                               );
 
 
-    //public static MlResult<TReturn> ResultSimpleReturnFaillure<T>(this MlResult<TReturn> source,
+    //public static MlResult<TResult> ResultSimpleReturnFaillure<T>(this MlResult<TResult> source,
     //                                                     T         returnValidValue)
     //    => source.Match<T, T>(
     //                                    valid: x      => returnValidValue.ToMlResultValid(),
     //                                    fail: errors => errors.ToMlResultFail<T>()
     //                               );
 
-    //public static MlResult<TReturn> ResultSimpleReturnFaillure<T>(this MlResult<TReturn>           source,
+    //public static MlResult<TResult> ResultSimpleReturnFaillure<T>(this MlResult<TResult>           source,
     //                                                     IEnumerable<string> returnFailValue)
     //    => source.Match<T, T>(
     //                                    valid: x      => source,
@@ -389,57 +389,57 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    //public static Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this MlResult<TReturn>           source,
-    //                                                                       TReturn             validValue,
+    //public static Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this MlResult<TResult>           source,
+    //                                                                       TResult             validValue,
     //                                                                       IEnumerable<string> failValue)
     //    => (source.Match(
     //                        valid: x      => validValue.ToMlResultValid(),
-    //                        fail: errors => failValue.ToMlResultFail<TReturn>()
+    //                        fail: errors => failValue.ToMlResultFail<TResult>()
     //                    )).ToAsync();
 
 
-    //public static Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this MlResult<TReturn> source,
-    //                                                                       TReturn   validValue,
-    //                                                                       TReturn   failValidValue)
+    //public static Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this MlResult<TResult> source,
+    //                                                                       TResult   validValue,
+    //                                                                       TResult   failValidValue)
     //    => (source.Match(
     //                        valid: x      => validValue      .ToMlResultValid(),
     //                        fail: errors => failValidValue.ToMlResultValid()
     //                    )).ToAsync();
 
-    //public static Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this MlResult<TReturn>           source,
+    //public static Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this MlResult<TResult>           source,
     //                                                                       IEnumerable<string> validFailValue,
     //                                                                       IEnumerable<string> failValue)
     //    => (source.Match(
-    //                        valid: x      => validFailValue.ToMlResultFail<TReturn>(),
-    //                        fail: errors => failValue       .ToMlResultFail<TReturn>()
+    //                        valid: x      => validFailValue.ToMlResultFail<TResult>(),
+    //                        fail: errors => failValue       .ToMlResultFail<TResult>()
     //                     )).ToAsync();
 
 
-    //public static Task<MlResult<TReturn>> ChangeReturnResultSuccessAsync<T, TReturn>(this MlResult<TReturn> source,
-    //                                                                              TReturn   returnValidValue)
+    //public static Task<MlResult<TResult>> ChangeReturnResultSuccessAsync<T, TResult>(this MlResult<TResult> source,
+    //                                                                              TResult   returnValidValue)
     //    => (source.Match(
     //                        valid: x      => returnValidValue.ToMlResultValid(),
-    //                        fail: errors => errors.ToMlResultFail<TReturn>()
+    //                        fail: errors => errors.ToMlResultFail<TResult>()
     //                    )).ToAsync();
 
-    //public static Task<MlResult<TReturn>> ChangeReturnResultSuccessAsync<T, TReturn>(this MlResult<TReturn>           source,
+    //public static Task<MlResult<TResult>> ChangeReturnResultSuccessAsync<T, TResult>(this MlResult<TResult>           source,
     //                                                                              IEnumerable<string> returnFailValue)
     //    => (source.Match(
-    //                        valid: x      => returnFailValue.ToMlResultFail<TReturn>(),
-    //                        fail: errors => errors.ToMlResultFail<TReturn>()
+    //                        valid: x      => returnFailValue.ToMlResultFail<TResult>(),
+    //                        fail: errors => errors.ToMlResultFail<TResult>()
     //                    )).ToAsync();
 
 
-    //public static Task<MlResult<TReturn>> ChangeReturnResultFaillureAsync<T, TReturn>(this MlResult<TReturn> source,
-    //                                                                               TReturn   returnValidValue)
+    //public static Task<MlResult<TResult>> ChangeReturnResultFaillureAsync<T, TResult>(this MlResult<TResult> source,
+    //                                                                               TResult   returnValidValue)
     //    => (source.Match(
     //                        valid: x      => returnValidValue.ToMlResultValid(),
-    //                        fail: errors => errors.ToMlResultFail<TReturn>()
+    //                        fail: errors => errors.ToMlResultFail<TResult>()
     //                    )).ToAsync();
 
 
 
-    //    public static Task<MlResult<TReturn>> ResultSimpleReturnAsync<T>(this MlResult<TReturn>           source,
+    //    public static Task<MlResult<TResult>> ResultSimpleReturnAsync<T>(this MlResult<TResult>           source,
     //                                                            T                   validValue,
     //                                                            IEnumerable<string> failValue)
     //    => (source.Match(
@@ -448,7 +448,7 @@ public static partial class MlResultChangeReturnResult
     //                    )).ToAsync();
 
 
-    //public static Task<MlResult<TReturn>> ResultSimpleReturnAsync<T>(this MlResult<TReturn> source,
+    //public static Task<MlResult<TResult>> ResultSimpleReturnAsync<T>(this MlResult<TResult> source,
     //                                                        T         validValue,
     //                                                        T         failValidValue)
     //    => (source.Match(
@@ -456,7 +456,7 @@ public static partial class MlResultChangeReturnResult
     //                        fail: errors => failValidValue.ToMlResultValid()
     //                    )).ToAsync();
 
-    //public static Task<MlResult<TReturn>> ResultSimpleReturnAsync<T>(this MlResult<TReturn>           source,
+    //public static Task<MlResult<TResult>> ResultSimpleReturnAsync<T>(this MlResult<TResult>           source,
     //                                                        IEnumerable<string> validFailValue,
     //                                                        IEnumerable<string> failValue)
     //    => (source.Match(
@@ -465,14 +465,14 @@ public static partial class MlResultChangeReturnResult
     //                    )).ToAsync();
 
 
-    //public static Task<MlResult<TReturn>> ResultSimpleReturnSuccessAsync<T>(this MlResult<TReturn> source,
+    //public static Task<MlResult<TResult>> ResultSimpleReturnSuccessAsync<T>(this MlResult<TResult> source,
     //                                                               T         returnValidValue)
     //    => (source.Match(
     //                        valid: x      => returnValidValue.ToMlResultValid(),
     //                        fail: errors => errors.ToMlResultFail<T>()
     //                    )).ToAsync();
 
-    //public static Task<MlResult<TReturn>> ResultSimpleReturnSuccessAsync<T>(this MlResult<TReturn>           source,
+    //public static Task<MlResult<TResult>> ResultSimpleReturnSuccessAsync<T>(this MlResult<TResult>           source,
     //                                                               IEnumerable<string> returnFailValue)
     //    => (source.Match(
     //                        valid: x      => returnFailValue.ToMlResultFail<T>(),
@@ -480,14 +480,14 @@ public static partial class MlResultChangeReturnResult
     //                    )).ToAsync();
 
 
-    //public static Task<MlResult<TReturn>> ResultSimpleReturnFaillureAsync<T>(this MlResult<TReturn> source,
+    //public static Task<MlResult<TResult>> ResultSimpleReturnFaillureAsync<T>(this MlResult<TResult> source,
     //                                                                T         returnValidValue)
     //    => (source.Match(
     //                        valid: x      => returnValidValue.ToMlResultValid(),
     //                        fail: errors => errors.ToMlResultFail<T>()
     //                    )).ToAsync();
 
-    //public static Task<MlResult<TReturn>> ResultSimpleReturnFaillureAsync<T>(this MlResult<TReturn>           source,
+    //public static Task<MlResult<TResult>> ResultSimpleReturnFaillureAsync<T>(this MlResult<TResult>           source,
     //                                                                IEnumerable<string> returnFailValue)
     //    => (source.Match(
     //                        valid: x      => source,
@@ -509,49 +509,49 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    //public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<TReturn>>     sourceAsync,
-    //                                                                             TReturn             validValue,
+    //public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<TResult>>     sourceAsync,
+    //                                                                             TResult             validValue,
     //                                                                             IEnumerable<string> failValue)
     //    => (await sourceAsync).Match(
     //                                    valid: x      => validValue.ToMlResultValid(),
-    //                                    fail: errors => failValue.ToMlResultFail<TReturn>()
+    //                                    fail: errors => failValue.ToMlResultFail<TResult>()
     //                                );
 
 
-    //public static async Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<TReturn>> sourceAsync,
-    //                                                                             TReturn         validValue,
-    //                                                                             TReturn         failValidValue)
+    //public static async Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<TResult>> sourceAsync,
+    //                                                                             TResult         validValue,
+    //                                                                             TResult         failValidValue)
     //    => (await sourceAsync).Match(
     //                                    valid: x      => validValue      .ToMlResultValid(),
     //                                    fail: errors => failValidValue.ToMlResultValid()
     //                                );
 
-    //public async static Task<MlResult<TReturn>> ChangeReturnResultAsync<T, TReturn>(this Task<MlResult<TReturn>>     sourceAsync,
+    //public async static Task<MlResult<TResult>> ChangeReturnResultAsync<T, TResult>(this Task<MlResult<TResult>>     sourceAsync,
     //                                                                             IEnumerable<string> validFailValue,
     //                                                                             IEnumerable<string> failValue)
     //    => (await sourceAsync).Match(
-    //                                    valid: x      => validFailValue.ToMlResultFail<TReturn>(),
-    //                                    fail: errors => failValue      .ToMlResultFail<TReturn>()
+    //                                    valid: x      => validFailValue.ToMlResultFail<TResult>(),
+    //                                    fail: errors => failValue      .ToMlResultFail<TResult>()
     //                                );
 
 
-    //public async static Task<MlResult<TReturn>> ChangeReturnResultSuccessAsync<T, TReturn>(this Task<MlResult<TReturn>> sourceAsync,
-    //                                                                                    TReturn         returnValidValue)
+    //public async static Task<MlResult<TResult>> ChangeReturnResultSuccessAsync<T, TResult>(this Task<MlResult<TResult>> sourceAsync,
+    //                                                                                    TResult         returnValidValue)
     //    => (await sourceAsync).Match(
     //                                    valid: x      => returnValidValue.ToMlResultValid(),
-    //                                    fail: errors => errors.ToMlResultFail<TReturn>()
+    //                                    fail: errors => errors.ToMlResultFail<TResult>()
     //                                );
 
-    //public async static Task<MlResult<TReturn>> ChangeReturnResultSuccessAsync<T, TReturn>(this Task<MlResult<TReturn>>     sourceAsync,
+    //public async static Task<MlResult<TResult>> ChangeReturnResultSuccessAsync<T, TResult>(this Task<MlResult<TResult>>     sourceAsync,
     //                                                                                    IEnumerable<string> returnFailValue)
     //    => (await sourceAsync).Match(
-    //                                    valid: x      => returnFailValue.ToMlResultFail<TReturn>(),
-    //                                    fail: errors => errors.ToMlResultFail<TReturn>()
+    //                                    valid: x      => returnFailValue.ToMlResultFail<TResult>(),
+    //                                    fail: errors => errors.ToMlResultFail<TResult>()
     //                                );
 
 
-    ////public async static Task<MlResult<TReturn>> ChangeReturnResultFaillureAsync<T, TReturn>(this Task<MlResult<TReturn>> sourceAsync,
-    ////                                                                                     TReturn         returnValidValue)
+    ////public async static Task<MlResult<TResult>> ChangeReturnResultFaillureAsync<T, TResult>(this Task<MlResult<TResult>> sourceAsync,
+    ////                                                                                     TResult         returnValidValue)
     ////{
     ////    var result = (await sourceAsync).Match(
     ////                                    valid: x      => sourceAsync,
@@ -561,7 +561,7 @@ public static partial class MlResultChangeReturnResult
     ////}
 
 
-    //public static async Task<MlResult<TReturn>> ResultSimpleReturnAsync<T>(this Task<MlResult<TReturn>>     sourceAsync,
+    //public static async Task<MlResult<TResult>> ResultSimpleReturnAsync<T>(this Task<MlResult<TResult>>     sourceAsync,
     //                                                              T                   validValue,
     //                                                              IEnumerable<string> failValue)
     //    => (await sourceAsync).Match(
@@ -570,7 +570,7 @@ public static partial class MlResultChangeReturnResult
     //                                );
 
 
-    //public static async Task<MlResult<TReturn>> ResultSimpleReturnAsync<T>(this Task<MlResult<TReturn>> sourceAsync,
+    //public static async Task<MlResult<TResult>> ResultSimpleReturnAsync<T>(this Task<MlResult<TResult>> sourceAsync,
     //                                                              T               validValue,
     //                                                              T               failValidValue)
     //    => (await sourceAsync).Match(
@@ -578,7 +578,7 @@ public static partial class MlResultChangeReturnResult
     //                                    fail: errors => failValidValue.ToMlResultValid()
     //                                );
 
-    //public static async Task<MlResult<TReturn>> ResultSimpleReturnAsync<T>(this Task<MlResult<TReturn>>     sourceAsync,
+    //public static async Task<MlResult<TResult>> ResultSimpleReturnAsync<T>(this Task<MlResult<TResult>>     sourceAsync,
     //                                                              IEnumerable<string> validFailValue,
     //                                                              IEnumerable<string> failValue)
     //    => (await sourceAsync).Match(
@@ -587,14 +587,14 @@ public static partial class MlResultChangeReturnResult
     //                                );
 
 
-    //public static async Task<MlResult<TReturn>> ResultSimpleReturnSuccessAsync<T>(this Task<MlResult<TReturn>> sourceAsync,
+    //public static async Task<MlResult<TResult>> ResultSimpleReturnSuccessAsync<T>(this Task<MlResult<TResult>> sourceAsync,
     //                                                                     T               returnValidValue)
     //    => (await sourceAsync).Match(
     //                                    valid: x      => returnValidValue.ToMlResultValid(),
     //                                    fail: errors => errors.ToMlResultFail<T>()
     //                                );
 
-    //public static async Task<MlResult<TReturn>> ResultSimpleReturnSuccessAsync<T>(this Task<MlResult<TReturn>>     sourceAsync,
+    //public static async Task<MlResult<TResult>> ResultSimpleReturnSuccessAsync<T>(this Task<MlResult<TResult>>     sourceAsync,
     //                                                                     IEnumerable<string> returnFailValue)
     //    => (await sourceAsync).Match(
     //                                    valid: x      => returnFailValue.ToMlResultFail<T>(),
@@ -602,7 +602,7 @@ public static partial class MlResultChangeReturnResult
     //                                );
 
 
-    //public static async Task<MlResult<TReturn>> ResultSimpleReturnFaillureAsync<T>(this Task<MlResult<TReturn>> sourceAsync,
+    //public static async Task<MlResult<TResult>> ResultSimpleReturnFaillureAsync<T>(this Task<MlResult<TResult>> sourceAsync,
     //                                                                      T               returnValidValue)
     //{
     //    var result =  await sourceAsync.MatchAsync(
@@ -613,7 +613,7 @@ public static partial class MlResultChangeReturnResult
     //    return result;
     //}
 
-    //public static async Task<MlResult<TReturn>> ResultSimpleReturnFaillureAsync<T>(this Task<MlResult<TReturn>>     sourceAsync,
+    //public static async Task<MlResult<TResult>> ResultSimpleReturnFaillureAsync<T>(this Task<MlResult<TResult>>     sourceAsync,
     //                                                                      IEnumerable<string> returnFailValue)
     //    => await sourceAsync.MatchAsync(
     //                                        successAsync: x      => sourceAsync,
@@ -639,26 +639,26 @@ public static partial class MlResultChangeReturnResult
 
 
 
-    //public static MlResult<TReturn> ChangeReturn<T, TReturn>(this MlResult<TReturn>           source,
-    //                                                            Func<T, TReturn>    successFunc,
+    //public static MlResult<TResult> ChangeReturn<T, TResult>(this MlResult<TResult>           source,
+    //                                                            Func<T, TResult>    successFunc,
     //                                                            IEnumerable<string> failValue)
-    //    => source.Match<T, TReturn>(
+    //    => source.Match<T, TResult>(
     //                                    valid: x      => successFunc(x).ToMlResultValid(),
-    //                                    fail: errors => failValue.ToMlResultFail<TReturn>());
+    //                                    fail: errors => failValue.ToMlResultFail<TResult>());
 
 
-    ////public static MlResult<TReturn> ChangeReturnFailure<T, TReturn>(this MlResult<TReturn> source,
+    ////public static MlResult<TResult> ChangeReturnFailure<T, TResult>(this MlResult<TResult> source,
     ////                                                                   IEnumerable<string> failValue)
-    ////    => source.Match<T, TReturn>(
+    ////    => source.Match<T, TResult>(
     ////                                    valid: x => successFunc(x).ToMlResultValid(),
-    ////                                    fail: errors => failValue.ToMlResultFail<TReturn>()
+    ////                                    fail: errors => failValue.ToMlResultFail<TResult>()
     ////                                );
 
-    //public static MlResult<TReturn> ChangeReturnSuccess<T>(this MlResult<TReturn> source,
+    //public static MlResult<TResult> ChangeReturnSuccess<T>(this MlResult<TResult> source,
     //                                                    T         returnValidValue)
     //    => source.Mapp(_ => returnValidValue);
 
-    //public static MlResult<TReturn> ChangeReturnFailure<T>(this MlResult<TReturn> source,
+    //public static MlResult<TResult> ChangeReturnFailure<T>(this MlResult<TResult> source,
     //                                                    T         returnValidValue)
     //    => source.Match<T, T>(
     //                                valid: x      => source,

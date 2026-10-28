@@ -57,38 +57,38 @@ public static partial class MlResultExtensions
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="TReturn"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
     /// <param name="source"></param>
     /// <param name="value"></param>
     /// <param name="completeFunc"></param>
     /// <returns></returns>
-    public static MlResult<TReturn> CompleteWithDataValueIfValid<T, TReturn>(this MlResult<T>      source,
-                                                                                  Func<T, TReturn> completeFunc)
+    public static MlResult<TResult> CompleteWithDataValueIfValid<T, TResult>(this MlResult<T>      source,
+                                                                                  Func<T, TResult> completeFunc)
         => source.Match(
-                            fail : errorDetails => errorDetails.ToMlResultFail<TReturn>(),
-                            valid: x            => MlResult<TReturn>.Valid(completeFunc(x))
+                            fail : errorDetails => errorDetails.ToMlResultFail<TResult>(),
+                            valid: x            => MlResult<TResult>.Valid(completeFunc(x))
                         );
 
 
 
-    public static async Task<MlResult<TReturn>> CompleteWithDataValueIfValidAsync<T, TReturn>(this MlResult<T>            source,
-                                                                                                   Func<T, Task<TReturn>> completeFuncAsync)
+    public static async Task<MlResult<TResult>> CompleteWithDataValueIfValidAsync<T, TResult>(this MlResult<T>            source,
+                                                                                                   Func<T, Task<TResult>> completeFuncAsync)
         => await source.MatchAsync(
-                                        failAsync :       errorDetails => errorDetails.ToMlResultFailAsync<TReturn>(),
-                                        validAsync: async x            => MlResult<TReturn>.Valid(await completeFuncAsync(x))
+                                        failAsync :       errorDetails => errorDetails.ToMlResultFailAsync<TResult>(),
+                                        validAsync: async x            => MlResult<TResult>.Valid(await completeFuncAsync(x))
                                     );
 
 
-    public static async Task<MlResult<TReturn>> CompleteWithDataValueIfValidAsync<T, TReturn>(this Task<MlResult<T>>      sourceAsync,
-                                                                                                   Func<T, Task<TReturn>> completeFuncAsync)
+    public static async Task<MlResult<TResult>> CompleteWithDataValueIfValidAsync<T, TResult>(this Task<MlResult<T>>      sourceAsync,
+                                                                                                   Func<T, Task<TResult>> completeFuncAsync)
         => await (await sourceAsync).CompleteWithDataValueIfValidAsync(completeFuncAsync);
 
-    public static Task<MlResult<TReturn>> CompleteWithDataValueIfValidAsync<T, TReturn>(this MlResult<T>      source,
-                                                                                              Func<T, TReturn> completeFunc)
+    public static Task<MlResult<TResult>> CompleteWithDataValueIfValidAsync<T, TResult>(this MlResult<T>      source,
+                                                                                              Func<T, TResult> completeFunc)
         => source.CompleteWithDataValueIfValid(completeFunc).ToAsync();
 
-    public static async Task<MlResult<TReturn>> CompleteWithDataValueIfValidAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync,
-                                                                                                    Func<T, TReturn> completeFunc)
+    public static async Task<MlResult<TResult>> CompleteWithDataValueIfValidAsync<T, TResult>(this Task<MlResult<T>> sourceAsync,
+                                                                                                    Func<T, TResult> completeFunc)
         => await (await sourceAsync).CompleteWithDataValueIfValidAsync(completeFunc);
 
 
@@ -127,42 +127,42 @@ public static partial class MlResultExtensions
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="TReturn"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
     /// <param name="source"></param>
     /// <param name="value"></param>
     /// <param name="completeFunc"></param>
     /// <returns></returns>
-    public static MlResult<TReturn> CompleteWithDataValue<T, TValue, TReturn>(this MlResult<T>      source, 
+    public static MlResult<TResult> CompleteWithDataValue<T, TValue, TResult>(this MlResult<T>      source, 
                                                                                    TValue           value,
-                                                                                   Func<T, TReturn> completeFunc)
+                                                                                   Func<T, TResult> completeFunc)
         => source.Match(
-                            fail : errorDetails => errorDetails.AddValueMetadata(value).ToMlResultFail<TReturn>(),
-                            valid: x            => MlResult<TReturn>.Valid(completeFunc(x))
+                            fail : errorDetails => errorDetails.AddValueMetadata(value).ToMlResultFail<TResult>(),
+                            valid: x            => MlResult<TResult>.Valid(completeFunc(x))
                         );
 
 
-    public static async Task<MlResult<TReturn>> CompleteWithDataValueAsync<T, TValue, TReturn>(this MlResult<T>            source, 
+    public static async Task<MlResult<TResult>> CompleteWithDataValueAsync<T, TValue, TResult>(this MlResult<T>            source, 
                                                                                                     TValue                 value,
-                                                                                                    Func<T, Task<TReturn>> completeFuncAsync)
+                                                                                                    Func<T, Task<TResult>> completeFuncAsync)
         => await source.MatchAsync(
-                                        failAsync :       errorDetails => errorDetails.AddValueMetadata(value).ToMlResultFailAsync<TReturn>(),
-                                        validAsync: async x            => MlResult<TReturn>.Valid(await completeFuncAsync(x))
+                                        failAsync :       errorDetails => errorDetails.AddValueMetadata(value).ToMlResultFailAsync<TResult>(),
+                                        validAsync: async x            => MlResult<TResult>.Valid(await completeFuncAsync(x))
                                     );
 
 
-    public static async Task<MlResult<TReturn>> CompleteWithDataValueAsync<T, TValue, TReturn>(this Task<MlResult<T>>      sourceAsync, 
+    public static async Task<MlResult<TResult>> CompleteWithDataValueAsync<T, TValue, TResult>(this Task<MlResult<T>>      sourceAsync, 
                                                                                                     TValue                 value,
-                                                                                                    Func<T, Task<TReturn>> completeFuncAsync)
+                                                                                                    Func<T, Task<TResult>> completeFuncAsync)
         => await (await sourceAsync).CompleteWithDataValueAsync(value, completeFuncAsync);
 
-    public static Task<MlResult<TReturn>> CompleteWithDataValueAsync<T, TValue, TReturn>(this MlResult<T>      source,
+    public static Task<MlResult<TResult>> CompleteWithDataValueAsync<T, TValue, TResult>(this MlResult<T>      source,
                                                                                                TValue           value,
-                                                                                               Func<T, TReturn> completeFunc)
+                                                                                               Func<T, TResult> completeFunc)
         => source.CompleteWithDataValue(value, completeFunc).ToAsync();
 
-    public static async Task<MlResult<TReturn>> CompleteWithDataValueAsync<T, TValue, TReturn>(this Task<MlResult<T>> sourceAsync,
+    public static async Task<MlResult<TResult>> CompleteWithDataValueAsync<T, TValue, TResult>(this Task<MlResult<T>> sourceAsync,
                                                                                                      TValue           value,
-                                                                                                     Func<T, TReturn> completeFunc)
+                                                                                                     Func<T, TResult> completeFunc)
         => await (await sourceAsync).CompleteWithDataValueAsync(value, completeFunc);
 
 

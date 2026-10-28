@@ -76,28 +76,28 @@ public static partial class MlErrorDetailsActions
 
 
 
-    public static MlResult<TReturn> MergeErrorsDetails<T, TReturn>(this MlErrorDetails source,
+    public static MlResult<TResult> MergeErrorsDetails<T, TResult>(this MlErrorDetails source,
                                                                         MlResult<T>     secondary)
         => secondary.Match(
                                 fail : source.Merge,
                                 valid: _ => source
                            );
 
-    public static Task<MlResult<TReturn>> MergeErrorsDetailsAsync<T, TReturn>(this MlErrorDetails source,
+    public static Task<MlResult<TResult>> MergeErrorsDetailsAsync<T, TResult>(this MlErrorDetails source,
                                                                                    MlResult<T>     secondary)
-        => source.MergeErrorsDetails<T, TReturn>(secondary).ToAsync();
+        => source.MergeErrorsDetails<T, TResult>(secondary).ToAsync();
 
-    public static async Task<MlResult<TReturn>> MergeErrorsDetailsAsync<T, TReturn>(this Task<MlErrorDetails> sourceAsync,
+    public static async Task<MlResult<TResult>> MergeErrorsDetailsAsync<T, TResult>(this Task<MlErrorDetails> sourceAsync,
                                                                                          MlResult<T>           secondary)
-        => await (await sourceAsync).MergeErrorsDetailsAsync<T, TReturn>(secondary);
+        => await (await sourceAsync).MergeErrorsDetailsAsync<T, TResult>(secondary);
 
-    public static async Task<MlResult<TReturn>> MergeErrorsDetailsAsync<T, TReturn>(this MlErrorDetails   source,
+    public static async Task<MlResult<TResult>> MergeErrorsDetailsAsync<T, TResult>(this MlErrorDetails   source,
                                                                                    Task<MlResult<T>> secondaryAsync)
-        => source.MergeErrorsDetails<T, TReturn>(await secondaryAsync);
+        => source.MergeErrorsDetails<T, TResult>(await secondaryAsync);
 
-    public static async Task<MlResult<TReturn>> MergeErrorsDetailsAsync<T, TReturn>(this Task<MlErrorDetails> sourceAsync,
+    public static async Task<MlResult<TResult>> MergeErrorsDetailsAsync<T, TResult>(this Task<MlErrorDetails> sourceAsync,
                                                                                          Task<MlResult<T>>     secondaryAsync)
-        => await (await sourceAsync).MergeErrorsDetailsAsync<T, TReturn>(await secondaryAsync);
+        => await (await sourceAsync).MergeErrorsDetailsAsync<T, TResult>(await secondaryAsync);
 
 
 

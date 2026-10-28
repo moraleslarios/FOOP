@@ -11,72 +11,72 @@ public static partial class MlResultConversions
 {
 
 
-    public static MlResult<TReturn> ToMlResult<T, TReturn>(this Func<T, TReturn> source, 
+    public static MlResult<TResult> ToMlResult<T, TResult>(this Func<T, TResult> source, 
                                                                 T                value)
     {
-        TReturn partialResult = source(value);
+        TResult partialResult = source(value);
 
-        MlResult<TReturn> result = partialResult;
+        MlResult<TResult> result = partialResult;
 
         return result;
     }
 
-    public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn> source, 
+    public static MlResult<TResult> TryToMlResult<T, TResult>(this Func<T, TResult> source, 
                                                                    T                value,
                                                                    string           exceptionAdditionalMessage = null!)
-        => source.TryToInternalMlResult<T, TReturn>(value, exceptionAdditionalMessage);
+        => source.TryToInternalMlResult<T, TResult>(value, exceptionAdditionalMessage);
 
-    public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, TReturn>         source, 
+    public static MlResult<TResult> TryToMlResult<T, TResult>(this Func<T, TResult>         source, 
                                                                    T                        value,
                                                                    Func<Exception, string>  errorMessageBuilder)
-        => source.TryToInternalMlResult<T, TReturn>(value, errorMessageBuilder);
+        => source.TryToInternalMlResult<T, TResult>(value, errorMessageBuilder);
 
 
-    public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, MlResult<TReturn>> source, 
+    public static MlResult<TResult> TryToMlResult<T, TResult>(this Func<T, MlResult<TResult>> source, 
                                                                    T                          value,
                                                                    string                     exceptionAdditionalMessage = null!)
-        => source.TryToInternalMlResult<T, TReturn>(value, exceptionAdditionalMessage);
+        => source.TryToInternalMlResult<T, TResult>(value, exceptionAdditionalMessage);
 
-    public static MlResult<TReturn> TryToMlResult<T, TReturn>(this Func<T, MlResult<TReturn>> source, 
+    public static MlResult<TResult> TryToMlResult<T, TResult>(this Func<T, MlResult<TResult>> source, 
                                                                    T                          value,
                                                                    Func<Exception, string>    errorMessageBuilder)
-        => source.TryToInternalMlResult<T, TReturn>(value, errorMessageBuilder);
+        => source.TryToInternalMlResult<T, TResult>(value, errorMessageBuilder);
 
 
 
-    public static async Task<MlResult<TReturn>> ToMlResultAsync<T, TReturn>(this Func<T, Task<TReturn>> sourceAsync, 
+    public static async Task<MlResult<TResult>> ToMlResultAsync<T, TResult>(this Func<T, Task<TResult>> sourceAsync, 
                                                                                  T                      value)
     {
-        TReturn partialResult = await sourceAsync(value);
+        TResult partialResult = await sourceAsync(value);
 
-        MlResult<TReturn> result = partialResult;
+        MlResult<TResult> result = partialResult;
 
         return result;
     }
 
 
 
-    public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<TReturn>> sourceAsync, 
+    public static async Task<MlResult<TResult>> TryToMlResultAsync<T, TResult>(this Func<T, Task<TResult>> sourceAsync, 
                                                                                     T                      value,
                                                                                     string                 exceptionAdditionalMessage = null!)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, exceptionAdditionalMessage);
+        => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, exceptionAdditionalMessage);
 
-    public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<TReturn>>  sourceAsync, 
+    public static async Task<MlResult<TResult>> TryToMlResultAsync<T, TResult>(this Func<T, Task<TResult>>  sourceAsync, 
                                                                                     T                       value,
                                                                                     Func<Exception, string> errorMessageBuilder)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, errorMessageBuilder);
+        => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, errorMessageBuilder);
 
 
-    public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<MlResult<TReturn>>> sourceAsync, 
+    public static async Task<MlResult<TResult>> TryToMlResultAsync<T, TResult>(this Func<T, Task<MlResult<TResult>>> sourceAsync, 
                                                                                     T                                value,
                                                                                     string                           exceptionAdditionalMessage = null!)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, exceptionAdditionalMessage);
+        => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, exceptionAdditionalMessage);
 
 
-    public static async Task<MlResult<TReturn>> TryToMlResultAsync<T, TReturn>(this Func<T, Task<MlResult<TReturn>>> sourceAsync, 
+    public static async Task<MlResult<TResult>> TryToMlResultAsync<T, TResult>(this Func<T, Task<MlResult<TResult>>> sourceAsync, 
                                                                                     T                                value,
                                                                                     Func<Exception, string>          errorMessageBuilder)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, errorMessageBuilder);
+        => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, errorMessageBuilder);
 
 
 
@@ -300,12 +300,12 @@ public static partial class MlResultConversions
     }
 
 
-    public static async Task<MlResult<TReturn>> ToMlTaskResult<T, TReturn>(this Func<T, Task<TReturn>> sourceAsync,
+    public static async Task<MlResult<TResult>> ToMlTaskResult<T, TResult>(this Func<T, Task<TResult>> sourceAsync,
                                                                                 T value)
     {
-        TReturn partialResult = await sourceAsync(value);
+        TResult partialResult = await sourceAsync(value);
 
-        MlResult<TReturn> result = partialResult;
+        MlResult<TResult> result = partialResult;
 
         return result;
     }
@@ -319,23 +319,23 @@ public static partial class MlResultConversions
 
 
 
-    //private static MlResult<TReturn> ToInternalMlResultEx<T, TReturn>(this object source, 
+    //private static MlResult<TResult> ToInternalMlResultEx<T, TResult>(this object source, 
     //                                                                       T      value,
     //                                                                       string exceptionAdditionalMessage = null!)
-    //    => source.ToInternalMlResultEx<T, TReturn>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+    //    => source.ToInternalMlResultEx<T, TResult>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
 
-    //private static MlResult<TReturn> ToInternalMlResultEx<T, TReturn>(this object                  source, 
+    //private static MlResult<TResult> ToInternalMlResultEx<T, TResult>(this object                  source, 
     //                                                                       T                       value,
     //                                                                       Func<Exception, string> errorMessageBuilder)
     //{
-    //    MlResult<TReturn> result = default!;
+    //    MlResult<TResult> result = default!;
 
     //    try
     //    {
     //        result = source switch
     //        {
-    //            Func<T, TReturn>           mySource => mySource.ToMlResult(value),
-    //            Func<T, MlResult<TReturn>> mySource => mySource(value),
+    //            Func<T, TResult>           mySource => mySource.ToMlResult(value),
+    //            Func<T, MlResult<TResult>> mySource => mySource(value),
     //            _                                   => throw new ArgumentException($"The type {source.GetType()} is not a valid type")
     //        };
     //    }
@@ -585,17 +585,17 @@ public static partial class MlResultConversions
 
 
 
-    public static MlResult<TReturn> ToMlResultFail<T, TReturn>(this MlResult<T> source)
+    public static MlResult<TResult> ToMlResultFail<T, TResult>(this MlResult<T> source)
         => source.Match(
                             fail: errorDetails => errorDetails,
-                            valid: _           => MlResult<TReturn>.Fail("Don't change MlResult Fail of valid source.")
+                            valid: _           => MlResult<TResult>.Fail("Don't change MlResult Fail of valid source.")
                         );
 
-    public static Task<MlResult<TReturn>> ToMlResultFailAsync<T, TReturn>(this MlResult<T> source)
-        => source.ToMlResultFail<T, TReturn>().ToAsync();
+    public static Task<MlResult<TResult>> ToMlResultFailAsync<T, TResult>(this MlResult<T> source)
+        => source.ToMlResultFail<T, TResult>().ToAsync();
 
-    public static async Task<MlResult<TReturn>> ToMlResultFailAsync<T, TReturn>(this Task<MlResult<T>> sourceAsync)
-        => await (await sourceAsync).ToMlResultFailAsync<T, TReturn>();
+    public static async Task<MlResult<TResult>> ToMlResultFailAsync<T, TResult>(this Task<MlResult<T>> sourceAsync)
+        => await (await sourceAsync).ToMlResultFailAsync<T, TResult>();
 
 
 
@@ -674,23 +674,23 @@ public static partial class MlResultConversions
 
 
 
-    private static MlResult<TReturn> TryToInternalMlResult<T, TReturn>(this object source, 
+    private static MlResult<TResult> TryToInternalMlResult<T, TResult>(this object source, 
                                                                             T      value,
                                                                             string exceptionAdditionalMessage = null!)
-        => source.TryToInternalMlResult<T, TReturn>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+        => source.TryToInternalMlResult<T, TResult>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
 
-    private static MlResult<TReturn> TryToInternalMlResult<T, TReturn>(this object                  source, 
+    private static MlResult<TResult> TryToInternalMlResult<T, TResult>(this object                  source, 
                                                                             T                       value,
                                                                             Func<Exception, string> errorMessageBuilder)
     {
-        MlResult<TReturn> result = default!;
+        MlResult<TResult> result = default!;
 
         try
         {
             result = source switch
             {
-                Func<T, TReturn>           mySource => mySource.ToMlResult(value),
-                Func<T, MlResult<TReturn>> mySource => mySource(value),
+                Func<T, TResult>           mySource => mySource.ToMlResult(value),
+                Func<T, MlResult<TResult>> mySource => mySource(value),
                 _                                   => throw new ArgumentException($"The type {source.GetType()} is not a valid type")
             };
         }
@@ -711,24 +711,24 @@ public static partial class MlResultConversions
 
 
 
-    private static async Task<MlResult<TReturn>> TryToInternalMlResultAsync<T, TReturn>(this object sourceAsync, 
+    private static async Task<MlResult<TResult>> TryToInternalMlResultAsync<T, TResult>(this object sourceAsync, 
                                                                                              T      value,
                                                                                              string exceptionAdditionalMessage = null!)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TReturn>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+        => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
 
 
-    private static async Task<MlResult<TReturn>> TryToInternalMlResultAsync<T, TReturn>(this object                  sourceAsync, 
+    private static async Task<MlResult<TResult>> TryToInternalMlResultAsync<T, TResult>(this object                  sourceAsync, 
                                                                                              T                       value,
                                                                                              Func<Exception, string> errorMessageBuilder)
     {
-        MlResult<TReturn> result = default!;
+        MlResult<TResult> result = default!;
 
         try
         {
             result = sourceAsync switch
             {
-                Func<T, Task<TReturn>>           mySource => await mySource.ToMlResultAsync(value),
-                Func<T, Task<MlResult<TReturn>>> mySource => await mySource(value),
+                Func<T, Task<TResult>>           mySource => await mySource.ToMlResultAsync(value),
+                Func<T, Task<MlResult<TResult>>> mySource => await mySource(value),
                 _                                         => throw new ArgumentException($"The type {sourceAsync.GetType()} is not a valid type")
             };
         }
