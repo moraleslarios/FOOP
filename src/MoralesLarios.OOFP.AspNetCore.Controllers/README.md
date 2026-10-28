@@ -626,7 +626,7 @@ Con eso, cualquier controlador que herede de las clases base ya resuelve su `ICr
 - ❌ **Filtrado, ordenación o búsqueda** → añade endpoints propios llamando al repositorio de [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
 - ❌ **Autenticación ni autorización** → aplica `[Authorize]` en tus clases derivadas.
 - ❌ **Caché HTTP e invalidación** → eso lo cubre `MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching`.
-- ❌ **Validación del DTO más allá de `NotNull`** → intégrala con [`Validation.Dataannotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) o [`Validation.FluentValidations`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md).
+- ❌ **Validación del DTO más allá de `NotNull`** → intégrala con [`Validation.DataAnnotations`](../MoralesLarios.OOFP.Validation.DataAnnotations/README.md) o [`Validation.FluentValidation`](../MoralesLarios.OOFP.Validation.FluentValidation/README.md).
 - ❌ **Versionado de API, HATEOAS, `ETag` ni `If-Match`.**
 - ❌ **Documentación OpenAPI automática** → declara `[ProducesResponseType]` tú mismo.
 - ❌ **Registro de dependencias** → `AddMlControllers()` no registra nada (está `[Obsolete]`); registra `EntityFrameworkCore` y `Application`.
