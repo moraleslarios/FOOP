@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Métodos de extension de <c>MlResultBind</c>.
+/// Métodos de extensión de encadenamiento (<c>Bind</c>) sobre <see cref="MlResult{T}"/>: aplican una función que devuelve otro resultado solo cuando el origen es válido y propagan el error en caso contrario.
 /// </summary>
 public static partial class MlResultBindExtensions
 {
@@ -21,7 +21,7 @@ public static partial class MlResultBindExtensions
     /// <typeparam name="TResult">Return Type</typeparam>
     /// <param name="source">MlResult source</param>
     /// <param name="func">Method to execute (returns <see cref="MlResult{TResult}"/>).</param>
-    /// <returns></returns>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> Bind<T, TResult>(this MlResult<T>                source, 
                                                           Func<T, MlResult<TResult>> func)
         => source.Match
@@ -49,9 +49,9 @@ public static partial class MlResultBindExtensions
     /// </summary>
     /// <typeparam name="T">Input Type</typeparam>
     /// <typeparam name="TResult">Return Type</typeparam>
-    /// <param name="source"></param>
-    /// <param name="funcAsync"></param>
-    /// <returns></returns>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcAsync">Función asíncrona que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<TResult>> BindAsync<T, TResult>(this MlResult<T>                      source,
                                                                            Func<T, Task<MlResult<TResult>>> funcAsync)
         => await source.MatchAsync
@@ -101,12 +101,12 @@ public static partial class MlResultBindExtensions
     /// Execute the function if the source is valid, otherwise return the source.
     /// If method func throw Exception, this saves in ErrorDetails.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="func"></param>
-    /// <param name="exceptionAdditionalMessage"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> TryBind<T, TResult>(this MlResult<T>                source,
                                                              Func<T, MlResult<TResult>> func,
                                                              string                     exceptionAdditionalMessage = null!)
@@ -732,11 +732,11 @@ public static partial class MlResultBindExtensions
     /// Execute the function if the source is valid, otherwise return the source.
     /// If the func method fails, the 'SuccessValue' of the source is added as ErrorDetails.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="func"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindSaveValueInDetailsIfFailedFuncResult<T, TResult>(this MlResult<T>                source, 
                                                                                              Func<T, MlResult<TResult>> func)
         => source.Match
@@ -1796,10 +1796,10 @@ public static partial class MlResultBindExtensions
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="func"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> BindIfFail<T>(this MlResult<T>                        source, 
                                                  Func<MlErrorDetails, MlResult<T>> func)
         => source.Match
@@ -2721,13 +2721,13 @@ public static partial class MlResultBindExtensions
     /// source parameter has a previous 'SuccessValue' execution
     /// -- 2 funcs (valid and fail) are necessary, since they have to preserve output compatibility --
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="funcValid"></param>
-    /// <param name="funcFail"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindIfFailWithValue<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                  Func<T     , MlResult<TResult>> funcValid,
                                                                                  Func<TValue, MlResult<TResult>> funcFail)
@@ -8048,12 +8048,12 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     ///     1.- Función que se ejecutará si el MlResult es válido (facilita el value valido por parámetros)
     ///     2.- Función que se ejecutará si el MlResult es fallido (facilita el errorDetails por parámetros)
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="funcValidAlways"></param>
-    /// <param name="funcFailAlways"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> BindAlways<T, TResult>(this MlResult<T>                              source,
                                                                 Func<T              , MlResult<TResult>> funcValidAlways,
                                                                 Func<MlErrorDetails, MlResult<TResult>> funcFailAlways)

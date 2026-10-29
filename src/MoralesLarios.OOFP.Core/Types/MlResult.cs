@@ -124,7 +124,7 @@ public partial record MlResult
 
 
 /// <summary>
-/// Representa <c>MlResult</c>.
+/// Resultado de una operación que puede ser válido, y entonces transporta un valor de tipo <typeparamref name="T"/>, o fallido, y entonces transporta los detalles del error. Es el tipo central de la biblioteca.
 /// </summary>
 /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
 public partial record MlResult<T>

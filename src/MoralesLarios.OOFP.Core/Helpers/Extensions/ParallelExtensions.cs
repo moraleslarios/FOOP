@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.Helpers.Extensions;
 /// <summary>
-/// Métodos de extension de <c>Parallel</c>.
+/// Métodos de extensión que elevan un valor sincrónico al mundo asíncrono envolviéndolo en una <see cref="Task{TResult}"/> ya completada, sin consumir ningún hilo.
 /// </summary>
 public static class ParallelExtensions
 {

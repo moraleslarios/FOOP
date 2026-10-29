@@ -4,7 +4,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Métodos de extension de <c>MlResultSeveral</c>.
+/// Sobrecargas obsoletas de <see cref="MlResultSeveralExtensions"/>, conservadas como alias de compatibilidad con la versión 2.0.
 /// </summary>
 public static partial class MlResultSeveralExtensions
 {

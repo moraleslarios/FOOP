@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Métodos de extension de <c>MlResultErrorDetails</c>.
+/// Sobrecargas obsoletas de <see cref="MlResultErrorDetailsExtensions"/>, conservadas como alias de compatibilidad con la versión 2.0.
 /// </summary>
 public static partial class MlResultErrorDetailsExtensions
 {

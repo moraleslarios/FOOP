@@ -1,7 +1,7 @@
 ﻿// Puentes [Obsolete] de la v2.0.0: nombres antiguos que reenvian al nombre nuevo. Se eliminan en la v3.0.0.
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Representa <c>MlResultChangeReturnResult</c>.
+/// Sobrecargas obsoletas de <see cref="MlResultChangeReturnResult"/>, conservadas como alias de compatibilidad con la versión 2.0.
 /// </summary>
 public static partial class MlResultChangeReturnResult
 {

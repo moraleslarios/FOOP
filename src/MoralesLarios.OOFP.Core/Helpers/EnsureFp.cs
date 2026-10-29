@@ -97,10 +97,6 @@ public static partial class EnsureFp
         => condition ? MlResult<T>.Valid(value) : errorsDetails.ToMlResultFail<T>();
 
 
-    //public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, string errorMessage)
-    //    => condition ? MlResult<T>.Valid(value).ToAsync() : MlResult<T>.Fail(errorMessage).ToAsync();
-
-
     /// <summary>
     /// Ejecuta <c>That</c>. Versión asíncrona.
     /// </summary>
@@ -129,10 +125,6 @@ public static partial class EnsureFp
     public static Task<MlResult<T>> ThatAsync<T>(T value, bool condition, MlErrorDetails errorsDetails)
         => condition ? MlResult<T>.Valid(value).ToAsync() : errorsDetails.ToMlResultFail<T>().ToAsync();
 
-
-
-    //public static async Task<MlResult<T>> NotNullAsync<T>(T value, string errorMessage)
-    //    => await ThatAsync(value, value is not null, errorMessage);
 
     /// <summary>
     /// Ejecuta <c>NotNull</c>. Versión asíncrona.

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Representa <c>MlResultConversions</c>.
+/// Métodos de extensión que convierten delegados y valores corrientes en <see cref="MlResult{T}"/>, incluidas las variantes <c>Try</c> que capturan las excepciones y las transforman en un resultado fallido.
 /// </summary>
 public static partial class MlResultConversions
 {
@@ -178,34 +178,6 @@ public static partial class MlResultConversions
         => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, errorMessageBuilder);
 
 
-
-
-
-
-    //public static MlResult<T> TryToMlResult<T>(this Func<T>                 source, 
-    //                                                Func<Exception, string> errorMessageBuilder = null!)
-    //{
-
-    //    /// ********** Cuando ees una MlResult en Fail y con errores, no se añaden los nuevos errores
-
-    //    try
-    //    {
-    //        var result = source();
-
-    //        return result.ToMlResultValid();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        string message = FormatErrorMessage(errorMessageBuilder, ex);
-
-    //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                               Metadata: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
-
-    //        return errorDetails.ToMlResultFail<T>();
-    //    }
-    //}
-
-
     /// <summary>
     /// Ejecuta la operación de forma protegida, capturando cualquier excepción y convirtiendola en un
     /// resultado fallido indicada por to ml result.
@@ -293,30 +265,6 @@ public static partial class MlResultConversions
             return errorDetails.ToMlResultFail<T>();
         }
     }
-
-
-
-
-
-    //public static async Task<MlResult<T>> TryToMlResultAsync<T>(this Func<Task<T>>           sourceAsync, 
-    //                                                                 Func<Exception, string> errorMessageBuilder = null!)
-    //{
-    //    try
-    //    {
-    //        var result = await sourceAsync();
-
-    //        return result.ToMlResultValid();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        string message = FormatErrorMessage(errorMessageBuilder, ex);
-
-    //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                    Metadata: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
-
-    //        return errorDetails.ToMlResultFail<T>();
-    //    }
-    //}
 
 
     /// <summary>
@@ -484,49 +432,6 @@ public static partial class MlResultConversions
 
         return result;
     }
-
-
-
-
-
-
-
-
-
-
-    //private static MlResult<TResult> ToInternalMlResultEx<T, TResult>(this object source, 
-    //                                                                       T      value,
-    //                                                                       string exceptionAdditionalMessage = null!)
-    //    => source.ToInternalMlResultEx<T, TResult>(value, ex => exceptionAdditionalMessage ?? Constants.DefaultErrorMessage);
-
-    //private static MlResult<TResult> ToInternalMlResultEx<T, TResult>(this object                  source, 
-    //                                                                       T                       value,
-    //                                                                       Func<Exception, string> errorMessageBuilder)
-    //{
-    //    MlResult<TResult> result = default!;
-
-    //    try
-    //    {
-    //        result = source switch
-    //        {
-    //            Func<T, TResult>           mySource => mySource.ToMlResult(value),
-    //            Func<T, MlResult<TResult>> mySource => mySource(value),
-    //            _                                   => throw new ArgumentException($"The type {source.GetType()} is not a valid type")
-    //        };
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        string msg = FormatErrorMessage(errorMessageBuilder, ex);
-
-    //        result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
-    //                                     Metadata: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
-
-    //    }
-
-    //    return result;
-    //}
-
-
 
 
     /// <summary>

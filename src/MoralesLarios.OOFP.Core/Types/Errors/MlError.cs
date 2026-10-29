@@ -6,7 +6,7 @@ namespace MoralesLarios.OOFP.Types.Errors;
 
 
 /// <summary>
-/// Representa <c>MlError</c>.
+/// Error individual de la biblioteca, identificado por su mensaje.
 /// </summary>
 public record MlError
 {
@@ -46,7 +46,7 @@ public record MlError
 
 
 /// <summary>
-/// Métodos de extension de <c>MlError</c>.
+/// Métodos de extensión para crear instancias de <see cref="MlError"/> y colecciones de errores a partir de cadenas de texto.
 /// </summary>
 public static class MlErrorExtensions
 {

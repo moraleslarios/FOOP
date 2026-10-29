@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Métodos de extension de <c>MlResultExecSelf</c>.
+/// Métodos de extensión que ejecutan acciones laterales sobre un <see cref="MlResult{T}"/> (registro, trazas, notificaciones) y devuelven el resultado de origen sin modificarlo.
 /// </summary>
 public static class MlResultExecSelfExtensions
 {
@@ -228,12 +228,12 @@ public static class MlResultExecSelfExtensions
     /// Execute the actionSuccess if the source is valid, otherwise execute the actionFailure. Return same source every time.
     /// If an exception is thrown, the errorMessageBuilder is used to build the error message.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="actionValid"></param>
-    /// <param name="actionFail"></param>
-    /// <param name="errorMessageBuilder"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="actionValid">Acción que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="actionFail">Acción que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryExecSelf<T>(this MlResult<T>             source,
                                                   Action<T>               actionValid,
                                                   Action<MlErrorDetails> actionFail,
@@ -895,10 +895,10 @@ public static class MlResultExecSelfExtensions
     /// <summary>
     /// Execute the actionSuccess if the source is valid, otherwise execute the actionFailure. Return same source every time.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="actionValid"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="actionValid">Acción que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> ExecSelfIfValid<T>(this MlResult<T> source,
                                                       Action<T>   actionValid)
         => source.Match(
@@ -963,11 +963,11 @@ public static class MlResultExecSelfExtensions
     /// Execute the actionSuccess if the source is valid, otherwise execute the actionFailure. Return same source every time.
     /// If an exception is thrown, the errorMessageBuilder is used to build the error message.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="actionValid"></param>
-    /// <param name="errorMessageBuilder"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="actionValid">Acción que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="errorMessageBuilder">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> TryExecSelfIfValid<T>(this MlResult<T>             source,
                                                          Action<T>               actionValid,
                                                          Func<Exception, string> errorMessageBuilder)

@@ -5,83 +5,10 @@
 namespace MoralesLarios.OOFP.Types;
 
 /// <summary>
-/// Representa <c>MlResultCollections</c>.
+/// Métodos de extensión para operar con colecciones y resultados: recorridos (<c>Traverse</c>), secuenciación, particionado de elementos válidos y fallidos y agregación de errores.
 /// </summary>
 public static partial class MlResultCollections
 {
-
-    //public static MlResult<IEnumerable<T>> Traverse<T>(this IEnumerable<T> source,
-    //                                                            Func<T, MlResult<T>> completeFuncTransform)
-    //{
-    //    var result = source.ToMlResultValid()
-    //                        .Bind(x => completeFuncTransform.GestionCollection(x));
-    //    return result;
-    //}
-
-    //public static MlResult<IEnumerable<T>> GestionCollection<T>(this Func<T, MlResult<T>> completeFuncTransform, IEnumerable<T> x)
-    //{
-    //    var partialData = x.Select(completeFuncTransform).ToList();
-
-    //    var result = partialData.Any(x => x.IsFailure) ?
-    //                 MergeFailureErrors(partialData) :
-    //                 MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.SuccessValue));
-
-    //    return result;
-    //}
-
-    //public static Task<MlResult<IEnumerable<T>>> TraverseAsync<T>(this IEnumerable<T> source,
-    //                                                                       Func<T, MlResult<T>> completeFuncTransform)
-    //    => source.Traverse<T>(completeFuncTransform).ToAsync();
-
-    //public static async Task<MlResult<IEnumerable<T>>> TraverseAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
-    //                                                                             Func<T, Task<MlResult<T>>> completeFuncTransformAsync) //
-    //{
-    //    var result = await sourceAsync.ToMlResultValidAsync()
-    //                        .BindAsync(async x =>
-    //                        {
-    //                            var colec = await x;
-
-    //                            var partialData = new List<MlResult<T>>();
-
-    //                            foreach (var item in colec)
-    //                            {
-    //                                var funcResult = await completeFuncTransformAsync(item);
-    //                                partialData.Add(funcResult);
-    //                            }
-
-    //                            var result = partialData.Any(x => x.IsFailure) ?
-    //                                         MergeFailureErrors(partialData)   :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
-
-    //                            return result;
-    //                        });
-    //    return result;
-    //}
-
-
-    //public static async Task<MlResult<IEnumerable<T>>> TraverseAsync<T>(this IEnumerable<T> source,
-    //                                                                             Func<T, Task<MlResult<T>>> completeFuncTransformAsync) //
-    //{
-    //    var result = await source.ToMlResultValidAsync()
-    //                        .BindAsync(async colec =>
-    //                        {
-    //                            var partialData = new List<MlResult<T>>();
-
-    //                            foreach (var item in colec)
-    //                            {
-    //                                var funcResult = await completeFuncTransformAsync(item);
-    //                                partialData.Add(funcResult);
-    //                            }
-
-    //                            var result = partialData.Any(x => x.IsFailure) ?
-    //                                         MergeFailureErrors(partialData)   :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
-
-    //                            return result;
-    //                        });
-    //    return result;
-    //}
-
 
 
     /// <summary>
@@ -324,85 +251,6 @@ public static partial class MlResultCollections
         return result;
     }
 
-
-
-    //public static MlResult<IEnumerable<T>> TraverseWhile<T>(this IEnumerable<T>       source,
-    //                                                                 Func<T, MlResult<T>> completeFuncTransform)
-    //{
-    //    var result = source.ToMlResultValid()
-    //                        .Bind(x =>
-    //                        {
-    //                            List<MlResult<T>> partialData = [];
-                                
-    //                            foreach (var item in x)
-    //                            {
-    //                                var funcResult = completeFuncTransform(item);
-    //                                partialData.Add(funcResult);
-    //                                if (funcResult.IsFailure) break;
-    //                            }
-
-    //                            var result = partialData.Any(x => x.IsFailure) ?
-    //                                         MergeFailureErrors(partialData) :
-    //                                         MlResult<IEnumerable<T>>.Valid(partialData.Select(x => x.SuccessValue));
-
-    //                            return result;
-    //                        });
-    //    return result;
-    //}
-
-    //public static Task<MlResult<IEnumerable<T>>> TraverseWhileAsync<T>(this IEnumerable<T>       source,
-    //                                                                            Func<T, MlResult<T>> completeFuncTransform)
-    //    => source.TraverseWhile<T>(completeFuncTransform).ToAsync();
-
-    //public static async Task<MlResult<IEnumerable<T>>> TraverseWhileAsync<T>(this Task<IEnumerable<T>> sourceAsync,
-    //                                                                                  Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
-    //{
-    //    var result = await sourceAsync.ToMlResultValidAsync()
-    //                        .BindAsync(async x =>
-    //                        {
-    //                            var colec = await x;
-
-    //                            var partialData = new List<MlResult<T>>();
-
-    //                            foreach (var item in colec)
-    //                            {
-    //                                var funcResult = await completeFuncTransformAsync(item);
-    //                                partialData.Add(funcResult);
-    //                                if (funcResult.IsFailure) break;
-    //                            }
-
-    //                            var result = partialData.Any(x => x.IsFailure) ?
-    //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
-
-    //                            return result;
-    //                        });
-    //    return result;
-    //}
-
-    //public static async Task<MlResult<IEnumerable<T>>> TraverseWhileAsync<T>(this IEnumerable<T>             source,
-    //                                                                                  Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
-    //{
-    //    var result = await source.ToMlResultValidAsync()
-    //                        .BindAsync(async colec =>
-    //                        {
-    //                            var partialData = new List<MlResult<T>>();
-
-    //                            foreach (var item in colec)
-    //                            {
-    //                                var funcResult = await completeFuncTransformAsync(item);
-    //                                partialData.Add(funcResult);
-    //                                if (funcResult.IsFailure) break;
-    //                            }
-
-    //                            var result = partialData.Any(x => x.IsFailure) ?
-    //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
-
-    //                            return result;
-    //                        });
-    //    return result;
-    //}
 
     /// <summary>
     /// Ejecuta <c>TraverseWhile</c>.
@@ -665,52 +513,6 @@ public static partial class MlResultCollections
         return result;
     }
 
-
-
-
-    //public static async Task<MlResult<IEnumerable<T>>> TraverseParallelAsync<T>(this Task<IEnumerable<T>>       sourceAsync,
-    //                                                                                     Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
-    //{
-    //    var result = await sourceAsync.ToMlResultValidAsync()
-    //                        .BindAsync(async x =>
-    //                        {
-    //                            var colec = await x;
-
-    //                            List<Task<MlResult<T>>> tasks = colec.Select(item => completeFuncTransformAsync(item)).ToList();
-
-    //                            await Task.WhenAll(tasks);
-
-    //                            List<MlResult<T>> partialData = tasks.Select(t => t.Result).ToList();
-
-    //                            var result = partialData.Any(x => x.IsFailure) ?
-    //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
-
-    //                            return result;
-    //                        });
-    //    return result;
-    //}
-
-    //public static async Task<MlResult<IEnumerable<T>>> TraverseParallelAsync<T>(this IEnumerable<T>             source,
-    //                                                                                     Func<T, Task<MlResult<T>>> completeFuncTransformAsync)
-    //{
-    //    var result = await source.ToMlResultValidAsync()
-    //                        .BindAsync(async colec =>
-    //                        {
-    //                            List<Task<MlResult<T>>> tasks = colec.Select(item => completeFuncTransformAsync(item)).ToList();
-
-    //                            await Task.WhenAll(tasks);
-
-    //                            List<MlResult<T>> partialData = tasks.Select(t => t.Result).ToList();
-
-    //                            var result = partialData.Any(x => x.IsFailure) ?
-    //                                         MergeFailureErrors(partialData) :
-    //                                         await MlResult<IEnumerable<T>>.ValidAsync(partialData.Select(x => x.SuccessValue));
-
-    //                            return result;
-    //                        });
-    //    return result;
-    //}
 
     /// <summary>
     /// Ejecuta <c>TraverseParallel</c>. Versión asíncrona.
@@ -1157,7 +959,7 @@ public static partial class MlResultCollections
 
 
 /// <summary>
-/// Representa <c>TraverseSplitSuccess</c>.
+/// Elemento procesado con éxito durante un recorrido particionado: asocia la clave del elemento de origen con el valor obtenido.
 /// </summary>
 /// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
 /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
@@ -1166,7 +968,7 @@ public static partial class MlResultCollections
 public record TraverseSplitSuccess<TKey, TResult>(TKey Key, TResult Value);
 
 /// <summary>
-/// Representa <c>TraverseSplitFailure</c>.
+/// Elemento fallido durante un recorrido particionado: asocia la clave del elemento de origen con los detalles del error.
 /// </summary>
 /// <typeparam name="TKey">Tipo de la clave de la entidad.</typeparam>
 /// <param name="Key">Valor de <c>Key</c>.</param>

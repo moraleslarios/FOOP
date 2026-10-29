@@ -6,7 +6,7 @@ using System;
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Métodos de extension de <c>MlResultMap</c>.
+/// Métodos de extensión de proyección (<c>Map</c>) sobre <see cref="MlResult{T}"/>: transforman el valor cuando el origen es válido, con variantes <c>TryMap</c> que capturan las excepciones.
 /// </summary>
 public static class MlResultMapExtensions
 {
@@ -273,28 +273,14 @@ public static class MlResultMapExtensions
     #region MapEnsure
 
 
-    //public static MlResult<T> MapEquals<T>(this MlResult<T>   source,
-    //                                            Func<T, bool> predicate,
-    //                                            string        errorMessage = null!)
-    //{
-    //    var result = source.Match(
-    //                                valid: x      => predicate(x) ? x : (errorMessage ?? "The Mapp comparation is false, return Result Error.").ToMlResultFail<T>(),
-    //                                fail : errors => errors.ToMlResultFail<T>()
-    //                             );
-
-    //    return result;
-    //}
-
-
-
     /// <summary>
     /// Convierte un MlResult en Fail, si no cumple con la condición de EnsureFUnc
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="ensureFunc"></param>
-    /// <param name="errorDetailsResult"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="ensureFunc">Función que se ejecuta durante la operación.</param>
+    /// <param name="errorDetailsResult">Detalles del error que se devuelven cuando no se cumple la condición.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> MapEnsure<T>(this MlResult<T>     source,
                                                 Func<T, bool>   ensureFunc,
                                                 MlErrorDetails errorDetailsResult)
@@ -374,11 +360,6 @@ public static class MlResultMapExtensions
                                                            Func<T, MlErrorDetails> errorDetailsResultBuilder)
         => source.MapEnsure(ensureFunc, errorDetailsResultBuilder).ToAsync();
 
-
-    //public static Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T>   source,
-    //                                                       Func<T, bool> ensureFunc,
-    //                                                       string        errorMessageResult)
-    //    => source.MapEnsure(ensureFunc, errorMessageResult).ToAsync();
 
     /// <summary>
     /// Transforma el valor de <c>Ensure</c>. Versión asíncrona.
@@ -1273,10 +1254,10 @@ public static class MlResultMapExtensions
     /// <summary>
     /// Execute the function if the source is fail, otherwise return the source.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="func"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> MapIfFail<T>(this MlResult<T>              source, 
                                                 Func<MlErrorDetails, T> func)
         => source.Match
@@ -2179,13 +2160,13 @@ public static class MlResultMapExtensions
     /// source parameter has a previous 'SuccessValue' execution
     /// -- 2 funcs (valid and fail) are necessary, since they have to preserve output compatibility --
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="funcValid"></param>
-    /// <param name="funcFail"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
+    /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> MapIfFailWithValue<T, TValue, TResult>(this MlResult<T>            source,
                                                                                  Func<T     , TResult> funcValid,
                                                                                  Func<TValue, TResult> funcFail)
@@ -7394,12 +7375,12 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     ///     1.- Función que se ejecutará si el MlResult es válido (facilita el value valido por parámetros)
     ///     2.- Función que se ejecutará si el MlResult es fallido (facilita el errorDetails por parámetros)
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="funcValidAlways"></param>
-    /// <param name="funcFailAlways"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="funcValidAlways">Función a aplicar.</param>
+    /// <param name="funcFailAlways">Función a aplicar.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> MapAlways<T, TResult>(this MlResult<T>                    source, 
                                                                Func<T              , TResult> funcValidAlways,
                                                                Func<MlErrorDetails, TResult> funcFailAlways)

@@ -4,7 +4,7 @@
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Métodos de extension de <c>MlResultMatch</c>.
+/// Métodos de extensión de resolución (<c>Match</c>) que reducen un <see cref="MlResult{T}"/> a un único valor aplicando una función distinta según sea válido o fallido.
 /// </summary>
 public static class MlResultMatchExtensions
 {

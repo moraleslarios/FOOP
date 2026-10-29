@@ -7,7 +7,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MoralesLarios.OOFP.Types;
 /// <summary>
-/// Métodos de extension de <c>MlResultSeveral</c>.
+/// Métodos de extensión que validan y combinan varios valores o resultados a la vez, acumulando todos los errores en lugar de detenerse en el primero.
 /// </summary>
 public static partial class MlResultSeveralExtensions
 {

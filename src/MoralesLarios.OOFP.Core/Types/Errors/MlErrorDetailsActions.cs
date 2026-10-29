@@ -5,7 +5,7 @@
 namespace MoralesLarios.OOFP.Types.Errors;
 
 /// <summary>
-/// Representa <c>MlErrorDetailsActions</c>.
+/// Operaciones sobre <see cref="MlErrorDetails"/>: incorporación de los datos de una excepción como metadatos, fusión de los errores de varios resultados y propagación de esos errores a resultados de otro tipo.
 /// </summary>
 public static partial class MlErrorDetailsActions
 {
@@ -89,14 +89,12 @@ public static partial class MlErrorDetailsActions
                                            .Select((x, index) => ($"{Constants.ExceptionMetadataKey}{(index == 0 ? string.Empty : index.ToString())}", x.Value))
                                            .ToDictionary(x => x.Item1, x => x.Item2);
 
-        //var printipalDetailsWitoutEx = source.Metadata.Where(x => x.Key != Constants.ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
-        //var otherDetailsWitoutEx     = other .Metadata.Where(x => x.Key != Constants.ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
 
-        var printipalDetailsWitoutEx = sourceDetails.Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
-        var otherDetailsWitoutEx     = otherDetails .Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
+        var principalDetailsWithoutEx = sourceDetails.Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
+        var otherDetailsWithoutEx     = otherDetails .Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
 
-        var details = printipalDetailsWitoutEx.Concat(otherDetailsWitoutEx)
-                                              .Concat(principalDetailsWithEx).ToDictionary(x => x.Key, x => x.Value);
+        var details = principalDetailsWithoutEx.Concat(otherDetailsWithoutEx)
+                                               .Concat(principalDetailsWithEx).ToDictionary(x => x.Key, x => x.Value);
 
         var result = (errors, details);
 
@@ -191,21 +189,21 @@ public static partial class MlErrorDetailsActions
 
 
     /// <summary>
-    /// Añade el elemento indicado de <c>Error</c>.
+    /// Devuelve unos detalles de error nuevos con el error indicado añadido a la colección existente, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="error">Error que describe el fallo.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
     public static MlErrorDetails AddError(this MlErrorDetails source, MlError error) => (source.Errors.Append(error), source.Metadata);
     /// <summary>
-    /// Añade el elemento indicado de <c>ErrorMessage</c>.
+    /// Devuelve unos detalles de error nuevos con un error construido a partir del mensaje indicado, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
     public static MlErrorDetails AddErrorMessage(this MlErrorDetails source, string errorMessage) => (source.Errors.Append(errorMessage), source.Metadata);
     /// <summary>
-    /// Añade el elemento indicado de <c>Errors</c>.
+    /// Devuelve unos detalles de error nuevos con la colección de errores indicada concatenada a la existente, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errors">Colección de errores que describen el fallo.</param>
@@ -214,7 +212,7 @@ public static partial class MlErrorDetailsActions
         => (source.Errors.Concat(errors).ToList(), source.Metadata);
 
     /// <summary>
-    /// Añade el elemento indicado de <c>Errors</c>.
+    /// Devuelve unos detalles de error nuevos con los errores indicados concatenados a la colección existente, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errors">Colección de errores que describen el fallo.</param>
@@ -222,7 +220,7 @@ public static partial class MlErrorDetailsActions
     public static MlErrorDetails AddErrors(this MlErrorDetails source, params MlError[] errors) 
         => (source.Errors.Concat(errors).ToList(), source.Metadata);
     /// <summary>
-    /// Añade el elemento indicado de <c>ErrorsMessages</c>.
+    /// Devuelve unos detalles de error nuevos con los errores construidos a partir de la colección de mensajes indicada, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errorMessages">Mensajes descriptivos de los errores.</param>
@@ -231,7 +229,7 @@ public static partial class MlErrorDetailsActions
         => (source.Errors.Concat(errorMessages.ToMlErrors()).ToList(), source.Metadata);
 
     /// <summary>
-    /// Añade el elemento indicado de <c>ErrorsMessages</c>.
+    /// Devuelve unos detalles de error nuevos con los errores construidos a partir de los mensajes indicados, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errorMessages">Mensajes descriptivos de los errores.</param>
@@ -240,7 +238,7 @@ public static partial class MlErrorDetailsActions
         => (source.Errors.Concat(errorMessages.ToMlErrors()).ToList(), source.Metadata);
 
     /// <summary>
-    /// Añade el elemento indicado de <c>MetadataOrThrow</c>.
+    /// Añade el par clave-valor indicado al diccionario de metadatos del error; lanza una excepción si la clave ya existe.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
@@ -257,7 +255,7 @@ public static partial class MlErrorDetailsActions
     }
 
     /// <summary>
-    /// Añade el elemento indicado de <c>MetadataRange</c>.
+    /// Incorpora a los metadatos del error todas las entradas del diccionario indicado.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="otherDetails">Valor de <c>otherDetails</c>.</param>
@@ -272,7 +270,7 @@ public static partial class MlErrorDetailsActions
     }
 
     /// <summary>
-    /// Añade el elemento indicado de <c>MetadataRange</c>.
+    /// Incorpora a los metadatos del error todas las parejas clave-valor indicadas.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="otherDetails">Colección de <c>otherDetails</c>.</param>
@@ -291,7 +289,7 @@ public static partial class MlErrorDetailsActions
 
 
     /// <summary>
-    /// Añade el elemento indicado de <c>ValueMetadata</c>.
+    /// Registra el valor indicado en los metadatos del error, bajo la clave estándar de valor, sustituyendo el que hubiera.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>

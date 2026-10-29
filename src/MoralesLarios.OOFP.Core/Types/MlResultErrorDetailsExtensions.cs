@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace MoralesLarios.OOFP.Types;
 
 /// <summary>
-/// Métodos de extension de <c>MlResultErrorDetails</c>.
+/// Métodos de extensión para consultar, enriquecer y combinar los detalles de error (<see cref="MlErrorDetails"/>) asociados a un <see cref="MlResult{T}"/>.
 /// </summary>
 public static partial class MlResultErrorDetailsExtensions
 {
@@ -205,7 +205,7 @@ public static partial class MlResultErrorDetailsExtensions
 
 
     /// <summary>
-    /// Añade el elemento indicado de <c>Value</c> unicamente cuando el resultado de origen es fallido.
+    /// Registra el valor indicado en los metadatos del error cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <typeparam name="TValue">Tipo del valor.</typeparam>
@@ -220,8 +220,7 @@ public static partial class MlResultErrorDetailsExtensions
                         );
 
     /// <summary>
-    /// Añade el elemento indicado de <c>Value</c> unicamente cuando el resultado de origen es fallido.
-    /// Versión asíncrona.
+    /// Registra el valor indicado en los metadatos del error cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <typeparam name="TValue">Tipo del valor.</typeparam>
@@ -233,8 +232,7 @@ public static partial class MlResultErrorDetailsExtensions
         => await source.AddValueIfFail(value).ToAsync();
 
     /// <summary>
-    /// Añade el elemento indicado de <c>Value</c> unicamente cuando el resultado de origen es fallido.
-    /// Versión asíncrona.
+    /// Registra el valor indicado en los metadatos del error cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <typeparam name="TValue">Tipo del valor.</typeparam>

@@ -1,7 +1,7 @@
 ﻿// Puentes [Obsolete] de la v2.0.0: nombres antiguos que reenvian al nombre nuevo. Se eliminan en la v3.0.0.
 namespace MoralesLarios.OOFP.Types.Errors;
 /// <summary>
-/// Métodos de extension de <c>MlErrorDetails</c>.
+/// Sobrecargas obsoletas de <see cref="MlErrorDetailsExtensions"/>, conservadas como alias de compatibilidad con la versión 2.0.
 /// </summary>
 public static partial class MlErrorDetailsExtensions
 {

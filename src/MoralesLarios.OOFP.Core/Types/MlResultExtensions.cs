@@ -5,14 +5,13 @@
 namespace MoralesLarios.OOFP.Types;
 
 /// <summary>
-/// Métodos de extension de <c>MlResult</c>.
+/// Métodos de extensión generales de <see cref="MlResult{T}"/>: enriquecimiento de los detalles del error, comprobaciones condicionales y composición de valores.
 /// </summary>
 public static partial class MlResultExtensions
 {
 
     /// <summary>
-    /// Añade el elemento indicado de <c>MlErrorDetail</c> unicamente cuando el resultado de origen es
-    /// fallido.
+    /// Añade el par clave-valor indicado a los metadatos del error cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
@@ -30,8 +29,7 @@ public static partial class MlResultExtensions
 
 
     /// <summary>
-    /// Añade el elemento indicado de <c>ValueDetail</c> unicamente cuando el resultado de origen es
-    /// fallido.
+    /// Registra el valor indicado en los metadatos del error, bajo la clave estándar de valor, cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
@@ -42,8 +40,7 @@ public static partial class MlResultExtensions
         => source.AddMlErrorDetailIfFail(Constants.ValueMetadataKey, errorValue);
 
     /// <summary>
-    /// Añade el elemento indicado de <c>MlErrorDetail</c> unicamente cuando el resultado de origen es
-    /// fallido. Versión asíncrona.
+    /// Añade el par clave-valor indicado a los metadatos del error cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
@@ -57,8 +54,7 @@ public static partial class MlResultExtensions
 
 
     /// <summary>
-    /// Añade el elemento indicado de <c>MlErrorDetail</c> unicamente cuando el resultado de origen es
-    /// fallido. Versión asíncrona.
+    /// Añade el par clave-valor indicado a los metadatos del error cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
@@ -71,8 +67,7 @@ public static partial class MlResultExtensions
         => await (await sourceAsync).AddMlErrorDetailIfFailAsync(errorKey, errorValue);
 
     /// <summary>
-    /// Añade el elemento indicado de <c>ValueDetail</c> unicamente cuando el resultado de origen es
-    /// fallido. Versión asíncrona.
+    /// Registra el valor indicado en los metadatos del error, bajo la clave estándar de valor, cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
@@ -84,8 +79,7 @@ public static partial class MlResultExtensions
 
 
     /// <summary>
-    /// Añade el elemento indicado de <c>ValueDetail</c> unicamente cuando el resultado de origen es
-    /// fallido. Versión asíncrona.
+    /// Registra el valor indicado en los metadatos del error, bajo la clave estándar de valor, cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
@@ -186,10 +180,10 @@ public static partial class MlResultExtensions
     /// <summary>
     /// Populate the ErrorDetails information with a Key value entry, if the MlResult result is fail
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="value"></param>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="value">Valor sobre el que se opera.</param>
     /// <returns>Fail MlResult with value ErrorDetailData</returns>
     public static MlResult<T> CompleteWithDetailsValueIfFail<T, TValue>(this MlResult<T> source, 
                                                                              TValue      value)
@@ -231,13 +225,13 @@ public static partial class MlResultExtensions
     /// If the source is valid, it returns a new MlResult with the value of the source and the value passed as a parameter.
     /// If the source is fail, populate the ErrorDetails information with a Key value entry, if the MlResult result is fail
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    /// <typeparam name="TResult"></typeparam>
-    /// <param name="source"></param>
-    /// <param name="value"></param>
-    /// <param name="completeFunc"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <typeparam name="TValue">Tipo del valor.</typeparam>
+    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="value">Valor sobre el que se opera.</param>
+    /// <param name="completeFunc">Función que se ejecuta durante la operación.</param>
+    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<TResult> CompleteWithDataValue<T, TValue, TResult>(this MlResult<T>      source, 
                                                                                    TValue           value,
                                                                                    Func<T, TResult> completeFunc)

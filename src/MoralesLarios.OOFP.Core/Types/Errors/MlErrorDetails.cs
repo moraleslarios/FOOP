@@ -7,7 +7,7 @@ namespace MoralesLarios.OOFP.Types.Errors;
 
 
 /// <summary>
-/// Representa <c>MlErrorDetails</c>.
+/// Conjunto de errores de una operación fallida junto con los metadatos (pares clave/valor) que aportan el contexto adicional del fallo.
 /// </summary>
 public partial class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
                              Dictionary<string, object> Details = null!)
@@ -228,7 +228,7 @@ public partial class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
 
 
 /// <summary>
-/// Métodos de extension de <c>MlErrorDetails</c>.
+/// Métodos de extensión para crear y transformar instancias de <see cref="MlErrorDetails"/>.
 /// </summary>
 public static partial class MlErrorDetailsExtensions
 {

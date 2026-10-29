@@ -3,23 +3,10 @@
 // Licensed under the Apache License, Version 2.0
 
 namespace MoralesLarios.OOFP.Types.Errors;
-//public class ErrorMessage
-//{
-
-
-//    public string Message { get; }
-
-
-//    public ErrorMessage(string message)
-//    {
-//        Message = message;
-//    }
-
-//}
 
 
 /// <summary>
-/// Representa <c>ErrorMessage</c>.
+/// Mensaje de error expresado como tipo propio, para no manejar cadenas de texto desnudas.
 /// </summary>
 /// <param name="Message">Valor de <c>Message</c>.</param>
 public record ErrorMessage(string Message);

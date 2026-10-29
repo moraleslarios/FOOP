@@ -1,7 +1,7 @@
 ﻿// Puentes [Obsolete] de la v2.0.0: nombres antiguos que reenvian al nombre nuevo. Se eliminan en la v3.0.0.
 namespace MoralesLarios.OOFP.Types.Errors;
 /// <summary>
-/// Representa <c>MlErrorDetailsActions</c>.
+/// Sobrecargas obsoletas de <see cref="MlErrorDetailsActions"/>, conservadas como alias de compatibilidad con la versión 2.0.
 /// </summary>
 public static partial class MlErrorDetailsActions
 {
@@ -62,7 +62,7 @@ public static partial class MlErrorDetailsActions
     [global::System.Obsolete("Renamed to ContainsExceptionAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<bool> HasExceptionDetailsAsync(this MlErrorDetails source) => ContainsExceptionAsync(source);
     /// <summary>
-    /// Añade el elemento indicado de <c>Detail</c>.
+    /// Añade el par clave-valor indicado al diccionario de metadatos del error; lanza una excepción si la clave ya existe.
     /// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
@@ -76,7 +76,7 @@ public static partial class MlErrorDetailsActions
     [global::System.Obsolete("Renamed to AddMetadataOrThrow. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlErrorDetails AddDetail<T>(this MlErrorDetails source, string key, T value) => AddMetadataOrThrow<T>(source, key, value);
     /// <summary>
-    /// Añade el elemento indicado de <c>Details</c>.
+    /// Incorpora a los metadatos del error todas las entradas del diccionario indicado.
     /// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
@@ -88,7 +88,7 @@ public static partial class MlErrorDetailsActions
     [global::System.Obsolete("Renamed to AddMetadataRange. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlErrorDetails AddDetails(this MlErrorDetails source, Dictionary<string, object> otherDetails) => AddMetadataRange(source, otherDetails);
     /// <summary>
-    /// Añade el elemento indicado de <c>Details</c>.
+    /// Incorpora a los metadatos del error todas las parejas clave-valor indicadas.
     /// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
@@ -100,7 +100,7 @@ public static partial class MlErrorDetailsActions
     [global::System.Obsolete("Renamed to AddMetadataRange. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlErrorDetails AddDetails(this MlErrorDetails source, params (string key, object value)[] otherDetails) => AddMetadataRange(source, otherDetails);
     /// <summary>
-    /// Añade el elemento indicado de <c>DetailValue</c>.
+    /// Registra el valor indicado en los metadatos del error, bajo la clave estándar de valor, sustituyendo el que hubiera.
     /// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo

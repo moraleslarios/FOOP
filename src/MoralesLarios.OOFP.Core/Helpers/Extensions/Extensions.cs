@@ -6,21 +6,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MoralesLarios.OOFP.Helpers.Extensions;
 /// <summary>
-/// Métodos de extension de <c></c>.
+/// Métodos de extensión de uso general del núcleo: conversión a nullable, clonado con mutaciones (<c>With</c>), adaptación de delegados sincrónicos a asíncronos y volcado de los datos de una excepción a un diccionario de metadatos.
 /// </summary>
 public static class Extensions
 {
 
-    //public static IEnumerable<ValidationResult> ValidateObject(this object source)
-    //{
-    //    var valContext = new ValidationContext(source, null, null);
-
-    //    var resultado = new List<ValidationResult>();
-
-    //    Validator.TryValidateObject(source, valContext, resultado, true);
-
-    //    return resultado;
-    //}
 
     /// <summary>
     /// Ejecuta <c>ToNullable</c>.
