@@ -524,6 +524,33 @@ La **2.1.1** normaliza `MoralesLarios.OOFP.Helpers.Constants`: los nombres en
 > `EnsureFpMessages.DefaultExceptionError(null)` lanza `ArgumentNullException` (antes, a través de
 > `Constants.DEFAULT_EX_ERROR_MESSAGE(null)`, era un `NullReferenceException`).
 
+#### 39 — El tipo `ErrorMessage` queda retirado (2.1.1 → 3.0.0) ⚠️
+
+`MoralesLarios.OOFP.Types.Errors.ErrorMessage` era un `record` de un solo campo (`Message`) sin
+cometido propio dentro del modelo de error: el tipo canónico es **`MlError`**. En la **2.1.1** se
+marca como puente y en la **3.0.0** el fichero desaparece.
+
+| Elemento | 2.0.0 | 2.1.1 | 3.0.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- | --- |
+| `ErrorMessage` (tipo) | `public record` visible | `[Obsolete]` + `[EditorBrowsable(Never)]` | **eliminado** | ✅ `CS0618` en 2.1.1 · `CS0246` en 3.0.0 |
+| Firma del constructor | `ErrorMessage(string Message)` | **idéntica** | — | — |
+
+La firma **no cambia** en la 2.1.1, así que el puente es de uso transparente: el código que lo
+utilizase sigue compilando, solo emite `CS0618`.
+
+**Qué revisar en tu código:**
+- Sustituye `new ErrorMessage(texto)` por `MlError.FromErrorMessage(texto)` (o por el `string`
+  desnudo, si solo necesitabas el texto). `MlError` admite conversión implícita desde `string`.
+- Si tenías el tipo en una **firma pública propia**, cambiarla es una ruptura para *tus* consumidores:
+  planifica el cambio antes de la 3.0.0.
+- El tipo ya no aparece en IntelliSense por `[EditorBrowsable(Never)]`; si lo buscas y no lo ves,
+  es intencionado.
+
+> ⚠️ Ojo con los falsos positivos al buscar: `ErrorMessage` es también el nombre de una **propiedad**
+> de `System.ComponentModel.DataAnnotations.ValidationResult` y de `FluentValidation.ValidationFailure`.
+> Esas propiedades **no tienen nada que ver** con este tipo y no hay que tocarlas. Busca con límites
+> de palabra y distinguiendo mayúsculas, y descarta las apariciones precedidas por un punto.
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -604,6 +631,7 @@ dotnet build --nologo /p:WarningLevel=4
    FAILED_INDEXES_KEY|EXPECTED_KEY|EX_DESC_KEY|VALUE_KEY
    Ex(s) details exceptions|More info in Ex Details|Not right value
    using static MoralesLarios.OOFP.Helpers.Constants
+   new ErrorMessage(|Types.Errors.ErrorMessage|ErrorMessage(
    ```
    - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
      `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
@@ -617,6 +645,9 @@ dotnet build --nologo /p:WarningLevel=4
      `MlResult<T>` con valor `null` (ahora `"<null>"`). Si declarabas
      `global using static MoralesLarios.OOFP.Helpers.Constants;`, sigue funcionando, pero conviene
      cualificar los usos con `Constants.` para que `CS0618` sea legible.
+   - **2.1.1**: si usabas el tipo `ErrorMessage`, cámbialo por `MlError` (punto 39). Busca con límite de
+     palabra y **descarta las coincidencias precedidas por un punto** (`.ErrorMessage`): esas son la
+     propiedad homónima de `ValidationResult` o de `ValidationFailure` y no hay que tocarlas.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -634,7 +665,7 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37 y —si migras a la 2.1.1— 38, indicando, para cada uno, si **afecta** al proyecto, qué se cambió y
+   36, 37 y —si migras a la 2.1.1— 38 y 39, indicando, para cada uno, si **afecta** al proyecto, qué se cambió y
    **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto).
 6. **Resultado del build**: errores y avisos, antes y después.
@@ -674,7 +705,7 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
-| 2.1.1 | 38 | Normalización de `Constants`, mensajes corregidos y `EnsureFpMessages` público |
+| 2.1.1 | 38, 39 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público y `ErrorMessage` retirado |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
 > nomenclatura no cambian) y aplica únicamente el punto 38 de la sección 3.3 más el barrido específico del

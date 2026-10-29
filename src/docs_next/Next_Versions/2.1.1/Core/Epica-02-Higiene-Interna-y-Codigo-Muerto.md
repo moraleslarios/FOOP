@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Core/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Core/01-Nomenclatura-y-Estandares.md) · puntos 05 (documentación) y 12, más dos hallazgos colaterales
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.1.1
 > **Proyecto** · `src/MoralesLarios.OOFP.Core`
-> **Estado** · ⬜ no iniciada
+> **Estado** · ✅ completada (commits `179162f` + éste) · US-07 … US-10 cerradas en 2.1.1
 > **Esfuerzo** · **M** (~1,25 jornadas)
 > **Riesgo** · 🟢 bajo en US-07 … US-09 · 🟡 medio en US-10
 >
@@ -193,10 +193,15 @@ Un fichero de 25 líneas de las cuales **16 son comentario** y la única línea 
 
 Criterios de aceptación:
 
-- [ ] `printipalDetailsWitoutEx` → `principalDetailsWithoutEx` (2 ocurrencias).
-- [ ] `otherDetailsWitoutEx` → `otherDetailsWithoutEx` (2 ocurrencias).
-- [ ] Un `grep` de `printipal` y de `Witout` en **todo** `src/` devuelve **0 coincidencias**.
-- [ ] No se ha tocado ningún identificador público en esta historia.
+- [x] `printipalDetailsWitoutEx` → `principalDetailsWithoutEx` (2 ocurrencias).
+- [x] `otherDetailsWitoutEx` → `otherDetailsWithoutEx` (2 ocurrencias).
+- [x] Un `grep` de `printipal` y de `Witout` en **todo** `src/` devuelve **0 coincidencias**.
+- [x] No se ha tocado ningún identificador público en esta historia.
+
+> **Resultado de la ejecución** · `printipal` y `Witout` → **0 coincidencias** en `src/`. El barrido
+> localizó además **119 erratas en identificadores PÚBLICOS** (`Faild`, `Alwais`, `Erros`,
+> `Diferent`, `Lenght`) que, conforme a las notas técnicas de esta historia, **no se corrigen aquí**
+> y quedan **remitidas a la épica de erratas públicas**.
 
 **API propuesta** · ninguna; los identificadores son locales.
 
@@ -221,14 +226,14 @@ de erratas públicas.
 
 Criterios de aceptación:
 
-- [ ] Eliminado el `ValidateObject` comentado de `Helpers/Extensions/Extensions.cs` (~10 líneas).
-- [ ] Eliminadas las 16 líneas comentadas de `Types/Errors/ErrorMessage.cs`.
-- [ ] Eliminadas las líneas comentadas de `Types/Errors/MlErrorDetailsActions.cs` (L92-93).
-- [ ] Eliminados los 2 bloques comentados de `Helpers/EnsureFp.cs`.
-- [ ] Eliminado el bloque comentado de `Helpers/EnsureFp.Core.cs`.
-- [ ] **Se conservan** los comentarios explicativos (`//` de una línea que explican *por qué*), las
+- [x] Eliminado el `ValidateObject` comentado de `Helpers/Extensions/Extensions.cs` (~10 líneas).
+- [x] Eliminadas las 16 líneas comentadas de `Types/Errors/ErrorMessage.cs`.
+- [x] Eliminadas las líneas comentadas de `Types/Errors/MlErrorDetailsActions.cs` (L92-93).
+- [x] Eliminados los 2 bloques comentados de `Helpers/EnsureFp.cs`.
+- [x] Eliminado el bloque comentado de `Helpers/EnsureFp.Core.cs`.
+- [x] **Se conservan** los comentarios explicativos (`//` de una línea que explican *por qué*), las
       cabeceras de licencia y las regiones `#region`.
-- [ ] El recuento de líneas de cada fichero modificado se ha verificado antes y después.
+- [x] El recuento de líneas de cada fichero modificado se ha verificado antes y después.
 
 **Notas técnicas** · el criterio de distinción es claro: se borra lo que **sería código si se le
 quitaran las barras**; se conserva lo que es **prosa**. En caso de duda, `git log -p` recupera
@@ -254,14 +259,14 @@ líneas por fichero y revisar el `git diff` completo antes de confirmar.
 
 Criterios de aceptación:
 
-- [ ] Un `grep` de `<c></c>` en el núcleo devuelve **0 coincidencias**.
-- [ ] Un `grep` de `<returns></returns>` en el núcleo devuelve **0 coincidencias**.
-- [ ] Ningún `<summary>` de tipo referencia un tipo inexistente (se ha verificado
+- [x] Un `grep` de `<c></c>` en el núcleo devuelve **0 coincidencias**.
+- [x] Un `grep` de `<returns></returns>` en el núcleo devuelve **0 coincidencias**.
+- [x] Ningún `<summary>` de tipo referencia un tipo inexistente (se ha verificado
       `MlResultBind` y los 6 hermanos del patrón `MlResult*Extensions`).
-- [ ] Los `<summary>` de los **15 tipos públicos** del núcleo describen el cometido del tipo, no su
+- [x] Los `<summary>` de los **15 tipos públicos** del núcleo describen el cometido del tipo, no su
       nombre reescrito.
-- [ ] `CS1591` sigue en **0** (la historia no debe introducir ninguna regresión documental).
-- [ ] Toda la documentación XML tocada está en **castellano**, coherente con los 3.400 miembros ya
+- [x] `CS1591` sigue en **0** (la historia no debe introducir ninguna regresión documental).
+- [x] Toda la documentación XML tocada está en **castellano**, coherente con los 3.400 miembros ya
       documentados.
 
 **API propuesta** (ejemplos del antes y después):
@@ -325,21 +330,30 @@ anclas de cadena únicas y verificación del recuento de líneas; **nunca** rees
 
 Criterios de aceptación:
 
-- [ ] Se ha resuelto [D-09](#5-decisiones-abiertas) (retirar vs. conservar).
-- [ ] Los **7 usos internos** de `ErrorMessage` se han sustituido por `MlError` o por `string`,
+- [x] Se ha resuelto [D-09](#5-decisiones-abiertas) (retirar vs. conservar).
+- [x] Los **7 usos internos** de `ErrorMessage` se han sustituido por `MlError` o por `string`,
       según corresponda en cada punto.
-- [ ] `ErrorMessage` queda marcado `[Obsolete]` con el mensaje
+- [x] `ErrorMessage` queda marcado `[Obsolete]` con el mensaje
       `"Use MlError instead. Will be removed in 3.0.0."` y `[EditorBrowsable(Never)]`.
-- [ ] El `record` conserva su forma actual (no se cambia la firma del constructor) para que el
+- [x] El `record` conserva su forma actual (no se cambia la firma del constructor) para que el
       puente sea de uso transparente.
-- [ ] La ruptura futura está registrada en `oofp-upgrade-2.prompt.md` §3.3.
+- [x] La ruptura futura está registrada en `oofp-upgrade-2.prompt.md` §3.3.
 - [ ] En 3.0.0 el fichero `Types/Errors/ErrorMessage.cs` desaparece.
 
-**Inventario de los 7 usos** (a confirmar en la ejecución):
+**Inventario real de usos** (verificado en la ejecución): **0 usos reales del tipo**. Los 6 aciertos
+del `grep` eran 1 declaración del propio tipo y 5 falsos positivos:
 
-| Fichero | Uso | Sustitución propuesta |
-|---------|-----|-----------------------|
-| *(a completar con `grep` en la ejecución)* | — | `MlError` o `string` |
+| Fichero | Uso | Sustitución aplicada |
+|---------|-----|----------------------|
+| `Core/Types/Errors/ErrorMessage.cs` | declaración del `record` | marcado `[Obsolete]` + `[EditorBrowsable(Never)]` |
+| `AspNetCore.Results/.../MlProblemDetails.cs:93` | `ValidationResult.ErrorMessage` | ninguna · falso positivo |
+| `AspNetCore.Results/.../MlResults.cs:103` | `ValidationResult.ErrorMessage` | ninguna · falso positivo |
+| `Validation.DataAnnotations/Helpers/Extensions.cs:39` | `ValidationResult.ErrorMessage` | ninguna · falso positivo |
+| `Validation.FluentValidation/Helpers/Extensions.cs:40` | `ValidationFailure.ErrorMessage` | ninguna · falso positivo |
+| `scripts/tools/MlDoc/Vocabulary.cs:155` | entrada de vocabulario | ninguna · falso positivo |
+
+> Al no haber ningún uso real, el puente `[Obsolete]` no ha requerido tocar ni una línea de código
+> de producción más allá del propio `ErrorMessage.cs`.
 
 > La historia **empieza** por elaborar ese inventario: `grep -r "ErrorMessage" src/` filtrando los
 > falsos positivos (`errorMessage` como nombre de parámetro, muy abundante tras la épica 1, y
@@ -407,8 +421,8 @@ graph TD
 
 ## 5. Decisiones abiertas
 
-| Id | Decisión | Opciones | Recomendación | Bloquea |
-|----|----------|----------|---------------|---------|
+| Id | Decisión | Opciones | Decisión tomada | Bloquea |
+|----|----------|----------|-----------------|---------|
 | **D-08** | ¿Se adopta `dotnet format` / `.editorconfig` en el núcleo? | (a) sí, con el formato por defecto · (b) sí, pero configurando `.editorconfig` para preservar la alineación por columnas · (c) no | **(c) no, por ahora** · el formato alineado de los dos ficheros grandes (20.134 líneas, 55,9 % del núcleo) es deliberado y un reformateo masivo generaría un *diff* ilegible que sepultaría los cambios reales de estas épicas. Reconsiderar cuando esos ficheros se troceen | US-09 |
 | **D-09** | ¿Se retira `ErrorMessage` o se le da un cometido propio? | (a) retirar en favor de `MlError` · (b) conservarlo como tipo ligero sin metadatos · (c) conservarlo y documentar la diferencia | **(a) retirar** · no hay ninguna diferencia funcional con `MlError`, y tener dos tipos para el mismo concepto es exactamente el problema que estas épicas intentan resolver | US-10 |
 | **D-10** | ¿La documentación XML debe estar en castellano o en inglés? | (a) castellano (estado actual, 3.400 miembros) · (b) inglés (norma en NuGet) · (c) ambos vía ficheros `.xml` satélite | **(a) castellano** para 2.1.1 · cambiar de idioma 3.400 miembros no es una decisión de esta épica. Anotar la tensión con [D-05](Epica-01-Constantes-Literales-y-Usings.md#5-decisiones-abiertas) (mensajes en inglés + documentación en castellano) para resolverla de forma conjunta más adelante | US-09 |
@@ -419,15 +433,20 @@ graph TD
 
 Además de los [criterios comunes](README.md#8-definición-de-terminado-común):
 
-- [ ] `grep` de `printipal` y `Witout` en `src/` → **0 coincidencias**.
-- [ ] `grep` de `<c></c>` y `<returns></returns>` en el núcleo → **0 coincidencias**.
-- [ ] Ningún fichero del núcleo contiene bloques de código comentado.
-- [ ] `ErrorMessage` está marcado `[Obsolete]` y no se usa en ningún sitio del núcleo.
-- [ ] El recuento de líneas de los dos ficheros grandes (`MlResultBindExtensions.cs` = 12.217,
+- [x] `grep` de `printipal` y `Witout` en `src/` → **0 coincidencias**.
+- [x] `grep` de `<c></c>` y `<returns></returns>` en el núcleo → **0 coincidencias**.
+- [x] Ningún fichero del núcleo contiene bloques de código comentado.
+- [x] `ErrorMessage` está marcado `[Obsolete]` y no se usa en ningún sitio del núcleo.
+- [x] El recuento de líneas de los dos ficheros grandes (`MlResultBindExtensions.cs` = 12.217,
       `MlResultMapExtensions.cs` = 7.917) **no ha variado** más allá de las líneas de documentación
       añadidas conscientemente.
-- [ ] La ruptura de US-10 consta en
-      [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
+- [x] La ruptura de US-10 consta en
+      [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3
+      (punto **39**, más el apéndice de versiones y los puntos 4 de la Fase 5 y 5 de la Fase 6).
+
+> **Verificación final** · `dotnet build MoralesLarios.OOFP.sln -c Debug` → **0 errores** y **0**
+> avisos `CS0618`/`CS0619`. `dotnet test MoralesLarios.OOFP.Core.Tests.Unit` → **795 superados**,
+> 0 fallidos (793 de línea base + los 2 nuevos de `ModeloDeErrorTests`).
 
 ---
 
