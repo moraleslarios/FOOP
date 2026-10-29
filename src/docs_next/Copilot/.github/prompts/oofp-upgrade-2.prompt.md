@@ -368,6 +368,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 35 | `TryRemoveRangeAsync` | guarda sincrónica, `Task` sin `await` | guarda asíncrona esperada | Contrato (ahora sí corta con `null`) |
 | 36 | `TotalCount` de la paginación sincrónica | contaba la tabla **completa**, ignorando el filtro | cuenta **con el filtro aplicado** | Contrato (nº de páginas) |
 | 37 | Paginación imperativa | `OrderBy` **después** de `Skip`/`Take` | `OrderBy` **antes** de `Skip`/`Take` | Contrato (contenido de cada página) |
+| 38 | Constantes y literales de mensaje del núcleo (**2.1.1**) | nombres `MAYUSCULAS`, `const`, mensajes con erratas | `PascalCase`, `static readonly`, mensajes corregidos | **Compilación** (`CS0618`) + Contrato (texto de los mensajes) + **binario** |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -490,6 +491,8 @@ al borrado por lotes contando con que no fallara.
 > siempre una ordenación estable** (idealmente por clave primaria) en las consultas paginadas. Sin `ORDER BY`,
 > SQL Server no garantiza el reparto en páginas.
 
+---
+
 #### 38 — Constantes y literales de mensaje del núcleo (2.1.1) ⚠️
 
 La **2.1.1** normaliza `MoralesLarios.OOFP.Helpers.Constants`: los nombres en
@@ -520,3 +523,159 @@ La **2.1.1** normaliza `MoralesLarios.OOFP.Helpers.Constants`: los nombres en
 >
 > `EnsureFpMessages.DefaultExceptionError(null)` lanza `ArgumentNullException` (antes, a través de
 > `Constants.DEFAULT_EX_ERROR_MESSAGE(null)`, era un `NullReferenceException`).
+
+## Fase 4 — Compilar y resolver iterativamente
+
+1. ```powershell
+   dotnet build --nologo
+   ```
+2. **Resuelve primero los errores `CS0246` (tipo no encontrado) y `CS0234`** (no existe en el namespace):
+   casi siempre es un `using` olvidado de la Fase 2 o un tipo que cambió de nombre en la Fase 3.
+3. Luego los **`CS0117`/`CS1061`** (el miembro no existe): renombrado de método o propiedad pendiente.
+4. Repite build + corrección hasta `0 errores`. **Si tras 5 iteraciones siguen apareciendo errores nuevos,
+   detente y pide instrucciones al usuario** en lugar de seguir probando a ciegas.
+5. **No silencies errores** con `#pragma warning disable`, `dynamic`, casts forzados ni `!`. Si no sabes cómo
+   migrar algo, déjalo marcado con `// TODO: OOFP 2.0 — revisar` y repórtalo.
+
+### 4.1 Avisos de los puentes `[Obsolete]`
+
+La 2.0.0 conserva **187 puentes `[Obsolete]`** para que el código 1.x compile con avisos. Si el build termina
+con `0 errores` pero con **`CS0618`** (*"'X' is obsolete"*), significa que **aún quedan llamadas al nombre antiguo**.
+
+```powershell
+dotnet build --nologo /p:WarningLevel=4
+```
+
+**Resuélvelos todos**: los puentes están marcados *"Will be removed in 3.0.0"* y
+`[EditorBrowsable(Never)]`, así que no aparecen en IntelliSense. Dejarlos es deuda técnica que romperá en la 3.0.0.
+
+> 💡 Si el usuario quiere una migración **gradual**, puede quedarse aquí: con los paquetes nuevos y los
+> namespaces corregidos, los puentes permiten compilar. Pregúntale si prefiere
+> **(a)** migración completa a nombres 2.0.0 o **(b)** mínima (solo paquetes + namespaces, aceptando `CS0618`).
+> **Recomienda (a).**
+
+---
+
+## Fase 5 — Verificación
+
+1. **Compilación limpia**:
+   ```powershell
+   dotnet build --nologo
+   ```
+   Objetivo: `0 Error(s)` y `0` avisos `CS0618`/`CS0619`.
+2. **Tests**:
+   ```powershell
+   dotnet test --nologo
+   ```
+   Compara con la línea base de la Fase 0. Si algún test que pasaba ahora falla, **investígalo**: lo más
+   probable es un cambio semántico de la sección 3.2 (fechas con cultura invariante, factorías, nulabilidad)
+   o un cambio de comportamiento de la sección 3.3 (URL, cabeceras de paginación, `Location`, `type` de
+   `ProblemDetails`, `TotalCount` y orden de las consultas paginadas).
+3. **Barrido final de nombres antiguos**. Busca en todo el código que no quede ningún nombre 1.x:
+   ```
+   MoralesLarios.OOFP.WebApi|MoralesLarios.OOFP.WebControllers|MoralesLarios.OOFP.WebServices
+   MoralesLarios.OOFP.HttpClients|MoralesLarios.OOFP.EFCore|MoralesLarios.OOFP.Internals
+   MoralesLarios.OOFP.Utilities|MoralesLarios.OOFP.Extensions.Loggers|MoralesLarios.OOFP.ValueObjects.IO
+   NullToFailed|EmptyToFailed|BoolToResult|SecureValidValue|FusionFailErros|FusionErrosIfExists
+   MlErrorsDetails|MlResultActions|MlProblemsDetails|MlActionResults|MlResultWebExtensions
+   IsValid|IsFail|ErrorsDetails|Projection|ProjectionSplit|ProjectionWhile
+   IGenServiceFp|GenServiceFp|SimpleMlControllerBase|SimpleMlComplexPkControllerBase
+   SimpleMlCacheControllerBase|PkParameterAttribute|PerControllerOutputCachePolicy
+   IGenClientFp|GenClientFp|GenComplexClientFp|IHttpClientFactoryManager|HttpClientFactoryManager
+   CallRequestParamsInfo|CallRequestPaginationParamsInfo|GetHttpClientFactoryKey
+   PaginationInfo|PaginationResultInfo|IWrapperIO|WrapperIO|IMlConfigManager|MlConfigManager
+   IEFRepo|EFRepo|IEFPaginatorFp|MlFile|MlDirectory|ExistsFile|ExistDirectory
+   MlValidableFp|FluentValidationsValidator|IntNotNegative|DecimalNotNegative|DoubleNotNegative
+   RangeEnumValueObject|StringBetweenLength|LogMlResultFinal|ChangeReturnResultAlwais
+   ```
+   ⚠️ Algunos (`IsValid`, `Value`, `Name`, `Key`, `Empty`, `OrderBy`, `Combine`, `Do`) son palabras muy comunes:
+   revisa cada coincidencia a mano y **descarta las que no provengan de la librería**.
+4. **Revisión de los cambios de comportamiento (sección 3.3)**. Busca y revisa a mano:
+   ```
+   PackageReference Include="Microsoft.AspNetCore.Mvc.Core"
+   SetHeaderPageNumber|SetHeaderPageSize|AddPageNumberHeader|AddPageSizeHeader
+   DefaultRequestHeaders
+   netalpunto|puntonetalpunto
+   TotalCount|ToResponseErrorsDescription|ReadErrorDescription
+   ```
+   Y, si actualizas a la **2.1.1** o posterior, busca además (punto 38):
+   ```
+   DEFAULT_ERROR_MESSAGE|DEFAULT_EX_ERROR_MESSAGE|NOT_FOUND_KEY|PARAM_NAME_KEY
+   FAILED_INDEXES_KEY|EXPECTED_KEY|EX_DESC_KEY|VALUE_KEY
+   Ex(s) details exceptions|More info in Ex Details|Not right value
+   using static MoralesLarios.OOFP.Helpers.Constants
+   ```
+   - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
+     `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
+   - Si se añaden cabeceras de paginación sobre `HttpClient`, migra a las sobrecargas de
+     `HttpRequestMessage`.
+   - Si hay tests o *snapshots* que fijen `Location`, `type`, URL compuestas o `TotalCount`, actualiza el
+     valor esperado al comportamiento correcto de la 2.0.0.
+   - **2.1.1**: sustituye los nombres en `MAYÚSCULAS` de `Constants` por sus gemelos `PascalCase`, cambia
+     `Constants.DEFAULT_EX_ERROR_MESSAGE(ex)` por `EnsureFpMessages.DefaultExceptionError(ex)` y actualiza
+     las aserciones que comparen literalmente los mensajes por defecto o el `ToString()` de un
+     `MlResult<T>` con valor `null` (ahora `"<null>"`). Si declarabas
+     `global using static MoralesLarios.OOFP.Helpers.Constants;`, sigue funcionando, pero conviene
+     cualificar los usos con `Constants.` para que `CS0618` sea legible.
+5. **Diff**:
+   ```powershell
+   git diff --stat
+   ```
+   Revisa que no haya ficheros tocados sin motivo.
+
+---
+
+## Fase 6 — Informe final (OBLIGATORIO)
+
+Entrega al usuario, **en español**, un informe con:
+
+1. **Paquetes**: tabla de antiguo → nuevo → versión instalada, por proyecto.
+2. **Ficheros modificados**: número total y desglose por proyecto.
+3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
+4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
+5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
+   36, 37 y —si migras a la 2.1.1— 38, indicando, para cada uno, si **afecta** al proyecto, qué se cambió y
+   **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
+   `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto).
+6. **Resultado del build**: errores y avisos, antes y después.
+7. **Resultado de los tests**: pasados/fallados, antes y después.
+8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
+   y cualquier decisión que requiera al usuario.
+9. **Siguientes pasos sugeridos**: confirmar el commit, revisar el diff, ejecutar la aplicación.
+
+No afirmes que la migración está completa si queda **cualquier** error de compilación, test roto nuevo,
+`CS0618` sin resolver o `TODO` pendiente. En ese caso, dilo explícitamente y enumera lo que falta.
+
+---
+
+## Recordatorios finales
+
+- ✅ Pregunta antes de reemplazar identificadores ambiguos (`Name`, `Key`, `Value`, `Empty`, `Combine`, `Do`, `OrderBy`).
+- ✅ Dos pasadas con tokens siempre que haya solapamiento entre el lado antiguo y el nuevo.
+- ✅ Más largo primero, con límites de palabra.
+- ✅ Compila entre tandas; no acumules 500 cambios sin verificar.
+- ❌ No reformatees, no reordenes `using`, no "limpies" código.
+- ❌ No toques `Program.cs`, `appsettings*.json` ni ficheros de configuración salvo que contengan nombres de la librería.
+- ❌ No instales *prereleases* sin permiso.
+- ❌ No des la migración por buena sin compilar.
+- ⚠️ **Avisa SIEMPRE al usuario de los cambios de comportamiento de la sección 3.3**, aunque el build y los
+  tests queden en verde: cambian la respuesta HTTP pública de su API y el contenido de sus listados paginados.
+
+> 📚 Referencia completa de los 888 cambios: `Cambios Realizados/Renombrados-v2.0.0.md` en el repositorio
+> de MoralesLarios.OOFP. Convenciones de nomenclatura de la 2.0.0: `CONTRIBUTING.md`.
+
+---
+
+## Apéndice — Versiones posteriores a la 2.0.0
+
+Este prompt cubre el salto **1.x → 2.0.0** y, además, acumula las rupturas introducidas en cada versión
+posterior. Consulta la sección 3.3 para el detalle de cada punto.
+
+| Versión | Puntos de la 3.3 | Resumen de la ruptura |
+| --- | --- | --- |
+| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
+| 2.1.1 | 38 | Normalización de `Constants`, mensajes corregidos y `EnsureFpMessages` público |
+
+> 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
+> nomenclatura no cambian) y aplica únicamente el punto 38 de la sección 3.3 más el barrido específico del
+> punto 4 de la Fase 5.
