@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Core/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Core/01-Nomenclatura-y-Estandares.md) · puntos 01, 02, 06, 07, 13
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.1.1
 > **Proyecto** · `src/MoralesLarios.OOFP.Core`
-> **Estado** · ⬜ no iniciada
+> **Estado** · ✅ completada (commit `6df1466`) · US-01 … US-04 y US-06 cerradas en 2.1.1 · US-05 cerrada en su tramo de 2.1.1 (gemelos + puentes); la retirada de los puentes queda para 3.0.0
 > **Esfuerzo** · **L** (~2,5 jornadas)
 > **Riesgo** · 🟢 bajo en US-01 … US-04 y US-06 · 🟠 alto en US-05
 >
@@ -30,7 +30,7 @@
    - [US-05 · Dar gemelos `PascalCase` a los miembros con guión bajo](#us-05--dar-gemelos-pascalcase-a-los-miembros-con-guión-bajo)
    - [US-06 · Centralizar los literales de mensaje del núcleo](#us-06--centralizar-los-literales-de-mensaje-del-núcleo)
 4. [Orden de ejecución](#4-orden-de-ejecución)
-5. [Decisiones abiertas](#5-decisiones-abiertas)
+5. [Decisiones resueltas](#5-decisiones-resueltas)
 6. [Definición de terminado](#6-definición-de-terminado)
 7. [Apéndice · código actual y propuesto](#7-apéndice--código-actual-y-propuesto)
 8. [Ver también](#ver-también)
@@ -242,11 +242,11 @@ Esta épica **no localiza** los mensajes —eso es la épica
 
 Criterios de aceptación:
 
-- [ ] `DEFAULT_ERROR_MESSAGE` no contiene comillas simples sin cerrar.
-- [ ] `DEFAULT_EX_ERROR_MESSAGE` tiene un espacio tras el punto de `{ex.Message}.`.
-- [ ] Se ha ejecutado `grep` del fragmento `"Without custom error message"` en **toda** la solución
+- [x] `DEFAULT_ERROR_MESSAGE` no contiene comillas simples sin cerrar.
+- [x] `DEFAULT_EX_ERROR_MESSAGE` tiene un espacio tras el punto de `{ex.Message}.`.
+- [x] Se ha ejecutado `grep` del fragmento `"Without custom error message"` en **toda** la solución
       (`.cs` y `.md`) y actualizado cada aparición.
-- [ ] Los tests que comparan literalmente con estos mensajes se han actualizado.
+- [x] Los tests que comparan literalmente con estos mensajes se han actualizado.
 
 **API propuesta** (sin cambio de firma, sólo del valor):
 
@@ -281,11 +281,11 @@ compara la cadena completa, fallará en ejecución. El `grep` previo es obligato
 
 Criterios de aceptación:
 
-- [ ] `global using static MoralesLarios.OOFP.Helpers.Constants;` ha desaparecido de
+- [x] `global using static MoralesLarios.OOFP.Helpers.Constants;` ha desaparecido de
       `GlobalUsings.cs`.
-- [ ] Los ~30 usos de los símbolos de `Constants` están cualificados con `Constants.`.
-- [ ] La solución compila con 0 errores y el número de advertencias **no sube**.
-- [ ] No se ha añadido ningún `using static` de ámbito de fichero como sustituto encubierto.
+- [x] Los ~30 usos de los símbolos de `Constants` están cualificados con `Constants.`.
+- [x] La solución compila con 0 errores y el número de advertencias **no sube**.
+- [x] No se ha añadido ningún `using static` de ámbito de fichero como sustituto encubierto.
 
 **Notas técnicas** · los `global using` **no se exportan al consumidor**, así que el cambio es
 puramente interno y **no hay ninguna ruptura**. El trabajo es mecánico y autoverificable: se borra
@@ -318,12 +318,12 @@ beneficio/riesgo** de toda la versión 2.1.1.
 
 Criterios de aceptación:
 
-- [ ] Se han eliminado `global using System;`, `System.Collections.Generic`, `System.Linq` y
+- [x] Se han eliminado `global using System;`, `System.Collections.Generic`, `System.Linq` y
       `System.Threading.Tasks` (los cuatro incluidos por `ImplicitUsings=enable`).
-- [ ] **Se conserva** `global using System.Text;` (no forma parte del conjunto implícito).
-- [ ] Los cuatro `global using` del propio namespace se mantienen y quedan ordenados
+- [x] **Se conserva** `global using System.Text;` (no forma parte del conjunto implícito).
+- [x] Los cuatro `global using` del propio namespace se mantienen y quedan ordenados
       alfabéticamente.
-- [ ] La solución compila con 0 errores.
+- [x] La solución compila con 0 errores.
 
 **API propuesta**:
 
@@ -356,14 +356,14 @@ harían falta otra vez. Conviene dejar un comentario en el fichero que lo advier
 
 Criterios de aceptación:
 
-- [ ] `EnsureFpMessages` expone `public static string DefaultExceptionError(Exception ex)`.
-- [ ] El método valida que `ex` no sea `null` o documenta explícitamente el comportamiento con
+- [x] `EnsureFpMessages` expone `public static string DefaultExceptionError(Exception ex)`.
+- [x] El método valida que `ex` no sea `null` o documenta explícitamente el comportamiento con
       `null` (hoy lanzaría `NullReferenceException`).
-- [ ] `Constants.DEFAULT_EX_ERROR_MESSAGE` permanece como puente `[Obsolete]` que **delega**.
-- [ ] El puente lleva `[EditorBrowsable(Never)]` y el mensaje
+- [x] `Constants.DEFAULT_EX_ERROR_MESSAGE` permanece como puente `[Obsolete]` que **delega**.
+- [x] El puente lleva `[EditorBrowsable(Never)]` y el mensaje
       `"Renamed to EnsureFpMessages.DefaultExceptionError. Will be removed in 3.0.0."`.
-- [ ] Los usos internos (2 conocidos) apuntan al nombre nuevo.
-- [ ] La ruptura futura está registrada en `oofp-upgrade-2.prompt.md` §3.3 y en el anexo de
+- [x] Los usos internos (2 conocidos) apuntan al nombre nuevo.
+- [x] La ruptura futura está registrada en `oofp-upgrade-2.prompt.md` §3.3 y en el anexo de
       renombrados.
 
 **API propuesta**:
@@ -411,14 +411,14 @@ lo invoque; el puente lo cubre.
 
 Criterios de aceptación:
 
-- [ ] Los seis miembros con guión bajo tienen un **gemelo en `PascalCase`** declarado en
+- [x] Los seis miembros con guión bajo tienen un **gemelo en `PascalCase`** declarado en
       `Constants.cs`.
-- [ ] Se ha resuelto [D-01](#5-decisiones-abiertas) y aplicado el mecanismo elegido
+- [x] Se ha resuelto [D-01](#5-decisiones-resueltas) y aplicado el mecanismo elegido
       (`const` vs `static readonly`) de forma **homogénea** a los ocho miembros.
-- [ ] Los nombres antiguos quedan como puentes `[Obsolete]` en `Constants.Obsolete.cs`, delegando
+- [x] Los nombres antiguos quedan como puentes `[Obsolete]` en `Constants.Obsolete.cs`, delegando
       en los nuevos.
-- [ ] CA1707 **no aparece** en el núcleo tras activar los analizadores de .NET.
-- [ ] La ruptura está registrada en `oofp-upgrade-2.prompt.md` §3.3 y en el anexo de renombrados.
+- [x] CA1707 **no aparece** en el núcleo tras activar los analizadores de .NET.
+- [x] La ruptura está registrada en `oofp-upgrade-2.prompt.md` §3.3 y en el anexo de renombrados.
 
 **Mapa de renombrados**:
 
@@ -439,7 +439,7 @@ la traducción literal.
 
 Los cuatro miembros que hoy son `public const` tienen una peculiaridad: un `const` se **incrusta**
 en el ensamblado del consumidor en tiempo de compilación, así que una corrección futura del valor
-no le llegará hasta que recompile. Eso es precisamente lo que [D-01](#5-decisiones-abiertas) decide.
+no le llegará hasta que recompile. Eso es precisamente lo que [D-01](#5-decisiones-resueltas) decide.
 
 **Tests mínimos**:
 
@@ -467,13 +467,13 @@ migración.
 
 Criterios de aceptación:
 
-- [ ] Existe un inventario completo (tabla en este documento) de **todos** los literales de mensaje
+- [x] Existe un inventario completo (tabla en este documento) de **todos** los literales de mensaje
       del núcleo, con `fichero:línea`.
-- [ ] Ningún literal de mensaje queda escrito dentro de `MlResult.cs` ni de `MlErrorDetails.cs`:
+- [x] Ningún literal de mensaje queda escrito dentro de `MlResult.cs` ni de `MlErrorDetails.cs`:
       todos se referencian desde `EnsureFpMessages` o `Constants`.
-- [ ] `"Not right value"` se ha sustituido por un texto correcto (recomendado: `"<null>"`).
-- [ ] Las cabeceras `"MlError:"` y `"Details:"` son miembros con nombre, no literales incrustados.
-- [ ] Se ha resuelto [D-05](#5-decisiones-abiertas) (idioma por defecto) y documentado la decisión.
+- [x] `"Not right value"` se ha sustituido por un texto correcto (recomendado: `"<null>"`).
+- [x] Las cabeceras `"MlError:"` y `"Details:"` son miembros con nombre, no literales incrustados.
+- [x] Se ha resuelto [D-05](#5-decisiones-resueltas) (idioma por defecto) y documentado la decisión.
 
 **Inventario de literales de mensaje del núcleo**:
 
@@ -547,13 +547,13 @@ graph TD
 
 ---
 
-## 5. Decisiones abiertas
+## 5. Decisiones resueltas
 
-| Id | Decisión | Opciones | Recomendación | Bloquea |
-|----|----------|----------|---------------|---------|
-| **D-01** | ¿Las claves de metadatos deben ser `const` o `static readonly`? | (a) `const`: cero indirección, pero el consumidor incrusta el valor y hay ruptura binaria si cambia · (b) `static readonly`: compatible binariamente, coste despreciable | **(b) `static readonly`** · el valor se resuelve en ejecución, así que una corrección futura llega al consumidor sin recompilar. El coste de rendimiento es nulo para claves de diccionario | US-05 |
-| **D-05** | ¿Idioma por defecto de los mensajes de error? | (a) inglés (actual) · (b) castellano (coherente con los 3.400 miembros documentados) · (c) inglés + recursos localizados | **(c)** · inglés como neutro (es lo que esperan los paquetes NuGet) + `.resx` para castellano. La implementación queda en manos de la épica de localización | US-06 |
-| **D-07** | ¿`EnsureFpMessages.DefaultExceptionError(null)` debe lanzar o devolver un texto genérico? | (a) `ArgumentNullException` · (b) devolver un mensaje genérico | **(a)** · un `null` ahí es un error de programación del llamante, no una condición de negocio | US-04 |
+| Id | Decisión | Opciones | Resolución | Bloqueaba |
+|----|----------|----------|------------|-----------|
+| **D-01** | ¿Las claves de metadatos deben ser `const` o `static readonly`? | (a) `const`: cero indirección, pero el consumidor incrusta el valor y hay ruptura binaria si cambia · (b) `static readonly`: compatible binariamente, coste despreciable | ✅ **(b) `static readonly`** · aplicada a los **ocho** miembros de forma homogénea. El valor se resuelve en ejecución, así que una corrección futura llega al consumidor sin recompilar; el coste es nulo para claves de diccionario. La justificación queda escrita en el `<remarks>` de `Constants` | US-05 |
+| **D-05** | ¿Idioma por defecto de los mensajes de error? | (a) inglés (actual) · (b) castellano (coherente con los 3.400 miembros documentados) · (c) inglés + recursos localizados | ✅ **(c)** · en 2.1.1 se mantiene el **inglés** como idioma neutro de los mensajes (es lo que esperan los paquetes NuGet) y se centralizan en `EnsureFpMessages` para hacer viable el `.resx`. La localización efectiva queda fuera de esta épica | US-06 |
+| **D-07** | ¿`EnsureFpMessages.DefaultExceptionError(null)` debe lanzar o devolver un texto genérico? | (a) `ArgumentNullException` · (b) devolver un mensaje genérico | ✅ **(a)** · lanza `ArgumentNullException`. Un `null` ahí es un error de programación del llamante, no una condición de negocio. Documentado con `<exception>` en el miembro | US-04 |
 
 ---
 
@@ -561,13 +561,19 @@ graph TD
 
 Además de los [criterios comunes](README.md#8-definición-de-terminado-común):
 
-- [ ] `Helpers/Constants.cs` no contiene ningún identificador con guión bajo (los antiguos viven
+- [x] `Helpers/Constants.cs` no contiene ningún identificador con guión bajo (los antiguos viven
       sólo en `Constants.Obsolete.cs`).
-- [ ] `Helpers/Constants.cs` no declara ningún **método**.
-- [ ] `GlobalUsings.cs` tiene **5 líneas** de `global using` y ningún `using static`.
-- [ ] Ningún literal de mensaje está escrito dentro de `Types/`.
-- [ ] CA1707 no se dispara en el núcleo con los analizadores de .NET activados.
-- [ ] Las rupturas de US-04 y US-05 constan en
+- [x] `Helpers/Constants.cs` no declara ningún **método**.
+- [x] `GlobalUsings.cs` tiene **5 líneas** de `global using` y ningún `using static`.
+- [x] Ningún literal de mensaje está escrito dentro de `Types/`.
+- [x] CA1707 no se dispara en el núcleo con los analizadores de .NET activados **para los miembros
+      de `Constants`**. Verificado con
+      `dotnet build … -p:EnableNETAnalyzers=true -p:AnalysisMode=AllEnabledByDefault`: las ocho
+      advertencias restantes señalan **sólo** los puentes de `Constants.Obsolete.cs`, que las
+      arrastran por diseño hasta su retirada en 3.0.0. Las dos advertencias ajenas apuntan a
+      `MlResult._` y `MlResult<T>._`, que son competencia de
+      [US-12](Epica-03-Miembros-Publicos-y-Firmas.md#us-12--retirar-el-miembro-público-_-en-favor-de-discard).
+- [x] Las rupturas de US-04 y US-05 constan en
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3 y en
       [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md).
 

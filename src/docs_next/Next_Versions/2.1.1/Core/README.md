@@ -1,6 +1,6 @@
 # Versión 2.1.1 · `MoralesLarios.OOFP.Core` · Épicas de nomenclatura, estándares y modelo de error
 
-> **Estado global** · ⬜ Ninguna épica iniciada
+> **Estado global** · ✅ Épicas 1 y 2 completadas (commits `6df1466`, `179162f`, `77ed10e`) · ⬜ Épicas 3 y 4 pendientes
 > **Proyecto afectado** · `src/MoralesLarios.OOFP.Core`
 > **Origen** · [`Mejoras/Core/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Core/01-Nomenclatura-y-Estandares.md) (puntos 01-14) · [`Mejoras/Core/README.md`](../../../Mejoras/Core/README.md) (hallazgos #3 y #4)
 > **Versiones destino** · 2.1.1 (parte aditiva y no rupturista) · 3.0.0 (retirada de puentes y rupturas de origen)
@@ -31,12 +31,14 @@ El reparto no es arbitrario: agrupa los hallazgos por **la superficie que tocan*
 
 ## 1. Las cuatro épicas
 
-| # | Épica | Superficie que toca | Historias | Esfuerzo | Riesgo |
-|---|-------|---------------------|:---------:|:--------:|:------:|
-| 1 | [Constantes, literales y `using` globales](Epica-01-Constantes-Literales-y-Usings.md) | `Helpers/Constants.cs` · `GlobalUsings.cs` · `Helpers/EnsureFpMessages.cs` | US-01 … US-06 | **L** (~2,5 j) | 🟢 / 🟠 |
-| 2 | [Higiene interna: erratas, código muerto y documentación XML](Epica-02-Higiene-Interna-y-Codigo-Muerto.md) | identificadores locales, comentarios, `<summary>`, `ErrorMessage.cs` | US-07 … US-10 | **M** (~1,25 j) | 🟢 / 🟡 |
-| 3 | [Nomenclatura de la superficie pública](Epica-03-Miembros-Publicos-y-Firmas.md) | `MlResult.cs` · `MlError.cs` · `MlErrorDetails.cs` · `EnsureFp.*` · `Extensions.cs` | US-11 … US-16 | **L** (~3,0 j) | 🟠 / 🔴 |
-| 4 | [El contenedor de metadatos de `MlErrorDetails`](Epica-04-Modelo-de-Metadatos-de-Error.md) | `MlErrorDetails.cs` · `MlErrorDetailsActions.cs` · `MlResultErrorDetailsExtensions.cs` · `Helpers/Extensions/Extensions.cs` · `Helpers/Constants.cs` | US-17 … US-25 | **XL** (~4,75 j) | 🔴 / 🟡 |
+| # | Épica | Superficie que toca | Historias | Esfuerzo | Riesgo | Estado |
+|---|-------|---------------------|:---------:|:--------:|:------:|:------:|
+| 1 | [Constantes, literales y `using` globales](Epica-01-Constantes-Literales-y-Usings.md) | `Helpers/Constants.cs` · `GlobalUsings.cs` · `Helpers/EnsureFpMessages.cs` | US-01 … US-06 | **L** (~2,5 j) | 🟢 / 🟠 | ✅ |
+| 2 | [Higiene interna: erratas, código muerto y documentación XML](Epica-02-Higiene-Interna-y-Codigo-Muerto.md) | identificadores locales, comentarios, `<summary>`, `ErrorMessage.cs` | US-07 … US-10 | **M** (~1,25 j) | 🟢 / 🟡 | ✅ |
+| 3 | [Nomenclatura de la superficie pública](Epica-03-Miembros-Publicos-y-Firmas.md) | `MlResult.cs` · `MlError.cs` · `MlErrorDetails.cs` · `EnsureFp.*` · `Extensions.cs` | US-11 … US-16 | **L** (~3,0 j) | 🟠 / 🔴 | ⬜ |
+| 4 | [El contenedor de metadatos de `MlErrorDetails`](Epica-04-Modelo-de-Metadatos-de-Error.md) | `MlErrorDetails.cs` · `MlErrorDetailsActions.cs` · `MlResultErrorDetailsExtensions.cs` · `Helpers/Extensions/Extensions.cs` · `Helpers/Constants.cs` | US-17 … US-25 | **XL** (~4,75 j) | 🔴 / 🟡 | ⬜ |
+
+> **Leyenda de estado** · ✅ completada · 🔄 en curso · ⬜ no iniciada
 
 > **Leyenda de esfuerzo** · XS (<2 h) · S (½ jornada) · M (1 jornada) · L (2 jornadas) · XL (3+ jornadas)
 > **Leyenda de riesgo** · 🟢 bajo · 🟡 medio · 🟠 alto · 🔴 muy alto (rompe compatibilidad)
@@ -149,6 +151,14 @@ graph LR
     R --> H2{{"🎯 3.0.0 cerrada"}}
 ```
 
+> **Nota sobre el orden realmente seguido.** Las épicas **2** y **1** se cerraron antes que la 4,
+> invirtiendo los pasos 2 y 3 del grafo. El motivo: la épica 1 es de riesgo 🟢 en cinco de sus seis
+> historias y no necesitaba en realidad el nombre canónico de claves de US-22, porque
+> [D-01](Epica-01-Constantes-Literales-y-Usings.md#5-decisiones-resueltas) se resolvió manteniendo
+> los nombres actuales (`ExceptionMetadataKey`, `ValueMetadataKey`) y sólo cambiando su mecanismo a
+> `static readonly`. La centralización en `MetadataKeys` de US-22 sigue siendo compatible con lo
+> hecho. Quedan por ejecutar las épicas **4** y **3**, en ese orden.
+
 **Por qué este orden:**
 
 1. **Épica 2 primero** porque es la de riesgo cero: limpia el ruido (código muerto, erratas
@@ -207,13 +217,13 @@ las suyas.**
 
 | Id | Decisión | Épica que la bloquea | Recomendación del análisis |
 |----|----------|:--------------------:|----------------------------|
-| **D-01** | ¿Claves de metadatos como `const` o `static readonly`? | 1 (US-05) | `static readonly`: compatible binariamente |
+| ~~**D-01**~~ | ✅ **resuelta**: claves de metadatos como `static readonly` | 1 (US-05) | `static readonly`: compatible binariamente |
 | **D-02** | ¿Se mantiene el prefijo `Ml` en los tipos? | 3 (US-11) | mantener: la ruptura no aporta nada |
 | **D-03** | ¿Qué hacer con `MlResult.Empty()` / `EmptyAsync()`? | 3 (US-12) | `[Obsolete]` en favor de `Discard` |
 | **D-04** | ¿Se renombra la familia `Try*`? | 3 (US-16) | no tocar, pero documentar la semántica |
-| **D-05** | ¿Idioma por defecto de los mensajes? | 1 (US-06) | inglés neutro + `.resx` para castellano |
+| ~~**D-05**~~ | ✅ **resuelta**: inglés neutro en 2.1.1; `.resx` diferido a la épica de localización | 1 (US-06) | inglés neutro + `.resx` para castellano |
 | **D-06** | ¿`With<T>` debe copiar en vez de mutar? | 3 (US-11) | renombrar a `Mutate` y dejar la mutación |
-| **D-07** … **D-10** | decisiones internas de las épicas 1 y 2 | 1, 2 | ver cada épica |
+| ~~**D-07**~~ … ~~**D-10**~~ | ✅ **resueltas**: D-07 `ArgumentNullException` · D-08 sin `dotnet format`/`.editorconfig` · D-09 retirar `ErrorMessage` · D-10 documentación XML en castellano | 1, 2 | ver cada épica |
 | **D-11** … **D-13** | nombre canónico `Metadata`, `Unit`, accesores `Try*` | 3 | ver la épica 3 |
 | **D-14** | ¿Cómo se discrimina una clave de excepción? | 4 (US-17) | `[GeneratedRegex(@"^Ex\d*$")]` |
 | **D-15** | ¿Política de colisión de claves en `Merge`? | 4 (US-19) | sufijar la clave entrante, no perder datos |
