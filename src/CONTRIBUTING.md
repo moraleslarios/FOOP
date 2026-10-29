@@ -253,6 +253,5 @@ Los scripts auxiliares de verificación están en `scripts/`:
 - La documentación extensa vive en `docs/`, en español.
 - Si un renombrado afecta a un **nombre de fichero** de `docs/`, se renombra con `git mv` y se
   actualizan todos los enlaces que apuntaban a él.
-- Las carpetas `Temas Pendientes/` y los ficheros `MEJORAS_PENDIENTES.md` y
-  `CONSEJOS_NOMENCLATURA.md` son **documentos históricos**: reflejan el estado previo a un
+- La carpeta `Temas Pendientes/` contiene **documentos históricos**: reflejan el estado previo a un
   cambio y **no** se actualizan con la nomenclatura nueva.

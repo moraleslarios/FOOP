@@ -280,7 +280,7 @@ $o.Add('Se dej' + $oc + ' **deliberadamente fuera** del alcance de la 2.0.0 lo s
 $o.Add('')
 $o.Add('| Elemento | Motivo |')
 $o.Add('|---|---|')
-$o.Add('| Documentos de `Temas Pendientes/`, `CONSEJOS_NOMENCLATURA.md` y `MEJORAS_PENDIENTES.md` | Son documentos **hist' + $oc + 'ricos** de an' + $ac + 'lisis: deben conservar la nomenclatura anterior para que el razonamiento siga siendo legible. |')
+$o.Add('| Documentos de `Temas Pendientes/` | Son documentos **hist' + $oc + 'ricos** de an' + $ac + 'lisis: deben conservar la nomenclatura anterior para que el razonamiento siga siendo legible. |')
 $o.Add('| Retirada de los puentes `[Obsolete]` | Se mantienen durante toda la rama 2.x. Su eliminaci' + $oc + 'n est' + $ac + ' planificada para la **3.0.0**. |')
 $o.Add('| Carpetas de proyectos antiguos vac' + $ic + 'as | Se eliminaron del ' + $ac + 'rbol de trabajo: eran restos de los `git mv` del Nivel 0 y no conten' + $ic + 'an ning' + $uc + 'n fichero versionado. |')
 $o.Add('| Los 6 tests de integraci' + $oc + 'n de `Http.Tests.Integration` | Fallan **desde antes** de este trabajo porque exigen un servidor HTTP vivo. No se tocaron: son un asunto de infraestructura de pruebas, no de nomenclatura. |')

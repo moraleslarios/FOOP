@@ -1,7 +1,0 @@
-{
-  "id": "fase7b-nivel6-registro",
-  "level": 6,
-  "renames": [
-    { "kind": "member", "assembly": "MoralesLarios.OOFP.EntityFrameworkCore", "name": "AddOofpRepositoriesScoped", "new": "AddOofpRepositories", "bridge": false, "note": "Scoped es el ciclo de vida por defecto: sin sufijo (el puente de AddScopedOOFPRepos se actualiza solo)" }
-  ]
-}

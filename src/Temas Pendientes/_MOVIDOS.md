@@ -11,8 +11,8 @@
 
 | Ubicación antigua (raíz de `src/`) | Ubicación actual (esta carpeta) | Estado |
 |---|---|---|
-| `src/MEJORAS_PENDIENTES.md` | [`Mejoras-Prioridad-Critica-y-Alta.md`](Mejoras-Prioridad-Critica-y-Alta.md) + [`Mejoras-Prioridad-Media.md`](Mejoras-Prioridad-Media.md) + [`Mejoras-Prioridad-Baja.md`](Mejoras-Prioridad-Baja.md) | Reemplazado y **dividido en tres** |
-| `src/CONSEJOS_NOMENCLATURA.md` | [`Consejos-Nomenclatura.md`](Consejos-Nomenclatura.md) | Reemplazado tal cual |
+| `src/MEJORAS_PENDIENTES.md` | [`Mejoras-Prioridad-Critica-y-Alta.md`](Mejoras-Prioridad-Critica-y-Alta.md) + [`Mejoras-Prioridad-Media.md`](Mejoras-Prioridad-Media.md) + [`Mejoras-Prioridad-Baja.md`](Mejoras-Prioridad-Baja.md) | **Dividido en tres** y **eliminado** |
+| `src/CONSEJOS_NOMENCLATURA.md` | [`Consejos-Nomenclatura.md`](Consejos-Nomenclatura.md) | Reemplazado tal cual y **eliminado** |
 
 ---
 
@@ -29,16 +29,21 @@ precedida por un encabezado de prioridad baja mal etiquetado). Al separarlo por 
 
 ---
 
-## Los originales se pueden borrar
+## Los originales ya se han borrado
 
-Los dos archivos de la raíz de `src/` ya **no son la fuente de verdad**. Se han dejado en su sitio
-únicamente con una nota puntero para no romper marcadores o enlaces antiguos. Cuando se confirme que
-nadie los referencia, se pueden eliminar sin pérdida de información:
+Los dos archivos de la raíz de `src/` se mantuvieron un tiempo como simple nota puntero y
+**ya se han eliminado**, una vez comprobado que:
+
+- los 89 puntos del inventario están íntegros en los tres documentos de prioridad (ningún
+  identificador se perdió en la división), y
+- ningún script ni documento activo depende de ellos.
 
 ```text
-src/MEJORAS_PENDIENTES.md
-src/CONSEJOS_NOMENCLATURA.md
+src/MEJORAS_PENDIENTES.md       ← eliminado
+src/CONSEJOS_NOMENCLATURA.md    ← eliminado
 ```
+
+El historial completo de ambos sigue disponible en Git.
 
 ---
 

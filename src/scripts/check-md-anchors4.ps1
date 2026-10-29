@@ -35,7 +35,7 @@ function Sim($a, $b) {
 }
 
 # Documentos historicos de planificacion: no se auditan.
-$excluir = @('MEJORAS_PENDIENTES.md', 'CONSEJOS_NOMENCLATURA.md')
+$excluir = @()
 
 $mds = Get-ChildItem -Path $src -Recurse -Filter *.md -File |
        Where-Object { $_.FullName -notmatch '\\(bin|obj|node_modules)\\' } |

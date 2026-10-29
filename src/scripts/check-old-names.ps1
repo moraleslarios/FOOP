@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $src = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 
-$excluir = @('Temas Pendientes', 'MEJORAS_PENDIENTES.md', 'CONSEJOS_NOMENCLATURA.md', 'Cambios Realizados', '.github', 'node_modules', 'bin', 'obj')
+$excluir = @('Temas Pendientes', 'Cambios Realizados', '.github', 'node_modules', 'bin', 'obj')
 
 $viejos = @(
  'NullToFailed','EmptyToFailed','BoolToResult','ProjectionWhile','ProjectionSplit',
