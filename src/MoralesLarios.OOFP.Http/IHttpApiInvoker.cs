@@ -1,6 +1,4 @@
-﻿
-
-using MoralesLarios.OOFP.Http.Requests;
+﻿using MoralesLarios.OOFP.Http.Requests;
 
 namespace MoralesLarios.OOFP.Http;
 
@@ -9,7 +7,6 @@ namespace MoralesLarios.OOFP.Http;
 /// </summary>
 public interface IHttpApiInvoker
 {
-    //Task<MlResult<TResponse?>> PostAndReadAsync<TRequest, TResponse>(ApiCallOptions<TRequest> parameters);
     /// <summary>
     /// Envia la petición mediante el verbo HTTP POST de <c>AndRead</c>. Versión asíncrona.
     /// </summary>

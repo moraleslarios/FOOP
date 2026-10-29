@@ -16,14 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Id.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Id.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MoralesLarios.OOFP.Core\MoralesLarios.OOFP.Core.csproj" />
   </ItemGroup>
 

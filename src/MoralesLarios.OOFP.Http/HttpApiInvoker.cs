@@ -541,16 +541,6 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
 
     #endregion
 
-
-    #region private methods
-
-
-
-
-
-
-    #endregion
-
 }
 
 
