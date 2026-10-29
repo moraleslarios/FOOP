@@ -16,13 +16,55 @@
 
 ## Índice
 
+- [Estado de la auditoría](#estado-de-la-auditoría) — trazabilidad a las épicas de la 2.1.0
+
 - [Código muerto y archivos vacíos](#código-muerto-y-archivos-vacíos) — puntos 64-70
-- [Erratas en identificadores públicos](#erratas-en-identificadores-públicos) — puntos 71-75
-- [Mensajes al usuario](#mensajes-al-usuario) — puntos 76-79
-- [Coherencia y documentación](#coherencia-y-documentación) — puntos 80-87
+- [Erratas en identificadores públicos](#erratas-en-identificadores-públicos) — puntos 71-76
+- [Mensajes al usuario](#mensajes-al-usuario) — puntos 77-80
+- [Coherencia y documentación](#coherencia-y-documentación) — puntos 81-89
 
 ---
 
+## Estado de la auditoría
+
+> 📌 Este documento es el **catálogo original**, redactado **antes de la 2.0.0**: usa la nomenclatura
+> **antigua** (`EFCore`, `WebServices`, `HttpClients`, `WebControllers`, `WebApi`, `Internals`,
+> `ValueObjects.IO`…). Se conserva tal cual como registro histórico. La equivalencia con los nombres
+> actuales está en el apéndice A de
+> [`Plan-Ejecucion-Prioridad-Media.md`](Plan-Ejecucion-Prioridad-Media.md).
+
+Los **26 puntos** (64-89) se han auditado contra el código de la 2.0.0 y **todos** están gestionados
+como tareas en las cuatro épicas de prioridad baja de
+[`Next_Versions/2.1`](../Next_Versions/2.1/README.md).
+
+| Punto | Estado | Épica que lo gestiona |
+|---|---|---|
+| 64 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-01 |
+| 65 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 66 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 67 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 68 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-02 |
+| 69 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-03 |
+| 70 | ⬜ Vivo ⚠️ rompe firmas | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-05 |
+| 71-76 | ⬜ Vivos | [Erratas en identificadores públicos](../Next_Versions/2.1/Epica-Erratas-Identificadores-Publicos.md) |
+| 77-80 | ⬜ Vivos | [Mensajes, idioma e instrumentación](../Next_Versions/2.1/Epica-Mensajes-Y-Localizacion.md) |
+| 81 | ⬜ Vivo | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-01 |
+| 82 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-02 |
+| 83 | ⬜ Vivo · 3 apariciones | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-03 |
+| 84 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-04 |
+| 85 | ✅ Resuelto en 2.0.0 | [Código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) y [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) (constancia) |
+| 86 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-05 |
+| 87 | ⬜ Vivo | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-06 |
+| 88 | ✅ Resuelto en 2.0.0 | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · §1 (constancia) |
+| 89 | ⬜ Vivo · 13 proyectos, no 2 | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-07 |
+
+**Leyenda:** ✅ resuelto durante la 2.0.0 · 🟡 parcial (el renombrado de la 2.0.0 arregló una parte,
+el resto sigue vivo) · ⬜ vivo, pendiente de la 2.1.0.
+
+> ⚠️ Los puntos **🟡 Parcial** (82, 84, 86) y el 89 citan tipos y proyectos que **se renombraron en la
+> 2.0.0**: cada épica los localiza con su nombre actual y con el número de línea real.
+
+---
 ## Código muerto y archivos vacíos
 
 - [ ] **64. `IEFRepoWriterFp` con el cuerpo íntegramente comentado**
@@ -32,19 +74,19 @@
     - **Impacto:** quien lee el proyecto no sabe si la escritura está por implementar o si la interfaz se abandonó.
     - **Propuesta:** completarla como contrato real de escritura o eliminar el archivo (el historial de Git conserva el contenido).
 
-- [ ] **65. `EFCore/Helpers/Constants.cs` es una clase vacía**
+- [x] **65. `EFCore/Helpers/Constants.cs` es una clase vacía** · ✅ **resuelto en la 2.0.0**
     - **Proyecto:** `MoralesLarios.OOFP.EFCore`
     - **Problema:** clase sin ningún miembro.
     - **Impacto:** aparece en IntelliSense y en la documentación generada sin aportar nada.
     - **Propuesta:** eliminarla, o usarla precisamente para centralizar los literales que hoy están repartidos (nombres de cabecera, claves de detalle, tamaños de página por defecto).
 
-- [ ] **66. `Services/GenService.cs` es un archivo vacío**
+- [x] **66. `Services/GenService.cs` es un archivo vacío** · ✅ **resuelto en la 2.0.0**
     - **Proyecto:** `MoralesLarios.OOFP.WebServices`
     - **Problema:** archivo sin contenido efectivo.
     - **Impacto:** sugiere que existe una versión no funcional del servicio junto a la funcional.
     - **Propuesta:** eliminarlo.
 
-- [ ] **67. `RangeEnumValueObject.cs` completamente comentado**
+- [x] **67. `RangeEnumValueObject.cs` completamente comentado** · ✅ **resuelto en la 2.0.0**
     - **Proyecto:** `MoralesLarios.OOFP.ValueObjects`
     - **Problema:** el tipo entero está comentado, incluida su lógica de validación de rangos de `enum`.
     - **Impacto:** una funcionalidad útil queda invisible; y quien la necesite no sabrá que existía.
@@ -170,7 +212,7 @@
     - **Impacto:** el consumidor no sabe qué puede omitir; y `K` no dice nada (la convención es `TKey`).
     - **Propuesta:** unificar la nulabilidad (declarar `T?` con `= null`) y renombrar `K` a `TKey`.
 
-- [ ] **85. Sobrecarga de `PostGetAsync` comentada en la interfaz**
+- [x] **85. Sobrecarga de `PostGetAsync` comentada en la interfaz** · ✅ **resuelto en la 2.0.0**
     - **Proyecto:** `MoralesLarios.OOFP.HttpClients`
     - **Problema:** queda una declaración comentada dentro de la interfaz pública.
     - **Impacto:** sugiere una capacidad que no existe.
@@ -188,7 +230,7 @@
     - **Impacto:** la documentación errónea es peor que la ausente: el cliente programa contra lo que dice el comentario.
     - **Propuesta:** activar `GenerateDocumentationFile`, revisar los comentarios de los miembros públicos y hacer que los códigos de estado se declaren con `[ProducesResponseType]`, de modo que el compilador y OpenAPI sean la fuente única.
 
-- [ ] **88. `GlobalUsings.cs` con `using` duplicados**
+- [x] **88. `GlobalUsings.cs` con `using` duplicados** · ✅ **resuelto en la 2.0.0** (0 duplicados en 27 ficheros)
     - **Proyecto:** `MoralesLarios.OOFP.HttpClients` (revisar el resto)
     - **Problema:** `MoralesLarios.OOFP.Types` aparece repetido.
     - **Impacto:** advertencia del compilador y confusión sobre qué está disponible globalmente.
@@ -206,6 +248,7 @@
 
 - [`Mejoras-Prioridad-Critica-y-Alta.md`](Mejoras-Prioridad-Critica-y-Alta.md) — prioridades 🔴 crítica y 🟠 alta.
 - [`Mejoras-Prioridad-Media.md`](Mejoras-Prioridad-Media.md) — rendimiento, diseño y API pública.
+- [`Next_Versions/2.1/README.md`](../Next_Versions/2.1/README.md) — las 9 épicas de la versión 2.1.0.
 - [`Profesionalizacion-Ingenieria-y-Calidad.md`](Profesionalizacion-Ingenieria-y-Calidad.md) ·
   [`Profesionalizacion-Diseno-API-y-Producto.md`](Profesionalizacion-Diseno-API-y-Producto.md)
 - [`Consejos-Nomenclatura.md`](Consejos-Nomenclatura.md) — propuesta de renombrado.
