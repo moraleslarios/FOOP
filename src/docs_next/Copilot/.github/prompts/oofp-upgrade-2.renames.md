@@ -51,6 +51,21 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `EX_DESC_KEY` | `ExceptionMetadataKey` | sí |
 | `VALUE_KEY` | `ValueMetadataKey` | sí |
 
+### 1.2.a Constantes de `Constants` normalizadas en la **2.1.1**
+
+> ⚠️ Estos renombrados pertenecen a la **2.1.1**, no a la 2.0.0. Los puentes `[Obsolete]`
+> se eliminan en la **3.0.0**. Ver el punto **38** de la sección 3.3 del prompt: además del
+> nombre, **dos de ellos cambian de valor** y el compilador **no** lo detecta.
+
+| Antes (2.0.0) | Después (2.1.1) | 🔗 |
+| --- | --- | --- |
+| `Constants.DEFAULT_ERROR_MESSAGE` | `Constants.DefaultErrorMessage` | sí |
+| `Constants.NOT_FOUND_KEY` | `Constants.NotFoundKey` | sí |
+| `Constants.PARAM_NAME_KEY` | `Constants.ParameterNameKey` | sí |
+| `Constants.FAILED_INDEXES_KEY` | `Constants.FailedIndexesKey` | sí |
+| `Constants.EXPECTED_KEY` | `Constants.ExpectedKey` | sí |
+| `Constants.DEFAULT_EX_ERROR_MESSAGE(ex)` | `EnsureFpMessages.DefaultExceptionError(ex)` | **NO** (cambia de clase) |
+
 ### 1.3 Métodos
 
 | Antes | Después | 🔗 |

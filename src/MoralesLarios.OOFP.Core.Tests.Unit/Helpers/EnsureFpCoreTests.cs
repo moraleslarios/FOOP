@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Juan Francisco Morales Larios
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
@@ -155,7 +155,7 @@ public class EnsureFpCoreTests
         var result = EnsureFp.TryThat(data, x => x.Length == 3, "longitud incorrecta");
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(ExceptionMetadataKey);
+        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(Constants.ExceptionMetadataKey);
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public class EnsureFpCoreTests
         var result = EnsureFp.TryThat(data, x => x.Length == 3, MlErrorDetails.FromErrorMessage("no usado"));
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(ExceptionMetadataKey);
+        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(Constants.ExceptionMetadataKey);
     }
 
     [Fact]
@@ -212,8 +212,8 @@ public class EnsureFpCoreTests
 
         var result = EnsureFp.NotNullArg(myArgument);
 
-        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(PARAM_NAME_KEY);
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("myArgument");
+        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(Constants.ParameterNameKey);
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("myArgument");
     }
 
     [Fact]
@@ -292,8 +292,8 @@ public class EnsureFpCoreTests
         var result = EnsureFp.ThatArg(age, x => x >= 18);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(ValueMetadataKey);
-        result.GetFailureDetailsOrThrow().Metadata[ValueMetadataKey].Should().Be(15);
+        result.GetFailureDetailsOrThrow().Metadata.Should().ContainKey(Constants.ValueMetadataKey);
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ValueMetadataKey].Should().Be(15);
     }
 
     [Fact]

@@ -194,11 +194,11 @@ public static partial class MlResultErrorDetailsExtensions
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> GetMetadataValue<T>(this MlErrorDetails source)
     {
-        if ( ! source.Metadata.ContainsKey(ValueMetadataKey)) return source.AddError($"The key {ValueMetadataKey} does not exist in the details");  //MlResult<T>.Fail($"The key {ValueMetadataKey} does not exist in the details");
+        if ( ! source.Metadata.ContainsKey(Constants.ValueMetadataKey)) return source.AddError($"The key {Constants.ValueMetadataKey} does not exist in the details");  //MlResult<T>.Fail($"The key {Constants.ValueMetadataKey} does not exist in the details");
         
-        var result = source.Metadata[ValueMetadataKey] is T value 
+        var result = source.Metadata[Constants.ValueMetadataKey] is T value 
                             ? MlResult<T>.Valid(value) 
-                            : source.AddError($"The key {ValueMetadataKey} does not contain a value of type {typeof(T).Name}");
+                            : source.AddError($"The key {Constants.ValueMetadataKey} does not contain a value of type {typeof(T).Name}");
 
         return result;
     }
@@ -277,14 +277,14 @@ public static partial class MlResultErrorDetailsExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static MlResult<T> GetException<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey);
+    public static MlResult<T> GetException<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(Constants.ExceptionMetadataKey);
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static Task<MlResult<T>> GetExceptionAsync<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(ExceptionMetadataKey).ToAsync();
+    public static Task<MlResult<T>> GetExceptionAsync<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(Constants.ExceptionMetadataKey).ToAsync();
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>
@@ -297,13 +297,13 @@ public static partial class MlResultErrorDetailsExtensions
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static MlResult<Exception> GetException(this MlErrorDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey);
+    public static MlResult<Exception> GetException(this MlErrorDetails source) => source.GetDetail<Exception>(Constants.ExceptionMetadataKey);
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static Task<MlResult<Exception>> GetExceptionAsync(this MlErrorDetails source) => source.GetDetail<Exception>(ExceptionMetadataKey).ToAsync();
+    public static Task<MlResult<Exception>> GetExceptionAsync(this MlErrorDetails source) => source.GetDetail<Exception>(Constants.ExceptionMetadataKey).ToAsync();
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>

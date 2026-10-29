@@ -21,7 +21,7 @@ public record MlError
     /// <param name="message">Mensaje descriptivo.</param>
     public MlError(string message)
     {
-        if (string.IsNullOrWhiteSpace(message)) Message = DEFAULT_ERROR_MESSAGE;
+        if (string.IsNullOrWhiteSpace(message)) Message = Constants.DefaultErrorMessage;
         else                                    Message = message;
     }
 

@@ -39,7 +39,7 @@ public static partial class MlResultExtensions
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> AddValueDetailIfFail<T>(this MlResult<T> source, 
                                                            object      errorValue)
-        => source.AddMlErrorDetailIfFail(ValueMetadataKey, errorValue);
+        => source.AddMlErrorDetailIfFail(Constants.ValueMetadataKey, errorValue);
 
     /// <summary>
     /// Añade el elemento indicado de <c>MlErrorDetail</c> unicamente cuando el resultado de origen es

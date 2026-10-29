@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Juan Francisco Morales Larios
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
@@ -42,7 +42,7 @@ public static partial class EnsureFp
                      Compare(value, limit) > 0,
                      EnsureFpMessages.GreaterThan(paramName, limit),
                      paramName,
-                     (EXPECTED_KEY, limit!));
+                     (Constants.ExpectedKey, limit!));
 
     #endregion
 
@@ -74,7 +74,7 @@ public static partial class EnsureFp
                      Compare(value, limit) >= 0,
                      EnsureFpMessages.GreaterOrEqual(paramName, limit),
                      paramName,
-                     (EXPECTED_KEY, limit!));
+                     (Constants.ExpectedKey, limit!));
 
     #endregion
 
@@ -106,7 +106,7 @@ public static partial class EnsureFp
                      Compare(value, limit) < 0,
                      EnsureFpMessages.LessThan(paramName, limit),
                      paramName,
-                     (EXPECTED_KEY, limit!));
+                     (Constants.ExpectedKey, limit!));
 
     #endregion
 
@@ -138,7 +138,7 @@ public static partial class EnsureFp
                      Compare(value, limit) <= 0,
                      EnsureFpMessages.LessOrEqual(paramName, limit),
                      paramName,
-                     (EXPECTED_KEY, limit!));
+                     (Constants.ExpectedKey, limit!));
 
     #endregion
 

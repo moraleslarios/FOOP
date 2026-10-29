@@ -322,16 +322,23 @@ operadores de la librería.
 ## Las constantes: `Constants`
 
 ```csharp
-public static class Constants
+public static partial class Constants
 {
-    public static string DEFAULT_ERROR_MESSAGE { get; }
-        = "Without custom error message. For more info, view 'Ex(s) details exceptions.";
+    public static readonly string DefaultErrorMessage
+        = "Without custom error message. For more info, view the 'Ex' details exceptions.";
 
-    public static string ExceptionMetadataKey { get; } = "Ex";
-    public static string ValueMetadataKey   { get; } = "Value";
+    public static readonly string ExceptionMetadataKey = "Ex";
+    public static readonly string ValueMetadataKey     = "Value";
+    public static readonly string NotFoundKey          = "NotFound";
+    public static readonly string ParameterNameKey     = "ParamName";
+    public static readonly string FailedIndexesKey     = "FailedIndexes";
+    public static readonly string ExpectedKey          = "Expected";
+}
 
-    public static string DEFAULT_EX_ERROR_MESSAGE(Exception ex)
-        => $"An error occurred while executing the function. Error: {ex.Message}.More info in Ex Details.";
+public static class EnsureFpMessages
+{
+    public static string DefaultExceptionError(Exception ex)
+        => $"An error occurred while executing the function. Error: {ex.Message}. More info in 'Ex' details.";
 }
 ```
 
@@ -339,11 +346,16 @@ public static class Constants
 |-----------|-------|----------------|
 | `ExceptionMetadataKey` | `"Ex"` | Clave de `Details` donde se guardan las excepciones |
 | `ValueMetadataKey` | `"Value"` | Clave donde `*WithValue` guarda el valor original |
-| `DEFAULT_ERROR_MESSAGE` | (texto) | Mensaje cuando no se indica ninguno |
-| `DEFAULT_EX_ERROR_MESSAGE(ex)` | (texto + `ex.Message`) | Mensaje por defecto de los `Try*` |
+| `DefaultErrorMessage` | (texto) | Mensaje cuando no se indica ninguno |
+| `EnsureFpMessages.DefaultExceptionError(ex)` | (texto + `ex.Message`) | Mensaje por defecto de los `Try*` |
+
+> **Desde la 2.1.1** los nombres en `MAYUSCULAS_CON_GUION_BAJO` (`DEFAULT_ERROR_MESSAGE`,
+> `NOT_FOUND_KEY`, `PARAM_NAME_KEY`, `FAILED_INDEXES_KEY`, `EXPECTED_KEY` y
+> `DEFAULT_EX_ERROR_MESSAGE(ex)`) siguen existiendo marcados como `[Obsolete]` y se eliminan
+> en la 3.0.0. Usa los nombres `PascalCase` de la tabla.
 
 🔑 **Consecuencias prácticas de conocer estas claves:**
-
+ 
 1. **No uses `"Ex"`, `"Ex2"`, `"Value"` ni nada que empiece por `Ex`** como claves propias en
    tus `Details`: colisionan con la maquinaria interna.
 2. Los mensajes por defecto están **en inglés** y exponen `ex.Message`. Nunca los muestres a
@@ -358,9 +370,6 @@ var ex = resultado.FailureDetails.Metadata["Ex"];
 // ✅ Accesor oficial
 resultado.ExecSelfIfFailWithException(ex => _log.LogError(ex, "…"));
 ```
-
-⚠️ Nótese que `DEFAULT_EX_ERROR_MESSAGE` tiene una **errata en el texto original**
-(`"Error: {ex.Message}.More info"`, sin espacio tras el punto). Está así en el código fuente.
 
 ---
 

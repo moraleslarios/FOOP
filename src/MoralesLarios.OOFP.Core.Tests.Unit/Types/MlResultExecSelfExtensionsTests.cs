@@ -218,7 +218,7 @@ public class MlResultExecSelfExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -303,7 +303,7 @@ public class MlResultExecSelfExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -321,7 +321,7 @@ public class MlResultExecSelfExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -426,7 +426,7 @@ public class MlResultExecSelfExtensionsTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                       );
@@ -444,7 +444,7 @@ public class MlResultExecSelfExtensionsTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                       );
@@ -467,7 +467,7 @@ public class MlResultExecSelfExtensionsTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                       );

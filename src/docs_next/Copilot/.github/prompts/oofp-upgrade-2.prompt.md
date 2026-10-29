@@ -490,130 +490,33 @@ al borrado por lotes contando con que no fallara.
 > siempre una ordenación estable** (idealmente por clave primaria) en las consultas paginadas. Sin `ORDER BY`,
 > SQL Server no garantiza el reparto en páginas.
 
----
+#### 38 — Constantes y literales de mensaje del núcleo (2.1.1) ⚠️
 
-## Fase 4 — Compilar y resolver iterativamente
+La **2.1.1** normaliza `MoralesLarios.OOFP.Helpers.Constants`: los nombres en
+`MAYUSCULAS_CON_GUION_BAJO` pasan a `PascalCase`, los miembros se declaran de forma homogénea como
+`public static readonly string` y el único método que había sale de la clase.
 
-1. ```powershell
-   dotnet build --nologo
-   ```
-2. **Resuelve primero los errores `CS0246` (tipo no encontrado) y `CS0234`** (no existe en el namespace):
-   casi siempre es un `using` olvidado de la Fase 2 o un tipo que cambió de nombre en la Fase 3.
-3. Luego los **`CS0117`/`CS1061`** (el miembro no existe): renombrado de método o propiedad pendiente.
-4. Repite build + corrección hasta `0 errores`. **Si tras 5 iteraciones siguen apareciendo errores nuevos,
-   detente y pide instrucciones al usuario** en lugar de seguir probando a ciegas.
-5. **No silencies errores** con `#pragma warning disable`, `dynamic`, casts forzados ni `!`. Si no sabes cómo
-   migrar algo, déjalo marcado con `// TODO: OOFP 2.0 — revisar` y repórtalo.
+| Elemento | 2.0.0 | 2.1.1 / 3.0.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| `Constants.DEFAULT_ERROR_MESSAGE` (nombre) | propiedad | `[Obsolete]` → `Constants.DefaultErrorMessage` | ✅ `CS0618` |
+| `DEFAULT_ERROR_MESSAGE` (**valor**) | `…view 'Ex(s) details exceptions.` | `…view the 'Ex' details exceptions.` | ❌ **NO** |
+| `DEFAULT_EX_ERROR_MESSAGE` (**valor**) | `…{ex.Message}.More info in Ex Details.` | `…{ex.Message}. More info in 'Ex' details.` | ❌ **NO** |
+| `NOT_FOUND_KEY`, `PARAM_NAME_KEY`, `FAILED_INDEXES_KEY`, `EXPECTED_KEY` | `public const string` | `[Obsolete]` propiedad → campo `PascalCase` | ✅ fuente · ❌ **binario** |
+| `ExceptionMetadataKey` / `ValueMetadataKey` | propiedad | campo `static readonly` | ✅ fuente · ❌ **binario** |
+| `DEFAULT_EX_ERROR_MESSAGE(ex)` (ubicación) | `Constants` | `EnsureFpMessages.DefaultExceptionError(ex)` | ✅ `CS0618` |
+| `MlResult<T>.ToString()` con valor `null` | `"Not right value"` | `"<null>"` | ❌ **NO** |
 
-### 4.1 Avisos de los puentes `[Obsolete]`
+**Qué revisar en tu código:**
+- **Tests y aserciones que comparen literalmente** los mensajes por defecto o el `ToString()` de un
+  `MlResult<T>` válido con valor `null`: el compilador **no** avisa, los tests fallarán en ejecución.
+- Si consumías las cuatro claves como `const`, **recompila**: eran constantes y su valor quedaba
+  horneado en tu ensamblado. El cambio es compatible en código fuente, pero **no en binario**.
+- Sustituye los nombres antiguos por los `PascalCase` de la tabla (ver el anexo de renombrados).
+  Los puentes `[Obsolete]` se eliminan en la **3.0.0**.
 
-La 2.0.0 conserva **187 puentes `[Obsolete]`** para que el código 1.x compile con avisos. Si el build termina
-con `0 errores` pero con **`CS0618`** (*"'X' is obsolete"*), significa que **aún quedan llamadas al nombre antiguo**.
-
-```powershell
-dotnet build --nologo /p:WarningLevel=4
-```
-
-**Resuélvelos todos**: los puentes están marcados *"Will be removed in 3.0.0"* y
-`[EditorBrowsable(Never)]`, así que no aparecen en IntelliSense. Dejarlos es deuda técnica que romperá en la 3.0.0.
-
-> 💡 Si el usuario quiere una migración **gradual**, puede quedarse aquí: con los paquetes nuevos y los
-> namespaces corregidos, los puentes permiten compilar. Pregúntale si prefiere
-> **(a)** migración completa a nombres 2.0.0 o **(b)** mínima (solo paquetes + namespaces, aceptando `CS0618`).
-> **Recomienda (a).**
-
----
-
-## Fase 5 — Verificación
-
-1. **Compilación limpia**:
-   ```powershell
-   dotnet build --nologo
-   ```
-   Objetivo: `0 Error(s)` y `0` avisos `CS0618`/`CS0619`.
-2. **Tests**:
-   ```powershell
-   dotnet test --nologo
-   ```
-   Compara con la línea base de la Fase 0. Si algún test que pasaba ahora falla, **investígalo**: lo más
-   probable es un cambio semántico de la sección 3.2 (fechas con cultura invariante, factorías, nulabilidad)
-   o un cambio de comportamiento de la sección 3.3 (URL, cabeceras de paginación, `Location`, `type` de
-   `ProblemDetails`, `TotalCount` y orden de las consultas paginadas).
-3. **Barrido final de nombres antiguos**. Busca en todo el código que no quede ningún nombre 1.x:
-   ```
-   MoralesLarios.OOFP.WebApi|MoralesLarios.OOFP.WebControllers|MoralesLarios.OOFP.WebServices
-   MoralesLarios.OOFP.HttpClients|MoralesLarios.OOFP.EFCore|MoralesLarios.OOFP.Internals
-   MoralesLarios.OOFP.Utilities|MoralesLarios.OOFP.Extensions.Loggers|MoralesLarios.OOFP.ValueObjects.IO
-   NullToFailed|EmptyToFailed|BoolToResult|SecureValidValue|FusionFailErros|FusionErrosIfExists
-   MlErrorsDetails|MlResultActions|MlProblemsDetails|MlActionResults|MlResultWebExtensions
-   IsValid|IsFail|ErrorsDetails|Projection|ProjectionSplit|ProjectionWhile
-   IGenServiceFp|GenServiceFp|SimpleMlControllerBase|SimpleMlComplexPkControllerBase
-   SimpleMlCacheControllerBase|PkParameterAttribute|PerControllerOutputCachePolicy
-   IGenClientFp|GenClientFp|GenComplexClientFp|IHttpClientFactoryManager|HttpClientFactoryManager
-   CallRequestParamsInfo|CallRequestPaginationParamsInfo|GetHttpClientFactoryKey
-   PaginationInfo|PaginationResultInfo|IWrapperIO|WrapperIO|IMlConfigManager|MlConfigManager
-   IEFRepo|EFRepo|IEFPaginatorFp|MlFile|MlDirectory|ExistsFile|ExistDirectory
-   MlValidableFp|FluentValidationsValidator|IntNotNegative|DecimalNotNegative|DoubleNotNegative
-   RangeEnumValueObject|StringBetweenLength|LogMlResultFinal|ChangeReturnResultAlwais
-   ```
-   ⚠️ Algunos (`IsValid`, `Value`, `Name`, `Key`, `Empty`, `OrderBy`, `Combine`, `Do`) son palabras muy comunes:
-   revisa cada coincidencia a mano y **descarta las que no provengan de la librería**.
-4. **Revisión de los cambios de comportamiento (sección 3.3)**. Busca y revisa a mano:
-   ```
-   PackageReference Include="Microsoft.AspNetCore.Mvc.Core"
-   SetHeaderPageNumber|SetHeaderPageSize|AddPageNumberHeader|AddPageSizeHeader
-   DefaultRequestHeaders
-   netalpunto|puntonetalpunto
-   TotalCount|ToResponseErrorsDescription|ReadErrorDescription
-   ```
-   - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
-     `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
-   - Si se añaden cabeceras de paginación sobre `HttpClient`, migra a las sobrecargas de
-     `HttpRequestMessage`.
-   - Si hay tests o *snapshots* que fijen `Location`, `type`, URL compuestas o `TotalCount`, actualiza el
-     valor esperado al comportamiento correcto de la 2.0.0.
-5. **Diff**:
-   ```powershell
-   git diff --stat
-   ```
-   Revisa que no haya ficheros tocados sin motivo.
-
----
-
-## Fase 6 — Informe final (OBLIGATORIO)
-
-Entrega al usuario, **en español**, un informe con:
-
-1. **Paquetes**: tabla de antiguo → nuevo → versión instalada, por proyecto.
-2. **Ficheros modificados**: número total y desglose por proyecto.
-3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
-4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
-5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36 y 37 indicando, para cada uno, si **afecta** al proyecto, qué se cambió y **qué debe validar el usuario**
-   (en especial: URL emitidas, cabecera `Location`, `type` de `ProblemDetails` y resultados paginados).
-6. **Resultado del build**: errores y avisos, antes y después.
-7. **Resultado de los tests**: pasados/fallados, antes y después.
-8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
-   y cualquier decisión que requiera al usuario.
-9. **Siguientes pasos sugeridos**: confirmar el commit, revisar el diff, ejecutar la aplicación.
-
-No afirmes que la migración está completa si queda **cualquier** error de compilación, test roto nuevo,
-`CS0618` sin resolver o `TODO` pendiente. En ese caso, dilo explícitamente y enumera lo que falta.
-
----
-
-## Recordatorios finales
-
-- ✅ Pregunta antes de reemplazar identificadores ambiguos (`Name`, `Key`, `Value`, `Empty`, `Combine`, `Do`, `OrderBy`).
-- ✅ Dos pasadas con tokens siempre que haya solapamiento entre el lado antiguo y el nuevo.
-- ✅ Más largo primero, con límites de palabra.
-- ✅ Compila entre tandas; no acumules 500 cambios sin verificar.
-- ❌ No reformatees, no reordenes `using`, no "limpies" código.
-- ❌ No toques `Program.cs`, `appsettings*.json` ni ficheros de configuración salvo que contengan nombres de la librería.
-- ❌ No instales *prereleases* sin permiso.
-- ❌ No des la migración por buena sin compilar.
-- ⚠️ **Avisa SIEMPRE al usuario de los cambios de comportamiento de la sección 3.3**, aunque el build y los
-  tests queden en verde: cambian la respuesta HTTP pública de su API y el contenido de sus listados paginados.
-
-> 📚 Referencia completa de los 888 cambios: `Cambios Realizados/Renombrados-v2.0.0.md` en el repositorio
-> de MoralesLarios.OOFP. Convenciones de nomenclatura de la 2.0.0: `CONTRIBUTING.md`.
+> 🆕 `EnsureFpMessages` pasa de `internal` a **`public`**, pero solo expone los cuatro miembros nuevos
+> (`DefaultExceptionError`, `NoValueRepresentation`, `ErrorsSectionHeader`, `MetadataSectionHeader`).
+> El resto de la clase sigue siendo `internal`.
+>
+> `EnsureFpMessages.DefaultExceptionError(null)` lanza `ArgumentNullException` (antes, a través de
+> `Constants.DEFAULT_EX_ERROR_MESSAGE(null)`, era un `NullReferenceException`).

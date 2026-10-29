@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace MoralesLarios.OOFP.Core.Tests.Unit.Helpers;
 
@@ -34,7 +34,7 @@ public class EnsureFpStringsTests
         var result = EnsureFp.NotNullOrEmptyArg(myText);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("myText");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("myText");
     }
 
     #endregion
@@ -71,8 +71,8 @@ public class EnsureFpStringsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("code");
-        details.Metadata[EXPECTED_KEY].Should().Be(3);
+        details.Metadata[Constants.ParameterNameKey].Should().Be("code");
+        details.Metadata[Constants.ExpectedKey].Should().Be(3);
         details.Errors.First().Message.Should().Contain("6");
     }
 
@@ -135,7 +135,7 @@ public class EnsureFpStringsTests
         var result = EnsureFp.MatchesArg(nif, @"^\d{8}[A-Z]$");
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("nif");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("nif");
     }
 
     #endregion
@@ -178,7 +178,7 @@ public class EnsureFpStringsTests
         var result = EnsureFp.NotContainsTextArg(password, "admin");
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("password");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("password");
     }
 
     #endregion
@@ -209,7 +209,7 @@ public class EnsureFpStringsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("level");
+        details.Metadata[Constants.ParameterNameKey].Should().Be("level");
         details.Errors.First().Message.Should().Contain("1");
     }
 

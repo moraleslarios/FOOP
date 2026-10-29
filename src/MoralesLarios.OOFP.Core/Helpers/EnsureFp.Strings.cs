@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Juan Francisco Morales Larios
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
@@ -72,7 +72,7 @@ public static partial class EnsureFp
                      HasMaxLength(value, maxLength),
                      EnsureFpMessages.MaxLength(paramName, maxLength, value?.Length),
                      paramName,
-                     (EXPECTED_KEY, maxLength));
+                     (Constants.ExpectedKey, maxLength));
 
     #endregion
 
@@ -102,7 +102,7 @@ public static partial class EnsureFp
                      HasMinLength(value, minLength),
                      EnsureFpMessages.MinLength(paramName, minLength, value?.Length),
                      paramName,
-                     (EXPECTED_KEY, minLength));
+                     (Constants.ExpectedKey, minLength));
 
     #endregion
 
@@ -158,7 +158,7 @@ public static partial class EnsureFp
                      value is not null && value.Length == length,
                      EnsureFpMessages.LengthExactly(paramName, length, value?.Length),
                      paramName,
-                     (EXPECTED_KEY, length));
+                     (Constants.ExpectedKey, length));
 
     #endregion
 

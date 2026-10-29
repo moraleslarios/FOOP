@@ -17,7 +17,7 @@ Se declara como `partial record`, por lo que la comparación e impresión son es
 | `IsFailure` | `bool` | Azúcar de `!IsSuccess`. |
 | `Value` | `T` | **`internal protected`**. No accesible desde código consumidor. |
 | `ErrorsDetails` | `MlErrorDetails` | **`internal protected`**. No accesible desde código consumidor. |
-| `ToString()` | `string` | Si es válido, `Value?.ToString()` (o `"Not right value"` si es `null`); si es fallido, la descripción de los errores. |
+| `ToString()` | `string` | Si es válido, `Value?.ToString()` (o `"<null>"` si es `null`); si es fallido, la descripción de los errores. |
 
 > ⚠️ **`Value` y `ErrorsDetails` son `internal protected` a propósito.** Nunca los leas directamente: usa [`Match`](MlResultMatchExtensions.md) para materializar el resultado, o `GetValueOrThrow` ([`MlResultExtensions`](MlResultExtensions.md)) si ya has verificado que es válido.
 

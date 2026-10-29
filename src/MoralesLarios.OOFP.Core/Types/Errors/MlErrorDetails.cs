@@ -107,14 +107,14 @@ public partial class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
     /// <param name="exception">Excepción capturada.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
-    public static MlErrorDetails FromErrorMessageWithException(string errorMessage, Exception exception) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { ExceptionMetadataKey, exception} });
+    public static MlErrorDetails FromErrorMessageWithException(string errorMessage, Exception exception) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { Constants.ExceptionMetadataKey, exception} });
     /// <summary>
     /// Ejecuta <c>FromErrorMessageWithValue</c>.
     /// </summary>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
     /// <param name="value">Valor sobre el que se opera.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
-    public static MlErrorDetails FromErrorMessageWithValue    (string errorMessage, object    value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { ValueMetadataKey , value     } });
+    public static MlErrorDetails FromErrorMessageWithValue    (string errorMessage, object    value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { Constants.ValueMetadataKey , value     } });
     /// <summary>
     /// Ejecuta <c>FromErrorMessageWithValue</c>.
     /// </summary>
@@ -122,7 +122,7 @@ public partial class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
     /// <param name="value">Valor sobre el que se opera.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
-    public static MlErrorDetails FromErrorMessageWithValue<T> (string errorMessage, T         value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { ValueMetadataKey , value!    } });
+    public static MlErrorDetails FromErrorMessageWithValue<T> (string errorMessage, T         value    ) => FromErrorMessageDetails(errorMessage, new Dictionary<string, object>() { { Constants.ValueMetadataKey , value!    } });
 
 
     /// <summary>
@@ -202,7 +202,7 @@ public partial class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
 
         if (Errors.Any())
         {
-            sb.AppendLine("MlError:");
+            sb.AppendLine(EnsureFpMessages.ErrorsSectionHeader);
             foreach (var error in Errors)
             {
                 sb.AppendLine($"     {error.Message}");
@@ -211,7 +211,7 @@ public partial class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
 
         if (Metadata.Any())
         {
-            sb.AppendLine("Details:");
+            sb.AppendLine(EnsureFpMessages.MetadataSectionHeader);
             foreach (var detail in Metadata)
             {
                 sb.AppendLine($"     {detail.Key}: {detail.Value}");

@@ -50,7 +50,7 @@ public class MlResultExtensionsTests
 
         MlResult<int> result = partialResult.AddValueDetailIfFail("XXXX");
 
-        MlResult<int> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, "XXXX" } });
+        MlResult<int> expected = ("Error", new Dictionary<string, object> { { Constants.ValueMetadataKey, "XXXX" } });
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -96,7 +96,7 @@ public class MlResultExtensionsTests
 
         MlResult<int> result = await partialResult.AddValueDetailIfFailAsync("XXXX");
 
-        MlResult<int> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, "XXXX" } });
+        MlResult<int> expected = ("Error", new Dictionary<string, object> { { Constants.ValueMetadataKey, "XXXX" } });
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -151,7 +151,7 @@ public class MlResultExtensionsTests
 
         MlResult<int> result = await partialResultAsync.AddValueDetailIfFailAsync("XXXX");
 
-        MlResult<int> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, "XXXX" } });
+        MlResult<int> expected = ("Error", new Dictionary<string, object> { { Constants.ValueMetadataKey, "XXXX" } });
 
         result.ToString().Should().Be(expected.ToString());
     }
@@ -311,7 +311,7 @@ public class MlResultExtensionsTests
         MlResult<string> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDetailsValueIfFail(initialValue));
 
-        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
+        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { Constants.ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -349,7 +349,7 @@ public class MlResultExtensionsTests
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
 
-        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
+        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { Constants.ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -388,7 +388,7 @@ public class MlResultExtensionsTests
         MlResult<string> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                     .CompleteWithDetailsValueIfFailAsync(initialValue));
 
-        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
+        MlResult<string> expected = ("Not OK", new Dictionary<string, object> { { Constants.ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -448,7 +448,7 @@ public class MlResultExtensionsTests
         MlResult<(int, string)> result = partialResult.Bind(initialValue => BindTestMethod(initialValue)
                                                                                 .CompleteWithDataValue(initialValue, x => (initialValue, x)));
 
-        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
+        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { Constants.ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -472,7 +472,7 @@ public class MlResultExtensionsTests
 
         MlResult<(int, string)> result = partialResult.CompleteWithDataValue(99, x => (99, "valor relleno"));
 
-        MlResult<string> expected = ("Error", new Dictionary<string, object> { { ValueMetadataKey, 99 } });
+        MlResult<string> expected = ("Error", new Dictionary<string, object> { { Constants.ValueMetadataKey, 99 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -522,7 +522,7 @@ public class MlResultExtensionsTests
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
 
-        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
+        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { Constants.ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -575,7 +575,7 @@ public class MlResultExtensionsTests
         MlResult<(int, string)> result = await partialResult.BindAsync(initialValue => BindTestMethodAsync(initialValue)
                                                                                             .CompleteWithDataValueAsync(initialValue, x => (initialValue, x).ToAsync()));
 
-        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { ValueMetadataKey, 0 } });
+        MlResult<(int, string)> expected = ("Not OK", new Dictionary<string, object> { { Constants.ValueMetadataKey, 0 } });
 
         result.ToString().Should().BeEquivalentTo(expected.ToString());
     }
@@ -877,7 +877,7 @@ public class MlResultExtensionsTests
 
         bool hasValue = result.Match(
             valid: _ => false,
-            fail: errors => errors.Metadata.ContainsKey(ValueMetadataKey) && (int)errors.Metadata[ValueMetadataKey] == 69);
+            fail: errors => errors.Metadata.ContainsKey(Constants.ValueMetadataKey) && (int)errors.Metadata[Constants.ValueMetadataKey] == 69);
 
         hasValue.Should().BeTrue();
     }

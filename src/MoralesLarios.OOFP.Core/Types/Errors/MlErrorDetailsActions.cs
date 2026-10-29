@@ -54,7 +54,7 @@ public static partial class MlErrorDetailsActions
     public static MlErrorDetails AppendExErrorDetail(this MlErrorDetails source, 
                                                            Exception       ex,
                                                            Func<Exception, string> errorMessageBuilder = null!)
-        => source.AppendExDetailsToMlDetails(errorMessageBuilder != null ? errorMessageBuilder(ex) : DEFAULT_EX_ERROR_MESSAGE(ex), ex);
+        => source.AppendExDetailsToMlDetails(errorMessageBuilder != null ? errorMessageBuilder(ex) : EnsureFpMessages.DefaultExceptionError(ex), ex);
 
     /// <summary>
     /// Añade el elemento al final de <c>ExErrorDetail</c>.
@@ -66,7 +66,7 @@ public static partial class MlErrorDetailsActions
     public static MlErrorDetails AppendExErrorDetail(this MlErrorDetails source,
                                                            Exception ex,
                                                            string message = null!)
-        => source.AppendExDetailsToMlDetails(message != null ? message : DEFAULT_EX_ERROR_MESSAGE(ex), ex);
+        => source.AppendExDetailsToMlDetails(message != null ? message : EnsureFpMessages.DefaultExceptionError(ex), ex);
 
 
 
@@ -86,11 +86,11 @@ public static partial class MlErrorDetailsActions
 
         var principalDetailsWithEx = sourceDetails.Where(x => x.Value is Exception)
                                            .Concat(otherDetails.Where(x => x.Value is Exception))
-                                           .Select((x, index) => ($"{ExceptionMetadataKey}{(index == 0 ? string.Empty : index.ToString())}", x.Value))
+                                           .Select((x, index) => ($"{Constants.ExceptionMetadataKey}{(index == 0 ? string.Empty : index.ToString())}", x.Value))
                                            .ToDictionary(x => x.Item1, x => x.Item2);
 
-        //var printipalDetailsWitoutEx = source.Metadata.Where(x => x.Key != ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
-        //var otherDetailsWitoutEx     = other .Metadata.Where(x => x.Key != ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
+        //var printipalDetailsWitoutEx = source.Metadata.Where(x => x.Key != Constants.ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
+        //var otherDetailsWitoutEx     = other .Metadata.Where(x => x.Key != Constants.ExceptionMetadataKey).ToDictionary(x => x.Key, x => x.SuccessValue);
 
         var printipalDetailsWitoutEx = sourceDetails.Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
         var otherDetailsWitoutEx     = otherDetails .Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
@@ -299,9 +299,9 @@ public static partial class MlErrorDetailsActions
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
     public static MlErrorDetails AddValueMetadata<T>(this MlErrorDetails source, T value)
     {
-        if (source.Metadata.ContainsKey(ValueMetadataKey)) source.Metadata.Remove(ValueMetadataKey);
+        if (source.Metadata.ContainsKey(Constants.ValueMetadataKey)) source.Metadata.Remove(Constants.ValueMetadataKey);
 
-        var result = source.AddMetadataOrThrow(ValueMetadataKey, value!);
+        var result = source.AddMetadataOrThrow(Constants.ValueMetadataKey, value!);
 
         return result;
     }
@@ -313,7 +313,7 @@ public static partial class MlErrorDetailsActions
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns><c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
-    public static bool ContainsValueMetadata(this MlErrorDetails source) => source.Metadata.ContainsKey(ValueMetadataKey);
+    public static bool ContainsValueMetadata(this MlErrorDetails source) => source.Metadata.ContainsKey(Constants.ValueMetadataKey);
 
     /// <summary>
     /// Ejecuta <c>ContainsValueMetadata</c>. Versión asíncrona.
@@ -328,7 +328,7 @@ public static partial class MlErrorDetailsActions
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns><c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
-    public static bool ContainsException(this MlErrorDetails source) => source.Metadata.ContainsKey(ExceptionMetadataKey);
+    public static bool ContainsException(this MlErrorDetails source) => source.Metadata.ContainsKey(Constants.ExceptionMetadataKey);
 
     /// <summary>
     /// Ejecuta <c>ContainsException</c>. Versión asíncrona.

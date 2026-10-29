@@ -5,10 +5,44 @@
 namespace MoralesLarios.OOFP.Helpers;
 
 /// <summary>
-/// Centraliza la construcción de los mensajes de error automáticos utilizados por <see cref="EnsureFp"/>.
+/// Centraliza la construcción de los mensajes de error automáticos utilizados por <see cref="EnsureFp"/>
+/// y de los literales de mensaje que emite el núcleo.
 /// </summary>
-internal static class EnsureFpMessages
+public static class EnsureFpMessages
 {
+    #region Mensajes públicos del núcleo
+
+    /// <summary>
+    /// Construye el mensaje de error utilizado cuando una función envuelta por la familia
+    /// <c>Try*</c> lanza una excepción y no se ha proporcionado un mensaje personalizado.
+    /// </summary>
+    /// <param name="ex">Excepción capturada. No puede ser <see langword="null"/>.</param>
+    /// <returns>Mensaje de error compuesto, apto para mostrarse al usuario final.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="ex"/> es <see langword="null"/>.</exception>
+    public static string DefaultExceptionError(Exception ex)
+        => ex is null
+               ? throw new ArgumentNullException(nameof(ex))
+               : $"An error occurred while executing the function. Error: {ex.Message}. More info in 'Ex' details.";
+
+    /// <summary>
+    /// Representación textual que devuelve <c>ToString()</c> cuando el valor válido es <see langword="null"/>.
+    /// </summary>
+    public static readonly string NoValueRepresentation = "<null>";
+
+    /// <summary>
+    /// Cabecera de la sección de errores en la representación textual de
+    /// <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails"/>.
+    /// </summary>
+    public static readonly string ErrorsSectionHeader = "MlError:";
+
+    /// <summary>
+    /// Cabecera de la sección de metadatos en la representación textual de
+    /// <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails"/>.
+    /// </summary>
+    public static readonly string MetadataSectionHeader = "Details:";
+
+    #endregion
+
     internal const string DEFAULT_PARAM_NAME = "value";
 
     internal static string SafeName(string? paramName)

@@ -50,7 +50,7 @@ Si el mensaje llega vacío, el error nunca queda "mudo":
 ```csharp
 MlError vacio = "";
 Console.WriteLine(vacio.Message);
-// Without custom error message. For more info, view 'Ex(s) details exceptions.
+// Without custom error message. For more info, view the 'Ex' details exceptions.
 ```
 
 ### `MlErrorExtensions`

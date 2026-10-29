@@ -1,4 +1,4 @@
-namespace MoralesLarios.OOFP.Core.Tests.Unit.Helpers;
+﻿namespace MoralesLarios.OOFP.Core.Tests.Unit.Helpers;
 
 public class EnsureFpNumbersTests
 {
@@ -52,9 +52,9 @@ public class EnsureFpNumbersTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("age");
-        details.Metadata[EXPECTED_KEY].Should().Be(18);
-        details.Metadata[ValueMetadataKey].Should().Be(3);
+        details.Metadata[Constants.ParameterNameKey].Should().Be("age");
+        details.Metadata[Constants.ExpectedKey].Should().Be(18);
+        details.Metadata[Constants.ValueMetadataKey].Should().Be(3);
     }
 
     #endregion
@@ -136,7 +136,7 @@ public class EnsureFpNumbersTests
         var result = EnsureFp.NotZeroArg(divisor);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("divisor");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("divisor");
     }
 
     [Fact]

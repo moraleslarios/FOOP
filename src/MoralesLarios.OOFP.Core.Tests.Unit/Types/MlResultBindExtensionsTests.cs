@@ -531,7 +531,7 @@ public class MlResultBindExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -546,7 +546,7 @@ public class MlResultBindExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -576,7 +576,7 @@ public class MlResultBindExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -591,7 +591,7 @@ public class MlResultBindExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -622,7 +622,7 @@ public class MlResultBindExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -637,7 +637,7 @@ public class MlResultBindExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -717,7 +717,7 @@ public class MlResultBindExtensionsTests
                                                                                                   funcFail           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year),
                                                                                                   errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -737,7 +737,7 @@ public class MlResultBindExtensionsTests
                                                                                                   funcFail           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year / 0),
                                                                                                   errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -757,7 +757,7 @@ public class MlResultBindExtensionsTests
                                                                                                        funcFailAsync           : valueDateTime  => (Convert.ToDecimal(valueDateTime.Year)).ToMlResultValidAsync(),
                                                                                                        errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -777,7 +777,7 @@ public class MlResultBindExtensionsTests
                                                                                                        funcFailAsync           : valueDateTime  => Convert.ToDecimal(valueDateTime.Year / 0).ToMlResultValidAsync(),
                                                                                                        errorMessageBuilder: errorsDetails => "Without message !!!");
 
-        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey) ? 1m : 0m);
+        MlResult<decimal> mlResultEx = result.MapIfFail(errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey) ? 1m : 0m);
 
         MlResult<decimal> expected = 1m;
 
@@ -811,7 +811,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -855,7 +855,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -900,7 +900,7 @@ public class MlResultBindExtensionsTests
         Task<MlResult<int>> partialResultAsync =  ("miError",
                                                         new Dictionary<string, object>
                                                         {
-                                                            { ExceptionMetadataKey, new Exception("miException") },
+                                                            { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                             { "key2", "value2" }
                                                         }
                                                     ).ToMlResultFailAsync<int>();
@@ -937,7 +937,7 @@ public class MlResultBindExtensionsTests
         Task<MlResult<int>> partialResultAsync =  ("miError",
                                                         new Dictionary<string, object>
                                                         {
-                                                            { ExceptionMetadataKey, new Exception("miException") },
+                                                            { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                             { "key2", "value2" }
                                                         }
                                                     ).ToMlResultFailAsync<int>();
@@ -962,7 +962,7 @@ public class MlResultBindExtensionsTests
     //    MlResult<int> partialResult =  ("miError",
     //                                        new Dictionary<string, object>
     //                                        {
-    //                                            { ExceptionMetadataKey, new Exception("miException") },
+    //                                            { Constants.ExceptionMetadataKey, new Exception("miException") },
     //                                            { "key2", "value2" }
     //                                        }
     //                                    );
@@ -994,7 +994,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                                 new Dictionary<string, object>
                                                 {
-                                                    { ExceptionMetadataKey, new Exception("miException") },
+                                                    { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                     { "key2", "value2" }
                                                 }
                                             );
@@ -1043,7 +1043,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new InvalidOperationException("miException") },
+                                                { Constants.ExceptionMetadataKey, new InvalidOperationException("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1059,7 +1059,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new InvalidOperationException("miException") },
+                                                { Constants.ExceptionMetadataKey, new InvalidOperationException("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1078,7 +1078,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult = ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new InvalidOperationException("miException") },
+                                                { Constants.ExceptionMetadataKey, new InvalidOperationException("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1122,7 +1122,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                                        new Dictionary<string, object>
                                                        {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );
@@ -1175,7 +1175,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult = ("miError",
                                                                   new Dictionary<string, object>
                                                                   {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                                                                                          );
@@ -1226,7 +1226,7 @@ public class MlResultBindExtensionsTests
         Task<MlResult<int>> partialResultAsync =  ("miError",
                                                                    new Dictionary<string, object>
                                                                    {
-                                                            { ExceptionMetadataKey, new Exception("miException") },
+                                                            { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                             { "key2", "value2" }
                                                         }
                                                                                                                       ).ToMlResultFailAsync<int>();
@@ -1278,7 +1278,7 @@ public class MlResultBindExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                                                   new Dictionary<string, object>
                                                                   {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                                                                                          );
@@ -1333,7 +1333,7 @@ public class MlResultBindExtensionsTests
 
         bool hasExError = result.Match(
                                             valid: _             => false,
-                                            fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                            fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                         );
 
         hasExError.Should().BeTrue();

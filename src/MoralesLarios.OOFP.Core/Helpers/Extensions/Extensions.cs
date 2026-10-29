@@ -41,9 +41,9 @@ public static class Extensions
     /// <returns>Valor de tipo <c>Dictionary&lt;string, object&gt;</c> obtenido por la operación.</returns>
     public static Dictionary<string, object> AppendExDetails(this Dictionary<string, object> source, Exception ex)
     {
-        var exKeys = source.Keys.Where(x => x.StartsWith(ExceptionMetadataKey)).ToList();
+        var exKeys = source.Keys.Where(x => x.StartsWith(Constants.ExceptionMetadataKey)).ToList();
 
-        var exKey = exKeys.Any() ? $"{ExceptionMetadataKey}{exKeys.Count + 1}" : ExceptionMetadataKey;
+        var exKey = exKeys.Any() ? $"{Constants.ExceptionMetadataKey}{exKeys.Count + 1}" : Constants.ExceptionMetadataKey;
 
         var result = source.ToDictionary(x => x.Key, x => x.Value);
 

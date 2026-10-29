@@ -1,4 +1,4 @@
-namespace MoralesLarios.OOFP.Core.Tests.Unit.Helpers;
+﻿namespace MoralesLarios.OOFP.Core.Tests.Unit.Helpers;
 
 public class EnsureFpCollectionsTests
 {
@@ -32,7 +32,7 @@ public class EnsureFpCollectionsTests
         var result = EnsureFp.NotEmptyCollectionArg<string[], string>(items);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("items");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("items");
     }
 
     #endregion
@@ -77,8 +77,8 @@ public class EnsureFpCollectionsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("lines");
-        details.Metadata[EXPECTED_KEY].Should().Be(5);
+        details.Metadata[Constants.ParameterNameKey].Should().Be("lines");
+        details.Metadata[Constants.ExpectedKey].Should().Be(5);
     }
 
     [Fact]
@@ -104,8 +104,8 @@ public class EnsureFpCollectionsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("numbers");
-        details.Metadata[FAILED_INDEXES_KEY].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
+        details.Metadata[Constants.ParameterNameKey].Should().Be("numbers");
+        details.Metadata[Constants.FailedIndexesKey].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
     }
 
     [Fact]
@@ -155,8 +155,8 @@ public class EnsureFpCollectionsTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("names");
-        details.Metadata[FAILED_INDEXES_KEY].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
+        details.Metadata[Constants.ParameterNameKey].Should().Be("names");
+        details.Metadata[Constants.FailedIndexesKey].As<IEnumerable<int>>().Should().BeEquivalentTo(new[] { 1, 3 });
     }
 
     [Fact]

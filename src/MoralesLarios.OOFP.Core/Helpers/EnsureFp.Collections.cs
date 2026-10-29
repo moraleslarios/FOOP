@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Juan Francisco Morales Larios
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
@@ -70,7 +70,7 @@ public static partial class EnsureFp
                                          materialized is not null && materialized.Count == expectedCount,
                                          EnsureFpMessages.CountExactly(paramName, expectedCount, materialized?.Count),
                                          paramName,
-                                         (EXPECTED_KEY, expectedCount));
+                                         (Constants.ExpectedKey, expectedCount));
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public static partial class EnsureFp
                                          materialized is not null && materialized.Count >= minCount,
                                          EnsureFpMessages.CountAtLeast(paramName, minCount, materialized?.Count),
                                          paramName,
-                                         (EXPECTED_KEY, minCount));
+                                         (Constants.ExpectedKey, minCount));
     }
 
     /// <summary>
@@ -126,7 +126,7 @@ public static partial class EnsureFp
                                          materialized is not null && materialized.Count <= maxCount,
                                          EnsureFpMessages.CountAtMost(paramName, maxCount, materialized?.Count),
                                          paramName,
-                                         (EXPECTED_KEY, maxCount));
+                                         (Constants.ExpectedKey, maxCount));
     }
 
     /// <summary>
@@ -200,7 +200,7 @@ public static partial class EnsureFp
                                          failedIndexes.Count == 0,
                                          EnsureFpMessages.AllMatch(paramName, failedIndexes),
                                          paramName,
-                                         (FAILED_INDEXES_KEY, failedIndexes));
+                                         (Constants.FailedIndexesKey, failedIndexes));
     }
 
     /// <summary>
@@ -242,7 +242,7 @@ public static partial class EnsureFp
                                          matchedIndexes.Count == 0,
                                          EnsureFpMessages.NoneMatch(paramName, matchedIndexes),
                                          paramName,
-                                         (FAILED_INDEXES_KEY, matchedIndexes));
+                                         (Constants.FailedIndexesKey, matchedIndexes));
     }
 
     /// <summary>
@@ -356,7 +356,7 @@ public static partial class EnsureFp
                                          nullIndexes.Count == 0,
                                          EnsureFpMessages.NoNullItems(paramName, nullIndexes),
                                          paramName,
-                                         (FAILED_INDEXES_KEY, nullIndexes));
+                                         (Constants.FailedIndexesKey, nullIndexes));
     }
 
     /// <summary>

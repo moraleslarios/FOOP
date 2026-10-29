@@ -110,8 +110,8 @@ public class MlErrorDetailsActionsTests
     //{
     //    MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
     //                                        { 
-    //                                            { ExceptionMetadataKey      , new ArgumentNullException("Excepcion 1") },
-    //                                            { $"{ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 2") }
+    //                                            { Constants.ExceptionMetadataKey      , new ArgumentNullException("Excepcion 1") },
+    //                                            { $"{Constants.ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 2") }
     //                                        }
     //                                );
 
@@ -119,8 +119,8 @@ public class MlErrorDetailsActionsTests
     //    {
     //        ("miError2", new Dictionary<string, object>
     //                                        {
-    //                                            { ExceptionMetadataKey      , new ArgumentNullException("Excepcion 3") },
-    //                                            { $"{ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 4") }
+    //                                            { Constants.ExceptionMetadataKey      , new ArgumentNullException("Excepcion 3") },
+    //                                            { $"{Constants.ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 4") }
     //                                        }
     //        )
 
@@ -130,10 +130,10 @@ public class MlErrorDetailsActionsTests
 
     //    MlErrorDetails expected = (new List<MlError> { "miError", "miError2" }, new Dictionary<string, object>
     //                                     {
-    //                                            { ExceptionMetadataKey      , new ArgumentNullException("Excepcion 1") },
-    //                                            { $"{ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 2") },
-    //                                            { $"{ExceptionMetadataKey}3", new ArgumentNullException("Excepcion 3") },
-    //                                            { $"{ExceptionMetadataKey}4", new ArgumentNullException("Excepcion 4") }
+    //                                            { Constants.ExceptionMetadataKey      , new ArgumentNullException("Excepcion 1") },
+    //                                            { $"{Constants.ExceptionMetadataKey}2", new ArgumentNullException("Excepcion 2") },
+    //                                            { $"{Constants.ExceptionMetadataKey}3", new ArgumentNullException("Excepcion 3") },
+    //                                            { $"{Constants.ExceptionMetadataKey}4", new ArgumentNullException("Excepcion 4") }
     //                                                }
     //                                      );
 
@@ -250,7 +250,7 @@ public class MlErrorDetailsActionsTests
         MlErrorDetails errors1 = ("miError", 
                                     new Dictionary<string, object>
                                             {
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -260,7 +260,7 @@ public class MlErrorDetailsActionsTests
         MlErrorDetails expected = ("miError", 
                                     new Dictionary<string, object>
                                             {
-                                                { ValueMetadataKey, "value3" },
+                                                { Constants.ValueMetadataKey, "value3" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -287,7 +287,7 @@ public class MlErrorDetailsActionsTests
                                             {
                                                 { "keyXXX", "value1" },
                                                 { "key2", "value2" },
-                                                { ValueMetadataKey, "value3" }
+                                                { Constants.ValueMetadataKey, "value3" }
                                             }
                                     );
 
@@ -312,7 +312,7 @@ public class MlErrorDetailsActionsTests
         MlErrorDetails errors1 = ("miError",
                                                new Dictionary<string, object>
                                                {
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                                                                   );
@@ -347,7 +347,7 @@ public class MlErrorDetailsActionsTests
         MlErrorDetails errors1 = ("miError",
                                                new Dictionary<string, object>
                                                {
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                                                                   );
@@ -390,7 +390,7 @@ public class MlErrorDetailsActionsTests
         MlErrorDetails errors1 = ("miError",
                                             new Dictionary<string, object>
                                                           {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                                                                                                                            );
@@ -424,7 +424,7 @@ public class MlErrorDetailsActionsTests
         MlErrorDetails errors1 = ("miError",
                                                           new Dictionary<string, object>
                                                           {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                                                                                                                            );

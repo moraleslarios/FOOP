@@ -45,7 +45,7 @@ public class MlResultConversionsTests
         var ex = new InvalidOperationException("boom");
 
         string result = MlResultConversions.FormatErrorMessage((string)null!, ex);
-        string expected = DEFAULT_EX_ERROR_MESSAGE(ex);
+        string expected = EnsureFpMessages.DefaultExceptionError(ex);
 
         result.Should().Be(expected);
     }

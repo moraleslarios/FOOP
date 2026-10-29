@@ -1,4 +1,4 @@
-namespace MoralesLarios.OOFP.Core.Tests.Unit.Helpers;
+﻿namespace MoralesLarios.OOFP.Core.Tests.Unit.Helpers;
 
 public class EnsureFpTypesTests
 {
@@ -35,7 +35,7 @@ public class EnsureFpTypesTests
         var result = EnsureFp.NotEmptyGuidArg(customerId);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("customerId");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("customerId");
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class EnsureFpTypesTests
         var result = EnsureFp.NotNullNotEmptyGuidArg(orderId);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("orderId");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("orderId");
     }
 
     #endregion
@@ -87,7 +87,7 @@ public class EnsureFpTypesTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("color");
+        details.Metadata[Constants.ParameterNameKey].Should().Be("color");
         details.Errors.First().Message.Should().Contain(nameof(TestColor));
     }
 
@@ -131,7 +131,7 @@ public class EnsureFpTypesTests
         var result = EnsureFp.InFutureArg(expirationDate);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("expirationDate");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("expirationDate");
     }
 
     #endregion
@@ -158,7 +158,7 @@ public class EnsureFpTypesTests
         var result = EnsureFp.NotDefaultArg(startDate);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("startDate");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("startDate");
     }
 
     #endregion
@@ -198,7 +198,7 @@ public class EnsureFpTypesTests
         var result = EnsureFp.IsValidUriArg(endpoint);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("endpoint");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("endpoint");
     }
 
     #endregion
@@ -229,7 +229,7 @@ public class EnsureFpTypesTests
         var result = EnsureFp.IsValidEmailArg(userEmail);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("userEmail");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("userEmail");
     }
 
     #endregion
@@ -273,7 +273,7 @@ public class EnsureFpTypesTests
 
         var details = result.GetFailureDetailsOrThrow();
 
-        details.Metadata[PARAM_NAME_KEY].Should().Be("directory");
+        details.Metadata[Constants.ParameterNameKey].Should().Be("directory");
         details.Errors.First().Message.Should().Contain(directory);
     }
 
@@ -304,7 +304,7 @@ public class EnsureFpTypesTests
         var result = EnsureFp.NotNullValueArg(birthDate);
 
         result.IsFailure.Should().BeTrue();
-        result.GetFailureDetailsOrThrow().Metadata[PARAM_NAME_KEY].Should().Be("birthDate");
+        result.GetFailureDetailsOrThrow().Metadata[Constants.ParameterNameKey].Should().Be("birthDate");
     }
 
     [Fact]

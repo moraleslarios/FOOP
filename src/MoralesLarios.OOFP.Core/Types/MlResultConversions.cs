@@ -199,7 +199,7 @@ public static partial class MlResultConversions
     //        string message = FormatErrorMessage(errorMessageBuilder, ex);
 
     //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                               Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+    //                                               Metadata: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
     //        return errorDetails.ToMlResultFail<T>();
     //    }
@@ -251,7 +251,7 @@ public static partial class MlResultConversions
             string message = FormatErrorMessage(errorMessageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                                   Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
             result = errorDetails.ToMlResultFail<T>();
         }
@@ -288,7 +288,7 @@ public static partial class MlResultConversions
             string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                                   Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -312,7 +312,7 @@ public static partial class MlResultConversions
     //        string message = FormatErrorMessage(errorMessageBuilder, ex);
 
     //        var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-    //                                    Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+    //                                    Metadata: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
     //        return errorDetails.ToMlResultFail<T>();
     //    }
@@ -362,7 +362,7 @@ public static partial class MlResultConversions
             string message = FormatErrorMessage(errorMessageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-                                        Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                        Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
             result = errorDetails.ToMlResultFail<T>();
         }
@@ -399,7 +399,7 @@ public static partial class MlResultConversions
             string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-                                        Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                        Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -497,7 +497,7 @@ public static partial class MlResultConversions
     //private static MlResult<TResult> ToInternalMlResultEx<T, TResult>(this object source, 
     //                                                                       T      value,
     //                                                                       string exceptionAdditionalMessage = null!)
-    //    => source.ToInternalMlResultEx<T, TResult>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+    //    => source.ToInternalMlResultEx<T, TResult>(value, ex => exceptionAdditionalMessage ?? Constants.DefaultErrorMessage);
 
     //private static MlResult<TResult> ToInternalMlResultEx<T, TResult>(this object                  source, 
     //                                                                       T                       value,
@@ -519,7 +519,7 @@ public static partial class MlResultConversions
     //        string msg = FormatErrorMessage(errorMessageBuilder, ex);
 
     //        result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
-    //                                     Metadata: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+    //                                     Metadata: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
     //    }
 
@@ -643,7 +643,7 @@ public static partial class MlResultConversions
             string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                                   Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -705,7 +705,7 @@ public static partial class MlResultConversions
             string message = FormatErrorMessage(messageBuilder, ex);
 
             var errorDetails = new MlErrorDetails(Errors : new List<MlError> { new MlError(message) },
-                                                   Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                                   Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
 
             return errorDetails.ToMlResultFail<T>();
         }
@@ -816,7 +816,7 @@ public static partial class MlResultConversions
     /// <param name="ex">Excepción capturada.</param>
     /// <returns>Representación textual obtenida.</returns>
     public static string FormatErrorMessage(string errorMessage, Exception ex)
-        => string.IsNullOrWhiteSpace(errorMessage) ? DEFAULT_EX_ERROR_MESSAGE(ex) : errorMessage;
+        => string.IsNullOrWhiteSpace(errorMessage) ? EnsureFpMessages.DefaultExceptionError(ex) : errorMessage;
 
     /// <summary>
     /// Ejecuta <c>FormatErrorMessage</c>.
@@ -825,7 +825,7 @@ public static partial class MlResultConversions
     /// <param name="ex">Excepción capturada.</param>
     /// <returns>Representación textual obtenida.</returns>
     public static string FormatErrorMessage(Func<Exception, string> messageBuilder, Exception ex)
-        => messageBuilder != null ? messageBuilder(ex) : DEFAULT_EX_ERROR_MESSAGE(ex);
+        => messageBuilder != null ? messageBuilder(ex) : EnsureFpMessages.DefaultExceptionError(ex);
 
 
 
@@ -1212,7 +1212,7 @@ public static partial class MlResultConversions
     private static MlResult<TResult> TryToInternalMlResult<T, TResult>(this object source, 
                                                                             T      value,
                                                                             string exceptionAdditionalMessage = null!)
-        => source.TryToInternalMlResult<T, TResult>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+        => source.TryToInternalMlResult<T, TResult>(value, ex => exceptionAdditionalMessage ?? Constants.DefaultErrorMessage);
 
     private static MlResult<TResult> TryToInternalMlResult<T, TResult>(this object                  source, 
                                                                             T                       value,
@@ -1234,7 +1234,7 @@ public static partial class MlResultConversions
             string msg = FormatErrorMessage(errorMessageBuilder, ex);
 
             result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
-                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                         Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
             
         }
 
@@ -1249,7 +1249,7 @@ public static partial class MlResultConversions
     private static async Task<MlResult<TResult>> TryToInternalMlResultAsync<T, TResult>(this object sourceAsync, 
                                                                                              T      value,
                                                                                              string exceptionAdditionalMessage = null!)
-        => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, ex => exceptionAdditionalMessage ?? DEFAULT_ERROR_MESSAGE);
+        => await sourceAsync.TryToInternalMlResultAsync<T, TResult>(value, ex => exceptionAdditionalMessage ?? Constants.DefaultErrorMessage);
 
 
     private static async Task<MlResult<TResult>> TryToInternalMlResultAsync<T, TResult>(this object                  sourceAsync, 
@@ -1274,7 +1274,7 @@ public static partial class MlResultConversions
             string msg = FormatErrorMessage(errorMessageBuilder, ex);
 
             result = new MlErrorDetails(Errors : new List<MlError> { new MlError(msg) },
-                                         Details: new Dictionary<string, object> { { ExceptionMetadataKey, ex } });
+                                         Details: new Dictionary<string, object> { { Constants.ExceptionMetadataKey, ex } });
             
         }
 

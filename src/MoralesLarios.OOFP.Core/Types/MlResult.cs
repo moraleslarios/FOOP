@@ -387,7 +387,7 @@ public partial record MlResult<T>
     /// <inheritdoc/>
     public override string ToString() => this.Match(
                                                         fail : errors => errors.ToString(),
-                                                        valid: value  => value?.ToString() ?? "Not right value"
+                                                        valid: value  => value?.ToString() ?? EnsureFpMessages.NoValueRepresentation
                                                    );
 
 

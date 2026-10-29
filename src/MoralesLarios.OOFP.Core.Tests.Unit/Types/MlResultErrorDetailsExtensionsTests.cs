@@ -59,7 +59,7 @@ public class MlResultErrorDetailsExtensionsTests
     {
         MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -172,7 +172,7 @@ public class MlResultErrorDetailsExtensionsTests
 
         MlResult<int> expected = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { ValueMetadataKey, 69 }
+                                                { Constants.ValueMetadataKey, 69 }
                                             }
                                     );
 
@@ -190,7 +190,7 @@ public class MlResultErrorDetailsExtensionsTests
     {
         MlErrorDetails source = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -201,7 +201,7 @@ public class MlResultErrorDetailsExtensionsTests
 
         MlResult<string> expected = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -214,7 +214,7 @@ public class MlResultErrorDetailsExtensionsTests
     {
         MlErrorDetails source = ("miError", new Dictionary<string, object> 
                                             { 
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" }
                                             }
                                     );
@@ -230,7 +230,7 @@ public class MlResultErrorDetailsExtensionsTests
 
         MlResult<string> expected = (["miError", "miError2"], new Dictionary<string, object> 
                                             { 
-                                                { ValueMetadataKey, "value1" },
+                                                { Constants.ValueMetadataKey, "value1" },
                                                 { "key2", "value2" },
                                                 { "other", "value1-2" },
                                                 { "key2-2", "value2-2" }
@@ -258,7 +258,7 @@ public class MlResultErrorDetailsExtensionsTests
     {
         Task<MlErrorDetails> errorsAsync = MlErrorDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
-            { ValueMetadataKey, 69 }
+            { Constants.ValueMetadataKey, 69 }
         }).ToAsync();
 
         MlResult<int> result = await errorsAsync.GetMetadataValueAsync<int>();
@@ -271,7 +271,7 @@ public class MlResultErrorDetailsExtensionsTests
     {
         Task<MlErrorDetails> errorsAsync = MlErrorDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
-            { ExceptionMetadataKey, new InvalidOperationException("oops") }
+            { Constants.ExceptionMetadataKey, new InvalidOperationException("oops") }
         }).ToAsync();
 
         MlResult<InvalidOperationException> result = await errorsAsync.GetExceptionAsync<InvalidOperationException>();
@@ -284,7 +284,7 @@ public class MlResultErrorDetailsExtensionsTests
     {
         Task<MlErrorDetails> errorsAsync = MlErrorDetails.FromErrorMessageDetails("miError", new Dictionary<string, object>
         {
-            { ExceptionMetadataKey, new InvalidOperationException("oops") }
+            { Constants.ExceptionMetadataKey, new InvalidOperationException("oops") }
         }).ToAsync();
 
         MlResult<Exception> result = await errorsAsync.GetExceptionAsync();

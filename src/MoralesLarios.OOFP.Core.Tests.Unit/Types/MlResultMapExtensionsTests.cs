@@ -396,7 +396,7 @@ public class MlResultMapExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -411,7 +411,7 @@ public class MlResultMapExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -442,7 +442,7 @@ public class MlResultMapExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -457,7 +457,7 @@ public class MlResultMapExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -488,7 +488,7 @@ public class MlResultMapExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeTrue();
@@ -503,7 +503,7 @@ public class MlResultMapExtensionsTests
 
         bool hasErrors = result.Match(
                                         valid: x             => false,
-                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(ExceptionMetadataKey)
+                                        fail : errorsDetails => errorsDetails.Metadata.ContainsKey(Constants.ExceptionMetadataKey)
                                       );     
 
         hasErrors.Should().BeFalse();
@@ -528,7 +528,7 @@ public class MlResultMapExtensionsTests
         MlResult<int> partialResult =  ("miError",
                                             new Dictionary<string, object>
                                             {
-                                                { ExceptionMetadataKey, new Exception("miException") },
+                                                { Constants.ExceptionMetadataKey, new Exception("miException") },
                                                 { "key2", "value2" }
                                             }
                                         );

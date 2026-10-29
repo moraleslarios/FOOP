@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Juan Francisco Morales Larios
+﻿// Copyright (c) 2023 Juan Francisco Morales Larios
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
@@ -210,8 +210,8 @@ public static partial class EnsureFp
         => condition
                 ? MlResult<T>.Valid(value)
                 : MlErrorDetails.FromErrorMessage(errorMessage)
-                                 .AddMetadataOrThrow(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
-                                 .AddMetadataOrThrow<object>(ValueMetadataKey, value!)
+                                 .AddMetadataOrThrow(Constants.ParameterNameKey, EnsureFpMessages.SafeName(paramName))
+                                 .AddMetadataOrThrow<object>(Constants.ValueMetadataKey, value!)
                                  .ToMlResultFail<T>();
 
     private static MlResult<T> BuildExceptionFail<T>(string?                 paramName,
@@ -223,7 +223,7 @@ public static partial class EnsureFp
                             : errorMessageBuilder(ex) ?? EnsureFpMessages.PredicateException(paramName, ex);
 
         return MlErrorDetails.FromErrorMessage(message)
-                              .AddMetadataOrThrow(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
+                              .AddMetadataOrThrow(Constants.ParameterNameKey, EnsureFpMessages.SafeName(paramName))
                               .AppendExDetailsToMlDetails(ex)
                               .ToMlResultFail<T>();
     }
@@ -241,8 +241,8 @@ public static partial class EnsureFp
         if (condition) return MlResult<T>.Valid(value);
 
         var errorsDetails = MlErrorDetails.FromErrorMessage(errorMessage)
-                                           .AddMetadataOrThrow(PARAM_NAME_KEY, EnsureFpMessages.SafeName(paramName))
-                                           .AddMetadataOrThrow<object>(ValueMetadataKey, value!);
+                                           .AddMetadataOrThrow(Constants.ParameterNameKey, EnsureFpMessages.SafeName(paramName))
+                                           .AddMetadataOrThrow<object>(Constants.ValueMetadataKey, value!);
 
         foreach (var (key, detailValue) in extraDetails ?? Array.Empty<(string, object)>())
             errorsDetails = errorsDetails.AddMetadataOrThrow(key, detailValue);

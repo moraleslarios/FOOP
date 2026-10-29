@@ -1,4 +1,4 @@
-namespace MoralesLarios.OOFP.Core.Tests.Unit.Types;
+﻿namespace MoralesLarios.OOFP.Core.Tests.Unit.Types;
 
 /// <summary>
 /// Tests que demuestran los arreglos aplicados sobre MlResultExecSelfExtensions.
@@ -16,7 +16,7 @@ public class MlResultExecSelfFixesTests
         => (message,
                 new Dictionary<string, object>
                 {
-                    { ExceptionMetadataKey, new Exception("miException") },
+                    { Constants.ExceptionMetadataKey, new Exception("miException") },
                     { "key2", "value2" }
                 }
             );
@@ -142,7 +142,7 @@ public class MlResultExecSelfFixesTests
 
         asyncErrors.Errors.Select(x => x.Message)
                           .Should()
-                          .NotContain(x => x.Contains(ExceptionMetadataKey) && x.Contains("does not exist"));
+                          .NotContain(x => x.Contains(Constants.ExceptionMetadataKey) && x.Contains("does not exist"));
 
         asyncErrors.Errors.First().Message.Should().Be("miError");
     }
