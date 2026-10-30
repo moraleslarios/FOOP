@@ -19,16 +19,17 @@ public static partial class MlResultErrorDetailsExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="key">Clave identificativa.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <remarks>
+    /// Es una consulta sin efectos secundarios: cuando la clave no existe o su valor no es del tipo
+    /// esperado, el fallo devuelto lleva los errores de <paramref name="source"/> más un error
+    /// explicativo, pero <paramref name="source"/> no se modifica. Llamar varias veces al método
+    /// produce siempre el mismo resultado.
+    /// </remarks>
     public static MlResult<T> GetDetail<T>(this MlErrorDetails source, string key)
-    {
-        if ( ! source.Metadata.ContainsKey(key)) return source.AddError($"The key {key} does not exist in the details");
-        
-        var result = source.Metadata[key] is T value 
-                            ? MlResult<T>.Valid(value) 
-                            : source.AddError($"The key {key} does not contain a value of type {typeof(T).Name}");
-
-        return result;
-    }
+        => source.TryGetMetadata<T>(key, out var value)
+               ? MlResult<T>.Valid(value)
+               : MlResult<T>.Fail(source.Errors.Append(MlError.FromErrorMessage(EnsureFpMessages.MetadataKeyNotFoundOrTypeMismatch(key, typeof(T)))).ToList(),
+                                  MlErrorDetails.CopyMetadata(source.Metadata));
 
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Detail</c>. Versión asíncrona.
@@ -192,17 +193,12 @@ public static partial class MlResultErrorDetailsExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <remarks>
+    /// Es una consulta sin efectos secundarios: no modifica <paramref name="source"/> y produce
+    /// siempre el mismo resultado.
+    /// </remarks>
     public static MlResult<T> GetMetadataValue<T>(this MlErrorDetails source)
-    {
-        if ( ! source.Metadata.ContainsKey(Constants.ValueMetadataKey)) return source.AddError($"The key {Constants.ValueMetadataKey} does not exist in the details");  //MlResult<T>.Fail($"The key {Constants.ValueMetadataKey} does not exist in the details");
-        
-        var result = source.Metadata[Constants.ValueMetadataKey] is T value 
-                            ? MlResult<T>.Valid(value) 
-                            : source.AddError($"The key {Constants.ValueMetadataKey} does not contain a value of type {typeof(T).Name}");
-
-        return result;
-    }
-
+        => source.GetDetail<T>(MlErrorDetails.MetadataKeys.Value);
 
     /// <summary>
     /// Registra el valor indicado en los metadatos del error cuando el resultado de origen es fallido; si es válido, lo devuelve sin cambios.
@@ -275,14 +271,14 @@ public static partial class MlResultErrorDetailsExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static MlResult<T> GetException<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(Constants.ExceptionMetadataKey);
+    public static MlResult<T> GetException<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(MlErrorDetails.MetadataKeys.Exception);
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static Task<MlResult<T>> GetExceptionAsync<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(Constants.ExceptionMetadataKey).ToAsync();
+    public static Task<MlResult<T>> GetExceptionAsync<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(MlErrorDetails.MetadataKeys.Exception).ToAsync();
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>
@@ -295,13 +291,13 @@ public static partial class MlResultErrorDetailsExtensions
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static MlResult<Exception> GetException(this MlErrorDetails source) => source.GetDetail<Exception>(Constants.ExceptionMetadataKey);
+    public static MlResult<Exception> GetException(this MlErrorDetails source) => source.GetDetail<Exception>(MlErrorDetails.MetadataKeys.Exception);
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static Task<MlResult<Exception>> GetExceptionAsync(this MlErrorDetails source) => source.GetDetail<Exception>(Constants.ExceptionMetadataKey).ToAsync();
+    public static Task<MlResult<Exception>> GetExceptionAsync(this MlErrorDetails source) => source.GetDetail<Exception>(MlErrorDetails.MetadataKeys.Exception).ToAsync();
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>

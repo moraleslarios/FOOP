@@ -16,5 +16,10 @@
     <RootNamespace>MoralesLarios.OOFP</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>MoralesLarios.OOFP.Core.Tests.Unit</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
 </Project>

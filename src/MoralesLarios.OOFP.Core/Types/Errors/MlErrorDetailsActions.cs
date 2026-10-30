@@ -76,25 +76,23 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="other">Segundo resultado que participa en la operación.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// La fusión nunca pierde información ni lanza: los errores se concatenan en orden y, cuando una
+    /// clave de metadatos existe en los dos conjuntos, la entrante se sufija con el primer índice
+    /// libre (<c>ParamName</c>, <c>ParamName2</c>…). Las excepciones conservan su secuencia reservada
+    /// <c>Ex</c>, <c>Ex2</c>, <c>Ex3</c>… sin renumerar las ya presentes en <paramref name="source"/>.
+    /// </remarks>
     public static MlErrorDetails Merge(this MlErrorDetails source, 
                                              MlErrorDetails other)
     {
-        var errors = source.Errors.Concat(other.Errors).ToList();
+        var errors = (source?.Errors ?? Enumerable.Empty<MlError>())
+                        .Concat(other?.Errors ?? Enumerable.Empty<MlError>())
+                        .ToList();
 
-        var sourceDetails = source?.Metadata ?? new Dictionary<string, object>();
-        var otherDetails  = other ?.Metadata ?? new Dictionary<string, object>();
+        var details = MlErrorDetails.CopyMetadata(null);
 
-        var principalDetailsWithEx = sourceDetails.Where(x => x.Value is Exception)
-                                           .Concat(otherDetails.Where(x => x.Value is Exception))
-                                           .Select((x, index) => ($"{Constants.ExceptionMetadataKey}{(index == 0 ? string.Empty : index.ToString())}", x.Value))
-                                           .ToDictionary(x => x.Item1, x => x.Item2);
-
-
-        var principalDetailsWithoutEx = sourceDetails.Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
-        var otherDetailsWithoutEx     = otherDetails .Where(x => x.Value is not Exception).ToDictionary(x => x.Key, x => x.Value);
-
-        var details = principalDetailsWithoutEx.Concat(otherDetailsWithoutEx)
-                                               .Concat(principalDetailsWithEx).ToDictionary(x => x.Key, x => x.Value);
+        MlErrorDetails.MergeMetadataInto(details, source?.Metadata);
+        MlErrorDetails.MergeMetadataInto(details, other ?.Metadata);
 
         var result = (errors, details);
 
@@ -109,15 +107,34 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errorsDetails">Detalles del error, con su mensaje y metadatos asociados.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Acumula en una sola pasada: el coste es lineal en el número total de errores y metadatos, no
+    /// cuadrático en el número de elementos de <paramref name="errorsDetails"/>.
+    /// </remarks>
     public static MlErrorDetails Merge(this MlErrorDetails              source,
                                              IEnumerable<MlErrorDetails> errorsDetails)
     {
-        foreach (var errorDetails in errorsDetails)
+        var errors = new List<MlError>(source?.Errors ?? Enumerable.Empty<MlError>());
+
+        var details = MlErrorDetails.CopyMetadata(null);
+
+        MlErrorDetails.MergeMetadataInto(details, source?.Metadata);
+
+        if (errorsDetails is not null)
         {
-            source = source.Merge(errorDetails);
+            foreach (var errorDetails in errorsDetails)
+            {
+                if (errorDetails is null) continue;
+
+                errors.AddRange(errorDetails.Errors);
+
+                MlErrorDetails.MergeMetadataInto(details, errorDetails.Metadata);
+            }
         }
 
-        return source;
+        var result = (errors, details);
+
+        return result;
     }
 
 
@@ -194,22 +211,36 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="error">Error que describe el fallo.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
-    public static MlErrorDetails AddError(this MlErrorDetails source, MlError error) => (source.Errors.Append(error), source.Metadata);
+    /// <remarks>
+    /// Los metadatos se copian: la instancia devuelta no comparte el diccionario con
+    /// <paramref name="source"/>.
+    /// </remarks>
+    public static MlErrorDetails AddError(this MlErrorDetails source, MlError error) 
+        => (source.Errors.Append(error).ToList(), MlErrorDetails.CopyMetadata(source.Metadata));
     /// <summary>
     /// Devuelve unos detalles de error nuevos con un error construido a partir del mensaje indicado, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
-    public static MlErrorDetails AddErrorMessage(this MlErrorDetails source, string errorMessage) => (source.Errors.Append(errorMessage), source.Metadata);
+    /// <remarks>
+    /// Los metadatos se copian: la instancia devuelta no comparte el diccionario con
+    /// <paramref name="source"/>.
+    /// </remarks>
+    public static MlErrorDetails AddErrorMessage(this MlErrorDetails source, string errorMessage) 
+        => (source.Errors.Append(errorMessage).ToList(), MlErrorDetails.CopyMetadata(source.Metadata));
     /// <summary>
     /// Devuelve unos detalles de error nuevos con la colección de errores indicada concatenada a la existente, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errors">Colección de errores que describen el fallo.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Los metadatos se copian: la instancia devuelta no comparte el diccionario con
+    /// <paramref name="source"/>.
+    /// </remarks>
     public static MlErrorDetails AddErrors(this MlErrorDetails source, IEnumerable<MlError> errors) 
-        => (source.Errors.Concat(errors).ToList(), source.Metadata);
+        => (source.Errors.Concat(errors).ToList(), MlErrorDetails.CopyMetadata(source.Metadata));
 
     /// <summary>
     /// Devuelve unos detalles de error nuevos con los errores indicados concatenados a la colección existente, conservando los metadatos.
@@ -217,16 +248,24 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errors">Colección de errores que describen el fallo.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Los metadatos se copian: la instancia devuelta no comparte el diccionario con
+    /// <paramref name="source"/>.
+    /// </remarks>
     public static MlErrorDetails AddErrors(this MlErrorDetails source, params MlError[] errors) 
-        => (source.Errors.Concat(errors).ToList(), source.Metadata);
+        => (source.Errors.Concat(errors).ToList(), MlErrorDetails.CopyMetadata(source.Metadata));
     /// <summary>
     /// Devuelve unos detalles de error nuevos con los errores construidos a partir de la colección de mensajes indicada, conservando los metadatos.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errorMessages">Mensajes descriptivos de los errores.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Los metadatos se copian: la instancia devuelta no comparte el diccionario con
+    /// <paramref name="source"/>.
+    /// </remarks>
     public static MlErrorDetails AddErrorsMessages(this MlErrorDetails source, IEnumerable<string> errorMessages) 
-        => (source.Errors.Concat(errorMessages.ToMlErrors()).ToList(), source.Metadata);
+        => (source.Errors.Concat(errorMessages.ToMlErrors()).ToList(), MlErrorDetails.CopyMetadata(source.Metadata));
 
     /// <summary>
     /// Devuelve unos detalles de error nuevos con los errores construidos a partir de los mensajes indicados, conservando los metadatos.
@@ -234,8 +273,12 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="errorMessages">Mensajes descriptivos de los errores.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Los metadatos se copian: la instancia devuelta no comparte el diccionario con
+    /// <paramref name="source"/>.
+    /// </remarks>
     public static MlErrorDetails AddErrorsMessages(this MlErrorDetails source, params string[] errorMessages) 
-        => (source.Errors.Concat(errorMessages.ToMlErrors()).ToList(), source.Metadata);
+        => (source.Errors.Concat(errorMessages.ToMlErrors()).ToList(), MlErrorDetails.CopyMetadata(source.Metadata));
 
     /// <summary>
     /// Añade el par clave-valor indicado al diccionario de metadatos del error; lanza una excepción si la clave ya existe.
@@ -245,11 +288,20 @@ public static partial class MlErrorDetailsActions
     /// <param name="key">Clave identificativa.</param>
     /// <param name="value">Valor sobre el que se opera.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Devuelve una instancia nueva y <b>no</b> modifica <paramref name="source"/>. Si la clave ya
+    /// existe lanza <see cref="ArgumentException"/>; use
+    /// <see cref="MlErrorDetails.WithMetadata(string, object)"/> cuando quiera sobrescribir sin
+    /// riesgo de excepción.
+    /// </remarks>
+    /// <exception cref="ArgumentException">La clave ya existe en los metadatos de <paramref name="source"/>.</exception>
     public static MlErrorDetails AddMetadataOrThrow<T>(this MlErrorDetails source, string key, T value)    
     {
-        source.Metadata.Add(key, value!);
+        var details = MlErrorDetails.CopyMetadata(source.Metadata);
 
-        var result = (source.Errors, source.Metadata);
+        details.Add(key, value!);
+
+        var result = (source.Errors, details);
 
         return result;
     }
@@ -260,14 +312,13 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="otherDetails">Valor de <c>otherDetails</c>.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Las claves que ya existan se sobrescriben con el valor entrante. Para conservar los dos
+    /// valores use <see cref="Merge(MlErrorDetails, MlErrorDetails)"/>. No modifica
+    /// <paramref name="source"/>.
+    /// </remarks>
     public static MlErrorDetails AddMetadataRange(this MlErrorDetails source, Dictionary<string, object> otherDetails)    
-    {
-        var details = source.Metadata.Concat(otherDetails).ToDictionary(x => x.Key, x => x.Value);
-
-        var result = (source.Errors, source.Metadata);
-
-        return result;
-    }
+        => source.WithMetadata(otherDetails);
 
     /// <summary>
     /// Incorpora a los metadatos del error todas las parejas clave-valor indicadas.
@@ -275,14 +326,13 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="otherDetails">Colección de <c>otherDetails</c>.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// Las claves que ya existan se sobrescriben con el valor entrante. Para conservar los dos
+    /// valores use <see cref="Merge(MlErrorDetails, MlErrorDetails)"/>. No modifica
+    /// <paramref name="source"/>.
+    /// </remarks>
     public static MlErrorDetails AddMetadataRange(this MlErrorDetails source, params (string key, object value)[] otherDetails)
-    {
-        var details = source.Metadata.Concat(otherDetails.ToDictionary(x => x.key, x => x.value));
-
-        var result = (source.Errors, source.Metadata);
-
-        return result;
-    }
+        => source.WithMetadata(otherDetails?.Select(x => new KeyValuePair<string, object>(x.key, x.value)));
 
 
 
@@ -295,55 +345,44 @@ public static partial class MlErrorDetailsActions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="value">Valor sobre el que se opera.</param>
     /// <returns>Valor de tipo <c>MlErrorDetails</c> obtenido por la operación.</returns>
+    /// <remarks>Devuelve una instancia nueva y no modifica <paramref name="source"/>.</remarks>
     public static MlErrorDetails AddValueMetadata<T>(this MlErrorDetails source, T value)
-    {
-        if (source.Metadata.ContainsKey(Constants.ValueMetadataKey)) source.Metadata.Remove(Constants.ValueMetadataKey);
-
-        var result = source.AddMetadataOrThrow(Constants.ValueMetadataKey, value!);
-
-        return result;
-    }
-
-
+        => source.WithMetadata(MlErrorDetails.MetadataKeys.Value, value!);
 
     /// <summary>
-    /// Ejecuta <c>ContainsValueMetadata</c>.
+    /// Indica si los metadatos del error contienen la clave estándar de valor.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns><c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
-    public static bool ContainsValueMetadata(this MlErrorDetails source) => source.Metadata.ContainsKey(Constants.ValueMetadataKey);
+    public static bool ContainsValueMetadata(this MlErrorDetails source) => source.HasMetadata(MlErrorDetails.MetadataKeys.Value);
 
     /// <summary>
-    /// Ejecuta <c>ContainsValueMetadata</c>. Versión asíncrona.
+    /// Indica si los metadatos del error contienen la clave estándar de valor. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
+    /// <returns>Tarea que produce <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
     public static Task<bool> ContainsValueMetadataAsync(this MlErrorDetails source) => source.ContainsValueMetadata().ToAsync();
 
-
     /// <summary>
-    /// Ejecuta <c>ContainsException</c>.
+    /// Indica si los metadatos del error contienen la clave canónica de excepción.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <returns><c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
-    public static bool ContainsException(this MlErrorDetails source) => source.Metadata.ContainsKey(Constants.ExceptionMetadataKey);
+    public static bool ContainsException(this MlErrorDetails source) => source.HasMetadata(MlErrorDetails.MetadataKeys.Exception);
 
     /// <summary>
-    /// Ejecuta <c>ContainsException</c>. Versión asíncrona.
+    /// Indica si los metadatos del error contienen la clave canónica de excepción. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
+    /// <returns>Tarea que produce <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
     public static Task<bool> ContainsExceptionAsync(this MlErrorDetails source) => source.ContainsException().ToAsync();
 
     /// <summary>
-    /// Ejecuta <c>ContainsMetadata</c>.
+    /// Indica si los metadatos del error contienen la clave indicada.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="key">Clave identificativa.</param>
     /// <returns><c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
-    public static bool ContainsMetadata(this MlErrorDetails source, string key) => source.Metadata.ContainsKey(key);
-
-
-
+    public static bool ContainsMetadata(this MlErrorDetails source, string key) => source.HasMetadata(key);
 }
 

@@ -746,7 +746,7 @@ public static partial class MlResultBindExtensions
             {
                 var result = func(value);
 
-                if (result.IsFailure) result.AddValueDetailIfFail(value!);
+                if (result.IsFailure) result = result.AddValueDetailIfFail(value!);
 
                 return result;
             }
@@ -771,7 +771,7 @@ public static partial class MlResultBindExtensions
                                     {
                                         var result = await funcAsync(value);
 
-                                        if (result.IsFailure) result.AddValueDetailIfFail(value!);
+                                        if (result.IsFailure) result = result.AddValueDetailIfFail(value!);
 
                                         return result;
                                     }
@@ -825,7 +825,7 @@ public static partial class MlResultBindExtensions
             {
                 var result = func.TryToMlResult(value, errorMessageBuilder);
 
-                if (result.IsFailure) result.AddValueDetailIfFail(value!);
+                if (result.IsFailure) result = result.AddValueDetailIfFail(value!);
 
                 return result;
             }
@@ -926,7 +926,7 @@ public static partial class MlResultBindExtensions
             {
                 var result = await funcAsync.TryToMlResultAsync(value, errorMessageBuilder);
 
-                if (result.IsFailure) result.AddValueDetailIfFail(value!);
+                if (result.IsFailure) result = result.AddValueDetailIfFail(value!);
 
                 return result;
             }
@@ -980,7 +980,7 @@ public static partial class MlResultBindExtensions
                                     validAsync: async value =>
                                     {
                                         var result = await funcAsync.TryToMlResultAsync(value, errorMessageBuilder);
-                                        if (result.IsFailure) result.AddValueDetailIfFail(value!);
+                                        if (result.IsFailure) result = result.AddValueDetailIfFail(value!);
                                         return result;
                                     }
                                 );

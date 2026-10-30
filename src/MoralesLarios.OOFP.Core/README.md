@@ -357,6 +357,78 @@ Console.WriteLine(error.ToString());
 
 ---
 
+### El contrato de metadatos
+
+Los detalles adicionales de un `MlErrorDetails` viven en la propiedad `Metadata`, un
+`Dictionary<string, object>` cuyo contrato es el siguiente:
+
+- **Comparador de claves** · `StringComparer.Ordinal`. Las claves distinguen mayúsculas y
+  minúsculas: `"Value"` y `"value"` son dos claves distintas.
+- **Claves bien conocidas** · están centralizadas en `MlErrorDetails.MetadataKeys` para no
+  escribirlas a mano:
+
+| Constante | Clave | Tipo que guarda | Quién la escribe |
+|-----------|-------|-----------------|------------------|
+| `MetadataKeys.Exception` | `"Ex"` | `Exception` | las variantes `Try*` del núcleo |
+| `MetadataKeys.Value` | `"Value"` | el valor que provocó el fallo | `AddValueDetailIfFail` y la familia `BindSaveValueInDetailsIfFailed*` |
+| `MetadataKeys.ParameterName` | `"ParamName"` | `string` | las guardas de `EnsureFp` |
+| `MetadataKeys.Expected` | `"Expected"` | el valor esperado | las reglas de comparación de `EnsureFp` |
+| `MetadataKeys.FailedIndexes` | `"FailedIndexes"` | índices que han fallado | las validaciones de colecciones |
+| `MetadataKeys.NotFound` | `"NotFound"` | marca de recurso inexistente | la capa de aplicación |
+| `MetadataKeys.ProblemsDetails` | `"ProblemsDetails"` | detalle de problema HTTP | `MoralesLarios.OOFP.AspNetCore.Results` |
+
+- **Prefijo `Ex` reservado** · las excepciones acumuladas ocupan la secuencia `"Ex"`, `"Ex2"`,
+  `"Ex3"`… Sólo esas claves exactas (el patrón `^Ex\d*$`) se consideran ranuras de excepción, de
+  modo que claves propias como `"Expected"`, `"ExternalId"` o `"ExecutionTime"` **no** interfieren.
+- **Política de colisión** · al fusionar dos `MlErrorDetails` con la misma clave no se pierde ni se
+  sobrescribe nada: la clave entrante se sufija (`"ParamName"`, `"ParamName2"`, `"ParamName3"`…).
+  Fusionar nunca lanza una excepción.
+- **Independencia entre instancias** · cada `MlErrorDetails` posee su propio diccionario. Ninguna
+  operación de la biblioteca comparte el diccionario entre dos instancias, de forma que modificar
+  una copia nunca afecta al original.
+
+#### Patrón recomendado de lectura
+
+Las lecturas no lanzan, no mutan el objeto consultado y resuelven la clave en una sola búsqueda:
+
+```csharp
+// 1) Lectura tipada con la semántica habitual de la BCL.
+if (details.TryGetMetadata<int>(MlErrorDetails.MetadataKeys.Value, out var valor))
+    logger.LogWarning("El fallo lo provocó el valor {Valor}.", valor);
+
+// 2) Comprobación de presencia.
+if (details.HasMetadata(MlErrorDetails.MetadataKeys.NotFound))
+    return NotFound();
+
+// 3) Recuperar la excepción original, si la hay.
+if (details.TryGetException(out var excepcion))
+    logger.LogError(excepcion, "Fallo inesperado.");
+
+// 4) Recorrer todas las excepciones acumuladas.
+foreach (var ex in details.GetExceptions()) logger.LogError(ex, "Fallo acumulado.");
+
+// 5) Lectura de sólo lectura del diccionario completo, sin copiarlo.
+IReadOnlyDictionary<string, object> vista = details.MetadataView;
+```
+
+#### Patrón recomendado de escritura
+
+`WithMetadata` devuelve siempre una **instancia nueva** y deja intacta la de origen:
+
+```csharp
+var conContexto = details.WithMetadata("CorrelationId", correlationId)
+                         .WithMetadata(new Dictionary<string, object>
+                         {
+                             ["Tenant"]  = tenantId,
+                             ["Attempt"] = intento,
+                         });
+```
+
+Los métodos `AddMetadataOrThrow`, `AddMetadataRange` y `AddValueMetadata` se conservan por
+compatibilidad, pero `WithMetadata` es la forma preferida en código nuevo.
+
+---
+
 ## 3. `EnsureFp`: validaciones funcionales
 
 `EnsureFp` es la capa de precondiciones del núcleo. Se usa **al principio** de la lógica de negocio para comprobar argumentos, valores nulos, colecciones vacías o condiciones de dominio, y convertir cualquier fallo en un `MlResult<T>` consistente. Su objetivo es sustituir el clásico bloque de guardas con excepciones por una expresión que ya devuelve el flujo funcional.

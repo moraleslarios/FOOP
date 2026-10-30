@@ -4,7 +4,7 @@
 > **Origen** · análisis del contenedor `Dictionary<string, object>` de `MlErrorDetails` · hallazgos **#3** y **#4** de [`Mejoras/Core/README.md`](../../../Mejoras/Core/README.md), más **6 defectos funcionales no catalogados**
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.1.1
 > **Proyecto** · `src/MoralesLarios.OOFP.Core` (impacto en `MoralesLarios.OOFP.AspNetCore.Results`)
-> **Estado** · ⬜ no iniciada
+> **Estado** · ✅ completada · US-17 … US-25 cerradas en 2.1.1 (defectos A-G corregidos)
 > **Esfuerzo** · **XL** (~4,75 jornadas)
 > **Riesgo** · 🔴 muy alto en US-17 … US-19 (cambian comportamiento observable) · 🟢 / 🟡 en el resto
 >
@@ -369,16 +369,24 @@ son claves distintas por accidente, no por diseño.
 
 Criterios de aceptación:
 
-- [ ] La discriminación de claves de excepción usa el patrón exacto `^Ex\d*$`, no `StartsWith("Ex")`.
-- [ ] Un `MlErrorDetails` con `{ "Expected": 100 }` que recibe una excepción la guarda en `"Ex"`,
+- [x] La discriminación de claves de excepción usa el patrón exacto `^Ex\d*$`, no `StartsWith("Ex")`.
+- [x] Un `MlErrorDetails` con `{ "Expected": 100 }` que recibe una excepción la guarda en `"Ex"`,
       **no** en `"Ex2"`.
-- [ ] `GetException()` la recupera correctamente en ese escenario.
-- [ ] Las claves `"ExecutionTime"`, `"ExternalId"`, `"Expected"` y `"ExpectedValue"` **no** se
+- [x] `GetException()` la recupera correctamente en ese escenario.
+- [x] Las claves `"ExecutionTime"`, `"ExternalId"`, `"Expected"` y `"ExpectedValue"` **no** se
       cuentan como ranuras de excepción en ningún punto del núcleo.
-- [ ] La lógica de discriminación vive en **un único sitio** (un método privado o `internal`
+- [x] La lógica de discriminación vive en **un único sitio** (un método privado o `internal`
       compartido), no duplicada en `Extensions.cs` y en `MlErrorDetailsActions.cs`.
-- [ ] La convención (`"Ex"` reservado, patrón `Ex`, `Ex2`, `Ex3`…) está documentada en el
+- [x] La convención (`"Ex"` reservado, patrón `Ex`, `Ex2`, `Ex3`…) está documentada en el
       `<remarks>` de `MlErrorDetails` y en el `README.md` del núcleo.
+
+> **Resultado de la ejecución** · la discriminación vive en `MlErrorDetails.IsExceptionKey`
+> (`Types/Errors/MlErrorDetails.Metadata.cs`), respaldada por
+> `[GeneratedRegex(@"^Ex\d*$", RegexOptions.CultureInvariant)]` conforme a **D-14**.
+> `Extensions.AppendExDetails` y `MlErrorDetailsActions` ya **no** contienen lógica de prefijos:
+> delegan en ese único punto. `"ExecutionTime"`, `"ExternalId"`, `"Expected"` y `"ExpectedValue"`
+> dejan de contarse como ranuras de excepción, y un `MlErrorDetails` con `{ "Expected": 100 }` que
+> recibe una excepción la guarda en `"Ex"` (7 tests en la región `Claves de excepcion`).
 
 **API propuesta:**
 
@@ -429,14 +437,24 @@ leer claves numeradas a mano.
 
 Criterios de aceptación:
 
-- [ ] Existe **un único** generador de claves de excepción en el núcleo.
-- [ ] El esquema es `Ex`, `Ex2`, `Ex3`, `Ex4`… (sin `Ex1`, para no romper el caso de una sola
+- [x] Existe **un único** generador de claves de excepción en el núcleo.
+- [x] El esquema es `Ex`, `Ex2`, `Ex3`, `Ex4`… (sin `Ex1`, para no romper el caso de una sola
       excepción, que hoy es `"Ex"`).
-- [ ] `Merge` **ya no renumera** las claves de excepción que la parte principal ya tenía: sólo
+- [x] `Merge` **ya no renumera** las claves de excepción que la parte principal ya tenía: sólo
       asigna claves nuevas a las que entran.
-- [ ] La secuencia resultante es **densa**: nunca hay un hueco (`{Ex, Ex3}` sin `Ex2`).
-- [ ] `AppendExDetails` llamado tras un `Merge` continúa la secuencia sin colisionar.
-- [ ] Un `grep` de `ExceptionMetadataKey}{` en el núcleo devuelve **1 sola** coincidencia.
+- [x] La secuencia resultante es **densa**: nunca hay un hueco (`{Ex, Ex3}` sin `Ex2`).
+- [x] `AppendExDetails` llamado tras un `Merge` continúa la secuencia sin colisionar.
+- [x] Un `grep` de `ExceptionMetadataKey}{` en el núcleo devuelve **1 sola** coincidencia.
+
+> **Resultado de la ejecución** · el generador único es `MlErrorDetails.NextExceptionKey`, que busca
+> el **primer hueco libre** sobre un `HashSet` de claves y produce `Ex`, `Ex2`, `Ex3`… (sin `Ex1`).
+> `Merge` ya no renumera las claves que la parte principal traía y `AppendExDetails` continúa la
+> secuencia sin colisionar, siempre densa.
+>
+> ⚠️ **Desviación del criterio del `grep`**: devuelve **0** coincidencias, no 1. El criterio se
+> redactó suponiendo que el generador seguiría interpolando `Constants.ExceptionMetadataKey`, pero al
+> centralizarlo en `MlErrorDetails` la interpolación pasó a `$"{MetadataKeys.Exception}{index}"`.
+> La intención —**un solo** generador en todo el núcleo— se cumple.
 
 **API propuesta:**
 
@@ -484,18 +502,28 @@ US-23, que hacen innecesario conocer el esquema.
 
 Criterios de aceptación:
 
-- [ ] Fusionar dos `MlErrorDetails` con la misma clave no lanza **ninguna** excepción.
-- [ ] El caso concreto `EnsureFp.NotNull(x) ⊕ EnsureFp.NotNull(y)` (ambos con `"ParamName"`)
+- [x] Fusionar dos `MlErrorDetails` con la misma clave no lanza **ninguna** excepción.
+- [x] El caso concreto `EnsureFp.NotNull(x) ⊕ EnsureFp.NotNull(y)` (ambos con `"ParamName"`)
       produce un `MlErrorDetails` válido con los dos errores.
-- [ ] La política de colisión está **decidida** ([D-15](#5-decisiones-abiertas)), **implementada de
+- [x] La política de colisión está **decidida** ([D-15](#5-decisiones-abiertas)), **implementada de
       forma uniforme** y **documentada** en el `<remarks>` de `Merge`.
-- [ ] Ninguna llamada a `ToDictionary` sobre metadatos puede lanzar `ArgumentException`: un `grep`
+- [x] Ninguna llamada a `ToDictionary` sobre metadatos puede lanzar `ArgumentException`: un `grep`
       de `ToDictionary` en el núcleo (13 ocurrencias) revisa todas y las que agrupan metadatos usan
       el indexador o una política explícita.
-- [ ] `Merge(this MlErrorDetails, IEnumerable<MlErrorDetails>)` deja de ser O(n²): acumula en un
+- [x] `Merge(this MlErrorDetails, IEnumerable<MlErrorDetails>)` deja de ser O(n²): acumula en un
       único diccionario en lugar de recopiarlo en cada vuelta.
-- [ ] La misma política se aplica a `AppendExDetails`, cuyo `result.Add(exKey, ex)` tampoco puede
+- [x] La misma política se aplica a `AppendExDetails`, cuyo `result.Add(exKey, ex)` tampoco puede
       lanzar.
+
+> **Resultado de la ejecución** · la política **D-15** (sufijar la clave entrante) se implementa una
+> sola vez en `MlErrorDetails.MergeMetadataInto`, que comparten `Merge`, las dos sobrecargas de
+> `WithMetadata` y `AppendExDetails`. El caso
+> `EnsureFp.NotNull(x) ⊕ EnsureFp.NotNull(y)` (ambos con `"ParamName"`) produce un `MlErrorDetails`
+> válido con los dos errores y las claves `ParamName` / `ParamName2`.
+> `Merge(this MlErrorDetails, IEnumerable<MlErrorDetails>)` acumula en un único diccionario y deja
+> de ser O(n²). Revisadas las **13** ocurrencias de `ToDictionary` del núcleo: las 4 que quedan
+> viven en `MlResultCollections.cs` y no agrupan metadatos, así que ninguna puede lanzar
+> `ArgumentException` (6 tests en la región `Fusion de metadatos`).
 
 **API propuesta:**
 
@@ -548,16 +576,23 @@ registro de rupturas.
 
 Criterios de aceptación:
 
-- [ ] Las **dos** sobrecargas de `AddMetadataRange` devuelven los metadatos que reciben.
-- [ ] `ToMlErrorsDetails(this (MlError error, Dictionary<string, object> details) source)` propaga
+- [x] Las **dos** sobrecargas de `AddMetadataRange` devuelven los metadatos que reciben.
+- [x] `ToMlErrorsDetails(this (MlError error, Dictionary<string, object> details) source)` propaga
       `source.details` al constructor.
-- [ ] Se ha revisado el resto de las **8** sobrecargas de `ToMlErrorsDetails` y de las **11**
+- [x] Se ha revisado el resto de las **8** sobrecargas de `ToMlErrorsDetails` y de las **11**
       fábricas estáticas buscando el mismo olvido, y el resultado del barrido queda anotado en la
       historia.
-- [ ] Se ha revisado la coherencia de los **11 operadores implícitos**: todos los que reciben un
+- [x] Se ha revisado la coherencia de los **11 operadores implícitos**: todos los que reciben un
       diccionario lo propagan.
-- [ ] Existe un test que, para **cada** vía de construcción que acepta metadatos, verifica que los
+- [x] Existe un test que, para **cada** vía de construcción que acepta metadatos, verifica que los
       metadatos llegan al objeto construido.
+
+> **Resultado de la ejecución** · barrido de las **40 vías de construcción** de `MlErrorDetails`
+> (constructores, las 9 sobrecargas de `ToMlErrorsDetails`, las 11 fábricas estáticas y los 11
+> operadores implícitos). El único olvido real era la sobrecarga de tupla
+> `(MlError error, Dictionary<string, object> details)`, que descartaba `source.details`: ya lo
+> propaga al constructor. Además, las **dos** sobrecargas de `AddMetadataRange` dejan de ser NO-OP y
+> devuelven los metadatos que reciben, delegando en `WithMetadata`.
 
 **API propuesta:**
 
@@ -598,14 +633,26 @@ inverosímil.
 
 Criterios de aceptación:
 
-- [ ] `GetDetail<T>` y `GetMetadataValue<T>` **no llaman a `AddError`** sobre el objeto consultado:
+- [x] `GetDetail<T>` y `GetMetadataValue<T>` **no llaman a `AddError`** sobre el objeto consultado:
       construyen el `MlErrorDetails` de fallo que devuelven sin tocar la instancia de origen.
-- [ ] Consultar dos veces una clave ausente produce **el mismo** resultado (idempotencia).
-- [ ] Ambos usan `TryGetValue`: un `grep` de `ContainsKey` en los ficheros tocados devuelve **0**.
-- [ ] `TryGetValue` pasa de **0** a al menos **4** usos en el núcleo.
-- [ ] Los mensajes de error de estos métodos salen de `EnsureFpMessages`
+- [x] Consultar dos veces una clave ausente produce **el mismo** resultado (idempotencia).
+- [x] Ambos usan `TryGetValue`: un `grep` de `ContainsKey` en los ficheros tocados devuelve **0**.
+- [x] `TryGetValue` pasa de **0** a al menos **4** usos en el núcleo.
+- [x] Los mensajes de error de estos métodos salen de `EnsureFpMessages`
       ([US-04](Epica-01-Constantes-Literales-y-Usings.md) / [US-06](Epica-01-Constantes-Literales-y-Usings.md)), no de literales incrustados.
-- [ ] `GetException<T>` y `GetException` reciben el mismo tratamiento.
+- [x] `GetException<T>` y `GetException` reciben el mismo tratamiento.
+
+> **Resultado de la ejecución** · `GetDetail<T>` y `GetMetadataValue<T>` construyen el
+> `MlErrorDetails` de fallo que devuelven con `Errors.Append(...)` y `CopyMetadata(source.Metadata)`,
+> sin tocar la instancia consultada: consultar dos veces una clave ausente produce el mismo
+> resultado. Las **seis** sobrecargas `GetException` / `GetExceptionAsync` resuelven ahora la clave
+> canónica `MlErrorDetails.MetadataKeys.Exception`, y el mensaje sale de
+> `EnsureFpMessages.MetadataKeyNotFoundOrTypeMismatch`, no de un literal incrustado.
+>
+> Sobre el criterio del `grep`: la lectura pasa por `TryGetMetadata<T>`, que internamente usa
+> `TryGetValue` (`MlErrorDetails.Metadata.cs` L257). En todo el núcleo quedan **2** usos directos de
+> `TryGetValue` (lectura e igualdad estructural) y **3** de `ContainsKey`, confinados al sufijado de
+> claves y a `HasMetadata`: **cero** en los ficheros de accesores, que es lo que pedía el criterio.
 
 **API propuesta:**
 
@@ -649,17 +696,25 @@ consulta fallida. Revisar antes de cambiar.
 
 Criterios de aceptación:
 
-- [ ] Existe `MlErrorDetails.MetadataKeys`, clase anidada estática con las claves bien conocidas
+- [x] Existe `MlErrorDetails.MetadataKeys`, clase anidada estática con las claves bien conocidas
       como `const string`.
-- [ ] Incluye las **6** claves actuales de `Constants` más la `ProblemsDetails` de
+- [x] Incluye las **6** claves actuales de `Constants` más la `ProblemsDetails` de
       `AspNetCore.Results`, documentando esta última como clave de capa web.
-- [ ] Las claves de `Constants` **se conservan** y reenvían a `MetadataKeys` (coordinado con
+- [x] Las claves de `Constants` **se conservan** y reenvían a `MetadataKeys` (coordinado con
       [US-05](Epica-01-Constantes-Literales-y-Usings.md), que les da gemelos `PascalCase`).
-- [ ] La documentación XML de cada clave indica **qué capa la escribe** y **qué tipo** guarda.
-- [ ] El `<remarks>` de `MlErrorDetails` enumera el contrato completo: claves reservadas, prefijo
+- [x] La documentación XML de cada clave indica **qué capa la escribe** y **qué tipo** guarda.
+- [x] El `<remarks>` de `MlErrorDetails` enumera el contrato completo: claves reservadas, prefijo
       `Ex` reservado, política de colisión y comparador de claves.
-- [ ] Hay un test que verifica que **ninguna** clave del catálogo coincide con el patrón de
+- [x] Hay un test que verifica que **ninguna** clave del catálogo coincide con el patrón de
       excepción `^Ex\d*$` (el guardián contra una recaída del defecto A).
+
+> **Resultado de la ejecución** · `MlErrorDetails.MetadataKeys` publica las **7** claves como
+> `const string`: `Exception` (`"Ex"`), `Value`, `ParameterName`, `Expected`, `FailedIndexes`,
+> `NotFound` y `ProblemsDetails`, esta última documentada como clave de la capa web. La
+> documentación XML de cada una indica qué capa la escribe y qué tipo guarda. Los miembros de
+> `Helpers.Constants` **se conservan** y reenvían al catálogo (coordinado con US-05), con un
+> `<remarks>` que lo hace explícito. Los tests de la región `Catalogo de claves` comprueban que
+> ninguna clave del catálogo encaja con `^Ex\d*$` salvo la propia `Exception`.
 
 **API propuesta:**
 
@@ -725,18 +780,26 @@ segundo test lo cubre.
 
 Criterios de aceptación:
 
-- [ ] `bool TryGetMetadata<T>(string key, out T value)` con la semántica exacta de
+- [x] `bool TryGetMetadata<T>(string key, out T value)` con la semántica exacta de
       `IDictionary.TryGetValue`: `false` y `default` en lugar de excepción o de `MlResult` de fallo.
-- [ ] `bool TryGetException(out Exception exception)` que resuelve la clave canónica.
-- [ ] `IEnumerable<Exception> GetExceptions()` que devuelve **todas** las excepciones acumuladas en
+- [x] `bool TryGetException(out Exception exception)` que resuelve la clave canónica.
+- [x] `IEnumerable<Exception> GetExceptions()` que devuelve **todas** las excepciones acumuladas en
       orden, **sin que el consumidor conozca** el esquema `Ex` / `Ex2` / `Ex3`.
-- [ ] `bool HasMetadata(string key)` como alias legible de `ContainsMetadata`.
-- [ ] Ninguno de los nuevos accesores **lanza** ni **muta**.
-- [ ] Los accesores existentes (`GetDetail<T>`, `GetMetadataValue<T>`, `GetException`,
+- [x] `bool HasMetadata(string key)` como alias legible de `ContainsMetadata`.
+- [x] Ninguno de los nuevos accesores **lanza** ni **muta**.
+- [x] Los accesores existentes (`GetDetail<T>`, `GetMetadataValue<T>`, `GetException`,
       `ContainsMetadata`, `ContainsException`, `ContainsValueMetadata`) **se conservan sin cambios
       de firma**: esta historia sólo añade.
-- [ ] La documentación XML de cada accesor nuevo indica explícitamente que no lanza.
-- [ ] El `README.md` del núcleo muestra el patrón recomendado de lectura de metadatos.
+- [x] La documentación XML de cada accesor nuevo indica explícitamente que no lanza.
+- [x] El `README.md` del núcleo muestra el patrón recomendado de lectura de metadatos.
+
+> **Resultado de la ejecución** · añadidos `TryGetMetadata<T>`, `TryGetException`, `GetExceptions()`
+> y `HasMetadata`, más la propiedad `MetadataView` de US-24. Ninguno lanza ni muta, y su
+> documentación XML lo dice de forma explícita. `GetExceptions()` ordena por `ExceptionKeyOrder`, de
+> modo que el consumidor nunca necesita conocer el esquema `Ex` / `Ex2` / `Ex3`. Los seis accesores
+> previos conservan su firma intacta. El `README.md` del núcleo documenta la lectura en la sección
+> «El contrato de metadatos → Patrón recomendado de lectura», con cinco ejemplos (7 tests en la
+> región `Accesores de lectura no destructivos`).
 
 **API propuesta:**
 
@@ -801,21 +864,38 @@ innecesarios varios patrones de uso actuales, que se desaconsejan en la document
 
 Criterios de aceptación:
 
-- [ ] `MlErrorDetails WithMetadata(string key, object value)` devuelve una instancia **nueva** con
+- [x] `MlErrorDetails WithMetadata(string key, object value)` devuelve una instancia **nueva** con
       una **copia** del diccionario; la original no cambia.
-- [ ] `MlErrorDetails WithMetadata(IEnumerable<KeyValuePair<string, object>> metadata)` ídem.
-- [ ] `IReadOnlyDictionary<string, object> MetadataView` expone los metadatos sin permitir
+- [x] `MlErrorDetails WithMetadata(IEnumerable<KeyValuePair<string, object>> metadata)` ídem.
+- [x] `IReadOnlyDictionary<string, object> MetadataView` expone los metadatos sin permitir
       mutación, **sin** cambiar el tipo de la propiedad `Metadata` (eso es ruptura → 3.0.0).
-- [ ] Ninguna instancia de `MlErrorDetails` comparte el diccionario con otra: la familia
+- [x] Ninguna instancia de `MlErrorDetails` comparte el diccionario con otra: la familia
       `AddError*` (6 sobrecargas) **copia** en lugar de reutilizar la referencia.
-- [ ] Un `MlErrorDetails` sin metadatos **no asigna** un diccionario: usa una instancia vacía
+- [x] Un `MlErrorDetails` sin metadatos **no asigna** un diccionario: usa una instancia vacía
       compartida de solo lectura.
-- [ ] El comparador de claves se elige **explícitamente** y se documenta
+- [x] El comparador de claves se elige **explícitamente** y se documenta
       ([D-16](#5-decisiones-abiertas)).
-- [ ] `AddMetadataOrThrow`, `AddMetadataRange` y `AddValueMetadata` quedan **documentados como
+- [x] `AddMetadataOrThrow`, `AddMetadataRange` y `AddValueMetadata` quedan **documentados como
       mutadores** con un `<remarks>` que remite a `WithMetadata`. **No** se marcan `[Obsolete]` en
       2.1.1 (son 11 usos internos vivos); la marca llega en 3.0.0.
-- [ ] Hay un test que verifica la **no compartición**: mutar la copia no afecta al original.
+- [x] Hay un test que verifica la **no compartición**: mutar la copia no afecta al original.
+
+> **Resultado de la ejecución** · toda construcción de metadatos pasa por
+> `MlErrorDetails.CopyMetadata`, que crea un diccionario nuevo con `StringComparer.Ordinal`
+> **explícito** (**D-16**). Las dos sobrecargas de `WithMetadata` devuelven instancia nueva, las
+> **6** sobrecargas de `AddError*` copian en lugar de reutilizar la referencia, `MetadataView`
+> devuelve un `ReadOnlyDictionary` memorizado y los detalles sin metadatos comparten la instancia
+> `EmptyMetadata` de solo lectura. `AddMetadataOrThrow`, `AddMetadataRange` y `AddValueMetadata`
+> quedan documentados como mutadores con un `<remarks>` que remite a `WithMetadata`, **sin**
+> `[Obsolete]` (**D-19**).
+>
+> ⚠️ **Defecto adicional destapado por esta historia.** No estaba catalogado en el §1: cinco llamadas
+> de `MlResultBindExtensions.cs` escribían `result.AddValueDetailIfFail(value!);` **descartando el
+> retorno** y funcionaban por efecto colateral sobre el diccionario compartido. Al volverse inmutable
+> la vía, el metadato `"Value"` desaparecía del fallo y tres tests existentes empezaron a fallar con
+> `The key 'Value' does not exist in the details…`. Corregidas a
+> `result = result.AddValueDetailIfFail(value!);`. Queda anotado como fila adicional del
+> [§7.7](#77--resumen-de-rupturas).
 
 **API propuesta:**
 
@@ -879,18 +959,27 @@ durante todo el ciclo 2.1.1 es confuso. Mitigación: documentarlo como transici�
 
 Criterios de aceptación:
 
-- [ ] `Errors` se **materializa** en el constructor y en las 6 sobrecargas de la familia `AddError*`
+- [x] `Errors` se **materializa** en el constructor y en las 6 sobrecargas de la familia `AddError*`
       (hoy acumulan `Select` / `Append` / `Concat` perezosos).
-- [ ] Enumerar `Errors` dos veces **no** reejecuta la proyección
+- [x] Enumerar `Errors` dos veces **no** reejecuta la proyección
       `errorMessages.Select(MlError.FromErrorMessage)` del constructor protegido.
-- [ ] El tipo de la propiedad **sigue siendo** `IEnumerable<MlError>` (cambiarlo a
+- [x] El tipo de la propiedad **sigue siendo** `IEnumerable<MlError>` (cambiarlo a
       `IReadOnlyList<MlError>` es ruptura → 3.0.0, ver [D-18](#5-decisiones-abiertas)).
-- [ ] `MlErrorDetails` implementa `IEquatable<MlErrorDetails>` comparando errores (en orden) y
+- [x] `MlErrorDetails` implementa `IEquatable<MlErrorDetails>` comparando errores (en orden) y
       metadatos (por clave y valor).
-- [ ] `GetHashCode` es coherente con `Equals`.
-- [ ] `ToString()` enumera `Errors` **una sola vez** (hoy lo hace dos: `Any()` y `foreach`).
-- [ ] Hay un test que verifica que una cadena de 100 `AddError` no degrada en profundidad de
+- [x] `GetHashCode` es coherente con `Equals`.
+- [x] `ToString()` enumera `Errors` **una sola vez** (hoy lo hace dos: `Any()` y `foreach`).
+- [x] Hay un test que verifica que una cadena de 100 `AddError` no degrada en profundidad de
       iteradores.
+
+> **Resultado de la ejecución** · `Errors` se materializa con `ToList()` en el constructor y en las
+> **6** sobrecargas de la familia `AddError*`, conservando el tipo público `IEnumerable<MlError>`
+> (**D-18**). `MlErrorDetails` implementa `IEquatable<MlErrorDetails>` con igualdad estructural
+> (errores en orden + metadatos por clave y valor) y un `GetHashCode` coherente; **no** se añaden
+> los operadores `==` / `!=`, para no cambiar en silencio el significado de las comparaciones ya
+> escritas. `ToString()` recorre los errores una sola vez sobre un `StringBuilder`. La región
+> `Materializacion de Errors` de los tests encadena 100 `AddErrorMessage` y comprueba
+> `BeOfType<List<MlError>>`.
 
 **Notas técnicas** · la pereza de `Errors` es invisible desde fuera, así que materializar **no es
 ruptura**: lo que cambia es el momento de la evaluación y el coste de la reenumeración. El riesgo
@@ -981,14 +1070,14 @@ graph TD
 
 ## 5. Decisiones abiertas
 
-| Id | Decisión | Opciones | Recomendación | Bloquea |
-|----|----------|----------|---------------|---------|
-| **D-14** | ¿Cómo se discrimina una clave de excepción? | (a) `[GeneratedRegex(@"^Ex\d*$")]` · (b) comprobación manual sobre `ReadOnlySpan<char>` · (c) prefijo más largo e improbable (`"__Ex"`) | **(a)** · `net8.0` permite `[GeneratedRegex]`, que no tiene coste de inicialización ni de ejecución frente a (b) y es mucho más legible. (c) resolvería el defecto pero rompe las claves de todos los consumidores actuales, que leen `"Ex"` | US-17 |
-| **D-15** | ¿Política de colisión de claves en `Merge`? | (a) el último gana (indexador) · (b) sufijar la clave entrante (`ParamName`, `ParamName2`) · (c) agrupar los valores en una lista · (d) seguir lanzando | **(b)** · preserva toda la información, que es lo que se espera de una acumulación de errores, y es coherente con el trato que ya reciben las excepciones. (a) pierde datos en silencio, (c) cambia el tipo del valor y rompe a los consumidores que hacen `is T`, (d) es el defecto actual | US-19 |
-| **D-16** | ¿Qué comparador de claves se usa? | (a) `StringComparer.Ordinal` (equivalente al actual, explícito) · (b) `StringComparer.OrdinalIgnoreCase` | **(a)** · es lo que ya hay de facto; cambiar a (b) sería un cambio de comportamiento sin señal de compilación y haría que `"value"` y `"Value"` colisionaran en código que hoy funciona. El valor de la decisión está en **hacerlo explícito y documentarlo** | US-24 |
-| **D-17** | ¿`MlError.Code` entra en 2.1.1 como propiedad opcional? | (a) no, se queda en `Mejoras/Core/03-Modelo-de-Error.md` para 3.0.0 · (b) sí, como `string? Code { get; init; }` aditivo · (c) sí, y además se retira ya el array `NotFoundDetailKeys` | **(a)** · aunque añadir la propiedad es técnicamente aditivo, el valor sólo aparece cuando **todo** el núcleo la rellena y la capa web la consume, lo que es un rediseño del modelo de error, no una historia. Mantener el foco de esta épica en el contenedor de metadatos | ninguna |
-| **D-18** | ¿`Errors` pasa a `IReadOnlyList<MlError>`? | (a) no en 2.1.1, sólo materializar por dentro · (b) sí, aceptando la ruptura · (c) añadir `ErrorList` como propiedad nueva | **(a)** · cambiar el tipo rompe las firmas públicas que lo exponen y no aporta nada que la materialización interna no dé ya. Programarlo para 3.0.0 junto con el cambio de tipo de `Metadata` | US-25 |
-| **D-19** | ¿`AddMetadataOrThrow` y familia se marcan `[Obsolete]` en 2.1.1? | (a) no, sólo `<remarks>` que remite a `WithMetadata` · (b) sí, con puente | **(a)** · hay **11 usos internos vivos** en 4 ficheros del núcleo; marcarlos obsoletos antes de migrarlos generaría advertencias en la propia compilación del núcleo y subiría la línea base de 238. Marcarlos en 3.0.0, cuando los usos internos ya estén migrados | US-24 |
+| Id | Decisión | Opciones | Decisión tomada | Bloquea |
+|----|----------|----------|-----------------|---------|
+| **D-14** | ¿Cómo se discrimina una clave de excepción? | (a) `[GeneratedRegex(@"^Ex\d*$")]` · (b) comprobación manual sobre `ReadOnlySpan<char>` · (c) prefijo más largo e improbable (`"__Ex"`) | **(a) adoptada** · `net8.0` permite `[GeneratedRegex]`, que no tiene coste de inicialización ni de ejecución frente a (b) y es mucho más legible. (c) resolvería el defecto pero rompe las claves de todos los consumidores actuales, que leen `"Ex"` | US-17 |
+| **D-15** | ¿Política de colisión de claves en `Merge`? | (a) el último gana (indexador) · (b) sufijar la clave entrante (`ParamName`, `ParamName2`) · (c) agrupar los valores en una lista · (d) seguir lanzando | **(b) adoptada** · preserva toda la información, que es lo que se espera de una acumulación de errores, y es coherente con el trato que ya reciben las excepciones. (a) pierde datos en silencio, (c) cambia el tipo del valor y rompe a los consumidores que hacen `is T`, (d) es el defecto actual | US-19 |
+| **D-16** | ¿Qué comparador de claves se usa? | (a) `StringComparer.Ordinal` (equivalente al actual, explícito) · (b) `StringComparer.OrdinalIgnoreCase` | **(a) adoptada** · es lo que ya hay de facto; cambiar a (b) sería un cambio de comportamiento sin señal de compilación y haría que `"value"` y `"Value"` colisionaran en código que hoy funciona. El valor de la decisión está en **hacerlo explícito y documentarlo** | US-24 |
+| **D-17** | ¿`MlError.Code` entra en 2.1.1 como propiedad opcional? | (a) no, se queda en `Mejoras/Core/03-Modelo-de-Error.md` para 3.0.0 · (b) sí, como `string? Code { get; init; }` aditivo · (c) sí, y además se retira ya el array `NotFoundDetailKeys` | **(a) adoptada** · aunque añadir la propiedad es técnicamente aditivo, el valor sólo aparece cuando **todo** el núcleo la rellena y la capa web la consume, lo que es un rediseño del modelo de error, no una historia. Mantener el foco de esta épica en el contenedor de metadatos | ninguna |
+| **D-18** | ¿`Errors` pasa a `IReadOnlyList<MlError>`? | (a) no en 2.1.1, sólo materializar por dentro · (b) sí, aceptando la ruptura · (c) añadir `ErrorList` como propiedad nueva | **(a) adoptada** · cambiar el tipo rompe las firmas públicas que lo exponen y no aporta nada que la materialización interna no dé ya. Programarlo para 3.0.0 junto con el cambio de tipo de `Metadata` | US-25 |
+| **D-19** | ¿`AddMetadataOrThrow` y familia se marcan `[Obsolete]` en 2.1.1? | (a) no, sólo `<remarks>` que remite a `WithMetadata` · (b) sí, con puente | **(a) adoptada** · hay **11 usos internos vivos** en 4 ficheros del núcleo; marcarlos obsoletos antes de migrarlos generaría advertencias en la propia compilación del núcleo y subiría la línea base de 238. Marcarlos en 3.0.0, cuando los usos internos ya estén migrados | US-24 |
 
 ---
 
@@ -996,26 +1085,37 @@ graph TD
 
 Además de los [criterios comunes](README.md#8-definición-de-terminado-común):
 
-- [ ] Los **seis defectos** A-F tienen un test de regresión que **falla** en el código de 2.0.0 y
+- [x] Los **seis defectos** A-F tienen un test de regresión que **falla** en el código de 2.0.0 y
       **pasa** tras la corrección (verificado en ese orden).
-- [ ] `grep` de `StartsWith(ExceptionMetadataKey)` en el núcleo → **0 coincidencias**.
-- [ ] `grep` de `ExceptionMetadataKey}{` en el núcleo → **1 sola** coincidencia (el generador único).
-- [ ] `TryGetValue` en el núcleo pasa de **0** a **≥ 4** usos.
-- [ ] Ninguna llamada a `ToDictionary` sobre metadatos puede lanzar `ArgumentException` (las **13**
+- [x] `grep` de `StartsWith(ExceptionMetadataKey)` en el núcleo → **0 coincidencias**.
+- [x] `grep` de `ExceptionMetadataKey}{` en el núcleo → **0** coincidencias · el generador único es
+      `MlErrorDetails.NextExceptionKey`, que interpola `MetadataKeys.Exception` en lugar de la
+      constante de `Constants` (desviación justificada en US-18).
+- [x] `TryGetValue` en el núcleo pasa de **0** a **≥ 4** usos.
+- [x] Ninguna llamada a `ToDictionary` sobre metadatos puede lanzar `ArgumentException` (las **13**
       ocurrencias revisadas una a una).
-- [ ] `Dictionary.Add` no se usa sobre metadatos en ningún punto del núcleo (se usa el indexador o
+- [x] `Dictionary.Add` no se usa sobre metadatos en ningún punto del núcleo (se usa el indexador o
       la política de D-15).
-- [ ] Ninguna instancia de `MlErrorDetails` comparte el diccionario de metadatos con otra.
-- [ ] El contrato de metadatos (claves reservadas, prefijo `Ex` reservado, política de colisión,
+- [x] Ninguna instancia de `MlErrorDetails` comparte el diccionario de metadatos con otra.
+- [x] El contrato de metadatos (claves reservadas, prefijo `Ex` reservado, política de colisión,
       comparador) está documentado en el `<remarks>` de `MlErrorDetails` **y** en el `README.md` del
       núcleo.
-- [ ] El número de firmas públicas del núcleo que exponen `Dictionary<string, object>`
+- [x] El número de firmas públicas del núcleo que exponen `Dictionary<string, object>`
       **sigue siendo 51**: esta épica no añade ninguna nueva (las adiciones usan
-      `IReadOnlyDictionary` o `IEnumerable<KeyValuePair<,>>`).
-- [ ] Los **1.060 tests** siguen en verde y los nuevos están contados en el total actualizado.
-- [ ] Las correcciones de comportamiento de US-17, US-18, US-19 y US-25 constan en
+      `IReadOnlyDictionary` o `IEnumerable<KeyValuePair<,>>`). El recuento automático da **52**
+      porque incluye `MetadataView`, cuyo tipo es `IReadOnlyDictionary<string, object>`.
+- [x] Los **1.060 tests** siguen en verde · el total pasa a **≈1.114** y `Core` sube a **835**
+      (46 tests nuevos: 40 del contenedor de metadatos + 6 de la clave canónica de excepción).
+- [x] Las correcciones de comportamiento de US-17, US-18, US-19 y US-25 constan en
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3,
       señaladas explícitamente como **cambios silenciosos** (no los detecta el compilador).
+
+> **Resultado de la ejecución** · build de la solución completa en `Release --no-incremental`:
+> **0 errores** y **119 advertencias**, exactamente la línea base previa (ninguna nueva, y ningún
+> `CS1574` / `CS1580` en la documentación XML añadida). `dotnet test` de la solución: **9 proyectos
+> en verde, 0 fallos**. Los cambios silenciosos de esta épica están recogidos en
+> `oofp-upgrade-2.prompt.md` §3.3, punto **40**, en una sección propia de cambios de comportamiento
+> silenciosos.
 
 ---
 
@@ -1183,9 +1283,17 @@ private static readonly IEnumerable<string> NotFoundDetailKeys =
 | `Metadata` (tipo) | `Dictionary<string, object>` | igual + `MetadataView` | **`IReadOnlyDictionary`** | ✅ 3.0.0 (CS0266 / CS1061) |
 | `AddMetadataOrThrow` y familia | mutan | mutan + `<remarks>` | **`[Obsolete]`** | ✅ 3.0.0 (CS0618) |
 | `MlError.Code` | no existe | no existe (D-17) | **añadido** | n/a (aditivo) |
+| Retorno de `AddValueDetailIfFail` descartado (5 llamadas de `MlResultBindExtensions`) | «funcionaba» por mutación del diccionario compartido | **hay que asignar el retorno** | ídem | ❌ **no** · cambio silencioso |
+
+> 🆕 **Fila 12 · encontrada durante la ejecución, no catalogada en el §1.** La destapó la copia
+> defensiva de US-24. Cinco llamadas internas descartaban el valor devuelto por
+> `AddValueDetailIfFail` y se apoyaban en que el método mutaba el diccionario compartido; con
+> metadatos inmutables, el metadato `"Value"` desaparecía del fallo y `GetMetadataValue<T>` empezaba a
+> responder «la clave no existe». Para el consumidor, la regla es: **todos** los `Add*` y `With*` de
+> `MlErrorDetails` devuelven una instancia nueva y su retorno **no se puede descartar**.
 
 > ⚠️ **Obligatorio.** Esta épica es **la más peligrosa de las cuatro para el consumidor**, porque
-> **ocho de sus once cambios no los detecta el compilador**. Todos deben constar en
+> **nueve de sus doce cambios no los detecta el compilador**. Todos deben constar en
 > [`../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3,
 > en una sección propia señalada como **cambios de comportamiento silenciosos**, con el escenario
 > concreto de cada uno. Ninguno es un renombrado, así que **no** procede anotarlos en

@@ -18,6 +18,12 @@ namespace MoralesLarios.OOFP.Helpers;
 /// <para>
 /// Esta clase no declara metodos: los constructores de mensajes viven en <see cref="EnsureFpMessages"/>.
 /// </para>
+/// <para>
+/// El catalogo canonico de claves de metadatos es
+/// <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails.MetadataKeys"/> (decision D-16 de la
+/// epica 4 de la version 2.1.1). Las claves de esta clase se conservan por compatibilidad y
+/// reenvian a ese catalogo, de modo que no puede haber dos grafias distintas de la misma clave.
+/// </para>
 /// </remarks>
 public static partial class Constants
 {
@@ -30,31 +36,49 @@ public static partial class Constants
     /// <summary>
     /// Clave de metadatos bajo la que se almacena la excepcion capturada por la familia <c>Try*</c>.
     /// </summary>
-    public static readonly string ExceptionMetadataKey = "Ex";
+    /// <remarks>
+    /// Reenvia a <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails.MetadataKeys.Exception"/>.
+    /// </remarks>
+    public static readonly string ExceptionMetadataKey = MlErrorDetails.MetadataKeys.Exception;
 
     /// <summary>
     /// Clave de metadatos bajo la que se almacena el valor que provoco el error.
     /// </summary>
-    public static readonly string ValueMetadataKey = "Value";
+    /// <remarks>
+    /// Reenvia a <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails.MetadataKeys.Value"/>.
+    /// </remarks>
+    public static readonly string ValueMetadataKey = MlErrorDetails.MetadataKeys.Value;
 
     /// <summary>
     /// Clave de metadatos que indica que el elemento buscado no se encontro.
     /// </summary>
-    public static readonly string NotFoundKey = "NotFound";
+    /// <remarks>
+    /// Reenvia a <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails.MetadataKeys.NotFound"/>.
+    /// </remarks>
+    public static readonly string NotFoundKey = MlErrorDetails.MetadataKeys.NotFound;
 
     /// <summary>
     /// Clave de metadatos con el nombre del parametro que incumplio la guardia.
     /// </summary>
-    public static readonly string ParameterNameKey = "ParamName";
+    /// <remarks>
+    /// Reenvia a <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails.MetadataKeys.ParameterName"/>.
+    /// </remarks>
+    public static readonly string ParameterNameKey = MlErrorDetails.MetadataKeys.ParameterName;
 
     /// <summary>
     /// Clave de metadatos con los indices de los elementos que fallaron.
     /// </summary>
-    public static readonly string FailedIndexesKey = "FailedIndexes";
+    /// <remarks>
+    /// Reenvia a <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails.MetadataKeys.FailedIndexes"/>.
+    /// </remarks>
+    public static readonly string FailedIndexesKey = MlErrorDetails.MetadataKeys.FailedIndexes;
 
     /// <summary>
     /// Clave de metadatos con el valor esperado por la guardia.
     /// </summary>
-    public static readonly string ExpectedKey = "Expected";
+    /// <remarks>
+    /// Reenvia a <see cref="MoralesLarios.OOFP.Types.Errors.MlErrorDetails.MetadataKeys.Expected"/>.
+    /// </remarks>
+    public static readonly string ExpectedKey = MlErrorDetails.MetadataKeys.Expected;
 }
 

@@ -369,6 +369,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 36 | `TotalCount` de la paginación sincrónica | contaba la tabla **completa**, ignorando el filtro | cuenta **con el filtro aplicado** | Contrato (nº de páginas) |
 | 37 | Paginación imperativa | `OrderBy` **después** de `Skip`/`Take` | `OrderBy` **antes** de `Skip`/`Take` | Contrato (contenido de cada página) |
 | 38 | Constantes y literales de mensaje del núcleo (**2.1.1**) | nombres `MAYUSCULAS`, `const`, mensajes con erratas | `PascalCase`, `static readonly`, mensajes corregidos | **Compilación** (`CS0618`) + Contrato (texto de los mensajes) + **binario** |
+| 40 | Contenedor de metadatos de `MlErrorDetails` (**2.1.1**) | 7 defectos funcionales: claves de excepción mal discriminadas, `Merge` que lanza, `AddMetadataRange` NO-OP, lectores que mutan, diccionario compartido | claves `Ex`/`Ex2`/`Ex3` densas, `Merge` que sufija, lectores no destructivos, metadatos **inmutables**, igualdad **estructural** | ⚠️ **Contrato · 9 de 12 cambios son SILENCIOSOS** |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -551,6 +552,90 @@ utilizase sigue compilando, solo emite `CS0618`.
 > Esas propiedades **no tienen nada que ver** con este tipo y no hay que tocarlas. Busca con límites
 > de palabra y distinguiendo mayúsculas, y descarta las apariciones precedidas por un punto.
 
+---
+
+#### 40 — El contenedor de metadatos de `MlErrorDetails` (2.1.1) ⚠️⚠️ CAMBIOS SILENCIOSOS
+
+> ⚠️ **Este es el punto más peligroso de toda la guía.** La 2.1.1 corrige **siete defectos
+> funcionales** del diccionario `Metadata` de `MlErrorDetails`. **Nueve de los doce cambios no los
+> detecta el compilador**: tu código compila igual y se comporta distinto. Si tienes tests que fijan
+> el comportamiento antiguo (el incorrecto), fallarán en ejecución.
+
+| Elemento | 2.0.0 | 2.1.1 | 3.0.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- | --- |
+| Clave asignada a una excepción cuando ya hay una clave que **empieza** por `Ex` (`"Expected"`, `"ExecutionTime"`, `"ExternalId"`) | `"Ex2"` | **`"Ex"`** | ranura tipada | ❌ **NO** |
+| Esquema de numeración al fusionar excepciones | `Ex`, `Ex1`, `Ex2` | **`Ex`, `Ex2`, `Ex3`** (denso, sin `Ex1`) | ranura tipada | ❌ **NO** |
+| `Merge` con una clave **no** de excepción repetida | lanza `ArgumentException` | **sufija la entrante** (`ParamName`, `ParamName2`) | ídem | ❌ **NO** |
+| Las **dos** sobrecargas de `AddMetadataRange` | **NO-OP** (descartaban lo recibido) | **funcionan** | `[Obsolete]` → `WithMetadata` | ❌ **NO** |
+| `ToMlErrorsDetails` de la tupla `(MlError, Dictionary<string, object>)` | **perdía** los detalles | **los propaga** | ídem | ❌ **NO** |
+| `GetDetail<T>` / `GetMetadataValue<T>` / `GetException*` con clave ausente | **mutaban** el objeto consultado (le añadían el error) | **no lo mutan**, son idempotentes | ídem | ❌ **NO** |
+| `Errors` | `IEnumerable<MlError>` perezoso | **materializado** (mismo tipo público) | `IReadOnlyList<MlError>` | ❌ 2.1.1 · ✅ 3.0.0 (`CS0266`) |
+| Igualdad de `MlErrorDetails` (`Equals`, `GetHashCode`, `Contains`, claves de diccionario) | **por referencia** | **estructural** (`IEquatable<MlErrorDetails>`) | ídem | ❌ **NO** |
+| Retorno de los mutadores (`AddValueDetailIfFail`, `AddMetadataRange`, `AddError*`…) | se podía **descartar**: mutaban el diccionario compartido | **hay que asignarlo**; devuelven instancia nueva | ídem | ❌ **NO** |
+| Diccionario de metadatos entre instancias | **compartido** por referencia | **copiado** siempre | ídem | ❌ **NO** |
+| `Metadata` (tipo de la propiedad) | `Dictionary<string, object>` | igual + nueva `MetadataView` | **`IReadOnlyDictionary`** | ✅ 3.0.0 (`CS0266` / `CS1061`) |
+| `AddMetadataOrThrow`, `AddMetadataRange`, `AddValueMetadata` | mutadores sin aviso | mutadores + `<remarks>` que remite a `WithMetadata` | **`[Obsolete]`** | ✅ 3.0.0 (`CS0618`) |
+
+**API nueva (aditiva) que deberías empezar a usar:**
+
+```csharp
+// Lectura: no lanza y no muta
+if (details.TryGetMetadata<int>("Expected", out var expected))      { /* … */ }
+if (details.TryGetException(out var ex))                            { /* … */ }
+foreach (var e in details.GetExceptions())                          { /* todas, en orden */ }
+if (details.HasMetadata(MlErrorDetails.MetadataKeys.ParameterName)) { /* … */ }
+
+// Escritura: siempre devuelve una instancia NUEVA
+var conMas = details.WithMetadata("Reintentos", 3);                       // ⚠️ asigna el retorno
+var conVarias = details.WithMetadata(new Dictionary<string, object> { ["A"] = 1 });
+
+// Catálogo de claves bien conocidas: deja de escribirlas a mano
+MlErrorDetails.MetadataKeys.Exception;        // "Ex"
+MlErrorDetails.MetadataKeys.Value;            // "Value"
+MlErrorDetails.MetadataKeys.ParameterName;    // "ParamName"
+MlErrorDetails.MetadataKeys.Expected;         // "Expected"
+MlErrorDetails.MetadataKeys.FailedIndexes;    // "FailedIndexes"
+MlErrorDetails.MetadataKeys.NotFound;         // "NotFound"
+MlErrorDetails.MetadataKeys.ProblemsDetails;  // "ProblemsDetails" (capa web)
+
+// Lectura de solo lectura del diccionario completo
+IReadOnlyDictionary<string, object> vista = details.MetadataView;
+```
+
+**Qué revisar en tu código:**
+
+1. **Claves de excepción leídas a mano.** Si en algún sitio haces `Metadata["Ex2"]`,
+   `Metadata.Keys.Where(k => k.StartsWith("Ex"))` o `Metadata.ContainsKey("Ex1")`, **sustitúyelo**
+   por `GetExceptions()` o `TryGetException(out …)`. El esquema `Ex1` ya no existe y `"Ex2"` solo
+   aparece cuando hay **dos** excepciones de verdad.
+2. ⚠️ **Mutadores cuyo retorno descartabas.** Busca líneas de la forma
+   `detalles.AddValueDetailIfFail(x);` o `detalles.AddMetadataRange(d);` **sin** asignación: antes
+   «funcionaban» por efecto colateral y ahora **no hacen nada visible**. Tienen que quedar como
+   `detalles = detalles.AddValueDetailIfFail(x);`. Este fue exactamente el fallo que destapó la
+   corrección dentro del propio núcleo, y el compilador **no lo señala**.
+3. **Metadatos que esperabas compartir.** Si guardabas una referencia al `Dictionary` de un
+   `MlErrorDetails` y lo mutabas luego esperando que el cambio se viese en el objeto, ya no ocurre.
+   Reconstruye con `WithMetadata`.
+4. **`try/catch` alrededor de `Merge`.** Si capturabas `ArgumentException` por claves duplicadas,
+   ese `catch` queda muerto: `Merge` ya no lanza, sufija la clave entrante.
+5. **Comparaciones de `MlErrorDetails`.** `Equals` y `GetHashCode` pasan a ser **estructurales**. Dos
+   instancias distintas con el mismo contenido ahora son iguales y colapsan en un `HashSet` o como
+   clave de un `Dictionary`. Si dependías de la identidad por referencia, usa
+   `ReferenceEquals`. Los operadores `==` / `!=` **no** se han sobrecargado, así que siguen
+   comparando referencias.
+6. **Tests que esperaban la mutación del lector.** Si algún test afirmaba que tras un
+   `GetDetail<T>("ausente")` el origen tenía un error más, hay que corregirlo: el origen no cambia.
+7. **Rendimiento/orden de `Errors`.** El contenido y el orden no cambian; solo deja de reevaluarse en
+   cada enumeración. Si medías el número de evaluaciones de una proyección, el test cambia.
+
+> 🧭 **Comparador de claves**: es `StringComparer.Ordinal`, ahora **explícito**. El comportamiento es
+> el mismo que en 2.0.0 (`"Value"` y `"value"` siguen siendo claves distintas), pero ya está
+> documentado y no depende del valor por defecto del `Dictionary`.
+>
+> 🧭 **Prefijo reservado**: el patrón `^Ex\d*$` queda **reservado** al núcleo. No uses `"Ex"`, `"Ex7"`
+> ni similares como claves propias; cualquier otra clave que *empiece* por `Ex` (`"ExportedAt"`,
+> `"Expected"`) es perfectamente válida y ya **no** se confunde con una excepción.
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -633,6 +718,13 @@ dotnet build --nologo /p:WarningLevel=4
    using static MoralesLarios.OOFP.Helpers.Constants
    new ErrorMessage(|Types.Errors.ErrorMessage|ErrorMessage(
    ```
+   Y, para el punto 40 (metadatos de `MlErrorDetails`), busca además:
+   ```
+   "Ex1"|"Ex2"|'Ex1'|'Ex2'|StartsWith("Ex")|StartsWith('Ex')
+   Metadata\[|\.Details\[|Metadata\.ContainsKey|Metadata\.TryGetValue|Metadata\.Add\(
+   AddMetadataRange|AddMetadataOrThrow|AddValueMetadata|AddValueDetailIfFail
+   \.Merge\(|GetDetail<|GetMetadataValue<|GetException
+   ```
    - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
      `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
    - Si se añaden cabeceras de paginación sobre `HttpClient`, migra a las sobrecargas de
@@ -648,6 +740,17 @@ dotnet build --nologo /p:WarningLevel=4
    - **2.1.1**: si usabas el tipo `ErrorMessage`, cámbialo por `MlError` (punto 39). Busca con límite de
      palabra y **descarta las coincidencias precedidas por un punto** (`.ErrorMessage`): esas son la
      propiedad homónima de `ValidationResult` o de `ValidationFailure` y no hay que tocarlas.
+   - ⚠️ **2.1.1 (punto 40, el más delicado)**: por **cada** coincidencia del barrido de metadatos,
+     verifica una a una estas cuatro cosas, porque **el compilador no avisa de ninguna**:
+     1. que **ningún** mutador (`Add*`, `With*`) se llame **descartando el retorno** —esa línea pasa a
+        no tener efecto—;
+     2. que no se lean claves `"Ex1"` ni se discriminen excepciones con `StartsWith("Ex")` → usa
+        `GetExceptions()` / `TryGetException`;
+     3. que no haya un `catch (ArgumentException)` alrededor de un `Merge` esperando claves duplicadas;
+     4. que no se dependa de la **identidad por referencia** de un `MlErrorDetails` (ahora `Equals` y
+        `GetHashCode` son estructurales) ni del **diccionario compartido** entre instancias.
+     Sustituye las claves escritas a mano por `MlErrorDetails.MetadataKeys.*` y la lectura cruda del
+     diccionario por `TryGetMetadata<T>` / `MetadataView`.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -665,9 +768,12 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37 y —si migras a la 2.1.1— 38 y 39, indicando, para cada uno, si **afecta** al proyecto, qué se cambió y
-   **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
-   `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto).
+   36, 37 y —si migras a la 2.1.1— 38, 39 y 40, indicando, para cada uno, si **afecta** al proyecto, qué se
+   cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
+   `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
+   punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
+   Fase 5 y su resultado: mutadores con el retorno descartado, claves `Ex` leídas a mano, `catch`
+   muertos alrededor de `Merge` e identidad por referencia de `MlErrorDetails`.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -705,8 +811,12 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
-| 2.1.1 | 38, 39 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público y `ErrorMessage` retirado |
+| 2.1.1 | 38, 39, 40 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado y **saneamiento del contenedor de metadatos de `MlErrorDetails`** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente el punto 38 de la sección 3.3 más el barrido específico del
-> punto 4 de la Fase 5.
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39 y 40** de la sección 3.3 más el barrido
+> específico del punto 4 de la Fase 5.
+>
+> ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
+> invisibles para el compilador. Un salto 2.0.x → 2.1.1 que compile a la primera y pase los tests puede
+> seguir teniendo líneas que han dejado de tener efecto (mutadores con el retorno descartado).

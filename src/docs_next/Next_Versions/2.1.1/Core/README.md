@@ -1,6 +1,6 @@
 # Versión 2.1.1 · `MoralesLarios.OOFP.Core` · Épicas de nomenclatura, estándares y modelo de error
 
-> **Estado global** · ✅ Épicas 1 y 2 completadas (commits `6df1466`, `179162f`, `77ed10e`) · ⬜ Épicas 3 y 4 pendientes
+> **Estado global** · ✅ Épicas 1, 2 y 4 completadas (commits `6df1466`, `179162f`, `77ed10e` + ésta) · ⬜ Épica 3 pendiente
 > **Proyecto afectado** · `src/MoralesLarios.OOFP.Core`
 > **Origen** · [`Mejoras/Core/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Core/01-Nomenclatura-y-Estandares.md) (puntos 01-14) · [`Mejoras/Core/README.md`](../../../Mejoras/Core/README.md) (hallazgos #3 y #4)
 > **Versiones destino** · 2.1.1 (parte aditiva y no rupturista) · 3.0.0 (retirada de puentes y rupturas de origen)
@@ -36,7 +36,7 @@ El reparto no es arbitrario: agrupa los hallazgos por **la superficie que tocan*
 | 1 | [Constantes, literales y `using` globales](Epica-01-Constantes-Literales-y-Usings.md) | `Helpers/Constants.cs` · `GlobalUsings.cs` · `Helpers/EnsureFpMessages.cs` | US-01 … US-06 | **L** (~2,5 j) | 🟢 / 🟠 | ✅ |
 | 2 | [Higiene interna: erratas, código muerto y documentación XML](Epica-02-Higiene-Interna-y-Codigo-Muerto.md) | identificadores locales, comentarios, `<summary>`, `ErrorMessage.cs` | US-07 … US-10 | **M** (~1,25 j) | 🟢 / 🟡 | ✅ |
 | 3 | [Nomenclatura de la superficie pública](Epica-03-Miembros-Publicos-y-Firmas.md) | `MlResult.cs` · `MlError.cs` · `MlErrorDetails.cs` · `EnsureFp.*` · `Extensions.cs` | US-11 … US-16 | **L** (~3,0 j) | 🟠 / 🔴 | ⬜ |
-| 4 | [El contenedor de metadatos de `MlErrorDetails`](Epica-04-Modelo-de-Metadatos-de-Error.md) | `MlErrorDetails.cs` · `MlErrorDetailsActions.cs` · `MlResultErrorDetailsExtensions.cs` · `Helpers/Extensions/Extensions.cs` · `Helpers/Constants.cs` | US-17 … US-25 | **XL** (~4,75 j) | 🔴 / 🟡 | ⬜ |
+| 4 | [El contenedor de metadatos de `MlErrorDetails`](Epica-04-Modelo-de-Metadatos-de-Error.md) | `MlErrorDetails.cs` · `MlErrorDetails.Metadata.cs` · `MlErrorDetailsActions.cs` · `MlResultErrorDetailsExtensions.cs` · `Helpers/Extensions/Extensions.cs` · `Helpers/Constants.cs` | US-17 … US-25 | **XL** (~4,75 j) | 🔴 / 🟡 | ✅ |
 
 > **Leyenda de estado** · ✅ completada · 🔄 en curso · ⬜ no iniciada
 
@@ -49,6 +49,14 @@ El reparto no es arbitrario: agrupa los hallazgos por **la superficie que tocan*
 > incompatibles, `Merge` que lanza, dos métodos que descartan su parámetro, lecturas con efecto
 > secundario). Su riesgo 🔴 no viene de romper firmas, sino de que **cambia comportamiento
 > observable** que algún consumidor podría estar aprovechando.
+>
+> **Resultado de la ejecución** · cerrada con **doce rupturas**, de las cuales **nueve no las detecta
+> el compilador**. Durante la ejecución apareció un **séptimo defecto** no catalogado en el análisis
+> (cinco llamadas internas en `MlResultBindExtensions.cs` descartaban el retorno de
+> `AddValueDetailIfFail`, que funcionaba por mutación del diccionario compartido). Todo ello está
+> registrado como **punto 40** de
+> [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3, con una
+> subsección propia de cambios silenciosos.
 
 ---
 

@@ -29,15 +29,17 @@ public static class Extensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="ex">Excepción capturada.</param>
     /// <returns>Valor de tipo <c>Dictionary&lt;string, object&gt;</c> obtenido por la operación.</returns>
+    /// <remarks>
+    /// La excepción se almacena en la primera ranura libre de la secuencia reservada
+    /// <c>Ex</c>, <c>Ex2</c>, <c>Ex3</c>… Sólo se consideran ocupadas las claves que encajan en el
+    /// patrón <c>^Ex\d*$</c>: una clave propia como <c>"Expected"</c> o <c>"ExternalId"</c> no
+    /// desplaza la ranura canónica. El diccionario de origen no se modifica.
+    /// </remarks>
     public static Dictionary<string, object> AppendExDetails(this Dictionary<string, object> source, Exception ex)
     {
-        var exKeys = source.Keys.Where(x => x.StartsWith(Constants.ExceptionMetadataKey)).ToList();
+        var result = MlErrorDetails.CopyMetadata(source);
 
-        var exKey = exKeys.Any() ? $"{Constants.ExceptionMetadataKey}{exKeys.Count + 1}" : Constants.ExceptionMetadataKey;
-
-        var result = source.ToDictionary(x => x.Key, x => x.Value);
-
-        result.Add(exKey, ex);
+        result[MlErrorDetails.NextExceptionKey(result.Keys)] = ex;
 
         return result;
     }

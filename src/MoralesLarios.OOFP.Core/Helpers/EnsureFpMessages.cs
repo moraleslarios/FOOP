@@ -41,6 +41,19 @@ public static class EnsureFpMessages
     /// </summary>
     public static readonly string MetadataSectionHeader = "Details:";
 
+    /// <summary>
+    /// Construye el mensaje de error que se emite cuando se solicita un metadato que no existe o cuyo
+    /// valor no es del tipo esperado.
+    /// </summary>
+    /// <param name="key">Clave del metadato solicitado.</param>
+    /// <param name="type">Tipo esperado del valor. No puede ser <see langword="null"/>.</param>
+    /// <returns>Mensaje de error compuesto.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="type"/> es <see langword="null"/>.</exception>
+    public static string MetadataKeyNotFoundOrTypeMismatch(string? key, Type type)
+        => type is null
+               ? throw new ArgumentNullException(nameof(type))
+               : $"The key '{key}' does not exist in the details or does not contain a value of type {type.Name}.";
+
     #endregion
 
     internal const string DEFAULT_PARAM_NAME = "value";
