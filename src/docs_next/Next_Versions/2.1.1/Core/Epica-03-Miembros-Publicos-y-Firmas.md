@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Core/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Core/01-Nomenclatura-y-Estandares.md) · puntos 03, 04, 05, 08, 09, 10, 11, 14
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.1.1
 > **Proyecto** · `src/MoralesLarios.OOFP.Core` (+ 29 proyectos dependientes)
-> **Estado** · 🔄 en curso · US-16 ✅ completada · US-11 ✅ completada · US-12 ⬜
+> **Estado** · ✅ completada para la 2.1.1 · US-16 ✅ · US-11 ✅ · US-12 ✅ *(parte 2.1.1; la retirada definitiva es 3.0.0)*
 > **Esfuerzo** · **L** (~3,0 jornadas)
 > **Riesgo** · 🟠 alto en US-11 · 🔴 muy alto en US-12 … US-15 · 🟢 bajo en US-16
 >
@@ -360,14 +360,20 @@ el documento de migración.
 
 Criterios de aceptación:
 
-- [ ] Resuelta [D-03](README.md#6-decisiones-pendientes-del-propietario) sobre `Empty()` / `EmptyAsync()`.
-- [ ] `Discard` pasa a ser la **implementación**, no el alias: `public static MlResult Discard => new (default!);`.
-- [ ] `_` pasa a ser un puente `[Obsolete]` que reenvía a `Discard`, en `Types/MlResult.Obsolete.cs`.
-- [ ] `Empty()` y `EmptyAsync()` quedan `[Obsolete]` en favor de `Discard`.
-- [ ] `Discard` tiene `<summary>` que dice: *«Resultado válido sin valor relevante. Equivalente
+- [x] Resuelta [D-03](README.md#6-decisiones-pendientes-del-propietario) sobre `Empty()` / `EmptyAsync()`:
+      se adopta la variante **(b)**, *no* obsoletarlos en la 2.1.1. Ver «Desviación» más abajo.
+- [x] `Discard` pasa a ser la **implementación**, no el alias: `public static MlResult Discard => new (default!);`.
+- [x] `_` pasa a ser un puente `[Obsolete]` que reenvía a `Discard`, en `Types/MlResult.Obsolete.cs`.
+- [x] ~~`Empty()` y `EmptyAsync()` quedan `[Obsolete]` en favor de `Discard`.~~ **Desviación
+      justificada**: se aplaza a la 3.0.0 (ver «Desviación respecto al criterio original»).
+- [x] `Discard` tiene `<summary>` que dice: *«Resultado válido sin valor relevante. Equivalente
       funcional a `Unit`.»*
-- [ ] Todos los usos internos del núcleo y de los 29 proyectos usan `Discard`.
-- [ ] En 3.0.0 desaparecen `_`, `Empty()` y `EmptyAsync()`.
+- [x] Todos los usos internos del núcleo y de los 29 proyectos usan `Discard`: barrido
+      `MlResult\.(_|Discard)\b` → **0 usos de `MlResult._`** en todo el repositorio, así que no había
+      nada que migrar.
+- [ ] En 3.0.0 desaparecen `_`, `Empty()` y `EmptyAsync()`. *(fuera del alcance de la 2.1.1)*
+- [x] La ruptura está registrada en `oofp-upgrade-2.prompt.md` §3.3 (**punto 43**, en los 5 sitios) y
+      en el anexo de renombrados (`### 1.2.d`).
 
 **API propuesta**:
 
@@ -386,10 +392,25 @@ public static MlResult Discard => new (default!);
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static MlResult _ => Discard;
 
-[Obsolete("Use Discard instead. Will be removed in 3.0.0.", false)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public static MlResult<object> Empty() => …;
+// Empty() y EmptyAsync() NO se obsoletan en la 2.1.1 (ver «Desviación» más abajo).
 ```
+
+**Desviación respecto al criterio original** · el criterio nº 4 pedía marcar `Empty()` y
+`EmptyAsync()` como `[Obsolete]` en esta misma versión. **No se ha hecho**, y la decisión D-03 se
+cierra con la variante **(b)**, por dos motivos verificados en el código:
+
+1. **No son alias de `Discard`.** Devuelven `MlResult<object>`, no `MlResult`. Un barrido de
+   `this MlResult (source|result|mlResult|value)` sobre todo el repositorio devuelve **cero
+   coincidencias**: no existe **ningún** combinador (`Bind`, `Map`, `ExecSelf`…) sobre el `MlResult`
+   **no genérico**. Por tanto `MlResult.Empty().Bind(...)` **no** se puede reescribir como
+   `MlResult.Discard.Bind(...)`, y obsoletarlos sería dejar al consumidor sin sustituto válido.
+2. **Rompería nuestra propia compilación.** Hay **57 usos** de `MlResult.Empty()` / `EmptyAsync()`
+   repartidos en **32 ficheros** del repositorio: marcarlos obsoletos generaría 57 `CS0618` propios,
+   que habría que silenciar con `#pragma`, justo lo contrario de la política de 0 avisos.
+
+La retirada se aplaza a la **3.0.0**, cuando exista un tipo `Unit` que dé un sustituto real
+([D-12](#5-decisiones-abiertas)). La decisión queda **blindada por un test**
+(`MlResult_Empty_NoEstaObsoletoEnLa211`) para que nadie los obsolete por descuido en una 2.1.x.
 
 **Notas técnicas** · el cambio de `Discard => _` a `_ => Discard` es **puramente de dirección**: el
 comportamiento observable es idéntico, pero deja el nombre canónico como implementación y el antiguo
@@ -399,13 +420,20 @@ Sobre `Empty()`: devuelve `MlResult<object>`, no `MlResult`, así que **no es un
 y la sustitución no es mecánica. Si se quiere un «sin valor» con tipo explícito, lo correcto es
 introducir un tipo `Unit` → queda anotado como [D-12](#5-decisiones-abiertas).
 
-**Tests mínimos**:
+**Tests implementados** · `Types/MlResultDiscardTests.cs` (4 tests, todos en verde):
 
 | Test | Comprueba |
 |------|-----------|
-| `MlResult_Discard_EsValido` | `MlResult.Discard.IsValid == true` |
-| `MlResult_Guion_DelegaEnDiscard` | `MlResult._` y `MlResult.Discard` son equivalentes |
-| `MlResult_MiembrosDescartados_EstanObsoletos` | `_`, `Empty`, `EmptyAsync` llevan `[Obsolete]` |
+| `MlResult_Discard_EsValido` | `MlResult.Discard` no es nulo y es del tipo `MlResult` |
+| `MlResult_Guion_DelegaEnDiscard` | `MlResult._` y `MlResult.Discard` son iguales (igualdad estructural del `record`) |
+| `MlResult_Guion_EstaObsoleto` | `_` lleva `[Obsolete]` con el mensaje exacto y `IsError == false` |
+| `MlResult_Empty_NoEstaObsoletoEnLa211` | `Empty()` y `EmptyAsync()` **no** llevan `[Obsolete]` (blinda D-03/D-12) |
+
+> ⚠️ El test `MlResult_Discard_EsValido` **no** puede afirmar `MlResult.Discard.IsValid == true` como
+> decía la especificación original: el `record MlResult` **no genérico** expone *únicamente* miembros
+> **estáticos** (`Discard`, `Valid<T>`, 10 sobrecargas de `Fail<T>`, `Empty`, `EmptyAsync`) y **no
+> tiene ningún miembro de instancia** — `IsValid` / `IsSuccess` / `IsFailure` pertenecen a
+> `MlResult<T>`. La equivalencia funcional queda cubierta por `MlResult_Guion_DelegaEnDiscard`.
 
 **Riesgo principal** · `_` puede estar muy usado en código de consumidor por su brevedad. La
 advertencia `CS0618` es suficiente aviso, pero el documento de migración debe dar la sustitución

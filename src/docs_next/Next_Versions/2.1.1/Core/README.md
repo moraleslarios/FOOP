@@ -227,7 +227,7 @@ las suyas.**
 |----|----------|:--------------------:|----------------------------|
 | ~~**D-01**~~ | ✅ **resuelta**: claves de metadatos como `static readonly` | 1 (US-05) | `static readonly`: compatible binariamente |
 | **D-02** | ¿Se mantiene el prefijo `Ml` en los tipos? | 3 (US-11) | mantener: la ruptura no aporta nada |
-| **D-03** | ¿Qué hacer con `MlResult.Empty()` / `EmptyAsync()`? | 3 (US-12) | `[Obsolete]` en favor de `Discard` |
+| ~~**D-03**~~ | ✅ **resuelta** (variante **b**): `Empty()` / `EmptyAsync()` **siguen vivos** en 2.1.1; sólo se invierte `_` → `Discard` | 3 (US-12) | `[Obsolete]` en favor de `Discard` → **descartado**: devuelven `MlResult<object>`, no hay combinadores sobre el `MlResult` no genérico (no hay sustituto mecánico) y generaría 57 `CS0618` propios en 32 ficheros. Se aplaza a 3.0.0 con `Unit` (D-12) |
 | **D-04** | ¿Se renombra la familia `Try*`? | 3 (US-16) | no tocar, pero documentar la semántica |
 | ~~**D-05**~~ | ✅ **resuelta**: inglés neutro en 2.1.1; `.resx` diferido a la épica de localización | 1 (US-06) | inglés neutro + `.resx` para castellano |
 | **D-06** | ¿`With<T>` debe copiar en vez de mutar? | 3 (US-11) | renombrar a `Mutate` y dejar la mutación |

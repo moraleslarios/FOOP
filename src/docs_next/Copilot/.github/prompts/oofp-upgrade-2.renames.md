@@ -101,6 +101,24 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `MoralesLarios.OOFP.Types.Errors.ErrorMessage` | `MoralesLarios.OOFP.Types.Errors.MlError` | **NO** (cambia de tipo) |
 | `ErrorMessage.Message` | `MlError.Message` | sí *(la propiedad conserva el nombre)* |
 
+### 1.2.d Miembros retirados en la **2.1.1**
+
+> ⚠️ `MlResult._` y `MlResult.Discard` devuelven **el mismo valor**: solo se invierte cuál es la
+> implementación y cuál el alias. El puente `[Obsolete]` se elimina en la **3.0.0**. Ver el punto
+> **43** de la sección 3.3 del prompt.
+>
+> 🔎 **`_` es un token AMBIGUO**: es el patrón de descarte de C# (`.Bind(_ => ...)`, `.Map(_ => ...)`,
+> `out _`, `_ => default`). **Nunca** busques `_` a secas. Usa el patrón cualificado
+> `MlResult\s*\.\s*_\b` y revisa cada coincidencia.
+
+| Antes (2.0.0) | Después (2.1.1) | 🔗 |
+| --- | --- | --- |
+| `MlResult._` | `MlResult.Discard` | sí *(solo la forma cualificada por el tipo)* |
+
+> 🧭 **No migres `Empty()` ni `EmptyAsync()`.** Devuelven `MlResult<object>`, no `MlResult`, así que
+> **no** son alias de `Discard` y no admiten sustitución mecánica. Siguen vivos en la 2.1.1 y se
+> retirarán en la 3.0.0 (decisión D-12).
+
 ### 1.3 Métodos
 
 | Antes | Después | 🔗 |

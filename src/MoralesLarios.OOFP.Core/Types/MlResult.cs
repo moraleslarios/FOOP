@@ -7,13 +7,9 @@
 public partial record MlResult
 {
     /// <summary>
-    /// Obtiene una instancia de descarte, utilizada cuando el valor transportado es irrelevante.
+    /// Resultado válido sin valor relevante. Equivalente funcional a <c>Unit</c>.
     /// </summary>
-    public static MlResult _  => new(default!);
-    /// <summary>
-    /// Obtiene una instancia de descarte, utilizada cuando el valor transportado es irrelevante.
-    /// </summary>
-    public static MlResult Discard  => _ ;
+    public static MlResult Discard  => new(default!);
 
     /// <summary>
     /// Crea un resultado válido que transporta el valor indicado.

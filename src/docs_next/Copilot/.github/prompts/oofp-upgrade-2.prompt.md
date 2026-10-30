@@ -373,6 +373,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 40 | Contenedor de metadatos de `MlErrorDetails` (**2.1.1**) | 7 defectos funcionales: claves de excepción mal discriminadas, `Merge` que lanza, `AddMetadataRange` NO-OP, lectores que mutan, diccionario compartido | claves `Ex`/`Ex2`/`Ex3` densas, `Merge` que sufija, lectores no destructivos, metadatos **inmutables**, igualdad **estructural** | ⚠️ **Contrato · 9 de 12 cambios son SILENCIOSOS** |
 | 41 | `TryGetValue` / `TryGetErrors` y los convenios `Try*` / `Async` (**2.1.1**) | no existían; los dos convenios no estaban documentados | dos miembros nuevos con semántica BCL (`bool` + `out`) y los convenios documentados en el `README.md` del núcleo | ✅ **Ninguna** · aditivo y documental |
 | 42 | Troceado de la clase `Extensions` del núcleo (**2.1.1**) | 11 métodos de extensión en una única clase `Extensions` | repartidos en `NullableExtensions`, `ExceptionMetadataExtensions`, `MutationExtensions` y `TaskLiftExtensions`; `Extensions` queda como puentes `[Obsolete]` | **Compilación** (`CS0618`) **solo** si se invocaban en forma **estática** |
+| 43 | El miembro `_` de `MlResult` queda retirado (**2.1.1**) | `MlResult._` era la implementación y `Discard` su alias | `Discard` es la **implementación**; `_` queda como puente `[Obsolete]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.1.1 → `CS0117` en 3.0.0) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -749,6 +750,45 @@ la 3.0.0.**
    compilación**. Migra o añade `#pragma warning disable CS0618` de forma temporal y localizada.
 3. Revisa los usos de `With<T>` que asumieran que no se muta el origen.
 
+#### 43 — El miembro `MlResult._` queda retirado en favor de `Discard` (2.1.1 → 3.0.0)
+
+`MlResult` ofrecía **dos** formas de obtener «resultado válido sin valor relevante»: `MlResult._`
+(la implementación) y `MlResult.Discard` (un alias que se limitaba a reenviar a `_`). Un identificador
+de un solo carácter es, además, el **patrón de descarte** del propio lenguaje (`_ => ...`,
+`out _`), lo que hacía el código ilegible y los barridos de búsqueda poco fiables. En la **2.1.1** se
+**invierte la relación**: `Discard` pasa a ser la implementación y `_` queda como puente.
+
+| Elemento | 2.0.0 | 2.1.1 | 3.0.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- | --- |
+| `MlResult.Discard` | alias: `=> _` | **implementación**: `=> new(default!)` | implementación | — (mismo valor) |
+| `MlResult._` | implementación | `[Obsolete]` + `[EditorBrowsable(Never)]`, reenvía a `Discard` | **eliminado** | ✅ `CS0618` en 2.1.1 · `CS0117` en 3.0.0 |
+
+El **valor devuelto es idéntico** y `MlResult` es un `record` con igualdad estructural, así que
+`MlResult._ == MlResult.Discard`. **No hay ninguna ruptura de comportamiento**: la ruptura es
+exclusivamente de nombre y la señala el compilador.
+
+**Qué revisar en tu código:**
+
+- Sustituye `MlResult._` por `MlResult.Discard`. Es un reemplazo **mecánico y seguro**.
+- El miembro ya no aparece en IntelliSense por `[EditorBrowsable(Never)]`; si lo buscas y no lo ves,
+  es intencionado.
+- Si tratas las advertencias como errores (`TreatWarningsAsErrors`), `CS0618` **romperá la
+  compilación**: migra, no silencies.
+
+> ⚠️ **Cuidado con los falsos positivos al buscar.** `_` es el patrón de descarte de C# y aparece
+> constantemente en código que usa esta librería (`.Bind(_ => ...)`, `.Map(_ => ...)`,
+> `out _`, `_ => default`). **Solo** hay que cambiar las apariciones **cualificadas por el tipo**:
+> `MlResult._`. Busca `MlResult\s*\.\s*_\b`, nunca `_` a secas.
+
+> 🧭 **`Empty()` y `EmptyAsync()` NO se tocan en la 2.1.1.** Aunque también representan «resultado
+> válido sin valor útil», devuelven `MlResult<object>` (genérico), **no `MlResult`**, así que **no son
+> alias de `Discard`** y la sustitución no es mecánica: sobre el `MlResult` no genérico no hay
+> combinadores `Bind`/`Map`, por lo que `MlResult.Empty().Bind(...)` **no** se puede reescribir como
+> `MlResult.Discard.Bind(...)`. Su retirada se aplaza a la **3.0.0**, cuando exista un tipo `Unit`
+> (decisión D-12). Si hoy empiezas cadenas con `MlResult.Empty()`, **sigue siendo correcto**.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -838,6 +878,12 @@ dotnet build --nologo /p:WarningLevel=4
    AddMetadataRange|AddMetadataOrThrow|AddValueMetadata|AddValueDetailIfFail
    \.Merge\(|GetDetail<|GetMetadataValue<|GetException
    ```
+   Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
+   ```
+   MlResult\s*\.\s*_\b
+   ```
+   ⚠️ Busca **solo** esa forma cualificada. `_` a secas es el patrón de descarte de C# y produciría
+   cientos de falsos positivos (`.Bind(_ => ...)`, `out _`): esos **no** se tocan.
    - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
      `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
    - Si se añaden cabeceras de paginación sobre `HttpClient`, migra a las sobrecargas de
@@ -864,6 +910,9 @@ dotnet build --nologo /p:WarningLevel=4
         `GetHashCode` son estructurales) ni del **diccionario compartido** entre instancias.
      Sustituye las claves escritas a mano por `MlErrorDetails.MetadataKeys.*` y la lectura cruda del
      diccionario por `TryGetMetadata<T>` / `MetadataView`.
+   - **2.1.1**: si usabas `MlResult._`, cámbialo por `MlResult.Discard` (punto 43). Es un reemplazo
+     mecánico: el valor devuelto es el mismo. **No** toques los `_` que son patrón de descarte del
+     lenguaje. `MlResult.Empty()` y `MlResult.EmptyAsync()` **siguen siendo válidos** en la 2.1.1.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -881,7 +930,7 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37 y —si migras a la 2.1.1— 38, 39, 40, 41 y 42, indicando, para cada uno, si **afecta** al proyecto, qué se
+   36, 37 y —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
@@ -924,10 +973,10 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
-| 2.1.1 | 38, 39, 40, 41, 42 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`** |
+| 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41 y 42** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42 y 43** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
