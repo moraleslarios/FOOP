@@ -85,6 +85,22 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `Extensions.VoidToAsync(x, a)` | `TaskLiftExtensions.VoidToAsync(x, a)` | **NO** (cambia de clase) |
 | `Extensions.ToFuncTask(f)` ×5 | `TaskLiftExtensions.ToFuncTask(f)` | **NO** (cambia de clase) |
 
+### 1.2.c Tipos retirados en la **2.1.1**
+
+> ⚠️ `ErrorMessage` **no es un renombrado mecánico**: es un tipo que desaparece y cuyo cometido
+> asume `MlError`. El puente `[Obsolete]` se elimina en la **3.0.0**. Ver el punto **39** de la
+> sección 3.3 del prompt.
+>
+> 🔎 **Cuidado con los falsos positivos**: `ErrorMessage` es también el nombre de **propiedades** y de
+> **parámetros** que **no** cambian (`.ErrorMessage`, `string errorMessage`). Busca siempre con
+> límite de palabra y **descarta las coincidencias precedidas por un punto**.
+
+| Antes (2.0.0) | Después (2.1.1) | 🔗 |
+| --- | --- | --- |
+| `new ErrorMessage(texto)` | `MlError.FromErrorMessage(texto)` | **NO** (cambia de tipo) |
+| `MoralesLarios.OOFP.Types.Errors.ErrorMessage` | `MoralesLarios.OOFP.Types.Errors.MlError` | **NO** (cambia de tipo) |
+| `ErrorMessage.Message` | `MlError.Message` | sí *(la propiedad conserva el nombre)* |
+
 ### 1.3 Métodos
 
 | Antes | Después | 🔗 |
