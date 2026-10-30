@@ -35,7 +35,7 @@ frente de conflicto en el control de versiones. Sigue el mismo criterio —y el 
 
 | # | Épica | Superficie que toca | Historias | Esfuerzo | Riesgo | Estado |
 |---|-------|---------------------|:---------:|:--------:|:------:|:------:|
-| 1 | [Red de seguridad](Epica-01-Red-de-Seguridad.md) | proyecto nuevo `MoralesLarios.OOFP.Logging.Tests.Unit` · `InternalsVisibleTo` | US-01 … US-04 | **L** (~2,0 j) | 🟢 | ⬜ |
+| 1 | [Red de seguridad](Epica-01-Red-de-Seguridad.md) | proyecto nuevo `MoralesLarios.OOFP.Logging.Tests.Unit` · `InternalsVisibleTo` | US-01 … US-04 | **L** (~2,0 j) | 🟢 | ✅ |
 | 2 | [Higiene interna y código muerto](Epica-02-Higiene-Interna-y-Codigo-Muerto.md) | `GlobalUsings.cs` · `.csproj` · 530 líneas comentadas | US-05 … US-10 | **S** (~0,5 j) | 🟢 | ⬜ |
 | 3 | [Corrección funcional y validación](Epica-03-Correccion-Funcional-y-Validacion.md) | `MlResultLogExtensions.cs` · guardias de argumentos | US-11 … US-14 | **M** (~1,0 j) | 🟠 | ⬜ |
 | 4 | [Nomenclatura y firmas públicas](Epica-04-Nomenclatura-y-Firmas-Publicas.md) | 218 parámetros · `Extensions.cs` · los 7 ficheros de nivel | US-15 … US-20 | **S** (~0,5 j) | 🔴 | ⬜ |

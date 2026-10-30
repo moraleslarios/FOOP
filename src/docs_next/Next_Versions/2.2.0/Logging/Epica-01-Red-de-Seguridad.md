@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) · hallazgos T1, T3 y T4
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.2.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging` · proyecto nuevo `src/MoralesLarios.OOFP.Logging.Tests.Unit`
-> **Estado** · ⬜ pendiente
+> **Estado** · ✅ completada
 > **Esfuerzo** · **L** (~2,0 jornadas)
 > **Riesgo** · 🟢 bajo · no toca una sola línea de producción
 >
@@ -149,13 +149,13 @@ diseño** y hay que preservarla, pero sobre todo permite escribir la matriz con 
 **Como** mantenedor, **quiero** un proyecto de tests unitarios para Logging **para** poder demostrar
 cualquier cambio de comportamiento antes de publicarlo.
 
-- [ ] Existe `src/MoralesLarios.OOFP.Logging.Tests.Unit/MoralesLarios.OOFP.Logging.Tests.Unit.csproj`.
-- [ ] El `TargetFramework` coincide con el del resto de los `*.Tests.Unit` de la solución.
-- [ ] Referencia a `MoralesLarios.OOFP.Logging` y a xUnit + FluentAssertions, con las **mismas
+- [x] Existe `src/MoralesLarios.OOFP.Logging.Tests.Unit/MoralesLarios.OOFP.Logging.Tests.Unit.csproj`.
+- [x] El `TargetFramework` coincide con el del resto de los `*.Tests.Unit` de la solución.
+- [x] Referencia a `MoralesLarios.OOFP.Logging` y a xUnit + FluentAssertions, con las **mismas
       versiones** que `MoralesLarios.OOFP.Core.Tests.Unit`.
-- [ ] El proyecto está dado de alta en `MoralesLarios.OOFP.sln`.
-- [ ] El `.csproj` **no** incluye el bloque `PropertyGroup Label="Globals"` con las `Scc*`.
-- [ ] `dotnet test` lo descubre y ejecuta.
+- [x] El proyecto está dado de alta en `MoralesLarios.OOFP.sln`.
+- [x] El `.csproj` **no** incluye el bloque `PropertyGroup Label="Globals"` con las `Scc*`.
+- [x] `dotnet test` lo descubre y ejecuta.
 
 **Esfuerzo** · S · **Riesgo** · 🟢
 
@@ -166,14 +166,14 @@ cualquier cambio de comportamiento antes de publicarlo.
 **Como** mantenedor, **quiero** una matriz que recorra los 6 niveles y las 7 regiones **para** que la
 simetría del diseño quede verificada y no sólo documentada.
 
-- [ ] Existe un doble de `ILogger` que captura `LogLevel`, el mensaje formateado y la `Exception`.
-- [ ] Hay un `[Theory]` con `[InlineData]` por cada `LogLevel` de los seis soportados.
-- [ ] Cada una de las 7 regiones tiene al menos un caso válido y un caso fallido.
-- [ ] Se comprueba que el `LogLevel` registrado es **exactamente** el del nombre del método.
-- [ ] Se comprueba que el valor devuelto es el `source` original, sin alterar.
-- [ ] Un test comprueba que los 6 ficheros de nivel exponen **el mismo número** de firmas públicas,
+- [x] Existe un doble de `ILogger` que captura `LogLevel`, el mensaje formateado y la `Exception`.
+- [x] Hay un `[Theory]` con `[InlineData]` por cada `LogLevel` de los seis soportados.
+- [x] Cada una de las 7 regiones tiene al menos un caso válido y un caso fallido.
+- [x] Se comprueba que el `LogLevel` registrado es **exactamente** el del nombre del método.
+- [x] Se comprueba que el valor devuelto es el `source` original, sin alterar.
+- [x] Un test comprueba que los 6 ficheros de nivel exponen **el mismo número** de firmas públicas,
       para que la asimetría futura falle el build.
-- [ ] El alcance de la matriz es el acordado en [D-05](#5-decisiones-abiertas).
+- [x] El alcance de la matriz es el acordado en [D-05](#5-decisiones-abiertas).
 
 **Esfuerzo** · M · **Riesgo** · 🟢
 
@@ -184,13 +184,13 @@ simetría del diseño quede verificada y no sólo documentada.
 **Como** mantenedor, **quiero** que el defecto `F1` esté capturado por un test **antes** de tocarlo
 **para** que el arreglo de la épica 3 sea demostrable y no un acto de fe.
 
-- [ ] Hay un test que invoca `LogMlResultIfFailWithExceptionAsync<T>` sobre un `MlResult<T>` fallido
+- [x] Hay un test que invoca `LogMlResultIfFailWithExceptionAsync<T>` sobre un `MlResult<T>` fallido
       que **sí** lleva excepción en los metadatos.
-- [ ] El test afirma que el mensaje registrado contiene el `Message` de la excepción.
-- [ ] Mientras `F1` no esté arreglado, el test está marcado con `Skip` y un comentario que apunta a
+- [x] El test afirma que el mensaje registrado contiene el `Message` de la excepción.
+- [x] Mientras `F1` no esté arreglado, el test está marcado con `Skip` y un comentario que apunta a
       la épica 3 · US-11, o bien documenta el comportamiento actual con un nombre que lo diga
       (`…RegistraElValorEnLugarDeLaExcepcion_DefectoConocidoF1`).
-- [ ] El mismo test comprueba, en paralelo, el comportamiento de `LogMlResultIfFailWithValueAsync`,
+- [x] El mismo test comprueba, en paralelo, el comportamiento de `LogMlResultIfFailWithValueAsync`,
       para que la diferencia entre ambos quede explícita.
 
 **Esfuerzo** · XS · **Riesgo** · 🟢
@@ -205,11 +205,11 @@ simetría del diseño quede verificada y no sólo documentada.
 **Como** mantenedor, **quiero** que Logging exponga sus internos al proyecto de tests **para**
 poder probar los auxiliares sin tener que hacerlos públicos.
 
-- [ ] El `.csproj` de `MoralesLarios.OOFP.Logging` declara `InternalsVisibleTo` hacia
+- [x] El `.csproj` de `MoralesLarios.OOFP.Logging` declara `InternalsVisibleTo` hacia
       `MoralesLarios.OOFP.Logging.Tests.Unit`.
-- [ ] La forma de declararlo es **la misma** que ya usa `MoralesLarios.OOFP.Core`, para no introducir
+- [x] La forma de declararlo es **la misma** que ya usa `MoralesLarios.OOFP.Core`, para no introducir
       un segundo estilo en la solución.
-- [ ] No se amplía la superficie **pública** del ensamblado.
+- [x] No se amplía la superficie **pública** del ensamblado.
 
 **Esfuerzo** · XS · **Riesgo** · 🟢
 
@@ -239,9 +239,9 @@ y la que menos urge.
 
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-05** | Alcance de la matriz de tests | (a) las **339** firmas, una por una · (b) **42 casos** (6 niveles × 7 regiones) más los bordes · (c) sólo las 7 regiones del nivel `Error`, asumiendo la simetría | ⬜ abierta |
-| **D-07** | Doble de `ILogger` | (a) escribirlo a mano en el proyecto de tests · (b) usar una librería de dobles ya referenciada en la solución · (c) usar el proveedor en memoria de `Microsoft.Extensions.Logging` | ⬜ abierta |
-| **D-08** | Qué hacer con el test de `F1` hasta que se arregle | (a) `Skip` con referencia a la US-11 · (b) afirmar el comportamiento **actual** y cambiar el test al arreglarlo · (c) dejarlo en rojo | ⬜ abierta |
+| **D-05** | Alcance de la matriz de tests | (a) las **339** firmas, una por una · (b) **42 casos** (6 niveles × 7 regiones) más los bordes · (c) sólo las 7 regiones del nivel `Error`, asumiendo la simetría | ✅ resuelta · **(b)** |
+| **D-07** | Doble de `ILogger` | (a) escribirlo a mano en el proyecto de tests · (b) usar una librería de dobles ya referenciada en la solución · (c) usar el proveedor en memoria de `Microsoft.Extensions.Logging` | ✅ resuelta · **(a)** |
+| **D-08** | Qué hacer con el test de `F1` hasta que se arregle | (a) `Skip` con referencia a la US-11 · (b) afirmar el comportamiento **actual** y cambiar el test al arreglarlo · (c) dejarlo en rojo | ✅ resuelta · **(b)** |
 
 > **Sobre D-05.** La opción (a) es inviable en dos jornadas. La (b) es la que propone este documento:
 > cubre la simetría y los bordes con ~60 tests. La (c) deja cinco de los seis niveles sin una sola
@@ -253,21 +253,71 @@ y la que menos urge.
 
 ---
 
+## 5.1 Resolución de las decisiones (al cerrar la épica)
+
+| # | Opción elegida | Justificación |
+|:-:|----------------|---------------|
+| **D-05** | **(b)** matriz de 42 casos (6 niveles × 7 regiones) más los bordes | Materializada en `MlResultLogExtensionsMatrixTests.cs` con una tabla `Dictionary<(LogLevel, string), LogOperation>` de **36 entradas** (6 niveles × 6 regiones condicionales) más la región completa y los invariantes de simetría. Resultado: **173 tests** nuevos. |
+| **D-07** | **(a)** doble escrito a mano | `Support/LoggerSpy.cs`: `ILogger` con `ConcurrentQueue<LoggedEntry>`, `MinimumLevel`, `Enabled`, `IsEnabledCallCount` y `Messages`. Ni Moq ni el proveedor en memoria permiten afirmar el `LogLevel` exacto y el mensaje ya formateado con esta comodidad. |
+| **D-08** | **(b)** afirmar el comportamiento **actual** | Los tests de `F1` llevan el sufijo `_DefectoConocidoF1` y un `because` que explica qué debe pasar a esperar la [US-11](Epica-03-Correccion-Funcional-y-Validacion.md). Se añade además un test `…ComportamientoDeReferencia` sobre la sobrecarga **síncrona**, que sí distingue la excepción y fija la conducta correcta. |
+
+### 5.2 Hallazgo nuevo · el mecanismo exacto de `F1`
+
+Al escribir los tests de la US-03 se descubrió **por qué** falla `F1`, y no es lo que decía el informe
+de mejoras:
+
+```csharp
+// MlResultLogExtensions.cs ≈ L948
+public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionAsync<T>(
+        this Task<MlResult<T>>                  sourceAsync,
+        ILogger                                 logger,
+        LogLevel                                logLevel,
+        Func<MlErrorDetails, Exception, string> failBuildMessage)
+    => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, logLevel, failBuildMessage);
+//                                                ^^^^^ delega en la familia equivocada
+```
+
+Como el constructor de mensaje es `Func<MlErrorDetails, Exception, string>`, la resolución de
+sobrecarga elige la variante **`<T, TValue>` con `TValue = Exception`**. La consecuencia observable es
+más estrecha de lo que parecía:
+
+- un fallo que lleva **sólo** el metadato `Ex` **no registra nada**;
+- un fallo que lleva el metadato `Value` de tipo `string` **tampoco registra nada**;
+- sólo registra si existe el metadato **`Value` y además es de tipo `Exception`**, caso que en la
+  práctica no produce ninguna factoría de `MlErrorDetails`.
+
+Es decir, la sobrecarga es **inoperante en la práctica**, no «mira el valor en lugar de la excepción».
+El arreglo de la US-11 es de **una palabra** (`WithValueAsync` → `WithExceptionAsync`), y el mismo
+defecto copiado-pegado está en los seis ficheros de nivel, en su sobrecarga equivalente
+(`MlResultLogExtensions.Error.cs` ≈ L646 y sus homólogas).
+
+### 5.3 Resultados medidos al cerrar la épica
+
+| Métrica | Valor |
+|---------|-------|
+| `dotnet build … -c Release --no-incremental` | **EXIT = 0** · 0 errores · **119 avisos únicos** · 0 `CS1591` · 0 `CS0618` |
+| `dotnet test … -c Release --no-build` | **EXIT = 0** · **10 ensamblados** · **1.309 tests** (1.136 previos + **173** nuevos) · 0 fallos · 0 omitidos |
+| `*.Tests.Unit` en el `.sln` | **10** |
+| `InternalsVisibleTo` en `MoralesLarios.OOFP.Logging.csproj` | **1** |
+| `<Scc` en el `.csproj` nuevo | **0** |
+
+---
+
 ## 6. Definición de terminado
 
-- [ ] `MoralesLarios.OOFP.Logging.Tests.Unit` existe, está en el `.sln` y `dotnet test` lo ejecuta.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**, **0 errores**,
+- [x] `MoralesLarios.OOFP.Logging.Tests.Unit` existe, está en el `.sln` y `dotnet test` lo ejecuta.
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**, **0 errores**,
       **0 `CS1591`**, **0 `CS0618`**, **no más de 236 avisos**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → los **1.136** tests previos siguen
-      en verde, **más** los nuevos.
-- [ ] El defecto `F1` está capturado por un test según la decisión [D-08](#5-decisiones-abiertas).
-- [ ] La matriz cubre el alcance acordado en [D-05](#5-decisiones-abiertas).
-- [ ] **No hay rupturas que registrar** en
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → los **1.136** tests previos siguen
+      en verde, **más** los nuevos. Medido: **1.309** tests en **10 ensamblados** (1.136 + **173**).
+- [x] El defecto `F1` está capturado por un test según la decisión [D-08](#5-decisiones-abiertas).
+- [x] La matriz cubre el alcance acordado en [D-05](#5-decisiones-abiertas).
+- [x] **No hay rupturas que registrar** en
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md): esta
       épica no cambia nada observable por el consumidor. Esa ausencia se hace **constar
       explícitamente** en el cuerpo del commit.
-- [ ] Las decisiones `D-05`, `D-07` y `D-08` están resueltas y anotadas aquí.
-- [ ] Commit `test(logging): …`, sin `!`, creado con `git commit -F` desde un fichero UTF-8 sin BOM.
+- [x] Las decisiones `D-05`, `D-07` y `D-08` están resueltas y anotadas aquí.
+- [x] Commit `test(logging): …`, sin `!`, creado con `git commit -F` desde un fichero UTF-8 sin BOM.
 
 ---
 

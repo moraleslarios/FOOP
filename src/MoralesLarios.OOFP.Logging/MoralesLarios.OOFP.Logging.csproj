@@ -18,4 +18,10 @@
     <ProjectReference Include="..\MoralesLarios.OOFP.Core\MoralesLarios.OOFP.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>MoralesLarios.OOFP.Logging.Tests.Unit</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>
