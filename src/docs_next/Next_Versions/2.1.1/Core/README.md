@@ -262,17 +262,39 @@ las suyas.**
 
 Aplica a las cuatro épicas. Cada una añade además sus propios criterios.
 
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` termina con **0 errores** y
+> **Estado** · ✅ **verificada el cierre de la 2.1.1** (commits `0d4eb54` … `d69e3b8`). Las evidencias de
+> cada punto se recogen en la tabla de abajo.
+
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` termina con **0 errores** y
       **`CS1591 = 0`**.
-- [ ] Los **1.060 tests** de la solución están en verde
+- [x] Los tests de la solución están en verde
       (`dotnet test MoralesLarios.OOFP.sln -c Release --no-build`).
-- [ ] El número de advertencias no supera la línea base de **238**.
-- [ ] Cada ruptura está registrada en `oofp-upgrade-2.prompt.md` §3.3 (y en el anexo de renombrados
+- [x] El número de advertencias no supera la línea base de **238**.
+- [x] Cada ruptura está registrada en `oofp-upgrade-2.prompt.md` §3.3 (y en el anexo de renombrados
       si procede).
-- [ ] El `README.md` del núcleo refleja los nombres nuevos.
-- [ ] Los enlaces y anclas de los `.md` modificados pasan
+- [x] El `README.md` del núcleo refleja los nombres nuevos.
+- [x] Los enlaces y anclas de los `.md` modificados pasan
       `scripts/check-md-links2.ps1` y `scripts/check-md-anchors4.ps1`.
-- [ ] La codificación de los `.md` nuevos pasa `scripts/check-md-encoding.ps1` sin ningún `NO-UTF8`.
+- [x] La codificación de los `.md` nuevos pasa `scripts/check-md-encoding.ps1` sin ningún `NO-UTF8`.
+
+### 8.1 Evidencias de la verificación de cierre
+
+| Criterio | Comando | Resultado medido |
+|----------|---------|------------------|
+| Build en Release | `dotnet build … -c Release --no-incremental -v q` | **EXITCODE = 0** · **0 Errores** · `error CS` = 0 |
+| Documentación XML | recuento de `CS1591` sobre la salida del build | **`CS1591` = 0** |
+| Sin uso de puentes propios | recuento de `CS0618` sobre la salida del build | **`CS0618` = 0** |
+| Línea base de avisos | recuento de `: warning ` sobre la salida del build | **238** (= línea base, no la supera) |
+| Tests | `dotnet test … -c Release --no-build` | **EXITCODE = 0** · **1.136 superados** · **0 con error** · 0 omitidos |
+| Registro de rupturas | `^#### \d+` y filas `\| N \|` de la §3.3 del prompt | puntos **17, 27, 28, 29, 31, 32, 34 … 43**, cada uno con **fila en la tabla y subsección**; sin huecos; **siguiente número libre = 44** |
+| Anexo de renombrados | `oofp-upgrade-2.renames.md` | **570 líneas** · secciones `1.2.c` y `1.2.d` presentes · 0 *mojibake* |
+| Anclas | `scripts/check-md-anchors4.ps1` | **revisados = 1.096 · rotos = 0** |
+| Enlaces | `scripts/check-md-links2.ps1` | **0 rotos** en los 11 `.md` de esta tanda (los 59 restantes son preexistentes y apuntan a documentos marcados como *pendientes*) |
+| Codificación | `scripts/check-md-encoding.ps1` | **`NO-UTF8` = 0** (los 46 «sospechosos» son únicamente ficheros sin BOM, lo cual es válido) |
+
+> 🧭 **Desglose de los 1.136 tests**: Core 857 (`net8.0`), ValueObjects 117, AspNetCore.Results 54,
+> Http.Integration 33, ValueObjects.FileSystem 22, Configuration 18, Validation.FluentValidation 16,
+> Validation.DataAnnotations 12, Http.Unit 7.
 
 ---
 

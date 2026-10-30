@@ -24,7 +24,7 @@
 3. [Historias de usuario](#3-historias-de-usuario)
    - [US-07 · Corregir `printipal` / `Witout` en identificadores locales](#us-07--corregir-printipal--witout-en-identificadores-locales)
    - [US-08 · Eliminar los bloques de código comentado](#us-08--eliminar-los-bloques-de-código-comentado)
-   - [US-09 · Rellenar los `<summary>` de plantilla y las `<c></c>` vacías](#us-09--rellenar-los-summary-de-plantilla-y-las-c-vacías)
+   - [US-09 · Rellenar los `<summary>` de plantilla y las `<c></c>` vacías](#us-09--rellenar-los-summary-de-plantilla-y-las-cc-vacías)
    - [US-10 · Retirar el tipo muerto `ErrorMessage`](#us-10--retirar-el-tipo-muerto-errormessage)
 4. [Orden de ejecución](#4-orden-de-ejecución)
 5. [Decisiones abiertas](#5-decisiones-abiertas)
