@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Core/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Core/01-Nomenclatura-y-Estandares.md) · puntos 03, 04, 05, 08, 09, 10, 11, 14
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.1.1
 > **Proyecto** · `src/MoralesLarios.OOFP.Core` (+ 29 proyectos dependientes)
-> **Estado** · 🔄 en curso · US-16 ✅ completada · US-11 ⬜ · US-12 ⬜
+> **Estado** · 🔄 en curso · US-16 ✅ completada · US-11 ✅ completada · US-12 ⬜
 > **Esfuerzo** · **L** (~3,0 jornadas)
 > **Riesgo** · 🟠 alto en US-11 · 🔴 muy alto en US-12 … US-15 · 🟢 bajo en US-16
 >
@@ -279,16 +279,34 @@ Renombrar 1.000 métodos no es rentable → [D-04](README.md#6-decisiones-pendie
 > **para** encontrar el método que busco sin leer la clase entera.
 
 - **Esfuerzo** · M (~0,75 j) · **Riesgo** · 🟠 · **Depende de** · US-09 (épica 2) · **Versión** · 2.1.1
+- **Estado** · ✅ **completada**
 
 Criterios de aceptación:
 
-- [ ] Resuelta [D-06](README.md#6-decisiones-pendientes-del-propietario) sobre `With<T>`.
-- [ ] Existen las cuatro clases nuevas con los métodos repartidos según la tabla de abajo.
-- [ ] `Extensions` sigue existiendo como `partial` con puentes `[Obsolete]` para la invocación en
+- [x] Resuelta [D-06](README.md#6-decisiones-pendientes-del-propietario) sobre `With<T>`: se
+      mantiene la mutación y se documenta explícitamente (opción **a**).
+- [x] Existen las cuatro clases nuevas con los métodos repartidos según la tabla de abajo.
+- [x] `Extensions` sigue existiendo como `partial` con puentes `[Obsolete]` para la invocación en
       forma estática.
-- [ ] Cada clase nueva tiene `<summary>` propio que describe su familia.
-- [ ] El código de los 29 proyectos dependientes **compila sin un solo cambio**.
-- [ ] Los 1.060 tests siguen en verde sin modificar ninguno.
+- [x] Cada clase nueva tiene `<summary>` propio que describe su familia.
+- [x] El código de los 29 proyectos dependientes **compila sin un solo cambio**.
+- [x] Los tests siguen en verde sin modificar ninguno.
+
+**Entregables** (commit de US-11):
+
+| Entregable | Detalle |
+|------------|---------|
+| `Helpers/Extensions/NullableExtensions.cs` | nuevo · `ToNullable<T>` |
+| `Helpers/Extensions/ExceptionMetadataExtensions.cs` | nuevo · `AppendExDetails` |
+| `Helpers/Extensions/MutationExtensions.cs` | nuevo · `With<T>` + `WithAsync<T>` ×2 · `<remarks>` que advierte de la **mutación en sitio** (D-06) |
+| `Helpers/Extensions/TaskLiftExtensions.cs` | nuevo · `VoidToAsync<T>` + `ToFuncTask` ×5 |
+| `Helpers/Extensions/Extensions.cs` | reducido a la declaración `public static partial class Extensions` con el `<summary>`/`<remarks>` de compatibilidad |
+| `Helpers/Extensions/Extensions.Obsolete.cs` | nuevo · **11 puentes NO-extensión** (sin `this`) con `<inheritdoc>`, `[Obsolete("Moved to <Clase>. Will be removed in 3.0.0.", false)]` y `[EditorBrowsable(EditorBrowsableState.Never)]` |
+| Tests | `ExtensionsSplitTests` (3) · total del núcleo **850 → 853** |
+
+**Verificación** · `dotnet build` de la solución en `Release --no-incremental`: `EXIT=0`, **0
+errores**, 119 advertencias (todas preexistentes), **0 `CS0121`** y **0 `CS1591`**. `dotnet test` de
+la solución: `EXIT=0`, **853/853** en el núcleo y `Con error: 0` en los 9 proyectos de pruebas.
 
 **Reparto propuesto:**
 
@@ -320,11 +338,11 @@ El espacio de nombres **no cambia** (`MoralesLarios.OOFP.Helpers.Extensions`), c
 
 **Tests mínimos**:
 
-| Test | Comprueba |
-|------|-----------|
-| `Extensiones_InvocacionComoExtension_SigueFuncionando` | `x.ToNullable()`, `x.With(…)`, `f.ToFuncTask()` compilan e invocan la implementación nueva |
-| `Extensions_PuentesEstaticos_EstanObsoletos` | vía reflexión, los métodos de la `Extensions` antigua llevan `[Obsolete]` |
-| `ClasesDeExtension_TienenSummary` | las cuatro clases nuevas tienen documentación XML |
+| Test | Comprueba | Estado |
+|------|-----------|--------|
+| `Extensiones_InvocacionComoExtension_SigueFuncionando` | `x.ToNullable()`, `x.With(…)`, `f.ToFuncTask()` compilan e invocan la implementación nueva (las 11 firmas, en forma de extensión) | ✅ |
+| `Extensions_PuentesEstaticos_EstanObsoletos` | vía reflexión, los puentes de `Extensions` llevan `[Obsolete]` con `IsError == false` y mensaje que cita `3.0.0`, y **no** están marcados con `ExtensionAttribute` | ✅ |
+| `ClasesDeExtension_TienenSummary` | el XML generado contiene `<summary>` no vacío para las cuatro clases nuevas | ✅ |
 
 **Riesgo principal** · que algún consumidor use la forma estática. El puente lo cubre, pero genera
 `CS0618` en su compilación. Mitigación: `[Obsolete(…, false)]` (advertencia, no error) y registro en

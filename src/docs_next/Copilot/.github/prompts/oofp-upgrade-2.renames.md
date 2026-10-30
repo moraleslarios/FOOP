@@ -66,6 +66,25 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `Constants.EXPECTED_KEY` | `Constants.ExpectedKey` | sí |
 | `Constants.DEFAULT_EX_ERROR_MESSAGE(ex)` | `EnsureFpMessages.DefaultExceptionError(ex)` | **NO** (cambia de clase) |
 
+### 1.2.b Métodos de extensión reubicados en la **2.1.1**
+
+> ⚠️ Estos **no son renombrados**: el método conserva su nombre y su firma, y **cambia de clase
+> contenedora**. Los puentes `[Obsolete]` se eliminan en la **3.0.0**. Ver el punto **42** de la
+> sección 3.3 del prompt.
+>
+> ✅ **Si los invocas en forma de extensión (`valor.ToNullable()`), no tienes que cambiar nada**: el
+> espacio de nombres `MoralesLarios.OOFP.Helpers.Extensions` **no cambia** y la resolución de
+> métodos de extensión no depende de la clase. Solo se rompe la invocación en **forma estática**.
+
+| Antes (2.0.0) · forma estática | Después (2.1.1) · forma estática | 🔗 |
+| --- | --- | --- |
+| `Extensions.ToNullable(x)` | `NullableExtensions.ToNullable(x)` | **NO** (cambia de clase) |
+| `Extensions.AppendExDetails(d, ex)` | `ExceptionMetadataExtensions.AppendExDetails(d, ex)` | **NO** (cambia de clase) |
+| `Extensions.With(x, …)` | `MutationExtensions.With(x, …)` | **NO** (cambia de clase) |
+| `Extensions.WithAsync(x, …)` ×2 | `MutationExtensions.WithAsync(x, …)` | **NO** (cambia de clase) |
+| `Extensions.VoidToAsync(x, a)` | `TaskLiftExtensions.VoidToAsync(x, a)` | **NO** (cambia de clase) |
+| `Extensions.ToFuncTask(f)` ×5 | `TaskLiftExtensions.ToFuncTask(f)` | **NO** (cambia de clase) |
+
 ### 1.3 Métodos
 
 | Antes | Después | 🔗 |

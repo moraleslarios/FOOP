@@ -2,179 +2,27 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
-using System.ComponentModel.DataAnnotations;
-
 namespace MoralesLarios.OOFP.Helpers.Extensions;
+
 /// <summary>
-/// Métodos de extensión de uso general del núcleo: conversión a nullable, clonado con mutaciones (<c>With</c>), adaptación de delegados sincrónicos a asíncronos y volcado de los datos de una excepción a un diccionario de metadatos.
+/// Clase de compatibilidad que conserva, en forma de puentes marcados como obsoletos, los
+/// métodos que antes vivían aquí y que se han repartido entre
+/// <see cref="NullableExtensions"/>, <see cref="ExceptionMetadataExtensions"/>,
+/// <see cref="MutationExtensions"/> y <see cref="TaskLiftExtensions"/>.
 /// </summary>
-public static class Extensions
+/// <remarks>
+/// Esta clase ya <b>no define métodos de extensión</b>: la invocación en forma de extensión
+/// (<c>valor.ToNullable()</c>, <c>objeto.With(...)</c>, <c>func.ToFuncTask()</c>…) se resuelve
+/// contra las clases nuevas sin que el código llamante necesite ningún cambio, porque el espacio
+/// de nombres <c>MoralesLarios.OOFP.Helpers.Extensions</c> <b>no ha cambiado</b>.
+/// <para>
+/// Los puentes viven en el fichero parcial <c>Helpers/Extensions/Extensions.Obsolete.cs</c> y sólo
+/// cubren la invocación en forma <b>estática</b> (<c>Extensions.ToNullable(valor)</c>), que sí
+/// habría quedado rota. Están marcados como obsoletos con aviso (no error) y
+/// <b>desaparecerán en la versión 3.0.0</b>: migre esas llamadas a la clase indicada en cada
+/// mensaje, o pásela a la forma de extensión.
+/// </para>
+/// </remarks>
+public static partial class Extensions
 {
-
-
-    /// <summary>
-    /// Ejecuta <c>ToNullable</c>.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Valor de tipo <c>T?</c> obtenido por la operación.</returns>
-    public static T? ToNullable<T>(this T source)
-        where T : struct
-            => source;
-
-
-    /// <summary>
-    /// Añade el elemento al final de <c>ExDetails</c>.
-    /// </summary>
-    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <param name="ex">Excepción capturada.</param>
-    /// <returns>Valor de tipo <c>Dictionary&lt;string, object&gt;</c> obtenido por la operación.</returns>
-    /// <remarks>
-    /// La excepción se almacena en la primera ranura libre de la secuencia reservada
-    /// <c>Ex</c>, <c>Ex2</c>, <c>Ex3</c>… Sólo se consideran ocupadas las claves que encajan en el
-    /// patrón <c>^Ex\d*$</c>: una clave propia como <c>"Expected"</c> o <c>"ExternalId"</c> no
-    /// desplaza la ranura canónica. El diccionario de origen no se modifica.
-    /// </remarks>
-    public static Dictionary<string, object> AppendExDetails(this Dictionary<string, object> source, Exception ex)
-    {
-        var result = MlErrorDetails.CopyMetadata(source);
-
-        result[MlErrorDetails.NextExceptionKey(result.Keys)] = ex;
-
-        return result;
-    }
-
-
-
-
-
-    /// <summary>
-    /// Ejecuta <c>With</c>.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <param name="changes">Acción a ejecutar.</param>
-    /// <returns>Valor de tipo <c>T</c> obtenido por la operación.</returns>
-    public static T With<T>(this T source, params Action<T>[] changes) 
-        where T : class
-    {
-        foreach (var change in changes)
-        {
-            change(source);
-        }
-
-        return source;
-    }
-
-
-    /// <summary>
-    /// Ejecuta <c>With</c>. Versión asíncrona.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <param name="changes">Acción a ejecutar.</param>
-    /// <returns>
-    /// Tarea que produce el valor de tipo <c>T</c> obtenido por la operación.
-    /// <para>
-    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
-    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
-    /// combinadores asíncronos. No admite cancelación.
-    /// </para>
-    /// </returns>
-    public static Task<T> WithAsync<T>(this T source, params Action<T>[] changes) 
-        where T : class
-        => source.With(changes).ToAsync();
-
-    /// <summary>
-    /// Ejecuta <c>With</c>. Versión asíncrona.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
-    /// <param name="changes">Acción a ejecutar.</param>
-    /// <returns>Tarea que produce el valor de tipo <c>T</c> obtenido por la operación.</returns>
-    public static async Task<T> WithAsync<T>(this Task<T> sourceAsync, params Action<T>[] changes) 
-        where T : class
-        => await (await sourceAsync).WithAsync(changes);
-
-
-
-    /// <summary>
-    /// Ejecuta <c>VoidTo</c>. Versión asíncrona.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <param name="voidAction">Acción que se ejecuta como efecto lateral.</param>
-    /// <returns>Tarea que representa la operación asíncrona.</returns>
-    public static Task VoidToAsync<T>(this T source, Action<T> voidAction)
-    {
-        voidAction(source);
-
-        return Task.CompletedTask;
-    }
-
-
-    /// <summary>
-    /// Ejecuta <c>ToFuncTask</c>.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
-    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Valor de tipo <c>Func&lt;T, Task&lt;TResult&gt;&gt;</c> obtenido por la operación.</returns>
-    public static Func<T, Task<TResult>> ToFuncTask<T, TResult>(this Func<T, TResult> func) => x => func(x).ToAsync();
-
-    /// <summary>
-    /// Ejecuta <c>ToFuncTask</c>.
-    /// </summary>
-    /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
-    /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Valor de tipo <c>Func&lt;MlErrorDetails, Task&lt;TResult&gt;&gt;</c> obtenido por la operación.</returns>
-    public static Func<MlErrorDetails, Task<TResult>> ToFuncTask<TResult>(this Func<MlErrorDetails, TResult> func) => errorsDetails => func(errorsDetails).ToAsync();
-
-    /// <summary>
-    /// Ejecuta <c>ToFuncTask</c>.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-    /// <param name="action">Acción que se ejecuta como efecto lateral.</param>
-    /// <returns>Valor de tipo <c>Func&lt;T, Task&gt;</c> obtenido por la operación.</returns>
-    public static Func<T, Task> ToFuncTask<T>(this Action<T> action)
-    {
-        return x =>
-        {
-            action(x);
-            return Task.CompletedTask;
-        };
-    }
-
-    /// <summary>
-    /// Ejecuta <c>ToFuncTask</c>.
-    /// </summary>
-    /// <param name="action">Acción que se ejecuta como efecto lateral.</param>
-    /// <returns>Valor de tipo <c>Func&lt;MlErrorDetails, Task&gt;</c> obtenido por la operación.</returns>
-    public static Func<MlErrorDetails, Task> ToFuncTask(this Action<MlErrorDetails> action)
-    {
-        return errorsDetails =>
-        {
-            action(errorsDetails);
-            return Task.CompletedTask;
-        };
-    }
-
-
-    /// <summary>
-    /// Ejecuta <c>ToFuncTask</c>.
-    /// </summary>
-    /// <param name="action">Acción que se ejecuta como efecto lateral.</param>
-    /// <returns>Valor de tipo <c>Func&lt;Task&gt;</c> obtenido por la operación.</returns>
-    public static Func<Task> ToFuncTask(this Action action)
-    {
-        return () =>
-        {
-            action();
-            return Task.CompletedTask;
-        };
-    }
-
-
-
 }
-

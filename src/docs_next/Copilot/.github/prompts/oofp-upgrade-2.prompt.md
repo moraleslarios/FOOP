@@ -371,6 +371,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 38 | Constantes y literales de mensaje del núcleo (**2.1.1**) | nombres `MAYUSCULAS`, `const`, mensajes con erratas | `PascalCase`, `static readonly`, mensajes corregidos | **Compilación** (`CS0618`) + Contrato (texto de los mensajes) + **binario** |
 | 40 | Contenedor de metadatos de `MlErrorDetails` (**2.1.1**) | 7 defectos funcionales: claves de excepción mal discriminadas, `Merge` que lanza, `AddMetadataRange` NO-OP, lectores que mutan, diccionario compartido | claves `Ex`/`Ex2`/`Ex3` densas, `Merge` que sufija, lectores no destructivos, metadatos **inmutables**, igualdad **estructural** | ⚠️ **Contrato · 9 de 12 cambios son SILENCIOSOS** |
 | 41 | `TryGetValue` / `TryGetErrors` y los convenios `Try*` / `Async` (**2.1.1**) | no existían; los dos convenios no estaban documentados | dos miembros nuevos con semántica BCL (`bool` + `out`) y los convenios documentados en el `README.md` del núcleo | ✅ **Ninguna** · aditivo y documental |
+| 42 | Troceado de la clase `Extensions` del núcleo (**2.1.1**) | 11 métodos de extensión en una única clase `Extensions` | repartidos en `NullableExtensions`, `ExceptionMetadataExtensions`, `MutationExtensions` y `TaskLiftExtensions`; `Extensions` queda como puentes `[Obsolete]` | **Compilación** (`CS0618`) **solo** si se invocaban en forma **estática** |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -693,6 +694,60 @@ semántica `Try*` de la BCL.
 > y excluir `OperationCanceledException` del `catch` de los `Try*`. Ambas son rupturas y están
 > remitidas a sus documentos de mejora.
 
+#### 42 — La clase `Extensions` del núcleo se ha troceado (2.1.1) ⚠️ SOLO SI LA USABAS EN FORMA ESTÁTICA
+
+> ✅ **Si invocabas estos métodos como métodos de extensión (`valor.ToNullable()`), no tienes que
+> cambiar nada.** El espacio de nombres **no cambia** y la resolución de métodos de extensión busca
+> en **todas** las clases estáticas del espacio de nombres, no en una concreta.
+>
+> ⚠️ **Si los invocabas en forma estática (`Extensions.ToNullable(valor)`), obtendrás `CS0618`.**
+
+La clase cajón de sastre `MoralesLarios.OOFP.Helpers.Extensions.Extensions` tenía 11 métodos de
+extensión sin relación entre sí. En la 2.1.1 se reparten en cuatro clases con nombre propio:
+
+| Clase nueva | Métodos | Qué familia cubre |
+| --- | --- | --- |
+| `NullableExtensions` | `ToNullable<T>` | elevación a `Nullable<T>` |
+| `ExceptionMetadataExtensions` | `AppendExDetails` | volcado de excepciones a metadatos de error |
+| `MutationExtensions` | `With<T>`, `WithAsync<T>` ×2 | mutación encadenable de objetos |
+| `TaskLiftExtensions` | `VoidToAsync<T>`, `ToFuncTask` ×5 | elevación de delegados y acciones a `Task` |
+
+**Espacio de nombres (sin cambios):** `MoralesLarios.OOFP.Helpers.Extensions`. Está en el
+`global using` del núcleo, así que sigue cubriendo las cuatro clases nuevas.
+
+```csharp
+// ✅ Sigue compilando sin tocar nada — forma de extensión
+int?                 n = 42.ToNullable();
+var                  c = cliente.With(x => x.Nombre = "Ana");
+Func<int, Task<int>> f = ((Func<int, int>)(x => x + 1)).ToFuncTask();
+
+// ⚠️ Genera CS0618 (advertencia, NO error) — forma estática
+int? n2 = Extensions.ToNullable(42);
+
+// ✅ Migración: usa la clase nueva, o pásalo a forma de extensión
+int? n3 = NullableExtensions.ToNullable(42);
+```
+
+**Los 11 puentes** viven en `Helpers/Extensions/Extensions.Obsolete.cs`, están marcados con
+`[Obsolete("Moved to <Clase>. Will be removed in 3.0.0.", false)]` (advertencia, no error) y con
+`[EditorBrowsable(EditorBrowsableState.Never)]` para que no ensucien IntelliSense. **Desaparecen en
+la 3.0.0.**
+
+> ⚠️ **Nota sobre `With<T>` / `WithAsync<T>`:** su nombre sugiere una copia al estilo `with` de los
+> `record`, pero **mutan la instancia recibida** y devuelven **la misma referencia**. Esto **no
+> cambia** en la 2.1.1 (decisión D-06), pero ahora está documentado de forma explícita en el
+> `<remarks>` de `MutationExtensions`. Si tu código asumía semántica de copia, tenías un defecto
+> latente.
+
+**Qué revisar en tu código:**
+
+1. Busca invocaciones en forma estática: `Extensions.ToNullable(`, `Extensions.With(`,
+   `Extensions.WithAsync(`, `Extensions.AppendExDetails(`, `Extensions.VoidToAsync(`,
+   `Extensions.ToFuncTask(`. Sustitúyelas por la clase nueva o por la forma de extensión.
+2. Si tratas las advertencias como errores (`TreatWarningsAsErrors`), esas llamadas **romperán la
+   compilación**. Migra o añade `#pragma warning disable CS0618` de forma temporal y localizada.
+3. Revisa los usos de `With<T>` que asumieran que no se muta el origen.
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -825,7 +880,7 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37 y —si migras a la 2.1.1— 38, 39, 40 y 41, indicando, para cada uno, si **afecta** al proyecto, qué se
+   36, 37 y —si migras a la 2.1.1— 38, 39, 40, 41 y 42, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
@@ -868,10 +923,10 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
-| 2.1.1 | 38, 39, 40, 41 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`** y `TryGetValue` / `TryGetErrors` (aditivo) |
+| 2.1.1 | 38, 39, 40, 41, 42 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40 y 41** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41 y 42** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
