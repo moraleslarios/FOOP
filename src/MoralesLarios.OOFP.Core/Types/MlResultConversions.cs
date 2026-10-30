@@ -10,6 +10,20 @@ namespace MoralesLarios.OOFP.Types;
 /// <summary>
 /// Métodos de extensión que convierten delegados y valores corrientes en <see cref="MlResult{T}"/>, incluidas las variantes <c>Try</c> que capturan las excepciones y las transforman en un resultado fallido.
 /// </summary>
+/// <remarks>
+/// <b>Semántica de la familia <c>Try*</c></b> · los miembros cuyo nombre empieza por <c>Try</c>
+/// (<c>TryToMlResult</c> y sus variantes) envuelven la ejecución en un <c>try/catch</c> y
+/// convierten la excepción capturada en un fallo de <see cref="MlResult{T}"/>. <b>No</b> devuelven
+/// <see langword="bool"/> ni usan parámetros <c>out</c>, al contrario que <c>TryParse</c> o
+/// <c>TryGetValue</c> de la BCL. Si necesita la forma de la BCL, use
+/// <c>MlResult{T}.TryGetValue</c> o <c>MlResult{T}.TryGetErrors</c>.
+/// <para>
+/// <b>Semántica del sufijo <c>Async</c></b> · una parte de los miembros <c>*Async</c> no realiza
+/// ninguna operación asíncrona: devuelve una tarea <b>ya completada</b> y el sufijo existe
+/// únicamente para permitir iniciar una cadena que continúa con combinadores asíncronos. Estos
+/// miembros no admiten cancelación.
+/// </para>
+/// </remarks>
 public static partial class MlResultConversions
 {
 
@@ -838,98 +852,196 @@ public static partial class MlResultConversions
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultValidAsync<T>(this T                    source) => source.ToMlResultValid().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this MlErrorDetails      source) => source.ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this MlError              source) => source.ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this string               source) => MlError.FromErrorMessage(source).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this List<MlError>        source) => source.ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this List<string>         source) => MlErrorDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this MlError[]            source) => source.ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this string[]             source) => MlErrorDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this IEnumerable<MlError> source) => new MlErrorDetails(source).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this IEnumerable<string>  source) => MlErrorDetails.FromErrorsMessagesDetails(source).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (IEnumerable<MlError>, Dictionary<string, object>) source) => new MlErrorDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (IEnumerable<string> , Dictionary<string, object>) source) => MlErrorDetails.FromErrorsMessagesDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (MlError             , Dictionary<string, object>) source) => new MlErrorDetails(new List<MlError> { source.Item1 }, source.Item2).ToMlResultFail<T>().ToAsync();
     /// <summary>
     /// Ejecuta <c>ToMlResultFail</c>. Versión asíncrona.
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ToMlResultFailAsync <T>(this (string              , Dictionary<string, object>) source) => MlErrorDetails.FromErrorMessageDetails(source.Item1, source.Item2).ToMlResultFail<T>().ToAsync();
 
 
@@ -954,7 +1066,14 @@ public static partial class MlResultConversions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> ToMlResultFailAsync<T, TResult>(this MlResult<T> source)
         => source.ToMlResultFail<T, TResult>().ToAsync();
 
@@ -1002,7 +1121,14 @@ public static partial class MlResultConversions
     /// Ejecuta <c>SecureGetValueFromMlResultBoxed</c>. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el valor de tipo <c>object</c> obtenido por la operación.</returns>
+    /// <returns>
+    /// Tarea que produce el valor de tipo <c>object</c> obtenido por la operación.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<object> SecureGetValueFromMlResultBoxedAsync(this object source)
         => source.SecureGetValueFromMlResultBoxed().ToAsync();
 
@@ -1034,7 +1160,14 @@ public static partial class MlResultConversions
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<object>> ToMlResultObjectAsync<T>(this MlResult<T> source)
         => source.ToMlResultObject().ToAsync();
 
@@ -1061,7 +1194,14 @@ public static partial class MlResultConversions
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<object>> ToMlResultObjectAsync<T>(this T source) => source.ToMlResultObject().ToAsync();
 
     /// <summary>
@@ -1093,7 +1233,14 @@ public static partial class MlResultConversions
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> FromMlResultObjectAsync<T>(this MlResult<object> source)
         => source.FromMlResultObject<T>().ToAsync();
 

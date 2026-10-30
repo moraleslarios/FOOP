@@ -1,10 +1,10 @@
-# Épica 3 · Nomenclatura de la superficie pública
+﻿# Épica 3 · Nomenclatura de la superficie pública
 
 > **Versión destino** · 2.1.1 (US-11, US-12 aditiva, US-16) · 3.0.0 (US-12 retirada, US-13, US-14, US-15)
 > **Origen** · [`Mejoras/Core/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Core/01-Nomenclatura-y-Estandares.md) · puntos 03, 04, 05, 08, 09, 10, 11, 14
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.1.1
 > **Proyecto** · `src/MoralesLarios.OOFP.Core` (+ 29 proyectos dependientes)
-> **Estado** · ⬜ no iniciada
+> **Estado** · 🔄 en curso · US-16 ✅ completada · US-11 ⬜ · US-12 ⬜
 > **Esfuerzo** · **L** (~3,0 jornadas)
 > **Riesgo** · 🟠 alto en US-11 · 🔴 muy alto en US-12 … US-15 · 🟢 bajo en US-16
 >
@@ -537,21 +537,36 @@ Mitigación obligatoria: herramienta Roslyn + verificación del recuento de lín
 > **para** no cometer errores por analogía.
 
 - **Esfuerzo** · S (½ j) · **Riesgo** · 🟢 · **Depende de** · nada · **Versión** · 2.1.1
+- **Estado** · ✅ **completada**
 
 Criterios de aceptación:
 
-- [ ] Cada familia `Try*` tiene un `<remarks>` compartido que explica la semántica propia:
+- [x] Cada familia `Try*` tiene un `<remarks>` compartido que explica la semántica propia:
       *«envuelve la ejecución en `try/catch` y convierte la excepción en un fallo de `MlResult`; no
       devuelve `bool` ni usa parámetros `out`, al contrario que `TryParse` o `TryGetValue` de la
       BCL»*.
-- [ ] Los métodos `*Async` que **no** son asíncronos documentan en su `<returns>` que la tarea
+- [x] Los métodos `*Async` que **no** son asíncronos documentan en su `<returns>` que la tarea
       devuelta **ya está completada** y que su único propósito es iniciar una cadena asíncrona.
-- [ ] El `README.md` del núcleo contiene una sección «Convenios de nomenclatura» que recoge
+- [x] El `README.md` del núcleo contiene una sección «Convenios de nomenclatura» que recoge
       ambas semánticas.
-- [ ] Se ha inventariado qué métodos `*Async` son realmente sincrónicos (al menos los de
+- [x] Se ha inventariado qué métodos `*Async` son realmente sincrónicos (al menos los de
       `MlResultBindExtensions.cs` L40-42 y L127-130) y el inventario queda en el documento de
       rendimiento.
-- [ ] `CS1591` sigue en 0.
+- [x] `CS1591` sigue en 0.
+
+**Entregables** (commit de US-16):
+
+| Entregable | Detalle |
+|------------|---------|
+| `<remarks>` de familia | 6 clases: `EnsureFp`, `MlResultBindExtensions`, `MlResultConversions`, `MlResultExecSelfExtensions`, `MlResultMapExtensions`, `MlResultMatchExtensions` |
+| `<returns>` con `<para>` | **248** métodos `*Async` sin asincronía real, en 14 ficheros |
+| `Types/MlResult.TryGet.cs` | nuevo · `TryGetValue(out T)` y `TryGetErrors(out MlErrorDetails)` (D-13, aditivo) |
+| `README.md` del núcleo | nueva sección [§15 «Convenios de nomenclatura»](../../../../MoralesLarios.OOFP.Core/README.md#15-convenios-de-nomenclatura) (2.042 → 2.135 líneas) |
+| `Mejoras/Core/06-Rendimiento.md` | inventario completo de los 248 métodos, implicaciones y acciones aplazadas |
+| Tests | `MlResultTryGetTests` (9) + `NamingConventionsDocTests` (6) · total del núcleo **835 → 850** |
+
+**Verificación** · `dotnet build` del núcleo: `EXIT=0`, 4 advertencias preexistentes (`CS8604` en
+`Helpers/EnsureFp.Strings.cs`), **0 `CS1591`**. `dotnet test` del núcleo: **850/850 correctas**.
 
 **API propuesta**:
 
@@ -580,10 +595,15 @@ Las dos mejoras de fondo quedan explícitamente fuera y remitidas:
 
 **Tests mínimos**:
 
-| Test | Comprueba |
-|------|-----------|
-| `BindAsync_SinAsincronia_DevuelveTareaCompletada` | la `Task` devuelta tiene `IsCompleted == true` inmediatamente |
-| `Documentacion_FamiliaTry_TieneRemarks` | el XML generado contiene `<remarks>` en los `Try*` de cada familia |
+| Test | Comprueba | Estado |
+|------|-----------|--------|
+| `BindAsync_SinAsincronia_DevuelveTareaCompletada` | la `Task` devuelta tiene `IsCompleted == true` inmediatamente | ✅ |
+| `MapAsync_SinAsincronia_DevuelveTareaCompletada` | ídem para la familia `Map` | ✅ |
+| `ValidAsync_SinAsincronia_DevuelveTareaCompletada` | ídem para el factor `MlResult{T}.ValidAsync` | ✅ |
+| `Documentacion_FamiliaTry_TieneRemarks` | el XML generado contiene `<remarks>` en las 6 familias, con las palabras `Try`, `try/catch` y `BCL` | ✅ |
+| `Documentacion_SufijoAsync_SeExplicaEnCadaFamilia` | el `<remarks>` de las 6 familias menciona `Async` y «completada» | ✅ |
+| `Documentacion_TryGetValue_Y_TryGetErrors_EstanDocumentados` | el XML contiene los dos miembros nuevos con documentación | ✅ |
+| `MlResultTryGetTests` (9 casos) | contrato `bool` + `out` de `TryGetValue` / `TryGetErrors` y su complementariedad | ✅ |
 
 **Riesgo principal** · ninguno técnico. El riesgo es de **esfuerzo**: documentar 1.000 métodos
 individualmente sería desproporcionado. El criterio es un `<remarks>` **por familia**, no por
@@ -654,8 +674,8 @@ Además de los [criterios comunes](README.md#8-definición-de-terminado-común):
 - [ ] Las cuatro clases de extensión nuevas existen y `Extensions` conserva puentes `[Obsolete]`.
 - [ ] `MlResult.Discard` es la implementación; `_`, `Empty()` y `EmptyAsync()` son puentes
       `[Obsolete]` en `Types/MlResult.Obsolete.cs`.
-- [ ] Cada familia `Try*` tiene `<remarks>` y cada `*Async` sincrónico tiene `<returns>` explícito.
-- [ ] El `README.md` del núcleo tiene la sección «Convenios de nomenclatura».
+- [x] Cada familia `Try*` tiene `<remarks>` y cada `*Async` sincrónico tiene `<returns>` explícito.
+- [x] El `README.md` del núcleo tiene la sección «Convenios de nomenclatura».
 - [ ] **Los 29 proyectos dependientes compilan sin ningún cambio de código.**
 - [ ] Las rupturas constan en
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3 y

@@ -252,7 +252,14 @@ public static partial class MlResultErrorDetailsExtensions
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> GetMetadataValueAsync<T>(this MlErrorDetails source) => source.GetMetadataValue<T>().ToAsync();
 
     /// <summary>
@@ -277,7 +284,14 @@ public static partial class MlResultErrorDetailsExtensions
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> GetExceptionAsync<T>(this MlErrorDetails source) where T : Exception => source.GetDetail<T>(MlErrorDetails.MetadataKeys.Exception).ToAsync();
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
@@ -296,7 +310,14 @@ public static partial class MlResultErrorDetailsExtensions
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<Exception>> GetExceptionAsync(this MlErrorDetails source) => source.GetDetail<Exception>(MlErrorDetails.MetadataKeys.Exception).ToAsync();
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Exception</c>. Versión asíncrona.

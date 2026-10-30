@@ -1,4 +1,4 @@
----
+﻿---
 mode: agent
 description: 'Migra automáticamente un proyecto que consume MoralesLarios.OOFP 1.x a la versión 2.0.0: actualiza los paquetes NuGet (incluidos los renombrados), reescribe los using/namespaces, aplica los 888 cambios de nomenclatura de la API y verifica la compilación.'
 tools: ['codebase', 'search', 'editFiles', 'runCommands', 'problems', 'usages', 'changes']
@@ -370,6 +370,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 37 | Paginación imperativa | `OrderBy` **después** de `Skip`/`Take` | `OrderBy` **antes** de `Skip`/`Take` | Contrato (contenido de cada página) |
 | 38 | Constantes y literales de mensaje del núcleo (**2.1.1**) | nombres `MAYUSCULAS`, `const`, mensajes con erratas | `PascalCase`, `static readonly`, mensajes corregidos | **Compilación** (`CS0618`) + Contrato (texto de los mensajes) + **binario** |
 | 40 | Contenedor de metadatos de `MlErrorDetails` (**2.1.1**) | 7 defectos funcionales: claves de excepción mal discriminadas, `Merge` que lanza, `AddMetadataRange` NO-OP, lectores que mutan, diccionario compartido | claves `Ex`/`Ex2`/`Ex3` densas, `Merge` que sufija, lectores no destructivos, metadatos **inmutables**, igualdad **estructural** | ⚠️ **Contrato · 9 de 12 cambios son SILENCIOSOS** |
+| 41 | `TryGetValue` / `TryGetErrors` y los convenios `Try*` / `Async` (**2.1.1**) | no existían; los dos convenios no estaban documentados | dos miembros nuevos con semántica BCL (`bool` + `out`) y los convenios documentados en el `README.md` del núcleo | ✅ **Ninguna** · aditivo y documental |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -636,6 +637,62 @@ IReadOnlyDictionary<string, object> vista = details.MetadataView;
 > ni similares como claves propias; cualquier otra clave que *empiece* por `Ex` (`"ExportedAt"`,
 > `"Expected"`) es perfectamente válida y ya **no** se confunde con una excepción.
 
+---
+
+#### 41 — `TryGetValue` / `TryGetErrors` y los convenios `Try*` / `Async` (2.1.1) ✅ SIN RUPTURAS
+
+> ✅ **Este punto no rompe nada.** Es **puramente aditivo** y documental. No hay que cambiar ni una
+> línea de código para migrar. Se incluye aquí porque aclara dos convenios de nomenclatura que son
+> fuente habitual de errores por analogía con la BCL.
+
+| Elemento | 2.0.0 | 2.1.1 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| `MlResult<T>.TryGetValue(out T value)` | no existe | **nuevo** · `bool` + `out`, semántica BCL | — (aditivo) |
+| `MlResult<T>.TryGetErrors(out MlErrorDetails errorsDetails)` | no existe | **nuevo** · `bool` + `out`, semántica BCL | — (aditivo) |
+| Familias `Try*` (`TryBind`, `TryMap`, `TryMatch`, `TryExecSelf`, `TryConvert`, `EnsureFp.Try*`) | sin documentar | `<remarks>` por familia que contrasta su semántica con la de la BCL | — (solo documentación) |
+| 248 sobrecargas `*Async` sin asincronía real | sin documentar | `<returns>` que declara que la tarea **ya está completada** | — (solo documentación) |
+
+**Los dos convenios, en una frase cada uno:**
+
+1. **`Try*` de OOFP ≠ `Try*` de la BCL.** En la BCL, `Try*` significa *«devuelvo `bool` y el
+   resultado por `out`, y no lanzo»*. En OOFP significa *«envuelvo la ejecución en `try/catch` y
+   convierto la excepción en un fallo de `MlResult`»*: devuelve un `MlResult<T>`, no un `bool`, y no
+   usa parámetros `out`. Son más de mil métodos y **no se renombran** (decisión D-04).
+2. **`Async` de OOFP no garantiza asincronía real.** 248 de las 3.436 firmas que devuelven
+   `Task<...>` (un 7,2 %) no realizan ninguna operación asíncrona: devuelven
+   `Task.FromResult(...)`. El sufijo existe para poder **iniciar** una cadena que continúa con
+   combinadores asíncronos. Ninguna de ellas admite cancelación.
+
+**API nueva (aditiva):**
+
+```csharp
+// Semántica BCL para los dos casos donde realmente aplica
+if (resultado.TryGetValue(out var valor))          { /* camino feliz */ }
+if (resultado.TryGetErrors(out var errorsDetails)) { /* camino de fallo */ }
+```
+
+`TryGetValue` y `TryGetErrors` son **complementarios y exhaustivos**: para un mismo `MlResult<T>`
+exactamente uno de los dos devuelve `true`. Son los **únicos** miembros de la biblioteca con
+semántica `Try*` de la BCL.
+
+**Qué revisar en tu código:**
+
+1. **Nada es obligatorio.** Tu código sigue compilando y comportándose igual.
+2. **Opcional · desenvolver un resultado.** Si usabas `Match`, `IsValid` + acceso a la propiedad o un
+   `if` sobre el estado solo para extraer el valor, `TryGetValue` / `TryGetErrors` expresan lo mismo
+   de forma más corta e idiomática para quien viene del ecosistema .NET.
+3. **Opcional · `ConfigureAwait` y cancelación.** Si añadías `ConfigureAwait(false)` o esperabas
+   poder cancelar una de las 248 sobrecargas sincrónicas, ahora está documentado que no sirve de
+   nada: la tarea ya está completada cuando el método retorna.
+
+> 🧭 **Dónde está documentado**: sección «Convenios de nomenclatura» del `README.md` del núcleo
+> (`src/MoralesLarios.OOFP.Core/README.md`, §15) y el inventario completo de las 248 sobrecargas en
+> `src/docs_next/Mejoras/Core/06-Rendimiento.md`.
+>
+> 🧭 **Aplazado a 3.0.0 (no se hace en 2.1.1)**: pasar esas 248 firmas de `Task<T>` a `ValueTask<T>`
+> y excluir `OperationCanceledException` del `catch` de los `Try*`. Ambas son rupturas y están
+> remitidas a sus documentos de mejora.
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -768,7 +825,7 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37 y —si migras a la 2.1.1— 38, 39 y 40, indicando, para cada uno, si **afecta** al proyecto, qué se
+   36, 37 y —si migras a la 2.1.1— 38, 39, 40 y 41, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
@@ -811,10 +868,10 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
-| 2.1.1 | 38, 39, 40 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado y **saneamiento del contenedor de metadatos de `MlErrorDetails`** |
+| 2.1.1 | 38, 39, 40, 41 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`** y `TryGetValue` / `TryGetErrors` (aditivo) |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39 y 40** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40 y 41** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría

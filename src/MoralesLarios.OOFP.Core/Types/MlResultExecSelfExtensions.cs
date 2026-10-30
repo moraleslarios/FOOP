@@ -6,6 +6,21 @@ namespace MoralesLarios.OOFP.Types;
 /// <summary>
 /// Métodos de extensión que ejecutan acciones laterales sobre un <see cref="MlResult{T}"/> (registro, trazas, notificaciones) y devuelven el resultado de origen sin modificarlo.
 /// </summary>
+/// <remarks>
+/// <b>Semántica de la familia <c>Try*</c></b> · los miembros cuyo nombre empieza por <c>Try</c>
+/// (<c>TryExecSelf</c> y sus variantes) envuelven la ejecución en un <c>try/catch</c> y convierten
+/// la excepción capturada en un fallo de <see cref="MlResult{T}"/>. <b>No</b> devuelven
+/// <see langword="bool"/> ni usan parámetros <c>out</c>, al contrario que <c>TryParse</c> o
+/// <c>TryGetValue</c> de la BCL. Si necesita la forma de la BCL, use
+/// <c>MlResult{T}.TryGetValue</c> o <c>MlResult{T}.TryGetErrors</c>.
+/// <para>
+/// <b>Semántica del sufijo <c>Async</c></b> · las sobrecargas <c>*Async</c> que reciben un origen
+/// <see cref="MlResult{T}"/> sincrónico y un delegado sincrónico no realizan ninguna operación
+/// asíncrona: devuelven una tarea <b>ya completada</b> y el sufijo existe únicamente para permitir
+/// iniciar una cadena que continúa con combinadores asíncronos. Estas sobrecargas no admiten
+/// cancelación.
+/// </para>
+/// </remarks>
 public static class MlResultExecSelfExtensions
 {
 
@@ -144,7 +159,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionValid">Acción que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="actionFail">Acción que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T>             source,
                                                          Action<T>               actionValid,
                                                          Action<MlErrorDetails> actionFail)
@@ -215,7 +237,14 @@ public static class MlResultExecSelfExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="action">Acción que se ejecuta como efecto lateral.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ExecSelfAsync<T>(this MlResult<T> source,
                                                         Action            action)
         => source.ExecSelf(action).ToAsync();
@@ -530,7 +559,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="action">Acción que se ejecuta como efecto lateral.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfAsync<T>(this MlResult<T>             source,
                                                             Action                  action,
                                                             Func<Exception, string> errorMessageBuilder)
@@ -544,7 +580,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="action">Acción que se ejecuta como efecto lateral.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfAsync<T>(this MlResult<T>             source,
                                                             Action                  action,
                                                             string                  errorMessage = null!)
@@ -953,7 +996,14 @@ public static class MlResultExecSelfExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionValid">Acción que se ejecuta cuando el resultado de origen es válido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ExecSelfIfValidAsync<T>(this MlResult<T> source,
                                                                 Action<T>         actionValid)
         => source.ExecSelfIfValid(actionValid).ToAsync();
@@ -1096,7 +1146,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionValid">Acción que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfValidAsync<T>(this MlResult<T>             source,
                                                                    Action<T>               actionValid,
                                                                    Func<Exception, string> errorMessageBuilder)
@@ -1111,7 +1168,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionValid">Acción que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfValidAsync<T>(this MlResult<T> source,
                                                                    Action<T>   actionValid,
                                                                    string      errorMessage = null!)
@@ -1193,7 +1257,14 @@ public static class MlResultExecSelfExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFail">Acción que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ExecSelfIfFailAsync<T>(this MlResult<T>             source,
                                                                Action<MlErrorDetails> actionFail)
         => source.ExecSelfIfFail(actionFail).ToAsync();
@@ -1359,7 +1430,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFail">Acción que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this MlResult<T>             source,
                                                                   Action<MlErrorDetails> actionFail,
                                                                   Func<Exception, string> errorMessageBuilder)
@@ -1374,7 +1452,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFail">Acción que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfFailAsync<T>(this MlResult<T>             source,
                                                                   Action<MlErrorDetails> actionFail,
                                                                   string                  errorMessage = null!)
@@ -1534,7 +1619,14 @@ public static class MlResultExecSelfExtensions
     /// <typeparam name="TValue">Tipo del valor.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFailValue">Valor sobre el que se opera.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ExecSelfIfFailWithValueAsync<T, TValue>(this MlResult<T>    source,
                                                                                  Action<TValue> actionFailValue)
         => source.ExecSelfIfFailWithValue<T, TValue>(actionFailValue).ToAsync();
@@ -1710,7 +1802,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFailValue">Valor sobre el que se opera.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfFailWithValueAsync<T, TValue>(this MlResult<T>             source,
                                                                                     Action<TValue>          actionFailValue,
                                                                                     Func<Exception, string> errorMessageBuilder)
@@ -1726,7 +1825,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFailValue">Valor sobre el que se opera.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfFailWithValueAsync<T, TValue>(this MlResult<T>    source,
                                                                                     Action<TValue> actionFailValue,
                                                                                     string         errorMessage = null!)
@@ -1820,7 +1926,14 @@ public static class MlResultExecSelfExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFailException">Excepción capturada.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ExecSelfIfFailWithExceptionAsync<T>(this MlResult<T>       source,
                                                                             Action<Exception> actionFailException)
         => source.ExecSelfIfFailWithException(actionFailException).ToAsync();
@@ -1986,7 +2099,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFailException">Excepción capturada.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfFailWithExceptionAsync<T>(this MlResult<T>             source,
                                                                                Action<Exception>       actionFailException,
                                                                                Func<Exception, string> errorMessageBuilder)
@@ -2001,7 +2121,14 @@ public static class MlResultExecSelfExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFailException">Excepción capturada.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryExecSelfIfFailWithExceptionAsync<T>(this MlResult<T>       source,
                                                                                Action<Exception> actionFailException,
                                                                                string            errorMessage = null!)
@@ -2093,7 +2220,14 @@ public static class MlResultExecSelfExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="actionFail">Acción que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> ExecSelfIfFailWithoutExceptionAsync<T>(this MlResult<T>             source,
                                                                                Action<MlErrorDetails> actionFail)
         => source.ExecSelfIfFailWithoutException(actionFail).ToAsync();

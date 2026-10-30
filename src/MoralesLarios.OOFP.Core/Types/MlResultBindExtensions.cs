@@ -6,6 +6,21 @@ namespace MoralesLarios.OOFP.Types;
 /// <summary>
 /// Métodos de extensión de encadenamiento (<c>Bind</c>) sobre <see cref="MlResult{T}"/>: aplican una función que devuelve otro resultado solo cuando el origen es válido y propagan el error en caso contrario.
 /// </summary>
+/// <remarks>
+/// <b>Semántica de la familia <c>Try*</c></b> · los miembros cuyo nombre empieza por <c>Try</c>
+/// (<c>TryBind</c>, <c>TryBindIf</c>, <c>TryBindIfFail</c> y sus variantes) envuelven la ejecución
+/// en un <c>try/catch</c> y convierten la excepción capturada en un fallo de
+/// <see cref="MlResult{T}"/>. <b>No</b> devuelven <see langword="bool"/> ni usan parámetros
+/// <c>out</c>, al contrario que <c>TryParse</c> o <c>TryGetValue</c> de la BCL. Si necesita la
+/// forma de la BCL, use <c>MlResult{T}.TryGetValue</c> o <c>MlResult{T}.TryGetErrors</c>.
+/// <para>
+/// <b>Semántica del sufijo <c>Async</c></b> · las sobrecargas <c>*Async</c> que reciben un origen
+/// <see cref="MlResult{T}"/> sincrónico y un delegado sincrónico no realizan ninguna operación
+/// asíncrona: devuelven una tarea <b>ya completada</b> y el sufijo existe únicamente para permitir
+/// iniciar una cadena que continúa con combinadores asíncronos. Estas sobrecargas no admiten
+/// cancelación.
+/// </para>
+/// </remarks>
 public static partial class MlResultBindExtensions
 {
 
@@ -37,7 +52,14 @@ public static partial class MlResultBindExtensions
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindAsync<T, TResult>(this MlResult<T>                source, 
                                                                      Func<T, MlResult<TResult>> func)
         => source.Bind(func).ToAsync();
@@ -121,7 +143,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindAsync<T, TResult>(this MlResult<T>                source,
                                                                         Func<T, MlResult<TResult>> func,
                                                                         string                     exceptionAdditionalMessage = null!)
@@ -156,7 +185,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindAsync<T, TResult>(this MlResult<T>                source,
                                                                         Func<T, MlResult<TResult>> func,
                                                                         Func<Exception, string>    errorMessageBuilder)
@@ -310,7 +346,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
     /// <param name="funcs">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this   MlResult<T>                  source,
                                                                             Func<T, MlResult<TResult>>   returnFunc,
                                                                      params Func<T, MlResult<TResult>>[] funcs)
@@ -449,7 +492,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
     /// <param name="funcs">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult>(this MlResult<T>                    source,
                                                                             Func<T,
                                                                             IEnumerable<TResult>,
@@ -591,7 +641,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="returnFunc">Función que se ejecuta durante la operación.</param>
     /// <param name="funcs">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindMultiAsync<T, TResult, TFuncColec>(this   MlResult<T>                     source,
                                                                                         Func<T,
                                                                                              IEnumerable<TFuncColec>,
@@ -855,7 +912,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                source, 
                                                                                                            Func<T, MlResult<TResult>> func,
                                                                                                            Func<Exception, string>    errorMessageBuilder)
@@ -870,7 +934,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                source, 
                                                                                                            Func<T, MlResult<TResult>> func,
                                                                                                            string                     errorMessage = null!)
@@ -956,7 +1027,14 @@ public static partial class MlResultBindExtensions
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(this MlResult<T>                source,
                                                                                                         Func<T, MlResult<TResult>> func)
         => source.BindSaveValueInDetailsIfFailedFuncResult(func).ToAsync();
@@ -1040,7 +1118,14 @@ public static partial class MlResultBindExtensions
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="funcTrue">Función a aplicar.</param>
     /// <param name="funcFalse">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfAsync<T, TResult>(this MlResult<T>                source,
                                                                        Func<T, bool>              condition,
                                                                        Func<T, MlResult<TResult>> funcTrue,
@@ -1197,7 +1282,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfAsync<T>(this MlResult<T>          source,
                                                         Func<T, bool>        condition,
                                                         Func<T, MlResult<T>> func)
@@ -1290,7 +1382,14 @@ public static partial class MlResultBindExtensions
     /// <param name="funcTrue">Función a aplicar.</param>
     /// <param name="funcFalse">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                source,
                                                                           Func<T, bool>              condition,
                                                                           Func<T, MlResult<TResult>> funcTrue,
@@ -1309,7 +1408,14 @@ public static partial class MlResultBindExtensions
     /// <param name="funcTrue">Función a aplicar.</param>
     /// <param name="funcFalse">Función a aplicar.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfAsync<T, TResult>(this MlResult<T>                source,
                                                                           Func<T, bool>              condition,
                                                                           Func<T, MlResult<TResult>> funcTrue,
@@ -1658,7 +1764,14 @@ public static partial class MlResultBindExtensions
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfAsync<T>(this MlResult<T>             source,
                                                            Func<T, bool>           condition,
                                                            Func<T, MlResult<T>>    func,
@@ -1674,7 +1787,14 @@ public static partial class MlResultBindExtensions
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfAsync<T>(this MlResult<T>             source,
                                                            Func<T, bool>           condition,
                                                            Func<T, MlResult<T>>    func,
@@ -1856,7 +1976,14 @@ public static partial class MlResultBindExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailAsync<T>(this MlResult<T>                  source,
                                                             Func<MlErrorDetails, MlResult<T>> func)
         => source.BindIfFail(func).ToAsync();
@@ -1869,7 +1996,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                        source,
                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                Func<Exception, string>            errorMessageBuilder)
@@ -1883,7 +2017,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailAsync<T>(this MlResult<T>                        source,
                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                string                             errorMessage = null!)
@@ -2291,7 +2432,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailAsync<T, TResult>(this MlResult<T>                              source,
                                                                            Func<T              , MlResult<TResult>> funcValid,
                                                                            Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -2383,7 +2531,14 @@ public static partial class MlResultBindExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2400,7 +2555,14 @@ public static partial class MlResultBindExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -2680,7 +2842,14 @@ public static partial class MlResultBindExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailWithValueAsync<T>(this MlResult<T>          source,
                                                                     Func<T, MlResult<T>> funcValue)
         => source.BindIfFailWithValue(funcValue).ToAsync();
@@ -2694,7 +2863,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>             source,
                                                                         Func<T, MlResult<T>>    funcValue,
                                                                         Func<Exception, string> errorMessageBuilder)
@@ -2709,7 +2885,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithValueAsync<T>(this MlResult<T>          source,
                                                                         Func<T, MlResult<T>> funcValue,
                                                                         string               errorMessage = null!)
@@ -2786,7 +2969,14 @@ public static partial class MlResultBindExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                            Func<T     , MlResult<TResult>> funcValid,
                                                                                            Func<TValue, MlResult<TResult>> funcFail)
@@ -3125,7 +3315,14 @@ public static partial class MlResultBindExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                                Func<T     , MlResult<TResult>> funcValid,
                                                                                                Func<TValue, MlResult<TResult>> funcFail,
@@ -3144,7 +3341,14 @@ public static partial class MlResultBindExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>                     source,
                                                                                                Func<T     , MlResult<TResult>> funcValid,
                                                                                                Func<TValue, MlResult<TResult>> funcFail,
@@ -5381,7 +5585,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
                                                                          Func<Exception, MlResult<T>> funcException)
         => source.BindIfFailWithException(funcException).ToAsync();
@@ -5395,7 +5606,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
                                                                             Func<Exception, MlResult<T>> funcException,
                                                                             Func<Exception, string>      errorMessageBuilder)
@@ -5410,7 +5628,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T>(this MlResult<T>                  source,
                                                                             Func<Exception, MlResult<T>> funcException,
                                                                             string                       errorMessage = null!)
@@ -5428,7 +5653,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                        source,
                                                                                        Func<T        , MlResult<TResult>> funcValid,
                                                                                        Func<Exception, MlResult<TResult>> funcFail)
@@ -5475,7 +5707,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                        source,
                                                                                           Func<T        , MlResult<TResult>> funcValid,
                                                                                           Func<Exception, MlResult<TResult>> funcFail,
@@ -5493,7 +5732,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult>(this MlResult<T>                        source,
                                                                                           Func<T        , MlResult<TResult>> funcValid,
                                                                                           Func<Exception, MlResult<TResult>> funcFail,
@@ -5583,7 +5829,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
                                                                                      Func<TException, MlResult<T>> funcException)
         where TException : Exception
@@ -5599,7 +5852,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
                                                                                         Func<TException, MlResult<T>> funcException,
                                                                                         Func<Exception, string>       errorMessageBuilder)
@@ -5616,7 +5876,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionAsync<T, TException>(this MlResult<T>                   source,
                                                                                         Func<TException, MlResult<T>> funcException,
                                                                                         string                        errorMessage = null!)
@@ -5636,7 +5903,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                         source,
                                                                                                    Func<T         , MlResult<TResult>> funcValid,
                                                                                                    Func<TException, MlResult<TResult>> funcFail)
@@ -5689,7 +5963,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                         source,
                                                                                                        Func<T         , MlResult<TResult>> funcValid,
                                                                                                        Func<TException, MlResult<TResult>> funcFail,
@@ -5709,7 +5990,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>                         source,
                                                                                                        Func<T         , MlResult<TResult>> funcValid,
                                                                                                        Func<TException, MlResult<TResult>> funcFail,
@@ -5807,7 +6095,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
                                                                           Func<MlErrorDetails, MlResult<T>> funcFail)
         => source.BindIfFailWithExceptionError(funcFail).ToAsync();
@@ -5820,7 +6115,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
                                                                              Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                              Func<Exception, string>            errorMessageBuilder)
@@ -5834,7 +6136,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T>(this MlResult<T>                        source,
                                                                              Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                              string                             errorMessage = null!)
@@ -5852,7 +6161,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                              source,
                                                                                          Func<T              , MlResult<TResult>> funcValid,
                                                                                          Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -5898,7 +6214,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                              source,
                                                                                             Func<T              , MlResult<TResult>> funcValid,
                                                                                             Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -5915,7 +6238,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                              source,
                                                                                             Func<T              , MlResult<TResult>> funcValid,
                                                                                             Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -6001,7 +6331,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                         source,
                                                                                       Func<MlErrorDetails, MlResult<T>> funcFail)
         where TException : Exception
@@ -6016,7 +6353,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                        source,
                                                                                          Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                          Func<Exception, string>            errorMessageBuilder)
@@ -6032,7 +6376,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>                        source,
                                                                                          Func<MlErrorDetails, MlResult<T>> funcFail,
                                                                                          string                             errorMessage = null!)
@@ -6052,7 +6403,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                      Func<T              , MlResult<TResult>> funcValid,
                                                                                                      Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -6104,7 +6462,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                         Func<T              , MlResult<TResult>> funcValid,
                                                                                                         Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -6123,7 +6488,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                         Func<T              , MlResult<TResult>> funcValid,
                                                                                                         Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -7376,7 +7748,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T>(this MlResult<T>                  source,
                                                                             Func<MlErrorDetails, MlResult<T>> func)
         => source.BindIfFailWithoutException(func).ToAsync();
@@ -7390,7 +7769,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                        source,
                                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                                Func<Exception, string>            errorMessageBuilder)
@@ -7405,7 +7791,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T>(this MlResult<T>                        source,
                                                                                Func<MlErrorDetails, MlResult<T>> func,
                                                                                string                             errorMessage = null!)
@@ -7423,7 +7816,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                            Func<T              , MlResult<TResult>> funcValid,
                                                                                            Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -7470,7 +7870,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -7488,7 +7895,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                              source,
                                                                                               Func<T              , MlResult<TResult>> funcValid,
                                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -7578,7 +7992,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> BindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
                                                                                         Func<MlErrorDetails, MlResult<T>> func)
         where TException : Exception
@@ -7594,7 +8015,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
                                                                                            Func<MlErrorDetails, MlResult<T>> func,
                                                                                            Func<Exception, string>            errorMessageBuilder)
@@ -7611,7 +8039,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryBindIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>                        source,
                                                                                            Func<MlErrorDetails, MlResult<T>> func,
                                                                                            string                             errorMessage = null!)
@@ -7631,7 +8066,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                        Func<T              , MlResult<TResult>> funcValid,
                                                                                                        Func<MlErrorDetails, MlResult<TResult>> funcFail)
@@ -7684,7 +8126,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                           Func<T              , MlResult<TResult>> funcValid,
                                                                                                           Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -7704,7 +8153,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                              source,
                                                                                                           Func<T              , MlResult<TResult>> funcValid,
                                                                                                           Func<MlErrorDetails, MlResult<TResult>> funcFail,
@@ -7820,7 +8276,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcAlways">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>             source, 
                                                                            Func<MlResult<TResult>> funcAlways)
         => source.BindAlways(funcAlways).ToAsync();
@@ -7910,7 +8373,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcAlways">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>             source,
                                                                               Func<MlResult<TResult>> funcAlways,
                                                                               Func<Exception, string> errorMessageBuilder)
@@ -8071,7 +8541,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValidAlways">Función a aplicar.</param>
     /// <param name="funcFailAlways">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> BindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
                                                                            Func<T              , MlResult<TResult>> funcValidAlways,
                                                                            Func<MlErrorDetails, MlResult<TResult>> funcFailAlways)
@@ -8416,7 +8893,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValidAlways">Función a aplicar.</param>
     /// <param name="funcFailAlways">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValidAlways,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
@@ -8434,7 +8918,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcValidAlways">Función a aplicar.</param>
     /// <param name="funcFailAlways">Función a aplicar.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryBindAlwaysAsync<T, TResult>(this MlResult<T>                              source,
                                                                               Func<T              , MlResult<TResult>> funcValidAlways,
                                                                               Func<MlErrorDetails, MlResult<TResult>> funcFailAlways,
@@ -8948,7 +9439,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcBuild1">Función a aplicar.</param>
     /// <param name="funcBuild2">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>             source,
                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                       Func<T, MlResult<TR2>>  funcBuild2)
@@ -8965,7 +9463,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild1">Función a aplicar.</param>
     /// <param name="funcBuild2">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>             source,
                                                                                       Func<T, MlResult<TR1>>  funcBuild1,
                                                                                       Func<T, MlResult<TR2>>  funcBuild2,
@@ -8983,7 +9488,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild1">Función a aplicar.</param>
     /// <param name="funcBuild2">Función a aplicar.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2)>> TryBindBuildTupleAsync<T, TR1, TR2>(this MlResult<T>            source,
                                                                                       Func<T, MlResult<TR1>> funcBuild1,
                                                                                       Func<T, MlResult<TR2>> funcBuild2,
@@ -9169,7 +9681,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild1">Función a aplicar.</param>
     /// <param name="funcBuild2">Función a aplicar.</param>
     /// <param name="funcBuild3">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
@@ -9189,7 +9708,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild2">Función a aplicar.</param>
     /// <param name="funcBuild3">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>             source,
                                                                                                 Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                 Func<T, MlResult<TR2>>  funcBuild2,
@@ -9210,7 +9736,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild2">Función a aplicar.</param>
     /// <param name="funcBuild3">Función a aplicar.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3>(this MlResult<T>            source,
                                                                                                 Func<T, MlResult<TR1>> funcBuild1,
                                                                                                 Func<T, MlResult<TR2>> funcBuild2,
@@ -9425,7 +9958,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild2">Función a aplicar.</param>
     /// <param name="funcBuild3">Función a aplicar.</param>
     /// <param name="funcBuild4">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
@@ -9448,7 +9988,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild3">Función a aplicar.</param>
     /// <param name="funcBuild4">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>             source,
                                                                                                      Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                      Func<T, MlResult<TR2>>  funcBuild2,
@@ -9472,7 +10019,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild3">Función a aplicar.</param>
     /// <param name="funcBuild4">Función a aplicar.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4>(this MlResult<T>            source,
                                                                                                      Func<T, MlResult<TR1>> funcBuild1,
                                                                                                      Func<T, MlResult<TR2>> funcBuild2,
@@ -9717,7 +10271,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild3">Función a aplicar.</param>
     /// <param name="funcBuild4">Función a aplicar.</param>
     /// <param name="funcBuild5">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                Func<T, MlResult<TR2>>  funcBuild2,
@@ -9743,7 +10304,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild4">Función a aplicar.</param>
     /// <param name="funcBuild5">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>             source,
                                                                                                                Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                Func<T, MlResult<TR2>>  funcBuild2,
@@ -9770,7 +10338,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild4">Función a aplicar.</param>
     /// <param name="funcBuild5">Función a aplicar.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5>(this MlResult<T>            source,
                                                                                                                Func<T, MlResult<TR1>> funcBuild1,
                                                                                                                Func<T, MlResult<TR2>> funcBuild2,
@@ -10045,7 +10620,14 @@ public static MlResult<T> TryBindIfFailWithExceptionError<T>(this MlResult<T>   
     /// <param name="funcBuild4">Función a aplicar.</param>
     /// <param name="funcBuild5">Función a aplicar.</param>
     /// <param name="funcBuild6">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(TR1, TR2, TR3, TR4, TR5, TR6)>> TryBindBuildTupleAsync<T, TR1, TR2, TR3, TR4, TR5, TR6>(this MlResult<T>             source,
                                                                                                                          Func<T, MlResult<TR1>>  funcBuild1,
                                                                                                                          Func<T, MlResult<TR2>>  funcBuild2,

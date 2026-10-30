@@ -8,6 +8,21 @@ namespace MoralesLarios.OOFP.Types;
 /// <summary>
 /// Métodos de extensión de proyección (<c>Map</c>) sobre <see cref="MlResult{T}"/>: transforman el valor cuando el origen es válido, con variantes <c>TryMap</c> que capturan las excepciones.
 /// </summary>
+/// <remarks>
+/// <b>Semántica de la familia <c>Try*</c></b> · los miembros cuyo nombre empieza por <c>Try</c>
+/// (<c>TryMap</c>, <c>TryMapIf</c>, <c>TryMapIfFail</c> y sus variantes) envuelven la ejecución en
+/// un <c>try/catch</c> y convierten la excepción capturada en un fallo de
+/// <see cref="MlResult{T}"/>. <b>No</b> devuelven <see langword="bool"/> ni usan parámetros
+/// <c>out</c>, al contrario que <c>TryParse</c> o <c>TryGetValue</c> de la BCL. Si necesita la
+/// forma de la BCL, use <c>MlResult{T}.TryGetValue</c> o <c>MlResult{T}.TryGetErrors</c>.
+/// <para>
+/// <b>Semántica del sufijo <c>Async</c></b> · las sobrecargas <c>*Async</c> que reciben un origen
+/// <see cref="MlResult{T}"/> sincrónico y un delegado sincrónico no realizan ninguna operación
+/// asíncrona: devuelven una tarea <b>ya completada</b> y el sufijo existe únicamente para permitir
+/// iniciar una cadena que continúa con combinadores asíncronos. Estas sobrecargas no admiten
+/// cancelación.
+/// </para>
+/// </remarks>
 public static class MlResultMapExtensions
 {
 
@@ -41,7 +56,14 @@ public static class MlResultMapExtensions
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapAsync<T, TResult>(this MlResult<T>      source, 
                                                                     Func<T, TResult> func)
         => source.Map(func).ToAsync();
@@ -121,7 +143,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapAsync<T, TResult>(this MlResult<T>      source, 
                                                                        Func<T, TResult> func,
                                                                        string           exceptionAdditionalMessage = null!)
@@ -154,7 +183,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapAsync<T, TResult>(this MlResult<T>             source, 
                                                                        Func<T, TResult>        func,
                                                                        Func<Exception, string> errorMessageBuilder)
@@ -341,7 +377,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="ensureFunc">Función que se ejecuta durante la operación.</param>
     /// <param name="errorDetailsResult">Valor de <c>errorDetailsResult</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T>     source,
                                                            Func<T, bool>   ensureFunc,
                                                            MlErrorDetails errorDetailsResult)
@@ -354,7 +397,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="ensureFunc">Función que se ejecuta durante la operación.</param>
     /// <param name="errorDetailsResultBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T>              source,
                                                            Func<T, bool>            ensureFunc,
                                                            Func<T, MlErrorDetails> errorDetailsResultBuilder)
@@ -386,7 +436,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="ensureFunc">Función que se ejecuta durante la operación.</param>
     /// <param name="errorMessageResultBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapEnsureAsync<T>(this MlResult<T>      source,
                                                            Func<T, bool>   ensureFunc,
                                                            Func<T, string> errorMessageResultBuilder)
@@ -487,7 +544,14 @@ public static class MlResultMapExtensions
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="funcTrue">Función a aplicar.</param>
     /// <param name="funcFalse">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfAsync<T, TResult>(this MlResult<T>      source,
                                                                       Func<T, bool>    condition,
                                                                       Func<T, TResult> funcTrue,
@@ -656,7 +720,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfAsync<T>(this MlResult<T>   source,
                                                        Func<T, bool> condition,
                                                        Func<T, T>    func)
@@ -770,7 +841,14 @@ public static class MlResultMapExtensions
     /// <param name="funcTrue">Función a aplicar.</param>
     /// <param name="funcFalse">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfAsync<T, TResult>(this MlResult<T>             source,
                                                                          Func<T, bool>           condition,
                                                                          Func<T, TResult>        funcTrue,
@@ -789,7 +867,14 @@ public static class MlResultMapExtensions
     /// <param name="funcTrue">Función a aplicar.</param>
     /// <param name="funcFalse">Función a aplicar.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfAsync<T, TResult>(this MlResult<T>      source,
                                                                          Func<T, bool>    condition,
                                                                          Func<T, TResult> funcTrue,
@@ -1142,7 +1227,14 @@ public static class MlResultMapExtensions
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfAsync<T>(this MlResult<T>             source,
                                                           Func<T, bool>           condition,
                                                           Func<T, T>              func,
@@ -1158,7 +1250,14 @@ public static class MlResultMapExtensions
     /// <param name="condition">Condición que debe cumplirse.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="exceptionAdditionalMessage">Mensaje descriptivo.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfAsync<T>(this MlResult<T>   source,
                                                           Func<T, bool> condition,
                                                           Func<T, T>    func,
@@ -1272,7 +1371,14 @@ public static class MlResultMapExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailAsync<T>(this MlResult<T>              source, 
                                                            Func<MlErrorDetails, T> func)
         => source.MapIfFail(func).ToAsync();
@@ -1342,7 +1448,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailAsync<T>(this MlResult<T>              source, 
                                                               Func<MlErrorDetails, T> func,
                                                               Func<Exception, string>  errorMessageBuilder)
@@ -1370,7 +1483,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailAsync<T>(this MlResult<T>              source, 
                                                               Func<MlErrorDetails, T> func,
                                                               string                   errorMessage = null!)
@@ -1494,7 +1614,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailAsync<T, TResult>(this MlResult<T>                    source, 
                                                                           Func<T              , TResult> funcValid,
                                                                           Func<MlErrorDetails, TResult> funcFail)
@@ -1608,7 +1735,14 @@ public static class MlResultMapExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailAsync<T, TResult>(this MlResult<T>                    source, 
                                                                              Func<T              , TResult> funcValid,
                                                                              Func<MlErrorDetails, TResult> funcFail,
@@ -1642,7 +1776,14 @@ public static class MlResultMapExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailAsync<T, TResult>(this MlResult<T>                    source, 
                                                                              Func<T              , TResult> funcValid,
                                                                              Func<MlErrorDetails, TResult> funcFail,
@@ -2467,7 +2608,14 @@ public static class MlResultMapExtensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailWithValueAsync<T>(this MlResult<T> source,
                                                                     Func<T, T>  func)
         => source.MapIfFailWithValue(func).ToAsync();
@@ -2481,7 +2629,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithValueAsync<T>(this MlResult<T>             source,
                                                                        Func<T, T>              funcValue,
                                                                        Func<Exception, string> errorMessageBuilder)
@@ -2496,7 +2651,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValue">Función que recibe el valor del resultado de origen.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithValueAsync<T>(this MlResult<T> source,
                                                                        Func<T, T>  funcValue,
                                                                        string      errorMessage = null!)
@@ -2512,7 +2674,14 @@ public static class MlResultMapExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>            source,
                                                                                             Func<T     , TResult> funcValid,
                                                                                             Func<TValue, TResult> funcFail)
@@ -2562,7 +2731,14 @@ public static class MlResultMapExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>             source,
                                                                                                Func<T     , TResult>   funcValid,
                                                                                                Func<TValue, TResult>   funcFail,
@@ -2581,7 +2757,14 @@ public static class MlResultMapExtensions
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithValueAsync<T, TValue, TResult>(this MlResult<T>           source,
                                                                                                Func<T     , TResult> funcValid,
                                                                                                Func<TValue, TResult> funcFail,
@@ -4787,7 +4970,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailWithExceptionAsync<T>(this MlResult<T>        source,
                                                                         Func<Exception, T> funcException)
         => source.MapIfFailWithException(funcException).ToAsync();
@@ -4801,7 +4991,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionAsync<T>(this MlResult<T>             source,
                                                                            Func<Exception, T>      funcException,
                                                                            Func<Exception, string> errorMessageBuilder)
@@ -4816,7 +5013,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionAsync<T>(this MlResult<T>        source,
                                                                            Func<Exception, T> funcException,
                                                                            string             errorMessage = null!)
@@ -4832,7 +5036,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailWithExceptionAsync<T, TResult>(this MlResult<T>              source,
                                                                                        Func<T        , TResult> funcValid,
                                                                                        Func<Exception, TResult> funcFail)
@@ -4879,7 +5090,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionAsync<T, TResult>(this MlResult<T>              source,
                                                                                           Func<T        , TResult> funcValid,
                                                                                           Func<Exception, TResult> funcFail,
@@ -4897,7 +5115,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionAsync<T, TResult>(this MlResult<T>              source,
                                                                                           Func<T        , TResult> funcValid,
                                                                                           Func<Exception, TResult> funcFail,
@@ -4985,7 +5210,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailWithExceptionAsync<T, TException>(this MlResult<T>         source,
                                                                                     Func<TException, T> funcException)
         where TException : Exception
@@ -5001,7 +5233,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionAsync<T, TException>(this MlResult<T>              source,
                                                                                         Func<TException, T>      funcException,
                                                                                         Func<Exception, string>  errorMessageBuilder)
@@ -5018,7 +5257,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcException">Función que recibe la excepción almacenada en el detalle del error.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionAsync<T, TException>(this MlResult<T>         source,
                                                                                         Func<TException, T> funcException,
                                                                                         string              errorMessage = null!)
@@ -5036,7 +5282,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>               source,
                                                                                                    Func<T         , TResult> funcValid,
                                                                                                    Func<TException, TResult> funcFail)
@@ -5089,7 +5342,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>               source,
                                                                                                        Func<T         , TResult> funcValid,
                                                                                                        Func<TException, TResult> funcFail,
@@ -5109,7 +5369,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionAsync<T, TResult, TException>(this MlResult<T>               source,
                                                                                                        Func<T         , TResult> funcValid,
                                                                                                        Func<TException, TResult> funcFail,
@@ -5204,7 +5471,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailWithExceptionErrorAsync<T>(this MlResult<T>              source,
                                                                              Func<MlErrorDetails, T> funcFail)
         => source.MapIfFailWithExceptionError(funcFail).ToAsync();
@@ -5217,7 +5491,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionErrorAsync<T>(this MlResult<T>                   source,
                                                                                 Func<MlErrorDetails, T>      funcFail,
                                                                                 Func<Exception, string>       errorMessageBuilder)
@@ -5231,7 +5512,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionErrorAsync<T>(this MlResult<T>              source,
                                                                                 Func<MlErrorDetails, T> funcFail,
                                                                                 string                   errorMessage = null!)
@@ -5246,7 +5534,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                    source,
                                                                                             Func<T              , TResult> funcValid,
                                                                                             Func<MlErrorDetails, TResult> funcFail)
@@ -5290,7 +5585,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                    source,
                                                                                                Func<T              , TResult> funcValid,
                                                                                                Func<MlErrorDetails, TResult> funcFail,
@@ -5307,7 +5609,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionErrorAsync<T, TResult>(this MlResult<T>                    source,
                                                                                                Func<T              , TResult> funcValid,
                                                                                                Func<MlErrorDetails, TResult> funcFail,
@@ -5390,7 +5699,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>              source,
                                                                                          Func<MlErrorDetails, T> funcFail)
         where TException : Exception
@@ -5405,7 +5721,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>              source,
                                                                                              Func<MlErrorDetails, T> funcFail,
                                                                                              Func<Exception, string>  errorMessageBuilder)
@@ -5421,7 +5744,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithExceptionErrorAsync<T, TException>(this MlResult<T>              source,
                                                                                              Func<MlErrorDetails, T> funcFail,
                                                                                              string                   errorMessage = null!)
@@ -5438,7 +5768,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                    source,
                                                                                                         Func<T              , TResult> funcValid,
                                                                                                         Func<MlErrorDetails, TResult> funcFail)
@@ -5488,7 +5825,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                    source,
                                                                                                            Func<T              , TResult> funcValid,
                                                                                                            Func<MlErrorDetails, TResult> funcFail,
@@ -5507,7 +5851,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithExceptionErrorAsync<T, TResult, TException>(this MlResult<T>                    source,
                                                                                                            Func<T              , TResult> funcValid,
                                                                                                            Func<MlErrorDetails, TResult> funcFail,
@@ -6745,7 +7096,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailWithoutExceptionAsync<T>(this MlResult<T>              source,
                                                                            Func<MlErrorDetails, T> func)
         => source.MapIfFailWithoutException(func).ToAsync();
@@ -6759,7 +7117,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithoutExceptionAsync<T>(this MlResult<T>              source,
                                                                               Func<MlErrorDetails, T> func,
                                                                               Func<Exception, string>  errorMessageBuilder)
@@ -6774,7 +7139,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithoutExceptionAsync<T>(this MlResult<T>              source,
                                                                               Func<MlErrorDetails, T> func,
                                                                               string                   errorMessage = null!)
@@ -6790,7 +7162,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                    source,
                                                                                           Func<T              , TResult> funcValid,
                                                                                           Func<MlErrorDetails, TResult> funcFail)
@@ -6837,7 +7216,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                    source,
                                                                                              Func<T              , TResult> funcValid,
                                                                                              Func<MlErrorDetails, TResult> funcFail,
@@ -6855,7 +7241,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithoutExceptionAsync<T, TResult>(this MlResult<T>                    source,
                                                                                              Func<T              , TResult> funcValid,
                                                                                              Func<MlErrorDetails, TResult> funcFail,
@@ -6943,7 +7336,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <typeparam name="TException">Tipo de la excepción esperada.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> MapIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>              source,
                                                                                        Func<MlErrorDetails, T> func)
         where TException : Exception
@@ -6959,7 +7359,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>              source,
                                                                                            Func<MlErrorDetails, T> func,
                                                                                            Func<Exception, string>  errorMessageBuilder)
@@ -6976,7 +7383,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="func">Función que se ejecuta para producir el nuevo resultado.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<T>> TryMapIfFailWithoutExceptionAsync<T, TException>(this MlResult<T>              source,
                                                                                            Func<MlErrorDetails, T> func,
                                                                                            string                   errorMessage = null!)
@@ -6994,7 +7408,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                    source,
                                                                                                       Func<T              , TResult> funcValid,
                                                                                                       Func<MlErrorDetails, TResult> funcFail)
@@ -7047,7 +7468,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                    source,
                                                                                                          Func<T              , TResult> funcValid,
                                                                                                          Func<MlErrorDetails, TResult> funcFail,
@@ -7067,7 +7495,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValid">Función que se ejecuta cuando el resultado de origen es válido.</param>
     /// <param name="funcFail">Función que se ejecuta cuando el resultado de origen es fallido.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapIfFailWithoutExceptionAsync<T, TResult, TException>(this MlResult<T>                    source,
                                                                                                          Func<T              , TResult> funcValid,
                                                                                                          Func<MlErrorDetails, TResult> funcFail,
@@ -7689,7 +8124,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcAlways">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapAlwaysAsync<T, TResult>(this MlResult<T>   source,
                                                                           Func<TResult> funcAlways)
         => source.MapAlways(funcAlways).ToAsync();
@@ -7704,7 +8146,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcAlways">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapAlwaysAsync<T, TResult>(this MlResult<T>             source,
                                                                              Func<TResult>           funcAlways,
                                                                              Func<Exception, string> errorMessageBuilder)
@@ -7720,7 +8169,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcAlways">Función a aplicar.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapAlwaysAsync<T, TResult>(this MlResult<T>   source,
                                                                              Func<TResult> funcAlways,
                                                                              string        errorMessage = null!)
@@ -7735,7 +8191,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcValidAlways">Función a aplicar.</param>
     /// <param name="funcFailAlways">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MapAlwaysAsync<T, TResult>(this MlResult<T>                    source,
                                                                           Func<T              , TResult> funcValidAlways,
                                                                           Func<MlErrorDetails, TResult> funcFailAlways)
@@ -7782,7 +8245,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValidAlways">Función a aplicar.</param>
     /// <param name="funcFailAlways">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapAlwaysAsync<T, TResult>(this MlResult<T>                    source,
                                                                              Func<T              , TResult> funcValidAlways,
                                                                              Func<MlErrorDetails, TResult> funcFailAlways,
@@ -7800,7 +8270,14 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     /// <param name="funcValidAlways">Función a aplicar.</param>
     /// <param name="funcFailAlways">Función a aplicar.</param>
     /// <param name="errorMessage">Mensaje descriptivo del error.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMapAlwaysAsync<T, TResult>(this MlResult<T>                    source,
                                                                              Func<T              , TResult> funcValidAlways,
                                                                              Func<MlErrorDetails, TResult> funcFailAlways,

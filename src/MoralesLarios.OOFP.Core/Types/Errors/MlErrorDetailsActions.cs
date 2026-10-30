@@ -161,7 +161,14 @@ public static partial class MlErrorDetailsActions
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="secondary">Resultado sobre el que se opera.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MergeErrorsDetailsAsync<T, TResult>(this MlErrorDetails source,
                                                                                    MlResult<T>     secondary)
         => source.MergeErrorsDetails<T, TResult>(secondary).ToAsync();
@@ -360,7 +367,14 @@ public static partial class MlErrorDetailsActions
     /// Indica si los metadatos del error contienen la clave estándar de valor. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
+    /// <returns>
+    /// Tarea que produce <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<bool> ContainsValueMetadataAsync(this MlErrorDetails source) => source.ContainsValueMetadata().ToAsync();
 
     /// <summary>
@@ -374,7 +388,14 @@ public static partial class MlErrorDetailsActions
     /// Indica si los metadatos del error contienen la clave canónica de excepción. Versión asíncrona.
     /// </summary>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.</returns>
+    /// <returns>
+    /// Tarea que produce <c>true</c> si la condición se cumple; en caso contrario, <c>false</c>.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<bool> ContainsExceptionAsync(this MlErrorDetails source) => source.ContainsException().ToAsync();
 
     /// <summary>

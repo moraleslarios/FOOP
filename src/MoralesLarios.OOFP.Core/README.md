@@ -70,8 +70,9 @@ MoralesLarios.OOFP.Core/
 12. [Extensiones genéricas de ayuda](#12-extensiones-genéricas-de-ayuda)
 13. [Patrón recomendado](#13-patrón-recomendado)
 14. [Cuándo usar cada familia](#14-cuándo-usar-cada-familia)
-15. [Documentación adicional del núcleo](#15-documentación-adicional)
-16. [Resumen](#16-resumen)
+15. [Convenios de nomenclatura](#15-convenios-de-nomenclatura)
+16. [Documentación adicional del núcleo](#16-documentación-adicional)
+17. [Resumen](#17-resumen)
 
 ---
 
@@ -1879,7 +1880,99 @@ Y los tres errores más frecuentes al empezar:
 
 ---
 
-## 15. Documentación adicional
+## 15. Convenios de nomenclatura
+
+Dos prefijos/sufijos de la librería tienen una semántica **propia**, distinta de la que cabría
+esperar por costumbre en la BCL de .NET. Conviene tenerlos claros antes de leer cualquier firma.
+
+### 15.1. El prefijo `Try*` **no** es el `Try*` de la BCL
+
+En la BCL, un método `Try*` (`int.TryParse`, `Dictionary.TryGetValue`) devuelve un `bool` y
+entrega el resultado por un parámetro `out`. **En esta librería no es así.**
+
+Un método `Try*` de `MoralesLarios.OOFP` **envuelve la ejecución del delegado en un `try/catch` y
+convierte la excepción capturada en un fallo de `MlResult`**. No devuelve `bool` ni usa parámetros
+`out`: devuelve el mismo tipo que su hermano sin prefijo.
+
+```csharp
+// BCL: bool + out
+if (int.TryParse(texto, out var numero)) { /* ... */ }
+
+// MoralesLarios.OOFP: MlResult<T>, la excepcion se convierte en fallo
+MlResult<int> resultado = origen.TryMap(x => int.Parse(x), "El texto no es un entero");
+// si int.Parse lanza, 'resultado' es fallido y la excepcion queda en los Details
+```
+
+Las familias que exponen variantes `Try*` son:
+
+| Familia | Métodos `Try*` representativos |
+|---------|--------------------------------|
+| `EnsureFp` | `TryThat`, `TryThatAsync` |
+| `MlResultBindExtensions` | `TryBind`, `TryBindIf`, `TryBindIfFail`, `TryBindIfFailWithValue`, `TryBindIfFailWithException` (+ `Async`) |
+| `MlResultMapExtensions` | `TryMap`, `TryMapIf`, `TryMapIfFail` (+ `Async`) |
+| `MlResultExecSelfExtensions` | `TryExecSelf`, `TryExecSelfIfFail`, `TryExecSelfIfFailWithValue` (+ `Async`) |
+| `MlResultMatchExtensions` | `TryMatch`, `TryMatchAsync` |
+| `MlResultConversions` | `TryToMlResult`, `TryToMlResultAsync` |
+
+> **Decisión D-04** · se valoró renombrar la familia (a `Safe*`, `Catching*`…) y se descartó por el
+> coste de ruptura que supondría para el ecosistema. Se documenta en lugar de renombrar.
+
+#### ¿Y si quiero la forma clásica de la BCL?
+
+Para eso están los **dos únicos miembros con semántica BCL** de la librería, declarados en
+`Types/MlResult.TryGet.cs`:
+
+```csharp
+if (resultado.TryGetValue(out var valor))
+{
+    // valor es el contenido valido
+}
+
+if (resultado.TryGetErrors(out var detalles))
+{
+    // detalles contiene los MlError y el diccionario Details
+}
+```
+
+Son la vía recomendada para interoperar con código imperativo, en lugar de leer las propiedades
+protegidas del resultado.
+
+### 15.2. El sufijo `Async` **no** garantiza asincronía real
+
+El sufijo `Async` de esta librería significa **«devuelve `Task<MlResult<T>>`»**, no
+«realiza E/S asíncrona». Muchas sobrecargas `*Async` existen sólo para poder **iniciar o continuar
+una cadena asíncrona** a partir de datos y delegados sincrónicos:
+
+```csharp
+public static Task<MlResult<TResult>> BindAsync<T, TResult>(this MlResult<T>                source,
+                                                                 Func<T, MlResult<TResult>> func)
+    => source.Bind(func).ToAsync();   // <- ToAsync() = Task.FromResult
+```
+
+Consecuencias prácticas:
+
+- La `Task` devuelta **ya está completada** cuando el método retorna (`task.IsCompleted == true`).
+- **No hay punto de cancelación**: estas sobrecargas no aceptan `CancellationToken` y pasarlo no
+  tendría efecto.
+- No introducen cambio de contexto ni coste de hilo: el `await` se resuelve de forma sincrónica.
+
+Hay **248** sobrecargas en esta situación en el núcleo. Todas lo declaran en su propio
+`<returns>` con el texto *«La tarea devuelta **ya está completada**: este método no realiza
+ninguna operación asíncrona»*, de modo que IntelliSense lo muestra directamente en el editor. El
+inventario completo, fichero a fichero, está en
+[`06-Rendimiento.md`](../docs_next/Mejoras/Core/06-Rendimiento.md).
+
+Para distinguirlas de un vistazo:
+
+| Señal | Significado |
+|-------|-------------|
+| `async` + `await` en el cuerpo | Asincronía **real** (el delegado o el origen son `Task`) |
+| `Task<...>` sin `async`, cuerpo con `.ToAsync()` | Tarea **ya completada**, sin asincronía |
+| Acepta `CancellationToken` | Punto de cancelación real |
+
+---
+
+## 16. Documentación adicional
 
 ### Punto de entrada: el índice maestro
 
@@ -1987,7 +2080,7 @@ filosofía, convención de nombres y el
 
 ---
 
-## 16. Resumen
+## 17. Resumen
 
 `MoralesLarios.OOFP` es el núcleo fundacional del ecosistema **MoralesLarios.FOOP**. Su idea
 central cabe en una frase:

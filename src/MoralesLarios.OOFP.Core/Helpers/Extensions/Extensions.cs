@@ -73,7 +73,14 @@ public static class Extensions
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="changes">Acción a ejecutar.</param>
-    /// <returns>Tarea que produce el valor de tipo <c>T</c> obtenido por la operación.</returns>
+    /// <returns>
+    /// Tarea que produce el valor de tipo <c>T</c> obtenido por la operación.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<T> WithAsync<T>(this T source, params Action<T>[] changes) 
         where T : class
         => source.With(changes).ToAsync();

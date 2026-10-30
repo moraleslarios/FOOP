@@ -73,7 +73,14 @@ public static partial class MlResultCollections
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="completeFuncTransform">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                         Func<T, MlResult<TResult>> completeFuncTransform)
         => source.Traverse(completeFuncTransform).ToAsync();
@@ -85,7 +92,14 @@ public static partial class MlResultCollections
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="completeFuncTransform">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseAsync<T, TResult>(this IEnumerable<T>                  source,
                                                                                         Func<T, int, MlResult<TResult>> completeFuncTransform)
         => source.Traverse(completeFuncTransform).ToAsync();
@@ -327,7 +341,14 @@ public static partial class MlResultCollections
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="completeFuncTransform">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                              Func<T, MlResult<TResult>> completeFuncTransform)
         => source.TraverseWhile(completeFuncTransform).ToAsync();
@@ -340,7 +361,14 @@ public static partial class MlResultCollections
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="completeFuncTransform">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<IEnumerable<TResult>>> TraverseWhileAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                              Func<T, int, MlResult<TResult>> completeFuncTransform)
         => source.TraverseWhile(completeFuncTransform).ToAsync();
@@ -673,7 +701,14 @@ public static partial class MlResultCollections
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="completeFuncTransform">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(Dictionary<T, TResult> valids, Dictionary<T, MlErrorDetails> fails)>> TraverseSplitAsync<T, TResult>(this IEnumerable<T>             source,
                                                                                                                                               Func<T, MlResult<TResult>> completeFuncTransform)
         where T : notnull
@@ -776,7 +811,14 @@ public static partial class MlResultCollections
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="completeFuncTransform">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<(IEnumerable<TraverseSplitSuccess<TKey, TResult>> valids, IEnumerable<TraverseSplitFailure<TKey>> fails)>> TraverseSplitWithKeysAsync<TKey, TResult>(this IEnumerable<TKey>             source,
                                                                                                                                                                                          Func<TKey, MlResult<TResult>> completeFuncTransform)
         where TKey : notnull
@@ -877,7 +919,14 @@ public static partial class MlResultCollections
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<IEnumerable<T>>> MergeFailureErrorsAsync<T>(this IEnumerable<MlResult<T>> source)
         => source.MergeFailureErrors().ToAsync();
 
@@ -924,7 +973,14 @@ public static partial class MlResultCollections
     /// </summary>
     /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<IEnumerable<T>>> MergeErrorsIfExistsAsync<T>(this IEnumerable<MlResult<T>> source)
         => source.MergeErrorsIfExists().ToAsync();
 

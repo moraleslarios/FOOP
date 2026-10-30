@@ -6,6 +6,21 @@ namespace MoralesLarios.OOFP.Types;
 /// <summary>
 /// Métodos de extensión de resolución (<c>Match</c>) que reducen un <see cref="MlResult{T}"/> a un único valor aplicando una función distinta según sea válido o fallido.
 /// </summary>
+/// <remarks>
+/// <b>Semántica de la familia <c>Try*</c></b> · los miembros cuyo nombre empieza por <c>Try</c>
+/// (<c>TryMatch</c> y sus variantes) envuelven la ejecución en un <c>try/catch</c> y convierten la
+/// excepción capturada en un fallo de <see cref="MlResult{T}"/>. <b>No</b> devuelven
+/// <see langword="bool"/> ni usan parámetros <c>out</c>, al contrario que <c>TryParse</c> o
+/// <c>TryGetValue</c> de la BCL. Si necesita la forma de la BCL, use
+/// <c>MlResult{T}.TryGetValue</c> o <c>MlResult{T}.TryGetErrors</c>.
+/// <para>
+/// <b>Semántica del sufijo <c>Async</c></b> · las sobrecargas <c>*Async</c> que reciben un origen
+/// <see cref="MlResult{T}"/> sincrónico y delegados sincrónicos no realizan ninguna operación
+/// asíncrona: devuelven una tarea <b>ya completada</b> y el sufijo existe únicamente para permitir
+/// iniciar una cadena que continúa con combinadores asíncronos. Estas sobrecargas no admiten
+/// cancelación.
+/// </para>
+/// </remarks>
 public static class MlResultMatchExtensions
 {
 
@@ -80,7 +95,14 @@ public static class MlResultMatchExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="valid">Función a aplicar.</param>
     /// <param name="fail">Función a aplicar.</param>
-    /// <returns>Tarea que produce el valor de tipo <c>TResult</c> obtenido por la operación.</returns>
+    /// <returns>
+    /// Tarea que produce el valor de tipo <c>TResult</c> obtenido por la operación.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<TResult> MatchAsync<T, TResult>(this MlResult<T>                    source,
                                                             Func<T              , TResult> valid,
                                                             Func<MlErrorDetails, TResult> fail)
@@ -265,7 +287,14 @@ public static class MlResultMatchExtensions
     /// <param name="validAsync">Función a aplicar.</param>
     /// <param name="fail">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                    source, 
                                                                          Func<T,Task<TResult>>          validAsync,
                                                                          Func<MlErrorDetails, TResult> fail,
@@ -302,7 +331,14 @@ public static class MlResultMatchExtensions
     /// <param name="valid">Función a aplicar.</param>
     /// <param name="failAsync">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>                          source, 
                                                                          Func<T,TResult>                      valid,
                                                                          Func<MlErrorDetails, Task<TResult>> failAsync,
@@ -337,7 +373,14 @@ public static class MlResultMatchExtensions
     /// <param name="valid">Función a aplicar.</param>
     /// <param name="fail">Función a aplicar.</param>
     /// <param name="errorMessageBuilder">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> TryMatchAsync<T, TResult>(this MlResult<T>              source,
                                                                          Func<T, TResult>         valid,
                                                                          Func<MlErrorDetails, TResult> fail,
@@ -544,7 +587,14 @@ public static class MlResultMatchExtensions
     /// <typeparam name="TResult">Tipo del valor devuelto.</typeparam>
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="funcAll">Función a aplicar.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    /// <returns>
+    /// Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.
+    /// <para>
+    /// La tarea devuelta <b>ya está completada</b>: este método no realiza ninguna operación
+    /// asíncrona. El sufijo <c>Async</c> existe para permitir iniciar una cadena que continúa con
+    /// combinadores asíncronos. No admite cancelación.
+    /// </para>
+    /// </returns>
     public static Task<MlResult<TResult>> MatchAsync<T, TResult>(this MlResult<T>   source,
                                                                       Func<TResult> funcAll)
         => source.Match(funcAll).ToAsync();
