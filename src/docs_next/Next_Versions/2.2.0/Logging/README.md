@@ -196,16 +196,20 @@ graph TD
 
 ## 6. Decisiones pendientes del propietario
 
+> ✅ **Las 25 decisiones están resueltas.** Esta tabla recoge las **8 primeras**, tal como se
+> plantearon al abrir el plan, con la opción finalmente elegida. El cuadro completo de las 25, con la
+épica en la que se resolvió cada una, está en [#sec#6.1](#61-cuadro-final-de-las-25-decisiones).
+
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-01** | Nombre nuevo de `MyMethodFinalLog` | (a) `LogActionResult` · (b) `LogMethodOutcome` · (c) `LogCompletedAction` · (d) retirarlo y que el consumidor use `LogCompletedResult` | ⬜ abierta |
-| **D-02** | Nombre nuevo de la clase `Extensions` | (a) `MlResultLogActionExtensions` · (b) `MlResultMethodLogExtensions` · (c) fusionar su contenido en `MlResultLogExtensions` como otro `partial` | ⬜ abierta |
-| **D-03** | Idioma de los mensajes que emite la librería | (a) castellano · (b) inglés · (c) no emitir texto propio | ⬜ abierta |
-| **D-04** | Estrategia para los 218 parámetros renombrados | (a) sobrecarga nueva + antigua `[Obsolete]` · (b) renombrado directo aceptando la ruptura · (c) renombrado directo en la 2.2.0 asumiendo que el uso de argumentos con nombre es minoritario | ⬜ abierta |
-| **D-05** | Alcance de la matriz de tests de la épica 1 | (a) las 339 firmas · (b) una por región y nivel (42 casos) + los bordes · (c) sólo las 7 regiones del nivel `Error` | ⬜ abierta |
-| **D-06** | Qué hacer cuando `logger` es nulo (US-12) | (a) `ArgumentNullException` · (b) devolver un `MlResult` fallido · (c) no registrar y devolver el `source` intacto | ⬜ abierta |
-| **D-07** | Doble de `ILogger` para el proyecto de tests (US-02) | (a) escribirlo a mano · (b) usar una librería de dobles ya referenciada en la solución · (c) usar el proveedor en memoria de `Microsoft.Extensions.Logging` | ⬜ abierta |
-| **D-08** | Qué hacer con el test de `F1` hasta que se arregle (US-03) | (a) `Skip` con referencia a la US-11 · (b) afirmar el comportamiento **actual** y cambiarlo al arreglarlo · (c) dejarlo en rojo | ⬜ abierta |
+| **D-01** | Nombre nuevo de `MyMethodFinalLog` | (a) `LogActionResult` · (b) `LogMethodOutcome` · (c) `LogCompletedAction` · (d) retirarlo y que el consumidor use `LogCompletedResult` | ✅ **(a)** |
+| **D-02** | Nombre nuevo de la clase `Extensions` | (a) `MlResultLogActionExtensions` · (b) `MlResultMethodLogExtensions` · (c) fusionar su contenido en `MlResultLogExtensions` como otro `partial` | ✅ **(a)** |
+| **D-03** | Idioma de los mensajes que emite la librería | (a) castellano · (b) inglés · (c) no emitir texto propio | ✅ **(b)** |
+| **D-04** | Estrategia para los 218 parámetros renombrados | (a) sobrecarga nueva + antigua `[Obsolete]` · (b) renombrado directo aceptando la ruptura · (c) renombrado directo en la 2.2.0 asumiendo que el uso de argumentos con nombre es minoritario | ✅ **(c)** |
+| **D-05** | Alcance de la matriz de tests de la épica 1 | (a) las 339 firmas · (b) una por región y nivel (42 casos) + los bordes · (c) sólo las 7 regiones del nivel `Error` | ✅ **(b)** |
+| **D-06** | Qué hacer cuando `logger` es nulo (US-12) | (a) `ArgumentNullException` · (b) devolver un `MlResult` fallido · (c) no registrar y devolver el `source` intacto | ✅ **(c)** |
+| **D-07** | Doble de `ILogger` para el proyecto de tests (US-02) | (a) escribirlo a mano · (b) usar una librería de dobles ya referenciada en la solución · (c) usar el proveedor en memoria de `Microsoft.Extensions.Logging` | ✅ **(a)** |
+| **D-08** | Qué hacer con el test de `F1` hasta que se arregle (US-03) | (a) `Skip` con referencia a la US-11 · (b) afirmar el comportamiento **actual** y cambiarlo al arreglarlo · (c) dejarlo en rojo | ✅ **(b)** |
 
 > **D-04 y D-06 son las dos decisiones que condicionan el plan.** La primera determina si la épica 4
 > cabe en una 2.2.0 o tiene que esperar a la 3.0.0. La segunda determina si la US-12 es una ruptura
@@ -213,6 +217,41 @@ graph TD
 
 > **Numeración.** Los identificadores `D-NN` son **estables**: se citan por número desde los
 > documentos de las épicas y **no se reordenan ni se reutilizan** aunque queden huecos.
+
+### 6.1 Cuadro final de las 25 decisiones
+
+| # | Épica | Decisión | Elegido |
+|:-:|:-:|----------|---------|
+| **D-01** | 4 | Nombre nuevo de `MyMethodFinalLog` | **(a)** `LogActionResult` |
+| **D-02** | 4 | Nombre nuevo de la clase `Extensions` | **(a)** `MlResultLogActionExtensions` |
+| **D-03** | 4 | Idioma de los mensajes que emite la librería | **(b)** inglés |
+| **D-04** | 4 | Estrategia para los 218 parámetros renombrados | **(c)** renombrado directo en la 2.2.0 |
+| **D-05** | 1 | Alcance de la matriz de tests | **(b)** 42 casos más los bordes |
+| **D-06** | 3 | Qué hacer cuando `logger` es nulo | **(c)** no registrar y devolver el `source` intacto |
+| **D-07** | 1 | Doble de `ILogger` | **(a)** escrito a mano · `LoggerSpy` |
+| **D-08** | 1 | Test de `F1` hasta que se arregle | **(b)** afirmar el comportamiento actual |
+| **D-09** | 2 | Las `#region` vivas | **(a)** conservarlas tal cual |
+| **D-10** | 2 | Normalización de blancos | **(a)** máximo 2 líneas seguidas |
+| **D-11** | 2 | `TreatWarningsAsErrors` en Logging | **(a)** no · es decisión de solución completa |
+| **D-12** | 3 | Constructor de mensaje nulo | **(a)** la misma política que `D-06` |
+| **D-13** | 3 | Puente de compatibilidad para la US-11 | **(a)** no · es un defecto |
+| **D-14** | 4 | ¿La épica 4 cabe en la 2.2.0? | **(a)** sí, en la 2.2.0 |
+| **D-15** | 5 | Texto canónico de los parámetros recurrentes | **(a)** glosario de 8 textos |
+| **D-16** | 5 | Cuántos `<example>` se escriben | **(a)** uno por familia · 6 |
+| **D-17** | 5 | ¿`<c>` o `<see cref>` para los tipos? | **(a)** `<see cref>` · lo verifica el compilador |
+| **D-18** | 5 | ¿`CS1572`/`CS1573` como error? | **(b)** no · quedan como avisos |
+| **D-19** | 6 | Cómo se introduce la evaluación perezosa | **(c)** corrección de un defecto |
+| **D-20** | 6 | Alcance de las sobrecargas con `EventId` | **(b)** `LogMlResult` y las 6 de nivel |
+| **D-21** | 6 | Herramienta de medición | **(b)** `Stopwatch` más `GC.GetAllocatedBytesForCurrentThread()` |
+| **D-22** | 6 | La doble espera del punto 28 | **ya resuelto** |
+| **D-23** | 7 | Las 59 líneas comentadas del `Sample` | **(c) + (b)** tests automáticos **y** código vivo |
+| **D-24** | 7 | Qué debe demostrar el `Sample` | **(c)** camino feliz y de error de las familias principales |
+| **D-25** | 7 | ¿Mantener el `Sample` o llevarlo al `README`? | **(a)** mantener el `Sample` |
+
+> **Las tres últimas en resolverse fueron `D-09`, `D-10` y `D-11`**, las de la épica 2. Se
+> aplicaron en su momento con la opción menos invasiva y el propietario las **ratificó en (a)** al
+> revisar el cuadro completo. `D-11` queda como **propuesta viva** para una épica transversal de
+> política de avisos: Logging es el primer candidato, porque tiene **0 avisos propios**.
 
 ---
 

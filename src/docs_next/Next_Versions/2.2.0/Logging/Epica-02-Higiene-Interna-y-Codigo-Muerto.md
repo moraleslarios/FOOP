@@ -409,32 +409,35 @@ graph TD
 
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-09** | Qué hacer con las `#region` **vivas** (7 por fichero, 42 en total) | (a) conservarlas tal cual · (b) renombrarlas a un texto homogéneo en castellano · (c) retirarlas y confiar en el orden de los miembros | ⬜ abierta |
-| **D-10** | Hasta dónde llevar la normalización de blancos | (a) máximo 2 líneas seguidas, como propone la US-10 · (b) máximo 1 · (c) fijar un `.editorconfig` en la solución y dejar que la herramienta decida | ⬜ abierta |
-| **D-11** | Si añadir `TreatWarningsAsErrors` a Logging | (a) no, es decisión de solución completa · (b) sí, sólo en Logging, aprovechando que tiene **0 avisos propios** · (c) sí, pero con `WarningsNotAsErrors` para los 8 `CS8604` transitivos del núcleo | ⬜ abierta |
+| **D-09** | Qué hacer con las `#region` **vivas** (7 por fichero, 42 en total) | (a) conservarlas tal cual · (b) renombrarlas a un texto homogéneo en castellano · (c) retirarlas y confiar en el orden de los miembros | ✅ **(a)** |
+| **D-10** | Hasta dónde llevar la normalización de blancos | (a) máximo 2 líneas seguidas, como propone la US-10 · (b) máximo 1 · (c) fijar un `.editorconfig` en la solución y dejar que la herramienta decida | ✅ **(a)** |
+| **D-11** | Si añadir `TreatWarningsAsErrors` a Logging | (a) no, es decisión de solución completa · (b) sí, sólo en Logging, aprovechando que tiene **0 avisos propios** · (c) sí, pero con `WarningsNotAsErrors` para los 8 `CS8604` transitivos del núcleo | ✅ **(a)** |
 
 > **D-11 es más interesante de lo que parece.** Logging tiene **cero avisos propios**: los 8
 > `CS8604` que aparecen vienen de anotaciones del núcleo. Es, por tanto, el candidato natural a ser
 > el **primer proyecto** de la solución con `TreatWarningsAsErrors`, y a servir de prueba antes de
-> extenderlo. La decisión se deja abierta porque afecta a la política de la solución, no sólo a este
-> proyecto.
+> extenderlo. **Ratificada en (a)**: activarlo sólo aquí dejaría el proyecto expuesto a que un
+> cambio del núcleo rompa su build sin haberlo tocado, así que se decidirá junto con la política de
+> la solución completa, no sólo de este proyecto.
 
 ---
 
 ### 5.1 Resolución de las decisiones (al cerrar la épica)
 
-Las tres decisiones se han aplicado con la **opción menos invasiva**, porque ninguna de ellas es
-bloqueante y las tres siguen **abiertas para revisión**: lo que se ha hecho es reversible y no
-compromete el resto del plan.
+Las tres decisiones se aplicaron con la **opción menos invasiva**, porque ninguna de ellas era
+bloqueante y lo hecho es reversible. El propietario las ha **revisado en bloque al cerrar el plan**
+y ha **ratificado la opción (a) en las tres**, de modo que quedan cerradas.
 
 | # | Decisión | Aplicado | Estado | Motivo |
 |:-:|----------|----------|:------:|--------|
-| **D-09** | `#region` vivas | **(a) conservarlas tal cual** | ⬜ abierta | Las 42 regiones vivas (6 por fichero de nivel y 7 en `MlResultLogExtensions.cs`) son el único índice navegable de ficheros de 700 líneas. Renombrarlas (b) es trabajo de la épica 4, que ya toca nomenclatura; retirarlas (c) empeoraría la lectura antes de tener la documentación XML de la épica 5. |
-| **D-10** | Normalización de blancos | **(a) máximo 2 líneas seguidas** | ⬜ abierta | Se ha aplicado la regla con un matiz: **1** línea en blanco entre miembros y **2** sólo como separador antes de un `#region` o después de un `#endregion`. Fijar un `.editorconfig` (c) es una decisión de solución completa y se deja para una épica transversal. |
-| **D-11** | `TreatWarningsAsErrors` | **(a) no, por ahora** | ⬜ abierta | Confirmado que Logging tiene **0 avisos propios**: de los 238 avisos del build, ninguno procede de este proyecto. Es, por tanto, el candidato natural, pero activarlo aquí dejaría el proyecto expuesto a que un cambio del núcleo rompa su build sin tocarlo. Se propone decidirlo junto con la política de la solución. |
+| **D-09** | `#region` vivas | **(a) conservarlas tal cual** | ✅ **(a)** ratificada | Las 42 regiones vivas (6 por fichero de nivel y 7 en `MlResultLogExtensions.cs`) son el único índice navegable de ficheros de 700 líneas. Renombrarlas (b) es trabajo de la épica 4, que ya toca nomenclatura; retirarlas (c) empeoraría la lectura antes de tener la documentación XML de la épica 5. |
+| **D-10** | Normalización de blancos | **(a) máximo 2 líneas seguidas** | ✅ **(a)** ratificada | Se ha aplicado la regla con un matiz: **1** línea en blanco entre miembros y **2** sólo como separador antes de un `#region` o después de un `#endregion`. Fijar un `.editorconfig` (c) es una decisión de solución completa y se deja para una épica transversal. |
+| **D-11** | `TreatWarningsAsErrors` | **(a) no** | ✅ **(a)** ratificada | Confirmado que Logging tiene **0 avisos propios**: de los 238 avisos del build, ninguno procede de este proyecto. Es, por tanto, el candidato natural, pero activarlo aquí dejaría el proyecto expuesto a que un cambio del núcleo rompa su build sin tocarlo. Se propone decidirlo junto con la política de la solución. |
 
-> Las tres se incluyen en la **lista final de decisiones abiertas** que se entrega al cerrar el plan,
-> para que puedan evaluarse en bloque junto con las otras 22.
+> Las tres se presentaron en la **lista final de las 25 decisiones** al cerrar el plan y el
+> propietario **ratificó la opción (a) en las tres**. `D-11` queda como **propuesta viva** para una
+> épica transversal: cuando la solución completa adopte una política de avisos, Logging es el
+> primer candidato, porque tiene **0 avisos propios**.
 
 ### 5.2 Resultados medidos al cerrar la épica
 
