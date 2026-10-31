@@ -1,6 +1,6 @@
 # Plan de la versión 2.3.0 · `MoralesLarios.OOFP.Logging`
 
-> **Estado global** · ⬜ no iniciada · **las 6 decisiones están resueltas** (31-10-2026), lista para implementar
+> **Estado global** · ✅ **completada** · las 6 decisiones resueltas (31-10-2026) y las **7 historias** (US-34 … US-40) implementadas · puntos **53 a 59** del prompt de migración
 > **Proyectos afectados** · `src/MoralesLarios.OOFP.Logging` · `src/MoralesLarios.OOFP.Logging.Tests.Unit` · `src/MoralesLarios.OOFP.Logging.Sample`
 > **Origen** · petición del propietario · hallazgo `D2`, diferido en la [épica 6 de la 2.2.0](../../2.2.0/Logging/Epica-06-Rendimiento-y-Estandar-de-Logging.md)
 > **Versiones destino** · 2.3.0 (US-34 … US-40)
@@ -26,7 +26,7 @@
 
 | # | Épica | Superficie que toca | Historias | Esfuerzo | Riesgo | Estado |
 |--:|-------|---------------------|-----------|---------:|:------:|:------:|
-| 8 | [Registro estructurado y plantillas de mensaje](Epica-08-Registro-Estructurado-y-Plantillas.md) | los 6 ficheros de nivel · `MlResultLogExtensions.cs` · `EventId.cs` · `Categoria.cs` · `README.md` · `Sample` | US-34 … US-40 | XL | 🟠 alto | ⬜ |
+| 8 | [Registro estructurado y plantillas de mensaje](Epica-08-Registro-Estructurado-y-Plantillas.md) | los 6 ficheros de nivel · `MlResultLogExtensions.cs` · `EventId.cs` · `Categoria.cs` · `README.md` · `Sample` | US-34 … US-40 | XL | 🟠 alto | ✅ |
 
 **Leyenda de esfuerzo:** XS (<2 h) · S (½ jornada) · M (1 jornada) · L (2 jornadas) · XL (3+ jornadas)
 **Leyenda de riesgo:** 🟢 bajo · 🟡 medio · 🟠 alto · 🔴 muy alto (rompe compatibilidad)
@@ -53,7 +53,7 @@
 | **US-37** ✅ | Decidir y, si procede, implementar los ámbitos (`BeginScope`) · **sin código**: entrega la [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) | L | no |
 | **US-38** ✅ | Dejar la superficie limpia ante los analizadores · **241** parámetros anotados, `CA2254 = 0` | M | no |
 | **US-39** ✅ | Cerrar las dos erratas que sobrevivieron a la 2.2.0 · `LogCompletedResultAsync` + región de `Trace`, **punto 58** del prompt | XS | **sí** |
-| **US-40** | Documentar la capacidad nueva de cara al consumidor | S | no |
+| **US-40** ✅ | Documentar la capacidad nueva de cara al consumidor · familia 8 del `README.md`, las **seis** afirmaciones falsificadas y el quinto bloque del `Sample`, **punto 59** del prompt | S | no |
 
 ---
 

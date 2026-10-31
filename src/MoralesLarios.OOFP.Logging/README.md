@@ -19,14 +19,15 @@ Es el equivalente funcional del "punto de observación": no transforma, no valid
 9. [Familia 5 — Los seis ficheros por nivel](#familia-5--los-seis-ficheros-por-nivel)
 10. [Familia 6 — `LogActionResult`](#familia-6--logactionresult)
 11. [Familia 7 — `EventId` e `ILogger<TCategory>`](#familia-7--eventid-e-iloggertcategory)
-12. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
-13. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
-14. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
-15. [Ejemplos prácticos](#ejemplos-prácticos)
-16. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
-17. [Mejores prácticas](#mejores-prácticas)
-18. [Resumen](#resumen)
-19. [Ver también](#ver-también)
+12. [Familia 8 — Registro estructurado con plantillas](#familia-8--registro-estructurado-con-plantillas)
+13. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
+14. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+15. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
+16. [Ejemplos prácticos](#ejemplos-prácticos)
+17. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+18. [Mejores prácticas](#mejores-prácticas)
+19. [Resumen](#resumen)
+20. [Ver también](#ver-también)
 
 ---
 
@@ -81,7 +82,7 @@ public Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
 | `Microsoft.Extensions.Logging.Abstractions` (8.0.1) | `ILogger`, `LogLevel` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind` |
 
-Destino: **`net8.0`**. Versión del paquete: **2.2.0**.
+Destino: **`net8.0`**. Versión del paquete: **2.3.0**.
 
 ```csharp
 using Microsoft.Extensions.Logging;
@@ -109,14 +110,20 @@ MoralesLarios.OOFP.Logging/
 ├── MlResultLogExtensions.Critical.cs           → nivel Critical fijado
 ├── MlResultLogExtensions.EventId.cs            → sobrecargas con EventId
 ├── MlResultLogExtensions.Categoria.cs          → sobrecargas con ILogger<TCategory>
+├── MlResultLogExtensions.Template.cs           → plantillas: registro estructurado (2.3.0)
+├── MlResultLogExtensions.TemplateFail.cs       → plantillas en la rama de fallo (2.3.0)
+├── MlResultLogExtensions.TemplateEventId.cs    → plantillas cruzadas con EventId (2.3.0)
+├── MlResultLogErrorFields.cs                   → campos canónicos del fallo: contrato (2.3.0)
 ├── MlResultLogExtensions.Obsolete.cs           → puentes [Obsolete] de LogMlResultFinal
 ├── MlResultLogActionExtensions.cs              → LogActionResult (atajo de más alto nivel)
 └── MlResultLogActionExtensions.Obsolete.cs     → puente [Obsolete] de MyMethodFinalLog
 ```
 
-Las seis clases por nivel y las de `EventId`/`Categoria` son **`partial` de la misma clase
-`MlResultLogExtensions`**: se reparten en ficheros por legibilidad, pero para el consumidor es un
-único tipo. Todo son **métodos de extensión estáticos**. La arquitectura es una pirámide:
+Las seis clases por nivel y las de `EventId`/`Categoria`/`Template…` son **`partial` de la misma
+clase `MlResultLogExtensions`**: se reparten en ficheros por legibilidad, pero para el consumidor es
+un único tipo. La única excepción es `MlResultLogErrorFields`, que es una clase propia porque no
+aporta extensiones, sino el **contrato de campos** de la rama de fallo. Todo lo demás son **métodos
+de extensión estáticos**. La arquitectura es una pirámide:
 
 ```
 MlResultLogActionExtensions.LogActionResult     ← atajo con mensajes prefabricados
@@ -133,6 +140,22 @@ ILogger.Log(logLevel, message)                  ← la API estándar de .NET
 ```
 
 > 💡 Cada capa delega en la de abajo. Si entiendes `LogMlResult` con `LogLevel`, entiendes **todo el proyecto**: el resto son atajos.
+
+Desde la **2.3.0** hay un **segundo raíl paralelo**, el de las plantillas, que no interpola el
+mensaje y lo entrega al registrador en dos piezas:
+
+```
+MlResultLogExtensions.LogMlResultXxxTemplate…   ← nivel fijado por fichero
+        ↓
+MlResultLogExtensions.LogMlResultTemplate…      ← LogLevel (y EventId) como parámetro
+        ↓
+MlResultLogGuards.IsEnabled(logger, logLevel)   ← corta antes de evaluar los argumentos
+        ↓
+ILogger.Log(logLevel, messageTemplate, args)    ← la plantilla llega intacta
+```
+
+> 💡 Los dos raíles conviven y se pueden mezclar en la misma cadena. Ver
+> [familia 8](#familia-8--registro-estructurado-con-plantillas).
 
 ---
 
@@ -494,6 +517,216 @@ source.LogMlResult(_logger, LogLevel.Information,
 > multiplicar la superficie pública. Es el alcance que fijó la decisión `D-28` opción (b) de la
 > épica 08.
 
+---
+
+## Familia 8 — Registro estructurado con plantillas
+
+Hasta la 2.2.0 todas las familias recibían un **mensaje ya compuesto**: una cadena interpolada por ti
+antes de llamar. Eso significa que el registrador recibe texto plano y que **ningún campo queda
+indexable** en Serilog, Seq o Application Insights. Desde la **2.3.0** existe un segundo raíl que
+entrega la plantilla **sin interpolar** y los valores aparte, de modo que el registrador la publica
+como `{OriginalFormat}` y expone cada marcador como un **campo consultable** en el destino.
+
+```csharp
+// ❌ Antes: el registrador recibe "Pedido 17 creado"; no hay campo PedidoId
+source.LogMlResultInformation(_logger, $"Pedido {pedido.Id} creado");
+
+// ✅ Ahora: el registrador recibe la plantilla + el valor; PedidoId es un campo
+source.LogMlResultInformationTemplate(_logger, "Pedido {PedidoId} creado", pedido.Id);
+```
+
+### El matiz de los marcadores: tienen nombre, se rellenan por posición
+
+Esto es lo primero que hay que interiorizar, porque es contraintuitivo:
+
+- El marcador **tiene nombre** (`{PedidoId}`), y ese nombre **es la clave del campo** en el destino.
+  No es `string.Format`: aquí `{0}` sería un nombre de campo malísimo, no una posición.
+- Pero `Microsoft.Extensions.Logging` **rellena los marcadores por posición**, no por nombre. El
+  primer valor de `args` va al primer marcador de la plantilla, el segundo al segundo, etc.
+
+```csharp
+// El orden de args manda: si lo inviertes, el campo PedidoId contendrá la fecha
+source.LogMlResultInformationTemplate(_logger,
+                                      "Pedido {PedidoId} creado a las {Hora}",
+                                      pedido.Id, DateTime.Now);
+```
+
+> 💡 **Escribe los marcadores en `PascalCase`.** No es cosmético: ese texto es literalmente el nombre
+> de la propiedad que vas a consultar en Seq (`PedidoId = 17`). `{pedido_id}` o `{id}` funcionan, pero
+> producen esquemas incoherentes entre servicios.
+
+> ⚠️ **La plantilla debe ser una constante, nunca una cadena interpolada.** Si escribes
+> `$"Pedido {pedido.Id} creado"` vuelves al punto de partida: el texto llega ya compuesto y no hay
+> ningún campo. Todos los parámetros `messageTemplate` están anotados con
+> `[StringSyntax("MessageTemplate")]`, así que el editor resalta los marcadores y los analizadores
+> `CA2254` detectan el error.
+
+### Por qué el nombre lleva el sufijo `Template` (y la captura silenciosa que evita)
+
+El nombre no es casual. Si la plantilla se hubiera añadido como una **sobrecarga más** de
+`LogMlResultInformation`, habría aparecido una trampa que **compila sin un solo aviso y hace otra
+cosa**. Ya existe una sobrecarga de dos literales (`validMessage`, `failMessage`):
+
+```csharp
+// ❌ Lo que habría pasado con el mismo nombre: dos string → gana la sobrecarga de dos literales
+origen.LogMlResultInformation(logger, "Pedido {PedidoId} creado", "17");
+//                                     ↑ validMessage              ↑ failMessage
+// Resultado: DOS trazas literales, con las llaves sin sustituir. Compila. No avisa.
+```
+
+Ese es el **punto 30** de la épica 08, y el caso peligroso es precisamente el más frecuente: cuando el
+único argumento de la plantilla es un `string`, el compilador no puede distinguir *plantilla +
+argumento* de *mensaje válido + mensaje fallido*. La ambigüedad no es de compilador, es **de
+intención**.
+
+> ✅ **La decisión `D-26` lo elimina por construcción**: la familia nueva tiene **nombre propio**
+> (`…Template`), así que no hay ninguna resolución de sobrecarga que elegir. La llamada va a
+> `…Template` o no va, y el código ya escrito queda intacto. Se eligió `Template` y no `Format`
+> porque `Format` arrastraría la semántica posicional y anónima de `string.Format`, que es justo la
+> idea equivocada.
+
+### Las tres formas y los dos niveles de nombre
+
+Igual que el resto del proyecto, la familia existe con el `LogLevel` **como parámetro** y con el nivel
+**fijado en el nombre**:
+
+```csharp
+// Nivel como parámetro
+origen.LogMlResultTemplate(_logger, LogLevel.Information, "Pedido {PedidoId} creado", pedido.Id);
+
+// Nivel fijado en el nombre (los seis: Trace, Debug, Information, Warning, Error, Critical)
+origen.LogMlResultInformationTemplate(_logger, "Pedido {PedidoId} creado", pedido.Id);
+```
+
+Y con los tres receptores de siempre:
+
+| Receptor | Devuelve | Para qué |
+|---|---|---|
+| `ILogger` | `MlResult<ILogger>` | Escribir una traza suelta y seguir en el raíl |
+| `MlResult<T>` | `MlResult<T>` | Registrar en medio de una cadena síncrona |
+| `Task<MlResult<T>>` | `Task<MlResult<T>>` | 🔑 La habitual en cadenas `async` |
+
+```csharp
+// Traza suelta, encadenable
+_logger.LogMlResultInformationTemplate("Arrancando a las {Hora}", DateTime.Now);
+
+// Con EventId (ver familia 7)
+_logger.LogMlResultTemplate(LogLevel.Information, new EventId(1001, "PedidoCreado"),
+                            "pedido {PedidoId} creado a las {Hora}", pedido.Id, DateTime.Now);
+```
+
+### La rama de fallo: `args` o `argsBuilder`
+
+Las cuatro familias condicionales de fallo tienen su equivalente con plantilla:
+
+| Familia | Registra cuando… |
+|---|---|
+| `LogMlResultIfFailTemplate` | el resultado es fallido |
+| `LogMlResultIfFailWithValueTemplate` | es fallido **y** arrastra un valor en `Details` |
+| `LogMlResultIfFailWithExceptionTemplate` | es fallido **y** arrastra una excepción |
+| `LogMlResultIfFailWithoutExceptionTemplate` | es fallido **y NO** arrastra excepción (fallo de negocio) |
+
+Cada una tiene **dos sabores**: uno al que le pasas los valores directamente y otro al que le pasas un
+constructor que **recibe el `MlErrorDetails`**:
+
+```csharp
+// (a) Valores conocidos en el punto de llamada
+origen.LogMlResultErrorIfFailTemplate(_logger, "El pedido {PedidoId} no se ha podido procesar", pedidoId);
+
+// (b) Valores derivados del propio error
+origen.LogMlResultErrorIfFailTemplate(_logger,
+                                      "Fallo al procesar: {ErrorMessage} ({ErrorCount})",
+                                      e => [e.GetErrorsSummary(), e.Errors?.Count() ?? 0]);
+```
+
+> 💡 **El `argsBuilder` sólo se ejecuta si el nivel está habilitado**, igual que los `Func` de
+> mensaje desde la 2.2.0. Puedes derivar datos caros del error sin pagarlos cuando el nivel está
+> apagado.
+
+### `MlResultLogErrorFields`: los campos canónicos del fallo, y son contrato
+
+Escribir a mano la plantilla del error en cada llamada produce esquemas incoherentes. Para eso está
+`MlResultLogErrorFields`, que fija **tres campos canónicos** y los sabe extraer de cualquier
+`MlErrorDetails`:
+
+| Miembro | Valor |
+|---|---|
+| `ErrorMessageField` | `"ErrorMessage"` |
+| `ErrorCountField` | `"ErrorCount"` |
+| `ExceptionTypeField` | `"ExceptionType"` |
+| `NoExceptionValue` | `"(ninguna)"` — lo que se publica cuando el fallo no arrastra excepción |
+| `DefaultTemplate` | `"El resultado ha fallado: {ErrorMessage} · errores: {ErrorCount} · excepción: {ExceptionType}"` |
+| `From(MlErrorDetails)` | los tres valores, **en el orden de `DefaultTemplate`** |
+| `ErrorMessageOf` / `ErrorCountOf` / `ExceptionTypeOf` | cada valor por separado |
+
+```csharp
+// La forma recomendada de registrar un fallo con campos indexables
+origen.LogMlResultErrorIfFailTemplate(_logger,
+                                      MlResultLogErrorFields.DefaultTemplate,
+                                      MlResultLogErrorFields.From);
+```
+
+> ✅ **`From` no lanza nunca.** Un detalle nulo, sin errores o sin excepción produce valores neutros
+> (`""`, `0`, `"(ninguna)"`), no un fallo al registrar.
+
+> ⚠️ **Los tres nombres de campo son contrato.** Un *sink* que indexe por `ErrorMessage`,
+> `ErrorCount` o `ExceptionType` dejaría de encontrar los datos si se renombrasen, y **el compilador
+> no avisaría de nada**. Por eso cambiarlos sería una **ruptura silenciosa** y exigiría su propio
+> punto en el prompt de migración. Si escribes tu propia plantilla con `From`, **respeta el orden**
+> `ErrorMessage` · `ErrorCount` · `ExceptionType`, porque los marcadores se rellenan por posición.
+
+### Ejemplo de extremo a extremo: la traza y los campos
+
+```csharp
+MlResult<Pedido> resultado = await _repo.GetAsync(17)
+    .LogMlResultInformationTemplateAsync(_logger, "Pedido {PedidoId} consultado a las {Hora}",
+                                         17, new DateTime(2026, 10, 31, 9, 0, 0))
+    .BindAsync(p => _servicio.ProcesarAsync(p))
+    .LogMlResultErrorIfFailTemplateAsync(_logger,
+                                         MlResultLogErrorFields.DefaultTemplate,
+                                         MlResultLogErrorFields.From);
+```
+
+**Traza renderizada** (consola, rama válida y luego rama de fallo):
+
+```text
+[09:00:00 INF] Pedido 17 consultado a las 31/10/2026 9:00:00
+[09:00:00 ERR] El resultado ha fallado: El pedido está bloqueado · errores: 1 · excepción: (ninguna)
+```
+
+**Campos emitidos** (lo que indexa el *sink*):
+
+```json
+{
+  "@mt": "Pedido {PedidoId} consultado a las {Hora}",
+  "PedidoId": 17,
+  "Hora": "2026-10-31T09:00:00"
+}
+{
+  "@mt": "El resultado ha fallado: {ErrorMessage} · errores: {ErrorCount} · excepción: {ExceptionType}",
+  "ErrorMessage": "El pedido está bloqueado",
+  "ErrorCount": 1,
+  "ExceptionType": "(ninguna)"
+}
+```
+
+> 🔑 **Lo importante**: el texto de la izquierda es el mismo que antes; lo que cambia es que ahora
+> puedes escribir `PedidoId = 17` o `ExceptionType <> '(ninguna)'` como consulta en Seq.
+
+### Recuento de firmas
+
+| Fichero | Qué aporta | Firmas | Regiones |
+|---|---|---:|---:|
+| `MlResultLogExtensions.Template.cs` | plantilla con `LogLevel` como parámetro | 5 | 2 |
+| `MlResultLogExtensions.TemplateFail.cs` | las cuatro familias de la rama de fallo | 24 | 5 |
+| `MlResultLogExtensions.TemplateEventId.cs` | plantilla × `EventId` (genérica + seis niveles) | 35 | 8 |
+| `MlResultLogErrorFields.cs` | campos canónicos del fallo | 4 | — |
+| Cada uno de los **seis** ficheros de nivel | sus cinco regiones de plantilla | 89 en total | 11 |
+
+> 💡 La superficie pública total del proyecto es de **640 firmas**. Un test de matriz vigila que cada
+> fichero de nivel exponga exactamente **89** y que toda firma que reciba una `Task` termine en
+> `Async`.
+
 
 ---
 
@@ -602,24 +835,30 @@ Los constructores de mensaje **no están envueltos en `TryMap`**. Una excepción
 
 En `LogMlResult` con `Func`, la llamada a `source.Match(...)` **no se asigna a nada**: se ejecuta solo por su efecto secundario (escribir el log) y luego se devuelve `source`. Es intencionado — así se garantiza la transparencia —, pero explica por qué las ramas pueden devolver `null!` sin consecuencias.
 
-### 7. Se usa `logger.Log(logLevel, message)`, no logging estructurado
+### 7. Las familias de mensaje compuesto usan `logger.Log(logLevel, message)`
 
 ```csharp
 logger.Log(logLevel, message);
 ```
 
-El mensaje llega **ya interpolado**, como una cadena plana. Ver [Lo que NO incluye](#️-lo-que-no-incluye).
+El mensaje llega **ya interpolado**, como una cadena plana: no hay campos indexables. Es el precio de
+esas familias, no del proyecto entero — desde la 2.3.0 el raíl de
+[plantillas](#familia-8--registro-estructurado-con-plantillas) entrega la plantilla intacta y sí
+produce campos. Ver [Lo que NO incluye](#️-lo-que-no-incluye).
 
 ---
 
 ## ⚠️ Lo que NO incluye
 
-> ⚠️ **No hay logging estructurado.** Los mensajes se interpolan antes de llegar al logger, así que **Serilog, Seq, Application Insights, etc. no podrán indexar campos**. No hay sobrecargas con plantilla y `params object[] args`.
+> ⚠️ **Las familias de mensaje compuesto siguen sin producir campos indexables.** Lo que les pasas es
+> una cadena ya interpolada, así que **Serilog, Seq o Application Insights no pueden indexar nada** de
+> su contenido. Lo que **sí existe desde la 2.3.0** es un raíl aparte con nombre propio:
+> [familia 8 — registro estructurado con plantillas](#familia-8--registro-estructurado-con-plantillas).
 > ```csharp
-> // ❌ Esto NO existe
-> source.LogMlResultInformation(_logger, "Pedido {OrderId} creado", pedido.Id);
-> // ✅ Solo esto: el {OrderId} se pierde como campo
-> source.LogMlResultInformation(_logger, $"Pedido {pedido.Id} creado");
+> // ❌ Esto NO existe: con el nombre sin sufijo, los dos string caen en (validMessage, failMessage)
+> source.LogMlResultInformation(_logger, "Pedido {OrderId} creado", "17");
+> // ✅ Para campos indexables, la familia con sufijo Template
+> source.LogMlResultInformationTemplate(_logger, "Pedido {OrderId} creado", pedido.Id);
 > ```
 
 > ⚠️ **No se pasa la `Exception` al `ILogger`.** Aunque `LogMlResultIfFailWithException` **detecta** la excepción y te la deja usar en el mensaje, **nunca** llama a `logger.Log(level, exception, message)`. Por tanto **el stack trace no se registra** salvo que lo incluyas tú en el texto (`ex.ToString()`).
@@ -745,11 +984,20 @@ public Task<MlResult<Informe>> Generar(int año)
 ### Ejemplo 7 — ❌ Qué no hacer / ✅ qué hacer
 
 ```csharp
-// ❌ MAL: esperar logging estructurado
-source.LogMlResultInformation(_logger, "Pedido {Id} creado", pedido.Id);   // 💥 no existe
+// ❌ MAL: esperar campos indexables de la familia sin sufijo. Con un int compila por la
+//         sobrecarga de params… pero con un string el compilador elige (validMessage, failMessage)
+//         y registra DOS trazas literales con las llaves intactas. Compila y no avisa.
+source.LogMlResultInformation(_logger, "Pedido {Id} creado", "17");   // 💥 captura silenciosa
 
-// ✅ BIEN: interpolar (aceptando que se pierde el campo indexable)
-source.LogMlResultInformation(_logger, $"Pedido {pedido.Id} creado");
+// ✅ BIEN: la familia con sufijo Template, que sí emite el campo Id
+source.LogMlResultInformationTemplate(_logger, "Pedido {Id} creado", pedido.Id);
+
+// ❌ MAL: interpolar la plantilla → el texto llega compuesto y no hay ningún campo
+source.LogMlResultInformationTemplate(_logger, $"Pedido {pedido.Id} creado");
+
+// ✅ BIEN: plantilla constante y los valores aparte, en el orden de los marcadores
+source.LogMlResultInformationTemplate(_logger, "Pedido {Id} creado a las {Hora}",
+                                      pedido.Id, DateTime.Now);
 
 
 // ❌ MAL: el nombre con la errata de la 2.1.1 ya no existe
@@ -799,6 +1047,8 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 | Escribir una traza suelta y seguir en el raíl | `_logger.LogMlResultXxx("mensaje")` → `MlResult<ILogger>` |
 | Registrar dentro de una cadena `async` | La sobrecarga `…Async` que recibe `Task<MlResult<T>>` |
 | Correlacionar un conjunto de trazas | La sobrecarga con `EventId` ([familia 7](#familia-7--eventid-e-iloggertcategory)) |
+| Emitir **campos indexables** en el *sink* | La familia `…Template` ([familia 8](#familia-8--registro-estructurado-con-plantillas)) |
+| Registrar un fallo con campos canónicos | `…IfFailTemplate(_logger, MlResultLogErrorFields.DefaultTemplate, MlResultLogErrorFields.From)` |
 | Fijar la categoría del logger en el punto de uso | La sobrecarga con `ILogger<TCategory>` |
 
 ---
@@ -813,7 +1063,7 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 6. **Incluye `ex.ToString()` en el mensaje** cuando quieras stack trace: la biblioteca no lo pasa al logger.
 7. **`Trace`/`Debug` para el detalle, `Information` para hitos, `Warning` para fallos de negocio, `Error` para técnicos, `Critical` para lo que despierta a alguien.**
 8. **No temas los bucles grandes**: desde la 2.2.0 se consulta `IsEnabled` **antes** de invocar tus `Func`, así que con el nivel apagado el mensaje **ni se construye** (−69,7 % de asignaciones, −93 % de tiempo).
-9. **Si necesitas logging estructurado de verdad**, llama a `ILogger` directamente en un `ExecSelf`/`Match` en lugar de usar estas extensiones.
+9. **Si necesitas campos indexables, usa la familia `…Template`** ([familia 8](#familia-8--registro-estructurado-con-plantillas)): la plantilla llega intacta al registrador y cada marcador se convierte en un campo consultable. Ya no hace falta bajarse a `ILogger` en un `ExecSelf`/`Match`.
 10. **Decide un idioma para las trazas** y sé coherente: recuerda que `LogActionResult` fuerza inglés, igual que todo el texto que genera la librería.
 11. **`GetErrorsSummary()` para trazas de negocio, `ToErrorsDetailsDescription()` para diagnóstico técnico** (el segundo incluye los `Details`).
 12. **No registres información sensible**: los `MlErrorDetails` pueden arrastrar el valor de entrada completo (`…WithValue`).
@@ -830,7 +1080,8 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 - Lo más distintivo: **filtrar el log según el contenido de `Details`**, lo que permite separar errores técnicos de errores de negocio sin un solo `if`.
 - Atajos de alto nivel: **`LogGeneralErrorIfFail`** (una línea, registra los fallos en `Error`) y **`LogCompletedResult`** (`Information` si va bien, `Error` si falla).
 - Desde la 2.2.0: **`EventId`** y **`ILogger<TCategory>`** como ejes aditivos, **guarda de `logger` nulo** y **cortocircuito por `IsEnabled`** antes de construir el mensaje.
-- ⚠️ Límites importantes: **no hay logging estructurado**, **no se pasa la `Exception` al logger** (ni stack trace), **no hay `scopes`**, y las excepciones dentro de tus `Func` **no están protegidas**.
+- Desde la 2.3.0: **registro estructurado con plantillas** ([familia 8](#familia-8--registro-estructurado-con-plantillas)) en la rama válida, en las cuatro condicionales de fallo y cruzado con `EventId`, más **`MlResultLogErrorFields`**, que fija los tres campos canónicos del fallo (`ErrorMessage`, `ErrorCount`, `ExceptionType`) como **contrato**.
+- ⚠️ Límites importantes: las familias de **mensaje compuesto** siguen sin producir campos indexables (para eso está `…Template`), **no se pasa la `Exception` al logger** (ni stack trace), **no hay `scopes`** (planificados en la épica 9 de la 2.4.0), y las excepciones dentro de tus `Func` **no están protegidas**.
 - ⚠️ Lo que queda por limpiar en la 3.0.0: solo los puentes **`[Obsolete]`** — los de `MyMethodFinalLog` y `LogMlResultFinal` de la 2.2.0, más el de `LogCompletedResult` sin sufijo de la 2.3.0. Las dos erratas cosméticas (la sobrecarga `async` sin sufijo y la región mal etiquetada en el fichero de `Trace`) **ya están cerradas** desde la 2.3.0.
 
 ---

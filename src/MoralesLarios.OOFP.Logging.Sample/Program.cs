@@ -130,4 +130,34 @@ validoSinDetalles.LogMlResultIfFailWithoutException(logger          : logger,
 
 logger.LogInformation("**** LogMlResultIfFailWithoutException FINALIZADO ****");
 
+logger.LogInformation("**** Probando el registro estructurado con plantillas ****");
+
+// La plantilla NO se interpola: llega intacta al registrador, que la publica como {OriginalFormat}
+// y expone cada marcador como un campo consultable en el destino.
+logger.LogMlResultInformationTemplate("Correcto: plantilla suelta sobre el registrador, a las {Hora}",
+                                      DateTime.Now);
+
+calculoValido.LogMlResultInformationTemplate(logger,
+                                             "Correcto: plantilla con el valor {Valor} consultado a las {Hora}",
+                                             42, DateTime.Now);
+
+logger.LogMlResultTemplate(LogLevel.Information,
+                           new EventId(1001, "PlantillaDemo"),
+                           "Correcto: plantilla cruzada con el EventId {EventoId}",
+                           1001);
+
+// En la rama de fallo, los campos canónicos los aporta MlResultLogErrorFields:
+// ErrorMessage · ErrorCount · ExceptionType, en ese orden.
+calculoFallido.LogMlResultIfFailTemplate(logger,
+                                         LogLevel.Information,
+                                         MlResultLogErrorFields.DefaultTemplate,
+                                         MlResultLogErrorFields.From);
+
+calculoValido.LogMlResultIfFailTemplate(logger,
+                                        LogLevel.Information,
+                                        "Esto no tendría que imprimirse: el resultado es válido · {ErrorMessage}",
+                                        MlResultLogErrorFields.From);
+
+logger.LogInformation("**** El registro estructurado con plantillas FINALIZADO ****");
+
 logger.LogInformation($"{Environment.NewLine}{Environment.NewLine}DEMOSTRACIÓN FINALIZADA");

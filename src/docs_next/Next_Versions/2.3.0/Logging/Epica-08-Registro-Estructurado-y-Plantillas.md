@@ -597,17 +597,62 @@ commit: `CadaNivel_ExponeLasSieteRegionesFuncionales` pasa a
 
 **Criterios de aceptación**
 
-- [ ] El `README.md` de `src/MoralesLarios.OOFP.Logging` tiene una sección nueva para la familia de
+- [x] El `README.md` de `src/MoralesLarios.OOFP.Logging` tiene una sección nueva para la familia de
       plantillas, con su entrada en el índice y la tabla de recuentos actualizada.
-- [ ] La sección explica el **matiz de los marcadores**: son nombres, se rellenan por posición, y
+- [x] La sección explica el **matiz de los marcadores**: son nombres, se rellenan por posición, y
       conviene escribirlos en `PascalCase` porque son la clave del campo.
-- [ ] La sección avisa de la **captura silenciosa** del punto 30 y de cómo `D-26` la evita, con el
+- [x] La sección avisa de la **captura silenciosa** del punto 30 y de cómo `D-26` la evita, con el
       contraejemplo de los dos `string`.
-- [ ] Hay un ejemplo de extremo a extremo que muestra la traza renderizada **y** los campos.
-- [ ] `scripts\check-md-anchors4.ps1` termina con **`rotos = 0`**.
-- [ ] El `Sample` incorpora una llamada con plantilla y sigue ejecutándose con **`EXIT = 0`**.
-- [ ] **Registro final en el prompt de migración** verificado en los 6 sitios, con la numeración
-      continuando desde el punto **52**, que es el último usado.
+- [x] Hay un ejemplo de extremo a extremo que muestra la traza renderizada **y** los campos.
+- [x] `scripts\check-md-anchors4.ps1` termina con **`rotos = 0`**.
+- [x] El `Sample` incorpora una llamada con plantilla y sigue ejecutándose con **`EXIT = 0`**.
+- [x] **Registro final en el prompt de migración** verificado en los 6 sitios, con la numeración
+      continuando desde el punto **58**, que es el último usado: le corresponde el punto **59**.
+
+> **Resuelta.** El `README.md` pasa de **862** a **1.113** líneas en tres tandas. La primera añade la
+> entrada **12** del índice —y renumera las ocho siguientes—, sube la versión del paquete a **2.3.0**,
+> declara los cuatro ficheros nuevos en el árbol de la estructura y dibuja una **segunda pirámide
+> ASCII** para el raíl de plantillas, que termina en `ILogger.Log(logLevel, messageTemplate, args)`
+> frente a la del raíl de mensaje compuesto, que termina en `ILogger.Log(logLevel, message)`. Los dos
+> raíles conviven y la diferencia es exactamente esa última llamada.
+>
+> La segunda tanda escribe la **familia 8** completa, con siete epígrafes: el matiz de los marcadores
+> (*tienen nombre, se rellenan por posición*), por qué el sufijo es `Template` y qué captura
+> silenciosa evita, las tres formas y los dos niveles de nombre, la rama de fallo con `args` frente a
+> `argsBuilder`, `MlResultLogErrorFields` y sus tres campos **canónicos y de contrato**, un ejemplo de
+> extremo a extremo que muestra **la traza renderizada y los campos publicados**, y el recuento de
+> firmas.
+>
+> La tercera tanda es la más importante de las tres y es la que motiva el punto **59** del prompt:
+> falsifica las **seis** afirmaciones del documento que decían que *no había logging estructurado*.
+> La particularidad **7** se acota a «las familias de **mensaje compuesto**»; el primer párrafo de
+> `⚠️ Lo que NO incluye` deja de negar la capacidad y pasa a acotar el límite; el **ejemplo 7** cambia
+> de «❌ esperar campos / ✅ interpolar aceptando la pérdida» a «✅ `…Template` / ❌ interpolar la
+> plantilla / ❌ pasar dos `string`»; la **mejor práctica 9** deja de recomendar bajarse a `ILogger`
+> dentro de un `ExecSelf`/`Match`; la **tabla de decisión rápida** gana dos filas; y el **resumen**
+> sustituye el límite antiguo por dos puntos, uno para la capacidad nueva y otro para los límites que
+> de verdad quedan.
+>
+> **Matiz que merece la pena no perder** · el criterio de aceptación decía «continuando desde el punto
+> **52**», y era **obsoleto**: lo escribimos al abrir la épica, cuando 52 era el último del prompt.
+> Las historias 34 a 39 han consumido los puntos 53 a 58, así que a esta le toca el **59**. La
+> numeración del prompt es una **secuencia global** que no se reordena ni se reutiliza, y la
+> numeración de los «puntos» de esta épica es **independiente** de ella: no hay que confundirlas.
+>
+> **Sample** · un **quinto bloque** de demostración con cinco llamadas: plantilla suelta sobre el
+> registrador, plantilla sobre un `MlResult<T>` con dos marcadores, plantilla cruzada con `EventId`,
+> fallo registrado con `MlResultLogErrorFields.DefaultTemplate` + `MlResultLogErrorFields.From`, y una
+> última que **no debe imprimir nada** porque el resultado es válido. El `Program.cs` pasa de **134** a
+> **164** líneas.
+>
+> **Registro** · punto **59** del prompt de migración, en los **cinco** sitios (tabla §3.3, subsección
+> `#### 59`, barrido **opcional** de la Fase 5 para los `ExecSelf`/`Match` que solo registran, informe
+> de la Fase 6 y tabla del apéndice). **No** toca `oofp-upgrade-2.renames.md`: no hay ningún
+> renombrado.
+>
+> **Líneas base** · build `EXIT = 0`, **0 errores**, **236 avisos**, `CS1591 = 0`, `CS0618 = 0`;
+> tests `EXIT = 0`, **1.510** en verde, 0 fallos; anclas `revisados = 1356`, **`rotos = 0`**;
+> `Sample` `EXIT = 0`, `Correcto = 10`, `NoDeberia = 0`, `FINALIZADO = 5`.
 ---
 
 ## 4. Orden de ejecución

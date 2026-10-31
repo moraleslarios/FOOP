@@ -389,6 +389,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 56 | Los **ámbitos de registro** (`ILogger.BeginScope`) siguen sin existir, y es **deliberado** (**2.3.0**) | el `README.md` decía solamente «no hay `scopes` ni `BeginScope`», sin decir si era un olvido o una decisión | el recuento de `BeginScope` en la librería es **`0`** y queda **documentado y justificado**: los ámbitos se han desgajado a la **épica 9 de la versión 2.4.0** porque plantean tres preguntas de diseño propias | ✅ **Ninguna** · no hay código nuevo; es **documentación de semántica no obvia** |
 | 57 | Los parámetros de plantilla se anotan con `[StringSyntax("MessageTemplate")]` (**2.3.0**) | el parámetro `messageTemplate` era un `string` cualquiera: el editor no lo coloreaba y los analizadores no lo reconocían como plantilla de registro | **241 parámetros anotados** en los nueve ficheros de plantilla, de modo que el editor y los analizadores del consumidor tratan la cadena como lo que es; `CA2254 = 0` medido en una sonda con analizadores estrictos | ✅ **Ninguna** · anotación declarativa; no cambia ninguna firma ni ningún comportamiento |
 | 58 | La sobrecarga `async` de `LogCompletedResult` recupera el sufijo `Async` (**2.3.0**) | `LogCompletedResult(this Task<MlResult<T>>, ILogger, string, string)`: era `async`, devolvía `Task<MlResult<T>>` y **no** terminaba en `Async`, el único incumplimiento del convenio que sobrevivió a la épica 4 de la 2.2.0 | `LogCompletedResultAsync`; el nombre sin sufijo queda como puente `[Obsolete(…, false)]` + `[EditorBrowsable(Never)]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.3.0 → `CS1061` en 3.0.0) |
+| 59 | El `README.md` de `MoralesLarios.OOFP.Logging` **ya no dice que no haya registro estructurado** (**2.3.0**) | el `README.md` afirmaba en **seis** sitios que «no hay logging estructurado», que las sobrecargas con plantilla «NO existen» y que, si hacían falta campos, había que bajarse a `ILogger` en un `ExecSelf`/`Match` | una **familia 8** nueva documenta el raíl de plantillas de extremo a extremo —marcadores, captura silenciosa del punto 30, `MlResultLogErrorFields` y recuentos— y las seis afirmaciones falsificadas quedan corregidas | ✅ **Ninguna** · documentación; pero **invalida una recomendación anterior**, así que conviene leerlo |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1474,6 +1475,49 @@ tercera que vigila que el puente siga marcado como obsoleto **con aviso y no con
 
 ---
 
+#### 59 — El `README.md` de Logging ya no dice que no haya registro estructurado (2.3.0) ✅ SIN RUPTURAS
+
+No hay cambio de código en este punto: **no hay nada que migrar**. Se registra porque el `README.md` de
+`MoralesLarios.OOFP.Logging` es la fuente que lee el consumidor antes de escribir la primera línea, y
+hasta la 2.2.0 **le decía lo contrario de lo que ahora es verdad**. Si no se avisa, el consumidor que ya
+leyó ese documento seguirá creyendo que la librería no puede publicar campos y seguirá aplicando el
+apaño que el propio `README.md` le recomendaba.
+
+Las **seis** afirmaciones que la familia de plantillas (puntos 53, 54, 55 y 57) ha falsificado, y que
+quedan corregidas en la 2.3.0:
+
+| Dónde | Decía | Dice ahora |
+| --- | --- | --- |
+| Particularidad 7 | «Se usa `logger.Log(logLevel, message)`, **no logging estructurado**» | el título se acota a «las familias de **mensaje compuesto**», y remite a la familia 8 |
+| `⚠️ Lo que NO incluye` | «**No hay logging estructurado** […] No hay sobrecargas con plantilla y `params object[] args`» | el límite se acota a las familias de mensaje compuesto, y el contraejemplo pasa a ser el de la **captura silenciosa** |
+| Ejemplo 7 | «❌ esperar logging estructurado […] ✅ interpolar (aceptando que se pierde el campo)» | ✅ es `…Template`; ❌ es interpolar la plantilla y ❌ es pasar dos `string` |
+| Mejor práctica 9 | «Si necesitas logging estructurado de verdad, llama a `ILogger` **directamente** en un `ExecSelf`/`Match`» | usa `…Template`: **ya no hace falta** salir del raíl |
+| Resumen | «⚠️ Límites importantes: **no hay logging estructurado**…» | el límite se acota, y se añade un punto propio para la familia 8 y `MlResultLogErrorFields` |
+| Tabla de decisión rápida | no contemplaba el caso | dos filas nuevas: «emitir campos indexables» y «registrar un fallo con campos canónicos» |
+
+**Qué hacer:** si en tu proyecto bajaste a `ILogger` dentro de un `ExecSelf`/`Match` **solo** para poder
+publicar campos —que es exactamente lo que la mejor práctica 9 recomendaba—, ese apaño ya no es
+necesario: la llamada equivalente con `…Template` mantiene el raíl y devuelve el `MlResult<T>` intacto.
+
+```csharp
+// antes — había que salir del raíl para publicar campos
+source.ExecSelf(_ => _logger.LogInformation("Pedido {Id} creado", pedidoId));
+
+// después — la familia 8 lo hace sin salir del raíl
+source.LogMlResultInformationTemplate(_logger, "Pedido {Id} creado", pedidoId);
+```
+
+> 🧭 **Cómo saber si te afecta.** No afecta a la compilación ni al comportamiento: el apaño antiguo
+> **sigue funcionando**. Te afecta solo como oportunidad. La señal es tener un `ExecSelf` o un `Match`
+> cuyo único contenido sea una llamada a `_logger.Log*`.
+
+**Nota de contrato.** La sección nueva deja escrito que los tres nombres de campo de
+`MlResultLogErrorFields` —`ErrorMessage`, `ErrorCount` y `ExceptionType`— son **contrato**: cambiarlos
+sería una **ruptura silenciosa** para cualquier consulta, panel o alerta del destino de registro. Es la
+misma advertencia del punto 54, repetida aquí porque es el sitio donde el consumidor la va a leer.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -1626,6 +1670,17 @@ dotnet build --nologo /p:WarningLevel=4
    detrás de otro `*Async`— y renómbralas a `LogCompletedResultAsync`. Las que operen sobre un
    `MlResult<T>` sincrónico **no se tocan**: esa sobrecarga conserva su nombre. El compilador te
    señala cada caso con `CS0618`, así que la vía rápida es compilar y seguir los avisos.
+   Y, para el punto 59 (el `README.md` de Logging ya no desaconseja el registro estructurado), busca
+   los apaños que la mejor práctica 9 de la 2.2.0 recomendaba:
+   ```
+   ExecSelf\w*\s*\([^;]*_?[Ll]ogger\.Log
+   \.Match\w*\s*\([^;]*_?[Ll]ogger\.Log
+   ```
+   Cada coincidencia cuyo **único** contenido sea la llamada al registrador es un descenso manual a
+   `ILogger` que la 2.3.0 ya no necesita: puede sustituirse por la llamada equivalente de la familia
+   `LogMlResult*Template`, que mantiene el raíl. ⚠️ **No** toques las que además hagan otra cosa
+   (publicar un evento, actualizar una métrica, mutar estado): ahí el `ExecSelf` sigue siendo lo
+   correcto. Este barrido es **opcional**: no hay nada que rompa si no se aplica.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -1727,7 +1782,12 @@ Entrega al usuario, **en español**, un informe con:
    `Task<MlResult<T>>` se han encontrado y renombrado a `LogCompletedResultAsync`, cuántas
    coincidencias se han **descartado** por operar sobre un `MlResult<T>` sincrónico, y confirma que
    no queda ningún `CS0618` de ese puente; deja escrito que es la **única ruptura de la 2.3.0** y que
-   el puente desaparece en la 3.0.0.
+   el puente desaparece en la 3.0.0. Para el punto **59**, haz constar que es **documental** y que no
+   hay nada que migrar, y, si se ha aprovechado el barrido opcional, cuántos `ExecSelf`/`Match` cuyo
+   único contenido era una llamada a `_logger.Log*` se han sustituido por la familia
+   `LogMlResult*Template` y cuántos se han **descartado** por hacer algo más que registrar; deja
+   escrito que los tres nombres de campo de `MlResultLogErrorFields` son **contrato** y que cualquier
+   consulta o panel del destino de registro puede depender de ellos.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1766,11 +1826,11 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.3.0 | 53, 54, 55, 56, 57, 58 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`) |
+| 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 y 58** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58 y 59** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > 🧭 El salto **2.2.0 → 2.3.0** exige **una sola cosa**: atender el punto **58**, el renombrado de la
