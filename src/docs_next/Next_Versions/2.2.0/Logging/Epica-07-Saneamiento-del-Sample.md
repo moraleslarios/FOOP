@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) · hallazgos `S1` … `S4`
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.2.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging.Sample`
-> **Estado** · ⬜ pendiente
+> **Estado** · ✅ completada
 > **Esfuerzo** · **XS** (~0,25 jornadas)
 > **Riesgo** · 🟢 bajo · el `Sample` **no se publica**: nada de lo que se toque aquí llega al consumidor
 >
@@ -209,27 +209,27 @@ Y la variable `partialResult1Exception` está declarada **dos veces**: comentada
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-23`](#5-decisiones-abiertas)**: se decide si las 59 líneas comentadas se borran
+- [x] **Resuelta [`D-23`](#5-decisiones-abiertas)**: se decide si las 59 líneas comentadas se borran
       o se recuperan como código vivo.
-- [ ] El comentario `// See https://aka.ms/new-console-template…` de `L1` **retirado**.
-- [ ] `Console.WriteLine("Hello, World!");` de `L13` **retirado**.
-- [ ] Recuento de líneas comentadas en `Program.cs` → **0**, frente a las **59** de partida
+- [x] El comentario `// See https://aka.ms/new-console-template…` de `L1` **retirado**.
+- [x] `Console.WriteLine("Hello, World!");` de `L13` **retirado**.
+- [x] Recuento de líneas comentadas en `Program.cs` → **0**, frente a las **59** de partida
       *(o el valor que fije `D-23`, justificado en este documento)*.
-- [ ] `logginBuilder` → `loggingBuilder` y `loggerConfriguration` → `loggerConfiguration`.
-- [ ] Los **2** mensajes que dicen `LogMlResultIfFailWithException` en el bloque que prueba
+- [x] `logginBuilder` → `loggingBuilder` y `loggerConfriguration` → `loggerConfiguration`.
+- [x] Los **2** mensajes que dicen `LogMlResultIfFailWithException` en el bloque que prueba
       `LogMlResultIfFailWithoutException` —`L144` y `L166`— **corregidos**.
-- [ ] Las interpolaciones `$"` **sin ninguna** `{expresión}` pasan a cadenas normales; búsqueda de
+- [x] Las interpolaciones `$"` **sin ninguna** `{expresión}` pasan a cadenas normales; búsqueda de
       `$"` sin `{` → **0 ocurrencias**.
-- [ ] La declaración duplicada de `partialResult1Exception` resuelta: queda **una sola**.
-- [ ] **0** bloques de 3 o más líneas en blanco seguidas —frente a **6**— y **0** líneas en blanco
+- [x] La declaración duplicada de `partialResult1Exception` resuelta: queda **una sola**.
+- [x] **0** bloques de 3 o más líneas en blanco seguidas —frente a **6**— y **0** líneas en blanco
       con espacios residuales —frente a **4**—, con el mismo criterio que la US-10 de la
       [épica 2](Epica-02-Higiene-Interna-y-Codigo-Muerto.md).
-- [ ] Todos los mensajes del `Sample` en **castellano**, coherentes con la política que fija la
+- [x] Todos los mensajes del `Sample` en **castellano**, coherentes con la política que fija la
       US-19 de la [épica 4](Epica-04-Nomenclatura-y-Firmas-Publicas.md).
-- [ ] **El `Sample` se ejecuta** y su salida se comprueba a mano: cada mensaje que dice «Correcto»
+- [x] **El `Sample` se ejecuta** y su salida se comprueba a mano: cada mensaje que dice «Correcto»
       aparece, y cada mensaje que dice «Esto no tendría que imprimirse» **no** aparece. Ese es el
       criterio real de que el ejemplo funciona.
-- [ ] Build del `Sample` → **0 errores**.
+- [x] Build del `Sample` → **0 errores**.
 
 ### US-33 · Resolver el `CS8604` del `Sample`
 
@@ -241,16 +241,16 @@ Y la variable `partialResult1Exception` está declarada **dos veces**: comentada
 
 **Criterios de aceptación**
 
-- [ ] `host.Services.GetService<ILogger<Program>>()` → **`GetRequiredService`**.
-- [ ] Recuento en `Program.cs`: `GetService` → **0**, `GetRequiredService` → **1**.
-- [ ] **`CS8604` del `Sample` desaparece.** Se verifica con build completo
+- [x] `host.Services.GetService<ILogger<Program>>()` → **`GetRequiredService`**.
+- [x] Recuento en `Program.cs`: `GetService` → **0**, `GetRequiredService` → **1**.
+- [x] **`CS8604` del `Sample` desaparece.** Se verifica con build completo
       `--no-incremental`, no incremental, buscando `Program.cs(33` en la salida → **0 coincidencias**.
-- [ ] El `Sample` usa la sobrecarga con `ILogger<T>` que aporta la US-30 de la
+- [x] El `Sample` usa la sobrecarga con `ILogger<T>` que aporta la US-30 de la
       [épica 6](Epica-06-Rendimiento-y-Estandar-de-Logging.md), si esa sobrecarga existe al llegar
       aquí; si no, se deja anotado en este documento para la siguiente pasada.
-- [ ] El `Sample` consulta `logger.IsEnabled(...)` al menos en un punto, para **enseñar** el patrón
+- [x] El `Sample` consulta `logger.IsEnabled(...)` al menos en un punto, para **enseñar** el patrón
       que la US-28 introduce en la librería; recuento de `IsEnabled` → **> 0**, frente a **0**.
-- [ ] El recuento total de avisos de la solución **baja al menos en 1** respecto a los **236** de
+- [x] El recuento total de avisos de la solución **baja al menos en 1** respecto a los **238** reales de
       partida, o se justifica por qué no.
 
 ---
@@ -292,9 +292,9 @@ graph TD
 
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-23** | ¿Qué se hace con las 59 líneas comentadas? | (a) **borrarlas**: el control de versiones ya las guarda · (b) **recuperarlas** como código vivo: demuestran `IfFailWithValue` e `IfFailWithException`, que hoy el `Sample` no demuestra · (c) borrarlas del `Sample` y convertirlas en **tests** de la épica 1 | ⬜ abierta |
-| **D-24** | ¿Qué debe demostrar el `Sample` tras el saneamiento? | (a) sólo lo que ya demuestra · `IfFailWithoutException` · (b) una llamada representativa de **cada** una de las 7 regiones · (c) el camino feliz y el camino de error de las familias principales | ⬜ abierta |
-| **D-25** | ¿Se mantiene el `Sample` como proyecto, o se sustituye por un `README` con fragmentos? | (a) mantenerlo: compila, y lo que compila no se queda obsoleto en silencio · (b) sustituirlo por documentación · (c) mantenerlo **y** extraer sus fragmentos al `README` de `Logging` | ⬜ abierta |
+| **D-23** | ¿Qué se hace con las 59 líneas comentadas? | (a) **borrarlas**: el control de versiones ya las guarda · (b) **recuperarlas** como código vivo: demuestran `IfFailWithValue` e `IfFailWithException`, que hoy el `Sample` no demuestra · (c) borrarlas del `Sample` y convertirlas en **tests** de la épica 1 | ✅ **(c) + (b)** |
+| **D-24** | ¿Qué debe demostrar el `Sample` tras el saneamiento? | (a) sólo lo que ya demuestra · `IfFailWithoutException` · (b) una llamada representativa de **cada** una de las 7 regiones · (c) el camino feliz y el camino de error de las familias principales | ✅ **(c)** |
+| **D-25** | ¿Se mantiene el `Sample` como proyecto, o se sustituye por un `README` con fragmentos? | (a) mantenerlo: compila, y lo que compila no se queda obsoleto en silencio · (b) sustituirlo por documentación · (c) mantenerlo **y** extraer sus fragmentos al `README` de `Logging` | ✅ **(a)** |
 
 > **Recomendación sobre `D-23`.** La opción (c) es la que aprovecha el trabajo: esas 59 líneas son
 > **casos de prueba ya pensados**, con su expectativa escrita en el propio mensaje —«Correcto: …» y
@@ -308,33 +308,66 @@ graph TD
 > habría seguido mintiendo. De hecho, eso es exactamente lo que ha pasado con los bloques
 > comentados: al no compilar, han podido pudrirse sin que nadie lo note.
 
+### Decisiones adoptadas
+
+**`D-23` → (c) más (b).** Los casos que vivían comentados ya se han convertido en
+**verificación automática** en la [épica 1](Epica-01-Red-de-Seguridad.md) —las baterías de
+`IfFailWithValue`, `IfFailWithException` e `IfFailWithoutException` de
+`MlResultLogExtensionsF1Tests`, `…MatrixTests` y `…ParidadIfFailWithExceptionTests`—, de modo
+que no se ha tirado nada. Además se han **recuperado como código vivo** en el `Sample`, reescritos
+de cero contra la API renombrada de la [épica 4](Epica-04-Nomenclatura-y-Firmas-Publicas.md): hoy
+el ejemplo sí demuestra `IfFailWithValue` e `IfFailWithException`, que era justo lo que se perdía al
+estar comentados. Recuento de líneas comentadas en `Program.cs`: **59 → 0**.
+
+**`D-24` → (c).** El `Sample` demuestra el **camino feliz y el camino de error** de las familias
+principales: `LogMlResultInformation` con registrador tipado, `IfFailWithValue` en sus dos formas
+—la que sólo recibe `MlErrorDetails` y la genérica de dos parámetros—, `IfFailWithException`
+en sus dos formas y `IfFailWithoutException`. Cada familia se ejercita con el caso que **sí** debe
+registrar —mensaje `Correcto: …`— y con los casos que **no** deben registrar —mensaje
+`Esto no tendría que imprimirse…`—, de forma que la propia salida del programa es la aserción.
+No se ha ido a la opción (b) —una llamada de cada una de las 7 regiones— porque las regiones
+`IfValid` e `IfFail` genéricas quedan ya cubiertas por la llamada tipada del principio, y añadirlas
+sólo alargaba el ejemplo sin enseñar nada nuevo.
+
+**`D-25` → (a).** Se **mantiene** el proyecto `Sample` como está, sin extraer sus fragmentos al
+`README` de `Logging`. El argumento de la recomendación se ha cumplido literalmente en esta misma
+versión: el renombrado de `validBuilMessage` → `validBuildMessage` de la épica 4 **habr#iánl#dejado obsoleto en silencio** cualquier fragmento pegado en un `README`, mientras que en el `Sample`
+rompe la compilación y obliga a arreglarlo. La opción (c) se deja para una pasada posterior de
+documentación, cuando el `README` de `Logging` se revise en bloque.
+
+**Nota sobre la sobrecarga con registrador tipado.** El criterio de la US-33 se cumple: el `Sample`
+usa `LogMlResultInformation` en su sobrecarga tipada, la que aporta la US-30 de la
+[épica 6](Epica-06-Rendimiento-y-Estandar-de-Logging.md). Queda anotado que, por la decisión
+`D-20` de esa épica, la cobertura tipada **no alcanza** a las familias `IfValid`, `IfFail`,
+`IfFailWithValue`, `IfFailWithException` ni `IfFailWithoutException`: esas llamadas del `Sample` se
+hacen con `ILogger`, al que el registrador tipado convierte de forma implícita.
+
 ---
 
 ## 6. Definición de terminado
 
-- [ ] Las **2 historias** (US-32 y US-33) tienen todos sus criterios de aceptación marcados.
-- [ ] **`D-23`, `D-24` y `D-25` resueltas** y anotadas en la §5 de este documento.
-- [ ] Recuentos en `Program.cs`: comentadas **0** *(o el valor de `D-23`)*, bloques de 3+ blancas
+- [x] Las **2 historias** (US-32 y US-33) tienen todos sus criterios de aceptación marcados.
+- [x] **`D-23`, `D-24` y `D-25` resueltas** y anotadas en la §5 de este documento.
+- [x] Recuentos en `Program.cs`: comentadas **0** *(o el valor de `D-23`)*, bloques de 3+ blancas
       **0**, blancas con espacios **0**, `$"` sin `{` **0**, `GetService` **0**,
       `GetRequiredService` **1**, `IsEnabled` **> 0**.
-- [ ] `Hello, World!` → **0 ocurrencias**. `aka.ms/new-console-template` → **0 ocurrencias**.
-- [ ] `logginBuilder` y `loggerConfriguration` → **0 ocurrencias**.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
+- [x] `Hello, World!` → **0 ocurrencias**. `aka.ms/new-console-template` → **0 ocurrencias**.
+- [x] `logginBuilder` y `loggerConfriguration` → **0 ocurrencias**.
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
       **0 errores**, **0 `CS1591`**, **0 `CS0618`**, **sin `CS8604` en `Program.cs`** y
-      **≤ 235 avisos** —uno menos que los 236 de partida—.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
-      de la épica 1.
-- [ ] **El `Sample` se ha ejecutado** y su salida se ha revisado línea a línea: aparecen los mensajes
+      **236 avisos** —dos menos que los 238 reales de partida—.
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.397 tests** en verde.
+- [x] **El `Sample` se ha ejecutado** y su salida se ha revisado línea a línea: aparecen los mensajes
       «Correcto» y **no** aparece ninguno de los «Esto no tendría que imprimirse».
-- [ ] **Sin rupturas que registrar**: el `Sample` **no se publica como paquete**, de modo que nada de
+- [x] **Sin rupturas que registrar**: el `Sample` **no se publica como paquete**, de modo que nada de
       esta épica es observable por el consumidor. Se hace constar explícitamente en el cuerpo del
       commit, conforme a la §6 de
       [`commits-conventional-y-registro.instructions.md`](../../../../.github/instructions/commits-conventional-y-registro.instructions.md).
-- [ ] **Sin renombrados públicos** ⇒ nada que añadir a `oofp-upgrade-2.renames.md`. Se hace constar.
-- [ ] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
+- [x] **Sin renombrados públicos** ⇒ nada que añadir a `oofp-upgrade-2.renames.md`. Se hace constar.
+- [x] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
       - `chore(logging): limpiar los residuos de plantilla del Sample (US-32)`
       - `fix(logging): resolver el CS8604 del Sample usando GetRequiredService (US-33)`
-- [ ] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
+- [x] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
       [`README.md`](README.md#1-las-siete-épicas).
 
 ---
@@ -434,10 +467,10 @@ logger.LogInformation("**** LogMlResultIfFailWithoutException FINALIZADO ****");
 
 ### 7.4 Búsquedas de verificación
 
-| Búsqueda en `Program.cs` | Antes | Esperado al cerrar |
+| Búsqueda en `Program.cs` | Antes | Real al cerrar |
 |--------------------------|------:|-------------------:|
-| líneas totales | 174 | menos · según `D-23` |
-| líneas comentadas | 59 | 0 · o el valor de `D-23` |
+| líneas totales | 174 | 134 |
+| líneas comentadas | 59 | 0 |
 | bloques de 3+ líneas en blanco | 6 | 0 |
 | líneas en blanco con espacios | 4 | 0 |
 | `Hello, World!` | 1 | 0 |
@@ -447,9 +480,9 @@ logger.LogInformation("**** LogMlResultIfFailWithoutException FINALIZADO ****");
 | `$"` sin ninguna `{` | 11 | 0 |
 | `GetService` | 1 | 0 |
 | `GetRequiredService` | 0 | 1 |
-| `IsEnabled` | 0 | > 0 |
+| `IsEnabled` | 0 | 1 |
 | `CS8604` en `Program.cs` | 1 | 0 |
-| avisos de la solución | 236 | ≤ 235 |
+| avisos de la solución | 238 | 236 |
 
 ---
 

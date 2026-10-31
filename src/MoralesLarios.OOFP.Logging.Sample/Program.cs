@@ -1,174 +1,133 @@
-﻿// See https://aka.ms/new-console-template for more information
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MoralesLarios.OOFP.Logging;
 using MoralesLarios.OOFP.Types;
 using MoralesLarios.OOFP.Types.Errors;
 using Serilog;
 using Serilog.Extensions.Logging;
-using Serilog.Sinks.SystemConsole.Themes;
-using MoralesLarios.OOFP.Logging;
 using static MoralesLarios.OOFP.Helpers.Constants;
-
-Console.WriteLine("Hello, World!");
 
 using var host = Host.CreateDefaultBuilder(args)
                     .ConfigureServices(services =>
                     {
-                        services.AddLogging(logginBuilder =>
+                        services.AddLogging(loggingBuilder =>
                         {
-                            var loggerConfriguration = new LoggerConfiguration();
- 
-                            var logger = loggerConfriguration
-                                            .WriteTo.Console()
-                                            .CreateLogger();
- 
-                            logginBuilder.Services.AddSingleton<ILoggerFactory>(provider => new SerilogLoggerFactory(logger, dispose: false));
+                            var loggerConfiguration = new LoggerConfiguration();
+
+                            var serilogLogger = loggerConfiguration
+                                                    .WriteTo.Console()
+                                                    .CreateLogger();
+
+                            loggingBuilder.Services.AddSingleton<ILoggerFactory>(provider => new SerilogLoggerFactory(serilogLogger, dispose: false));
                         });
                     })
                     .Build();
- 
-var logger = host.Services.GetService<ILogger<Program>>();
- 
-logger.LogInformation("Comenzando la ejecución");
 
+ILogger<Program> logger = host.Services.GetRequiredService<ILogger<Program>>();
 
+if (! logger.IsEnabled(LogLevel.Information))
+{
+    Console.WriteLine("El nivel Information está apagado: la demostración no registraría ninguna traza.");
 
+    return;
+}
 
+logger.LogInformation("**** Comenzando la demostración de MoralesLarios.OOFP.Logging ****");
 
+logger.LogInformation("**** Probando LogMlResultInformation con un registrador tipado ILogger<T> ****");
 
-//logger.LogInformation($"**************  Probando el método LogMlResultIfFailWithValue<T> ***************");
+MlResult<int> calculoValido  = 42;
+MlResult<int> calculoFallido = "El cálculo no se ha podido completar".ToMlResultFail<int>();
 
-//MlResult<int> partialResult1 = MlResult<int>.Fail("Error de prueba")
-//                                .AddValueDetailIfFail(12);
+calculoValido.LogMlResultInformation<int, Program>(logger,
+                                                   validBuildMessage: valor         => $"Correcto: camino feliz registrado con el valor {valor}",
+                                                   failBuildMessage : errorsDetails => "Esto no tendría que imprimirse: el resultado es válido");
 
-//partialResult1.LogMlResultIfFailWithValue(logger: logger,
-//                                          logLevel: LogLevel.Information,
-//                                          failBuildMessage: errorsDetails => "Correcto: La prueba de LogMlResultIfFailWithValue<T> ha sido buena");
+calculoFallido.LogMlResultInformation<int, Program>(logger,
+                                                    validBuildMessage: valor         => "Esto no tendría que imprimirse: el resultado es fallido",
+                                                    failBuildMessage : errorsDetails => $"Correcto: camino de error registrado con el fallo {errorsDetails.GetErrorsSummary()}");
 
-//MlResult<int> partialResult2 = MlResult<int>.Fail("Error de prueba")
-//                                .AddValueDetailIfFail(DateTime.Today);
+logger.LogInformation("**** LogMlResultInformation con un registrador tipado FINALIZADO ****");
 
-//partialResult2.LogMlResultIfFailWithValue<int, DateTime>(logger: logger,
-//                                                         logLevel: LogLevel.Information,
-//                                                         failBuildMessage: (errorsDetails, value) => $"Correcto: La prueba de LogMlResultIfFailWithValue<T> ha sido buena con el valor {value}");
+logger.LogInformation("**** Probando LogMlResultIfFailWithValue ****");
 
-//MlResult<int> partialResult3 = MlResult<int>.Fail("Error de prueba");
+MlResult<int> fallidoConValorEntero = "Error de prueba".ToMlResultFail<int>()
+                                            .AddValueDetailIfFail(12);
 
+fallidoConValorEntero.LogMlResultIfFailWithValue(logger          : logger,
+                                                 logLevel        : LogLevel.Information,
+                                                 failBuildMessage: errorsDetails => "Correcto: LogMlResultIfFailWithValue ha registrado el fallo que arrastra un valor");
 
-//partialResult3.LogMlResultIfFailWithValue(logger: logger,
-//                                          logLevel: LogLevel.Information,
-//                                          failBuildMessage: errorsDetails => "Esto no tendría que imprimirse");
+MlResult<int> fallidoConValorFecha = "Error de prueba".ToMlResultFail<int>()
+                                            .AddValueDetailIfFail(DateTime.Today);
 
-//partialResult3.LogMlResultIfFailWithValue<int, DateTime>(logger: logger,
-//                                                         logLevel: LogLevel.Information,
-//                                                         failBuildMessage: (errorsDetails, value) => $"Esto tampoco");
+fallidoConValorFecha.LogMlResultIfFailWithValue<int, DateTime>(logger          : logger,
+                                                               logLevel        : LogLevel.Information,
+                                                               failBuildMessage: (errorsDetails, value) => $"Correcto: LogMlResultIfFailWithValue ha recuperado la fecha {value:yyyy-MM-dd}");
 
-//MlResult<int> partialResult4 = 1;
+MlResult<int> fallidoSinValor = "Error de prueba".ToMlResultFail<int>();
 
+fallidoSinValor.LogMlResultIfFailWithValue(logger          : logger,
+                                           logLevel        : LogLevel.Information,
+                                           failBuildMessage: errorsDetails => "Esto no tendría que imprimirse: el fallo no arrastra ningún valor");
 
-//partialResult4.LogMlResultIfFailWithValue(logger: logger,
-//                                          logLevel: LogLevel.Information,
-//                                          failBuildMessage: errorsDetails => "Esto no tendría que imprimirse - 2");
+fallidoSinValor.LogMlResultIfFailWithValue<int, DateTime>(logger          : logger,
+                                                          logLevel        : LogLevel.Information,
+                                                          failBuildMessage: (errorsDetails, value) => "Esto no tendría que imprimirse: el fallo no arrastra ninguna fecha");
 
-//partialResult4.LogMlResultIfFailWithValue<int, DateTime>(logger: logger,
-//                                                         logLevel: LogLevel.Information,
-//                                                         failBuildMessage: (errorsDetails, value) => $"Esto tampoco - 2");
+MlResult<int> validoSinDetalles = 1;
 
+validoSinDetalles.LogMlResultIfFailWithValue(logger          : logger,
+                                             logLevel        : LogLevel.Information,
+                                             failBuildMessage: errorsDetails => "Esto no tendría que imprimirse: el resultado es válido");
 
+logger.LogInformation("**** LogMlResultIfFailWithValue FINALIZADO ****");
 
-//logger.LogInformation($"************** LogMlResultIfFailWithValue<T> FINALIZADO ***************");
+logger.LogInformation("**** Probando LogMlResultIfFailWithException ****");
 
+MlResult<int> fallidoConExcepcion = ("miError",
+                                        new Dictionary<string, object>
+                                        {
+                                            { ExceptionMetadataKey, new Exception("miException") },
+                                            { "key2", "value2" }
+                                        }
+                                    );
 
+fallidoConExcepcion.LogMlResultIfFailWithException(logger          : logger,
+                                                   logLevel        : LogLevel.Information,
+                                                   failBuildMessage: errorsDetails => "Correcto: LogMlResultIfFailWithException ha registrado el fallo que arrastra una excepción");
 
+fallidoConExcepcion.LogMlResultIfFailWithException<int>(logger          : logger,
+                                                        logLevel        : LogLevel.Information,
+                                                        failBuildMessage: (errorsDetails, ex) => $"Correcto: LogMlResultIfFailWithException ha recuperado la excepción con el mensaje {ex.Message}");
 
-//logger.LogInformation($"**************  Probando el método LogMlResultIfFailWithException ***************");
+MlResult<int> fallidoSinExcepcion = "Error sin excepción".ToMlResultFail<int>();
 
-//MlResult<int> partialResult1Exception = ("miError",
-//                                            new Dictionary<string, object>
-//                                            {
-//                                                { ExceptionMetadataKey, new Exception("miException") },
-//                                                { "key2", "value2" }
-//                                            }
-//                                        );
+fallidoSinExcepcion.LogMlResultIfFailWithException(logger          : logger,
+                                                   logLevel        : LogLevel.Information,
+                                                   failBuildMessage: errorsDetails => "Esto no tendría que imprimirse: el fallo no arrastra ninguna excepción");
 
-//partialResult1Exception.LogMlResultIfFailWithException(logger: logger,
-//                                                      logLevel: LogLevel.Information,
-//                                                      failBuildMessage: errorsDetails => "Correcto: La prueba de LogMlResultIfFailWithException ha sido buena");
+validoSinDetalles.LogMlResultIfFailWithException(logger          : logger,
+                                                 logLevel        : LogLevel.Information,
+                                                 failBuildMessage: errorsDetails => "Esto no tendría que imprimirse: el resultado es válido");
 
-//partialResult1Exception.LogMlResultIfFailWithException<int>(logger: logger,
-//                                                         logLevel: LogLevel.Information,
-//                                                         failBuildMessage: (errorsDetails, ex) => $"Correcto: La prueba de LogMlResultIfFailWithException ha sido buena con el message {ex.Message}");
+logger.LogInformation("**** LogMlResultIfFailWithException FINALIZADO ****");
 
-//MlResult<int> partialResult3Exception = MlResult<int>.Fail("Error de prueba");
+logger.LogInformation("**** Probando LogMlResultIfFailWithoutException ****");
 
+fallidoSinExcepcion.LogMlResultIfFailWithoutException(logger          : logger,
+                                                      logLevel        : LogLevel.Information,
+                                                      failBuildMessage: errorsDetails => "Correcto: LogMlResultIfFailWithoutException ha registrado el error sin excepción");
 
-//partialResult3Exception.LogMlResultIfFailWithException(logger: logger,
-//                                          logLevel: LogLevel.Information,
-//                                          failBuildMessage: errorsDetails => "Esto no tendría que imprimirse");
+fallidoConExcepcion.LogMlResultIfFailWithoutException(logger          : logger,
+                                                      logLevel        : LogLevel.Information,
+                                                      failBuildMessage: errorsDetails => "Esto no tendría que imprimirse: el fallo sí arrastra una excepción");
 
-////partialResult3Exception.LogMlResultIfFailWithValue<int, DateTime>(logger: logger,
-////                                                         logLevel: LogLevel.Information,
-////                                                         failBuildMessage: (errorsDetails, value) => $"Esto tampoco");
+validoSinDetalles.LogMlResultIfFailWithoutException(logger          : logger,
+                                                    logLevel        : LogLevel.Information,
+                                                    failBuildMessage: errorsDetails => "Esto no tendría que imprimirse: el resultado es válido");
 
-//MlResult<int> partialResult4Exception = 1;
+logger.LogInformation("**** LogMlResultIfFailWithoutException FINALIZADO ****");
 
-
-//partialResult4Exception.LogMlResultIfFailWithException(logger: logger,
-//                                          logLevel: LogLevel.Information,
-//                                          failBuildMessage: errorsDetails => "Esto no tendría que imprimirse - 2");
-
-//partialResult4Exception.LogMlResultIfFailWithException(logger: logger,
-//                                                         logLevel: LogLevel.Information,
-//                                                         failBuildMessage: (errorsDetails, ex) => $"Esto tampoco - 2");
-
-
-
-//logger.LogInformation($"************** LogMlResultIfFailWithException FINALIZADO ***************");
-
-
-logger.LogInformation($"**************  Probando el método LogMlResultIfFailWithoutException ***************");
-
-MlResult<int> partialResult1Exception = ("miError",
-                                            new Dictionary<string, object>
-                                            {
-                                                { ExceptionMetadataKey, new Exception("miException") },
-                                                { "key2", "value2" }
-                                            }
-                                        );
-
-MlResult<int> partialResultNoException = "Error sin excepción".ToMlResultFail<int>();
-
-partialResultNoException.LogMlResultIfFailWithoutException(logger: logger,
-                                                      logLevel: LogLevel.Information,
-                                                      failBuildMessage: errorsDetails => "Correcto: La prueba de LogMlResultIfFailWithException ha sido buena");
-
-
-partialResult1Exception.LogMlResultIfFailWithoutException(logger: logger,
-                                          logLevel: LogLevel.Information,
-                                          failBuildMessage: errorsDetails => "Esto no tendría que imprimirse");
-
-//partialResult3Exception.LogMlResultIfFailWithValue<int, DateTime>(logger: logger,
-//                                                         logLevel: LogLevel.Information,
-//                                                         failBuildMessage: (errorsDetails, value) => $"Esto tampoco");
-
-MlResult<int> partialResult4Exception = 1;
-
-
-partialResult4Exception.LogMlResultIfFailWithoutException(logger: logger,
-                                          logLevel: LogLevel.Information,
-                                          failBuildMessage: errorsDetails => "Esto no tendría que imprimirse - 2");
-
-
-
-
-
-logger.LogInformation($"************** LogMlResultIfFailWithException FINALIZADO ***************");
-
-
-
-
-
-
-logger.LogInformation($"{Environment.NewLine}{Environment.NewLine}TESTS FINALIZADOS");
-
+logger.LogInformation($"{Environment.NewLine}{Environment.NewLine}DEMOSTRACIÓN FINALIZADA");
