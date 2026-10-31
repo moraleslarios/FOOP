@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) · hallazgos `F1`, `D8`, `N3`
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.2.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
-> **Estado** · ⬜ pendiente
+> **Estado** · ✅ completada
 > **Esfuerzo** · **M** (~1,0 jornada)
 > **Riesgo** · 🟠 alto · **2 rupturas silenciosas**: compilan igual y cambian el comportamiento
 >
@@ -41,7 +41,7 @@ exactamente lo que ha pasado con `F1`.
 
 | Hallazgo | Fichero | Naturaleza | Rompe |
 |:--------:|---------|------------|:-----:|
-| `F1` | `MlResultLogExtensions.cs:951` | **Defecto real** · una sobrecarga delega en la función equivocada | **silenciosa** |
+| `F1` | `MlResultLogExtensions.cs:903` | **Defecto real** · una sobrecarga delega en la función equivocada | **silenciosa** |
 | `D8` | las 339 firmas públicas | 0 validaciones de argumento · `null` reventará dentro de la librería | **silenciosa** |
 | `N3` | `MlResultLogExtensions.cs:1089`, `:1100`, `:1111` | errata `errorDetals` en un parámetro de lambda local | no |
 
@@ -203,23 +203,23 @@ es el único renombrado de todo el plan que no tiene consecuencias.
 
 **Criterios de aceptación**
 
-- [ ] En `MlResultLogExtensions.cs:951`, la llamada pasa de `LogMlResultIfFailWithValueAsync` a
+- [x] En `MlResultLogExtensions.cs:903`, la llamada pasa de `LogMlResultIfFailWithValueAsync` a
       `LogMlResultIfFailWithExceptionAsync`.
-- [ ] El test de la US-03 —que fijaba el comportamiento **defectuoso**— se actualiza para afirmar el
+- [x] El test de la US-03 —que fijaba el comportamiento **defectuoso**— se actualiza para afirmar el
       comportamiento **correcto**, y el cambio de ese test se señala explícitamente en el commit como
       la prueba documental de la ruptura.
-- [ ] Se comprueba que las otras **dos** sobrecargas de la familia siguen intactas y en verde.
-- [ ] Se revisan las **tres** familias `IfFailWithValue`, `IfFailWithException` e
+- [x] Se comprueba que las otras **dos** sobrecargas de la familia siguen intactas y en verde.
+- [x] Se revisan las **tres** familias `IfFailWithValue`, `IfFailWithException` e
       `IfFailWithoutException` en los **6 ficheros de nivel** buscando el mismo patrón de llamada
       cruzada; si aparece otro caso, **se añade a esta historia**, no se deja para después.
-- [ ] La ruptura queda registrada en los **seis sitios** de
+- [x] La ruptura queda registrada en los **seis sitios** de
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md): fila
       en la §3.3, subsección `#### N` de detalle, barrido de búsqueda de la Fase 5, lista de la
       Fase 6, tabla del apéndice de versiones y —si procede— el anexo de renombrados.
-- [ ] La subsección de detalle incluye el apartado **«cómo detectarla»**: buscar
+- [x] La subsección de detalle incluye el apartado **«cómo detectarla»**: buscar
       `LogMlResultIfFailWithExceptionAsync` sobre una expresión de tipo `Task<MlResult<T>>` y revisar
       los tests que afirmen **ausencia** de traza.
-- [ ] Build con **0 errores** y todos los tests en verde.
+- [x] Build con **0 errores** y todos los tests en verde.
 
 ### US-12 · Validar `logger` y los constructores de mensaje
 
@@ -231,19 +231,19 @@ es el único renombrado de todo el plan que no tiene consecuencias.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-06`](README.md#6-decisiones-pendientes-del-propietario)** y anotada en este
+- [x] **Resuelta [`D-06`](README.md#6-decisiones-pendientes-del-propietario)** y anotada en este
       documento antes de escribir una sola línea.
-- [ ] La política elegida se aplica de forma **homogénea** a las 339 firmas: no se admite que unas
+- [x] La política elegida se aplica de forma **homogénea** a las 339 firmas: no se admite que unas
       validen y otras no.
-- [ ] La validación se concentra en el **punto de entrada** de cada familia; las sobrecargas que
+- [x] La validación se concentra en el **punto de entrada** de cada familia; las sobrecargas que
       delegan **no** repiten la comprobación.
-- [ ] Hay un test por cada forma de argumento nulo contemplada: `logger` nulo, constructor de mensaje
+- [x] Hay un test por cada forma de argumento nulo contemplada: `logger` nulo, constructor de mensaje
       nulo cuando es necesario y constructor de mensaje nulo cuando es prescindible.
-- [ ] Si la opción elegida es (a) o (b), la ruptura queda registrada en los **seis sitios** del
+- [x] Si la opción elegida es (a) o (b), la ruptura queda registrada en los **seis sitios** del
       prompt, con «cómo detectarla» redactado así: buscar las llamadas que **omiten** los parámetros
       opcionales y las que pasan un `logger` obtenido de `GetService<T>()`, que puede devolver nulo.
-- [ ] Si la opción elegida es (c), se hace constar en el commit que **no hay ruptura** y por qué.
-- [ ] Los avisos de la solución **no suben** de 236.
+- [x] Si la opción elegida es (c), se hace constar en el commit que **no hay ruptura** y por qué.
+- [x] Los avisos de la solución **no suben** de 236.
 
 > **Importante** · esta historia es la que explica el aviso `CS8604` del `Sample`
 > ([épica 7](Epica-07-Saneamiento-del-Sample.md), US-33): el propio ejemplo de la librería obtiene su
@@ -260,11 +260,11 @@ es el único renombrado de todo el plan que no tiene consecuencias.
 
 **Criterios de aceptación**
 
-- [ ] Las 3 ocurrencias de `errorDetals` (`:1089`, `:1100`, `:1111`) pasan a `errorDetails`.
-- [ ] Búsqueda de `errorDetals` en el proyecto → **0 ocurrencias**.
-- [ ] Se comprueba expresamente que las tres son **parámetros de lambda** y no nombres de parámetro
+- [x] Las 3 ocurrencias de `errorDetals` (`:1034`, `:1045`, `:1056`) pasan a `errorDetails`.
+- [x] Búsqueda de `errorDetals` en el proyecto → **0 ocurrencias**.
+- [x] Se comprueba expresamente que las tres son **parámetros de lambda** y no nombres de parámetro
       público, y que por tanto **no procede** registrar ruptura. Se hace constar en el commit.
-- [ ] Build y tests en verde.
+- [x] Build y tests en verde.
 
 ### US-14 · Test de regresión de la paridad entre las tres `IfFailWith*`
 
@@ -276,16 +276,16 @@ es el único renombrado de todo el plan que no tiene consecuencias.
 
 **Criterios de aceptación**
 
-- [ ] Existe un test que, para un mismo detalle de error **con** excepción, comprueba que
+- [x] Existe un test que, para un mismo detalle de error **con** excepción, comprueba que
       `IfFailWithException` registra y `IfFailWithoutException` **no** registra.
-- [ ] Existe su simétrico: para un detalle **sin** excepción, `IfFailWithoutException` registra y
+- [x] Existe su simétrico: para un detalle **sin** excepción, `IfFailWithoutException` registra y
       `IfFailWithException` **no** registra.
-- [ ] Las **tres** sobrecargas de cada familia —`MlResult<T>`, `Task<MlResult<T>>` y la que recibe un
+- [x] Las **tres** sobrecargas de cada familia —`MlResult<T>`, `Task<MlResult<T>>` y la que recibe un
       mensaje fijo— se ejercitan y se comprueba que producen **el mismo** resultado observable. Es el
       test que habría detectado `F1`.
-- [ ] El test se escribe de forma que **falle** si alguien vuelve a cruzar una llamada, y su nombre
+- [x] El test se escribe de forma que **falle** si alguien vuelve a cruzar una llamada, y su nombre
       cita la US-11 para que quede clara su razón de ser.
-- [ ] El test se apoya en el doble de `ILogger` de la
+- [x] El test se apoya en el doble de `ILogger` de la
       [épica 1](Epica-01-Red-de-Seguridad.md#7-apéndice--código-actual-y-propuesto) (US-02); **no**
       se escribe otro doble distinto.
 
@@ -329,9 +329,23 @@ graph TD
 
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-06** | Qué hacer cuando `logger` es nulo (US-12) | (a) lanzar `ArgumentNullException` · (b) devolver un `MlResult` fallido · (c) no registrar y devolver el `source` intacto | ⬜ abierta |
-| **D-12** | Qué hacer cuando el constructor de mensaje necesario es nulo | (a) la misma política que `D-06` · (b) usar un mensaje por omisión derivado de `GetErrorsSummary()` · (c) no registrar | ⬜ abierta |
-| **D-13** | Si la US-11 debe llevar también un puente de compatibilidad | (a) no · es un defecto, y mantener el comportamiento erróneo accesible no tiene sentido · (b) sí · una sobrecarga `[Obsolete]` que conserve el comportamiento anterior durante la 2.2.0 | ⬜ abierta |
+| **D-06** | Qué hacer cuando `logger` es nulo (US-12) | (a) lanzar `ArgumentNullException` · (b) devolver un `MlResult` fallido · **(c) no registrar y devolver el `source` intacto** | ✅ **(c)** |
+| **D-12** | Qué hacer cuando el constructor de mensaje necesario es nulo | **(a) la misma política que `D-06`** · (b) usar un mensaje por omisión derivado de `GetErrorsSummary()` · (c) no registrar | ✅ **(a)** |
+| **D-13** | Si la US-11 debe llevar también un puente de compatibilidad | **(a) no · es un defecto, y mantener el comportamiento erróneo accesible no tiene sentido** · (b) sí · una sobrecarga `[Obsolete]` que conserve el comportamiento anterior durante la 2.2.0 | ✅ **(a)** |
+
+> **Decisiones adoptadas al implementar la épica** · `D-06` → **(c)**, `D-12` → **(a)** (es decir,
+> la misma política que `D-06`) y `D-13` → **(a)**. En consecuencia:
+>
+> - cuando el `logger` es nulo **no se registra nada** y se devuelve el `source` **intacto**, salvo
+>   en las dos sobrecargas de entrada cuyo tipo de retorno es `MlResult<ILogger>` —que no tienen
+>   ningún `source` que devolver— y que por eso devuelven un resultado **fallido** con el mensaje
+>   «El parámetro 'logger' no puede ser nulo.»;
+> - cuando el constructor de mensaje es nulo tampoco se registra nada y se devuelve el `source`
+>   intacto, gracias al auxiliar interno `MlResultLogGuards.Build(...)`;
+> - la US-11 **no** lleva puente de compatibilidad: el comportamiento anterior era un defecto.
+>
+> Por tanto la **US-12 no es una ruptura** y la única ruptura de la épica es la silenciosa de `F1`
+> (US-11), registrada con el número **44** de la secuencia global.
 
 > **`D-06` es la decisión más consecuente de esta épica.** La opción (c) —no registrar y devolver el
 > `source`— es la **única que no rompe nada**, y es además la más coherente con el estilo
@@ -347,28 +361,28 @@ graph TD
 
 ## 6. Definición de terminado
 
-- [ ] Las **4 historias** (US-11 … US-14) tienen todos sus criterios de aceptación marcados.
-- [ ] **`D-06`, `D-12` y `D-13` resueltas** y anotadas en la §5 de este documento.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
+- [x] Las **4 historias** (US-11 … US-14) tienen todos sus criterios de aceptación marcados.
+- [x] **`D-06`, `D-12` y `D-13` resueltas** y anotadas en la §5 de este documento.
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
       **0 errores**, **0 `CS1591`**, **0 `CS0618`** y **no más de 236 avisos**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
-      de la épica 1, más los de las US-12 y US-14.
-- [ ] Búsqueda de `errorDetals` → **0 ocurrencias**.
-- [ ] Búsqueda de `LogMlResultIfFailWithValueAsync` dentro del cuerpo de un
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.325 tests** en verde (incluidos los
+      de la épica 1 y los nuevos de las US-12 y US-14).
+- [x] Búsqueda de `errorDetals` → **0 ocurrencias**.
+- [x] Búsqueda de `LogMlResultIfFailWithValueAsync` dentro del cuerpo de un
       `…WithExceptionAsync` → **0 ocurrencias**.
-- [ ] **Las 2 rupturas silenciosas están registradas en los SEIS sitios** de
+- [x] **Las 2 rupturas silenciosas están registradas en los SEIS sitios** de
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md), con su
       número en la secuencia global, y **cada una con su apartado explícito de «cómo detectarla»**.
       Si la US-12 se resuelve por la opción (c), queda **1** ruptura en lugar de 2 y se hace constar.
-- [ ] Los números asignados aparecen también en la tabla del apéndice de versiones del prompt, en el
+- [x] Los números asignados aparecen también en la tabla del apéndice de versiones del prompt, en el
       barrido de la Fase 5 y en la lista del informe de la Fase 6.
-- [ ] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
+- [x] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
       - `fix(logging)!: …` para la US-11, con el pie `BREAKING CHANGE` y la mención expresa de que
         la ruptura es **silenciosa**;
       - `fix(logging)` o `fix(logging)!` para la US-12, según la opción de `D-06`;
       - `refactor(logging)` para la US-13, **sin** `!`;
       - `test(logging)` para la US-14.
-- [ ] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
+- [x] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
       [`README.md`](README.md#1-las-siete-épicas).
 
 ---
@@ -378,7 +392,7 @@ graph TD
 ### 7.1 `F1` · la única línea que cambia
 
 ```csharp
-// ANTES  ·  MlResultLogExtensions.cs, L951
+// ANTES  ·  MlResultLogExtensions.cs, L903
 => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, logLevel, failBuildMessage);
 ```
 

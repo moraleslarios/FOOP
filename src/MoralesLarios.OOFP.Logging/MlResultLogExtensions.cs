@@ -23,6 +23,9 @@ public static partial class MlResultLogExtensions
                                                      LogLevel logLevel, 
                                                      string   message)
     {
+        if (logger  is null) return MlResultLogGuards.NullLoggerFail();
+        if (message is null) return logger.ToMlResultValid();
+
         logger.Log(logLevel, message);
 
         return logger.ToMlResultValid();
@@ -39,6 +42,9 @@ public static partial class MlResultLogExtensions
                                                                 LogLevel logLevel, 
                                                                 string   message)
     {
+        if (logger  is null) return MlResultLogGuards.NullLoggerFailAsync();
+        if (message is null) return logger.ToMlResultValidAsync();
+
         logger.Log(logLevel, message);
 
         return logger.ToMlResultValidAsync();
@@ -60,6 +66,8 @@ public static partial class MlResultLogExtensions
                                                   Func<T, string>               validBuilMessage = null!,
                                                   Func<MlErrorDetails, string> failBuildMessage = null!)
     {
+        if (logger is null) return source;
+
         source.Match(
                         valid: x      => validBuilMessage != null ? logger.LogMlResult(logLevel, validBuilMessage(x))    : null!,
                         fail : errors => failBuildMessage != null ? logger.LogMlResult(logLevel, failBuildMessage(errors)) : null!
@@ -176,6 +184,8 @@ public static partial class MlResultLogExtensions
                                                   LogLevel    logLevel, 
                                                   string      message)
     {
+        if (logger is null || message is null) return source;
+
         logger.Log(logLevel, message);
 
         return source;
@@ -195,6 +205,8 @@ public static partial class MlResultLogExtensions
                                                              LogLevel    logLevel, 
                                                              string      message)
     {
+        if (logger is null || message is null) return source.ToAsync();
+
         logger.Log(logLevel, message);
 
         return source.ToAsync();
@@ -214,7 +226,7 @@ public static partial class MlResultLogExtensions
                                                                    LogLevel          logLevel, 
                                                                    string            message)
     {
-        _ = await source;
+        if (logger is null || message is null) return await source;
 
         logger.Log(logLevel, message);
 
@@ -235,9 +247,11 @@ public static partial class MlResultLogExtensions
                                                   (LogLevel logLevel, Func<T              , string> buildMessage) validBuildMessage,
                                                   (LogLevel logLevel, Func<MlErrorDetails, string> buildMessage) failBuildMessage)
     {
+        if (logger is null) return source;
+
         source.Match(
-                        valid: x      => logger.LogMlResult(validBuildMessage.logLevel, validBuildMessage.buildMessage(x)),
-                        fail : errors => logger.LogMlResult(failBuildMessage .logLevel, failBuildMessage .buildMessage(errors))
+                        valid: x      => logger.LogMlResult(validBuildMessage.logLevel, MlResultLogGuards.Build(validBuildMessage.buildMessage, x)),
+                        fail : errors => logger.LogMlResult(failBuildMessage .logLevel, MlResultLogGuards.Build(failBuildMessage.buildMessage, errors))
                     );
 
         return source;
@@ -424,7 +438,7 @@ public static partial class MlResultLogExtensions
                                                          LogLevel        logLevel,
                                                          Func<T, string> validBuildMessage)
         => source.Match(
-                            valid: x      => source.LogMlResult(logger, logLevel, validBuildMessage(x)),
+                            valid: x      => source.LogMlResult(logger, logLevel, MlResultLogGuards.Build(validBuildMessage, x)),
                             fail : errors => source
                         );
 
@@ -533,7 +547,7 @@ public static partial class MlResultLogExtensions
         => source.Match(
                             valid: x      => source,
 
-                            fail : errors => source.LogMlResult(logger, logLevel, failBuildMessage(errors))
+                            fail : errors => source.LogMlResult(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errors))
                         );
 
     /// <summary>
@@ -591,7 +605,7 @@ public static partial class MlResultLogExtensions
         => source.Match(
                             valid: x             => source,
                             fail : errorsDetails => errorsDetails.GetMetadataValue<T>()
-                                                        .Bind( _ => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails)))
+                                                        .Bind( _ => source.LogMlResult(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails)))
                         );
 
     /// <summary>
@@ -627,7 +641,7 @@ public static partial class MlResultLogExtensions
         => await source.MatchAsync(
                                         validAsync: x             => source.ToAsync(),
                                         failAsync : errorsDetails => errorsDetails.GetMetadataValueAsync<T>()
-                                                                        .BindAsync( _ => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails)))
+                                                                        .BindAsync( _ => source.LogMlResultAsync(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails)))
                                     );
 
     /// <summary>
@@ -696,7 +710,7 @@ public static partial class MlResultLogExtensions
         => source.Match(
                             valid: x             => source,
                             fail : errorsDetails => errorsDetails.GetMetadataValue<TValue>()
-                                                        .Bind( value => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails, value)))
+                                                        .Bind( value => source.LogMlResult(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails, value)))
                         );
 
     /// <summary>
@@ -717,7 +731,7 @@ public static partial class MlResultLogExtensions
         => await source.MatchAsync(           
                                         validAsync: x             => source.ToAsync(),
                                         failAsync : errorsDetails => errorsDetails.GetMetadataValueAsync<TValue>()
-                                                                        .BindAsync( value => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails, value)))
+                                                                        .BindAsync( value => source.LogMlResultAsync(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails, value)))
                                     );
 
     /// <summary>
@@ -759,7 +773,7 @@ public static partial class MlResultLogExtensions
         => source.Match(
                             valid: x             => source,
                             fail : errorsDetails => errorsDetails.GetException()
-                                                        .Bind( _ => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails)))
+                                                        .Bind( _ => source.LogMlResult(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails)))
                         );
 
     /// <summary>
@@ -795,7 +809,7 @@ public static partial class MlResultLogExtensions
         => await source.MatchAsync(
                                         validAsync: x             => source.ToAsync(),
                                         failAsync : errorsDetails => errorsDetails.GetExceptionAsync()
-                                                                        .BindAsync( _ => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails)))
+                                                                        .BindAsync( _ => source.LogMlResultAsync(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails)))
                                     );
 
     /// <summary>
@@ -863,7 +877,7 @@ public static partial class MlResultLogExtensions
         => source.Match(
                             valid: x             => source,
                             fail : errorsDetails => errorsDetails.GetException()
-                                                        .Bind( ex => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails, ex)))
+                                                        .Bind( ex => source.LogMlResult(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails, ex)))
                         );
 
     /// <summary>
@@ -883,7 +897,7 @@ public static partial class MlResultLogExtensions
         => await source.MatchAsync(           
                                         validAsync: x             => source.ToAsync(),
                                         failAsync : errorsDetails => errorsDetails.GetExceptionAsync()
-                                                                        .BindAsync( ex => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails, ex)))
+                                                                        .BindAsync( ex => source.LogMlResultAsync(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails, ex)))
                                     );
 
     /// <summary>
@@ -900,7 +914,7 @@ public static partial class MlResultLogExtensions
                                                                                           ILogger                                  logger,
                                                                                           LogLevel                                 logLevel,
                                                                                           Func<MlErrorDetails, Exception, string> failBuildMessage)
-        => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, logLevel, failBuildMessage);
+        => await (await sourceAsync).LogMlResultIfFailWithExceptionAsync(logger, logLevel, failBuildMessage);
 
     #endregion
 
@@ -925,7 +939,7 @@ public static partial class MlResultLogExtensions
                             valid: x            => source,
                             fail: errorsDetails => errorsDetails.GetException()
                                                         .BindIfFail(
-                                                                        funcFail : _ => source.LogMlResult(logger, logLevel, failBuildMessage(errorsDetails)),
+                                                                        funcFail : _ => source.LogMlResult(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails)),
                                                                         funcValid: _ => source
                                                                     )
                         );
@@ -964,7 +978,7 @@ public static partial class MlResultLogExtensions
                                     validAsync: x             => source.ToAsync(),
                                     failAsync : errorsDetails => errorsDetails.GetExceptionAsync()
                                                                 .BindIfFailAsync(
-                                                                                    funcFailAsync : _ => source.LogMlResultAsync(logger, logLevel, failBuildMessage(errorsDetails)),
+                                                                                    funcFailAsync : _ => source.LogMlResultAsync(logger, logLevel, MlResultLogGuards.Build(failBuildMessage, errorsDetails)),
                                                                                     funcValidAsync: _ => source.ToAsync()
                                                                                 )
                         );
@@ -1031,7 +1045,7 @@ public static partial class MlResultLogExtensions
     /// <param name="logger">Registrador al que se envian las trazas.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static MlResult<T> LogGeneralErrorIfFail<T>(this MlResult<T> source, ILogger logger)
-        => source.LogMlResultErrorIfFail(logger, failBuildMessage : errorDetals => errorDetals.GetErrorsSummary());
+        => source.LogMlResultErrorIfFail(logger, failBuildMessage : errorDetails => errorDetails.GetErrorsSummary());
 
     /// <summary>
     /// Registra una traza del resultado de <c>GeneralError</c> unicamente cuando el resultado de origen es
@@ -1042,7 +1056,7 @@ public static partial class MlResultLogExtensions
     /// <param name="logger">Registrador al que se envian las trazas.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static Task<MlResult<T>> LogGeneralErrorIfFailAsync<T>(this MlResult<T> source, ILogger logger)
-        => source.LogMlResultErrorIfFail(logger, failBuildMessage : errorDetals => errorDetals.GetErrorsSummary()).ToAsync();
+        => source.LogMlResultErrorIfFail(logger, failBuildMessage : errorDetails => errorDetails.GetErrorsSummary()).ToAsync();
 
     /// <summary>
     /// Registra una traza del resultado de <c>GeneralError</c> unicamente cuando el resultado de origen es
@@ -1053,7 +1067,7 @@ public static partial class MlResultLogExtensions
     /// <param name="logger">Registrador al que se envian las trazas.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public static async Task<MlResult<T>> LogGeneralErrorIfFailAsync<T>(this Task<MlResult<T>> sourceAsync, ILogger logger)
-        => (await sourceAsync).LogMlResultErrorIfFail(logger, failBuildMessage : errorDetals => errorDetals.GetErrorsSummary());
+        => (await sourceAsync).LogMlResultErrorIfFail(logger, failBuildMessage : errorDetails => errorDetails.GetErrorsSummary());
 
     #endregion
 

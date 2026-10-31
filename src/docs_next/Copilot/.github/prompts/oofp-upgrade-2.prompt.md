@@ -374,6 +374,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 41 | `TryGetValue` / `TryGetErrors` y los convenios `Try*` / `Async` (**2.1.1**) | no existían; los dos convenios no estaban documentados | dos miembros nuevos con semántica BCL (`bool` + `out`) y los convenios documentados en el `README.md` del núcleo | ✅ **Ninguna** · aditivo y documental |
 | 42 | Troceado de la clase `Extensions` del núcleo (**2.1.1**) | 11 métodos de extensión en una única clase `Extensions` | repartidos en `NullableExtensions`, `ExceptionMetadataExtensions`, `MutationExtensions` y `TaskLiftExtensions`; `Extensions` queda como puentes `[Obsolete]` | **Compilación** (`CS0618`) **solo** si se invocaban en forma **estática** |
 | 43 | El miembro `_` de `MlResult` queda retirado (**2.1.1**) | `MlResult._` era la implementación y `Discard` su alias | `Discard` es la **implementación**; `_` queda como puente `[Obsolete]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.1.1 → `CS0117` en 3.0.0) |
+| 44 | `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (**2.2.0**) | delegaba en `LogMlResultIfFailWithValueAsync` y **nunca** registraba la excepción | delega en la sobrecarga correcta de su propia familia y **sí** registra la excepción | ⚠️ **Contrato · SILENCIOSA** (aparecen trazas donde antes no había ninguna) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -789,6 +790,63 @@ exclusivamente de nombre y la señala el compilador.
 
 ---
 
+#### 44 — `LogMlResultIfFailWithExceptionAsync` sobre una `Task` ya registra la excepción (2.2.0)
+
+La familia `LogMlResultIfFailWithException*` del proyecto `MoralesLarios.OOFP.Logging` registra una traza
+**solo cuando el detalle de error lleva una excepción** en sus metadatos. De sus seis sobrecargas, la que
+recibe un `Task<MlResult<T>>` y un constructor de mensaje `Func<MlErrorDetails, Exception, string>`
+delegaba, por una **llamada cruzada**, en `LogMlResultIfFailWithValueAsync`. La resolución de sobrecargas
+resolvía ese destino con `TValue = Exception`, de modo que el método solo registraba algo si la clave de
+metadatos `Value` contenía una excepción — algo que **ninguna factoría de `MlErrorDetails` produce**. El
+resultado práctico: **esa sobrecarga no registraba nunca nada**.
+
+| Elemento | 2.1.1 | 2.2.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| `LogMlResultIfFailWithExceptionAsync(this Task<MlResult<T>>, ILogger, LogLevel, Func<MlErrorDetails, Exception, string>)` | delegaba en `LogMlResultIfFailWithValueAsync` → **0 trazas** | delega en `LogMlResultIfFailWithExceptionAsync` → **1 traza** cuando hay excepción | ❌ **No** · la firma, el tipo de retorno y el valor devuelto son idénticos |
+| Las otras 5 sobrecargas de la familia | correctas | **sin cambios** | — |
+
+**Por qué es silenciosa.** La firma no cambia, el `MlResult<T>` devuelto es el mismo y el código del
+consumidor compila sin tocar una línea. Lo único que cambia es la **salida observable del log**: donde
+antes no se escribía nada, ahora se escribe la traza que siempre debió escribirse.
+
+**Qué revisar en tu código:**
+
+- Busca las llamadas a `LogMlResultIfFailWithExceptionAsync` cuyo receptor sea una expresión de tipo
+  `Task<MlResult<T>>` (es decir, **sin `await` delante**) y que pasen un constructor de mensaje de dos
+  parámetros. Son las afectadas.
+- Revisa los **tests que afirman ausencia de traza** (`Entries.Should().BeEmpty()`, contadores a `0`,
+  `Verify(..., Times.Never())` sobre `ILogger.Log`) alrededor de esas llamadas: si fijaban el
+  comportamiento defectuoso, **ahora fallarán** y hay que invertir la aserción.
+- Revisa los **volúmenes de log y las alertas** basadas en recuento de errores: un servicio que usara esa
+  sobrecarga en un camino caliente puede empezar a emitir trazas de nivel `Error` que antes no emitía.
+- Si tu intención real era registrar el **valor** y no la excepción, cambia explícitamente la llamada a
+  `LogMlResultIfFailWithValueAsync<T, TValue>` con los genéricos **expresos**: sin ellos el compilador
+  no puede inferir `TValue` y emite `CS1593`.
+
+**Cómo detectarla:**
+
+```
+LogMlResultIfFailWithExceptionAsync
+```
+
+y, sobre cada coincidencia, comprobar si el receptor es una `Task<MlResult<T>>`. Complementariamente, en
+la propia librería el barrido que garantiza que el defecto no ha vuelto es:
+
+```
+LogMlResultIfFailWithValueAsync
+```
+
+dentro de los cuerpos de los métodos `…IfFailWithException*` → debe dar **0 ocurrencias**.
+
+> 🧭 **Lo que NO rompe en la 2.2.0.** La validación de argumentos nulos de esta misma versión
+> (`logger` o constructor de mensaje nulos) se resolvió con la política «**no registrar y devolver el
+> `source` intacto**», de modo que **no altera** ningún comportamiento previo: antes de la 2.2.0 esos
+> casos lanzaban `NullReferenceException`, y lanzar menos excepciones no es una ruptura. Tampoco rompe el
+> renombrado del parámetro de lambda `errorDetals` → `errorDetails`, porque es un **nombre local**, no un
+> parámetro público.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -878,6 +936,13 @@ dotnet build --nologo /p:WarningLevel=4
    AddMetadataRange|AddMetadataOrThrow|AddValueMetadata|AddValueDetailIfFail
    \.Merge\(|GetDetail<|GetMetadataValue<|GetException
    ```
+   Y, para el punto 44 (`LogMlResultIfFailWithExceptionAsync` sobre una `Task`), busca además:
+   ```
+   LogMlResultIfFailWithExceptionAsync
+   ```
+   ⚠️ Revisa **solo** las coincidencias cuyo receptor sea una expresión de tipo
+   `Task<MlResult<T>>` (sin `await` delante) con un constructor de mensaje de **dos** parámetros:
+   esa sobrecarga **no registraba nada** antes de la 2.2.0 y ahora sí registra.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -913,6 +978,10 @@ dotnet build --nologo /p:WarningLevel=4
    - **2.1.1**: si usabas `MlResult._`, cámbialo por `MlResult.Discard` (punto 43). Es un reemplazo
      mecánico: el valor devuelto es el mismo. **No** toques los `_` que son patrón de descarte del
      lenguaje. `MlResult.Empty()` y `MlResult.EmptyAsync()` **siguen siendo válidos** en la 2.1.1.
+   - **2.2.0**: si llamabas a `LogMlResultIfFailWithExceptionAsync` sobre una `Task<MlResult<T>>`
+     (punto 44), **no hay nada que cambiar en el código**, pero sí hay que revisar los tests que
+     afirmaban **ausencia** de traza y los umbrales de alerta basados en recuento de errores: esa
+     sobrecarga no registraba nada y ahora registra la excepción.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -930,12 +999,15 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37 y —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43, indicando, para cada uno, si **afecta** al proyecto, qué se
+   36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
    Fase 5 y su resultado: mutadores con el retorno descartado, claves `Ex` leídas a mano, `catch`
-   muertos alrededor de `Merge` e identidad por referencia de `MlErrorDetails`.
+   muertos alrededor de `Merge` e identidad por referencia de `MlErrorDetails`. Para el punto
+   **44**, indica expresamente cuántas llamadas a `LogMlResultIfFailWithExceptionAsync` sobre una
+   `Task<MlResult<T>>` se han encontrado y qué tests que afirmaban ausencia de traza se han
+   tenido que invertir.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -974,9 +1046,10 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
+| 2.2.0 | 44 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` en `MoralesLarios.OOFP.Logging`: esa sobrecarga **no registraba nada** y ahora registra la excepción. ⚠️ **Silenciosa** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42 y 43** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43 y 44** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
