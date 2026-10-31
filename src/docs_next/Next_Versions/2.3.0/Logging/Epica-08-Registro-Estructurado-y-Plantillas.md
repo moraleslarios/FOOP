@@ -72,7 +72,7 @@ Y el estado del estándar de `Microsoft.Extensions.Logging` después de la 2.2.0
 | `EventId` | 0 | 123 | > 123 |
 | `ILogger<T>` | 0 | 21 firmas | > 21 |
 | **Plantilla de mensaje con argumentos** | **0** | **0** | **objetivo** |
-| `BeginScope` | 0 | **0** | ver [`D-29`](#5-decisiones-abiertas) |
+| `BeginScope` | 0 | **0** | **0** · [`D-29`](#5-decisiones-abiertas) (b) → [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) |
 | `LoggerMessage` (generación de código) | 0 | **0** | ver [`D-30`](#5-decisiones-abiertas) |
 
 Dos ceros siguen ahí. Esta épica ataca el primero, que es el que el consumidor nota todos los días.
@@ -274,7 +274,7 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
 | `D6` · `LogMlResult` devolviendo `MlResult<ILogger>` | **3.0.0** |
 | `D7` · `Match` devolviendo `null!` | **3.0.0** |
 | Retirar los puentes `[Obsolete]` de la 2.2.0 | **3.0.0** |
-| `BeginScope` | **aquí o épica propia** · ver [`D-29`](#5-decisiones-abiertas) |
+| `BeginScope` | **2.4.0** · [`D-29`](#5-decisiones-abiertas) (b) → [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) |
 | `LoggerMessage.Define` y la generación de código | **aquí o 3.0.0** · ver [`D-30`](#5-decisiones-abiertas) |
 
 > **Por qué esto no rompe nada, a diferencia de lo que suponía la épica 6.** Porque **no se modifica
@@ -439,11 +439,31 @@ commit: `CadaNivel_ExponeLasSieteRegionesFuncionales` pasa a
 
 - [x] **Resuelta [`D-29`](#5-decisiones-abiertas)** · opción **(b)**: los ámbitos **se desgajan a una
       épica 9 propia**. Por tanto esta historia **no produce código**.
-- [ ] Existe el documento de la **épica 9**, con sus historias numeradas **desde la US-41** y con las
+- [x] Existe el documento de la **épica 9**, con sus historias numeradas **desde la US-41** y con las
       preguntas propias de los ámbitos planteadas: qué pasa si el tramo lanza, cómo se compone con
       `Bind`, y si el ámbito debe sobrevivir al `await`.
-- [ ] El recuento de `BeginScope` en el proyecto queda documentado como `0` **con la justificación**
+- [x] El recuento de `BeginScope` en el proyecto queda documentado como `0` **con la justificación**
       —se aborda en la épica 9— en el `README.md` del proyecto.
+
+> ### ✅ Cerrada · 31-10-2026
+>
+> Historia **sin código de producción**, tal como dejó resuelta [`D-29`](#5-decisiones-abiertas) con la
+> opción **(b)**. Lo entregado es la decisión materializada en tres documentos:
+>
+> - [`docs_next/Next_Versions/2.4.0/Logging/Epica-09-Ambitos-de-Registro.md`](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md)
+>   · **6 historias** (US-41 … US-46), **6 decisiones abiertas** (`D-33` … `D-38`), los cuatro puntos de
+>   contexto (34 … 37) y un apéndice con las **cuatro mediciones** que hay que hacer *antes* de decidir.
+>   Las tres preguntas que `D-29` dejó planteadas están cada una convertida en su propia decisión:
+>   `D-34` (qué pasa si el tramo lanza), `D-35` (cómo se compone con `Bind`) y `D-36` (si el ámbito
+>   sobrevive al `await`).
+> - [`docs_next/Next_Versions/2.4.0/Logging/README.md`](../../2.4.0/Logging/README.md) · el plan de la
+>   versión 2.4.0, con la **puerta de entrada** fijada en esta 2.3.0: 640 firmas, 1.502 tests, 236 avisos.
+> - [`MoralesLarios.OOFP.Logging/README.md`](../../../../MoralesLarios.OOFP.Logging/README.md) ·
+>   el párrafo de «Lo que NO incluye» ya no se limita a decir que no hay ámbitos: justifica el `0`,
+>   enumera las tres preguntas de diseño y enlaza la épica 9.
+>
+> **Verificación** · `scripts\check-md-anchors4.ps1` ⇒ `revisados = 1348  rotos = 0`. No se ha tocado
+> código, así que las líneas base de build y tests siguen intactas.
 
 ### US-38 · Dejar la superficie limpia ante los analizadores
 
@@ -828,7 +848,7 @@ literales con las llaves intactas**. Es la captura silenciosa del punto 30, y es
 | Firmas públicas | 398 | *pendiente* |
 | Avisos del build en Release | 236 | *pendiente* |
 | Tests | 1.397 | *pendiente* |
-| `BeginScope` en el proyecto | 0 | *pendiente* |
+| `BeginScope` en el proyecto | 0 | **0** · diferido a la [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) (US-37) |
 | Asignaciones por llamada, nivel apagado | 240,0 B | *pendiente* |
 
 ### 7.1 · Recuento de firmas públicas por fichero (US-36)

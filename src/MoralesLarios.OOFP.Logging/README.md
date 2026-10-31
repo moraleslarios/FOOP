@@ -606,8 +606,17 @@ El mensaje llega **ya interpolado**, como una cadena plana. Ver [Lo que NO inclu
 
 > ⚠️ **No se pasa la `Exception` al `ILogger`.** Aunque `LogMlResultIfFailWithException` **detecta** la excepción y te la deja usar en el mensaje, **nunca** llama a `logger.Log(level, exception, message)`. Por tanto **el stack trace no se registra** salvo que lo incluyas tú en el texto (`ex.ToString()`).
 
-> ⚠️ **No hay `scopes` ni `BeginScope`.** Para correlacionar un conjunto de trazas, usa el `EventId` de
-> la [familia 7](#familia-7--eventid-e-iloggertcategory), que **sí existe desde la 2.2.0**.
+> ⚠️ **No hay `scopes` ni `BeginScope`.** El recuento de `BeginScope` en el proyecto es **`0`**, y lo
+> sigue siendo a propósito: los ámbitos **no son una omisión, son trabajo planificado**. La decisión
+> `D-29` de la [épica 8](../docs_next/Next_Versions/2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md)
+> los desgajó a la [**épica 9** de la 2.4.0](../docs_next/Next_Versions/2.4.0/Logging/Epica-09-Ambitos-de-Registro.md),
+> porque un ámbito es un `IDisposable` y encajarlo en una tubería de métodos de extensión plantea tres
+> preguntas de diseño propias —qué pasa si el tramo lanza, cómo se compone con `Bind` y si el ámbito
+> debe sobrevivir al `await`— que no se podían resolver de paso.
+>
+> Mientras tanto, para correlacionar un conjunto de trazas usa el `EventId` de la
+> [familia 7](#familia-7--eventid-e-iloggertcategory), que **sí existe desde la 2.2.0**: no agrupa las
+> trazas en el *sink* como lo haría un ámbito, pero sí permite filtrarlas por evento.
 
 > ⚠️ **No existe `LogCompletedResult` ni `LogGeneralErrorIfFail` por nivel** (`LogMlResultErrorFinal`, etc.).
 

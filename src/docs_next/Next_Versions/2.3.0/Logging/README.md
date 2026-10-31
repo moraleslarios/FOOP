@@ -50,7 +50,7 @@
 | **US-34** | Sobrecargas con plantilla de mensaje y argumentos (familia `…Template`) | L | no |
 | **US-35** | Plantilla en la rama de fallo | M | no |
 | **US-36** | Combinar la plantilla con `EventId` y con `ILogger<TCategory>` | M | no |
-| **US-37** | Decidir y, si procede, implementar los ámbitos (`BeginScope`) | L | no |
+| **US-37** ✅ | Decidir y, si procede, implementar los ámbitos (`BeginScope`) · **sin código**: entrega la [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) | L | no |
 | **US-38** | Dejar la superficie limpia ante los analizadores | M | no |
 | **US-39** | Cerrar las dos erratas que sobrevivieron a la 2.2.0 | XS | **sí, si `D-31`** |
 | **US-40** | Documentar la capacidad nueva de cara al consumidor | S | no |
@@ -86,7 +86,7 @@ Estado del estándar de `Microsoft.Extensions.Logging` en el proyecto:
 | `EventId` | 0 | 123 | > 123 |
 | `ILogger<TCategory>` | 0 | 21 | > 21 |
 | **Plantilla con argumentos** | 0 | **0** | **✅** |
-| `BeginScope` | 0 | 0 | ver `D-29` |
+| `BeginScope` | 0 | 0 | sigue a **0** · diferido a la [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) |
 | `LoggerMessage` | 0 | 0 | ver `D-30` |
 
 ---
@@ -99,7 +99,8 @@ Estado del estándar de `Microsoft.Extensions.Logging` en el proyecto:
 4. **US-36** · el cruce con `EventId` y con `ILogger<TCategory>`, según `D-28`.
 5. **US-38** y **US-39** · medición ante analizadores y las dos erratas, una vez la superficie está
    completa.
-6. **US-37** · en paralelo desde el principio, porque sólo depende de `D-29`.
+6. **US-37** ✅ · en paralelo desde el principio, porque sólo dependía de `D-29`. Cerrada entregando la
+   [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) y su [plan de versión](../../2.4.0/Logging/README.md).
 7. **US-40** · siempre al final: el `README.md` documenta lo que existe.
 
 El diagrama de dependencias está en la
@@ -151,7 +152,7 @@ Seis decisiones, numeradas a continuación de las 25 que se cerraron en la 2.2.0
 | `D7` · `Match` devolviendo `null!` | 3.0.0 | afecta a `MoralesLarios.OOFP.Core`, no a `Logging` |
 | Retirar los puentes `[Obsolete]` de la 2.2.0 | 3.0.0 | su razón de ser es dar una versión de margen |
 | Un tipo de opciones (`MlLogOptions`) que detenga la combinatoria | 3.0.0 | cambia el estilo de la API; ver `D-28` opción (d) |
-| `BeginScope` | épica 9, si `D-29` | plantea preguntas de diseño propias |
+| `BeginScope` | [**épica 9**, versión 2.4.0](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) | plantea preguntas de diseño propias: la excepción del tramo, la composición con `Bind` y la supervivencia al `await` |
 
 ---
 
@@ -181,5 +182,6 @@ Vale para **todas** las historias de esta versión:
 
 - [`Epica-08-Registro-Estructurado-y-Plantillas.md`](Epica-08-Registro-Estructurado-y-Plantillas.md)
 - [`README.md` de la versión 2.2.0](../../2.2.0/Logging/README.md) · las siete épicas ya cerradas
+- [`README.md` de la versión 2.4.0](../../2.4.0/Logging/README.md) · la épica 9, desgajada por la US-37
 - [`README.md` del proyecto](../../../../MoralesLarios.OOFP.Logging/README.md) · la API tal como está hoy
 - [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) · prompt de migración

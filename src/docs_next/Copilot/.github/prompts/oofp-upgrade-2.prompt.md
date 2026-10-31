@@ -386,6 +386,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 53 | Familia `LogMlResult*Template` con **plantilla de mensaje** (**2.3.0**) | no existía: el mensaje se interpolaba antes de llegar al registrador y los datos se perdían dentro de la cadena | **35 firmas nuevas** que aceptan `string messageTemplate` + `params object?[] args` y delegan en `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** | ✅ **Ninguna** · aditivo |
 | 54 | Plantillas en la **rama de fallo** y clase `MlResultLogErrorFields` (**2.3.0**) | la plantilla del punto 53 solo cubría la rama incondicional; el fallo seguía emitiendo un `string` plano | **172 firmas nuevas** en las cuatro familias `IfFail`, `IfFailWithValue`, `IfFailWithException` e `IfFailWithoutException`, más el tipo público `MlResultLogErrorFields`, que **fija los nombres de campo** `{ErrorMessage}`, `{ErrorCount}` y `{ExceptionType}` | ✅ **Ninguna** · aditivo, pero los **tres nombres de campo pasan a ser contrato** |
 | 55 | Cruce del eje `EventId` con las plantillas de registro estructurado (**2.3.0**) | había que elegir: o `EventId` (punto 51) o plantilla con campos (punto 53), nunca las dos en la misma llamada | **35 firmas nuevas** en `MlResultLogExtensions.TemplateEventId.cs` que aceptan `EventId` **y** plantilla: 5 en la familia genérica `LogMlResultTemplate` y 5 en cada uno de los seis niveles | ✅ **Ninguna** · aditivo; corrige la nota del punto 51 que decía que los ejes «no se combinan» |
+| 56 | Los **ámbitos de registro** (`ILogger.BeginScope`) siguen sin existir, y es **deliberado** (**2.3.0**) | el `README.md` decía solamente «no hay `scopes` ni `BeginScope`», sin decir si era un olvido o una decisión | el recuento de `BeginScope` en la librería es **`0`** y queda **documentado y justificado**: los ámbitos se han desgajado a la **épica 9 de la versión 2.4.0** porque plantean tres preguntas de diseño propias | ✅ **Ninguna** · no hay código nuevo; es **documentación de semántica no obvia** |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1159,6 +1160,21 @@ mismo hecho, puedes dejar **una sola** llamada añadiendo el sufijo `Template` y
 entre el `logger`/`logLevel` y la plantilla. La acción es **opcional**: nada de lo que ya está escrito
 deja de compilar ni cambia de comportamiento.
 
+Y, para el **punto 56**, busca si el consumidor ha intentado suplir por su cuenta los ámbitos que la
+librería no tiene:
+
+```
+BeginScope
+CorrelationId|correlationId
+```
+
+Si aparece un `using _logger.BeginScope(...)` envolviendo una tubería de `MlResult`, **déjalo tal
+cual**: es la forma correcta hoy, y es exactamente lo que la épica 9 de la 2.4.0 se propone convertir
+en API. Lo único que hay que hacer es **no** prometerle al consumidor un `WithLogScope` que todavía no
+existe. Si en su lugar ve que el consumidor arrastra un `CorrelationId` a mano dentro del texto del
+mensaje, puedes sugerirle que lo publique como **campo** con la plantilla del punto 53
+(`"... {CorrelationId} ..."`), que es la mejora disponible sin esperar a la 2.4.0.
+
 Cada coincidencia de las dos primeras búsquedas **sigue compilando y funcionando igual**; la acción es
 opcional. Si decides migrarla, usa `MlResultLogErrorFields.DefaultTemplate` y
 `MlResultLogErrorFields.From` para no inventar nombres de campo propios. La tercera búsqueda localiza
@@ -1238,6 +1254,69 @@ resultado **válido** no registra nada en ninguna de las cuatro familias.
 
 **Qué hacer:** nada obligatorio. Si ya registras fallos con mensaje fijo y quieres poder alertar por
 campo, pásalos a plantilla.
+
+---
+
+#### 56 — Los ámbitos de registro siguen a cero, y es deliberado (2.3.0) ✅ SIN RUPTURAS
+
+Este punto **no cambia ni una línea de código**. Está aquí porque la ausencia de una capacidad, cuando
+no se explica, se interpreta como un descuido, y el consumidor acaba esperando que aparezca sola en la
+siguiente versión o, peor, construyendo su diseño sobre la suposición de que llegará.
+
+`ILogger.BeginScope` es el mecanismo del estándar para que **varias** trazas compartan contexto: todo
+lo que se registre dentro del ámbito lleva adosadas sus propiedades, y el destino de trazas puede
+agruparlas. En `MoralesLarios.OOFP.Logging` el recuento de `BeginScope` es **`0`**, y lo sigue siendo
+después de las 242 firmas nuevas de los puntos 53, 54 y 55.
+
+Lo que cambia es que ahora está **documentado con su motivo**. Una tubería como ésta emite tres trazas
+que pertenecen a la misma operación lógica y que **nada** relaciona entre sí:
+
+```csharp
+origen.Bind(Validar)
+      .LogMlResultInformationTemplate(_logger, "validado {PedidoId}", id)
+      .Bind(Guardar)
+      .LogMlResultInformationTemplate(_logger, "guardado {PedidoId}", id)
+      .LogMlResultErrorIfFailTemplate(_logger, MlResultLogErrorFields.DefaultTemplate,
+                                      MlResultLogErrorFields.From);
+```
+
+**Qué tienes que hacer como consumidor.** Nada obligatorio. Si necesitas correlacionar trazas hoy,
+tienes dos vías, las dos disponibles ya:
+
+1. **Abrir el ámbito tú mismo**, alrededor de la tubería. Es la forma correcta y no choca con nada de
+   la librería:
+
+   ```csharp
+   using (_logger.BeginScope("{Operacion} de {PedidoId}", "AltaPedido", id))
+   {
+       var resultado = origen.Bind(Validar).Bind(Guardar)
+                             .LogMlResultInformationTemplate(_logger, "procesado {PedidoId}", id);
+   }
+   ```
+
+2. **Publicar la clave de correlación como campo** con la plantilla del punto 53, de modo que el
+   destino pueda agrupar por consulta aunque no haya ámbito:
+   `"... {CorrelationId} ..."` con el valor en los argumentos.
+
+**Por qué no entró con los puntos 53 a 55.** Porque un ámbito es un `IDisposable` y una tubería de
+métodos de extensión no tiene dónde ponerlo: cada eslabón recibe y devuelve un `MlResult<T>`, y no hay
+ningún sitio natural donde cerrar el `using`. Eso abre tres preguntas que no se podían resolver de
+paso, y que son las que la épica 9 tiene que contestar antes de publicar una sola firma:
+
+- **qué pasa si el tramo envuelto lanza una excepción** —si el ámbito se cierra, si la excepción se
+  convierte en `MlResult` fallido, o si se deja propagar;
+- **cómo se compone con `Bind`** —si el ámbito cubre un tramo que el consumidor delimita o toda la
+  tubería, y qué se registra al cerrarlo;
+- **si el ámbito debe sobrevivir al `await`** —porque la variante asíncrona es precisamente donde un
+  ámbito mal diseñado se rompe en silencio.
+
+**Cómo detectarlo.** No hace falta: el compilador no interviene y el comportamiento no cambia. El
+único síntoma es documental, y es el que este punto corrige.
+
+**Dónde seguirlo.** En la épica 9 de la versión **2.4.0** y en su plan: seis historias (US-41 … US-46),
+seis decisiones abiertas (`D-33` … `D-38`) y cuatro mediciones que hay que hacer **antes** de decidir.
+Si esas mediciones demuestran que escribir el `using` a mano no estorba lo suficiente, la decisión
+`D-33` se cerrará descartando la API y los ámbitos seguirán siendo responsabilidad del consumidor.
 
 ---
 
@@ -1517,7 +1596,11 @@ Entrega al usuario, **en español**, un informe con:
    `MlResultLogErrorFields`. Para el punto **55**, haz constar que es **aditivo** y, si se ha
    aprovechado, cuántas parejas de llamadas (una con `EventId`, otra con el texto armado a mano) se
    han unificado en una sola llamada `LogMlResult*Template` con `EventId`, y deja escrito que el
-   cruce con `ILogger<TCategory>` **sigue sin existir**, para que nadie lo busque.
+   cruce con `ILogger<TCategory>` **sigue sin existir**, para que nadie lo busque. Para el punto
+   **56**, deja constancia explícita de que la librería **no** tiene ámbitos de registro, de cuántos
+   `using logger.BeginScope(...)` escritos a mano se han encontrado en el proyecto —que **no** hay que
+   tocar— y de cuántas claves de correlación viajaban dentro del texto del mensaje y se han podido
+   publicar como campo aprovechando el punto 53.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1556,17 +1639,19 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.3.0 | 53, 54, 55 | **242 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no** |
+| 2.3.0 | 53, 54, 55, 56 | **242 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no** |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
 > nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54 y 55** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
-> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus tres puntos, el **53**, el **54** y el **55**, son
-> aditivos. Léelos solo si quieres aprovechar el registro estructurado; el **54** interesa
+> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus cuatro puntos, el **53**, el **54**, el **55** y el
+> **56**, son aditivos. Léelos solo si quieres aprovechar el registro estructurado; el **54** interesa
 > especialmente si montas alertas sobre la rama de fallo, porque fija los nombres de campo como
-> contrato, y el **55** si ya filtrabas por `EventId` y habías tenido que renunciar a los campos.
+> contrato, y el **55** si ya filtrabas por `EventId` y habías tenido que renunciar a los campos. El
+> **56** no pide ninguna acción: solo deja escrito que los **ámbitos de registro** siguen a cero a
+> propósito y cómo correlacionar trazas mientras tanto.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
 > invisibles para el compilador. Un salto 2.0.x → 2.1.1 que compile a la primera y pase los tests puede
