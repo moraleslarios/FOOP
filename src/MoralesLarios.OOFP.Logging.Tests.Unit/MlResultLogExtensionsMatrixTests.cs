@@ -405,15 +405,16 @@ public class MlResultLogExtensionsMatrixTests
     /// <remarks>
     /// El recuento se obtiene por reflexion sobre el prefijo <c>LogMlResult&lt;Nivel&gt;</c>, asi que
     /// agrega las firmas del fichero de nivel y las de los ficheros transversales de
-    /// <c>EventId</c> y de categoria. Paso de 60 a 84 con las plantillas de la rama de fallo (US-35).
+    /// <c>EventId</c> y de categoria. Paso de 60 a 84 con las plantillas de la rama de fallo (US-35)
+    /// y de 84 a 89 con el cruce plantilla x <c>EventId</c> (US-36).
     /// </remarks>
     /// <param name="level">Nivel de severidad bajo prueba.</param>
     [Theory]
     [MemberData(nameof(Niveles))]
     public void CadaNivel_ExponeElRecuentoDeFirmasEsperado(LogLevel level)
         => CuentaFirmasDelNivel(level).Should().Be(
-                84,
-                "el recuento por nivel quedo fijado en 84 firmas tras las plantillas de la rama de fallo (US-35)");
+                89,
+                "el recuento por nivel quedo fijado en 89 firmas tras cruzar la plantilla con EventId (US-36)");
     #endregion
 
 

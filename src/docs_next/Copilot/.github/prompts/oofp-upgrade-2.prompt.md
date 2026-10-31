@@ -385,6 +385,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 52 | Sobrecargas de `LogMlResult*` con `ILogger<TCategory>` (**2.2.0**) | había que convertir el registrador tipado a `ILogger` | **21 firmas nuevas** que aceptan directamente el `ILogger<T>` del contenedor | ✅ **Ninguna** · aditivo |
 | 53 | Familia `LogMlResult*Template` con **plantilla de mensaje** (**2.3.0**) | no existía: el mensaje se interpolaba antes de llegar al registrador y los datos se perdían dentro de la cadena | **35 firmas nuevas** que aceptan `string messageTemplate` + `params object?[] args` y delegan en `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** | ✅ **Ninguna** · aditivo |
 | 54 | Plantillas en la **rama de fallo** y clase `MlResultLogErrorFields` (**2.3.0**) | la plantilla del punto 53 solo cubría la rama incondicional; el fallo seguía emitiendo un `string` plano | **172 firmas nuevas** en las cuatro familias `IfFail`, `IfFailWithValue`, `IfFailWithException` e `IfFailWithoutException`, más el tipo público `MlResultLogErrorFields`, que **fija los nombres de campo** `{ErrorMessage}`, `{ErrorCount}` y `{ExceptionType}` | ✅ **Ninguna** · aditivo, pero los **tres nombres de campo pasan a ser contrato** |
+| 55 | Cruce del eje `EventId` con las plantillas de registro estructurado (**2.3.0**) | había que elegir: o `EventId` (punto 51) o plantilla con campos (punto 53), nunca las dos en la misma llamada | **35 firmas nuevas** en `MlResultLogExtensions.TemplateEventId.cs` que aceptan `EventId` **y** plantilla: 5 en la familia genérica `LogMlResultTemplate` y 5 en cada uno de los seis niveles | ✅ **Ninguna** · aditivo; corrige la nota del punto 51 que decía que los ejes «no se combinan» |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1079,10 +1080,15 @@ comportamiento observable es idéntico: la nueva **delega** en la antigua.
 \(ILogger\)
 ```
 
-> ⚠️ Las dos dimensiones **no se combinan**: no hay sobrecargas que acepten a la vez un
+> ⚠️ Las dos dimensiones **no se combinan entre sí**: no hay sobrecargas que acepten a la vez un
 > `ILogger<TCategory>` y un `EventId`, ni se han añadido a las familias `IfValid`, `IfFail`,
 > `IfFailWithValue`, `IfFailWithException` ni `IfFailWithoutException`. Solo a `LogMlResult` y a las
 > seis familias de nivel (`LogMlResultTrace` … `LogMlResultCritical`).
+>
+> 🆕 **Matiz de la 2.3.0.** Eso sigue siendo cierto para `ILogger<TCategory>`, pero el eje de
+> `EventId` **sí** se cruza con las plantillas de registro estructurado desde la 2.3.0: ver el
+> **punto 55**. El cruce alcanza la familia genérica `LogMlResultTemplate` y las seis de nivel, y
+> **no** las familias condicionales.
 
 ---
 
@@ -1139,6 +1145,19 @@ LogMlResultIfFail\w*\(
 LogMlResult(Trace|Debug|Information|Warning|Error|Critical)IfFail\w*\(
 "ErrorMessage"|"ErrorCount"|"ExceptionType"
 ```
+
+Y, para el **punto 55**, localiza las llamadas que usan el eje de `EventId` y las que usan plantilla,
+porque son exactamente las que ahora pueden **unirse en una sola**:
+
+```
+LogMlResult\w*Template\w*\(
+new EventId\(
+```
+
+Cruza las dos listas: donde una traza con `EventId` conviva con otra que arma el texto a mano para el
+mismo hecho, puedes dejar **una sola** llamada añadiendo el sufijo `Template` y pasando el `EventId`
+entre el `logger`/`logLevel` y la plantilla. La acción es **opcional**: nada de lo que ya está escrito
+deja de compilar ni cambia de comportamiento.
 
 Cada coincidencia de las dos primeras búsquedas **sigue compilando y funcionando igual**; la acción es
 opcional. Si decides migrarla, usa `MlResultLogErrorFields.DefaultTemplate` y
@@ -1219,6 +1238,61 @@ resultado **válido** no registra nada en ninguna de las cuatro familias.
 
 **Qué hacer:** nada obligatorio. Si ya registras fallos con mensaje fijo y quieres poder alertar por
 campo, pásalos a plantilla.
+
+---
+
+#### 55 — El eje `EventId` se cruza con las plantillas de registro estructurado (2.3.0) ✅ SIN RUPTURAS
+
+Hasta la 2.3.0 el consumidor tenía que **elegir**. O usaba el eje de `EventId` del punto 51, y entonces
+emitía un `string` plano; o usaba la plantilla del punto 53, y entonces renunciaba al `EventId` con el
+que filtra y agrupa en su destino de trazas. La nota del punto 51 decía expresamente que los ejes «no
+se combinan», y era verdad.
+
+Este punto **añade el cruce** que faltaba, en un fichero propio,
+`MlResultLogExtensions.TemplateEventId.cs`, con **35 firmas nuevas**:
+
+| Familia | Firmas | Formas |
+|---------|-------:|--------|
+| `LogMlResultTemplate` (genérica, con `LogLevel` expreso) | 5 | sobre `ILogger`, sobre `MlResult<T>` y sobre `Task<MlResult<T>>`, en sus variantes síncrona y `Async` |
+| `LogMlResultTraceTemplate` … `LogMlResultCriticalTemplate` | 30 | las mismas 5 formas por cada uno de los seis niveles |
+
+Antes de la 2.3.0 había que partir la llamada en dos, y la traza con campos perdía el evento:
+
+```csharp
+// antes · o el EventId, o los campos
+source.LogMlResultInformation(_logger, new EventId(1001, "PedidoCreado"), $"el pedido {id} se ha creado");
+```
+
+Ahora las dos cosas viajan juntas, y los marcadores siguen llegando como **campos indexables**:
+
+```csharp
+// ahora · el EventId y los campos, en la misma llamada
+source.LogMlResultInformationTemplate(_logger, new EventId(1001, "PedidoCreado"),
+                                      "el pedido {PedidoId} se ha creado", pedido.Id);
+```
+
+**Alcance exacto, y por qué es exacto.** El cruce llega hasta donde llegaba el eje de `EventId`, y no
+más allá:
+
+- ✅ familia genérica `LogMlResultTemplate` y las **seis** de nivel;
+- ❌ **no** las familias condicionales de plantilla (`LogMlResultIfFailTemplate` y las otras tres del
+  punto 54): el eje de `EventId` nunca llegó a las familias condicionales y seguir el patrón habría
+  multiplicado la superficie pública sin demanda que lo justifique;
+- ❌ **no** el cruce con `ILogger<TCategory>`: ese eje se mantiene aislado, igual que en la 2.2.0.
+
+**Comportamiento.** Idéntico al del punto 53, parámetro a parámetro: `IsEnabled` se consulta **antes**
+de cualquier trabajo, un `logger` nulo o una `messageTemplate` nula **no registran ni lanzan**, y el
+`MlResult<T>` de entrada se devuelve **intacto**, válido o fallido. La única diferencia es que la
+llamada subyacente pasa a ser `logger.Log(logLevel, eventId, messageTemplate, args)`.
+
+**Por qué no rompe nada.** Las 35 firmas son **nuevas**, no se ha modificado ninguna anterior, y el
+`EventId` va en **posición propia** entre el `logger`/`logLevel` y la plantilla, así que una llamada de
+la 2.3.0 sin `EventId` **no puede** resolverse a la sobrecarga nueva. Se verificó compilando una llamada
+de cada forma **sin nombres de parámetro** y con un `ILogger<TCategory>` **sin *casting***: el build en
+Release da **0 errores**, sin un solo `CS0121`.
+
+**Qué hacer:** nada. Si ya usabas `EventId` y habías renunciado a la plantilla —o al contrario—, ahora
+puedes unir las dos en una sola llamada añadiendo el sufijo `Template`.
 
 ---
 
@@ -1440,7 +1514,10 @@ Entrega al usuario, **en español**, un informe con:
    indica cuántos registros de la **rama de fallo** se han pasado a plantilla, cuántos usan la forma
    con `Func<MlErrorDetails, object?[]>` frente a la de `params`, y cuántos literales
    `"ErrorMessage"`, `"ErrorCount"` o `"ExceptionType"` se han sustituido por las constantes de
-   `MlResultLogErrorFields`.
+   `MlResultLogErrorFields`. Para el punto **55**, haz constar que es **aditivo** y, si se ha
+   aprovechado, cuántas parejas de llamadas (una con `EventId`, otra con el texto armado a mano) se
+   han unificado en una sola llamada `LogMlResult*Template` con `EventId`, y deja escrito que el
+   cruce con `ILogger<TCategory>` **sigue sin existir**, para que nadie lo busque.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1479,16 +1556,17 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.3.0 | 53, 54 | **207 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa |
+| 2.3.0 | 53, 54, 55 | **242 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no** |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53 y 54** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54 y 55** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
-> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus dos puntos, el **53** y el **54**, son aditivos.
-> Léelos solo si quieres aprovechar el registro estructurado; el **54** interesa especialmente si
-> montas alertas sobre la rama de fallo, porque fija los nombres de campo como contrato.
+> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus tres puntos, el **53**, el **54** y el **55**, son
+> aditivos. Léelos solo si quieres aprovechar el registro estructurado; el **54** interesa
+> especialmente si montas alertas sobre la rama de fallo, porque fija los nombres de campo como
+> contrato, y el **55** si ya filtrabas por `EventId` y habías tenido que renunciar a los campos.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
 > invisibles para el compilador. Un salto 2.0.x → 2.1.1 que compile a la primera y pase los tests puede

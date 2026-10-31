@@ -402,15 +402,30 @@ commit: `CadaNivel_ExponeLasSieteRegionesFuncionales` pasa a
 
 - [x] **Resuelta [`D-28`](#5-decisiones-abiertas)** · opción **(b)**: se cruzan el genérico, los 6
       niveles y el eje `EventId`; el cruce con `ILogger<TCategory>` **queda fuera de alcance**.
-- [ ] Ese criterio queda escrito en el `README.md` del proyecto, sustituyendo la nota actual de «los
+- [x] Ese criterio queda escrito en el `README.md` del proyecto, sustituyendo la nota actual de «los
       dos ejes no se combinan».
-- [ ] Existen las combinaciones que `D-28` apruebe, y **sólo** ésas: la épica no añade firmas «por
+- [x] Existen las combinaciones que `D-28` apruebe, y **sólo** ésas: la épica no añade firmas «por
       simetría» que nadie va a llamar.
-- [ ] Se verifica que las combinaciones nuevas **no** generan ambigüedad, compilando una llamada de
+- [x] Se verifica que las combinaciones nuevas **no** generan ambigüedad, compilando una llamada de
       cada una **sin nombres de parámetro** y con un `ILogger<Program>` sin *casting*.
-- [ ] El recuento de firmas públicas antes y después queda escrito en la §7, con el desglose por
+- [x] El recuento de firmas públicas antes y después queda escrito en la §7, con el desglose por
       fichero, igual que la tabla de la §1.
-- [ ] Documentación XML completa y **registro en el prompt de migración**.
+- [x] Documentación XML completa y **registro en el prompt de migración**.
+
+> ### ✅ Cerrada
+>
+> Las **35 firmas** del cruce viven en un fichero propio, `MlResultLogExtensions.TemplateEventId.cs`,
+> siguiendo el precedente que `D-20` sentó con `MlResultLogExtensions.EventId.cs`: así los seis
+> ficheros de nivel **no se tocan** y el *diff* queda revisable.
+>
+> El criterio de la ambigüedad se comprueba en
+> `MlResultLogExtensionsTemplateEventIdTests.LasCombinacionesNuevas_SeResuelvenSinNombresDeParametro`
+> y en `…_SeResuelvenConUnILoggerDeCategoriaSinCasting`: su valor está en que **compilan**. El límite
+> de `D-28` (b) —nada de `EventId` en las familias condicionales— lo fija
+> `LasFamiliasCondicionales_NoRecibenElEjeEventId`, para que nadie añada firmas «por simetría».
+>
+> Registrada como **punto 55** de `oofp-upgrade-2.prompt.md` §3.3.
+
 
 ### US-37 · Decidir y, si procede, implementar los ámbitos de registro
 
@@ -815,6 +830,41 @@ literales con las llaves intactas**. Es la captura silenciosa del punto 30, y es
 | Tests | 1.397 | *pendiente* |
 | `BeginScope` en el proyecto | 0 | *pendiente* |
 | Asignaciones por llamada, nivel apagado | 240,0 B | *pendiente* |
+
+### 7.1 · Recuento de firmas públicas por fichero (US-36)
+
+Criterio de aceptación de la US-36. Medido con un contador sintáctico sobre cada fichero del proyecto
+`MoralesLarios.OOFP.Logging`, antes y después del cruce plantilla × `EventId`:
+
+| Fichero | 2.2.0 | Tras US-34 | Tras US-35 | Tras US-36 |
+|---------|------:|-----------:|-----------:|-----------:|
+| `MlResultLogExtensions.cs` | 57 | 57 | 57 | 57 |
+| `MlResultLogExtensions.Trace.cs` | 50 | 51 | 75 | 75 |
+| `MlResultLogExtensions.Debug.cs` | 50 | 51 | 75 | 75 |
+| `MlResultLogExtensions.Information.cs` | 50 | 51 | 75 | 75 |
+| `MlResultLogExtensions.Warning.cs` | 50 | 51 | 75 | 75 |
+| `MlResultLogExtensions.Error.cs` | 50 | 51 | 75 | 75 |
+| `MlResultLogExtensions.Critical.cs` | 50 | 51 | 75 | 75 |
+| `MlResultLogExtensions.EventId.cs` | 35 | 35 | 35 | 35 |
+| `MlResultLogExtensions.Categoria.cs` | 21 | 21 | 21 | 21 |
+| `MlResultLogExtensions.Template.cs` | — | 5 | 5 | 5 |
+| `MlResultLogExtensions.TemplateFail.cs` | — | — | 24 | 24 |
+| `MlResultLogExtensions.TemplateEventId.cs` | — | — | — | **35** |
+| `MlResultLogErrorFields.cs` | — | — | 4 | 4 |
+| `MlResultLogExtensions.Obsolete.cs` | 5 | 5 | 5 | 5 |
+| `MlResultLogActionExtensions.cs` | 2 | 2 | 2 | 2 |
+| `MlResultLogActionExtensions.Obsolete.cs` | 2 | 2 | 2 | 2 |
+| **TOTAL** | **398** | **433** | **605** | **640** |
+
+El cruce de la US-36 añade **35 firmas y ni una más**: 5 en la familia genérica `LogMlResultTemplate`
+y 5 en cada uno de los seis niveles. Las familias condicionales quedan fuera por `D-28` (b).
+
+> ⚠️ El recuento **por reflexión** no coincide con el recuento por fichero, y es correcto que no
+> coincida: `MlResultLogExtensions` es una clase `partial`, así que contar por el prefijo
+> `LogMlResult<Nivel>` agrega las firmas del fichero de nivel **y** las de los ficheros transversales.
+> Por eso el test `CadaNivel_ExponeElRecuentoDeFirmasEsperado` pasó de **84** a **89**, mientras el
+> fichero de nivel sigue teniendo 75.
+
 
 ---
 

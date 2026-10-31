@@ -476,9 +476,24 @@ source.LogMlResult(_logger, LogLevel.Information,
 |---|---|---|
 | `EventId` | `MlResultLogExtensions.EventId.cs` | 35 |
 | `ILogger<TCategory>` | `MlResultLogExtensions.Categoria.cs` | 21 |
+| `EventId` × plantilla | `MlResultLogExtensions.TemplateEventId.cs` | 35 |
 
 > 💡 El eje de `EventId` cubre la familia genérica `LogMlResult` y las seis de nivel; el de categoría,
-> lo mismo. **Los dos ejes no se combinan entre sí**, para no multiplicar la superficie pública.
+> lo mismo.
+>
+> **Qué se combina y qué no** · desde la 2.3.0 el eje de `EventId` **sí** se cruza con las plantillas
+> de registro estructurado, en la familia genérica `LogMlResultTemplate` y en las seis de nivel:
+>
+> ```csharp
+> source.LogMlResultInformationTemplate(_logger, new EventId(1001, "PedidoCreado"),
+>                                       "el pedido {PedidoId} se ha creado", pedido.Id);
+> ```
+>
+> El eje de `ILogger<TCategory>` **no** se cruza con ninguno de los otros dos, y el de `EventId`
+> **no** se cruza con las familias condicionales de plantilla (`…IfFailTemplate` y compañía), para no
+> multiplicar la superficie pública. Es el alcance que fijó la decisión `D-28` opción (b) de la
+> épica 08.
+
 
 ---
 
