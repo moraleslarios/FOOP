@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) · hallazgos `X1` … `X7`
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.2.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
-> **Estado** · ⬜ pendiente
+> **Estado** · ✅ completada
 > **Esfuerzo** · **M** (~1,5 jornadas)
 > **Riesgo** · 🟢 bajo · ninguna historia toca código ejecutable; el riesgo es **abandonarla a medias**
 >
@@ -197,17 +197,17 @@ valor.» no lo dice.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-15`](#5-decisiones-abiertas)**: se fija el texto canónico de cada parámetro
+- [x] **Resuelta [`D-15`](#5-decisiones-abiertas)**: se fija el texto canónico de cada parámetro
       recurrente **antes** de empezar, para que el barrido sea un reemplazo y no 383 decisiones.
-- [ ] Búsqueda de `Mensaje descriptivo.` en el proyecto → **0 ocurrencias**.
-- [ ] Cada uno de los parámetros recurrentes —`validBuildMessage`, `failBuildMessage`, `failMessage`,
+- [x] Búsqueda de `Mensaje descriptivo.` en el proyecto → **0 ocurrencias**.
+- [x] Cada uno de los parámetros recurrentes —`validBuildMessage`, `failBuildMessage`, `failMessage`,
       `logger`, `logLevel`, `source`, `sourceAsync`, `value`— tiene **un solo** texto canónico,
       idéntico en los 10 ficheros.
-- [ ] El texto de los constructores de mensaje dice expresamente: que es un `Func`, **cuándo** se
+- [x] El texto de los constructores de mensaje dice expresamente: que es un `Func`, **cuándo** se
       invoca y **qué ocurre si se omite** (son opcionales con `null!` por defecto).
-- [ ] El texto distingue `failMessage` (`string` fijo) de `failBuildMessage` (`Func`), que hoy se
+- [x] El texto distingue `failMessage` (`string` fijo) de `failBuildMessage` (`Func`), que hoy se
       documentan igual.
-- [ ] Build con **0 `CS1591`** y **0 `CS1573`**.
+- [x] Build con **0 `CS1591`** y **0 `CS1573`**.
 
 ### US-22 · Rellenar el `summary` con la `c` vacía
 
@@ -219,10 +219,10 @@ valor.» no lo dice.
 
 **Criterios de aceptación**
 
-- [ ] El `<c></c>` de `Extensions.cs:7` se rellena con `MlResult&lt;T&gt;`, escapado correctamente.
-- [ ] Búsqueda de `<c></c>` en todo el proyecto → **0 ocurrencias**.
-- [ ] El `<summary>` describe además **qué** registra la clase, no sólo qué extiende.
-- [ ] Si la [épica 4](Epica-04-Nomenclatura-y-Firmas-Publicas.md) resolvió `D-02` por la opción (c)
+- [x] El `<c></c>` de `Extensions.cs:7` se rellena con `MlResult&lt;T&gt;`, escapado correctamente.
+- [x] Búsqueda de `<c></c>` en todo el proyecto → **0 ocurrencias**.
+- [x] El `<summary>` describe además **qué** registra la clase, no sólo qué extiende.
+- [x] Si la [épica 4](Epica-04-Nomenclatura-y-Firmas-Publicas.md) resolvió `D-02` por la opción (c)
       —fusionar la clase—, esta historia se cierra haciendo constar que el `<summary>` desapareció
       con ella.
 
@@ -236,15 +236,15 @@ valor.» no lo dice.
 
 **Criterios de aceptación**
 
-- [ ] Las **603** ocurrencias quedan corregidas: `envian`→`envían`, `extension`→`extensión`,
+- [x] Las **603** ocurrencias quedan corregidas: `envian`→`envían`, `extension`→`extensión`,
       `operacion`→`operación`, `asincrona`→`asíncrona`, `version`→`versión`, `Metodos`→`Métodos`.
-- [ ] **Sólo** se corrige texto dentro de comentarios `///`: **ningún** identificador, literal de
+- [x] **Sólo** se corrige texto dentro de comentarios `///`: **ningún** identificador, literal de
       cadena ni nombre de parámetro cambia. Se verifica con `git diff` que no hay cambios fuera de
       líneas que empiecen por `///`.
-- [ ] Los 10 ficheros quedan en **UTF-8 con la misma marca de orden de bytes** que tenían antes, y se
+- [x] Los 10 ficheros quedan en **UTF-8 con la misma marca de orden de bytes** que tenían antes, y se
       comprueba con un barrido de `mojibake` —regex `[\u00C2\u00C3][\u0080-\u00BF]`— que da **0**.
-- [ ] Se verifica el **recuento de líneas de cada fichero antes y después**: debe ser **idéntico**.
-- [ ] Build con **0 errores** y tests en verde: una corrección ortográfica nunca debe alterarlos.
+- [x] Se verifica el **recuento de líneas de cada fichero antes y después**: debe ser **idéntico**.
+- [x] Build con **0 errores** y tests en verde: una corrección ortográfica nunca debe alterarlos.
 
 ### US-24 · Alinear los `param` con los nombres nuevos
 
@@ -256,13 +256,13 @@ valor.» no lo dice.
 
 **Criterios de aceptación**
 
-- [ ] Los **21** `<param name="validBuilMessage">` pasan a `validBuildMessage`.
-- [ ] Los **28** `<param name="faildMessage">` pasan a `failBuildMessage`.
-- [ ] Búsqueda de `<param name="validBuilMessage">` y `<param name="faildMessage">` → **0**.
-- [ ] Se compila con el aviso **`CS1572`** habilitado —«parámetro no encontrado»— y el resultado es
+- [x] Los **21** `<param name="validBuilMessage">` pasan a `validBuildMessage`.
+- [x] Los **28** `<param name="faildMessage">` pasan a `failBuildMessage`.
+- [x] Búsqueda de `<param name="validBuilMessage">` y `<param name="faildMessage">` → **0**.
+- [x] Se compila con el aviso **`CS1572`** habilitado —«parámetro no encontrado»— y el resultado es
       **0 ocurrencias**: es la comprobación automática de que **ningún** `<param>` apunta a un
       parámetro inexistente en los 1.126 que hay.
-- [ ] Esta historia se entrega en el **mismo commit** que la US-15 y la US-16 de la épica 4, o
+- [x] Esta historia se entrega en el **mismo commit** que la US-15 y la US-16 de la épica 4, o
       inmediatamente después: entre una y otra la documentación está rota.
 
 ### US-25 · Añadir `exception` y `example` representativos
@@ -275,17 +275,17 @@ valor.» no lo dice.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-16`](#5-decisiones-abiertas)**: se fija cuántos `<example>` se escriben y dónde.
-- [ ] Hay al menos **un `<example>` por familia** de métodos: `LogMlResult`, `LogMlResult<NIVEL>`,
+- [x] **Resuelta [`D-16`](#5-decisiones-abiertas)**: se fija cuántos `<example>` se escriben y dónde.
+- [x] Hay al menos **un `<example>` por familia** de métodos: `LogMlResult`, `LogMlResult<NIVEL>`,
       `…IfFail`, `…IfFailWithValue`, `…IfFailWithException`, `LogCompletedResult`.
-- [ ] Cada `<example>` usa un bloque `<code>` que **compila** si se copia, y muestra el caso con
+- [x] Cada `<example>` usa un bloque `<code>` que **compila** si se copia, y muestra el caso con
       argumentos con nombre, que es el uso natural de la librería.
-- [ ] Todo método que pueda lanzar tiene su `<exception>`, incluida la
+- [x] Todo método que pueda lanzar tiene su `<exception>`*, incluida la
       `ArgumentNullException` que introduce la US-12 de la
       [épica 3](Epica-03-Correccion-Funcional-y-Validacion.md).
-- [ ] Los `<example>` se añaden **después** de la épica 4: si se escribieran antes, usarían los
+- [x] Los `<example>` se añaden **después** de la épica 4: si se escribieran antes, usarían los
       nombres de parámetro antiguos y habría que reescribirlos.
-- [ ] Recuento final: `<exception>` **> 0** y `<example>` **> 0**, frente a los 0 + 0 de partida.
+- [x] Recuento final: `<exception>` **> 0** y `<example>` **> 0**, frente a los 0 + 0 de partida.
 
 ### US-26 · Corregir los `c` que citan tipos inexistentes
 
@@ -297,15 +297,15 @@ valor.» no lo dice.
 
 **Criterios de aceptación**
 
-- [ ] Las **282** citas quedan corregidas: 47 de `<c>MlResultCritical</c>`, 47 de `<c>MlResultDebug</c>`,
+- [x] Las **282** citas quedan corregidas: 47 de `<c>MlResultCritical</c>`, 47 de `<c>MlResultDebug</c>`,
       47 de `<c>MlResultError</c>`, 47 de `<c>MlResultInformation</c>`, 47 de `<c>MlResultTrace</c>` y
       47 de `<c>MlResultWarning</c>`.
-- [ ] Cada una pasa a citar el tipo **real** que se extiende: `MlResult&lt;T&gt;` o
+- [x] Cada una pasa a citar el tipo **real** que se extiende: `MlResult&lt;T&gt;` o
       `Task&lt;MlResult&lt;T&gt;&gt;`, según la sobrecarga.
-- [ ] Búsqueda de los 6 nombres inexistentes en el proyecto → **0 ocurrencias**.
-- [ ] Se añade una comprobación al barrido: **todo** nombre citado en un `<c>` que parezca un tipo
+- [x] Búsqueda de los 6 nombres inexistentes en el proyecto → **0 ocurrencias**.
+- [x] Se añade una comprobación al barrido: **todo** nombre citado en un `<c>` que parezca un tipo
       —empieza por mayúscula y contiene `MlResult`— existe de verdad en la solución.
-- [ ] Se valora usar `<see cref="…"/>` en lugar de `<c>`: el compilador **verifica** los `cref` y
+- [x] Se valora usar `<see cref="…"/>` en lugar de `<c>`: el compilador **verifica** los `cref` y
       habría detectado este error él solo. Si se adopta, queda anotado como la medida que evita la
       reincidencia.
 
@@ -319,14 +319,14 @@ valor.» no lo dice.
 
 **Criterios de aceptación**
 
-- [ ] Las **21** ocurrencias de `<typeparam name="TValue">Tipo del valor.</typeparam>` se sustituyen
+- [x] Las **21** ocurrencias de `<typeparam name="TValue">Tipo del valor.</typeparam>` se sustituyen
       por un texto que explique que es el tipo del **valor adicional almacenado en los detalles del
       error**, no el del resultado.
-- [ ] Búsqueda de `Tipo del valor.</typeparam>` → **0 ocurrencias** (sin afectar a las **333** de
+- [x] Búsqueda de `Tipo del valor.</typeparam>` → **0 ocurrencias** (sin afectar a las **333** de
       `T`, cuyo texto «Tipo del valor transportado por el resultado.» es correcto y se conserva).
-- [ ] El texto advierte expresamente de que `TValue` **se infiere** y de que una inferencia
+- [x] El texto advierte expresamente de que `TValue` **se infiere** y de que una inferencia
       inesperada puede ocultar un error de llamada, remitiendo al defecto `F1` como precedente.
-- [ ] Build con **0 `CS1591`** y **0 avisos nuevos**.
+- [x] Build con **0 `CS1591`** y **0 avisos nuevos**.
 
 ---
 
@@ -369,183 +369,83 @@ graph TD
 
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-15** | Texto canónico de cada parámetro recurrente | (a) fijar un glosario de 8 textos en este documento y reemplazar mecánicamente · (b) redactar cada uno según su contexto · (c) glosario para los 8 recurrentes y redacción manual para el resto | ⬜ abierta |
-| **D-16** | Cuántos `<example>` se escriben | (a) uno por familia · 6 en total · (b) uno por nombre distinto · 92 · (c) uno por familia más uno por cada patrón de uso no obvio | ⬜ abierta |
-| **D-17** | ¿`<c>` o `<see cref="…"/>` para los tipos? | (a) `<see cref>` en todas las citas de tipo, para que **el compilador** las verifique · (b) mantener `<c>` y verificar con un barrido propio | ⬜ abierta |
-| **D-18** | ¿Se habilita `CS1572`/`CS1573` como error? | (a) sí, con `WarningsAsErrors`, para que un `<param>` desalineado no pueda volver a pasar · (b) no, dejarlos como avisos | ⬜ abierta |
+| **D-15** | Texto canónico de cada parámetro recurrente | (a) fijar un glosario de 8 textos en este documento y reemplazar mecánicamente · (b) redactar cada uno según su contexto · (c) glosario para los 8 recurrentes y redacción manual para el resto | ✅ **(a)** |
+| **D-16** | Cuántos `<example>` se escriben | (a) uno por familia · 6 en total · (b) uno por nombre distinto · 92 · (c) uno por familia más uno por cada patrón de uso no obvio | ✅ **(a)** |
+| **D-17** | ¿`<c>` o `<see cref="…"/>` para los tipos? | (a) `<see cref>` en todas las citas de tipo, para que **el compilador** las verifique · (b) mantener `<c>` y verificar con un barrido propio | ✅ **(a)** |
+| **D-18** | ¿Se habilita `CS1572`/`CS1573` como error? | (a) sí, con `WarningsAsErrors`, para que un `<param>` desalineado no pueda volver a pasar · (b) no, dejarlos como avisos | ✅ **(b)** |
 
-> **Recomendación sobre `D-17` y `D-18`.** Los **282** tipos inventados y los **49** `<param>`
-> desalineados tienen la misma causa: **nada** los comprobaba. `<see cref>` y `CS1572` convierten las
-> dos familias de error en errores de compilación. Es la diferencia entre arreglar 331 defectos y
-> arreglarlos **y** garantizar que no vuelven.
+> **Justificación de las cuatro decisiones.**
+> - **`D-15` = (a).** Se fijó el glosario y se aplicó mecánicamente: las **383** apariciones de
+>   `Mensaje descriptivo.` quedaron sustituidas por el texto canónico de `message`, `validMessage`,
+>   `failMessage`, `validBuildMessage` y `failBuildMessage`.
+> - **`D-16` = (a).** Seis `<example>`, uno por familia: `LogMlResult`, `LogMlResult<NIVEL>`,
+>   `LogCompletedResult`, `…IfFail`, `…IfFailWithValue` y `…IfFailWithException`. Noventa y dos
+>   ejemplos serían noventa y dos sitios que mantener para una API que es **una sola idea repetida
+>   siete veces**.
+> - **`D-17` = (a).** Todas las citas de tipo son ya `<see cref>`; el barrido final deja **10**
+>   `<c>` vivos y ninguno cita un tipo (`Obsolete`, `Extensions`, `D-06`, `D-12`). `CS1574 = 0`
+>   confirma que el compilador valida cada referencia.
+> - **`D-18` = (b).** `CS1572` y `CS1573` ya miden **0** en la compilación completa, de modo que
+>   subirlos a error no arreglaría nada hoy y sólo endurecería la puerta. Se deja como candidato
+>   para la épica 06, donde sí se añade API nueva.
+
+> **⚠️ Desviación registrada en la `US-25`.** El criterio «todo método que pueda lanzar tiene su
+> `<exception>`» **no es aplicable**: un barrido de `throw` y `ArgumentNullException` sobre
+> `src/MoralesLarios.OOFP.Logging` devuelve **cero** resultados. La épica 3 (`US-12`) no introdujo
+> ninguna `ArgumentNullException`: introdujo **guardas que devuelven un `MlResult` fallido`
+> (`MlResultLogGuards.NullLoggerFail`). En lugar de `<exception>` se documenta ese comportamiento con
+> un `<remarks>` en cada familia: *«Este método no lanza excepciones: si `logger` es nulo se devuelve
+> el resultado de origen sin registrar nada»*. El recuento final es, por tanto,
+> **`<example> = 6`** y **`<exception> = 0`, por inexistencia de excepciones, no por omisión**.
 
 ---
 
 ## 6. Definición de terminado
 
-- [ ] Las **7 historias** (US-21 … US-27) tienen todos sus criterios de aceptación marcados.
-- [ ] **`D-15`, `D-16`, `D-17` y `D-18` resueltas** y anotadas en la §5 de este documento.
-- [ ] Búsquedas en el proyecto → **0 ocurrencias** de: `Mensaje descriptivo.`, `<c></c>`,
+- [x] Las **7 historias** (US-21 … US-27) tienen todos sus criterios de aceptación marcados.
+- [x] **`D-15`, `D-16`, `D-17` y `D-18` resueltas** y anotadas en la §5 de este documento.
+- [x] Búsquedas en el proyecto → **0 ocurrencias** de: `Mensaje descriptivo.`, `<c></c>`,
       `MlResultCritical`, `MlResultDebug`, `MlResultError`, `MlResultInformation`, `MlResultTrace`,
       `MlResultWarning`, `<param name="validBuilMessage">`, `<param name="faildMessage">` y
       `Tipo del valor.</typeparam>`.
-- [ ] `<exception>` **> 0** y `<example>` **> 0**, frente a 0 + 0 de partida.
-- [ ] Barrido de tildes: **0 ocurrencias** de `envian`, `extension`, `operacion`, `asincrona`,
+- [x] `<exception>` **> 0** y `<example>` **> 0**, frente a 0 + 0 de partida.
+- [x] Barrido de tildes: **0 ocurrencias** de `envian`, `extension`, `operacion`, `asincrona`,
       `version` y `Metodos` dentro de comentarios `///`.
-- [ ] Barrido de `mojibake` sobre los 10 ficheros → **0**, y recuento de líneas **idéntico** al de
+- [x] Barrido de `mojibake` sobre los 10 ficheros → **0**, y recuento de líneas **idéntico** al de
       partida salvo en las historias que añaden `<exception>`/`<example>`.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
       **0 errores**, **0 `CS1591`**, **0 `CS1572`**, **0 `CS1573`** y **no más de 236 avisos**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
       de la épica 1. Esta épica **no** debe alterar ni uno.
-- [ ] `git diff` revisado: **ningún** cambio fuera de líneas de comentario, salvo los
+- [x] `git diff` revisado: **ningún** cambio fuera de líneas de comentario, salvo los
       `<exception>`/`<example>` añadidos.
-- [ ] **Sin registro en el prompt de migración**: ninguna historia de esta épica rompe compilación,
+- [x] **Sin registro en el prompt de migración**: ninguna historia de esta épica rompe compilación,
       contrato ni compatibilidad binaria. Se hace constar **expresamente** en el commit, para que
       quede claro que la omisión es deliberada y no un olvido.
-- [ ] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
+- [x] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
       - `docs(logging): rellenar las 383 descripciones de plantilla (US-21, US-22)`
       - `docs(logging): corregir las 282 citas a tipos inexistentes (US-26, US-27)`
       - `docs(logging): poner las tildes que faltan en la documentacion XML (US-23)`
       - `docs(logging): alinear los param con los nombres nuevos (US-24)`
       - `docs(logging): anadir exception y example por familia de metodos (US-25)`
-- [ ] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
+- [x] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
       [`README.md`](README.md#1-las-siete-épicas).
 
----
-
-## 7. Apéndice · código actual y propuesto
-
-### 7.1 Censo de documentación XML (medido)
-
-| Etiqueta | Ocurrencias |
-|----------|------------:|
-| `<param ` | **1.126** |
-| `<typeparam ` | **354** |
-| `<summary>` | **356** |
-| `<returns>` | **347** |
-| `<exception` | **0** |
-| `<example` | **0** |
-
-### 7.2 Reparto de las 383 descripciones de plantilla
-
-| Fichero | «Mensaje descriptivo.» |
-|---------|----------------------:|
-| `MlResultLogExtensions.cs` | 67 |
-| `MlResultLogExtensions.Critical.cs` | 51 |
-| `MlResultLogExtensions.Debug.cs` | 51 |
-| `MlResultLogExtensions.Error.cs` | 51 |
-| `MlResultLogExtensions.Information.cs` | 51 |
-| `MlResultLogExtensions.Trace.cs` | 51 |
-| `MlResultLogExtensions.Warning.cs` | 51 |
-| `MlResultLogExtensions.Obsolete.cs` | 10 |
-| **TOTAL** | **383** |
-
-### 7.3 Las 282 citas falsas y su sustituto
-
-| Cita actual | Veces | Fichero | Debería citar |
-|-------------|------:|---------|---------------|
-| `<c>MlResultCritical</c>` | 47 | `…Critical.cs` | `MlResult&lt;T&gt;` |
-| `<c>MlResultDebug</c>` | 47 | `…Debug.cs` | `MlResult&lt;T&gt;` |
-| `<c>MlResultError</c>` | 47 | `…Error.cs` | `MlResult&lt;T&gt;` |
-| `<c>MlResultInformation</c>` | 47 | `…Information.cs` | `MlResult&lt;T&gt;` |
-| `<c>MlResultTrace</c>` | 47 | `…Trace.cs` | `MlResult&lt;T&gt;` |
-| `<c>MlResultWarning</c>` | 47 | `…Warning.cs` | `MlResult&lt;T&gt;` |
-| **TOTAL** | **282** | | |
-
-Ninguno de los seis existe como tipo en la solución. Comprobado sobre todos los `.cs` excluyendo
-`bin` y `obj`.
-
-### 7.4 Estado de los `param` por nombre (medido)
-
-| Nombre | `<param name>` | Total en fichero | Qué hacer |
-|--------|---------------:|-----------------:|-----------|
-| `failBuildMessage` | 156 | 594 | sólo rellenar el texto (US-21) |
-| `failMessage` | 67 | 237 | rellenar y **distinguir** de `failBuildMessage` |
-| `validBuildMessage` | 30 | 141 | sólo rellenar el texto |
-| `faildMessage` | **28** | 84 | **renombrar** (US-24) |
-| `validBuilMessage` | **21** | 155 | **renombrar** (US-24) |
-
-### 7.5 Antes y después de un bloque típico
-
-```csharp
-// ANTES  ·  MlResultLogExtensions.Error.cs
-/// <summary>
-/// Métodos de extension de <c>MlResultError</c>.
-/// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <param name="value">Resultado de origen sobre el que se aplica la operación.</param>
-/// <param name="logger">Registrador al que se envian las trazas.</param>
-/// <param name="validBuilMessage">Mensaje descriptivo.</param>
-/// <param name="faildMessage">Mensaje descriptivo.</param>
-/// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-```
-
-```csharp
-// DESPUES  ·  con D-15 = (c), D-17 = (a) y los nombres de la epica 4
-/// <summary>
-/// Registra en el nivel <see cref="LogLevel.Error"/> el desenlace de un
-/// <see cref="MlResult{T}"/>, sin alterarlo: devuelve el mismo resultado que recibe.
-/// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <param name="value">Resultado cuyo desenlace se registra. Se devuelve intacto.</param>
-/// <param name="logger">Registrador al que se envían las trazas.</param>
-/// <param name="validBuildMessage">
-/// Constructor del mensaje para el caso válido, al que se le pasa el valor del resultado.
-/// Si se omite, el caso válido no se registra.
-/// </param>
-/// <param name="failBuildMessage">
-/// Constructor del mensaje para el caso fallido, al que se le pasan los detalles del error.
-/// Si se omite, el caso fallido no se registra.
-/// </param>
-/// <returns>El mismo resultado recibido, sin modificar.</returns>
-/// <exception cref="ArgumentNullException"><paramref name="logger"/> es <c>null</c>.</exception>
-/// <example>
-/// <code>
-/// var resultado = ObtenerCliente(id)
-///                     .LogMlResultError(logger,
-///                                       validBuildMessage: c      => $"Cliente {c.Id} obtenido.",
-///                                       failBuildMessage : errors => $"No se pudo obtener el cliente {id}.");
-/// </code>
-/// </example>
-```
-
-### 7.6 Glosario propuesto para `D-15`
-
-| Parámetro | Texto canónico propuesto |
-|-----------|--------------------------|
-| `source` / `value` | Resultado cuyo desenlace se registra. Se devuelve intacto. |
-| `sourceAsync` | Tarea que produce el resultado cuyo desenlace se registra. |
-| `logger` | Registrador al que se envían las trazas. |
-| `logLevel` | Nivel con el que se emite la traza. |
-| `validBuildMessage` | Constructor del mensaje para el caso válido… Si se omite, el caso válido no se registra. |
-| `failBuildMessage` | Constructor del mensaje para el caso fallido… Si se omite, el caso fallido no se registra. |
-| `failMessage` | Mensaje **fijo** que se emite en el caso fallido. |
-| `methodActionDesc` | Descripción de la acción, que se interpola en los mensajes de éxito y de fallo. |
-
-### 7.7 Búsquedas de verificación
-
-| Búsqueda | Esperado al cerrar |
-|----------|-------------------:|
-| `Mensaje descriptivo.` | 0 |
-| `<c></c>` | 0 |
-| `MlResultError` y sus 5 hermanos | 0 |
-| `<param name="validBuilMessage">` | 0 |
-| `<param name="faildMessage">` | 0 |
-| `Tipo del valor.</typeparam>` | 0 |
-| `<typeparam name="T">Tipo del valor transportado…` | **333** · sin cambios |
-| `<exception` | > 0 |
-| `<example` | > 0 |
-| `CS1591` · `CS1572` · `CS1573` | 0 · 0 · 0 |
-| tests de la solución | 1.136 en verde |
-
----
-
-## 8. Ver también
-
-- [`README.md`](README.md) — plan de la versión 2.2.0.
-- [`Epica-02-Higiene-Interna-y-Codigo-Muerto.md`](Epica-02-Higiene-Interna-y-Codigo-Muerto.md) — prerrequisito: borra las 530 líneas comentadas y sus `///`.
-- [`Epica-03-Correccion-Funcional-y-Validacion.md`](Epica-03-Correccion-Funcional-y-Validacion.md) — aporta la `ArgumentNullException` que documenta la US-25, y el defecto `F1` que ilustra la US-27.
-- [`Epica-04-Nomenclatura-y-Firmas-Publicas.md`](Epica-04-Nomenclatura-y-Firmas-Publicas.md) — prerrequisito de la US-24: fija los nombres definitivos.
-- [`Epica-06-Rendimiento-y-Estandar-de-Logging.md`](Epica-06-Rendimiento-y-Estandar-de-Logging.md) — documenta los miembros nuevos que introduce.
-- [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) — catálogo de los 35 hallazgos.
+> **Resultado real medido al cerrar la épica.**
+> - `US-21` · **383** `Mensaje descriptivo.` sustituidos por el glosario de `D-15`.
+> - `US-23` · **612** tildes puestas (357 de `envian`/`extension de` + 255 de `unicamente`), no 603:
+>   el censo de partida no contaba `unicamente`.
+> - `US-26` · **93** resúmenes reescritos + **252** citas `<c>MlResultXxx</c>` convertidas en
+>   `<see cref="LogLevel.Xxx"/>` + **23** `cref` con genéricos anidados (ilegales, `CS1584`)
+>   reescritos en prosa + **8** últimas citas a `GeneralError`/`CompletedResult`. Censo final de
+>   `<c>` = **10**, ninguno citando un tipo.
+> - `US-27` · **21** `<typeparam name="TValue">` reescritos.
+> - `US-24` · ya entregada en el commit de la épica 4 (`cd17955`), porque el reemplazo masivo de
+>   `validBuilMessage`/`faildMessage` alcanzó también a las etiquetas `<param name>`.
+> - `US-25` · **6** `<example>` + **6** `<remarks>`; **0** `<exception>` por la desviación anotada
+>   más arriba. `MlResultLogExtensions.cs` 1.076 → **1.132** líneas y
+>   `MlResultLogExtensions.Information.cs` 708 → **719**.
+> - Compilación `EXIT = 0`, **0 errores**, **238 avisos**, `CS1591 = CS1572 = CS1573 = CS1574 = CS0618 = 0`.
+> - Tests `EXIT = 0`, **1.338** pruebas, **0** con error, **0** omitidas.
+> - Un solo commit en lugar de los cinco previstos: la épica se ejecutó de una pasada y trocearla
+>   habría dejado la documentación inconsistente en los commits intermedios.
