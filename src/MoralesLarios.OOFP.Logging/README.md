@@ -17,15 +17,16 @@ Es el equivalente funcional del "punto de observación": no transforma, no valid
 7. [Familia 3 — Filtrado por contenido de `Details`](#familia-3--filtrado-por-contenido-de-details)
 8. [Familia 4 — `LogCompletedResult` y `LogGeneralErrorIfFail`](#familia-4--logcompletedresult-y-loggeneralerroriffail)
 9. [Familia 5 — Los seis ficheros por nivel](#familia-5--los-seis-ficheros-por-nivel)
-10. [Familia 6 — `MyMethodFinalLog`](#familia-6--mymethodfinallog)
-11. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
-12. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
-13. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
-14. [Ejemplos prácticos](#ejemplos-prácticos)
-15. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
-16. [Mejores prácticas](#mejores-prácticas)
-17. [Resumen](#resumen)
-18. [Ver también](#ver-también)
+10. [Familia 6 — `LogActionResult`](#familia-6--logactionresult)
+11. [Familia 7 — `EventId` e `ILogger<TCategory>`](#familia-7--eventid-e-iloggertcategory)
+12. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
+13. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+14. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
+15. [Ejemplos prácticos](#ejemplos-prácticos)
+16. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+17. [Mejores prácticas](#mejores-prácticas)
+18. [Resumen](#resumen)
+19. [Ver también](#ver-también)
 
 ---
 
@@ -80,7 +81,7 @@ public Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
 | `Microsoft.Extensions.Logging.Abstractions` (8.0.1) | `ILogger`, `LogLevel` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind` |
 
-Destino: **`net8.0`**. Versión del paquete: **1.0.9**.
+Destino: **`net8.0`**. Versión del paquete: **2.2.0**.
 
 ```csharp
 using Microsoft.Extensions.Logging;
@@ -98,26 +99,35 @@ using MoralesLarios.OOFP.Logging;   // 🔑 todas las extensiones viven aquí
 ```
 MoralesLarios.OOFP.Logging/
 ├── GlobalUsings.cs
-├── MlResultLogExtensions.cs               → núcleo: LogLevel como parámetro
-├── MlResultLogExtensions.cs          → nivel Trace fijado
-├── MlResultLogExtensions.cs          → nivel Debug fijado
-├── MlResultLogExtensions.cs    → nivel Information fijado
-├── MlResultLogExtensions.cs        → nivel Warning fijado
-├── MlResultLogExtensions.cs          → nivel Error fijado
-├── MlResultLogExtensions.cs       → nivel Critical fijado
-└── Extensions.cs                            → MyMethodFinalLog (atajo de más alto nivel)
+├── MlResultLogGuards.cs                        → guardas internas: logger nulo + IsEnabled
+├── MlResultLogExtensions.cs                    → núcleo: LogLevel como parámetro
+├── MlResultLogExtensions.Trace.cs              → nivel Trace fijado
+├── MlResultLogExtensions.Debug.cs              → nivel Debug fijado
+├── MlResultLogExtensions.Information.cs        → nivel Information fijado
+├── MlResultLogExtensions.Warning.cs            → nivel Warning fijado
+├── MlResultLogExtensions.Error.cs              → nivel Error fijado
+├── MlResultLogExtensions.Critical.cs           → nivel Critical fijado
+├── MlResultLogExtensions.EventId.cs            → sobrecargas con EventId
+├── MlResultLogExtensions.Categoria.cs          → sobrecargas con ILogger<TCategory>
+├── MlResultLogExtensions.Obsolete.cs           → puentes [Obsolete] de LogMlResultFinal
+├── MlResultLogActionExtensions.cs              → LogActionResult (atajo de más alto nivel)
+└── MlResultLogActionExtensions.Obsolete.cs     → puente [Obsolete] de MyMethodFinalLog
 ```
 
-Todo son **clases estáticas con métodos de extensión**. La arquitectura es una pirámide:
+Las seis clases por nivel y las de `EventId`/`Categoria` son **`partial` de la misma clase
+`MlResultLogExtensions`**: se reparten en ficheros por legibilidad, pero para el consumidor es un
+único tipo. Todo son **métodos de extensión estáticos**. La arquitectura es una pirámide:
 
 ```
-Extensions.MyMethodFinalLog                    ← atajo con mensajes prefabricados
+MlResultLogActionExtensions.LogActionResult     ← atajo con mensajes prefabricados
         ↓
 MlResultLogExtensions.LogCompletedResult        ← Information si válido / Error si fallo
         ↓
-GeneralExtensionLoggersXxx.LogMlResultXxx…      ← LogLevel fijado por fichero
+MlResultLogExtensions.LogMlResultXxx…           ← LogLevel fijado por fichero
         ↓
-MlResultLogExtensions.LogMlResult…            ← LogLevel como parámetro
+MlResultLogExtensions.LogMlResult…              ← LogLevel como parámetro
+        ↓
+MlResultLogGuards.IsEnabled(logger, logLevel)   ← corta antes de construir el mensaje
         ↓
 ILogger.Log(logLevel, message)                  ← la API estándar de .NET
 ```
@@ -136,6 +146,9 @@ public static MlResult<T> LogMlResult<T>(this MlResult<T> source,
                                               LogLevel    logLevel,
                                               string      message)
 {
+    if (logger is null) return source;                              // 🔑 guarda: nunca lanza
+    if (! MlResultLogGuards.IsEnabled(logger, logLevel)) return source;
+
     logger.Log(logLevel, message);
     return source;              // 🔑 el resultado sale intacto
 }
@@ -147,12 +160,14 @@ Y la variante con constructores de mensaje:
 public static MlResult<T> LogMlResult<T>(this MlResult<T>                   source,
                                               ILogger                       logger,
                                               LogLevel                      logLevel,
-                                              Func<T, string>               validBuilMessage = null!,
-                                              Func<MlErrorDetails, string> failBuildMessage = null!)
+                                              Func<T, string>               validBuildMessage = null!,
+                                              Func<MlErrorDetails, string> failBuildMessage  = null!)
 {
+    if (! MlResultLogGuards.IsEnabled(logger, logLevel)) return source;   // 🔑 pereza
+
     source.Match(
-        valid: x      => validBuilMessage != null ? logger.LogMlResult(logLevel, validBuilMessage(x))      : null!,
-        fail : errors => failBuildMessage != null ? logger.LogMlResult(logLevel, failBuildMessage(errors)) : null!)
+        valid: x      => validBuildMessage != null ? logger.LogMlResult(logLevel, validBuildMessage(x)) : null!,
+        fail : errors => failBuildMessage  != null ? logger.LogMlResult(logLevel, failBuildMessage(errors)) : null!)
     );
 
     return source;
@@ -166,8 +181,15 @@ Tres propiedades que se cumplen en **todo** el proyecto:
 | **Devuelve `source` sin tocarlo** | Puedes insertar o quitar el log en cualquier punto de la cadena |
 | **Los `Func` se evalúan solo en su rama** | Si el resultado es válido, `failBuildMessage` **no se ejecuta** ⇒ no hay coste de formateo |
 | **Un `Func` a `null` ⇒ no se registra nada** | Así se implementan las variantes `IfValid` / `IfFail` |
+| **Un `logger` nulo ⇒ devuelve `source` intacto** | Nunca lanza `NullReferenceException` (desde la 2.2.0) |
+| **Si el nivel está apagado ⇒ ni se construye el mensaje** | `IsEnabled` se consulta **antes** de invocar tu `Func` (desde la 2.2.0) |
 
 > 💡 **La evaluación diferida es importante para el rendimiento**: `e => $"Error: {e.GetErrorsSummary()}"` solo construye la cadena si realmente hay fallo.
+
+> 💡 **Y desde la 2.2.0 no se construye en absoluto si el nivel está filtrado.** Medido sobre
+> `LogMlResultTrace` con `Trace` apagado: **240,0 B** por llamada frente a los **792,6 B** de antes
+> (**−69,7 %** de asignaciones y **−93 %** de tiempo). Ya puedes dejar trazas `Trace`/`Debug` en
+> bucles calientes sin pagarlas en producción.
 
 Además existe la variante que registra **cada rama en un nivel distinto** usando tuplas:
 
@@ -184,7 +206,10 @@ resultado.LogMlResult(_logger,
                       failBuildMessage : (LogLevel.Error, e => $"Fallo: {e.GetErrorsSummary()}"));
 ```
 
-> ⚠️ **Ojo con el nombre del parámetro**: en la sobrecarga con `Func` y `LogLevel` suelto se llama **`validBuilMessage`** (le falta la `d` de "Build"), mientras que en la sobrecarga con tuplas se llama **`validBuildMessage`** (correcto). Si usas argumentos con nombre, tienes que respetar la errata en unas y no en otras. Ver [Particularidades](#️-particularidades-reales-del-código-fuente).
+> ✅ **El nombre del parámetro es uniforme**: `validBuildMessage` / `failBuildMessage` en **todas** las
+> sobrecargas. Hasta la 2.1.1 la sobrecarga con `LogLevel` suelto lo llamaba `validBuilMessage` (sin la
+> `d`) y la de tuplas `faildMessage`; ambas erratas se corrigieron en la 2.2.0. Ver
+> [Particularidades](#️-particularidades-reales-del-código-fuente).
 
 ---
 
@@ -197,7 +222,7 @@ En `MlResultLogExtensions.cs`. El nivel es siempre un parámetro.
 | `logger.LogMlResult(logLevel, message)` → `MlResult<ILogger>` | Siempre. Punto de entrada de bajo nivel |
 | `source.LogMlResult(logger, logLevel, message)` | Siempre, con mensaje fijo |
 | `source.LogMlResult(logger, logLevel, validMessage, failMessage)` | Siempre, mensaje distinto según estado |
-| `source.LogMlResult(logger, logLevel, validBuilMessage, failBuildMessage)` | Según qué `Func` pases (los `null` no registran) |
+| `source.LogMlResult(logger, logLevel, validBuildMessage, failBuildMessage)` | Según qué `Func` pases (los `null` no registran) |
 | `source.LogMlResult(logger, (nivel, funcValid), (nivel, funcFail))` | Siempre, **nivel distinto por rama** |
 
 > 💡 La primera sobrecarga (`this ILogger`) devuelve `MlResult<ILogger>`. Es el ladrillo interno que usan las demás; rara vez lo necesitarás directamente, pero permite encadenar logs: `_logger.LogMlResult(LogLevel.Debug, "inicio").Bind(l => …)`.
@@ -357,7 +382,7 @@ Y dentro de cada fichero, estas variantes (sustituye `Xxx` por el nivel):
 | `logger.LogMlResultXxx(message)` | Siempre (devuelve `MlResult<ILogger>`) |
 | `source.LogMlResultXxx(logger, message)` | Siempre |
 | `source.LogMlResultXxx(logger, validMessage, failMessage)` | Siempre, texto según estado |
-| `source.LogMlResultXxx(logger, validBuilMessage, failBuildMessage)` | Según los `Func` no nulos |
+| `source.LogMlResultXxx(logger, validBuildMessage, failBuildMessage)` | Según los `Func` no nulos |
 | `source.LogMlResultXxxIfValid(logger, …)` | Solo si es válido |
 | `source.LogMlResultXxxIfFail(logger, …)` | Solo si es fallo |
 | `source.LogMlResultXxxIfFailWithValue(logger, …)` | Fallo **con valor** en `Details` |
@@ -372,34 +397,88 @@ Todas tienen su pareja `…Async`.
 
 ---
 
-## Familia 6 — `MyMethodFinalLog`
+## Familia 6 — `LogActionResult`
 
-En `Extensions.cs`. Es el atajo de más alto nivel: **tú solo dices qué estaba haciendo el método**, y él construye los dos mensajes.
+En `MlResultLogActionExtensions.cs`. Es el atajo de más alto nivel: **tú solo dices qué estaba haciendo el método**, y él construye los dos mensajes.
 
 ```csharp
-public static MlResult<T> MyMethodFinalLog<T>(this MlResult<T> source,
-                                                   ILogger     logger,
-                                                   string      methodActionDesc)
+public static MlResult<T> LogActionResult<T>(this MlResult<T> source,
+                                                  ILogger     logger,
+                                                  string      methodActionDesc)
     => source.LogCompletedResult(logger,
             validBuildMessage: item   => $"{methodActionDesc} done correctly.",
-            failBuildMessage : errors => $"Error when {methodActionDesc} Error: {errors.ToErrorsDetailsDescription()}");
+            failBuildMessage : errors => $"Error when {methodActionDesc}: {errors.ToErrorsDetailsDescription()}");
 ```
 
 ```csharp
 return await _repo.AddAsync(pedido)
-                  .MyMethodFinalLogAsync(_logger, "creating order");
+                  .LogActionResultAsync(_logger, "creating order");
 // Válido → Information: "creating order done correctly."
-// Fallo  → Error      : "Error when creating order Error: <detalle completo>"
+// Fallo  → Error      : "Error when creating order: <detalle completo>"
 ```
 
 | Método | Uso |
 |---|---|
-| `MyMethodFinalLog(logger, methodActionDesc)` | Versión síncrona |
-| `MyMethodFinalLogAsync(logger, methodActionDesc)` | Sobre `Task<MlResult<T>>` |
+| `LogActionResult(logger, methodActionDesc)` | Versión síncrona |
+| `LogActionResultAsync(logger, methodActionDesc)` | Sobre `Task<MlResult<T>>` |
 
-> ⚠️ **Los mensajes están en inglés y son fijos.** Si tu aplicación registra en español, o si el formato no te sirve, usa `LogCompletedResult` directamente. El nombre (`MyMethodFinalLog`) delata que es una plantilla personal del autor más que una API pensada para consumo general.
+> ⚠️ **Renombrado en la 2.2.0.** Antes esta familia vivía en `Extensions.cs` y se llamaba
+> `MyMethodFinalLog` / `MyMethodFinalLogAsync`. Los nombres antiguos siguen existiendo en
+> `MlResultLogActionExtensions.Obsolete.cs` marcados con `[Obsolete(error: false)]`, así que tu código
+> **sigue compilando con un aviso `CS0618`**, pero desaparecen en la 3.0.0. Consulta el
+> [prompt de migración](../docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md).
+
+> ⚠️ **Los mensajes están en inglés y son fijos**, por decisión de diseño: todo el texto que genera la
+> librería se emite en inglés. Si tu aplicación registra en español, usa `LogCompletedResult`
+> directamente con tus propios `Func`.
 
 > 💡 Nótese que usa `ToErrorsDetailsDescription()` (errores **y** detalles), mientras que `LogGeneralErrorIfFail` usa `GetErrorsSummary()` (solo los mensajes). El primero es más verboso y más útil para diagnóstico.
+
+---
+
+## Familia 7 — `EventId` e `ILogger<TCategory>`
+
+Dos ejes de sobrecargas añadidos en la **2.2.0**, ambos **puramente aditivos**: no sustituyen a nada.
+
+### `EventId` — correlacionar trazas
+
+Todas las sobrecargas de `LogMlResult` (y sus variantes por nivel) aceptan un `EventId` **después** del
+`LogLevel`. Están en `MlResultLogExtensions.EventId.cs`.
+
+```csharp
+private static readonly EventId PedidoCreado = new(1001, nameof(PedidoCreado));
+
+return await _repo.AddAsync(pedido)
+                  .LogMlResultInformationAsync(_logger, PedidoCreado,
+                                               validBuildMessage: p => $"Pedido {p.Id} creado");
+```
+
+El `EventId` llega al `ILogger` tal cual (`logger.Log(logLevel, eventId, message)`), así que **Serilog,
+Seq o Application Insights pueden filtrar y agrupar por él**. Es la forma recomendada de correlacionar
+un conjunto de trazas sin recurrir a `BeginScope`.
+
+### `ILogger<TCategory>` — fijar la categoría
+
+Las mismas familias, pero recibiendo un **registrador tipado** `ILogger<TCategory>` en lugar de un
+`ILogger` pelado. No cambian el comportamiento: el compilador elige estas sobrecargas cuando el
+argumento ya es tipado (la conversión es de identidad) y las anteriores cuando no lo es, así que el
+`TCategory` queda **inferido** y no hay que escribirlo. Están en `MlResultLogExtensions.Categoria.cs`.
+
+```csharp
+// 'logger' es el ILogger<ServicioPedidos> que inyecta el contenedor:
+// no hace falta ningún cast a ILogger ni escribir los parámetros de tipo.
+source.LogMlResult(_logger, LogLevel.Information,
+                   validBuildMessage: p      => $"Pedido {p.Id} creado",
+                   failBuildMessage : errors => errors.GetErrorsSummary());
+```
+
+| Eje | Fichero | Firmas públicas |
+|---|---|---|
+| `EventId` | `MlResultLogExtensions.EventId.cs` | 35 |
+| `ILogger<TCategory>` | `MlResultLogExtensions.Categoria.cs` | 21 |
+
+> 💡 El eje de `EventId` cubre la familia genérica `LogMlResult` y las seis de nivel; el de categoría,
+> lo mismo. **Los dos ejes no se combinan entre sí**, para no multiplicar la superficie pública.
 
 ---
 
@@ -423,26 +502,32 @@ return await _repo.GetAsync(id)                               // Task<MlResult<P
 
 > ⚠️ **Las versiones `Async` que reciben `MlResult<T>` (no `Task<…>`) no son asíncronas de verdad**: registran el log de forma síncrona y envuelven con `.ToAsync()` (`Task.FromResult`). Solo sirven para adaptar tipos, no para no bloquear.
 
+> ✅ **Convenio de nomenclatura `Async`**: un método lleva el sufijo `Async` cuando devuelve
+> `Task<…>`. La única excepción histórica es la sobrecarga de `LogCompletedResult` que recibe
+> `Task<MlResult<T>>` y se dejó **sin** sufijo para no romper a los consumidores; ver el punto 2 de
+> [Particularidades](#️-particularidades-reales-del-código-fuente).
+
 ---
 
 ## ⚠️ Particularidades reales del código fuente
 
-### 1. El parámetro `validBuilMessage` está mal escrito
+### 1. La errata `validBuilMessage` se corrigió en la 2.2.0
 
-En las sobrecargas con `LogLevel` suelto, el parámetro se llama **`validBuilMessage`** (falta la `d`), mientras que su pareja es **`failBuildMessage`** (correcta).
+Hasta la 2.1.1, las sobrecargas con `LogLevel` suelto llamaban al parámetro **`validBuilMessage`**
+(sin la `d`), mientras que su pareja se llamaba `faildMessage`. **Desde la 2.2.0 el nombre es uniforme
+en toda la superficie pública**: `validBuildMessage` y `failBuildMessage`.
 
 ```csharp
-// ✅ Compila
+// ✅ Desde la 2.2.0, en TODAS las sobrecargas
 source.LogMlResult(_logger, LogLevel.Information,
-                   validBuilMessage: x => $"OK {x}",
-                   failBuildMessage: e => $"KO {e}");
-
-// ❌ NO compila: no existe un parámetro llamado validBuildMessage en esta sobrecarga
-source.LogMlResult(_logger, LogLevel.Information,
-                   validBuildMessage: x => $"OK {x}", …);
+                   validBuildMessage: x => $"OK {x}",
+                   failBuildMessage : e => $"KO {e}");
 ```
 
-En cambio, la sobrecarga con **tuplas** y `LogCompletedResult` sí usan `validBuildMessage` bien escrito. **Si usas argumentos con nombre, confía en IntelliSense** en lugar de en la memoria.
+> ⚠️ **Ruptura.** Si invocabas con argumentos con nombre, hay que renombrar `validBuilMessage` →
+> `validBuildMessage` (107 ocurrencias en la librería) y `faildMessage` → `failBuildMessage` (84).
+> El compilador lo detecta: `CS1739`. Está registrada en el
+> [anexo de renombrados](../docs_next/Copilot/.github/prompts/oofp-upgrade-2.renames.md).
 
 ### 2. Hay una sobrecarga `async` que no se llama `Async`
 
@@ -455,25 +540,23 @@ public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T
 
 Recibe una `Task<MlResult<T>>` y es `async`, pero **se llama `LogCompletedResult`, sin sufijo `Async`**. Funciona correctamente; solo rompe la convención de nombres del resto del proyecto.
 
-### 3. `MlResultLogExtensions.cs` tiene una región mal etiquetada
+### 3. `MlResultLogExtensions.Trace.cs` tiene una región mal etiquetada
 
-La primera región del fichero de `Trace` se llama `#region LogMlResultCritical` (copia-pega desde el fichero de `Critical`). **Los métodos sí usan `LogLevel.Trace`**: solo el comentario está equivocado. No afecta al comportamiento.
+La primera región del fichero de `Trace` se llama `#region LogMlResultCritical` (copia-pega desde el fichero de `Critical`). **Los métodos sí usan `LogLevel.Trace`**: solo el comentario está equivocado. No afecta al comportamiento. Se conserva a la espera de la 3.0.0 para no mezclar cambios cosméticos con la poda de los puentes `[Obsolete]`.
 
-### 4. `MlResultLogExtensions.cs` arrastra un `using` inútil
+### 4. Un `logger` nulo devuelve el `source` intacto, no un `Fail`
+
+Desde la 2.2.0 **sí se valida el `ILogger`**: hay siete guardas que, ante un `logger` nulo, **devuelven el resultado de origen sin tocarlo y sin registrar nada**, en lugar de propagar una `NullReferenceException`.
 
 ```csharp
-using static System.Runtime.InteropServices.JavaScript.JSType;
+internal const string NullLoggerMessage = "El parámetro 'logger' no puede ser nulo.";
 ```
 
-Residuo de una sugerencia automática del IDE. No se usa para nada y es inocuo, pero puede confundir al leer el fichero.
+La decisión (`D-06`) fue **no convertir el logging en una fuente de fallos**: que falte el registrador no debe hacer fracasar el caso de uso. Si prefieres enterarte, `MlResultLogGuards.NullLoggerFail()` produce el `Fail` correspondiente, pero no se usa en la ruta por defecto.
 
-### 5. No se comprueba que `logger` sea `null`
+> 💡 **Ruptura silenciosa**: el código que dependía de la `NullReferenceException` para detectar un doble mal configurado en tests ya no la recibe. Ahora el test pasa y simplemente no hay trazas.
 
-Ningún método valida el `ILogger`. Con un `logger` nulo obtendrás una **`NullReferenceException` propagada**, no un `Fail`. El logging aquí **no está protegido por el raíl funcional**.
-
-> 💡 En ASP.NET Core esto rara vez ocurre (el contenedor siempre inyecta un logger). Pero en tests con dobles mal configurados, sí.
-
-### 6. Una excepción dentro de tu `Func` rompe la cadena
+### 5. Una excepción dentro de tu `Func` rompe la cadena
 
 ```csharp
 source.LogMlResultIfValid(_logger, LogLevel.Debug, x => $"Id: {x.Cliente.Nombre}");
@@ -482,11 +565,11 @@ source.LogMlResultIfValid(_logger, LogLevel.Debug, x => $"Id: {x.Cliente.Nombre}
 
 Los constructores de mensaje **no están envueltos en `TryMap`**. Una excepción al formatear el texto **sale del pipeline como excepción**, no como `Fail`. Mantén los `Func` triviales y a prueba de nulos.
 
-### 7. El `Match` interno descarta su resultado
+### 6. El `Match` interno descarta su resultado
 
 En `LogMlResult` con `Func`, la llamada a `source.Match(...)` **no se asigna a nada**: se ejecuta solo por su efecto secundario (escribir el log) y luego se devuelve `source`. Es intencionado — así se garantiza la transparencia —, pero explica por qué las ramas pueden devolver `null!` sin consecuencias.
 
-### 8. Se usa `logger.Log(logLevel, message)`, no logging estructurado
+### 7. Se usa `logger.Log(logLevel, message)`, no logging estructurado
 
 ```csharp
 logger.Log(logLevel, message);
@@ -508,9 +591,8 @@ El mensaje llega **ya interpolado**, como una cadena plana. Ver [Lo que NO inclu
 
 > ⚠️ **No se pasa la `Exception` al `ILogger`.** Aunque `LogMlResultIfFailWithException` **detecta** la excepción y te la deja usar en el mensaje, **nunca** llama a `logger.Log(level, exception, message)`. Por tanto **el stack trace no se registra** salvo que lo incluyas tú en el texto (`ex.ToString()`).
 
-> ⚠️ **No hay `EventId`, ni `scopes`, ni `BeginScope`.** No se puede correlacionar un conjunto de logs.
-
-> ⚠️ **No comprueba `logger.IsEnabled(logLevel)`.** El mensaje se construye siempre que se entre en la rama correspondiente, incluso si el nivel está filtrado y el texto se va a descartar. Para `Trace`/`Debug` en bucles muy calientes, esto cuesta.
+> ⚠️ **No hay `scopes` ni `BeginScope`.** Para correlacionar un conjunto de trazas, usa el `EventId` de
+> la [familia 7](#familia-7--eventid-e-iloggertcategory), que **sí existe desde la 2.2.0**.
 
 > ⚠️ **No existe `LogCompletedResult` ni `LogGeneralErrorIfFail` por nivel** (`LogMlResultErrorFinal`, etc.).
 
@@ -614,7 +696,7 @@ public Task<MlResult<Informe>> Generar(int año)
 
     return _datos.CargarAsync(año)
                  .BindAsync(d => _motor.CalcularAsync(d))
-                 .MyMethodFinalLogAsync(_logger, $"generating report for {año}");
+                 .LogActionResultAsync(_logger, $"generating report for {año}");
 }
 ```
 
@@ -628,11 +710,11 @@ source.LogMlResultInformation(_logger, "Pedido {Id} creado", pedido.Id);   // �
 source.LogMlResultInformation(_logger, $"Pedido {pedido.Id} creado");
 
 
-// ❌ MAL: usar el nombre "correcto" del parámetro en la sobrecarga con LogLevel
-source.LogMlResult(_logger, LogLevel.Debug, validBuildMessage: x => $"{x}");   // 💥 no compila
+// ❌ MAL: el nombre con la errata de la 2.1.1 ya no existe
+source.LogMlResult(_logger, LogLevel.Debug, validBuilMessage: x => $"{x}");   // 💥 CS1739
 
-// ✅ BIEN: respetar la errata
-source.LogMlResult(_logger, LogLevel.Debug, validBuilMessage: x => $"{x}");
+// ✅ BIEN: el nombre uniforme de la 2.2.0
+source.LogMlResult(_logger, LogLevel.Debug, validBuildMessage: x => $"{x}");
 
 // ❌ MAL: Func que puede lanzar → rompe el pipeline con excepción
 source.LogMlResultIfValid(_logger, LogLevel.Debug, x => $"{x.Cliente.Nombre}");
@@ -665,7 +747,7 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 |---|---|
 | Registrar todos los fallos con el mínimo código | `LogGeneralErrorIfFailAsync(_logger)` |
 | Un único log de cierre de caso de uso | `LogCompletedResultAsync(_logger, funcValid, funcFail)` |
-| Lo mismo con mensajes prefabricados (en inglés) | `MyMethodFinalLogAsync(_logger, "doing X")` |
+| Lo mismo con mensajes prefabricados (en inglés) | `LogActionResultAsync(_logger, "doing X")` |
 | Registrar solo cuando va bien | `LogMlResultXxxIfValid(_logger, …)` |
 | Registrar solo cuando falla | `LogMlResultXxxIfFail(_logger, …)` |
 | Separar fallo técnico de fallo de negocio | `…IfFailWithException` + `…IfFailWithoutException` |
@@ -674,6 +756,8 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 | Nivel decidido en tiempo de ejecución | `LogMlResult(_logger, logLevel, …)` |
 | Escribir una traza suelta y seguir en el raíl | `_logger.LogMlResultXxx("mensaje")` → `MlResult<ILogger>` |
 | Registrar dentro de una cadena `async` | La sobrecarga `…Async` que recibe `Task<MlResult<T>>` |
+| Correlacionar un conjunto de trazas | La sobrecarga con `EventId` ([familia 7](#familia-7--eventid-e-iloggertcategory)) |
+| Fijar la categoría del logger en el punto de uso | La sobrecarga con `ILogger<TCategory>` |
 
 ---
 
@@ -686,24 +770,26 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 5. **Mantén los `Func` triviales y a prueba de nulos**: una excepción dentro rompe la cadena de verdad.
 6. **Incluye `ex.ToString()` en el mensaje** cuando quieras stack trace: la biblioteca no lo pasa al logger.
 7. **`Trace`/`Debug` para el detalle, `Information` para hitos, `Warning` para fallos de negocio, `Error` para técnicos, `Critical` para lo que despierta a alguien.**
-8. **No abuses en bucles grandes**: no se comprueba `IsEnabled`, así que el mensaje se construye igualmente.
+8. **No temas los bucles grandes**: desde la 2.2.0 se consulta `IsEnabled` **antes** de invocar tus `Func`, así que con el nivel apagado el mensaje **ni se construye** (−69,7 % de asignaciones, −93 % de tiempo).
 9. **Si necesitas logging estructurado de verdad**, llama a `ILogger` directamente en un `ExecSelf`/`Match` en lugar de usar estas extensiones.
-10. **Decide un idioma para las trazas** y sé coherente: recuerda que `MyMethodFinalLog` fuerza inglés.
+10. **Decide un idioma para las trazas** y sé coherente: recuerda que `LogActionResult` fuerza inglés, igual que todo el texto que genera la librería.
 11. **`GetErrorsSummary()` para trazas de negocio, `ToErrorsDetailsDescription()` para diagnóstico técnico** (el segundo incluye los `Details`).
 12. **No registres información sensible**: los `MlErrorDetails` pueden arrastrar el valor de entrada completo (`…WithValue`).
-13. **Confía en IntelliSense para los nombres de parámetros**: hay erratas (`validBuilMessage`) y una sobrecarga `async` sin sufijo `Async`.
+13. **Usa `validBuildMessage` / `failBuildMessage`**: desde la 2.2.0 los nombres son uniformes en toda la superficie pública; los antiguos (`validBuilMessage`, `faildMessage`) ya no compilan.
+14. **Usa un `EventId` estático por tipo de suceso** en lugar de literales: así puedes filtrar y agrupar en Seq o Application Insights.
 
 ---
 
 ## Resumen
 
 - Permite **registrar trazas en medio de un pipeline funcional sin romperlo**: cada método devuelve el `MlResult<T>` recibido, intacto.
-- Arquitectura en pirámide: `MyMethodFinalLog` → `LogCompletedResult` → métodos por nivel → `LogMlResult` con `LogLevel` → `ILogger.Log`.
+- Arquitectura en pirámide: `LogActionResult` → `LogCompletedResult` → métodos por nivel → `LogMlResult` con `LogLevel` → `MlResultLogGuards.IsEnabled` → `ILogger.Log`.
 - **Seis ficheros por nivel** (`Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`), cada uno con el mismo catálogo: variante general, `IfValid`, `IfFail`, `IfFailWithValue`, `IfFailWithException`, `IfFailWithoutException`, y todas sus parejas `Async`.
 - Lo más distintivo: **filtrar el log según el contenido de `Details`**, lo que permite separar errores técnicos de errores de negocio sin un solo `if`.
 - Atajos de alto nivel: **`LogGeneralErrorIfFail`** (una línea, registra los fallos en `Error`) y **`LogCompletedResult`** (`Information` si va bien, `Error` si falla).
-- ⚠️ Límites importantes: **no hay logging estructurado**, **no se pasa la `Exception` al logger** (ni stack trace), **no se comprueba `IsEnabled`**, y las excepciones dentro de tus `Func` **no están protegidas**.
-- ⚠️ Erratas del código: el parámetro **`validBuilMessage`** (sin `d`) en algunas sobrecargas, una sobrecarga `async` llamada **`LogCompletedResult`** sin sufijo, y una región mal etiquetada en el fichero de `Trace`.
+- Desde la 2.2.0: **`EventId`** y **`ILogger<TCategory>`** como ejes aditivos, **guarda de `logger` nulo** y **cortocircuito por `IsEnabled`** antes de construir el mensaje.
+- ⚠️ Límites importantes: **no hay logging estructurado**, **no se pasa la `Exception` al logger** (ni stack trace), **no hay `scopes`**, y las excepciones dentro de tus `Func` **no están protegidas**.
+- ⚠️ Lo que queda por limpiar en la 3.0.0: una sobrecarga `async` llamada **`LogCompletedResult`** sin sufijo, una región mal etiquetada en el fichero de `Trace`, y los puentes **`[Obsolete]`** de `MyMethodFinalLog` y `LogMlResultFinal`.
 
 ---
 
