@@ -10,11 +10,7 @@ public static partial class MlResultLogExtensions
 {
 
 
-
-
-
     #region LogMlResultWarning
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c>.
@@ -35,7 +31,6 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<ILogger>> LogMlResultWarningAsync(this ILogger  logger,
                                                                            string   message)
         => logger.LogMlResultAsync(LogLevel.Warning, message);
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c>.
@@ -67,7 +62,6 @@ public static partial class MlResultLogExtensions
                                                                         Func<MlErrorDetails, string> failBuildMessage = null!)
         => source.LogMlResult(logger, LogLevel.Warning, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage).ToAsync();
 
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c>. Versión asíncrona.
     /// </summary>
@@ -82,7 +76,6 @@ public static partial class MlResultLogExtensions
                                                                               Func<T, string>               validBuilMessage = null!,
                                                                               Func<MlErrorDetails, string> failBuildMessage = null!)
         => (await sourceAsync).LogMlResult(logger, LogLevel.Warning, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage);
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c>.
@@ -138,9 +131,6 @@ public static partial class MlResultLogExtensions
                                                  validBuilMessage: _ => validMessage, 
                                                  failBuildMessage: _ => failMessage);
 
-
-
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c>.
     /// </summary>
@@ -167,7 +157,6 @@ public static partial class MlResultLogExtensions
                                                                         string      message)
         => source.LogMlResultAsync<T>(logger, LogLevel.Warning, message);
 
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c>. Versión asíncrona.
     /// </summary>
@@ -181,13 +170,10 @@ public static partial class MlResultLogExtensions
                                                                               string            message)
         => await source.LogMlResultAsync<T>(logger, LogLevel.Warning, message);
 
-
-
     #endregion
 
 
     #region LogMlResultWarningIfValid
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
@@ -271,7 +257,6 @@ public static partial class MlResultLogExtensions
                                                                                      ILogger           logger,
                                                                                      Func<T, string>   validBuildMessage)
         => (await sourceAsync).LogMlResultIfValid(logger, LogLevel.Warning, validBuildMessage);
-
 
     #endregion
 
@@ -363,12 +348,10 @@ public static partial class MlResultLogExtensions
                                                                                     Func<MlErrorDetails, string> failBuildMessage)
         => (await sourceAsync).LogMlResultIfFail(logger, LogLevel.Warning, failBuildMessage);
 
-
     #endregion
 
 
     #region LogMlResultWarningIfFailWithValue
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
@@ -397,9 +380,6 @@ public static partial class MlResultLogExtensions
                                                                             ILogger     logger,
                                                                             string      failMessage)
         => source.LogMlResultIfFailWithValue(logger, LogLevel.Warning, failMessage);
-
-
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
@@ -457,11 +437,6 @@ public static partial class MlResultLogExtensions
                                                                                              string            faildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, LogLevel.Warning, faildMessage);
 
-
-
-
-
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
     /// es fallido, recuperando el valor almacenado en el detalle del error.
@@ -507,13 +482,10 @@ public static partial class MlResultLogExtensions
                                                                                                      Func<MlErrorDetails, TValue, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, LogLevel.Warning, failBuildMessage);
 
-
-
     #endregion
 
 
     #region LogMlResultWarningIfFailWithException
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
@@ -542,9 +514,6 @@ public static partial class MlResultLogExtensions
                                                                                 ILogger     logger,
                                                                                 string      failMessage)
         => source.LogMlResultIfFailWithException(logger, LogLevel.Warning, failMessage);
-
-
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
@@ -602,11 +571,6 @@ public static partial class MlResultLogExtensions
                                                                                                  string            faildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithExceptionAsync(logger, LogLevel.Warning, faildMessage);
 
-
-
-
-
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
     /// es fallido y su detalle de error contiene una excepción.
@@ -649,14 +613,10 @@ public static partial class MlResultLogExtensions
                                                                                                  Func<MlErrorDetails, Exception, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithExceptionAsync(logger, LogLevel.Warning, failBuildMessage);
 
-
-
-
     #endregion
 
 
     #region LogMlResultWarningIfFailWithoutException
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
@@ -685,7 +645,6 @@ public static partial class MlResultLogExtensions
                                                                                    ILogger                       logger,
                                                                                    string                        failMessage)
         => source.LogMlResultIfFailWithoutException(logger, LogLevel.Warning, failMessage);
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResultWarning</c> unicamente cuando el resultado de origen
@@ -743,155 +702,6 @@ public static partial class MlResultLogExtensions
                                                                                                     string            failMessage)
         => await (await source).LogMlResultIfFailWithoutExceptionAsync(logger, LogLevel.Warning, failMessage);
 
-
     #endregion
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #region old
-
-    //public static MlResult<ILogger> LogMlResultWarning(this ILogger logger,
-    //                                                      string message)
-    //    => logger.LogMlResult(LogLevel.Warning, message);
-
-    //public static Task<MlResult<ILogger>> LogMlResultWarningAsync(this ILogger logger,
-    //                                                                 string message)
-    //    => logger.LogMlResultAsync(LogLevel.Warning, message);
-
-
-    //public static MlResult<T> LogMlResultWarning<T>(this MlResult<T> value,
-    //                                                   ILogger logger,
-    //                                                   Func<T, string> validBuildMessage = null!,
-    //                                                   Func<MlErrorDetails, string> failBuildMessage = null!)
-    //    => value.LogMlResult<T>(logger, LogLevel.Warning, validBuilMessage: validBuildMessage, failBuildMessage: failBuildMessage);
-
-
-
-    //public static MlResult<T> LogMlResultWarning<T>(this MlResult<T> value,
-    //                                                   ILogger logger,
-    //                                                   string message)
-    //=> value.LogMlResult<T>(logger, LogLevel.Warning, message);
-
-    //public static Task<MlResult<T>> LogMlResultWarningAsync<T>(this MlResult<T> value,
-    //                                                              ILogger logger,
-    //                                                              string message)
-    //    => value.LogMlResultAsync<T>(logger, LogLevel.Warning, message);
-
-
-    //public static async Task<MlResult<T>> LogMlResultWarningAsync<T>(this Task<MlResult<T>> value,
-    //                                                                    ILogger logger,
-    //                                                                    string message)
-    //    => await value.LogMlResultAsync<T>(logger, LogLevel.Warning, message);
-
-
-    //public static MlResult<T> LogMlResultIfValidWarning<T>(this MlResult<T> value,
-    //                                                          ILogger logger,
-    //                                                          Func<T, string> validBuildMessage)
-    //    => value.LogMlResult<T>(logger, LogLevel.Warning, validBuilMessage: validBuildMessage);
-
-    //public static MlResult<T> LogMlResultIfFailWarning<T>(this MlResult<T> value,
-    //                                                          ILogger logger,
-    //                                                          Func<MlErrorDetails, string> errorBuildMessage)
-    //    => value.LogMlResult<T>(logger, LogLevel.Warning, failBuildMessage: errorBuildMessage);
-
-
-    //public static MlResult<T> LogMlResultWarning<T>(this MlResult<T> value,
-    //                                                   ILogger logger,
-    //                                                   string validMessage = null!,
-    //                                                   string failMessage = null!)
-    //    => value.LogMlResult<T>(logger,
-    //                          LogLevel.Warning,
-    //                          validBuilMessage: x => validMessage,
-    //                          failBuildMessage: errors => failMessage);
-
-    //public static MlResult<T> LogMlResultIfValidWarning<T>(this MlResult<T> value,
-    //                                                          ILogger logger,
-    //                                                          string validMessage)
-    //    => value.LogMlResult<T>(logger,
-    //                          LogLevel.Warning,
-    //                          validBuilMessage: x => validMessage);
-
-
-    //public static MlResult<T> LogMlResultIfFailWarning<T>(this MlResult<T> value,
-    //                                                          ILogger logger,
-    //                                                          string failMessage)
-    //    => value.LogMlResult<T>(logger,
-    //                          LogLevel.Warning,
-    //                          failBuildMessage: errors => failMessage);
-
-
-
-
-
-
-
-
-
-
-
-    //public static async Task<MlResult<T>> LogMlResultWarningAsync<T>(this Task<MlResult<T>> valueAsync,
-    //                                                                    ILogger logger,
-    //                                                                    Func<T, string> validBuildMessage = null!,
-    //                                                                    Func<MlErrorDetails, string> failBuildMessage = null!)
-    //    => (await valueAsync).LogMlResult<T>(logger, LogLevel.Warning, validBuilMessage: validBuildMessage, failBuildMessage: failBuildMessage);
-
-    //public static async Task<MlResult<T>> LogMlResultIfValidWarningAsync<T>(this Task<MlResult<T>> valueAsync,
-    //                                                                           ILogger logger,
-    //                                                                           Func<T, string> validBuildMessage)
-    //    => (await valueAsync).LogMlResult<T>(logger, LogLevel.Warning, validBuilMessage: validBuildMessage);
-
-    //public static async Task<MlResult<T>> LogMlResultIfFailWarningAsync<T>(this Task<MlResult<T>> valueAsync,
-    //                                                                           ILogger logger,
-    //                                                                           Func<MlErrorDetails, string> errorBuildMessage)
-    //    => (await valueAsync).LogMlResult<T>(logger, LogLevel.Warning, failBuildMessage: errorBuildMessage);
-
-
-    //public static async Task<MlResult<T>> LogMlResultWarningAsync<T>(this Task<MlResult<T>> valueAsync,
-    //                                                                    ILogger logger,
-    //                                                                    string vallidMessage = null!,
-    //                                                                    string failMessage = null!)
-    //    => (await valueAsync).LogMlResult<T>(logger,
-    //                                       LogLevel.Warning,
-    //                                       validBuilMessage: x => vallidMessage,
-    //                                       failBuildMessage: errors => failMessage);
-
-    //public static async Task<MlResult<T>> LogMlResultIfValidWarningAsync<T>(this Task<MlResult<T>> valueAsync,
-    //                                                                           ILogger logger,
-    //                                                                           string successMessage)
-    //    => (await valueAsync).LogMlResult<T>(logger,
-    //                                       LogLevel.Warning,
-    //                                       validBuilMessage: x => successMessage);
-
-
-    //public static async Task<MlResult<T>> LogMlResultIfFailWarningAsync<T>(this Task<MlResult<T>> valueAsync,
-    //                                                                           ILogger logger,
-    //                                                                           string errorMessage)
-    //    => (await valueAsync).LogMlResult<T>(logger,
-    //                                       LogLevel.Warning,
-    //                                       failBuildMessage: errors => errorMessage);
-
-
-
-
-    #endregion
-
-
-
-
-
-
 
 }
-

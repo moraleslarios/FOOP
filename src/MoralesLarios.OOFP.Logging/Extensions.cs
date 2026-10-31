@@ -39,8 +39,4 @@ public static class Extensions
                                                            validBuildMessage: item => $"{methodActionDesc} done correctly.",
                                                            failBuildMessage: errors => $"Error when {methodActionDesc} Error: {errors.ToErrorsDetailsDescription()}");
 
-
-
-
 }
-

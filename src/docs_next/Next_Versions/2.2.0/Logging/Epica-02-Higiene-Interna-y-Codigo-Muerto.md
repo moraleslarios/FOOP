@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) · hallazgos `G1`, `G2`, `G4`, `G5`, `G6`, `M1`, `M2`
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.2.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
-> **Estado** · ⬜ pendiente
+> **Estado** · ✅ completada
 > **Esfuerzo** · **S** (~0,5 jornadas)
 > **Riesgo** · 🟢 bajo · ninguna historia toca una sola línea de código vivo
 >
@@ -269,10 +269,10 @@ sería normalizar espacios de código que va a desaparecer.
 
 **Criterios de aceptación**
 
-- [ ] Suprimida la línea 8 de `MlResultLogExtensions.cs`.
-- [ ] Suprimida la línea 2 de `MlResultLogExtensions.Obsolete.cs`.
-- [ ] Búsqueda de `JavaScript.JSType` en todo el proyecto → **0 ocurrencias**.
-- [ ] El proyecto compila sin errores nuevos: si alguna línea dependía de un tipo anidado de
+- [x] Suprimida la línea 8 de `MlResultLogExtensions.cs`.
+- [x] Suprimida la línea 2 de `MlResultLogExtensions.Obsolete.cs`.
+- [x] Búsqueda de `JavaScript.JSType` en todo el proyecto → **0 ocurrencias**.
+- [x] El proyecto compila sin errores nuevos: si alguna línea dependía de un tipo anidado de
       `JSType`, el compilador lo señala y **se cualifica el tipo correcto**, nunca se reinstaura el
       `using`.
 
@@ -286,14 +286,14 @@ sería normalizar espacios de código que va a desaparecer.
 
 **Criterios de aceptación**
 
-- [ ] El fichero queda con **4 `global using`**: `MoralesLarios.OOFP.Types`,
+- [x] El fichero queda con **4 `global using`**: `MoralesLarios.OOFP.Types`,
       `Microsoft.Extensions.Logging`, `MoralesLarios.OOFP.Helpers.Extensions` y
       `MoralesLarios.OOFP.Types.Errors`.
-- [ ] Retirados `System`, `System.Collections.Generic`, `System.Linq` y `System.Threading.Tasks`
+- [x] Retirados `System`, `System.Collections.Generic`, `System.Linq` y `System.Threading.Tasks`
       (los da `ImplicitUsings`).
-- [ ] Retirado `System.Text`, comprobando antes que `StringBuilder` y `Encoding` siguen dando
+- [x] Retirado `System.Text`, comprobando antes que `StringBuilder` y `Encoding` siguen dando
       **0 ocurrencias**.
-- [ ] El proyecto compila con **0 errores** y sin avisos nuevos.
+- [x] El proyecto compila con **0 errores** y sin avisos nuevos.
 
 ### US-07 · Añadir `RootNamespace` al `.csproj`
 
@@ -305,10 +305,10 @@ sería normalizar espacios de código que va a desaparecer.
 
 **Criterios de aceptación**
 
-- [ ] `<RootNamespace>MoralesLarios.OOFP</RootNamespace>` presente en el `PropertyGroup` principal.
-- [ ] Ningún fichero existente cambia de espacio de nombres (se comprueba que los `namespace`
+- [x] `<RootNamespace>MoralesLarios.OOFP</RootNamespace>` presente en el `PropertyGroup` principal.
+- [x] Ningún fichero existente cambia de espacio de nombres (se comprueba que los `namespace`
       declarados son explícitos y no dependen del valor por omisión).
-- [ ] Build y los **1.136 tests** de la solución siguen en verde.
+- [x] Build y los **1.136 tests** de la solución siguen en verde.
 
 ### US-08 · Homogeneizar el versionado con el del núcleo
 
@@ -320,10 +320,10 @@ sería normalizar espacios de código que va a desaparecer.
 
 **Criterios de aceptación**
 
-- [ ] Retiradas `<AssemblyVersion>` y `<FileVersion>` del `.csproj`.
-- [ ] Conservada `<Version>`, que será la que el SDK propague.
-- [ ] Comprobado sobre el ensamblado compilado que la versión resultante sigue siendo la esperada.
-- [ ] El `.csproj` de Logging y el del núcleo declaran **el mismo conjunto** de propiedades de
+- [x] Retiradas `<AssemblyVersion>` y `<FileVersion>` del `.csproj`.
+- [x] Conservada `<Version>`, que será la que el SDK propague.
+- [x] Comprobado sobre el ensamblado compilado que la versión resultante sigue siendo la esperada.
+- [x] El `.csproj` de Logging y el del núcleo declaran **el mismo conjunto** de propiedades de
       versionado.
 
 ### US-09 · Borrar las 530 líneas comentadas (y con ellas `LogMlResultt`)
@@ -336,16 +336,16 @@ sería normalizar espacios de código que va a desaparecer.
 
 **Criterios de aceptación**
 
-- [ ] Las 6 `#region old` de los ficheros de nivel quedan suprimidas **por completo**, incluida la
+- [x] Las 6 `#region old` de los ficheros de nivel quedan suprimidas **por completo**, incluida la
       directiva `#endregion`.
-- [ ] Búsqueda de `LogMlResultt` en el proyecto → **0 ocurrencias** (cierra `M2`).
-- [ ] Búsqueda de `#region old` → **0 ocurrencias**.
-- [ ] El recuento de `public static` vivas sigue siendo **348** antes y después (es decir: **no se
+- [x] Búsqueda de `LogMlResultt` en el proyecto → **0 ocurrencias** (cierra `M2`).
+- [x] Búsqueda de `#region old` → **0 ocurrencias**.
+- [x] El recuento de `public static` vivas sigue siendo **348** antes y después (es decir: **no se
       ha borrado ni una sola firma viva**).
-- [ ] El recuento de `#region`/`#endregion` emparejadas sigue siendo **consistente** en los seis
+- [x] El recuento de `#region`/`#endregion` emparejadas sigue siendo **consistente** en los seis
       ficheros, y la paridad **47 vivas + 17 comentadas** pasa a ser **47 vivas + 0 comentadas** en
       los seis, exactamente igual en todos.
-- [ ] Build con **0 errores** y los 1.136 tests en verde.
+- [x] Build con **0 errores** y los 1.136 tests en verde.
 
 > **Importante** · esta historia borra **1.689 − 1.159 = 530** líneas sin tocar código ejecutable.
 > Es la única del plan en la que el `git diff` debe tener **0 inserciones**. Si aparece alguna
@@ -361,12 +361,12 @@ sería normalizar espacios de código que va a desaparecer.
 
 **Criterios de aceptación**
 
-- [ ] Ningún fichero tiene más de **2** líneas en blanco consecutivas.
-- [ ] Búsqueda del patrón de 4 o más saltos seguidos → **0 bloques** (partiendo de 98).
-- [ ] Se conserva **una** línea en blanco entre miembros y **dos** como separador entre regiones,
+- [x] Ningún fichero tiene más de **2** líneas en blanco consecutivas.
+- [x] Búsqueda del patrón de 4 o más saltos seguidos → **0 bloques** (partiendo de 98).
+- [x] Se conserva **una** línea en blanco entre miembros y **dos** como separador entre regiones,
       de forma homogénea en los seis ficheros de nivel.
-- [ ] Se ejecuta **después** de la US-09, para no normalizar espacios de código que va a borrarse.
-- [ ] Build y tests en verde; el `git diff` **no contiene ningún cambio de línea con código**.
+- [x] Se ejecuta **después** de la US-09, para no normalizar espacios de código que va a borrarse.
+- [x] Build y tests en verde; el `git diff` **no contiene ningún cambio de línea con código**.
 
 ---
 
@@ -421,27 +421,97 @@ graph TD
 
 ---
 
+### 5.1 Resolución de las decisiones (al cerrar la épica)
+
+Las tres decisiones se han aplicado con la **opción menos invasiva**, porque ninguna de ellas es
+bloqueante y las tres siguen **abiertas para revisión**: lo que se ha hecho es reversible y no
+compromete el resto del plan.
+
+| # | Decisión | Aplicado | Estado | Motivo |
+|:-:|----------|----------|:------:|--------|
+| **D-09** | `#region` vivas | **(a) conservarlas tal cual** | ⬜ abierta | Las 42 regiones vivas (6 por fichero de nivel y 7 en `MlResultLogExtensions.cs`) son el único índice navegable de ficheros de 700 líneas. Renombrarlas (b) es trabajo de la épica 4, que ya toca nomenclatura; retirarlas (c) empeoraría la lectura antes de tener la documentación XML de la épica 5. |
+| **D-10** | Normalización de blancos | **(a) máximo 2 líneas seguidas** | ⬜ abierta | Se ha aplicado la regla con un matiz: **1** línea en blanco entre miembros y **2** sólo como separador antes de un `#region` o después de un `#endregion`. Fijar un `.editorconfig` (c) es una decisión de solución completa y se deja para una épica transversal. |
+| **D-11** | `TreatWarningsAsErrors` | **(a) no, por ahora** | ⬜ abierta | Confirmado que Logging tiene **0 avisos propios**: de los 238 avisos del build, ninguno procede de este proyecto. Es, por tanto, el candidato natural, pero activarlo aquí dejaría el proyecto expuesto a que un cambio del núcleo rompa su build sin tocarlo. Se propone decidirlo junto con la política de la solución. |
+
+> Las tres se incluyen en la **lista final de decisiones abiertas** que se entrega al cerrar el plan,
+> para que puedan evaluarse en bloque junto con las otras 22.
+
+### 5.2 Resultados medidos al cerrar la épica
+
+| Métrica | Antes | Después | Objetivo |
+|---------|------:|--------:|----------|
+| Líneas totales del proyecto | 6.619 | **5.435** | ~5.400 |
+| Líneas comentadas | 530 | **25** | 0 no documentales |
+| Líneas en blanco | 1.159 | **499** | — |
+| Bloques de ≥4 blancas seguidas | 98 | **0** | 0 |
+| `public static` vivas | 348 | **348** | 348 (ninguna perdida) |
+| `JavaScript.JSType` | 2 | **0** | 0 |
+| `LogMlResultt` (errata `M2`) | 13 | **0** | 0 |
+| `#region old` | 6 | **0** | 0 |
+| `global using` en `GlobalUsings.cs` | 9 | **4** | 4 |
+
+Las **25 líneas comentadas** que quedan **no son código muerto**: son las tres líneas de cabecera de
+licencia de ocho ficheros (24) más la nota que explica el propósito de
+`MlResultLogExtensions.Obsolete.cs` (1). Son documentales y se conservan a propósito.
+
+Verificación de equilibrio de regiones tras el borrado (`#region` = `#endregion` en los diez
+ficheros):
+
+| Fichero | `#region` | `#endregion` |
+|---------|:---------:|:------------:|
+| `MlResultLogExtensions.cs` | 7 | 7 |
+| `MlResultLogExtensions.Critical.cs` | 6 | 6 |
+| `MlResultLogExtensions.Debug.cs` | 6 | 6 |
+| `MlResultLogExtensions.Error.cs` | 6 | 6 |
+| `MlResultLogExtensions.Information.cs` | 6 | 6 |
+| `MlResultLogExtensions.Trace.cs` | 6 | 6 |
+| `MlResultLogExtensions.Warning.cs` | 6 | 6 |
+| `Extensions.cs` · `GlobalUsings.cs` · `MlResultLogExtensions.Obsolete.cs` | 0 | 0 |
+
+**Build y tests** (desde `src`, en `Release`, con `--no-incremental`):
+
+- `dotnet build` → **EXIT = 0**, **0 errores**, **119 avisos únicos** (238 en total, ninguno de
+  Logging), **0 `CS1591`**, **0 `CS0618`**.
+- `dotnet test --no-build` → **EXIT = 0**, **10 ensamblados**, **1.309 tests**, **0 fallidos**,
+  **0 omitidos**. Cifra idéntica a la del cierre de la épica 1: el borrado masivo **no ha alterado
+  ningún comportamiento**.
+
+### 5.3 Hallazgo nuevo · el borrado real fue mayor de lo previsto
+
+El documento estimaba 530 líneas comentadas en 6 `#region old`. El borrado efectivo ha retirado
+**862 líneas** de los seis ficheros de nivel, porque cada región venía precedida y seguida de
+bloques de líneas en blanco que también se han suprimido, y porque la normalización posterior
+(US-10) ha recortado otras 269. El recuento de `public static` vivas se ha comprobado **antes y
+después** del borrado y es **348 en los dos casos**, que es la garantía de que no se ha perdido
+ninguna firma viva.
+
+Dato colateral: el recuento de bloques de ≥4 blancas medido justo antes de la US-10 era **52**, no
+98, precisamente porque la US-09 ya se había llevado por delante 46 de ellos al borrar las regiones.
+Esto confirma el orden `US-09 → US-10` que fijaba el apartado 4.
+
+---
+
 ## 6. Definición de terminado
 
-- [ ] Las **6 historias** (US-05 … US-10) tienen todos sus criterios de aceptación marcados.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
+- [x] Las **6 historias** (US-05 … US-10) tienen todos sus criterios de aceptación marcados.
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
       **0 errores**, **0 `CS1591`**, **0 `CS0618`** y **no más de 236 avisos**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde (más los
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde (más los
       que haya añadido la épica 1).
-- [ ] El proyecto baja de **6.619** líneas a **~5.400**, con **0** comentadas no documentales y
+- [x] El proyecto baja de **6.619** líneas a **~5.400**, con **0** comentadas no documentales y
       **0** bloques de 4 blancos seguidos.
-- [ ] Búsquedas de cierre a **0**: `JavaScript.JSType`, `LogMlResultt`, `#region old`.
-- [ ] El recuento de `public static` vivas sigue en **348** (ninguna firma viva perdida).
-- [ ] **No hay rupturas que registrar.** Ninguna de las 6 historias altera la superficie pública ni
+- [x] Búsquedas de cierre a **0**: `JavaScript.JSType`, `LogMlResultt`, `#region old`.
+- [x] El recuento de `public static` vivas sigue en **348** (ninguna firma viva perdida).
+- [x] **No hay rupturas que registrar.** Ninguna de las 6 historias altera la superficie pública ni
       el comportamiento observable: los `using` son detalles de compilación, el `GlobalUsings` es
       interno, las propiedades del `.csproj` no cambian la versión publicada y lo borrado estaba
       comentado. Por tanto **no se añade ningún punto** a
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) ni a
       [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md), y
       esa ausencia **se hace constar explícitamente en el cuerpo del commit**.
-- [ ] Commit `refactor(logging): …` **sin `!`**, en castellano, creado con `git commit -F` desde un
+- [x] Commit `refactor(logging): …` **sin `!`**, en castellano, creado con `git commit -F` desde un
       fichero UTF-8 sin BOM.
-- [ ] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
+- [x] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
       [`README.md`](README.md#1-las-siete-épicas).
 
 ---

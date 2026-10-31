@@ -2,11 +2,6 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
-
-
-
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace MoralesLarios.OOFP.Logging;
 /// <summary>
 /// Métodos de extension de <c>MlResultLog</c>.
@@ -15,9 +10,7 @@ public static partial class MlResultLogExtensions
 {
 
 
-
     #region LogMlResult
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>.
@@ -50,7 +43,6 @@ public static partial class MlResultLogExtensions
 
         return logger.ToMlResultValidAsync();
     }
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>.
@@ -93,7 +85,6 @@ public static partial class MlResultLogExtensions
                                                              Func<MlErrorDetails, string> failBuildMessage = null!)
         => source.LogMlResult(logger, logLevel, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage).ToAsync();
 
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
     /// </summary>
@@ -110,7 +101,6 @@ public static partial class MlResultLogExtensions
                                                                    Func<T, string>               validBuilMessage = null!,
                                                                    Func<MlErrorDetails, string> failBuildMessage = null!)
         => (await sourceAsync).LogMlResult(logger, logLevel, validBuilMessage: validBuilMessage, failBuildMessage: failBuildMessage);
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>.
@@ -172,9 +162,6 @@ public static partial class MlResultLogExtensions
                                                  validBuilMessage: _ => validMessage, 
                                                  failBuildMessage: _ => failMessage);
 
-
-
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>.
     /// </summary>
@@ -213,7 +200,6 @@ public static partial class MlResultLogExtensions
         return source.ToAsync();
     }
 
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
     /// </summary>
@@ -234,10 +220,6 @@ public static partial class MlResultLogExtensions
 
         return await source;
     }
-
-
-
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>.
@@ -260,7 +242,6 @@ public static partial class MlResultLogExtensions
 
         return source;
     }
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c>. Versión asíncrona.
@@ -291,8 +272,6 @@ public static partial class MlResultLogExtensions
                                                                    (LogLevel logLevel, Func<T              , string> buildMessage) validBuildMessage,
                                                                    (LogLevel logLevel, Func<MlErrorDetails, string> buildMessage) failBuildMessage)
         => (await sourceAsync).LogMlResult(logger, validBuildMessage, failBuildMessage);
-
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>CompletedResult</c>.
@@ -373,15 +352,10 @@ public static partial class MlResultLogExtensions
                                                                    string             failMessage)
         => await sourceAsync.LogCompletedResultAsync(logger, _ => validMessage, _ => failMessage);
 
-
-
-
-
     #endregion
 
 
     #region LogMlResultIfValid
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
@@ -485,7 +459,6 @@ public static partial class MlResultLogExtensions
                                                                           LogLevel          logLevel,
                                                                           Func<T, string>   validBuildMessage)
         => (await sourceAsync).LogMlResultIfValid(logger, logLevel, validBuildMessage);
-
 
     #endregion
 
@@ -596,12 +569,10 @@ public static partial class MlResultLogExtensions
                                                                          Func<MlErrorDetails, string> failBuildMessage)
         => (await sourceAsync).LogMlResultIfFail(logger, logLevel, failBuildMessage);
 
-
     #endregion
 
 
     #region LogMlResultIfFailWithValue
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
@@ -638,9 +609,6 @@ public static partial class MlResultLogExtensions
                                                                  LogLevel    logLevel,
                                                                  string      failMessage)
         => source.LogMlResultIfFailWithValue(logger, logLevel, _ => failMessage);
-
-
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
@@ -710,11 +678,6 @@ public static partial class MlResultLogExtensions
                                                                                   string            faildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, logLevel, _ => faildMessage);
 
-
-
-
-
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
     /// fallido, recuperando el valor almacenado en el detalle del error.
@@ -774,13 +737,10 @@ public static partial class MlResultLogExtensions
                                                                                           Func<MlErrorDetails, TValue, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, logLevel, failBuildMessage);
 
-
-
     #endregion
 
 
     #region LogMlResultIfFailWithException
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
@@ -817,9 +777,6 @@ public static partial class MlResultLogExtensions
                                                                      LogLevel    logLevel,
                                                                      string      failMessage)
         => source.LogMlResultIfFailWithException(logger, logLevel, _ => failMessage);
-
-
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
@@ -889,11 +846,6 @@ public static partial class MlResultLogExtensions
                                                                                       string            faildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithExceptionAsync(logger, logLevel, _ => faildMessage);
 
-
-
-
-
-
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
     /// fallido y su detalle de error contiene una excepción.
@@ -950,14 +902,10 @@ public static partial class MlResultLogExtensions
                                                                                           Func<MlErrorDetails, Exception, string> failBuildMessage)
         => await (await sourceAsync).LogMlResultIfFailWithValueAsync(logger, logLevel, failBuildMessage);
 
-
-
-
     #endregion
 
 
     #region LogMlResultIfFailWithoutException
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
@@ -997,7 +945,6 @@ public static partial class MlResultLogExtensions
                                                                         LogLevel                      logLevel,
                                                                         string                        failMessage)
         => source.LogMlResultIfFailWithoutException(logger, logLevel, _ => failMessage);
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>MlResult</c> unicamente cuando el resultado de origen es
@@ -1070,12 +1017,10 @@ public static partial class MlResultLogExtensions
                                                                                          string            failMessage)
         => await (await source).LogMlResultIfFailWithoutExceptionAsync(logger, logLevel, _ => failMessage);
 
-
     #endregion
 
 
     #region LogGeneralErrorIfFail
-
 
     /// <summary>
     /// Registra una traza del resultado de <c>GeneralError</c> unicamente cuando el resultado de origen es
@@ -1110,12 +1055,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogGeneralErrorIfFailAsync<T>(this Task<MlResult<T>> sourceAsync, ILogger logger)
         => (await sourceAsync).LogMlResultErrorIfFail(logger, failBuildMessage : errorDetals => errorDetals.GetErrorsSummary());
 
-
-
     #endregion
 
 
-
-
 }
-
