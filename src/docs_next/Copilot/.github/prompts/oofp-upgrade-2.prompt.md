@@ -388,6 +388,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 55 | Cruce del eje `EventId` con las plantillas de registro estructurado (**2.3.0**) | había que elegir: o `EventId` (punto 51) o plantilla con campos (punto 53), nunca las dos en la misma llamada | **35 firmas nuevas** en `MlResultLogExtensions.TemplateEventId.cs` que aceptan `EventId` **y** plantilla: 5 en la familia genérica `LogMlResultTemplate` y 5 en cada uno de los seis niveles | ✅ **Ninguna** · aditivo; corrige la nota del punto 51 que decía que los ejes «no se combinan» |
 | 56 | Los **ámbitos de registro** (`ILogger.BeginScope`) siguen sin existir, y es **deliberado** (**2.3.0**) | el `README.md` decía solamente «no hay `scopes` ni `BeginScope`», sin decir si era un olvido o una decisión | el recuento de `BeginScope` en la librería es **`0`** y queda **documentado y justificado**: los ámbitos se han desgajado a la **épica 9 de la versión 2.4.0** porque plantean tres preguntas de diseño propias | ✅ **Ninguna** · no hay código nuevo; es **documentación de semántica no obvia** |
 | 57 | Los parámetros de plantilla se anotan con `[StringSyntax("MessageTemplate")]` (**2.3.0**) | el parámetro `messageTemplate` era un `string` cualquiera: el editor no lo coloreaba y los analizadores no lo reconocían como plantilla de registro | **241 parámetros anotados** en los nueve ficheros de plantilla, de modo que el editor y los analizadores del consumidor tratan la cadena como lo que es; `CA2254 = 0` medido en una sonda con analizadores estrictos | ✅ **Ninguna** · anotación declarativa; no cambia ninguna firma ni ningún comportamiento |
+| 58 | La sobrecarga `async` de `LogCompletedResult` recupera el sufijo `Async` (**2.3.0**) | `LogCompletedResult(this Task<MlResult<T>>, ILogger, string, string)`: era `async`, devolvía `Task<MlResult<T>>` y **no** terminaba en `Async`, el único incumplimiento del convenio que sobrevivió a la épica 4 de la 2.2.0 | `LogCompletedResultAsync`; el nombre sin sufijo queda como puente `[Obsolete(…, false)]` + `[EditorBrowsable(Never)]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.3.0 → `CS1061` en 3.0.0) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1419,6 +1420,60 @@ puedes **retirar la supresión**: ya no hace falta.
 
 ---
 
+#### 58 — La sobrecarga `async` de `LogCompletedResult` recupera su sufijo `Async` (2.3.0)
+
+La épica 4 de la **2.2.0** renombró la familia `LogMlResultFinal*` a `LogCompletedResult*` (punto 47) y
+normalizó el convenio «todo miembro que devuelve una `Task` termina en `Async`». De las cinco
+sobrecargas de esa familia, **cuatro** quedaron bien: tres sincrónicas sin sufijo y una `Async`. La
+quinta se quedó a medias: recibía una `Task<MlResult<T>>`, era `async`, devolvía `Task<MlResult<T>>`…
+y se llamaba `LogCompletedResult`, **sin sufijo**. Nadie lo detectó porque ningún test miraba el
+convenio, solo los nombres uno a uno.
+
+```csharp
+// 2.2.0 — async, devuelve Task, y NO termina en Async
+public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>> sourceAsync,
+                                                            ILogger              logger,
+                                                            string               validMessage,
+                                                            string               failMessage)
+
+// 2.3.0 — el nombre dice la verdad
+public static async Task<MlResult<T>> LogCompletedResultAsync<T>(this Task<MlResult<T>> sourceAsync,
+                                                                 ILogger              logger,
+                                                                 string               validMessage,
+                                                                 string               failMessage)
+```
+
+**Es la única ruptura de la 2.3.0.** Las otras cinco (puntos 53 a 57) son aditivas o documentales.
+
+**Qué hacer:** renombrar la llamada. El puente `[Obsolete]` mantiene el código compilando con un
+**`CS0618`**, igual que los puentes de la épica 4, así que la migración puede ser gradual; pero el
+puente **desaparece en la 3.0.0** y entonces el error será `CS1061`.
+
+```csharp
+// antes
+await miTareaDeResultado.LogCompletedResult(logger, "todo bien", "ha fallado");
+
+// después
+await miTareaDeResultado.LogCompletedResultAsync(logger, "todo bien", "ha fallado");
+```
+
+> 🧭 **Cómo saber si te afecta.** Solo afecta a la sobrecarga que recibe una **`Task<MlResult<T>>`** y
+> dos `string`. La sobrecarga sincrónica `LogCompletedResult(this MlResult<T>, ILogger, string, string)`
+> **no cambia de nombre** y seguirá siendo válida: si tu receptor no es una tarea, no tienes nada que
+> hacer. El compilador lo distingue por ti, porque el aviso `CS0618` señala exactamente la llamada
+> afectada.
+
+**Qué más se ha saneado en esta historia**, sin efecto para el consumidor: la región
+`LogMlResultCritical` del fichero `MlResultLogExtensions.Trace.cs` estaba **mal etiquetada** —era un
+copia-pega de 2017— y pasa a llamarse `LogMlResultTrace`. Es una `#region`, no una firma: no cambia ni
+la API ni el comportamiento. Y, para que ninguno de los dos defectos pueda volver, la matriz de tests
+incorpora tres comprobaciones nuevas: una que exige que las **once regiones** de cada fichero de nivel
+empiecen por `LogMlResult<Nivel>`, otra que exige que **toda firma pública vigente que reciba una
+`Task` termine en `Async`** —los puentes `[Obsolete]` quedan excluidos, que para eso existen— y una
+tercera que vigila que el puente siga marcado como obsoleto **con aviso y no con error**.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -1561,6 +1616,16 @@ dotnet build --nologo /p:WarningLevel=4
    aviso reaparece, es que la plantilla está **interpolada** y hay que pasarla a constante.
    ⚠️ **No** retires las supresiones de `CA1848`: ese aviso sigue siendo esperado al llamar a esta
    familia, y silenciarlo es correcto.
+   Y, para el punto 58 (el sufijo `Async` de `LogCompletedResult`), busca además:
+   ```
+   LogCompletedResult\s*\(|LogCompletedResult<
+   LogMlResultFinal
+   ```
+   ⚠️ Revisa **solo** las coincidencias cuyo receptor sea una expresión de tipo `Task<MlResult<T>>`
+   —típicamente una llamada `*Async` **sin** `await` delante, o un `.LogCompletedResult(` encadenado
+   detrás de otro `*Async`— y renómbralas a `LogCompletedResultAsync`. Las que operen sobre un
+   `MlResult<T>` sincrónico **no se tocan**: esa sobrecarga conserva su nombre. El compilador te
+   señala cada caso con `CS0618`, así que la vía rápida es compilar y seguir los avisos.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -1658,7 +1723,11 @@ Entrega al usuario, **en español**, un informe con:
    publicar como campo aprovechando el punto 53. Para el punto **57**, indica cuántas supresiones de
    `CA2254` se han podido **retirar** del proyecto y confirma que el build sigue sin emitir ese aviso;
    si queda algún `CA1848`, dilo expresamente y aclara que es **esperado** y que no hay nada que
-   migrar.
+   migrar. Para el punto **58**, indica cuántas llamadas a `LogCompletedResult` sobre una
+   `Task<MlResult<T>>` se han encontrado y renombrado a `LogCompletedResultAsync`, cuántas
+   coincidencias se han **descartado** por operar sobre un `MlResult<T>` sincrónico, y confirma que
+   no queda ningún `CS0618` de ese puente; deja escrito que es la **única ruptura de la 2.3.0** y que
+   el puente desaparece en la 3.0.0.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1697,14 +1766,16 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.3.0 | 53, 54, 55, 56, 57 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no** |
+| 2.3.0 | 53, 54, 55, 56, 57, 58 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`) |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56 y 57** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 y 58** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
-> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus cinco puntos, el **53**, el **54**, el **55**, el
+> 🧭 El salto **2.2.0 → 2.3.0** exige **una sola cosa**: atender el punto **58**, el renombrado de la
+> sobrecarga `async` de `LogCompletedResult`, que el compilador te señala con `CS0618` y se resuelve
+> añadiendo el sufijo `Async` a la llamada. Los otros cinco puntos, el **53**, el **54**, el **55**, el
 > **56** y el **57**, son aditivos. Léelos solo si quieres aprovechar el registro estructurado; el
 > **54** interesa especialmente si montas alertas sobre la rama de fallo, porque fija los nombres de
 > campo como contrato, y el **55** si ya filtrabas por `EventId` y habías tenido que renunciar a los

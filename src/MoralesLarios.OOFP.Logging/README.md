@@ -518,8 +518,10 @@ return await _repo.GetAsync(id)                               // Task<MlResult<P
 > ⚠️ **Las versiones `Async` que reciben `MlResult<T>` (no `Task<…>`) no son asíncronas de verdad**: registran el log de forma síncrona y envuelven con `.ToAsync()` (`Task.FromResult`). Solo sirven para adaptar tipos, no para no bloquear.
 
 > ✅ **Convenio de nomenclatura `Async`**: un método lleva el sufijo `Async` cuando devuelve
-> `Task<…>`. La única excepción histórica es la sobrecarga de `LogCompletedResult` que recibe
-> `Task<MlResult<T>>` y se dejó **sin** sufijo para no romper a los consumidores; ver el punto 2 de
+> `Task<…>`. **Desde la 2.3.0 el convenio no tiene ni una sola excepción**: la última que quedaba —la
+> sobrecarga de `LogCompletedResult` que recibe una `Task<MlResult<T>>`— ya se llama
+> `LogCompletedResultAsync`, y un test de la matriz vigila que ninguna firma pública nueva pueda
+> volver a incumplirlo; ver el punto 2 de
 > [Particularidades](#️-particularidades-reales-del-código-fuente).
 
 ---
@@ -544,20 +546,36 @@ source.LogMlResult(_logger, LogLevel.Information,
 > El compilador lo detecta: `CS1739`. Está registrada en el
 > [anexo de renombrados](../docs_next/Copilot/.github/prompts/oofp-upgrade-2.renames.md).
 
-### 2. Hay una sobrecarga `async` que no se llama `Async`
+### 2. La sobrecarga `async` sin sufijo se corrigió en la 2.3.0
+
+Hasta la 2.2.0 existía **una** sobrecarga que era `async`, devolvía `Task<MlResult<T>>` y, pese a ello,
+**no** terminaba en `Async`: la de `LogCompletedResult` que recibe una tarea y dos `string`. Era el
+único incumplimiento del convenio que sobrevivió al renombrado de la 2.2.0.
 
 ```csharp
-public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>> sourceAsync,
-                                                               ILogger           logger,
-                                                               string            validMessage,
-                                                               string            failMessage)
+// ❌ 2.2.0 — async, devuelve Task, y sin sufijo
+public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>> sourceAsync, …)
+
+// ✅ 2.3.0 — el nombre dice la verdad
+public static async Task<MlResult<T>> LogCompletedResultAsync<T>(this Task<MlResult<T>> sourceAsync, …)
 ```
 
-Recibe una `Task<MlResult<T>>` y es `async`, pero **se llama `LogCompletedResult`, sin sufijo `Async`**. Funciona correctamente; solo rompe la convención de nombres del resto del proyecto.
+> ⚠️ **Ruptura (la única de la 2.3.0).** El nombre antiguo se conserva como puente
+> `[Obsolete(…, false)]` + `[EditorBrowsable(Never)]`, así que el código existente **sigue compilando
+> con un aviso `CS0618`**; el puente desaparece en la 3.0.0. **Solo** cambia de nombre la sobrecarga
+> cuyo receptor es una `Task<MlResult<T>>`: las tres sincrónicas conservan `LogCompletedResult`, de
+> modo que **no** sirve un buscar-y-reemplazar del token a secas. El compilador señala exactamente las
+> llamadas afectadas. Está registrada en el punto 58 del
+> [prompt de migración](../docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md) y en el
+> [anexo de renombrados](../docs_next/Copilot/.github/prompts/oofp-upgrade-2.renames.md).
 
-### 3. `MlResultLogExtensions.Trace.cs` tiene una región mal etiquetada
+### 3. La región mal etiquetada del fichero de `Trace` se corrigió en la 2.3.0
 
-La primera región del fichero de `Trace` se llama `#region LogMlResultCritical` (copia-pega desde el fichero de `Critical`). **Los métodos sí usan `LogLevel.Trace`**: solo el comentario está equivocado. No afecta al comportamiento. Se conserva a la espera de la 3.0.0 para no mezclar cambios cosméticos con la poda de los puentes `[Obsolete]`.
+La primera región de `MlResultLogExtensions.Trace.cs` se llamaba `#region LogMlResultCritical`, un
+copia-pega desde el fichero de `Critical`. Los métodos **siempre** usaron `LogLevel.Trace`: solo la
+etiqueta estaba equivocada, así que nunca afectó al comportamiento. Desde la 2.3.0 se llama
+`LogMlResultTrace`, y un test de la matriz comprueba que las **once** regiones de cada uno de los seis
+ficheros de nivel empiecen por `LogMlResult<Nivel>`, para que el fallo no pueda reaparecer.
 
 ### 4. Un `logger` nulo devuelve el `source` intacto, no un `Fail`
 
@@ -813,7 +831,7 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 - Atajos de alto nivel: **`LogGeneralErrorIfFail`** (una línea, registra los fallos en `Error`) y **`LogCompletedResult`** (`Information` si va bien, `Error` si falla).
 - Desde la 2.2.0: **`EventId`** y **`ILogger<TCategory>`** como ejes aditivos, **guarda de `logger` nulo** y **cortocircuito por `IsEnabled`** antes de construir el mensaje.
 - ⚠️ Límites importantes: **no hay logging estructurado**, **no se pasa la `Exception` al logger** (ni stack trace), **no hay `scopes`**, y las excepciones dentro de tus `Func` **no están protegidas**.
-- ⚠️ Lo que queda por limpiar en la 3.0.0: una sobrecarga `async` llamada **`LogCompletedResult`** sin sufijo, una región mal etiquetada en el fichero de `Trace`, y los puentes **`[Obsolete]`** de `MyMethodFinalLog` y `LogMlResultFinal`.
+- ⚠️ Lo que queda por limpiar en la 3.0.0: solo los puentes **`[Obsolete]`** — los de `MyMethodFinalLog` y `LogMlResultFinal` de la 2.2.0, más el de `LogCompletedResult` sin sufijo de la 2.3.0. Las dos erratas cosméticas (la sobrecarga `async` sin sufijo y la región mal etiquetada en el fichero de `Trace`) **ya están cerradas** desde la 2.3.0.
 
 ---
 

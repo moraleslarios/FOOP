@@ -3,6 +3,8 @@
 // Licensed under the Apache License, Version 2.0
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace MoralesLarios.OOFP.Logging.Tests.Unit;
 
@@ -398,6 +400,41 @@ public class MlResultLogExtensionsMatrixTests
     }
 
     /// <summary>
+    /// Comprueba que ninguna de las once regiones de los seis ficheros de nivel queda mal
+    /// etiquetada. Es el endurecimiento que pide la US-39 de la epica 08: la
+    /// <c>#region LogMlResultCritical</c> de <c>MlResultLogExtensions.Trace.cs</c> sobrevivio a la
+    /// normalizacion de nombres de la epica 04 precisamente porque ningun test miraba las
+    /// etiquetas, solo los nombres de los metodos.
+    /// </summary>
+    /// <param name="level">Nivel de severidad bajo prueba.</param>
+    [Theory]
+    [MemberData(nameof(Niveles))]
+    public void CadaNivel_EtiquetaTodasSusRegionesConSuPropioNombre(LogLevel level)
+    {
+        var fichero = Path.Combine(DirectorioDeProduccion(), $"MlResultLogExtensions.{level}.cs");
+
+        File.Exists(fichero).Should().BeTrue("el fichero de nivel {0} debe existir en {1}", level, fichero);
+
+        var etiquetas = Regex.Matches(File.ReadAllText(fichero), @"#region[ \t]+(?<r>[^\r\n]+)")
+                             .Select(x => x.Groups["r"].Value.Trim())
+                             .ToArray();
+
+        etiquetas.Should().HaveCount(
+            11,
+            "el fichero de {0} debe declarar las once regiones funcionales",
+            level);
+
+        var prefijo = $"LogMlResult{level}";
+
+        etiquetas.Should().OnlyContain(
+            x => x.StartsWith(prefijo, StringComparison.Ordinal),
+            "toda region del fichero de {0} debe empezar por {1}, y se obtuvo: {2}",
+            level,
+            prefijo,
+            string.Join(" | ", etiquetas));
+    }
+
+    /// <summary>
     /// Fija el recuento de firmas publicas por nivel que la epica 01 vigila, para que cualquier
     /// anadido futuro obligue a actualizar este test de forma consciente y a registrar el cambio en
     /// el prompt de migracion.
@@ -415,6 +452,54 @@ public class MlResultLogExtensionsMatrixTests
         => CuentaFirmasDelNivel(level).Should().Be(
                 89,
                 "el recuento por nivel quedo fijado en 89 firmas tras cruzar la plantilla con EventId (US-36)");
+
+    /// <summary>
+    /// Comprueba que toda firma publica vigente que reciba una <see cref="Task{TResult}"/> como
+    /// primer parametro termina en <c>Async</c>. Es el endurecimiento que pide la US-39 de la
+    /// epica 08: la sobrecarga <c>LogCompletedResult(Task&lt;MlResult&lt;T&gt;&gt;, ILogger, string, string)</c>
+    /// sobrevivio a la normalizacion de nombres de la epica 04 porque ningun test miraba el
+    /// convenio. Los puentes marcados con <see cref="ObsoleteAttribute"/> quedan excluidos, que para
+    /// eso existen.
+    /// </summary>
+    [Fact]
+    public void TodaFirmaVigenteQueRecibeTask_TerminaEnAsync()
+    {
+        var incumplen = FirmasPublicas().Where(x => x.GetCustomAttribute<ObsoleteAttribute>() is null)
+                                        .Where(x => RecibeTask(x))
+                                        .Where(x => ! x.Name.EndsWith("Async", StringComparison.Ordinal))
+                                        .Select(x => x.Name)
+                                        .Distinct()
+                                        .OrderBy(x => x, StringComparer.Ordinal)
+                                        .ToArray();
+
+        incumplen.Should().BeEmpty(
+            "toda firma vigente que reciba una Task debe terminar en Async, y las que no lo hacen son: {0}",
+            string.Join(" | ", incumplen));
+    }
+
+    /// <summary>
+    /// Comprueba que el puente del nombre sin sufijo sigue existiendo y sigue marcado como
+    /// obsoleto, para que el consumidor de la 2.2.0 reciba un <c>CS0618</c> y no un error de
+    /// compilacion.
+    /// </summary>
+    [Fact]
+    public void ElPuenteDeLogCompletedResultAsincrono_SigueMarcadoComoObsoleto()
+    {
+        var puente = FirmasPublicas().Where(x => x.Name == "LogCompletedResult")
+                                     .SingleOrDefault(x => RecibeTask(x));
+
+        puente.Should().NotBeNull("el puente sin sufijo Async debe seguir existiendo hasta la 3.0.0");
+
+        puente!.GetCustomAttribute<ObsoleteAttribute>()
+               .Should().NotBeNull("el puente debe estar marcado como obsoleto");
+
+        puente!.GetCustomAttribute<ObsoleteAttribute>()!.IsError
+               .Should().BeFalse("el aviso debe ser CS0618, no un error de compilacion");
+
+        FirmasPublicas().Where(x => x.Name == "LogCompletedResultAsync")
+                        .Any(x => RecibeTask(x))
+                        .Should().BeTrue("el nombre nuevo con sufijo Async debe existir");
+    }
     #endregion
 
 
@@ -456,9 +541,33 @@ public class MlResultLogExtensionsMatrixTests
     private static IEnumerable<MethodInfo> FirmasPublicas()
         => typeof(MlResultLogExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static);
 
+    /// <summary>Indica si el primer parametro del metodo es una <see cref="Task{TResult}"/>.</summary>
+    /// <param name="metodo">Metodo bajo inspeccion.</param>
+    /// <returns><c>true</c> si el primer parametro es una tarea generica.</returns>
+    private static bool RecibeTask(MethodInfo metodo)
+    {
+        var parametros = metodo.GetParameters();
+
+        if (parametros.Length == 0) return false;
+
+        var tipo = parametros[0].ParameterType;
+
+        return tipo.IsGenericType && tipo.GetGenericTypeDefinition() == typeof(Task<>);
+    }
+
     /// <summary>Cuenta las firmas publicas que pertenecen al nivel indicado.</summary>
     /// <param name="level">Nivel de severidad.</param>
     /// <returns>Numero de firmas publicas del nivel.</returns>
+    /// <summary>
+    /// Devuelve la carpeta del proyecto de produccion a partir de la ruta de este fichero de
+    /// pruebas, que el compilador incrusta en tiempo de compilacion.
+    /// </summary>
+    /// <param name="esteFichero">Ruta de este fichero; la inyecta el compilador.</param>
+    /// <returns>Ruta absoluta de la carpeta <c>MoralesLarios.OOFP.Logging</c>.</returns>
+    private static string DirectorioDeProduccion([CallerFilePath] string esteFichero = "")
+        => Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(esteFichero)!)!,
+                        "MoralesLarios.OOFP.Logging");
+
     private static int CuentaFirmasDelNivel(LogLevel level)
         => FirmasPublicas().Count(x => x.Name.StartsWith($"LogMlResult{level}", StringComparison.Ordinal));
 

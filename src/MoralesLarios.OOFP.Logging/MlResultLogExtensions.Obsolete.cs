@@ -50,7 +50,7 @@ public static partial class MlResultLogExtensions
     /// <param name="failMessage">Mensaje literal que se registra cuando el resultado es fallido. Si es nulo no se registra nada para el caso fallido.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     [global::System.Obsolete("Renamed to LogCompletedResult. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static Task<MlResult<T>> LogMlResultFinal<T>(this Task<MlResult<T>> sourceAsync, ILogger logger, string validMessage, string failMessage) => LogCompletedResult<T>(sourceAsync, logger, validMessage, failMessage);
+    public static Task<MlResult<T>> LogMlResultFinal<T>(this Task<MlResult<T>> sourceAsync, ILogger logger, string validMessage, string failMessage) => LogCompletedResultAsync<T>(sourceAsync, logger, validMessage, failMessage);
     /// <summary>
     /// Registra una traza de <see cref="MlResult{T}"/> con el nivel que se indique. Versión asíncrona.
     /// </summary>
@@ -81,4 +81,20 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     [global::System.Obsolete("Renamed to LogCompletedResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<T>> LogMlResultFinalAsync<T>(this Task<MlResult<T>> sourceAsync, ILogger logger, Func<T, string> validBuildMessage, Func<MlErrorDetails, string> failBuildMessage) => LogCompletedResultAsync<T>(sourceAsync, logger, validBuildMessage, failBuildMessage);
+    /// <summary>
+    /// Registra una traza de <see cref="MlResult{T}"/> con el nivel <see cref="LogLevel.Information"/> si es válido y <see cref="LogLevel.Error"/> si es fallido. Versión asíncrona.
+    /// </summary>
+    /// <remarks>
+    /// Sobrecarga asíncrona que se quedó sin el sufijo <c>Async</c> al normalizar la nomenclatura en
+    /// la épica 4 de la 2.2.0. Se conserva como puente hasta la 3.0.0; use la sobrecarga
+    /// <c>LogCompletedResultAsync</c> con la misma lista de parámetros.
+    /// </remarks>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="validMessage">Mensaje literal que se registra cuando el resultado es válido. Si es nulo no se registra nada para el caso válido.</param>
+    /// <param name="failMessage">Mensaje literal que se registra cuando el resultado es fallido. Si es nulo no se registra nada para el caso fallido.</param>
+    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Renamed to LogCompletedResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public static Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>> sourceAsync, ILogger logger, string validMessage, string failMessage) => LogCompletedResultAsync<T>(sourceAsync, logger, validMessage, failMessage);
 }

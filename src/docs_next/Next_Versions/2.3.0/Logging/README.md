@@ -52,7 +52,7 @@
 | **US-36** | Combinar la plantilla con `EventId` y con `ILogger<TCategory>` | M | no |
 | **US-37** ✅ | Decidir y, si procede, implementar los ámbitos (`BeginScope`) · **sin código**: entrega la [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) | L | no |
 | **US-38** ✅ | Dejar la superficie limpia ante los analizadores · **241** parámetros anotados, `CA2254 = 0` | M | no |
-| **US-39** | Cerrar las dos erratas que sobrevivieron a la 2.2.0 | XS | **sí, si `D-31`** |
+| **US-39** ✅ | Cerrar las dos erratas que sobrevivieron a la 2.2.0 · `LogCompletedResultAsync` + región de `Trace`, **punto 58** del prompt | XS | **sí** |
 | **US-40** | Documentar la capacidad nueva de cara al consumidor | S | no |
 
 ---

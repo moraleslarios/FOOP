@@ -10,7 +10,7 @@ public static partial class MlResultLogExtensions
 {
 
 
-    #region LogMlResultCritical
+    #region LogMlResultTrace
 
     /// <summary>
     /// Registra una traza de <see cref="ILogger"/> con el nivel <see cref="LogLevel.Trace"/>.

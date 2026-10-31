@@ -453,6 +453,24 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 > idioma de los mensajes que construye la librería (punto 49) es **silencioso**: búscalo con
 > `done correctly` y `Error when`.
 
+### 10.2 Renombrados de la **2.3.0** *(punto 58 del prompt)*
+
+| Antes | Después | Ocurrencias | 🔗 |
+| --- | --- | ---: | --- |
+| `LogCompletedResult` *(la sobrecarga sobre `Task<MlResult<T>>` con `ILogger` + dos `string`)* | `LogCompletedResultAsync` | 1 método | sí · `[Obsolete]` hasta la 3.0.0 |
+
+> ⚠️ **Renombrado parcial: NO es un buscar-y-reemplazar ciego.** De las cinco sobrecargas de
+> `LogCompletedResult`, solo cambia de nombre **la que recibe una `Task<MlResult<T>>`** y dos `string`.
+> Las tres sincrónicas conservan el nombre `LogCompletedResult` y la que ya se llamaba
+> `LogCompletedResultAsync` no se toca. Si reemplazas todas las apariciones del token, romperás las
+> llamadas sincrónicas.
+>
+> 🔎 **Cómo detectarlo.** Compila: el puente `[Obsolete]` emite **`CS0618`** exactamente en las
+> llamadas afectadas y en ninguna otra. Si prefieres buscar a mano, el patrón es
+> `LogCompletedResult\s*\(` y hay que quedarse **solo** con las coincidencias cuyo receptor sea una
+> tarea: una llamada `*Async` sin `await` delante, o un `.LogCompletedResult(` encadenado detrás de
+> otro `*Async`.
+
 ---
 
 ## 11. `MoralesLarios.OOFP.Application` *(antes `…WebServices`)*

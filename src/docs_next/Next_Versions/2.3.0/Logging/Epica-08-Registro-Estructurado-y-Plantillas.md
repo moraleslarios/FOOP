@@ -553,21 +553,39 @@ commit: `CadaNivel_ExponeLasSieteRegionesFuncionales` pasa a
 **para** que el convenio de la épica 4 se cumpla sin excepciones.
 
 - **Esfuerzo** · XS · **Riesgo** · 🟡 · **Rompe** · **sí** · [`D-31`](#5-decisiones-abiertas) aprobó el puente
+- **Estado** · ✅ **cerrada**
 
 **Criterios de aceptación**
 
-- [ ] La `#region LogMlResultCritical` de `MlResultLogExtensions.Trace.cs` pasa a llamarse
+- [x] La `#region LogMlResultCritical` de `MlResultLogExtensions.Trace.cs` pasa a llamarse
       `LogMlResultTrace`, y el test de paridad de nombres de región de `MatrixTests.cs` se endurece
       para que no pueda volver a ocurrir.
 - [x] **Resuelta [`D-31`](#5-decisiones-abiertas)** · opción **(a)**: en la 2.3.0 se añade
       `LogCompletedResultAsync` con puente `[Obsolete]` sobre el nombre sin sufijo. Esto convierte a
       esta historia en **la única de la épica que rompe**.
-- [ ] El nombre antiguo queda como
+- [x] El nombre antiguo queda como
       `[Obsolete(…, false)] + [EditorBrowsable(Never)]`, igual que los puentes de la épica 4, y la
       **ruptura `CS0618` queda registrada en los 6 sitios** del prompt, **más** la fila en
       `oofp-upgrade-2.renames.md`.
-- [ ] El `README.md` del proyecto actualiza su apartado «Lo que queda por limpiar en la 3.0.0»
+- [x] El `README.md` del proyecto actualiza su apartado «Lo que queda por limpiar en la 3.0.0»
       retirando lo que esta historia cierre.
+
+> **Cómo quedó.** La sobrecarga `async` sobre `Task<MlResult<T>>` con dos `string` pasa a
+> `LogCompletedResultAsync` (`MlResultLogExtensions.cs`, línea 386) y el nombre antiguo sobrevive como
+> **sexto puente** de `MlResultLogExtensions.Obsolete.cs` (85 → 101 líneas). La región del fichero de
+> `Trace` ya se llama `LogMlResultTrace`, con las once regiones de los seis ficheros de nivel
+> correctamente prefijadas. `MlResultLogExtensionsMatrixTests.cs` crece de 467 a 576 líneas con tres
+> comprobaciones nuevas: paridad de nombre de región por nivel (`[Theory]` sobre los seis),
+> «toda firma vigente que recibe una `Task` termina en `Async`» y «el puente sigue marcado
+> `[Obsolete]` sin ser error».
+>
+> **Registro de la ruptura** · punto **58** del prompt de migración, en los **cinco** sitios
+> (tabla §3.3, subsección `#### 58`, barrido de la Fase 5, informe de la Fase 6 y tabla del apéndice),
+> **más** la sección **10.2** de `oofp-upgrade-2.renames.md` con el aviso de que **no** es un
+> buscar-y-reemplazar ciego: solo cambia la sobrecarga cuyo receptor es una tarea.
+>
+> **Líneas base** · build `EXIT = 0`, **0 errores**, **236 avisos** (idéntico a la 2.2.0),
+> `CS1591 = 0`, `CS0618 = 0`; tests `EXIT = 0`, **1.510** en verde (1.502 + 8), 0 fallos.
 
 ### US-40 · Documentar la capacidad nueva de cara al consumidor
 

@@ -383,10 +383,10 @@ public static partial class MlResultLogExtensions
     /// <param name="validMessage">Mensaje literal que se registra cuando el resultado es válido. Si es nulo no se registra nada para el caso válido.</param>
     /// <param name="failMessage">Mensaje literal que se registra cuando el resultado es fallido. Si es nulo no se registra nada para el caso fallido.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public static async Task<MlResult<T>> LogCompletedResult<T>(this Task<MlResult<T>>  sourceAsync,
-                                                                   ILogger            logger,
-                                                                   string             validMessage,
-                                                                   string             failMessage)
+    public static async Task<MlResult<T>> LogCompletedResultAsync<T>(this Task<MlResult<T>>  sourceAsync,
+                                                                        ILogger            logger,
+                                                                        string             validMessage,
+                                                                        string             failMessage)
         => await sourceAsync.LogCompletedResultAsync(logger, _ => validMessage, _ => failMessage);
 
     #endregion
