@@ -375,6 +375,11 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 42 | Troceado de la clase `Extensions` del núcleo (**2.1.1**) | 11 métodos de extensión en una única clase `Extensions` | repartidos en `NullableExtensions`, `ExceptionMetadataExtensions`, `MutationExtensions` y `TaskLiftExtensions`; `Extensions` queda como puentes `[Obsolete]` | **Compilación** (`CS0618`) **solo** si se invocaban en forma **estática** |
 | 43 | El miembro `_` de `MlResult` queda retirado (**2.1.1**) | `MlResult._` era la implementación y `Discard` su alias | `Discard` es la **implementación**; `_` queda como puente `[Obsolete]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.1.1 → `CS0117` en 3.0.0) |
 | 44 | `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (**2.2.0**) | delegaba en `LogMlResultIfFailWithValueAsync` y **nunca** registraba la excepción | delega en la sobrecarga correcta de su propia familia y **sí** registra la excepción | ⚠️ **Contrato · SILENCIOSA** (aparecen trazas donde antes no había ninguna) |
+| 45 | Parámetro `validBuilMessage` de la familia `LogMlResult*` (**2.2.0**) | 107 parámetros públicos con la errata `Buil` | `validBuildMessage` | **Compilación** (`CS1739`) **solo** si usabas **argumentos con nombre** |
+| 46 | Parámetro `faildMessage` de la familia `LogMlResult*` (**2.2.0**) | 84 parámetros públicos con la errata `faild` | `failBuildMessage` | **Compilación** (`CS1739`) **solo** si usabas **argumentos con nombre** |
+| 47 | `MyMethodFinalLog[Async]` (**2.2.0**) | nombre sin relación con la familia `LogMlResult*` | `LogActionResult[Async]`; el antiguo queda como puente `[Obsolete]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.2.0 → `CS1061` en 3.0.0) |
+| 48 | Clase estática `Extensions` de `MoralesLarios.OOFP.Logging` (**2.2.0**) | `public static class Extensions` | `MlResultLogActionExtensions`; `Extensions` queda como puente `[Obsolete]` | **Compilación** (`CS0618`) **solo** si se invocaba en forma **estática** |
+| 49 | Idioma y texto de los mensajes que construye la librería (**2.2.0**) | mezcla de castellano e inglés y un `Error` duplicado en `MyMethodFinalLog` | **inglés** en todos los mensajes propios y prefijo `Error when <acción>: ` sin duplicar | ⚠️ **Contrato · SILENCIOSA** (cambia el texto escrito en el log) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -845,6 +850,137 @@ dentro de los cuerpos de los métodos `…IfFailWithException*` → debe dar **0
 > renombrado del parámetro de lambda `errorDetals` → `errorDetails`, porque es un **nombre local**, no un
 > parámetro público.
 
+#### 45 — El parámetro `validBuilMessage` pasa a llamarse `validBuildMessage` (2.2.0)
+
+Toda la familia `LogMlResult*` del proyecto `MoralesLarios.OOFP.Logging` recibía el constructor del
+mensaje del caso válido en un parámetro llamado `validBuilMessage`, con una **errata** heredada desde la
+primera versión (`Buil` por `Build`). En la 2.2.0 pasa a llamarse `validBuildMessage` en los **107**
+parámetros públicos afectados, repartidos por los siete ficheros de la familia.
+
+| Elemento | 2.1.1 | 2.2.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| Llamada con argumento **posicional** | `src.LogCompletedResult(log, v => ..., f => ...)` | **idéntica** | — · no hay nada que cambiar |
+| Llamada con argumento **con nombre** | `validBuilMessage: v => ...` | `validBuildMessage: v => ...` | ✅ **Sí** · `CS1739` |
+
+**Por qué no hay puente.** C# no admite alias de parámetro: no existe atributo ni sobrecarga que acepte
+los dos nombres a la vez sin duplicar las 107 firmas. La ruptura se asume en la 2.2.0 porque el uso de
+argumentos con nombre en estas llamadas es minoritario y, cuando ocurre, el compilador la señala con
+`CS1739` en la línea exacta.
+
+**Cómo detectarla:**
+
+```
+validBuilMessage:
+```
+
+Las coincidencias **sin** los dos puntos son declaraciones de la propia librería y no aparecen en código
+de consumidor.
+
+#### 46 — El parámetro `faildMessage` pasa a llamarse `failBuildMessage` (2.2.0)
+
+La misma familia recibía el constructor del mensaje del caso fallido en un parámetro llamado
+`faildMessage` (errata de `fail`). En la 2.2.0 pasa a llamarse `failBuildMessage` en los **84**
+parámetros públicos afectados.
+
+| Elemento | 2.1.1 | 2.2.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| Llamada con argumento **posicional** | `src.LogCompletedResult(log, v => ..., f => ...)` | **idéntica** | — · no hay nada que cambiar |
+| Llamada con argumento **con nombre** | `faildMessage: f => ...` | `failBuildMessage: f => ...` | ✅ **Sí** · `CS1739` |
+
+⚠️ **No lo confundas con `failMessage`**, el parámetro `string` que lleva el mensaje **fijo** del caso
+fallido en las sobrecargas que no reciben una lambda: ése **no cambia**. El convenio final de la 2.2.0
+queda así:
+
+| Parámetro | Tipo | Cuándo |
+| --- | --- | --- |
+| `validBuildMessage` | `Func<T, string>` | constructor del mensaje del caso válido |
+| `failBuildMessage` | `Func<MlErrorDetails, string>` | constructor del mensaje del caso fallido |
+| `failBuildMessage` | `Func<MlErrorDetails, Exception, string>` | ídem, con la excepción |
+| `failMessage` | `string` | mensaje **fijo** del caso fallido · ✅ **no se toca** |
+
+**Cómo detectarla:**
+
+```
+faildMessage:
+```
+
+#### 47 — `MyMethodFinalLog[Async]` pasa a llamarse `LogActionResult[Async]` (2.2.0)
+
+El par de extensiones que registra el desenlace de una acción completa se llamaba `MyMethodFinalLog` y
+`MyMethodFinalLogAsync`, nombres que no seguían el convenio `LogXxx` del resto del proyecto y que
+hablaban del **método que llama** en lugar de lo que se registra. En la 2.2.0 pasan a `LogActionResult`
+y `LogActionResultAsync`.
+
+| Elemento | 2.1.1 | 2.2.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| `source.MyMethodFinalLog(logger, desc)` | nombre vivo | puente `[Obsolete]` + `[EditorBrowsable(Never)]` | ✅ **Sí** · `CS0618` en 2.2.0, `CS1061` en 3.0.0 |
+| `sourceAsync.MyMethodFinalLogAsync(logger, desc)` | nombre vivo | ídem | ✅ **Sí** |
+| `source.LogActionResult(logger, desc)` | — | nombre final | — |
+
+El puente delega literalmente en el nombre nuevo, así que el comportamiento es el mismo salvo el texto
+del mensaje (punto 49). **Se elimina en la 3.0.0.**
+
+**Cómo detectarla:**
+
+```
+MyMethodFinalLog
+```
+
+#### 48 — La clase `Extensions` de `MoralesLarios.OOFP.Logging` pasa a `MlResultLogActionExtensions` (2.2.0)
+
+Igual que ocurrió en el núcleo con el punto 42, el proyecto de logging tenía una clase estática
+llamada simplemente `Extensions`, un nombre que no dice nada y que colisiona con cualquier otra
+`Extensions` importada. En la 2.2.0 el contenido vive en `MlResultLogActionExtensions` y `Extensions`
+queda como **tipo puente** marcado `[Obsolete]` y `[EditorBrowsable(Never)]`.
+
+| Forma de uso | 2.1.1 | 2.2.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| Como **método de extensión** (`source.MyMethodFinalLog(...)`) | resuelve en `Extensions` | resuelve en `MlResultLogActionExtensions` | — · el nombre de la clase es irrelevante |
+| Invocación **estática** (`Extensions.MyMethodFinalLog(source, ...)`) | compila | compila con `CS0618` | ✅ **Sí** |
+| `typeof(Extensions)` o reflexión sobre el tipo | compila | compila con `CS0618` | ✅ **Sí** |
+
+**Cómo detectarla:**
+
+```
+Extensions.MyMethodFinalLog|Logging.Extensions|typeof(Extensions)
+```
+
+#### 49 — Los mensajes que construye la librería se unifican en inglés (2.2.0)
+
+`MoralesLarios.OOFP.Logging` es, casi en su totalidad, una capa que **transporta** el texto que le pasa el
+consumidor; pero los dos miembros del punto 47 **construyen** ellos mismos el mensaje. Esos textos
+mezclaban convenios y, además, el del caso fallido repetía la palabra `Error`. En la 2.2.0 se fija
+**inglés** como idioma de todo mensaje que emita la librería y se corrige la duplicidad.
+
+| Caso | 2.1.1 | 2.2.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| Válido | `"{desc} done correctly."` | **sin cambios** | — |
+| Fallido | `"Error when {desc} Error: {detalle}"` | `"Error when {desc}: {detalle}"` | 🔗 **No** · solo cambia el `string` |
+
+**Por qué es silenciosa.** Las firmas no cambian y el `MlResult<T>` devuelto es el mismo: lo único que
+cambia es el **texto escrito en el log**.
+
+**Qué revisar en tu código:**
+
+- Tests que comparen literalmente el mensaje registrado (`Should().Be("Error when ... Error: ...")`,
+  *snapshots*, `Verify(l => l.Log(..., It.Is<string>(m => m == ...)))`).
+- Reglas de agregación, alertas y búsquedas guardadas de tu plataforma de logs que filtren por el texto
+  antiguo con el `Error` duplicado.
+- Mensajes propios **en castellano** que tuvieras encadenados a los de la librería: la política de la
+  2.2.0 es que la librería emite en inglés y el consumidor decide el idioma de **sus** textos.
+
+**Cómo detectarla:**
+
+```
+done correctly|Error when
+```
+
+> 🧭 **Lo que NO rompe de los puntos 45 a 49.** Las llamadas con argumentos **posicionales** — la forma
+> habitual — compilan sin tocar una sola línea. Los métodos de extensión invocados **como extensión**
+> tampoco se enteran del renombrado de la clase. Y la paridad de la familia `LogMlResult*`
+> (47 miembros genéricos más 17 por cada nivel de log) se mantiene **intacta**: no se añade ni se
+> retira ningún miembro de esa familia en la 2.2.0.
+
 ---
 
 ## Fase 4 — Compilar y resolver iterativamente
@@ -943,6 +1079,17 @@ dotnet build --nologo /p:WarningLevel=4
    ⚠️ Revisa **solo** las coincidencias cuyo receptor sea una expresión de tipo
    `Task<MlResult<T>>` (sin `await` delante) con un constructor de mensaje de **dos** parámetros:
    esa sobrecarga **no registraba nada** antes de la 2.2.0 y ahora sí registra.
+   Y, para los puntos 45 a 49 (nomenclatura y mensajes de `MoralesLarios.OOFP.Logging`), busca además:
+   ```
+   validBuilMessage:|faildMessage:
+   MyMethodFinalLog
+   Extensions.MyMethodFinalLog|Logging.Extensions|typeof(Extensions)
+   done correctly|Error when
+   ```
+   ⚠️ Los dos primeros solo rompen la compilación si los pasabas como **argumento con nombre**
+   (con los dos puntos detrás): un argumento **posicional** compila sin tocar nada. El último barrido
+   localiza los tests, los *snapshots* y los filtros de log que fijaban el **texto** de los mensajes que
+   construye la librería, que ahora están **en inglés** y sin el `Error` duplicado.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -982,6 +1129,17 @@ dotnet build --nologo /p:WarningLevel=4
      (punto 44), **no hay nada que cambiar en el código**, pero sí hay que revisar los tests que
      afirmaban **ausencia** de traza y los umbrales de alerta basados en recuento de errores: esa
      sobrecarga no registraba nada y ahora registra la excepción.
+   - **2.2.0**: si pasabas `validBuilMessage:` o `faildMessage:` como **argumento con nombre**
+     (puntos 45 y 46), renombra los dos a `validBuildMessage:` y `failBuildMessage:`. No hay puente
+     posible: C# no admite alias de parámetro, pero el compilador señala cada caso con `CS1739`. **No**
+     toques `failMessage`, el parámetro `string` del mensaje fijo.
+   - **2.2.0**: si usabas `MyMethodFinalLog[Async]` o la clase `Extensions` de
+     `MoralesLarios.OOFP.Logging` en forma estática (puntos 47 y 48), cámbialos por
+     `LogActionResult[Async]` y `MlResultLogActionExtensions`. Los puentes `[Obsolete]` siguen
+     funcionando en la 2.2.0, pero **desaparecen en la 3.0.0**.
+   - **2.2.0**: si tus tests, tus *snapshots* o tus alertas comparaban el **texto** de los mensajes que
+     construye la librería (punto 49), actualiza el valor esperado: ahora están **en inglés** y el del
+     caso fallido ya no repite la palabra `Error`.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -999,7 +1157,7 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, indicando, para cada uno, si **afecta** al proyecto, qué se
+   36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, 45, 46, 47, 48 y 49, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
@@ -1046,10 +1204,10 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.2.0 | 44 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` en `MoralesLarios.OOFP.Logging`: esa sobrecarga **no registraba nada** y ahora registra la excepción. ⚠️ **Silenciosa** |
+| 2.2.0 | 44, 45, 46, 47, 48, 49 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. ⚠️ **Dos rupturas silenciosas (44 y 49)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43 y 44** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48 y 49** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría

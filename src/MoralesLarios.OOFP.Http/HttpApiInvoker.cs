@@ -63,7 +63,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                                              parameters.PageNumber, 
                                                                                              parameters.PageSize))
                                     .TryBindAsync        (client => SendPagedRequestAsync<T>(client, HttpMethod.Get, parameters, ct))
-                                            .MyMethodFinalLogAsync(_logger, $"GetPagedAsync<{typeof(T).Name}>");
+                                            .LogActionResultAsync(_logger, $"GetPagedAsync<{typeof(T).Name}>");
         return result!;
     }
 
@@ -253,7 +253,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync         ( _       => EmptyValue.Create())
-                                            .MyMethodFinalLogAsync(_logger, $"{nameof(DeleteByIdAsync)}<{typeof(T).Name}");
+                                            .LogActionResultAsync(_logger, $"{nameof(DeleteByIdAsync)}<{typeof(T).Name}");
 
         return result!;
     }
@@ -309,7 +309,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     //.ExecSelfIfValidAsync(actionValid: response => response.Dispose())
                                     .TryMapAsync(response => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: ct))
-                                            .MyMethodFinalLogAsync(_logger, $"{nameof(InternalHttpActionAsync)}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
+                                            .LogActionResultAsync(_logger, $"{nameof(InternalHttpActionAsync)}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
         return result;
     }
 
@@ -335,7 +335,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync(response => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: parameters.CancellationToken))
-                                            .MyMethodFinalLogAsync(_logger, $"{methodName}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
+                                            .LogActionResultAsync(_logger, $"{methodName}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
         return result;
     }
 
@@ -362,7 +362,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync         (response => response.Content.ReadFromJsonAsync<T>(cancellationToken: ct))
-                                            .MyMethodFinalLogAsync(_logger, $"{nameof(PostAsync)}<{typeof(T).Name}");
+                                            .LogActionResultAsync(_logger, $"{nameof(PostAsync)}<{typeof(T).Name}");
 
         return result!;
     }
@@ -391,7 +391,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .MapAsync            ( _       => EmptyValue.Create().ToAsync())
-                                            .MyMethodFinalLogAsync(_logger, $"{nameof(ActionEmptyAsync)}<{typeof(T).Name}");
+                                            .LogActionResultAsync(_logger, $"{nameof(ActionEmptyAsync)}<{typeof(T).Name}");
 
         return result!;
     }
@@ -534,7 +534,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync(response       => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: parameters.CancellationToken))
-                                            .MyMethodFinalLogAsync(_logger, $"{methodName}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
+                                            .LogActionResultAsync(_logger, $"{methodName}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
         return result;
     }
 

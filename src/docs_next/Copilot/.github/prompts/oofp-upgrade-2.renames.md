@@ -434,6 +434,25 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | --- | --- | --- |
 | `LogMlResultFinal[Async]` | `LogCompletedResult[Async]` | sí |
 
+### 10.1 Renombrados de la **2.2.0** *(puntos 45 a 49 del prompt)*
+
+| Antes | Después | Ocurrencias | 🔗 |
+| --- | --- | ---: | --- |
+| `validBuilMessage` *(parámetro)* | `validBuildMessage` | 107 | **no** · es un parámetro |
+| `faildMessage` *(parámetro)* | `failBuildMessage` | 84 | **no** · es un parámetro |
+| `MyMethodFinalLog` | `LogActionResult` | 1 método | sí · `[Obsolete]` hasta la 3.0.0 |
+| `MyMethodFinalLogAsync` | `LogActionResultAsync` | 1 método | sí · `[Obsolete]` hasta la 3.0.0 |
+| `Extensions` *(clase estática)* | `MlResultLogActionExtensions` | 1 tipo | sí · `[Obsolete]` hasta la 3.0.0 |
+
+> ⚠️ `failMessage` — el parámetro `string` con el mensaje **fijo** del caso fallido — **no se toca**.
+> Los dos nombres finales del convenio son `validBuildMessage` para `Func<T, string>` y
+> `failBuildMessage` para `Func<MlErrorDetails, string>` y `Func<MlErrorDetails, Exception, string>`.
+>
+> 🔎 **Cómo detectarlo.** Los dos parámetros solo rompen la compilación si los pasabas como argumento
+> con nombre: búscalos como `validBuilMessage:` y `faildMessage:`, **con los dos puntos**. El cambio de
+> idioma de los mensajes que construye la librería (punto 49) es **silencioso**: búscalo con
+> `done correctly` y `Error when`.
+
 ---
 
 ## 11. `MoralesLarios.OOFP.Application` *(antes `…WebServices`)*
