@@ -384,6 +384,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 51 | Sobrecargas de `LogMlResult*` con `EventId` (**2.2.0**) | no existían | **35 firmas nuevas** que aceptan un `EventId` y lo trasladan al `ILogger` | ✅ **Ninguna** · aditivo |
 | 52 | Sobrecargas de `LogMlResult*` con `ILogger<TCategory>` (**2.2.0**) | había que convertir el registrador tipado a `ILogger` | **21 firmas nuevas** que aceptan directamente el `ILogger<T>` del contenedor | ✅ **Ninguna** · aditivo |
 | 53 | Familia `LogMlResult*Template` con **plantilla de mensaje** (**2.3.0**) | no existía: el mensaje se interpolaba antes de llegar al registrador y los datos se perdían dentro de la cadena | **35 firmas nuevas** que aceptan `string messageTemplate` + `params object?[] args` y delegan en `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** | ✅ **Ninguna** · aditivo |
+| 54 | Plantillas en la **rama de fallo** y clase `MlResultLogErrorFields` (**2.3.0**) | la plantilla del punto 53 solo cubría la rama incondicional; el fallo seguía emitiendo un `string` plano | **172 firmas nuevas** en las cuatro familias `IfFail`, `IfFailWithValue`, `IfFailWithException` e `IfFailWithoutException`, más el tipo público `MlResultLogErrorFields`, que **fija los nombres de campo** `{ErrorMessage}`, `{ErrorCount}` y `{ExceptionType}` | ✅ **Ninguna** · aditivo, pero los **tres nombres de campo pasan a ser contrato** |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1130,6 +1131,22 @@ LogMlResult\w*\(\s*\w+\s*,\s*\$"
 LogMlResult\w*\(\s*\$"
 ```
 
+Y, para el **punto 54**, localiza los registros de la rama de fallo que todavía arman el texto a mano,
+porque son los candidatos directos a pasar a plantilla con campos indexables:
+
+```
+LogMlResultIfFail\w*\(
+LogMlResult(Trace|Debug|Information|Warning|Error|Critical)IfFail\w*\(
+"ErrorMessage"|"ErrorCount"|"ExceptionType"
+```
+
+Cada coincidencia de las dos primeras búsquedas **sigue compilando y funcionando igual**; la acción es
+opcional. Si decides migrarla, usa `MlResultLogErrorFields.DefaultTemplate` y
+`MlResultLogErrorFields.From` para no inventar nombres de campo propios. La tercera búsqueda localiza
+nombres de campo escritos como **literal**: sustitúyelos por las constantes
+`MlResultLogErrorFields.ErrorMessageField`, `…ErrorCountField` y `…ExceptionTypeField`, porque son
+contrato y un renombrado futuro no lo detectaría el compilador.
+
 > ⚠️ **Dos matices de los marcadores.** Primero, se rellenan **por posición**, no por nombre: el
 > primer argumento va al primer marcador aunque el nombre no cuadre. Segundo, el nombre del marcador
 > **es la clave del campo** en el destino, así que conviene escribirlo en `PascalCase` (`{Hora}`,
@@ -1138,6 +1155,70 @@ LogMlResult\w*\(\s*\$"
 >
 > ⚠️ La plantilla debe ser una **constante**, nunca una cadena interpolada: si escribes
 > `$"hola a las {hora}"` vuelves a perder el campo y, además, el analizador `CA2254` lo señala.
+
+---
+
+#### 54 — Plantillas en la rama de fallo y contrato de campos de error (2.3.0) ✅ SIN RUPTURAS
+
+El punto 53 solo cubría la rama **incondicional**. La 2.3.0 completa el trabajo y lleva la plantilla a
+las cuatro familias que solo registran **cuando el resultado es fallido**, que son justamente las que
+interesan para alertar:
+
+| Familia | Registra cuando… |
+| --- | --- |
+| `LogMlResult*IfFailTemplate` | el resultado es fallido |
+| `LogMlResult*IfFailWithValueTemplate` | es fallido **y** el detalle de error lleva un valor en los metadatos |
+| `LogMlResult*IfFailWithExceptionTemplate` | es fallido **y** el detalle de error lleva una excepción |
+| `LogMlResult*IfFailWithoutExceptionTemplate` | es fallido **y** el detalle de error **no** lleva excepción |
+
+Son **172 firmas públicas nuevas**: 24 en el núcleo neutral (4 familias × 6 sobrecargas) y 24 por cada
+uno de los seis ficheros de nivel. El recuento total de la clase pasa de **433** a **605**.
+
+**De dónde salen los argumentos.** Hay **dos maneras, y conviven** (decisión `D-32` de la épica 08):
+
+```csharp
+// (1) los aporta el llamante, igual que en el punto 53
+resultado.LogMlResultErrorIfFailTemplate(logger, "El pedido {PedidoId} ha fallado", pedidoId);
+
+// (2) se derivan del MlErrorDetails con un constructor perezoso
+resultado.LogMlResultErrorIfFailTemplate(logger,
+                                         MlResultLogErrorFields.DefaultTemplate,
+                                         MlResultLogErrorFields.From);
+```
+
+La segunda forma recibe un `Func<MlErrorDetails, object?[]>` que **no se invoca** si el nivel está
+apagado, igual que los constructores de mensaje del punto 50.
+
+**Los nombres de campo son contrato.** El tipo público nuevo `MlResultLogErrorFields` los fija:
+
+| Constante | Valor | Qué publica |
+| --- | --- | --- |
+| `ErrorMessageField` | `ErrorMessage` | el resumen de errores del `MlErrorDetails` |
+| `ErrorCountField` | `ErrorCount` | el número de errores |
+| `ExceptionTypeField` | `ExceptionType` | el **nombre del tipo** de la excepción, o `NoExceptionValue` |
+| `NoExceptionValue` | `(ninguna)` | valor explícito de ausencia, nunca `null` |
+| `DefaultTemplate` | — | plantilla canónica que consume los tres campos **en el orden de `From`** |
+
+> ⚠️ **Riesgo de ruptura silenciosa futura.** A partir de la 2.3.0 estos tres nombres son parte del
+> contrato público: si una versión posterior los renombrase, las consultas guardadas del destino
+> dejarían de encontrar nada y **el compilador no avisaría**. Por eso están expuestos como constantes:
+> referencia `MlResultLogErrorFields.ErrorMessageField` en lugar de escribir `"ErrorMessage"` a mano.
+
+**Por qué no rompe nada.** El sufijo `Template` mantiene el conjunto de nombres **disjunto** del
+existente, así que ninguna llamada de la 2.2.0 puede resolverse a una sobrecarga nueva (ver el punto
+30). No se ha modificado ninguna firma anterior.
+
+> ⚠️ **Un matiz de resolución de sobrecargas.** Como cada familia tiene una sobrecarga con
+> `params object?[]` y otra con `Func<MlErrorDetails, object?[]>`, pasar el literal `null` desnudo es
+> **ambiguo** (`CS0121`), porque es convertible a las dos. Si necesitas pasar nulo, conviértelo:
+> `(object?[])null!`. Es un error de compilación, no una ruptura silenciosa.
+
+**Comportamiento.** Idéntico al del punto 53: `IsEnabled` antes de cualquier trabajo, `logger` nulo y
+`messageTemplate` nula no registran ni lanzan, y el `MlResult<T>` de entrada se devuelve intacto. Un
+resultado **válido** no registra nada en ninguna de las cuatro familias.
+
+**Qué hacer:** nada obligatorio. Si ya registras fallos con mensaje fijo y quieres poder alertar por
+campo, pásalos a plantilla.
 
 ---
 
@@ -1355,7 +1436,11 @@ Entrega al usuario, **en español**, un informe con:
    llamadas se han migrado a `EventId` y cuántas conversiones `(ILogger)` se han podido eliminar.
    Para el punto **53**, haz constar que es **aditivo** y, si se ha aprovechado, cuántos mensajes
    interpolados se han pasado a `LogMlResult*Template` y cuántos marcadores quedan escritos dentro
-   de una cadena interpolada (que no publican campo y disparan `CA2254`).
+   de una cadena interpolada (que no publican campo y disparan `CA2254`). Para el punto **54**,
+   indica cuántos registros de la **rama de fallo** se han pasado a plantilla, cuántos usan la forma
+   con `Func<MlErrorDetails, object?[]>` frente a la de `params`, y cuántos literales
+   `"ErrorMessage"`, `"ErrorCount"` o `"ExceptionType"` se han sustituido por las constantes de
+   `MlResultLogErrorFields`.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1394,15 +1479,16 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.3.0 | 53 | **35 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa |
+| 2.3.0 | 53, 54 | **207 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52 y 53** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53 y 54** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
-> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: su único punto, el **53**, es aditivo. Léelo solo si
-> quieres aprovechar el registro estructurado.
+> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus dos puntos, el **53** y el **54**, son aditivos.
+> Léelos solo si quieres aprovechar el registro estructurado; el **54** interesa especialmente si
+> montas alertas sobre la rama de fallo, porque fija los nombres de campo como contrato.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
 > invisibles para el compilador. Un salto 2.0.x → 2.1.1 que compile a la primera y pase los tests puede

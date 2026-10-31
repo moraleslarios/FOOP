@@ -84,6 +84,28 @@ internal static class MlResultLogGuards
         => builder is null || ! IsEnabled(logger, logLevel) ? null! : builder(arg1, arg2);
 
     /// <summary>
+    /// Invoca un constructor de argumentos de plantilla, devolviendo una colección vacía cuando el
+    /// propio constructor es nulo, cuando el registrador es nulo o cuando el nivel indicado está
+    /// deshabilitado en el registrador.
+    /// </summary>
+    /// <typeparam name="TArg">Tipo del argumento que recibe el constructor de argumentos.</typeparam>
+    /// <param name="logger">Registrador al que se preguntará si el nivel está habilitado.</param>
+    /// <param name="logLevel">Nivel de severidad con el que se registraría la traza.</param>
+    /// <param name="builder">Constructor de argumentos, que puede ser nulo.</param>
+    /// <param name="arg">Argumento que se pasa al constructor de argumentos.</param>
+    /// <returns>Los argumentos construidos, o una colección vacía si no hay nada que registrar.</returns>
+    /// <remarks>
+    /// Extiende a los argumentos de plantilla la misma pereza que <see cref="Build{TArg}"/> aplica a
+    /// los mensajes: si el nivel está deshabilitado no se ejecuta el constructor, de modo que leer
+    /// los metadatos del fallo no cuesta nada cuando la traza no se va a emitir.
+    /// </remarks>
+    internal static object?[] BuildArgs<TArg>(ILogger               logger,
+                                              LogLevel              logLevel,
+                                              Func<TArg, object?[]> builder,
+                                              TArg                  arg)
+        => builder is null || ! IsEnabled(logger, logLevel) ? [] : builder(arg) ?? [];
+
+    /// <summary>
     /// Indica si merece la pena construir el mensaje para el nivel indicado.
     /// </summary>
     /// <param name="logger">Registrador al que se pregunta, que puede ser nulo.</param>

@@ -354,18 +354,41 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
 
 **Criterios de aceptación**
 
-- [ ] Las familias `…IfFail`, `…IfFailWithValue`, `…IfFailWithException` y
+- [x] Las familias `…IfFail`, `…IfFailWithValue`, `…IfFailWithException` y
       `…IfFailWithoutException` tienen su variante con plantilla.
-- [ ] Queda resuelto, y escrito, **de dónde salen los argumentos** en la rama de fallo: los aporta el
+- [x] Queda resuelto, y escrito, **de dónde salen los argumentos** en la rama de fallo: los aporta el
       llamante, o se derivan del `MlErrorDetails`, o ambas cosas con sobrecargas distintas.
-- [ ] Si se derivan del `MlErrorDetails`, los nombres de campo quedan **fijados y documentados**
+- [x] Si se derivan del `MlErrorDetails`, los nombres de campo quedan **fijados y documentados**
       —p. ej. `{ErrorMessage}`, `{ErrorCount}`, `{ExceptionType}`—, porque pasan a ser **contrato**:
       cambiarlos después sería una ruptura silenciosa.
-- [ ] Hay tests que verifican los campos de la rama de fallo con el doble de `ILogger`.
-- [ ] Se conserva la **paridad de recuentos** por fichero de nivel que la épica 1 vigila en
+- [x] Hay tests que verifican los campos de la rama de fallo con el doble de `ILogger`.
+- [x] Se conserva la **paridad de recuentos** por fichero de nivel que la épica 1 vigila en
       `MatrixTests.cs`, y los dos tests de matriz se actualizan con los recuentos nuevos **en el
       mismo commit** que añade las sobrecargas.
-- [ ] Documentación XML completa y **registro en el prompt de migración**.
+- [x] Documentación XML completa y **registro en el prompt de migración**.
+
+**Lo que se construyó**
+
+| Artefacto | Qué aporta |
+|-----------|------------|
+| `MlResultLogExtensions.TemplateFail.cs` | el núcleo neutral: 4 familias × 6 sobrecargas = **24 firmas** |
+| `MlResultLogErrorFields.cs` | el **contrato** de los tres campos derivados, `NoExceptionValue` y `DefaultTemplate` |
+| `MlResultLogGuards.BuildArgs<TArg>` | evaluación **perezosa** del generador de argumentos, tras `IsEnabled` |
+| Los seis ficheros de nivel | 4 regiones nuevas y **24 firmas** por fichero, generadas con el mismo bloque |
+| `MlResultLogExtensionsTemplateFailTests.cs` | **30 tests** nuevos con `StructuredLoggerSpy` |
+
+Las dos maneras de aportar los argumentos quedan fijadas en la decisión `D-32`: la del llamante, con
+`params object?[] args`, y la derivada del detalle de error, con
+`Func<MlErrorDetails, object?[]> argsBuilder`. Los dos tests de matriz se actualizaron en el mismo
+commit: `CadaNivel_ExponeLasSieteRegionesFuncionales` pasa a
+`CadaNivel_ExponeLasOnceRegionesFuncionales`, y se añade
+`CadaNivel_ExponeElRecuentoDeFirmasEsperado`, que fija el recuento por nivel en **84** firmas.
+
+> ✅ **US-35 cerrada.** Firmas públicas de `MlResultLogExtensions`: 433 → **605** (+172, aditivas) ·
+> Tests: 1423 → **1459** · Build en Release: `EXIT = 0  errores = 0  avisos = 236` ·
+> `CS1591 = 0` · `CS0618 = 0` · prompt de migración: punto **54** registrado en los cinco sitios más
+> la lista de versiones y la nota de salto (1410 → **1496** líneas).
+> `oofp-upgrade-2.renames.md` **no** se toca: la historia no renombra nada.
 
 ### US-36 · Combinar la plantilla con EventId y con ILogger de T
 
@@ -674,6 +697,33 @@ Ejes disponibles tras esta épica: **nivel** (6 + genérico) × **familia** (7) 
 > `[Obsolete(…, false)] + [EditorBrowsable(Never)]`. Esto convierte la **US-39 en la única historia
 > que rompe** de la épica: genera `CS0618` en el consumidor, y por tanto **obliga** a la fila en
 > `oofp-upgrade-2.renames.md` además del registro en los 6 sitios del prompt.
+
+### `D-32` · De dónde salen los argumentos de la plantilla en la rama de fallo
+
+| Opción | Propuesta |
+|:------:|-----------|
+| **(a)** | Sólo los aporta el **llamante**, con `params object?[] args` |
+| **(b)** | Sólo se **derivan** del `MlErrorDetails`, con nombres de campo fijos |
+| **(c)** | **Las dos cosas**, con sobrecargas distintas y evaluación perezosa |
+
+> **Recomendación.** La **(c)**. La (a) obliga al consumidor a escribir a mano lo que la librería ya
+> sabe; la (b) le impide publicar sus propios campos de negocio, que es justo el objetivo de la épica.
+
+> ### ✅ Resuelta · opción **(c)**
+>
+> Cada familia de fallo expone **dos** caminos: uno con `params object?[] args`, que aporta el
+> llamante, y otro con `Func<MlErrorDetails, object?[]> argsBuilder`, que se **deriva** del detalle de
+> error y se evalúa **después** de `IsEnabled`, a través de `MlResultLogGuards.BuildArgs<TArg>`.
+>
+> Los nombres de los campos derivados quedan **fijados como contrato** en la clase pública
+> `MlResultLogErrorFields`: `ErrorMessage`, `ErrorCount` y `ExceptionType`, con
+> `NoExceptionValue = "(ninguna)"` y una `DefaultTemplate` que los consume **en el orden** en que los
+> emite `From`, porque `Microsoft.Extensions.Logging` rellena los marcadores **por posición**.
+> ⚠️ Cambiar cualquiera de esos tres nombres más adelante sería una **ruptura silenciosa**.
+>
+> Matiz documentado: pasar un `null` desnudo como tercer argumento es **ambiguo** entre las dos
+> sobrecargas y produce `CS0121`. Hay que escribir `(object?[])null!`. Es un matiz de la API, no un
+> defecto, y queda registrado en el punto **54** del prompt de migración.
 
 ---
 

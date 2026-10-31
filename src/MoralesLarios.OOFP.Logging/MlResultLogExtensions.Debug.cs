@@ -804,4 +804,480 @@ public static partial class MlResultLogExtensions
 
     #endregion
 
+    #region LogMlResultDebugIfFailTemplate
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido. Los argumentos los aporta el llamante.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailTemplate(logger,
+    ///                                                               "El pedido {PedidoId} no se ha podido procesar",
+    ///                                                               pedidoId);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailTemplate<T>(this   MlResult<T> source,
+                                                                            ILogger     logger,
+                                                                            string      messageTemplate,
+                                                                     params object?[]   args)
+        => source.LogMlResultIfFailTemplate(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido. Los argumentos se derivan del detalle del error.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailTemplate(logger,
+    ///                                                               MlResultLogErrorFields.DefaultTemplate,
+    ///                                                               MlResultLogErrorFields.From);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailTemplate<T>(this MlResult<T>                    source,
+                                                                          ILogger                        logger,
+                                                                          string                         messageTemplate,
+                                                                          Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailTemplate(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailTemplateAsync<T>(this   MlResult<T> source,
+                                                                                       ILogger     logger,
+                                                                                       string      messageTemplate,
+                                                                                params object?[]   args)
+        => source.LogMlResultIfFailTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailTemplateAsync<T>(this MlResult<T>                    source,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
+                                                                                       ILogger           logger,
+                                                                                       string            messageTemplate,
+                                                                                params object?[]         args)
+        => sourceAsync.LogMlResultIfFailTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => sourceAsync.LogMlResultIfFailTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    #endregion
+
+
+    #region LogMlResultDebugIfFailWithValueTemplate
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva un valor en los metadatos. Los argumentos los aporta el llamante.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailWithValueTemplate(logger,
+    ///                                                               "El pedido {PedidoId} no se ha podido procesar",
+    ///                                                               pedidoId);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailWithValueTemplate<T>(this   MlResult<T> source,
+                                                                            ILogger     logger,
+                                                                            string      messageTemplate,
+                                                                     params object?[]   args)
+        => source.LogMlResultIfFailWithValueTemplate(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva un valor en los metadatos. Los argumentos se derivan del detalle del error.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailWithValueTemplate(logger,
+    ///                                                               MlResultLogErrorFields.DefaultTemplate,
+    ///                                                               MlResultLogErrorFields.From);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailWithValueTemplate<T>(this MlResult<T>                    source,
+                                                                          ILogger                        logger,
+                                                                          string                         messageTemplate,
+                                                                          Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailWithValueTemplate(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva un valor en los metadatos. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithValueTemplateAsync<T>(this   MlResult<T> source,
+                                                                                       ILogger     logger,
+                                                                                       string      messageTemplate,
+                                                                                params object?[]   args)
+        => source.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva un valor en los metadatos. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithValueTemplateAsync<T>(this MlResult<T>                    source,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva un valor en los metadatos. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithValueTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
+                                                                                       ILogger           logger,
+                                                                                       string            messageTemplate,
+                                                                                params object?[]         args)
+        => sourceAsync.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva un valor en los metadatos. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithValueTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => sourceAsync.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    #endregion
+
+
+    #region LogMlResultDebugIfFailWithExceptionTemplate
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva una excepción. Los argumentos los aporta el llamante.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailWithExceptionTemplate(logger,
+    ///                                                               "El pedido {PedidoId} no se ha podido procesar",
+    ///                                                               pedidoId);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailWithExceptionTemplate<T>(this   MlResult<T> source,
+                                                                            ILogger     logger,
+                                                                            string      messageTemplate,
+                                                                     params object?[]   args)
+        => source.LogMlResultIfFailWithExceptionTemplate(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva una excepción. Los argumentos se derivan del detalle del error.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailWithExceptionTemplate(logger,
+    ///                                                               MlResultLogErrorFields.DefaultTemplate,
+    ///                                                               MlResultLogErrorFields.From);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailWithExceptionTemplate<T>(this MlResult<T>                    source,
+                                                                          ILogger                        logger,
+                                                                          string                         messageTemplate,
+                                                                          Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailWithExceptionTemplate(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva una excepción. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionTemplateAsync<T>(this   MlResult<T> source,
+                                                                                       ILogger     logger,
+                                                                                       string      messageTemplate,
+                                                                                params object?[]   args)
+        => source.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva una excepción. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionTemplateAsync<T>(this MlResult<T>                    source,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva una excepción. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
+                                                                                       ILogger           logger,
+                                                                                       string            messageTemplate,
+                                                                                params object?[]         args)
+        => sourceAsync.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error lleva una excepción. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithExceptionTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => sourceAsync.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    #endregion
+
+
+    #region LogMlResultDebugIfFailWithoutExceptionTemplate
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error NO lleva ninguna excepción. Los argumentos los aporta el llamante.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailWithoutExceptionTemplate(logger,
+    ///                                                               "El pedido {PedidoId} no se ha podido procesar",
+    ///                                                               pedidoId);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailWithoutExceptionTemplate<T>(this   MlResult<T> source,
+                                                                            ILogger     logger,
+                                                                            string      messageTemplate,
+                                                                     params object?[]   args)
+        => source.LogMlResultIfFailWithoutExceptionTemplate(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error NO lleva ninguna excepción. Los argumentos se derivan del detalle del error.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>El resultado de origen, sin modificar.</returns>
+    /// <example>
+    /// <code>
+    /// MlResult&lt;int&gt; resultado = origen.LogMlResultDebugIfFailWithoutExceptionTemplate(logger,
+    ///                                                               MlResultLogErrorFields.DefaultTemplate,
+    ///                                                               MlResultLogErrorFields.From);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultDebugIfFailWithoutExceptionTemplate<T>(this MlResult<T>                    source,
+                                                                          ILogger                        logger,
+                                                                          string                         messageTemplate,
+                                                                          Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailWithoutExceptionTemplate(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error NO lleva ninguna excepción. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionTemplateAsync<T>(this   MlResult<T> source,
+                                                                                       ILogger     logger,
+                                                                                       string      messageTemplate,
+                                                                                params object?[]   args)
+        => source.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error NO lleva ninguna excepción. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionTemplateAsync<T>(this MlResult<T>                    source,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => source.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error NO lleva ninguna excepción. Los argumentos los aporta el llamante. Versión
+    /// asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, en el mismo orden en que aparecen.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
+                                                                                       ILogger           logger,
+                                                                                       string            messageTemplate,
+                                                                                params object?[]         args)
+        => sourceAsync.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza de nivel <c>Debug</c> con plantilla de mensaje y campos
+    /// estructurados, únicamente cuando el resultado es fallido y su detalle de error NO lleva ninguna excepción. Los argumentos se derivan del detalle del error.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envían las trazas.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores con nombre. Debe ser una constante, nunca una cadena interpolada.</param>
+    /// <param name="argsBuilder">Constructor de los valores que rellenan los marcadores; recibe el detalle del error. Sólo se ejecuta si el nivel está habilitado.</param>
+    /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
+    public static Task<MlResult<T>> LogMlResultDebugIfFailWithoutExceptionTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
+                                                                                     ILogger                        logger,
+                                                                                     string                         messageTemplate,
+                                                                                     Func<MlErrorDetails, object?[]> argsBuilder)
+        => sourceAsync.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Debug, messageTemplate, argsBuilder);
+
+    #endregion
+
+
 }

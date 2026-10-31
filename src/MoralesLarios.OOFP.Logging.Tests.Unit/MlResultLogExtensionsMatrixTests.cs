@@ -349,6 +349,11 @@ public class MlResultLogExtensionsMatrixTests
     /// numero de firmas publicas. La comparacion se hace entre los seis recuentos, nunca contra un
     /// literal, para que el invariante siga siendo valido cuando se anadan sobrecargas a los seis.
     /// </summary>
+    /// <remarks>
+    /// Las plantillas de la rama de fallo (epica 08, US-35) anadieron 24 firmas a cada nivel, de
+    /// 51 a 75, repartidas en cuatro familias nuevas. El invariante se mantiene porque el generador
+    /// inyecta exactamente el mismo bloque en los seis ficheros.
+    /// </remarks>
     [Fact]
     public void LosSeisNiveles_ExponenElMismoNumeroDeFirmasPublicas()
     {
@@ -363,13 +368,14 @@ public class MlResultLogExtensionsMatrixTests
     }
 
     /// <summary>
-    /// Comprueba que cada uno de los seis niveles expone las siete regiones funcionales, de forma
-    /// que ninguna region quede huerfana en un nivel concreto.
+    /// Comprueba que cada uno de los seis niveles expone las once regiones funcionales, de forma
+    /// que ninguna region quede huerfana en un nivel concreto. Las cuatro ultimas son las
+    /// plantillas de la rama de fallo que anadio la US-35 de la epica 08.
     /// </summary>
     /// <param name="level">Nivel de severidad bajo prueba.</param>
     [Theory]
     [MemberData(nameof(Niveles))]
-    public void CadaNivel_ExponeLasSieteRegionesFuncionales(LogLevel level)
+    public void CadaNivel_ExponeLasOnceRegionesFuncionales(LogLevel level)
     {
         var nombres = FirmasPublicas()
                             .Select(x => x.Name)
@@ -383,8 +389,31 @@ public class MlResultLogExtensionsMatrixTests
         nombres.Should().Contain($"LogMlResult{level}IfFailWithException");
         nombres.Should().Contain($"LogMlResult{level}IfFailWithoutException");
         nombres.Should().Contain($"LogMlResult{level}Async");
+
+        nombres.Should().Contain($"LogMlResult{level}Template");
+        nombres.Should().Contain($"LogMlResult{level}IfFailTemplate");
+        nombres.Should().Contain($"LogMlResult{level}IfFailWithValueTemplate");
+        nombres.Should().Contain($"LogMlResult{level}IfFailWithExceptionTemplate");
+        nombres.Should().Contain($"LogMlResult{level}IfFailWithoutExceptionTemplate");
     }
 
+    /// <summary>
+    /// Fija el recuento de firmas publicas por nivel que la epica 01 vigila, para que cualquier
+    /// anadido futuro obligue a actualizar este test de forma consciente y a registrar el cambio en
+    /// el prompt de migracion.
+    /// </summary>
+    /// <remarks>
+    /// El recuento se obtiene por reflexion sobre el prefijo <c>LogMlResult&lt;Nivel&gt;</c>, asi que
+    /// agrega las firmas del fichero de nivel y las de los ficheros transversales de
+    /// <c>EventId</c> y de categoria. Paso de 60 a 84 con las plantillas de la rama de fallo (US-35).
+    /// </remarks>
+    /// <param name="level">Nivel de severidad bajo prueba.</param>
+    [Theory]
+    [MemberData(nameof(Niveles))]
+    public void CadaNivel_ExponeElRecuentoDeFirmasEsperado(LogLevel level)
+        => CuentaFirmasDelNivel(level).Should().Be(
+                84,
+                "el recuento por nivel quedo fijado en 84 firmas tras las plantillas de la rama de fallo (US-35)");
     #endregion
 
 
