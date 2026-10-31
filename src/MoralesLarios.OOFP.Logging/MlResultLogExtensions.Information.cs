@@ -715,4 +715,104 @@ public static partial class MlResultLogExtensions
 
     #endregion
 
+
+    #region LogMlResultInformationTemplate
+
+    /// <summary>
+    /// Registra una traza <b>estructurada</b> con el nivel <see cref="LogLevel.Information"/>, pasando
+    /// la plantilla y sus argumentos por separado al registrador.
+    /// </summary>
+    /// <param name="logger">Registrador al que se envía la traza. Si es nulo no se registra nada.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores por nombre · <c>"hola a las {Hora}"</c> ·. Debe ser una constante: los valores viajan en <paramref name="args"/>. Si es nula no se registra nada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, <b>por posición</b>.</param>
+    /// <returns>Resultado válido que transporta el propio registrador, para poder encadenar.</returns>
+    /// <remarks>
+    /// La plantilla <b>no se interpola</b>: llega intacta al registrador, que la publica como
+    /// <c>{OriginalFormat}</c> y expone cada marcador como un campo consultable en el destino.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// logger.LogMlResultInformationTemplate("hola a las {Hora}", DateTime.Now);
+    /// </code>
+    /// </example>
+    public static MlResult<ILogger> LogMlResultInformationTemplate(this ILogger      logger,
+                                                                     string       messageTemplate,
+                                                              params object?[]    args)
+        => logger.LogMlResultTemplate(LogLevel.Information, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza <b>estructurada</b> con el nivel <see cref="LogLevel.Information"/>, pasando
+    /// la plantilla y sus argumentos por separado al registrador. Versión asíncrona.
+    /// </summary>
+    /// <param name="logger">Registrador al que se envía la traza. Si es nulo no se registra nada.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores por nombre. Debe ser una constante: los valores viajan en <paramref name="args"/>. Si es nula no se registra nada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, <b>por posición</b>.</param>
+    /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
+    public static Task<MlResult<ILogger>> LogMlResultInformationTemplateAsync(this ILogger      logger,
+                                                                               string       messageTemplate,
+                                                                        params object?[]    args)
+        => logger.LogMlResultTemplateAsync(LogLevel.Information, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza <b>estructurada</b> del resultado de origen con el nivel
+    /// <see cref="LogLevel.Information"/>, pasando la plantilla y sus argumentos por separado.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envía la traza. Si es nulo no se registra nada.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores por nombre. Debe ser una constante: los valores viajan en <paramref name="args"/>. Si es nula no se registra nada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, <b>por posición</b>.</param>
+    /// <returns>El resultado de origen, inalterado.</returns>
+    /// <remarks>
+    /// La traza se emite siempre, con independencia de que el resultado sea válido o fallido, y el
+    /// resultado de origen se devuelve intacto.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var resultado = ObtenerCliente(17)
+    ///                     .LogMlResultInformationTemplate(logger, "cliente {ClienteId} consultado", 17);
+    /// </code>
+    /// </example>
+    public static MlResult<T> LogMlResultInformationTemplate<T>(this MlResult<T>      source,
+                                                                   ILogger         logger,
+                                                                   string          messageTemplate,
+                                                            params object?[]       args)
+        => source.LogMlResultTemplate(logger, LogLevel.Information, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza <b>estructurada</b> del resultado de origen con el nivel
+    /// <see cref="LogLevel.Information"/>, pasando la plantilla y sus argumentos por separado.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
+    /// <param name="logger">Registrador al que se envía la traza. Si es nulo no se registra nada.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores por nombre. Debe ser una constante: los valores viajan en <paramref name="args"/>. Si es nula no se registra nada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, <b>por posición</b>.</param>
+    /// <returns>Tarea que produce el resultado de origen, inalterado.</returns>
+    public static Task<MlResult<T>> LogMlResultInformationTemplateAsync<T>(this MlResult<T>      source,
+                                                                             ILogger         logger,
+                                                                             string          messageTemplate,
+                                                                      params object?[]       args)
+        => source.LogMlResultTemplateAsync(logger, LogLevel.Information, messageTemplate, args);
+
+    /// <summary>
+    /// Registra una traza <b>estructurada</b> del resultado de origen con el nivel
+    /// <see cref="LogLevel.Information"/>, pasando la plantilla y sus argumentos por separado.
+    /// Versión asíncrona.
+    /// </summary>
+    /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
+    /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
+    /// <param name="logger">Registrador al que se envía la traza. Si es nulo no se registra nada.</param>
+    /// <param name="messageTemplate">Plantilla del mensaje, con marcadores por nombre. Debe ser una constante: los valores viajan en <paramref name="args"/>. Si es nula no se registra nada.</param>
+    /// <param name="args">Valores que rellenan los marcadores de la plantilla, <b>por posición</b>.</param>
+    /// <returns>Tarea que produce el resultado de origen, inalterado.</returns>
+    public static Task<MlResult<T>> LogMlResultInformationTemplateAsync<T>(this Task<MlResult<T>>      sourceAsync,
+                                                                             ILogger                logger,
+                                                                             string                 messageTemplate,
+                                                                      params object?[]              args)
+        => sourceAsync.LogMlResultTemplateAsync(logger, LogLevel.Information, messageTemplate, args);
+
+    #endregion
+
 }

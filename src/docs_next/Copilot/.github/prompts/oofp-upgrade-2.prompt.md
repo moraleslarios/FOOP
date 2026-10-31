@@ -383,6 +383,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 50 | La familia `LogMlResult*` consulta `IsEnabled` antes de construir el mensaje (**2.2.0**) | el constructor de mensaje se **invocaba siempre**, incluso con el nivel de log apagado | el constructor **no se invoca** si `logger.IsEnabled(logLevel)` devuelve `false` | ⚠️ **Contrato · SILENCIOSA** (los constructores con efectos colaterales dejan de ejecutarse) |
 | 51 | Sobrecargas de `LogMlResult*` con `EventId` (**2.2.0**) | no existían | **35 firmas nuevas** que aceptan un `EventId` y lo trasladan al `ILogger` | ✅ **Ninguna** · aditivo |
 | 52 | Sobrecargas de `LogMlResult*` con `ILogger<TCategory>` (**2.2.0**) | había que convertir el registrador tipado a `ILogger` | **21 firmas nuevas** que aceptan directamente el `ILogger<T>` del contenedor | ✅ **Ninguna** · aditivo |
+| 53 | Familia `LogMlResult*Template` con **plantilla de mensaje** (**2.3.0**) | no existía: el mensaje se interpolaba antes de llegar al registrador y los datos se perdían dentro de la cadena | **35 firmas nuevas** que aceptan `string messageTemplate` + `params object?[] args` y delegan en `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** | ✅ **Ninguna** · aditivo |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1084,6 +1085,62 @@ comportamiento observable es idéntico: la nueva **delega** en la antigua.
 
 ---
 
+#### 53 — Familia `LogMlResult*Template` con plantilla de mensaje (2.3.0) ✅ SIN RUPTURAS
+
+La 2.3.0 añade **35 firmas públicas nuevas** —5 del núcleo neutral y 5 por cada uno de los seis
+niveles— que aceptan una **plantilla de mensaje** y sus argumentos, y los pasan **tal cual** a
+`ILogger.Log`. La plantilla **no se interpola**: los marcadores llegan al registrador como **campos
+estructurados**, que es lo que permite consultarlos y agruparlos en el destino (Seq, Application
+Insights, Elastic…).
+
+```csharp
+// 2.2.0 — el dato se diluía dentro de la cadena
+resultado.LogMlResultInformation(logger, $"hola a las {DateTime.Now}");
+// el log recibe un único string: "hola a las 17/05/2024 9:30:00"
+
+// 2.3.0 — el dato viaja como campo
+resultado.LogMlResultInformationTemplate(logger, "hola a las {Hora}", DateTime.Now);
+// el log recibe:  {OriginalFormat} = "hola a las {Hora}"   y   Hora = <DateTime>
+```
+
+Las firmas nuevas, por familia:
+
+| Familia | Firmas | Forma |
+| --- | --- | --- |
+| Núcleo neutral | 5 | `LogMlResultTemplate[Async](… LogLevel logLevel, string messageTemplate, params object?[] args)` sobre `ILogger`, `MlResult<T>` y `Task<MlResult<T>>` |
+| Por nivel (×6) | 30 | `LogMlResult<Nivel>Template[Async](… string messageTemplate, params object?[] args)`, con `<Nivel>` = `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical` |
+
+**Por qué no rompe nada.** La familia nueva lleva el **sufijo `Template`**, así que es un conjunto de
+nombres **disjunto** del existente: ninguna llamada escrita contra la 2.2.0 puede resolverse a una
+sobrecarga nueva, ni siquiera las que pasan dos `string` sin nombre de parámetro (ver el punto 30).
+Tampoco se ha modificado **ninguna** firma anterior, ni añadiéndole un parámetro opcional.
+
+**Comportamiento.** Es coherente con el resto de la familia `LogMlResult*`:
+
+- consulta `IsEnabled(logLevel)` **antes** de cualquier trabajo (punto 50);
+- un `logger` nulo **no lanza**: no registra y devuelve el resultado de origen intacto;
+- una `messageTemplate` nula **no registra nada** y devuelve el resultado de origen intacto;
+- devuelve siempre el `MlResult<T>` de entrada sin tocarlo, igual que el resto de la familia.
+
+**Qué hacer:** nada obligatorio. Si quieres aprovecharlo, busca las interpolaciones que diluyen datos
+dentro del mensaje y pásalas a plantilla:
+
+```
+LogMlResult\w*\(\s*\w+\s*,\s*\$"
+LogMlResult\w*\(\s*\$"
+```
+
+> ⚠️ **Dos matices de los marcadores.** Primero, se rellenan **por posición**, no por nombre: el
+> primer argumento va al primer marcador aunque el nombre no cuadre. Segundo, el nombre del marcador
+> **es la clave del campo** en el destino, así que conviene escribirlo en `PascalCase` (`{Hora}`,
+> `{PedidoId}`) y mantenerlo estable: cambiarlo rompe las consultas guardadas del destino, y eso el
+> compilador no lo detecta.
+>
+> ⚠️ La plantilla debe ser una **constante**, nunca una cadena interpolada: si escribes
+> `$"hola a las {hora}"` vuelves a perder el campo y, además, el analizador `CA2254` lo señala.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -1205,6 +1262,16 @@ dotnet build --nologo /p:WarningLevel=4
    LogMlResult.*\[\d+\]
    \(ILogger\)
    ```
+   Y, para el punto 53 (familia `LogMlResult*Template`), busca además — **solo para limpiar**,
+   porque es aditivo:
+   ```
+   LogMlResult\w*\(\s*\w+\s*,\s*\$"
+   LogMlResult\w*\(\s*\$"
+   ```
+   Cada coincidencia es un mensaje **interpolado**: el dato acaba diluido dentro de la cadena y el
+   destino no lo puede consultar como campo. Pásalo a `LogMlResult*Template` con la plantilla como
+   **constante** y los datos en `args`. ⚠️ Y comprueba que la plantilla resultante **no** sea una
+   cadena interpolada: el analizador `CA2254` lo señala, pero solo si está activado.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -1286,6 +1353,9 @@ Entrega al usuario, **en español**, un informe con:
    invocaciones del constructor con el nivel apagado se han tenido que ajustar. Para los puntos
    **51 y 52**, basta con hacer constar que son **aditivos** y, si se han aprovechado, cuántas
    llamadas se han migrado a `EventId` y cuántas conversiones `(ILogger)` se han podido eliminar.
+   Para el punto **53**, haz constar que es **aditivo** y, si se ha aprovechado, cuántos mensajes
+   interpolados se han pasado a `LogMlResult*Template` y cuántos marcadores quedan escritos dentro
+   de una cadena interpolada (que no publican campo y disparan `CA2254`).
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1324,11 +1394,15 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
+| 2.3.0 | 53 | **35 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51 y 52** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52 y 53** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
+>
+> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: su único punto, el **53**, es aditivo. Léelo solo si
+> quieres aprovechar el registro estructurado.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
 > invisibles para el compilador. Un salto 2.0.x → 2.1.1 que compile a la primera y pase los tests puede

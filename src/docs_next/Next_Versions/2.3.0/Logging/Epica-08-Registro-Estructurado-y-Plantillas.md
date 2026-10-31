@@ -301,27 +301,48 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
       **imposible**, no improbable.
 - [x] **Resuelta [`D-27`](#5-decisiones-abiertas)** · opción **(c)**: esta historia cubre **sólo la
       rama válida**; la fallida es la US-35.
-- [ ] Existe al menos una sobrecarga por nivel que acepta `string messageTemplate` y los argumentos,
+- [x] Existe al menos una sobrecarga por nivel que acepta `string messageTemplate` y los argumentos,
       y delega en `ILogger.Log(logLevel, messageTemplate, args)` **sin** interpolar previamente.
-- [ ] Hay un **test con doble de `ILogger`** que verifica que el `state` recibido implementa
+      **Hecho**: `MlResultLogExtensions.Template.cs` aporta el núcleo neutral (5 firmas) y cada uno
+      de los seis ficheros de nivel aporta 5 delegaciones de una línea ⇒ **35 firmas nuevas**
+      (398 → 433 firmas públicas en el proyecto).
+- [x] Hay un **test con doble de `ILogger`** que verifica que el `state` recibido implementa
       `IReadOnlyList<KeyValuePair<string, object?>>` y **contiene los campos con sus nombres**:
       para `"hola a las {Hora}"` debe existir la clave `Hora`. Éste es el test que demuestra la
       épica: sin él, nada prueba que el registro sea realmente estructurado.
-- [ ] Hay un **test** que verifica que `{OriginalFormat}` llega con la **plantilla sin sustituir**.
-- [ ] Se respeta el **cortocircuito `IsEnabled`**: con el nivel apagado no se llama a `logger.Log`
-      **ni se evalúa nada**; hay un test que lo afirma.
-- [ ] Se respeta la **política `D-06`**: con `logger` nulo se devuelve el `source` intacto y no se
+      **Hecho**: `LogMlResultInformationTemplate_PublicaElMarcadorComoCampoEstructurado`, apoyado en
+      el nuevo doble `Support/StructuredLoggerSpy.cs` (el `LoggerSpy` anterior aplanaba el `state` y
+      hacía imposible esta comprobación; se ha añadido uno nuevo sin tocar el existente).
+- [x] Hay un **test** que verifica que `{OriginalFormat}` llega con la **plantilla sin sustituir**.
+      **Hecho**: `…EntregaLaPlantillaSinSustituirEnOriginalFormat`, y
+      `…RellenaLosMarcadoresPorPosicion` fija además el matiz del relleno **por posición**.
+- [x] Se respeta el **cortocircuito `IsEnabled`**: con el nivel apagado no se llama a `logger.Log`
+      **ni se evalúa nada**; hay un test que lo afirma. **Hecho**: con `MinimumLevel = Error` el
+      doble no recibe ninguna traza y `IsEnabledCallCount` vale exactamente 1.
+- [x] Se respeta la **política `D-06`**: con `logger` nulo se devuelve el `source` intacto y no se
       lanza nada; hay un test que lo afirma.
-- [ ] Se respeta la política de argumentos nulos: `messageTemplate` nulo ⇒ no se registra nada y se
-      devuelve el `source`, igual que hacen hoy las sobrecargas de `message`.
-- [ ] Ninguna firma existente se modifica, **ni añadiéndole un parámetro opcional**: sería una
-      ruptura binaria (§4 de `commits-conventional-y-registro.instructions.md`).
-- [ ] Se compila un **caso de prueba por cada una de las 5 formas de llamada** de la tabla del punto
+- [x] Se respeta la política de argumentos nulos: `messageTemplate` nulo ⇒ no se registra nada y se
+      devuelve el `source`, igual que hacen hoy las sobrecargas de `message`. También se cubre el
+      caso de `args` nulo.
+- [x] Ninguna firma existente se modifica, **ni añadiéndole un parámetro opcional**: sería una
+      ruptura binaria (§4 de `commits-conventional-y-registro.instructions.md`). **Hecho**: todo el
+      trabajo es aditivo; el recuento por fichero sólo crece (+5 por nivel, +5 del núcleo).
+- [x] Se compila un **caso de prueba por cada una de las 5 formas de llamada** de la tabla del punto
       30, sin nombres de parámetro, verificando que sigue resolviéndose a la sobrecarga de siempre.
-- [ ] Documentación XML completa en cada miembro nuevo, con al menos un `<example>` por familia, y
-      build con **0 `CS1591`**.
-- [ ] **Registrada como aditivo relevante** en los 6 sitios del prompt de migración: no rompe, pero
+      **Hecho**: `LasCincoFormasDeLlamadaExistentes_SiguenResolviendoALasSobrecargasAntiguas` y
+      `LaSobrecargaDeDosMensajes_NoSeConfundeConUnaPlantillaMasArgumento` no sólo compilan: afirman
+      sobre lo que recibe el doble, que es lo único que demuestra a **qué** sobrecarga se resolvió.
+- [x] Documentación XML completa en cada miembro nuevo, con al menos un `<example>` por familia, y
+      build con **0 `CS1591`**. **Hecho**: build en Release `EXIT = 0`, 0 errores, 236 avisos (el
+      mismo recuento que antes de la historia ⇒ ningún aviso nuevo), `CS1591 = 0`, `CS0618 = 0`.
+- [x] **Registrada como aditivo relevante** en los 6 sitios del prompt de migración: no rompe, pero
       es la capacidad más visible de la versión y el consumidor debe saber que existe.
+      **Hecho** como **punto 53**: fila de la tabla §3.3, subsección `#### 53`, barrido de la Fase 5
+      punto 4, informe de la Fase 6 punto 5 y fila nueva `2.3.0` del apéndice con su nota de salto de
+      versión. El anexo `oofp-upgrade-2.renames.md` **no** aplica: la historia no renombra nada.
+
+> ✅ **US-34 cerrada.** Tests: 1397 → **1423** (+26, todos verdes, 0 con error, 0 omitidos).
+> Anclas markdown: `revisados = 1308  rotos = 0`.
 
 ### US-35 · Plantilla en la rama de fallo
 
