@@ -37,6 +37,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailTemplate<T>(this   MlResult<T> source,
                                                                    ILogger     logger,
                                                                    LogLevel    logLevel,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string      messageTemplate,
                                                             params object?[]   args)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, _ => args, PredicateIfFail<T>);
@@ -68,6 +69,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailTemplate<T>(this MlResult<T>                    source,
                                                                  ILogger                        logger,
                                                                  LogLevel                       logLevel,
+                                                                 [StringSyntax("MessageTemplate")]
                                                                  string                         messageTemplate,
                                                                  Func<MlErrorDetails, object?[]> argsBuilder)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, argsBuilder, PredicateIfFail<T>);
@@ -86,6 +88,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailTemplateAsync<T>(this   MlResult<T> source,
                                                                               ILogger     logger,
                                                                               LogLevel    logLevel,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string      messageTemplate,
                                                                        params object?[]   args)
         => source.LogMlResultIfFailTemplate(logger, logLevel, messageTemplate, args).ToAsync();
@@ -105,6 +108,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailTemplateAsync<T>(this MlResult<T>                    source,
                                                                             ILogger                        logger,
                                                                             LogLevel                       logLevel,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string                         messageTemplate,
                                                                             Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailTemplate(logger, logLevel, messageTemplate, argsBuilder).ToAsync();
@@ -123,6 +127,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                     ILogger           logger,
                                                                                     LogLevel          logLevel,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string            messageTemplate,
                                                                              params object?[]         args)
         => (await sourceAsync).LogMlResultIfFailTemplate(logger, logLevel, messageTemplate, args);
@@ -142,6 +147,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                   ILogger                        logger,
                                                                                   LogLevel                       logLevel,
+                                                                                  [StringSyntax("MessageTemplate")]
                                                                                   string                         messageTemplate,
                                                                                   Func<MlErrorDetails, object?[]> argsBuilder)
         => (await sourceAsync).LogMlResultIfFailTemplate(logger, logLevel, messageTemplate, argsBuilder);
@@ -179,6 +185,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailWithValueTemplate<T>(this   MlResult<T> source,
                                                                    ILogger     logger,
                                                                    LogLevel    logLevel,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string      messageTemplate,
                                                             params object?[]   args)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, _ => args, PredicateIfFailWithValue<T>);
@@ -210,6 +217,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailWithValueTemplate<T>(this MlResult<T>                    source,
                                                                  ILogger                        logger,
                                                                  LogLevel                       logLevel,
+                                                                 [StringSyntax("MessageTemplate")]
                                                                  string                         messageTemplate,
                                                                  Func<MlErrorDetails, object?[]> argsBuilder)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, argsBuilder, PredicateIfFailWithValue<T>);
@@ -228,6 +236,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailWithValueTemplateAsync<T>(this   MlResult<T> source,
                                                                               ILogger     logger,
                                                                               LogLevel    logLevel,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string      messageTemplate,
                                                                        params object?[]   args)
         => source.LogMlResultIfFailWithValueTemplate(logger, logLevel, messageTemplate, args).ToAsync();
@@ -247,6 +256,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailWithValueTemplateAsync<T>(this MlResult<T>                    source,
                                                                             ILogger                        logger,
                                                                             LogLevel                       logLevel,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string                         messageTemplate,
                                                                             Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithValueTemplate(logger, logLevel, messageTemplate, argsBuilder).ToAsync();
@@ -265,6 +275,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                     ILogger           logger,
                                                                                     LogLevel          logLevel,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string            messageTemplate,
                                                                              params object?[]         args)
         => (await sourceAsync).LogMlResultIfFailWithValueTemplate(logger, logLevel, messageTemplate, args);
@@ -284,6 +295,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailWithValueTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                   ILogger                        logger,
                                                                                   LogLevel                       logLevel,
+                                                                                  [StringSyntax("MessageTemplate")]
                                                                                   string                         messageTemplate,
                                                                                   Func<MlErrorDetails, object?[]> argsBuilder)
         => (await sourceAsync).LogMlResultIfFailWithValueTemplate(logger, logLevel, messageTemplate, argsBuilder);
@@ -321,6 +333,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailWithExceptionTemplate<T>(this   MlResult<T> source,
                                                                    ILogger     logger,
                                                                    LogLevel    logLevel,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string      messageTemplate,
                                                             params object?[]   args)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, _ => args, PredicateIfFailWithException<T>);
@@ -352,6 +365,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailWithExceptionTemplate<T>(this MlResult<T>                    source,
                                                                  ILogger                        logger,
                                                                  LogLevel                       logLevel,
+                                                                 [StringSyntax("MessageTemplate")]
                                                                  string                         messageTemplate,
                                                                  Func<MlErrorDetails, object?[]> argsBuilder)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, argsBuilder, PredicateIfFailWithException<T>);
@@ -370,6 +384,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailWithExceptionTemplateAsync<T>(this   MlResult<T> source,
                                                                               ILogger     logger,
                                                                               LogLevel    logLevel,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string      messageTemplate,
                                                                        params object?[]   args)
         => source.LogMlResultIfFailWithExceptionTemplate(logger, logLevel, messageTemplate, args).ToAsync();
@@ -389,6 +404,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailWithExceptionTemplateAsync<T>(this MlResult<T>                    source,
                                                                             ILogger                        logger,
                                                                             LogLevel                       logLevel,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string                         messageTemplate,
                                                                             Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithExceptionTemplate(logger, logLevel, messageTemplate, argsBuilder).ToAsync();
@@ -407,6 +423,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                     ILogger           logger,
                                                                                     LogLevel          logLevel,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string            messageTemplate,
                                                                              params object?[]         args)
         => (await sourceAsync).LogMlResultIfFailWithExceptionTemplate(logger, logLevel, messageTemplate, args);
@@ -426,6 +443,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailWithExceptionTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                   ILogger                        logger,
                                                                                   LogLevel                       logLevel,
+                                                                                  [StringSyntax("MessageTemplate")]
                                                                                   string                         messageTemplate,
                                                                                   Func<MlErrorDetails, object?[]> argsBuilder)
         => (await sourceAsync).LogMlResultIfFailWithExceptionTemplate(logger, logLevel, messageTemplate, argsBuilder);
@@ -463,6 +481,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailWithoutExceptionTemplate<T>(this   MlResult<T> source,
                                                                    ILogger     logger,
                                                                    LogLevel    logLevel,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string      messageTemplate,
                                                             params object?[]   args)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, _ => args, PredicateIfFailWithoutException<T>);
@@ -494,6 +513,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultIfFailWithoutExceptionTemplate<T>(this MlResult<T>                    source,
                                                                  ILogger                        logger,
                                                                  LogLevel                       logLevel,
+                                                                 [StringSyntax("MessageTemplate")]
                                                                  string                         messageTemplate,
                                                                  Func<MlErrorDetails, object?[]> argsBuilder)
         => LogIfFailTemplateCore(source, logger, logLevel, messageTemplate, argsBuilder, PredicateIfFailWithoutException<T>);
@@ -512,6 +532,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailWithoutExceptionTemplateAsync<T>(this   MlResult<T> source,
                                                                               ILogger     logger,
                                                                               LogLevel    logLevel,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string      messageTemplate,
                                                                        params object?[]   args)
         => source.LogMlResultIfFailWithoutExceptionTemplate(logger, logLevel, messageTemplate, args).ToAsync();
@@ -531,6 +552,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultIfFailWithoutExceptionTemplateAsync<T>(this MlResult<T>                    source,
                                                                             ILogger                        logger,
                                                                             LogLevel                       logLevel,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string                         messageTemplate,
                                                                             Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithoutExceptionTemplate(logger, logLevel, messageTemplate, argsBuilder).ToAsync();
@@ -549,6 +571,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailWithoutExceptionTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                     ILogger           logger,
                                                                                     LogLevel          logLevel,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string            messageTemplate,
                                                                              params object?[]         args)
         => (await sourceAsync).LogMlResultIfFailWithoutExceptionTemplate(logger, logLevel, messageTemplate, args);
@@ -568,6 +591,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultIfFailWithoutExceptionTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                   ILogger                        logger,
                                                                                   LogLevel                       logLevel,
+                                                                                  [StringSyntax("MessageTemplate")]
                                                                                   string                         messageTemplate,
                                                                                   Func<MlErrorDetails, object?[]> argsBuilder)
         => (await sourceAsync).LogMlResultIfFailWithoutExceptionTemplate(logger, logLevel, messageTemplate, argsBuilder);
@@ -595,6 +619,7 @@ public static partial class MlResultLogExtensions
     private static MlResult<T> LogIfFailTemplateCore<T>(MlResult<T>                     source,
                                                         ILogger                         logger,
                                                         LogLevel                        logLevel,
+                                                        [StringSyntax("MessageTemplate")]
                                                         string                          messageTemplate,
                                                         Func<MlErrorDetails, object?[]> argsBuilder,
                                                         Func<MlErrorDetails, bool>      shouldLog)

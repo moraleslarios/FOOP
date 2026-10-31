@@ -51,7 +51,7 @@
 | **US-35** | Plantilla en la rama de fallo | M | no |
 | **US-36** | Combinar la plantilla con `EventId` y con `ILogger<TCategory>` | M | no |
 | **US-37** ✅ | Decidir y, si procede, implementar los ámbitos (`BeginScope`) · **sin código**: entrega la [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) | L | no |
-| **US-38** | Dejar la superficie limpia ante los analizadores | M | no |
+| **US-38** ✅ | Dejar la superficie limpia ante los analizadores · **241** parámetros anotados, `CA2254 = 0` | M | no |
 | **US-39** | Cerrar las dos erratas que sobrevivieron a la 2.2.0 | XS | **sí, si `D-31`** |
 | **US-40** | Documentar la capacidad nueva de cara al consumidor | S | no |
 
@@ -121,7 +121,7 @@ Seis decisiones, numeradas a continuación de las 25 que se cerraron en la 2.2.0
 | `D-27` | A qué rama se aplica la plantilla | US-34 | ✅ **(c)** sólo la válida; la fallida en la US-35 |
 | `D-28` | Hasta dónde se cruzan los ejes | US-36 | ✅ **(b)** genérico + 6 niveles + `EventId`; `ILogger<T>` fuera de alcance |
 | `D-29` | Si los **ámbitos** entran aquí | US-37 | ✅ **(b)** se desgajan a la **épica 9**; la US-37 no produce código |
-| `D-30` | Alcance de la US-38 | US-38 | ✅ **(a)** sólo anotar y documentar |
+| `D-30` | Alcance de la US-38 | US-38 | ✅ **(a)** sólo anotar y documentar · aplicada con `[StringSyntax]` |
 | `D-31` | El puente del `Async` que falta | US-39 | ✅ **(a)** puente `[Obsolete]` en la 2.3.0 |
 
 ### Lo que estas resoluciones cambian en el plan

@@ -387,6 +387,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 54 | Plantillas en la **rama de fallo** y clase `MlResultLogErrorFields` (**2.3.0**) | la plantilla del punto 53 solo cubría la rama incondicional; el fallo seguía emitiendo un `string` plano | **172 firmas nuevas** en las cuatro familias `IfFail`, `IfFailWithValue`, `IfFailWithException` e `IfFailWithoutException`, más el tipo público `MlResultLogErrorFields`, que **fija los nombres de campo** `{ErrorMessage}`, `{ErrorCount}` y `{ExceptionType}` | ✅ **Ninguna** · aditivo, pero los **tres nombres de campo pasan a ser contrato** |
 | 55 | Cruce del eje `EventId` con las plantillas de registro estructurado (**2.3.0**) | había que elegir: o `EventId` (punto 51) o plantilla con campos (punto 53), nunca las dos en la misma llamada | **35 firmas nuevas** en `MlResultLogExtensions.TemplateEventId.cs` que aceptan `EventId` **y** plantilla: 5 en la familia genérica `LogMlResultTemplate` y 5 en cada uno de los seis niveles | ✅ **Ninguna** · aditivo; corrige la nota del punto 51 que decía que los ejes «no se combinan» |
 | 56 | Los **ámbitos de registro** (`ILogger.BeginScope`) siguen sin existir, y es **deliberado** (**2.3.0**) | el `README.md` decía solamente «no hay `scopes` ni `BeginScope`», sin decir si era un olvido o una decisión | el recuento de `BeginScope` en la librería es **`0`** y queda **documentado y justificado**: los ámbitos se han desgajado a la **épica 9 de la versión 2.4.0** porque plantean tres preguntas de diseño propias | ✅ **Ninguna** · no hay código nuevo; es **documentación de semántica no obvia** |
+| 57 | Los parámetros de plantilla se anotan con `[StringSyntax("MessageTemplate")]` (**2.3.0**) | el parámetro `messageTemplate` era un `string` cualquiera: el editor no lo coloreaba y los analizadores no lo reconocían como plantilla de registro | **241 parámetros anotados** en los nueve ficheros de plantilla, de modo que el editor y los analizadores del consumidor tratan la cadena como lo que es; `CA2254 = 0` medido en una sonda con analizadores estrictos | ✅ **Ninguna** · anotación declarativa; no cambia ninguna firma ni ningún comportamiento |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1375,6 +1376,49 @@ puedes unir las dos en una sola llamada añadiendo el sufijo `Template`.
 
 ---
 
+#### 57 — Los parámetros de plantilla se anotan con `[StringSyntax]` (2.3.0) ✅ SIN RUPTURAS
+
+Las **241** apariciones del parámetro `messageTemplate` de las familias de plantilla (puntos 53, 54 y
+55) quedan anotadas con `[StringSyntax("MessageTemplate")]`. Es una anotación **puramente
+declarativa**: no cambia ni una firma, ni un tipo de retorno, ni un comportamiento.
+
+| Fichero | Parámetros anotados |
+| --- | ---: |
+| `MlResultLogExtensions.Template.cs` | 6 |
+| `MlResultLogExtensions.TemplateEventId.cs` | 36 |
+| `MlResultLogExtensions.TemplateFail.cs` | 25 |
+| Los seis ficheros de nivel (`Trace` … `Critical`) | 29 cada uno · **174** |
+| **Total** | **241** |
+
+**Qué gana el consumidor.** Su editor y sus analizadores pasan a reconocer la cadena como lo que es,
+una plantilla de registro: coloreado de los marcadores, aviso si el recuento de marcadores no cuadra
+con el de argumentos y aviso si la plantilla llega **interpolada** en lugar de constante. Es la pieza
+que faltaba para que el matiz documentado en los puntos 53 y 54 —«la plantilla debe ser una
+constante»— lo vigile la herramienta y no la memoria de quien escribe la llamada.
+
+**La medición de `CA2254`.** Se compiló un proyecto **sonda** fuera de la solución, con
+`EnableNETAnalyzers`, `AnalysisLevel=latest-all`, `AnalysisMode=All` y `TreatWarningsAsErrors=true`,
+que ejercita las cinco formas de la familia: sobre un `ILogger`, sobre un resultado válido, en la rama
+de fallo, con `EventId` y en variante `Async`. Resultado: **`CA2254 = 0`**, build con `EXIT = 0` y
+**cero diagnósticos**.
+
+Ese `0` **no es un falso negativo**: la sonda incluye, a propósito, una llamada **de control** directa
+a `ILogger.Log`, y esa sí emite `CA1848` y `CA1873`, lo que demuestra que los analizadores estaban
+activos. `CA2254` solo se dispara sobre las llamadas directas al registrador, y esas viven **dentro**
+de la librería, tras un `#pragma warning disable CA2254` acotado al núcleo privado que recibe la
+plantilla del consumidor en tiempo de ejecución.
+
+> ⚠️ **Matiz que sí te puede aparecer.** Con analizadores estrictos, llamar a esta familia puede
+> seguir emitiendo **`CA1848`** («usar los delegados de `LoggerMessage`»). Es **esperado** y se puede
+> silenciar sin riesgo: satisfacerlo exigiría plantillas conocidas en tiempo de compilación, que es
+> justo lo que esta API no puede imponer, porque la plantilla la aporta el consumidor en la llamada.
+> No existe —ni está previsto— ningún `LoggerMessage.Define` en la librería.
+
+**Qué hacer:** nada. Si ya tenías `CA2254` activado y silenciado a mano alrededor de estas llamadas,
+puedes **retirar la supresión**: ya no hace falta.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -1506,6 +1550,17 @@ dotnet build --nologo /p:WarningLevel=4
    destino no lo puede consultar como campo. Pásalo a `LogMlResult*Template` con la plantilla como
    **constante** y los datos en `args`. ⚠️ Y comprueba que la plantilla resultante **no** sea una
    cadena interpolada: el analizador `CA2254` lo señala, pero solo si está activado.
+   Y, para el punto 57 (anotación `[StringSyntax]` de las plantillas), busca además — **solo para
+   limpiar**, porque es aditivo:
+   ```
+   pragma warning disable CA2254|pragma warning restore CA2254
+   NoWarn.*CA2254|dotnet_diagnostic\.CA2254
+   ```
+   Cada coincidencia es una supresión de `CA2254` que el consumidor escribió para poder usar estas
+   llamadas. Con la anotación de la 2.3.0 **ya no es necesaria**: retírala y vuelve a compilar; si el
+   aviso reaparece, es que la plantilla está **interpolada** y hay que pasarla a constante.
+   ⚠️ **No** retires las supresiones de `CA1848`: ese aviso sigue siendo esperado al llamar a esta
+   familia, y silenciarlo es correcto.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -1600,7 +1655,10 @@ Entrega al usuario, **en español**, un informe con:
    **56**, deja constancia explícita de que la librería **no** tiene ámbitos de registro, de cuántos
    `using logger.BeginScope(...)` escritos a mano se han encontrado en el proyecto —que **no** hay que
    tocar— y de cuántas claves de correlación viajaban dentro del texto del mensaje y se han podido
-   publicar como campo aprovechando el punto 53.
+   publicar como campo aprovechando el punto 53. Para el punto **57**, indica cuántas supresiones de
+   `CA2254` se han podido **retirar** del proyecto y confirma que el build sigue sin emitir ese aviso;
+   si queda algún `CA1848`, dilo expresamente y aclara que es **esperado** y que no hay nada que
+   migrar.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1639,19 +1697,21 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.3.0 | 53, 54, 55, 56 | **242 firmas nuevas aditivas**: la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no** |
+| 2.3.0 | 53, 54, 55, 56, 57 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no** |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54 y 55** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56 y 57** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
-> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus cuatro puntos, el **53**, el **54**, el **55** y el
-> **56**, son aditivos. Léelos solo si quieres aprovechar el registro estructurado; el **54** interesa
-> especialmente si montas alertas sobre la rama de fallo, porque fija los nombres de campo como
-> contrato, y el **55** si ya filtrabas por `EventId` y habías tenido que renunciar a los campos. El
-> **56** no pide ninguna acción: solo deja escrito que los **ámbitos de registro** siguen a cero a
-> propósito y cómo correlacionar trazas mientras tanto.
+> 🧭 El salto **2.2.0 → 2.3.0** no exige nada: sus cinco puntos, el **53**, el **54**, el **55**, el
+> **56** y el **57**, son aditivos. Léelos solo si quieres aprovechar el registro estructurado; el
+> **54** interesa especialmente si montas alertas sobre la rama de fallo, porque fija los nombres de
+> campo como contrato, y el **55** si ya filtrabas por `EventId` y habías tenido que renunciar a los
+> campos. El **56** no pide ninguna acción: solo deja escrito que los **ámbitos de registro** siguen
+> a cero a propósito y cómo correlacionar trazas mientras tanto. Y el **57** solo te interesa si
+> tienes analizadores estrictos: puedes **retirar** las supresiones de `CA2254` que hubieras escrito
+> alrededor de estas llamadas, aunque los avisos `CA1848` seguirán ahí y son esperados.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
 > invisibles para el compilador. Un salto 2.0.x → 2.1.1 que compile a la primera y pase los tests puede

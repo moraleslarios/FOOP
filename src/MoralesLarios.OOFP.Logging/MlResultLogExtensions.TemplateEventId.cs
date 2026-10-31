@@ -43,6 +43,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<ILogger> LogMlResultTemplate(this ILogger      logger,
                                                              LogLevel     logLevel,
                                                              EventId      eventId,
+                                                             [StringSyntax("MessageTemplate")]
                                                              string       messageTemplate,
                                                       params object?[]    args)
     {
@@ -64,6 +65,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<ILogger>> LogMlResultTemplateAsync(this ILogger      logger,
                                                                        LogLevel     logLevel,
                                                                        EventId      eventId,
+                                                                       [StringSyntax("MessageTemplate")]
                                                                        string       messageTemplate,
                                                                 params object?[]    args)
         => logger.LogMlResultTemplate(logLevel, eventId, messageTemplate, args).ToAsync();
@@ -95,6 +97,7 @@ public static partial class MlResultLogExtensions
                                                           ILogger      logger,
                                                           LogLevel     logLevel,
                                                           EventId      eventId,
+                                                          [StringSyntax("MessageTemplate")]
                                                           string       messageTemplate,
                                                    params object?[]    args)
     {
@@ -119,6 +122,7 @@ public static partial class MlResultLogExtensions
                                                                      ILogger      logger,
                                                                      LogLevel     logLevel,
                                                                      EventId      eventId,
+                                                                     [StringSyntax("MessageTemplate")]
                                                                      string       messageTemplate,
                                                               params object?[]    args)
         => source.LogMlResultTemplate(logger, logLevel, eventId, messageTemplate, args).ToAsync();
@@ -139,6 +143,7 @@ public static partial class MlResultLogExtensions
                                                                            ILogger            logger,
                                                                            LogLevel           logLevel,
                                                                            EventId            eventId,
+                                                                           [StringSyntax("MessageTemplate")]
                                                                            string             messageTemplate,
                                                                     params object?[]          args)
         => (await sourceAsync).LogMlResultTemplate(logger, logLevel, eventId, messageTemplate, args);
@@ -164,6 +169,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<ILogger> LogMlResultTraceTemplate(this ILogger      logger,
                                                                       EventId      eventId,
+                                                                      [StringSyntax("MessageTemplate")]
                                                                       string       messageTemplate,
                                                                params object?[]    args)
         => logger.LogMlResultTemplate(LogLevel.Trace, eventId, messageTemplate, args);
@@ -179,6 +185,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
     public static Task<MlResult<ILogger>> LogMlResultTraceTemplateAsync(this ILogger      logger,
                                                                                 EventId      eventId,
+                                                                                [StringSyntax("MessageTemplate")]
                                                                                 string       messageTemplate,
                                                                          params object?[]    args)
         => logger.LogMlResultTemplateAsync(LogLevel.Trace, eventId, messageTemplate, args);
@@ -204,6 +211,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultTraceTemplate<T>(this MlResult<T>  source,
                                                                    ILogger      logger,
                                                                    EventId      eventId,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string       messageTemplate,
                                                             params object?[]    args)
         => source.LogMlResultTemplate(logger, LogLevel.Trace, eventId, messageTemplate, args);
@@ -222,6 +230,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultTraceTemplateAsync<T>(this MlResult<T>  source,
                                                                               ILogger      logger,
                                                                               EventId      eventId,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string       messageTemplate,
                                                                        params object?[]    args)
         => source.LogMlResultTemplateAsync(logger, LogLevel.Trace, eventId, messageTemplate, args);
@@ -240,6 +249,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultTraceTemplateAsync<T>(this Task<MlResult<T>>  sourceAsync,
                                                                                     ILogger            logger,
                                                                                     EventId            eventId,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string             messageTemplate,
                                                                              params object?[]          args)
         => (await sourceAsync).LogMlResultTraceTemplate(logger, eventId, messageTemplate, args);
@@ -265,6 +275,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<ILogger> LogMlResultDebugTemplate(this ILogger      logger,
                                                                       EventId      eventId,
+                                                                      [StringSyntax("MessageTemplate")]
                                                                       string       messageTemplate,
                                                                params object?[]    args)
         => logger.LogMlResultTemplate(LogLevel.Debug, eventId, messageTemplate, args);
@@ -280,6 +291,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
     public static Task<MlResult<ILogger>> LogMlResultDebugTemplateAsync(this ILogger      logger,
                                                                                 EventId      eventId,
+                                                                                [StringSyntax("MessageTemplate")]
                                                                                 string       messageTemplate,
                                                                          params object?[]    args)
         => logger.LogMlResultTemplateAsync(LogLevel.Debug, eventId, messageTemplate, args);
@@ -305,6 +317,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultDebugTemplate<T>(this MlResult<T>  source,
                                                                    ILogger      logger,
                                                                    EventId      eventId,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string       messageTemplate,
                                                             params object?[]    args)
         => source.LogMlResultTemplate(logger, LogLevel.Debug, eventId, messageTemplate, args);
@@ -323,6 +336,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultDebugTemplateAsync<T>(this MlResult<T>  source,
                                                                               ILogger      logger,
                                                                               EventId      eventId,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string       messageTemplate,
                                                                        params object?[]    args)
         => source.LogMlResultTemplateAsync(logger, LogLevel.Debug, eventId, messageTemplate, args);
@@ -341,6 +355,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultDebugTemplateAsync<T>(this Task<MlResult<T>>  sourceAsync,
                                                                                     ILogger            logger,
                                                                                     EventId            eventId,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string             messageTemplate,
                                                                              params object?[]          args)
         => (await sourceAsync).LogMlResultDebugTemplate(logger, eventId, messageTemplate, args);
@@ -366,6 +381,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<ILogger> LogMlResultInformationTemplate(this ILogger      logger,
                                                                       EventId      eventId,
+                                                                      [StringSyntax("MessageTemplate")]
                                                                       string       messageTemplate,
                                                                params object?[]    args)
         => logger.LogMlResultTemplate(LogLevel.Information, eventId, messageTemplate, args);
@@ -381,6 +397,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
     public static Task<MlResult<ILogger>> LogMlResultInformationTemplateAsync(this ILogger      logger,
                                                                                 EventId      eventId,
+                                                                                [StringSyntax("MessageTemplate")]
                                                                                 string       messageTemplate,
                                                                          params object?[]    args)
         => logger.LogMlResultTemplateAsync(LogLevel.Information, eventId, messageTemplate, args);
@@ -406,6 +423,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultInformationTemplate<T>(this MlResult<T>  source,
                                                                    ILogger      logger,
                                                                    EventId      eventId,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string       messageTemplate,
                                                             params object?[]    args)
         => source.LogMlResultTemplate(logger, LogLevel.Information, eventId, messageTemplate, args);
@@ -424,6 +442,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultInformationTemplateAsync<T>(this MlResult<T>  source,
                                                                               ILogger      logger,
                                                                               EventId      eventId,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string       messageTemplate,
                                                                        params object?[]    args)
         => source.LogMlResultTemplateAsync(logger, LogLevel.Information, eventId, messageTemplate, args);
@@ -442,6 +461,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultInformationTemplateAsync<T>(this Task<MlResult<T>>  sourceAsync,
                                                                                     ILogger            logger,
                                                                                     EventId            eventId,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string             messageTemplate,
                                                                              params object?[]          args)
         => (await sourceAsync).LogMlResultInformationTemplate(logger, eventId, messageTemplate, args);
@@ -467,6 +487,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<ILogger> LogMlResultWarningTemplate(this ILogger      logger,
                                                                       EventId      eventId,
+                                                                      [StringSyntax("MessageTemplate")]
                                                                       string       messageTemplate,
                                                                params object?[]    args)
         => logger.LogMlResultTemplate(LogLevel.Warning, eventId, messageTemplate, args);
@@ -482,6 +503,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
     public static Task<MlResult<ILogger>> LogMlResultWarningTemplateAsync(this ILogger      logger,
                                                                                 EventId      eventId,
+                                                                                [StringSyntax("MessageTemplate")]
                                                                                 string       messageTemplate,
                                                                          params object?[]    args)
         => logger.LogMlResultTemplateAsync(LogLevel.Warning, eventId, messageTemplate, args);
@@ -507,6 +529,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultWarningTemplate<T>(this MlResult<T>  source,
                                                                    ILogger      logger,
                                                                    EventId      eventId,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string       messageTemplate,
                                                             params object?[]    args)
         => source.LogMlResultTemplate(logger, LogLevel.Warning, eventId, messageTemplate, args);
@@ -525,6 +548,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultWarningTemplateAsync<T>(this MlResult<T>  source,
                                                                               ILogger      logger,
                                                                               EventId      eventId,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string       messageTemplate,
                                                                        params object?[]    args)
         => source.LogMlResultTemplateAsync(logger, LogLevel.Warning, eventId, messageTemplate, args);
@@ -543,6 +567,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultWarningTemplateAsync<T>(this Task<MlResult<T>>  sourceAsync,
                                                                                     ILogger            logger,
                                                                                     EventId            eventId,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string             messageTemplate,
                                                                              params object?[]          args)
         => (await sourceAsync).LogMlResultWarningTemplate(logger, eventId, messageTemplate, args);
@@ -568,6 +593,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<ILogger> LogMlResultErrorTemplate(this ILogger      logger,
                                                                       EventId      eventId,
+                                                                      [StringSyntax("MessageTemplate")]
                                                                       string       messageTemplate,
                                                                params object?[]    args)
         => logger.LogMlResultTemplate(LogLevel.Error, eventId, messageTemplate, args);
@@ -583,6 +609,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
     public static Task<MlResult<ILogger>> LogMlResultErrorTemplateAsync(this ILogger      logger,
                                                                                 EventId      eventId,
+                                                                                [StringSyntax("MessageTemplate")]
                                                                                 string       messageTemplate,
                                                                          params object?[]    args)
         => logger.LogMlResultTemplateAsync(LogLevel.Error, eventId, messageTemplate, args);
@@ -608,6 +635,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultErrorTemplate<T>(this MlResult<T>  source,
                                                                    ILogger      logger,
                                                                    EventId      eventId,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string       messageTemplate,
                                                             params object?[]    args)
         => source.LogMlResultTemplate(logger, LogLevel.Error, eventId, messageTemplate, args);
@@ -626,6 +654,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultErrorTemplateAsync<T>(this MlResult<T>  source,
                                                                               ILogger      logger,
                                                                               EventId      eventId,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string       messageTemplate,
                                                                        params object?[]    args)
         => source.LogMlResultTemplateAsync(logger, LogLevel.Error, eventId, messageTemplate, args);
@@ -644,6 +673,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultErrorTemplateAsync<T>(this Task<MlResult<T>>  sourceAsync,
                                                                                     ILogger            logger,
                                                                                     EventId            eventId,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string             messageTemplate,
                                                                              params object?[]          args)
         => (await sourceAsync).LogMlResultErrorTemplate(logger, eventId, messageTemplate, args);
@@ -669,6 +699,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<ILogger> LogMlResultCriticalTemplate(this ILogger      logger,
                                                                       EventId      eventId,
+                                                                      [StringSyntax("MessageTemplate")]
                                                                       string       messageTemplate,
                                                                params object?[]    args)
         => logger.LogMlResultTemplate(LogLevel.Critical, eventId, messageTemplate, args);
@@ -684,6 +715,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
     public static Task<MlResult<ILogger>> LogMlResultCriticalTemplateAsync(this ILogger      logger,
                                                                                 EventId      eventId,
+                                                                                [StringSyntax("MessageTemplate")]
                                                                                 string       messageTemplate,
                                                                          params object?[]    args)
         => logger.LogMlResultTemplateAsync(LogLevel.Critical, eventId, messageTemplate, args);
@@ -709,6 +741,7 @@ public static partial class MlResultLogExtensions
     public static MlResult<T> LogMlResultCriticalTemplate<T>(this MlResult<T>  source,
                                                                    ILogger      logger,
                                                                    EventId      eventId,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string       messageTemplate,
                                                             params object?[]    args)
         => source.LogMlResultTemplate(logger, LogLevel.Critical, eventId, messageTemplate, args);
@@ -727,6 +760,7 @@ public static partial class MlResultLogExtensions
     public static Task<MlResult<T>> LogMlResultCriticalTemplateAsync<T>(this MlResult<T>  source,
                                                                               ILogger      logger,
                                                                               EventId      eventId,
+                                                                              [StringSyntax("MessageTemplate")]
                                                                               string       messageTemplate,
                                                                        params object?[]    args)
         => source.LogMlResultTemplateAsync(logger, LogLevel.Critical, eventId, messageTemplate, args);
@@ -745,6 +779,7 @@ public static partial class MlResultLogExtensions
     public static async Task<MlResult<T>> LogMlResultCriticalTemplateAsync<T>(this Task<MlResult<T>>  sourceAsync,
                                                                                     ILogger            logger,
                                                                                     EventId            eventId,
+                                                                                    [StringSyntax("MessageTemplate")]
                                                                                     string             messageTemplate,
                                                                              params object?[]          args)
         => (await sourceAsync).LogMlResultCriticalTemplate(logger, eventId, messageTemplate, args);
@@ -770,6 +805,7 @@ public static partial class MlResultLogExtensions
     private static void LogTemplateCore(ILogger   logger,
                                         LogLevel  logLevel,
                                         EventId   eventId,
+                                        [StringSyntax("MessageTemplate")]
                                         string    messageTemplate,
                                         object?[] args)
     {

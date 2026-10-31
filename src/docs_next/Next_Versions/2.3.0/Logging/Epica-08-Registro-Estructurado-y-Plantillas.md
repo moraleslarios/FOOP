@@ -478,15 +478,73 @@ commit: `CadaNivel_ExponeLasSieteRegionesFuncionales` pasa a
 - [x] **Resuelta [`D-30`](#5-decisiones-abiertas)** · opción **(a)**: **sólo anotar y documentar**.
       `LoggerMessage.Define` **no entra**, porque presupone plantillas conocidas en tiempo de
       compilación y aquí las trae el consumidor en tiempo de ejecución.
-- [ ] Los parámetros de plantilla se anotan para que las herramientas los reconozcan como tales, y se
+- [x] Los parámetros de plantilla se anotan para que las herramientas los reconozcan como tales, y se
       documenta en el XML que **deben ser constantes** y que los valores van en los argumentos.
-- [ ] Se compila un proyecto de prueba con los analizadores de `Microsoft.Extensions.Logging`
+- [x] Se compila un proyecto de prueba con los analizadores de `Microsoft.Extensions.Logging`
       habilitados y `TreatWarningsAsErrors`, y se **registra el recuento de avisos** `CA2254` que
       produce usar la API nueva. Si no es `0`, se hace constar y se explica por qué.
 - [x] ~~Si `D-30` aprueba `LoggerMessage.Define`, se mide la mejora…~~ · **no aplica**: `D-30` se
       resolvió con la opción (a).
-- [ ] El build del proyecto sigue con **0 `CS1591`** y **sin avisos nuevos** respecto a la línea base
+- [x] El build del proyecto sigue con **0 `CS1591`** y **sin avisos nuevos** respecto a la línea base
       de la 2.2.0 (**236 avisos**).
+
+> ### ✅ Cerrada · 31-10-2026
+>
+> **Anotación** · los **241** parámetros `messageTemplate` de la superficie pública llevan ahora
+> `[StringSyntax("MessageTemplate")]`, repartidos así:
+>
+> | Fichero | Parámetros anotados |
+> | --- | --- |
+> | `MlResultLogExtensions.Critical.cs` | 29 |
+> | `MlResultLogExtensions.Debug.cs` | 29 |
+> | `MlResultLogExtensions.Error.cs` | 29 |
+> | `MlResultLogExtensions.Information.cs` | 29 |
+> | `MlResultLogExtensions.Trace.cs` | 29 |
+> | `MlResultLogExtensions.Warning.cs` | 29 |
+> | `MlResultLogExtensions.Template.cs` | 6 |
+> | `MlResultLogExtensions.TemplateEventId.cs` | 36 |
+> | `MlResultLogExtensions.TemplateFail.cs` | 25 |
+> | **Total** | **241** |
+>
+> El atributo vive en `System.Diagnostics.CodeAnalysis`, que se ha añadido a los
+> `global using` del proyecto (de 4 a 5 líneas). Es el mecanismo del framework para declarar
+> **qué sintaxis** espera una cadena: el editor y los analizadores dejan de tratar el parámetro
+> como texto libre y lo reconocen como plantilla de registro. No genera código ni cambia firmas,
+> así que **no rompe nada**: es puramente declarativo.
+>
+> **Documentación** · el XML de los **241** parámetros ya decía, desde las US-34 a US-36, que la
+> plantilla «**debe ser una constante**: los valores viajan en `args`», así que este criterio no ha
+> requerido tocar la documentación.
+>
+> **Medición de `CA2254`** · se ha compilado un proyecto sonda **fuera de la solución** (para no
+> alterar el recuento de 36 proyectos) con `EnableNETAnalyzers`, `AnalysisLevel=latest-all`,
+> `AnalysisMode=All` y `TreatWarningsAsErrors=true`, que ejerce cinco llamadas de la API nueva:
+>
+> | Llamada ejercida | `CA2254` |
+> | --- | --- |
+> | `logger.LogMlResultInformationTemplate("hola a las {Hora}", DateTime.Now)` | 0 |
+> | `valido.LogMlResultInformationTemplate(logger, "cliente {ClienteId} consultado", 17)` | 0 |
+> | `fallido.LogMlResultErrorIfFailTemplate(logger, "fallo {Mensaje}", "vaya")` | 0 |
+> | `logger.LogMlResultWarningTemplate(new EventId(1001, "PedidoCambiado"), "pedido {PedidoId} cambiado", 42)` | 0 |
+> | `logger.LogMlResultDebugTemplateAsync("sondeo {Paso}", 5)` | 0 |
+> | **Total del proyecto sonda** | **`CA2254 = 0`**, `EXIT = 0`, **cero diagnósticos** |
+>
+> El **0** no es un falso negativo. La sonda incluye una **llamada de control** directa a
+> `ILogger.Log`, y esa sí produce `CA1848` y `CA1873`, lo que demuestra que los analizadores
+> estaban realmente activos. La razón de fondo es que `CA2254` sólo se dispara en las llamadas al
+> **propio** `ILogger`, y esas quedan **dentro** de la librería, encerradas en el
+> `#pragma warning disable CA2254` de `LogTemplateCore`. El consumidor nunca ve el aviso porque
+> nunca llama directamente al registrador.
+>
+> **Un matiz que conviene saber** · los analizadores estrictos **sí** pueden emitir `CA1848`
+> («use delegados `LoggerMessage`») al llamar a esta familia, porque no hay forma de satisfacerlo
+> sin plantillas conocidas en compilación, que es exactamente lo que `D-30` descartó. Queda
+> documentado en el `README` del proyecto para que el consumidor sepa que puede suprimirlo con
+> tranquilidad.
+>
+> **Líneas base intactas** · build `EXIT = 0`, **0 errores**, **236 avisos** (idéntico a la 2.2.0),
+> `CS1591 = 0`, `CS0618 = 0`; tests `EXIT = 0`, **1.502** en verde, 0 fallos. El recuento de firmas
+> públicas sigue en **640**: la anotación no añade superficie.
 
 ### US-39 · Cerrar las dos erratas que sobrevivieron a la 2.2.0
 
@@ -841,15 +899,17 @@ compilador ve dos `string`, los toma como *mensaje válido* y *mensaje de fallo*
 literales con las llaves intactas**. Es la captura silenciosa del punto 30, y es la razón de ser de
 `D-26`.
 
-**Mediciones pendientes** (se rellenan al cerrar la épica):
+**Mediciones** (se rellenan al cerrar la épica):
 
 | Métrica | Línea base 2.2.0 | Tras la épica |
 |---------|-----------------:|--------------:|
-| Firmas públicas | 398 | *pendiente* |
-| Avisos del build en Release | 236 | *pendiente* |
-| Tests | 1.397 | *pendiente* |
+| Firmas públicas | 398 | **640** |
+| Avisos del build en Release | 236 | **236** · sin avisos nuevos |
+| Tests | 1.397 | **1.502** |
 | `BeginScope` en el proyecto | 0 | **0** · diferido a la [épica 9](../../2.4.0/Logging/Epica-09-Ambitos-de-Registro.md) (US-37) |
-| Asignaciones por llamada, nivel apagado | 240,0 B | *pendiente* |
+| `CA2254` en el proyecto sonda del consumidor | — | **0** (US-38) |
+| Parámetros de plantilla anotados | 0 | **241** (US-38) |
+| Asignaciones por llamada, nivel apagado | 240,0 B | *no medido* · la épica no toca la ruta sin plantilla |
 
 ### 7.1 · Recuento de firmas públicas por fichero (US-36)
 

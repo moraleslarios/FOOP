@@ -727,6 +727,7 @@ public static partial class MlResultLogExtensions
     /// </code>
     /// </example>
     public static MlResult<ILogger> LogMlResultCriticalTemplate(this ILogger      logger,
+                                                                     [StringSyntax("MessageTemplate")]
                                                                      string       messageTemplate,
                                                               params object?[]    args)
         => logger.LogMlResultTemplate(LogLevel.Critical, messageTemplate, args);
@@ -740,6 +741,7 @@ public static partial class MlResultLogExtensions
     /// <param name="args">Valores que rellenan los marcadores de la plantilla, <b>por posición</b>.</param>
     /// <returns>Tarea que produce un resultado válido que transporta el propio registrador.</returns>
     public static Task<MlResult<ILogger>> LogMlResultCriticalTemplateAsync(this ILogger      logger,
+                                                                               [StringSyntax("MessageTemplate")]
                                                                                string       messageTemplate,
                                                                         params object?[]    args)
         => logger.LogMlResultTemplateAsync(LogLevel.Critical, messageTemplate, args);
@@ -766,6 +768,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalTemplate<T>(this MlResult<T>      source,
                                                                    ILogger         logger,
+                                                                   [StringSyntax("MessageTemplate")]
                                                                    string          messageTemplate,
                                                             params object?[]       args)
         => source.LogMlResultTemplate(logger, LogLevel.Critical, messageTemplate, args);
@@ -783,6 +786,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, inalterado.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalTemplateAsync<T>(this MlResult<T>      source,
                                                                              ILogger         logger,
+                                                                             [StringSyntax("MessageTemplate")]
                                                                              string          messageTemplate,
                                                                       params object?[]       args)
         => source.LogMlResultTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -800,6 +804,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, inalterado.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalTemplateAsync<T>(this Task<MlResult<T>>      sourceAsync,
                                                                              ILogger                logger,
+                                                                             [StringSyntax("MessageTemplate")]
                                                                              string                 messageTemplate,
                                                                       params object?[]              args)
         => sourceAsync.LogMlResultTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -827,6 +832,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailTemplate<T>(this   MlResult<T> source,
                                                                             ILogger     logger,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string      messageTemplate,
                                                                      params object?[]   args)
         => source.LogMlResultIfFailTemplate(logger, LogLevel.Critical, messageTemplate, args);
@@ -850,6 +856,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailTemplate<T>(this MlResult<T>                    source,
                                                                           ILogger                        logger,
+                                                                          [StringSyntax("MessageTemplate")]
                                                                           string                         messageTemplate,
                                                                           Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailTemplate(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -867,6 +874,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailTemplateAsync<T>(this   MlResult<T> source,
                                                                                        ILogger     logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string      messageTemplate,
                                                                                 params object?[]   args)
         => source.LogMlResultIfFailTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -884,6 +892,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailTemplateAsync<T>(this MlResult<T>                    source,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -901,6 +910,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                        ILogger           logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string            messageTemplate,
                                                                                 params object?[]         args)
         => sourceAsync.LogMlResultIfFailTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -918,6 +928,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => sourceAsync.LogMlResultIfFailTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -946,6 +957,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailWithValueTemplate<T>(this   MlResult<T> source,
                                                                             ILogger     logger,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string      messageTemplate,
                                                                      params object?[]   args)
         => source.LogMlResultIfFailWithValueTemplate(logger, LogLevel.Critical, messageTemplate, args);
@@ -969,6 +981,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailWithValueTemplate<T>(this MlResult<T>                    source,
                                                                           ILogger                        logger,
+                                                                          [StringSyntax("MessageTemplate")]
                                                                           string                         messageTemplate,
                                                                           Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithValueTemplate(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -986,6 +999,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithValueTemplateAsync<T>(this   MlResult<T> source,
                                                                                        ILogger     logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string      messageTemplate,
                                                                                 params object?[]   args)
         => source.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -1003,6 +1017,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithValueTemplateAsync<T>(this MlResult<T>                    source,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -1020,6 +1035,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithValueTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                        ILogger           logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string            messageTemplate,
                                                                                 params object?[]         args)
         => sourceAsync.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -1037,6 +1053,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithValueTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => sourceAsync.LogMlResultIfFailWithValueTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -1065,6 +1082,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailWithExceptionTemplate<T>(this   MlResult<T> source,
                                                                             ILogger     logger,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string      messageTemplate,
                                                                      params object?[]   args)
         => source.LogMlResultIfFailWithExceptionTemplate(logger, LogLevel.Critical, messageTemplate, args);
@@ -1088,6 +1106,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailWithExceptionTemplate<T>(this MlResult<T>                    source,
                                                                           ILogger                        logger,
+                                                                          [StringSyntax("MessageTemplate")]
                                                                           string                         messageTemplate,
                                                                           Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithExceptionTemplate(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -1105,6 +1124,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithExceptionTemplateAsync<T>(this   MlResult<T> source,
                                                                                        ILogger     logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string      messageTemplate,
                                                                                 params object?[]   args)
         => source.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -1122,6 +1142,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithExceptionTemplateAsync<T>(this MlResult<T>                    source,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -1139,6 +1160,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithExceptionTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                        ILogger           logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string            messageTemplate,
                                                                                 params object?[]         args)
         => sourceAsync.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -1156,6 +1178,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithExceptionTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => sourceAsync.LogMlResultIfFailWithExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -1184,6 +1207,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailWithoutExceptionTemplate<T>(this   MlResult<T> source,
                                                                             ILogger     logger,
+                                                                            [StringSyntax("MessageTemplate")]
                                                                             string      messageTemplate,
                                                                      params object?[]   args)
         => source.LogMlResultIfFailWithoutExceptionTemplate(logger, LogLevel.Critical, messageTemplate, args);
@@ -1207,6 +1231,7 @@ public static partial class MlResultLogExtensions
     /// </example>
     public static MlResult<T> LogMlResultCriticalIfFailWithoutExceptionTemplate<T>(this MlResult<T>                    source,
                                                                           ILogger                        logger,
+                                                                          [StringSyntax("MessageTemplate")]
                                                                           string                         messageTemplate,
                                                                           Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithoutExceptionTemplate(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -1224,6 +1249,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithoutExceptionTemplateAsync<T>(this   MlResult<T> source,
                                                                                        ILogger     logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string      messageTemplate,
                                                                                 params object?[]   args)
         => source.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -1241,6 +1267,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithoutExceptionTemplateAsync<T>(this MlResult<T>                    source,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => source.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
@@ -1258,6 +1285,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithoutExceptionTemplateAsync<T>(this   Task<MlResult<T>> sourceAsync,
                                                                                        ILogger           logger,
+                                                                                       [StringSyntax("MessageTemplate")]
                                                                                        string            messageTemplate,
                                                                                 params object?[]         args)
         => sourceAsync.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, args);
@@ -1275,6 +1303,7 @@ public static partial class MlResultLogExtensions
     /// <returns>Tarea que produce el resultado de origen, sin modificar.</returns>
     public static Task<MlResult<T>> LogMlResultCriticalIfFailWithoutExceptionTemplateAsync<T>(this Task<MlResult<T>>              sourceAsync,
                                                                                      ILogger                        logger,
+                                                                                     [StringSyntax("MessageTemplate")]
                                                                                      string                         messageTemplate,
                                                                                      Func<MlErrorDetails, object?[]> argsBuilder)
         => sourceAsync.LogMlResultIfFailWithoutExceptionTemplateAsync(logger, LogLevel.Critical, messageTemplate, argsBuilder);
