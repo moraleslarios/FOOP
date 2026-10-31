@@ -1,6 +1,6 @@
 # Plan de la versión 2.3.0 · `MoralesLarios.OOFP.Logging`
 
-> **Estado global** · ⬜ no iniciada
+> **Estado global** · ⬜ no iniciada · **las 6 decisiones están resueltas** (31-10-2026), lista para implementar
 > **Proyectos afectados** · `src/MoralesLarios.OOFP.Logging` · `src/MoralesLarios.OOFP.Logging.Tests.Unit` · `src/MoralesLarios.OOFP.Logging.Sample`
 > **Origen** · petición del propietario · hallazgo `D2`, diferido en la [épica 6 de la 2.2.0](../../2.2.0/Logging/Epica-06-Rendimiento-y-Estandar-de-Logging.md)
 > **Versiones destino** · 2.3.0 (US-34 … US-40)
@@ -15,7 +15,7 @@
 2. [Mapa de las historias](#2-mapa-de-las-historias)
 3. [Qué cambia para el consumidor](#3-qué-cambia-para-el-consumidor)
 4. [Orden recomendado](#4-orden-recomendado)
-5. [Decisiones pendientes](#5-decisiones-pendientes)
+5. [Decisiones resueltas](#5-decisiones-resueltas)
 6. [Qué queda fuera](#6-qué-queda-fuera)
 7. [Definición de terminado común](#7-definición-de-terminado-común)
 8. [Ver también](#8-ver-también)
@@ -47,7 +47,7 @@
 
 | Historia | Resumen | Esfuerzo | Rompe |
 |----------|---------|---------:|:-----:|
-| **US-34** | Sobrecargas con plantilla de mensaje y argumentos | L | no (ver `D-26`) |
+| **US-34** | Sobrecargas con plantilla de mensaje y argumentos (familia `…Template`) | L | no |
 | **US-35** | Plantilla en la rama de fallo | M | no |
 | **US-36** | Combinar la plantilla con `EventId` y con `ILogger<TCategory>` | M | no |
 | **US-37** | Decidir y, si procede, implementar los ámbitos (`BeginScope`) | L | no |
@@ -107,24 +107,37 @@ El diagrama de dependencias está en la
 
 ---
 
-## 5. Decisiones pendientes
+## 5. Decisiones resueltas
 
-Seis decisiones, numeradas a continuación de las 25 que se cerraron en la 2.2.0. El detalle de cada
-una, con sus opciones y la recomendación razonada, está en la
+Seis decisiones, numeradas a continuación de las 25 que se cerraron en la 2.2.0, **todas resueltas el
+31-10-2026 con la opción recomendada**. El razonamiento completo, con las opciones descartadas y el
+*por qué no* de cada una, está en la
 [§5 de la épica](Epica-08-Registro-Estructurado-y-Plantillas.md#5-decisiones-abiertas).
 
-| # | Asunto | Bloquea | Recomendación |
-|:-:|--------|---------|---------------|
-| `D-26` | Cómo se evita la **captura silenciosa**: nombre distinto, orden distinto, cadena interpolada, tipo envoltorio o asumir el riesgo | **US-34, US-35, US-36** | **(a)** nombre distinto |
-| `D-27` | Si la plantilla se aplica a la rama válida, a la fallida o a ambas | US-34 | **(c)** válida ahora, fallida en la US-35 |
-| `D-28` | Hasta dónde se cruzan los ejes `nivel × EventId × categoría × plantilla` | US-36 | **(b)** genérico + 6 niveles + `EventId` |
-| `D-29` | Si los **ámbitos** entran aquí o se desgajan a la épica 9 | US-37 | **(b)** épica propia |
-| `D-30` | Alcance de la US-38: anotar, `LoggerMessage.Define` o generador | US-38 | **(a)** anotar y documentar |
-| `D-31` | Si el puente del `Async` que falta entra en la 2.3.0 o espera a la 3.0.0 | US-39 | **(a)** puente ahora |
+| # | Asunto | Afecta a | Resolución |
+|:-:|--------|----------|------------|
+| `D-26` | Cómo se evita la **captura silenciosa** | **US-34, US-35, US-36** | ✅ **(a)** nombre distinto, con el sufijo **`Template`** |
+| `D-27` | A qué rama se aplica la plantilla | US-34 | ✅ **(c)** sólo la válida; la fallida en la US-35 |
+| `D-28` | Hasta dónde se cruzan los ejes | US-36 | ✅ **(b)** genérico + 6 niveles + `EventId`; `ILogger<T>` fuera de alcance |
+| `D-29` | Si los **ámbitos** entran aquí | US-37 | ✅ **(b)** se desgajan a la **épica 9**; la US-37 no produce código |
+| `D-30` | Alcance de la US-38 | US-38 | ✅ **(a)** sólo anotar y documentar |
+| `D-31` | El puente del `Async` que falta | US-39 | ✅ **(a)** puente `[Obsolete]` en la 2.3.0 |
 
-> ⚠️ **`D-26` es la única verdaderamente bloqueante.** Las demás admiten empezar y ajustar; ésta
-> determina el **nombre público** de cada miembro nuevo, y un nombre publicado ya no se cambia sin
-> romper.
+### Lo que estas resoluciones cambian en el plan
+
+- **La familia nueva se llama `…Template`** · `LogMlResultInformationTemplate`,
+  `LogMlResultErrorTemplate`, … y el genérico `LogMlResultTemplate`. Elegido frente a `Format`
+  porque *plantilla de mensaje* es el término de la plataforma, mientras que `Format` evocaría los
+  marcadores **posicionales y anónimos** de `string.Format` (`{0}`, `{1}`), que es justo la idea
+  contraria: aquí el marcador **tiene nombre** y ese nombre es el campo que verá el *sink*.
+- **La captura silenciosa desaparece por construcción** · al no compartir nombre con las sobrecargas
+  de `string`, no hay resolución de sobrecarga que pueda equivocarse. El riesgo de la épica baja de
+  🟠 **alto** a 🟡 **medio** en todo lo que no sea la US-39.
+- **La US-37 no produce código** · se cierra con la decisión y con el documento de la épica 9.
+- **La US-39 pasa a ser la única que rompe** · el puente `[Obsolete]` genera `CS0618`, así que exige
+  la fila en `oofp-upgrade-2.renames.md` además del registro en los 6 sitios del prompt.
+- **`ILogger<TCategory>` × plantilla queda fuera de alcance**, y hay que declararlo en el `README.md`
+  del proyecto igual que hoy se declara que los dos ejes de la 2.2.0 no se combinan.
 
 ---
 

@@ -292,14 +292,15 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
 **quiero** pasar una plantilla con marcadores y sus valores por separado
 **para** que mis trazas lleguen al *sink* con campos consultables, no como una cadena opaca.
 
-- **Esfuerzo** · L · **Riesgo** · 🟠 · **Rompe** · no, salvo lo que decida [`D-26`](#5-decisiones-abiertas)
+- **Esfuerzo** · L · **Riesgo** · 🟡 · **Rompe** · no · familia **`…Template`** por [`D-26`](#5-decisiones-abiertas)
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-26`](#5-decisiones-abiertas)**: queda decidido el nombre y la forma de la firma,
-      de modo que la **captura silenciosa** del punto 30 sea **imposible**, no improbable.
-- [ ] **Resuelta [`D-27`](#5-decisiones-abiertas)**: queda decidido si la plantilla se aplica sólo a
-      la rama válida, sólo a la fallida, o a ambas con plantillas independientes.
+- [x] **Resuelta [`D-26`](#5-decisiones-abiertas)** · opción **(a)** con el sufijo **`Template`**: al
+      no compartir nombre con las sobrecargas de `string`, la **captura silenciosa** del punto 30 es
+      **imposible**, no improbable.
+- [x] **Resuelta [`D-27`](#5-decisiones-abiertas)** · opción **(c)**: esta historia cubre **sólo la
+      rama válida**; la fallida es la US-35.
 - [ ] Existe al menos una sobrecarga por nivel que acepta `string messageTemplate` y los argumentos,
       y delega en `ILogger.Log(logLevel, messageTemplate, args)` **sin** interpolar previamente.
 - [ ] Hay un **test con doble de `ILogger`** que verifica que el `state` recibido implementa
@@ -355,9 +356,10 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-28`](#5-decisiones-abiertas)**: queda fijado el criterio de combinatoria —qué
-      ejes se cruzan y qué cruces se declaran fuera de alcance— y queda escrito en el `README.md`
-      del proyecto, sustituyendo la nota actual de «los dos ejes no se combinan».
+- [x] **Resuelta [`D-28`](#5-decisiones-abiertas)** · opción **(b)**: se cruzan el genérico, los 6
+      niveles y el eje `EventId`; el cruce con `ILogger<TCategory>` **queda fuera de alcance**.
+- [ ] Ese criterio queda escrito en el `README.md` del proyecto, sustituyendo la nota actual de «los
+      dos ejes no se combinan».
 - [ ] Existen las combinaciones que `D-28` apruebe, y **sólo** ésas: la épica no añade firmas «por
       simetría» que nadie va a llamar.
 - [ ] Se verifica que las combinaciones nuevas **no** generan ambigüedad, compilando una llamada de
@@ -376,15 +378,13 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-29`](#5-decisiones-abiertas)**: queda decidido si los ámbitos entran en esta
-      épica o se desgajan a una épica propia. Si se desgajan, **esta historia se cierra con la
-      decisión y el documento de la épica nueva**, no con código.
-- [ ] Si entran: existe un mecanismo que abre el ámbito con una plantilla y sus argumentos, ejecuta
-      un tramo de la tubería y **cierra el ámbito siempre**, también si el tramo lanza.
-- [ ] Si entran: hay un test que verifica que las trazas emitidas **dentro** del tramo llevan las
-      propiedades del ámbito, y las de **fuera** no.
-- [ ] El recuento de `BeginScope` en el proyecto queda documentado, sea `0` —con la justificación— o
-      mayor que `0`.
+- [x] **Resuelta [`D-29`](#5-decisiones-abiertas)** · opción **(b)**: los ámbitos **se desgajan a una
+      épica 9 propia**. Por tanto esta historia **no produce código**.
+- [ ] Existe el documento de la **épica 9**, con sus historias numeradas **desde la US-41** y con las
+      preguntas propias de los ámbitos planteadas: qué pasa si el tramo lanza, cómo se compone con
+      `Bind`, y si el ámbito debe sobrevivir al `await`.
+- [ ] El recuento de `BeginScope` en el proyecto queda documentado como `0` **con la justificación**
+      —se aborda en la épica 9— en el `README.md` del proyecto.
 
 ### US-38 · Dejar la superficie limpia ante los analizadores
 
@@ -396,16 +396,16 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-30`](#5-decisiones-abiertas)**: queda decidido el alcance —anotar la superficie,
-      usar `LoggerMessage.Define`, o ambas cosas—.
+- [x] **Resuelta [`D-30`](#5-decisiones-abiertas)** · opción **(a)**: **sólo anotar y documentar**.
+      `LoggerMessage.Define` **no entra**, porque presupone plantillas conocidas en tiempo de
+      compilación y aquí las trae el consumidor en tiempo de ejecución.
 - [ ] Los parámetros de plantilla se anotan para que las herramientas los reconozcan como tales, y se
       documenta en el XML que **deben ser constantes** y que los valores van en los argumentos.
 - [ ] Se compila un proyecto de prueba con los analizadores de `Microsoft.Extensions.Logging`
       habilitados y `TreatWarningsAsErrors`, y se **registra el recuento de avisos** `CA2254` que
       produce usar la API nueva. Si no es `0`, se hace constar y se explica por qué.
-- [ ] Si `D-30` aprueba `LoggerMessage.Define`, se mide la mejora con el mismo método de la US-31
-      —`Stopwatch` + `GC.GetAllocatedBytesForCurrentThread()`, decisión `D-21`— y el resultado se
-      escribe en la §7.
+- [x] ~~Si `D-30` aprueba `LoggerMessage.Define`, se mide la mejora…~~ · **no aplica**: `D-30` se
+      resolvió con la opción (a).
 - [ ] El build del proyecto sigue con **0 `CS1591`** y **sin avisos nuevos** respecto a la línea base
       de la 2.2.0 (**236 avisos**).
 
@@ -415,17 +415,17 @@ antiguo `[Obsolete]` genera `CS0618` en el consumidor, que es una ruptura regist
 **quiero** que no queden nombres equivocados en la superficie
 **para** que el convenio de la épica 4 se cumpla sin excepciones.
 
-- **Esfuerzo** · XS · **Riesgo** · 🟡 · **Rompe** · sí, si [`D-31`](#5-decisiones-abiertas) aprueba el puente
+- **Esfuerzo** · XS · **Riesgo** · 🟡 · **Rompe** · **sí** · [`D-31`](#5-decisiones-abiertas) aprobó el puente
 
 **Criterios de aceptación**
 
 - [ ] La `#region LogMlResultCritical` de `MlResultLogExtensions.Trace.cs` pasa a llamarse
       `LogMlResultTrace`, y el test de paridad de nombres de región de `MatrixTests.cs` se endurece
       para que no pueda volver a ocurrir.
-- [ ] **Resuelta [`D-31`](#5-decisiones-abiertas)**: queda decidido si en la 2.3.0 se añade
-      `LogCompletedResultAsync` con puente `[Obsolete]` sobre el nombre sin sufijo, o si se espera a
-      la 3.0.0.
-- [ ] Si se aprueba el puente: el nombre antiguo queda como
+- [x] **Resuelta [`D-31`](#5-decisiones-abiertas)** · opción **(a)**: en la 2.3.0 se añade
+      `LogCompletedResultAsync` con puente `[Obsolete]` sobre el nombre sin sufijo. Esto convierte a
+      esta historia en **la única de la épica que rompe**.
+- [ ] El nombre antiguo queda como
       `[Obsolete(…, false)] + [EditorBrowsable(Never)]`, igual que los puentes de la épica 4, y la
       **ruptura `CS0618` queda registrada en los 6 sitios** del prompt, **más** la fila en
       `oofp-upgrade-2.renames.md`.
@@ -504,6 +504,10 @@ graph TD
 
 > La numeración continúa desde `D-25`, que fue la última de la 2.2.0.
 
+> ✅ **Las seis decisiones quedaron resueltas por el propietario el 31-10-2026**, todas con la opción
+> recomendada. En `D-26` se eligió además el sufijo **`Template`**. Se conservan abajo las opciones
+> descartadas, porque el *por qué no* de cada una es parte del diseño y evita volver a discutirlo.
+
 ### `D-26` · Cómo se evita la captura silenciosa del punto 30
 
 El problema, en una línea: `(logger, "hola a las {Hora}", "las nueve")` encaja **mejor** con la
@@ -523,6 +527,32 @@ sobrecarga de dos literales que con la de plantilla, y el compilador no avisa.
 > descartada por el propio criterio del repositorio: una ruptura silenciosa que podemos evitar por
 > diseño no se documenta, se evita.
 
+> ### ✅ Resuelta · opción **(a)** con el sufijo **`Template`**
+>
+> La familia nueva se llama **`LogMlResult<Nivel>Template`**, y el genérico
+> **`LogMlResultTemplate`**:
+>
+> ```csharp
+> origen.LogMlResultInformationTemplate(logger, "hola a las {Hora}", DateTime.Now);
+> origen.LogMlResultTemplate(logger, LogLevel.Information, "hola a las {Hora}", DateTime.Now);
+> ```
+>
+> **Por qué `Template` y no `Format`.** Porque es el término que usa la propia plataforma: el
+> parámetro de `ILogger.Log` se llama **`message template`** en la documentación de Microsoft, y la
+> clave que viaja en el `state` es **`{OriginalFormat}`** pero el concepto es *plantilla de mensaje*.
+> `Format` arrastraría la semántica de `string.Format`, donde los marcadores son **posicionales y
+> anónimos** (`{0}`, `{1}`): exactamente la idea equivocada, porque aquí el marcador **tiene nombre**
+> y ese nombre es el que acaba siendo un campo consultable en el *sink*.
+>
+> **Consecuencia sobre la captura silenciosa.** Queda **eliminada por construcción**: con un nombre
+> distinto no hay ninguna resolución de sobrecarga que elegir, así que el caso
+> `(logger, "hola a las {Hora}", "las nueve")` del punto 30 **deja de existir** en la familia nueva.
+> La llamada va a `…Template` o no va.
+>
+> **Lo que esto NO cierra.** La **(c)**, el manejador de cadena interpolada, sigue siendo deseable y
+> **no es excluyente**: se evalúa para la 3.0.0 y, si entra, lo hará **sobre** esta familia, no en su
+> lugar.
+
 ### `D-27` · ¿A qué rama se aplica la plantilla?
 
 Las sobrecargas actuales tienen dos sabores: uno que registra en **ambas** ramas con mensajes
@@ -538,6 +568,11 @@ distintos (`validMessage`, `failMessage`) y uno que registra el **mismo** mensaj
 > **Recomendación.** La **(c)**, cerrando después con la US-35. Dos juegos de `params` en la misma
 > firma es imposible —`params` tiene que ir último—, así que la (b) obliga a un tipo envoltorio o a
 > dos llamadas. Conviene no mezclar esa discusión con la de la US-34.
+
+> ### ✅ Resuelta · opción **(c)**
+>
+> La **US-34** cubre **sólo la rama válida**. La rama de fallo es el objeto de la **US-35**, que
+> diseñará su propia forma y fijará los nombres de campo derivados del `MlErrorDetails`.
 
 ### `D-28` · Hasta dónde se cruzan los ejes
 
@@ -555,6 +590,16 @@ Ejes disponibles tras esta épica: **nivel** (6 + genérico) × **familia** (7) 
 > detiene el crecimiento combinatorio de verdad, pero cambia el estilo de la API y eso pertenece a una
 > versión mayor.
 
+> ### ✅ Resuelta · opción **(b)**
+>
+> Se cruzan el **genérico**, los **6 niveles** y el eje **`EventId`**. El cruce con
+> `ILogger<TCategory>` **queda fuera de alcance** y así se declarará en el `README.md`, igual que hoy
+> se declara que los dos ejes de la 2.2.0 no se combinan.
+>
+> La **(d)** —un `MlLogOptions` que absorba `EventId`, categoría y plantilla— queda **anotada para la
+> 3.0.0**: es la única salida real al crecimiento combinatorio, pero cambia el estilo de la API y eso
+> no cabe en una versión menor.
+
 ### `D-29` · ¿Los ámbitos entran en esta épica?
 
 | Opción | Propuesta |
@@ -566,6 +611,12 @@ Ejes disponibles tras esta épica: **nivel** (6 + genérico) × **familia** (7) 
 > **Recomendación.** La **(b)**. Un ámbito que envuelve un tramo de tubería plantea preguntas propias
 > —qué pasa si el tramo lanza, cómo se compone con `Bind`, si el ámbito debe sobrevivir al `await`—
 > que no tienen nada que ver con las plantillas. Mezclarlas haría de esta épica un cajón de sastre.
+
+> ### ✅ Resuelta · opción **(b)**
+>
+> Los ámbitos **se desgajan a una épica 9 propia**. Por tanto la **US-37 no produce código**: se
+> cierra entregando la decisión y el documento de esa épica nueva, tal y como ya preveía su primer
+> criterio de aceptación.
 
 ### `D-30` · Alcance de la US-38
 
@@ -579,6 +630,11 @@ Ejes disponibles tras esta épica: **nivel** (6 + genérico) × **familia** (7) 
 > tiempo de compilación**, y aquí la plantilla la trae el consumidor en tiempo de ejecución: el
 > beneficio sería marginal y el coste alto.
 
+> ### ✅ Resuelta · opción **(a)**
+>
+> Sólo **anotar y documentar**. No entra `LoggerMessage.Define`, así que el criterio de aceptación de
+> la US-38 que dependía de ello **no aplica** y la medición de la §7 no se requiere.
+
 ### `D-31` · El puente del `Async` que falta
 
 | Opción | Propuesta |
@@ -591,14 +647,21 @@ Ejes disponibles tras esta épica: **nivel** (6 + genérico) × **familia** (7) 
 > caso con `D-04` y con puentes `[Obsolete(…, false)] + [EditorBrowsable(Never)]`. Es una sola firma:
 > el coste es mínimo y cierra el convenio.
 
+> ### ✅ Resuelta · opción **(a)**
+>
+> Se añade **`LogCompletedResultAsync`** y el nombre sin sufijo queda como
+> `[Obsolete(…, false)] + [EditorBrowsable(Never)]`. Esto convierte la **US-39 en la única historia
+> que rompe** de la épica: genera `CS0618` en el consumidor, y por tanto **obliga** a la fila en
+> `oofp-upgrade-2.renames.md` además del registro en los 6 sitios del prompt.
+
 ---
 
 ## 6. Definición de terminado
 
 Esta épica no se da por cerrada hasta que **todo** lo siguiente es cierto:
 
-- [ ] **Las seis decisiones `D-26` … `D-31` están resueltas** y escritas en este documento, con la
-      opción elegida marcada.
+- [x] **Las seis decisiones `D-26` … `D-31` están resueltas** y escritas en este documento, con la
+      opción elegida marcada. ✅ 31-10-2026, todas con la opción recomendada.
 - [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` ⇒ **`EXIT = 0`**,
       **0 errores**, **0 `CS1591`**, **0 `CS1572`/`CS1573`/`CS1574`**, **0 `CS0618`** y **sin avisos
       nuevos** sobre la línea base de **236**.
@@ -612,8 +675,9 @@ Esta épica no se da por cerrada hasta que **todo** lo siguiente es cierto:
 - [ ] `scripts\check-md-anchors4.ps1` ⇒ **`revisados ≥ 1268`, `rotos = 0`**.
 - [ ] El `README.md` del proyecto refleja la API **real**, con la tabla de recuentos actualizada.
 - [ ] Toda ruptura y todo aditivo relevante están registrados en los **6 sitios** de
-      `oofp-upgrade-2.prompt.md`, **continuando la numeración desde el punto 52**, y los renombrados
-      —si `D-31` los aprueba— en `oofp-upgrade-2.renames.md`.
+      `oofp-upgrade-2.prompt.md`, **continuando la numeración desde el punto 52**, y el renombrado
+      `LogCompletedResult` → `LogCompletedResultAsync` —aprobado por `D-31`— en
+      `oofp-upgrade-2.renames.md`.
 - [ ] Los commits siguen **Conventional Commits en castellano**, con `!` si rompen, creados con
       `git commit -F` desde un fichero **UTF-8 sin BOM**.
 - [ ] **No se publica sin confirmación** del propietario.
