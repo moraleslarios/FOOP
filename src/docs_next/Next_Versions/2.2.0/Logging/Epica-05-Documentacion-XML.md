@@ -449,3 +449,88 @@ graph TD
 > - Tests `EXIT = 0`, **1.338** pruebas, **0** con error, **0** omitidas.
 > - Un solo commit en lugar de los cinco previstos: la épica se ejecutó de una pasada y trocearla
 >   habría dejado la documentación inconsistente en los commits intermedios.
+
+---
+
+## 7. Apéndice · código actual y propuesto
+
+### 7.1 Las descripciones de plantilla, antes y después
+
+```csharp
+// ANTES
+/// <summary>
+/// Registra el resultado en el <c></c> indicado.
+/// </summary>
+/// <param name="source">Mensaje descriptivo.</param>
+/// <param name="logger">Mensaje descriptivo.</param>
+/// <param name="validBuilMessage">Mensaje descriptivo.</param>
+/// <returns>Mensaje descriptivo.</returns>
+```
+
+```csharp
+// DESPUES
+/// <summary>
+/// Registra el resultado con el nivel <see cref="LogLevel.Information"/>.
+/// </summary>
+/// <typeparam name="T">Tipo del valor que transporta el resultado correcto.</typeparam>
+/// <param name="source">Resultado que se registra y se devuelve sin alterar.</param>
+/// <param name="logger">Registrador al que se envía la traza.</param>
+/// <param name="validBuildMessage">
+/// Construye el mensaje a partir del valor correcto. Si es <see langword="null"/>, no se registra
+/// el caso correcto.
+/// </param>
+/// <returns>El mismo <see cref="MlResult{T}"/> recibido, sin modificar.</returns>
+/// <example>
+/// <code>
+/// var resultado = BuscarPedido(id)
+///                     .LogMlResultInformation(logger,
+///                                             validBuildMessage: x  => $"Pedido {x.Id} localizado",
+///                                             failBuildMessage : er => $"No se localiza: {er.GetErrorsSummary()}");
+/// </code>
+/// </example>
+```
+
+### 7.2 Las citas a tipos inexistentes
+
+Los `<c>MlResultCritical</c>`, `<c>MlResultDebug</c>` … y hermanos **no eran tipos**: eran
+nombres inventados en la plantilla. Cada uno se ha convertido en la referencia real al nivel que
+corresponde.
+
+| Cita antigua | Sustitución |
+|--------------|-------------|
+| `<c>MlResultTrace</c>` | `<see cref="LogLevel.Trace"/>` |
+| `<c>MlResultDebug</c>` | `<see cref="LogLevel.Debug"/>` |
+| `<c>MlResultInformation</c>` | `<see cref="LogLevel.Information"/>` |
+| `<c>MlResultWarning</c>` | `<see cref="LogLevel.Warning"/>` |
+| `<c>MlResultError</c>` | `<see cref="LogLevel.Error"/>` |
+| `<c>MlResultCritical</c>` | `<see cref="LogLevel.Critical"/>` |
+| `<c></c>` (vacío) | `<see cref="ILogger"/>` |
+
+> **Trampa encontrada por el camino.** Los **genéricos anidados son ilegales dentro de `cref`**:
+> `<see cref="Task{MlResult{T}}"/>` produce `CS1584` más `CS1658`. Las **23** citas de esa forma se
+> reescribieron en prosa. Un `cref` de un solo nivel —`<see cref="MlResult{T}"/>`— sí es
+> legal.
+
+### 7.3 Búsquedas de verificación
+
+| Búsqueda | Antes | Al cerrar |
+|-----------|------:|----------:|
+| `Mensaje descriptivo.` | 383 | **0** |
+| `<c></c>` | 1 | **0** |
+| `<c>MlResultXxx</c>` (los seis) | 252 | **0** |
+| `Tipo del valor.</typeparam>` | 21 | **0** |
+| `<example>` | 0 | **6** |
+| `<remarks>` | 0 | **6** |
+| `CS1591` | 0 | **0** |
+| `CS1572` · `CS1573` · `CS1574` | 0 | **0** |
+| avisos de la solución | 236 | **238** |
+| tests en verde | 1.136 | **1.338** |
+
+---
+
+## 8. Ver también
+
+- [`README.md`](README.md) — plan de la versión 2.2.0.
+- [`Epica-04-Nomenclatura-y-Firmas-Publicas.md`](Epica-04-Nomenclatura-y-Firmas-Publicas.md) — fija los nombres de parámetro que esta épica documenta.
+- [`Epica-06-Rendimiento-y-Estandar-de-Logging.md`](Epica-06-Rendimiento-y-Estandar-de-Logging.md) — sus sobrecargas nuevas nacen ya con el criterio de documentación que aquí se fija.
+- [`Epica-07-Saneamiento-del-Sample.md`](Epica-07-Saneamiento-del-Sample.md) — el `Sample` es la documentación ejecutable que acompaña a ésta.

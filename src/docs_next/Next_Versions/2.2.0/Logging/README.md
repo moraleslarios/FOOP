@@ -40,7 +40,7 @@ frente de conflicto en el control de versiones. Sigue el mismo criterio —y el 
 | 3 | [Corrección funcional y validación](Epica-03-Correccion-Funcional-y-Validacion.md) | `MlResultLogExtensions.cs` · guardias de argumentos | US-11 … US-14 | **M** (~1,0 j) | 🟠 | ✅ |
 | 4 | [Nomenclatura y firmas públicas](Epica-04-Nomenclatura-y-Firmas-Publicas.md) | 218 parámetros · `Extensions.cs` · los 7 ficheros de nivel | US-15 … US-20 | **S** (~0,5 j) | 🔴 | ✅ |
 | 5 | [Documentación XML](Epica-05-Documentacion-XML.md) | los `///` de los 339 métodos públicos | US-21 … US-27 | **M** (~1,5 j) | 🟢 | ✅ |
-| 6 | [Rendimiento y estándar de logging](Epica-06-Rendimiento-y-Estandar-de-Logging.md) | API nueva aditiva · `IsEnabled` · `EventId` · `ILogger<T>` | US-28 … US-31 | **L** (~2,0 j) | 🟡 | ⬜ |
+| 6 | [Rendimiento y estándar de logging](Epica-06-Rendimiento-y-Estandar-de-Logging.md) | API nueva aditiva · `IsEnabled` · `EventId` · `ILogger<T>` | US-28 … US-31 | **L** (~2,0 j) | 🟡 | ✅ |
 | 7 | [Saneamiento del Sample](Epica-07-Saneamiento-del-Sample.md) | `MoralesLarios.OOFP.Logging.Sample/Program.cs` | US-32 … US-33 | **XS** (~0,25 j) | 🟢 | ⬜ |
 
 > **Leyenda de estado** · ✅ completada · 🔄 en curso · ⬜ no iniciada

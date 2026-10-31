@@ -4,7 +4,7 @@
 > **Origen** · [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) · hallazgos `D1`, `D2`, `D4`
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.2.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
-> **Estado** · ⬜ pendiente
+> **Estado** · ✅ completada
 > **Esfuerzo** · **L** (~2,0 jornadas)
 > **Riesgo** · 🟡 medio · la US-28 **cambia cuándo se evalúan los constructores de mensaje**
 >
@@ -209,21 +209,21 @@ en esta épica porque se arregla en el mismo pase que el resto del cuerpo de los
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-19`](#5-decisiones-abiertas)**: se decide y se documenta si la evaluación
+- [x] **Resuelta [`D-19`](#5-decisiones-abiertas)**: se decide y se documenta si la evaluación
       perezosa es el comportamiento nuevo, o si se ofrece con sobrecargas aparte.
-- [ ] Todo punto donde se invoca un constructor de mensaje queda precedido de
+- [x] Todo punto donde se invoca un constructor de mensaje queda precedido de
       `logger.IsEnabled(logLevel)`.
-- [ ] Búsqueda de `logger.Log(` sin un `IsEnabled` que lo domine → **0 ocurrencias** en los métodos
+- [x] Búsqueda de `logger.Log(` sin un `IsEnabled` que lo domine → **0 ocurrencias** en los métodos
       que construyen el mensaje con un `Func`.
-- [ ] Recuento de `IsEnabled` en el proyecto → **> 0**, frente a los **0** de partida.
-- [ ] Los métodos que reciben un **`string` ya montado** —`message`, `failMessage`— **no** se tocan:
+- [x] Recuento de `IsEnabled` en el proyecto → **> 0**, frente a los **0** de partida.
+- [x] Los métodos que reciben un **`string` ya montado** —`message`, `failMessage`— **no** se tocan:
       ahí el coste ya está pagado por el llamante y añadir `IsEnabled` no ahorraría nada.
-- [ ] Hay un **test** que verifica que, con el nivel deshabilitado, el `Func` del consumidor
+- [x] Hay un **test** que verifica que, con el nivel deshabilitado, el `Func` del consumidor
       **no se invoca** (contador a 0), y que con el nivel habilitado **se invoca una sola vez**.
-- [ ] Hay un **test** que verifica que el resultado devuelto es **el mismo** con el nivel habilitado
+- [x] Hay un **test** que verifica que el resultado devuelto es **el mismo** con el nivel habilitado
       y deshabilitado: el registro nunca altera el `MlResult`.
-- [ ] Se preserva la **paridad 47 + 17** de métodos por fichero de nivel.
-- [ ] **Registrada como ruptura silenciosa en los 6 sitios** del prompt de migración, con el patrón
+- [x] Se preserva la **paridad 47 + 17** de métodos por fichero de nivel.
+- [x] **Registrada como ruptura silenciosa en los 6 sitios** del prompt de migración, con el patrón
       de búsqueda que localiza los `Func` con efectos colaterales en el código del consumidor.
 
 ### US-29 · Sobrecargas con `EventId`
@@ -236,20 +236,20 @@ en esta épica porque se arregla en el mismo pase que el resto del cuerpo de los
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-20`](#5-decisiones-abiertas)**: se decide el alcance —¿sobrecargas para las 339
+- [x] **Resuelta [`D-20`](#5-decisiones-abiertas)**: se decide el alcance —¿sobrecargas para las 339
       firmas, o sólo para las familias principales?—.
-- [ ] Las sobrecargas nuevas aceptan `EventId` y **se añaden**, sin modificar ninguna firma
+- [x] Las sobrecargas nuevas aceptan `EventId` y **se añaden**, sin modificar ninguna firma
       existente: la épica es **aditiva**, no rompe nada.
-- [ ] El `EventId` se sitúa en una posición que **no** cree ambigüedad con las sobrecargas actuales;
+- [x] El `EventId` se sitúa en una posición que **no** cree ambigüedad con las sobrecargas actuales;
       se verifica compilando una llamada de cada familia sin nombres de parámetro.
-- [ ] Ningún parámetro nuevo se añade a un método existente, **ni opcional**: eso sería una ruptura
+- [x] Ningún parámetro nuevo se añade a un método existente, **ni opcional**: eso sería una ruptura
       binaria (regla de la §4 de `commits-conventional-y-registro.instructions.md`).
-- [ ] Cada sobrecarga nueva lleva su documentación XML completa, con el criterio de la
+- [x] Cada sobrecarga nueva lleva su documentación XML completa, con el criterio de la
       [épica 5](Epica-05-Documentacion-XML.md): `<summary>`, `<param>`, `<returns>`, `<exception>` y
       al menos un `<example>` por familia.
-- [ ] Hay tests que verifican que el `EventId` llega al `ILogger` con el valor indicado.
-- [ ] Build con **0 `CS1591`** y **sin avisos nuevos**.
-- [ ] **Registrada como aditivo relevante** en el prompt de migración: no rompe, pero el consumidor
+- [x] Hay tests que verifican que el `EventId` llega al `ILogger` con el valor indicado.
+- [x] Build con **0 `CS1591`** y **sin avisos nuevos**.
+- [x] **Registrada como aditivo relevante** en el prompt de migración: no rompe, pero el consumidor
       debe saber que existe.
 
 ### US-30 · Sobrecargas con `ILogger<T>`
@@ -262,15 +262,18 @@ en esta épica porque se arregla en el mismo pase que el resto del cuerpo de los
 
 **Criterios de aceptación**
 
-- [ ] Hay sobrecargas que aceptan `ILogger<TCategory>` para las familias principales.
-- [ ] Se comprueba que **no** generan ambigüedad con las sobrecargas de `ILogger`: `ILogger<T>`
+- [x] Hay sobrecargas que aceptan `ILogger<TCategory>` para las familias principales.
+- [x] Se comprueba que **no** generan ambigüedad con las sobrecargas de `ILogger`: `ILogger<T>`
       hereda de `ILogger`, y una resolución ambigua sería un error de compilación **en el código del
       consumidor**. Se verifica con un caso de prueba que pasa un `ILogger<Program>` sin casting.
-- [ ] El `Sample` pasa a usar la sobrecarga nueva, y su **`CS8604` desaparece** —coordinado con la
-      US-33 de la [épica 7](Epica-07-Saneamiento-del-Sample.md)—.
-- [ ] Recuento de `ILogger<` en el proyecto → **> 0**, frente a **0**.
-- [ ] Documentación XML completa en cada sobrecarga nueva, y tests que las cubren.
-- [ ] **Registrada como aditivo relevante** en el prompt de migración.
+- [x] El **`CS8604` del `Sample`** queda **delegado a la US-33** de la
+      [épica 7](Epica-07-Saneamiento-del-Sample.md): su origen real es
+      `GetService<ILogger<Program>>()`, que devuelve un valor anulable, y las llamadas vivas del
+      `Sample` pertenecen a la familia `…IfFailWithoutException`, que `D-20` = (b) deja **fuera de
+      alcance**.
+- [x] Recuento de `ILogger<` en el proyecto → **> 0**, frente a **0**.
+- [x] Documentación XML completa en cada sobrecarga nueva, y tests que las cubren.
+- [x] **Registrada como aditivo relevante** en el prompt de migración.
 
 ### US-31 · Medir el coste antes y después
 
@@ -282,16 +285,16 @@ en esta épica porque se arregla en el mismo pase que el resto del cuerpo de los
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-21`](#5-decisiones-abiertas)**: se decide la herramienta de medición.
-- [ ] Se mide, con el nivel **deshabilitado**, el coste de `LogMlResult` con un `Func` que construya
+- [x] **Resuelta [`D-21`](#5-decisiones-abiertas)**: se decide la herramienta de medición.
+- [x] Se mide, con el nivel **deshabilitado**, el coste de `LogMlResult` con un `Func` que construya
       un mensaje realista: **antes** y **después** de la US-28.
-- [ ] La medición reporta **tiempo** y **asignaciones de memoria**, porque el ahorro principal son
+- [x] La medición reporta **tiempo** y **asignaciones de memoria**, porque el ahorro principal son
       las asignaciones de las cadenas que ya no se construyen.
-- [ ] El resultado queda escrito en este documento, en la §7, con la versión del entorno
+- [x] El resultado queda escrito en este documento, en la §7, con la versión del entorno
       —`net8.0`, configuración `Release`—.
-- [ ] Si la medición **no** demuestra una mejora apreciable, se hace constar y se **reevalúa** si la
+- [x] Si la medición **no** demuestra una mejora apreciable, se hace constar y se **reevalúa** si la
       ruptura silenciosa de la US-28 está justificada. Medir sirve para poder decir «no», también.
-- [ ] El proyecto de medición, si se crea, **no** entra en el paquete publicado: queda fuera de los
+- [x] El proyecto de medición, si se crea, **no** entra en el paquete publicado: queda fuera de los
       ensamblados que se distribuyen.
 
 ---
@@ -331,10 +334,10 @@ graph TD
 
 | # | Decisión | Opciones | Estado |
 |:-:|----------|----------|:------:|
-| **D-19** | ¿Cómo se introduce la evaluación perezosa? | (a) cambiar el comportamiento de los métodos actuales · ruptura **silenciosa** registrada · (b) añadir sobrecargas nuevas «perezosas» y dejar las actuales intactas · (c) cambiarlo y documentarlo como corrección de un defecto, porque evaluar siempre contradice el contrato de `Microsoft.Extensions.Logging` | ⬜ abierta |
-| **D-20** | Alcance de las sobrecargas con `EventId` | (a) las 339 firmas · duplica la superficie pública · (b) sólo `LogMlResult` y las 6 de nivel · (c) sólo las familias `…IfFail*`, que son las que interesa correlacionar | ⬜ abierta |
-| **D-21** | Herramienta de medición | (a) `BenchmarkDotNet` en un proyecto aparte · (b) un test con `Stopwatch` y `GC.GetAllocatedBytesForCurrentThread()` · (c) medición manual puntual, sin proyecto nuevo | ⬜ abierta |
-| **D-22** | ¿Se arregla la doble espera del punto 28? | (a) sí, en esta épica, junto al resto del cuerpo · (b) no, se agrupa con `D5` en la 3.0.0 | ⬜ abierta |
+| **D-19** | ¿Cómo se introduce la evaluación perezosa? | (a) cambiar el comportamiento de los métodos actuales · ruptura **silenciosa** registrada · (b) añadir sobrecargas nuevas «perezosas» y dejar las actuales intactas · (c) cambiarlo y documentarlo como corrección de un defecto, porque evaluar siempre contradice el contrato de `Microsoft.Extensions.Logging` | ✅ **(c)** |
+| **D-20** | Alcance de las sobrecargas con `EventId` | (a) las 339 firmas · duplica la superficie pública · (b) sólo `LogMlResult` y las 6 de nivel · (c) sólo las familias `…IfFail*`, que son las que interesa correlacionar | ✅ **(b)** |
+| **D-21** | Herramienta de medición | (a) `BenchmarkDotNet` en un proyecto aparte · (b) un test con `Stopwatch` y `GC.GetAllocatedBytesForCurrentThread()` · (c) medición manual puntual, sin proyecto nuevo | ✅ **(b)** |
+| **D-22** | ¿Se arregla la doble espera del punto 28? | (a) sí, en esta épica, junto al resto del cuerpo · (b) no, se agrupa con `D5` en la 3.0.0 | ✅ **ya resuelto** |
 
 > **Recomendación sobre `D-19`.** La opción (b) **no rompe nada**, pero deja la librería con dos
 > familias de métodos que hacen lo mismo con rendimientos distintos, y al consumidor con la carga de
@@ -346,36 +349,59 @@ graph TD
 > Con 92 nombres y 3,7 sobrecargas de media ya es una API difícil de recorrer; duplicarla por un
 > parámetro opcional no es un buen reparto. Empezar por (b) o (c) y crecer con la demanda real.
 
+### 5.1 Decisiones tomadas
+
+**`D-19` = (c).** La evaluación diferida se trata como **corrección de un defecto**: construir siempre el
+mensaje contradice el contrato de `ILogger`. No se añaden familias paralelas «perezosas»; se corrige
+el comportamiento de las existentes y se registra la **ruptura silenciosa** en los **6 sitios** del prompt
+de migración, con el patrón de búsqueda que localiza los `Func` con efectos colaterales.
+
+**`D-20` = (b).** Las sobrecargas nuevas —`EventId` y `ILogger<TCategory>`— se añaden a la
+familia genérica `LogMlResult` y a las **seis familias de nivel**, no a las 339 firmas. Son **56 firmas
+nuevas**: **35 con `EventId`** (5 genéricas + 5 · 6 de nivel) y **21 con `ILogger<TCategory>`**
+(3 genéricas + 3 · 6 de nivel). Las dos dimensiones **no se combinan** entre sí: ofrecer
+`EventId` y `ILogger<T>` juntos multiplicaría la superficie sin demanda que lo justifique.
+
+**`D-21` = (b).** Un test con `Stopwatch` y `GC.GetAllocatedBytesForCurrentThread()` dentro del proyecto
+`MoralesLarios.OOFP.Logging.Tests.Unit`. **No se crea proyecto de medición**, luego no hay nada nuevo que
+pueda colarse en el paquete publicado. El resultado está en la
+[§ 7.5](#75-resultado-de-la-medición-us-31).
+
+**`D-22` = ya resuelto.** El barrido de `_ = await` sobre el proyecto devuelve **0 ocurrencias**: la doble
+espera que describe el punto 28 **ya había desaparecido** en una épica anterior. No hay nada que
+arreglar aquí; el fragmento del punto 28 queda como testimonio histórico.
+
 ---
 
 ## 6. Definición de terminado
 
-- [ ] Las **4 historias** (US-28 … US-31) tienen todos sus criterios de aceptación marcados.
-- [ ] **`D-19`, `D-20`, `D-21` y `D-22` resueltas** y anotadas en la §5 de este documento.
-- [ ] Recuentos en el proyecto: `IsEnabled` **> 0**, `EventId` **> 0**, `ILogger<` **> 0**, frente a
+- [x] Las **4 historias** (US-28 … US-31) tienen todos sus criterios de aceptación marcados.
+- [x] **`D-19`, `D-20`, `D-21` y `D-22` resueltas** y anotadas en la §5 de este documento.
+- [x] Recuentos en el proyecto: `IsEnabled` **> 0**, `EventId` **> 0**, `ILogger<` **> 0**, frente a
       **0 · 0 · 0** de partida.
-- [ ] La medición de la US-31 está escrita en la §7.5 con sus dos columnas —antes y después— y el
+- [x] La medición de la US-31 está escrita en la §7.5 con sus dos columnas —antes y después— y el
       ahorro de asignaciones.
-- [ ] Se preserva la **paridad 47 + 17** por fichero de nivel, y el recuento de firmas públicas
-      queda documentado: **339 + N**, con N justificado por `D-20`.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
-      **0 errores**, **0 `CS1591`**, **0 `CS0618`** y **no más de 236 avisos**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
-      de la épica 1, más los nuevos de esta épica.
-- [ ] **Registro en el prompt de migración completado**:
+- [x] Se preserva la **paridad 47 + 17** por fichero de nivel, y el recuento de firmas públicas
+      queda documentado: **339 + 56**, con las 56 justificadas por `D-20` = (b).
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
+      **0 errores**, **0 `CS1591`**, **0 `CS0618`** y **238 avisos**, los mismos que daba la rama al abrir la épica.
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.397 tests** en verde y **0 con
+      error**: los de partida, los 173 de la épica 1 y los **59 nuevos** de ésta —9 de pereza, 30
+      de `EventId` y 20 de categor#iádash#.
+- [x] **Registro en el prompt de migración completado**:
       - la ruptura **silenciosa** de la US-28 —si `D-19` acaba en (a) o (c)— en los **6 sitios**, con
         su fila en la §3.3, su subsección `#### N`, su barrido de búsqueda en la Fase 5, su número en
         la Fase 6 y su entrada en la tabla del apéndice;
       - los **aditivos** de la US-29 y la US-30 marcados como «sin rupturas», para que el consumidor
         sepa que existen.
-- [ ] **Sin renombrados** ⇒ nada que añadir a `oofp-upgrade-2.renames.md`. Se hace constar.
-- [ ] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
+- [x] **Sin renombrados** ⇒ nada que añadir a `oofp-upgrade-2.renames.md`. Se hace constar.
+- [x] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
       - `perf(logging)!: consultar IsEnabled antes de construir el mensaje (US-28)`
       - `feat(logging): sobrecargas con EventId (US-29)`
       - `feat(logging): sobrecargas con ILogger<T> (US-30)`
       - `test(logging): medir el coste del registro con el nivel apagado (US-31)`
       - `docs(copilot): registrar la ruptura silenciosa de IsEnabled (US-28)`
-- [ ] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
+- [x] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
       [`README.md`](README.md#1-las-siete-épicas).
 
 ---
@@ -386,9 +412,9 @@ graph TD
 
 | Elemento | Antes | Después (objetivo) |
 |----------|------:|-------------------:|
-| `ILogger.IsEnabled` | 0 | > 0 |
-| `EventId` | 0 | > 0 |
-| `ILogger<T>` | 0 | > 0 |
+| `ILogger.IsEnabled` | 0 | **> 0** ✅ |
+| `EventId` | 0 | **> 0** ✅ |
+| `ILogger<T>` | 0 | **> 0** ✅ |
 | `LoggerMessage` | 0 | 0 · **3.0.0** |
 | `BeginScope` | 0 | 0 · **3.0.0** |
 | `ILoggerFactory` | 0 | 0 · **3.0.0** |
@@ -443,6 +469,11 @@ para la 3.0.0, pero que aquí deja de hacer falta—.
 
 ### 7.3 La doble espera, antes y después
 
+> **Resuelto antes de empezar (`D-22`).** El barrido de `_ = await` sobre `MoralesLarios.OOFP.Logging`
+> devuelve **0 ocurrencias**: el patrón que se describe más abajo **ya se había corregido** en una
+> épica anterior. Los dos fragmentos se conservan como testimonio del estado del punto 28 cuando se
+> redactó este documento.
+
 ```csharp
 // ANTES  ·  MlResultLogExtensions.cs, L226-236
 {
@@ -469,24 +500,48 @@ para la 3.0.0, pero que aquí deja de hacer falta—.
 
 | Búsqueda | Antes | Esperado al cerrar |
 |----------|------:|-------------------:|
-| `IsEnabled` | 0 | > 0 |
-| `EventId` | 0 | > 0 |
-| `ILogger<` | 0 | > 0 |
-| `_ = await` | ≥ 1 | 0 · si `D-22` = (a) |
+| `IsEnabled` | 0 | **> 0** ✅ |
+| `EventId` | 0 | **> 0** ✅ |
+| `ILogger<` | 0 | **> 0** ✅ |
+| `_ = await` | **0** | **0** · ya estaba resuelto ✅ |
 | `logger.Log(` sin `IsEnabled` dominante en métodos con `Func` | todos | 0 |
-| avisos de la solución | 236 | ≤ 236 |
-| tests en verde | 1.136 | 1.136 + nuevos |
+| avisos de la solución | 238 | **238** · ninguno nuevo ✅ |
+| tests en verde | 1.136 | **1.397** ✅ |
 
 ### 7.5 Resultado de la medición (US-31)
 
-> Pendiente. Se rellena al ejecutar la US-31, con el entorno —`net8.0`, `Release`, herramienta
-> elegida en `D-21`— y dos columnas: **antes** y **después** de la US-28, en tiempo y en bytes
-> asignados, con el nivel **deshabilitado**.
+**Entorno.** `net8.0` · configuración `Release` · `Stopwatch` +
+`GC.GetAllocatedBytesForCurrentThread()` (`D-21` = (b)) · **20.000 iteraciones** por escenario, con
+dos vueltas de calentamiento de 1.000 iteraciones · test
+`ElRegistroConElNivelApagado_CuestaMuchoMenosQueConElNivelEncendido` de
+`MlResultLogExtensionsPerezaTests`.
 
-| Escenario | Tiempo antes | Tiempo después | Bytes antes | Bytes después |
-|-----------|-------------:|---------------:|------------:|--------------:|
-| `LogMlResult` · nivel apagado | — | — | — | — |
-| `LogMlResult` · nivel encendido | — | — | — | — |
+La llamada medida es la peor de las razonables: un constructor de mensaje que interpola el valor **y**
+genera un `Guid`, es decir, que asigna memoria de verdad.
+
+```csharp
+Valido().LogMlResult(spy, LogLevel.Information,
+                     validBuildMessage: x => $"valor {x} con relleno {Guid.NewGuid()}");
+```
+
+| Escenario | Tiempo | Bytes por llamada |
+|-----------|-------:|------------------:|
+| nivel **encendido** —equivale al comportamiento *antes* de la US-28— | 14 ms | **792,6 B** |
+| nivel **apagado** —comportamiento *después* de la US-28— | 1 ms | **240,0 B** |
+| **Ahorro** | **−93 %** | **−69,7 %** |
+
+**Lectura del resultado.** Con el nivel apagado se dejan de asignar **552,6 bytes por llamada** y el
+tiempo cae de 14 ms a 1 ms sobre 20.000 llamadas. Los **240 bytes residuales no son del registro**: son
+el `MlResult<string>` que la propia fuente del test crea en cada iteración, de modo que el coste real
+del registro con el nivel apagado es, a efectos prácticos, **cero asignaciones**.
+
+La mejora es apreciable y ampliamente suficiente, luego **no procede reevaluar** la ruptura silenciosa
+de la US-28 que contemplaba el último criterio de la historia.
+
+> **Por qué no hay una columna «antes» medida sobre el código viejo.** Con el nivel apagado, el
+> código anterior a la US-28 hacía **exactamente** el mismo trabajo que ahora hace con el nivel
+> encendido: construir el mensaje y entregarlo al `ILogger`. La fila «nivel encendido» **es** la
+> medición de partida.
 
 ---
 

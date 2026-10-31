@@ -380,6 +380,9 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 47 | `MyMethodFinalLog[Async]` (**2.2.0**) | nombre sin relación con la familia `LogMlResult*` | `LogActionResult[Async]`; el antiguo queda como puente `[Obsolete]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.2.0 → `CS1061` en 3.0.0) |
 | 48 | Clase estática `Extensions` de `MoralesLarios.OOFP.Logging` (**2.2.0**) | `public static class Extensions` | `MlResultLogActionExtensions`; `Extensions` queda como puente `[Obsolete]` | **Compilación** (`CS0618`) **solo** si se invocaba en forma **estática** |
 | 49 | Idioma y texto de los mensajes que construye la librería (**2.2.0**) | mezcla de castellano e inglés y un `Error` duplicado en `MyMethodFinalLog` | **inglés** en todos los mensajes propios y prefijo `Error when <acción>: ` sin duplicar | ⚠️ **Contrato · SILENCIOSA** (cambia el texto escrito en el log) |
+| 50 | La familia `LogMlResult*` consulta `IsEnabled` antes de construir el mensaje (**2.2.0**) | el constructor de mensaje se **invocaba siempre**, incluso con el nivel de log apagado | el constructor **no se invoca** si `logger.IsEnabled(logLevel)` devuelve `false` | ⚠️ **Contrato · SILENCIOSA** (los constructores con efectos colaterales dejan de ejecutarse) |
+| 51 | Sobrecargas de `LogMlResult*` con `EventId` (**2.2.0**) | no existían | **35 firmas nuevas** que aceptan un `EventId` y lo trasladan al `ILogger` | ✅ **Ninguna** · aditivo |
+| 52 | Sobrecargas de `LogMlResult*` con `ILogger<TCategory>` (**2.2.0**) | había que convertir el registrador tipado a `ILogger` | **21 firmas nuevas** que aceptan directamente el `ILogger<T>` del contenedor | ✅ **Ninguna** · aditivo |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -978,8 +981,106 @@ done correctly|Error when
 > 🧭 **Lo que NO rompe de los puntos 45 a 49.** Las llamadas con argumentos **posicionales** — la forma
 > habitual — compilan sin tocar una sola línea. Los métodos de extensión invocados **como extensión**
 > tampoco se enteran del renombrado de la clase. Y la paridad de la familia `LogMlResult*`
-> (47 miembros genéricos más 17 por cada nivel de log) se mantiene **intacta**: no se añade ni se
-> retira ningún miembro de esa familia en la 2.2.0.
+> (47 miembros genéricos más 17 por cada nivel de log) se mantiene **intacta**: los puntos 45 a 49 no
+> añaden ni retiran ningún miembro de esa familia. Los puntos **51 y 52 sí añaden** miembros, pero
+> siempre en **todos** los niveles a la vez, de modo que la simetría se conserva.
+
+---
+
+#### 50 — La familia `LogMlResult*` consulta `IsEnabled` antes de construir el mensaje (2.2.0)
+
+Hasta la 2.1.1, los métodos de `LogMlResult*` que reciben un **constructor de mensaje**
+(`validBuildMessage` / `failBuildMessage`) lo **invocaban siempre**, y solo después entregaban el
+`string` resultante al `ILogger`, que lo descartaba si el nivel estaba apagado. Es decir: se pagaba el
+coste completo de interpolar, serializar y concatenar un mensaje que nadie iba a leer.
+
+En la 2.2.0 se consulta `logger.IsEnabled(logLevel)` **antes** de construir el mensaje.
+
+| Caso | 2.1.1 | 2.2.0 | ¿Lo detecta el compilador? |
+| --- | --- | --- | --- |
+| Nivel **encendido** | se construye el mensaje y se registra | **sin cambios** | — |
+| Nivel **apagado** | **se construye** el mensaje y se descarta | **no se construye** | 🔗 **No** · misma firma, mismo retorno |
+
+**Por qué es silenciosa.** Las firmas no cambian y el `MlResult<T>` devuelto es exactamente el mismo.
+Lo único que cambia es que, con el nivel apagado, **tu `Func` ya no se ejecuta**.
+
+**Qué revisar en tu código:**
+
+- Constructores de mensaje con **efectos colaterales**: si tu `validBuildMessage` o tu
+  `failBuildMessage` incrementa un contador, escribe en una caché, envía una métrica, consume un
+  enumerable perezoso o hace una llamada a base de datos, **ese efecto desaparece** cuando el nivel
+  está apagado. Muévelo fuera del constructor de mensaje.
+- Tests que cuenten invocaciones del constructor de mensaje con un `LogLevel` que el `ILogger`
+  simulado no tiene habilitado: antes contaban 1 y ahora cuentan 0.
+- `ILogger` simulados con `Mock<ILogger>` **sin configurar `IsEnabled`**: `Moq` devuelve `false` por
+  defecto para `bool`, de modo que esos dobles **dejan de registrar**. Añade
+  `mock.Setup(l => l.IsEnabled(It.IsAny<LogLevel>())).Returns(true);`.
+
+**Cómo detectarla:**
+
+```
+validBuildMessage|failBuildMessage|Mock<ILogger|IsEnabled
+```
+
+> 🧭 La ganancia medida en el repositorio de la librería, con 20.000 iteraciones en `Release`, es de
+> un **69,7 %** menos de asignaciones y un **93 %** menos de tiempo cuando el nivel está apagado.
+
+---
+
+#### 51 — Sobrecargas de `LogMlResult*` con `EventId` (2.2.0) ✅ SIN RUPTURAS
+
+La 2.2.0 añade **35 firmas públicas nuevas** que aceptan un `EventId` y lo trasladan al `ILogger`,
+para poder correlacionar trazas sin meter el identificador dentro del texto del mensaje.
+
+```csharp
+// 2.1.1 — el identificador tenía que ir en el texto
+resultado.LogMlResultInformation(logger, validBuildMessage: x => $"[4242] Pedido {x.Id} localizado");
+
+// 2.2.0 — el identificador viaja como EventId
+resultado.LogMlResultInformation(logger, new EventId(4242, "PedidoLocalizado"),
+                                 validBuildMessage: x => $"Pedido {x.Id} localizado");
+```
+
+**Por qué no rompe nada.** El `EventId` es un parámetro **obligatorio** colocado **antes** de los
+constructores de mensaje opcionales, de modo que ninguna llamada existente puede resolverse por
+error contra la sobrecarga nueva. Las firmas antiguas siguen vivas y sin cambios.
+
+**Qué hacer:** nada. Es opcional. Si quieres aprovecharlo, revisa tus mensajes que llevan el
+identificador incrustado en el texto:
+
+```
+LogMlResult.*\[\d+\]
+```
+
+---
+
+#### 52 — Sobrecargas de `LogMlResult*` con `ILogger<TCategory>` (2.2.0) ✅ SIN RUPTURAS
+
+La 2.2.0 añade **21 firmas públicas nuevas** que aceptan directamente el `ILogger<T>` que inyecta el
+contenedor de dependencias, sin obligar a convertirlo a `ILogger`.
+
+```csharp
+// 2.1.1 — había que convertir
+resultado.LogMlResultInformation((ILogger)_logger, validBuildMessage: x => $"{x}");
+
+// 2.2.0 — el ILogger<PedidosService> se acepta tal cual
+resultado.LogMlResultInformation(_logger, validBuildMessage: x => $"{x}");
+```
+
+**Por qué no rompe nada.** Para un `ILogger<T>` la sobrecarga nueva gana por **conversión de
+identidad**, y para un `ILogger` a secas sigue ganando la antigua. En ambos casos el
+comportamiento observable es idéntico: la nueva **delega** en la antigua.
+
+**Qué hacer:** nada. Si quieres limpiar código, busca las conversiones que ya no hacen falta:
+
+```
+\(ILogger\)
+```
+
+> ⚠️ Las dos dimensiones **no se combinan**: no hay sobrecargas que acepten a la vez un
+> `ILogger<TCategory>` y un `EventId`, ni se han añadido a las familias `IfValid`, `IfFail`,
+> `IfFailWithValue`, `IfFailWithException` ni `IfFailWithoutException`. Solo a `LogMlResult` y a las
+> seis familias de nivel (`LogMlResultTrace` … `LogMlResultCritical`).
 
 ---
 
@@ -1090,6 +1191,20 @@ dotnet build --nologo /p:WarningLevel=4
    (con los dos puntos detrás): un argumento **posicional** compila sin tocar nada. El último barrido
    localiza los tests, los *snapshots* y los filtros de log que fijaban el **texto** de los mensajes que
    construye la librería, que ahora están **en inglés** y sin el `Error` duplicado.
+   Y, para el punto 50 (`IsEnabled` antes de construir el mensaje), busca además:
+   ```
+   validBuildMessage|failBuildMessage|Mock<ILogger|IsEnabled
+   ```
+   ⚠️ Revisa **cada** constructor de mensaje buscando **efectos colaterales** (contadores,
+   métricas, escrituras en caché, consumo de enumerables perezosos): con el nivel de log apagado
+   **ya no se ejecutan**. Y revisa los `Mock<ILogger>` que no configuran `IsEnabled`: `Moq` devuelve
+   `false` por defecto y esos dobles dejan de registrar.
+   Y, para los puntos 51 y 52 (sobrecargas con `EventId` y con `ILogger<TCategory>`), busca además
+   — **solo para limpiar**, porque ninguno de los dos rompe nada:
+   ```
+   LogMlResult.*\[\d+\]
+   \(ILogger\)
+   ```
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -1165,7 +1280,12 @@ Entrega al usuario, **en español**, un informe con:
    muertos alrededor de `Merge` e identidad por referencia de `MlErrorDetails`. Para el punto
    **44**, indica expresamente cuántas llamadas a `LogMlResultIfFailWithExceptionAsync` sobre una
    `Task<MlResult<T>>` se han encontrado y qué tests que afirmaban ausencia de traza se han
-   tenido que invertir.
+   tenido que invertir. Para el punto **50**, indica cuántos constructores de mensaje con **efectos
+   colaterales** se han encontrado y qué se ha hecho con cada uno, cuántos `Mock<ILogger>` han
+   necesitado `Setup(l => l.IsEnabled(...)).Returns(true)` y cuántos tests que contaban
+   invocaciones del constructor con el nivel apagado se han tenido que ajustar. Para los puntos
+   **51 y 52**, basta con hacer constar que son **aditivos** y, si se han aprovechado, cuántas
+   llamadas se han migrado a `EventId` y cuántas conversiones `(ILogger)` se han podido eliminar.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1204,10 +1324,10 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
-| 2.2.0 | 44, 45, 46, 47, 48, 49 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. ⚠️ **Dos rupturas silenciosas (44 y 49)** |
+| 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48 y 49** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51 y 52** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
