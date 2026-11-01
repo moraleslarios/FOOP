@@ -276,16 +276,53 @@ prompt de migración.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-36`](#5-decisiones-abiertas)** · qué se promete respecto al `await`.
-- [ ] Existen las variantes `Async` con el sufijo correcto, según el convenio de la
+- [x] **Resuelta [`D-36`](#5-decisiones-abiertas)** · qué se promete respecto al `await`.
+- [x] Existen las variantes `Async` con el sufijo correcto, según el convenio de la
       [épica 4](../../2.2.0/Logging/Epica-04-Nomenclatura-y-Firmas-Publicas.md).
-- [ ] Hay un test que demuestra el caso **peligroso**: un `Task<MlResult<T>>` **ya iniciado** que se
+- [x] Hay un test que demuestra el caso **peligroso**: un `Task<MlResult<T>>` **ya iniciado** que se
       pasa a la sobrecarga `Async`. Se documenta si sus trazas internas caen dentro del ámbito o no,
       con el resultado medido, no supuesto.
-- [ ] Hay un test que demuestra que dos tuberías concurrentes **no se contaminan** el ámbito entre
+- [x] Hay un test que demuestra que dos tuberías concurrentes **no se contaminan** el ámbito entre
       ellas.
-- [ ] El comportamiento respecto al `await` queda escrito en el `README.md` del proyecto, en el
+- [x] El comportamiento respecto al `await` queda escrito en el `README.md` del proyecto, en el
       apartado de particularidades reales del código fuente.
+
+> ✅ **Hecha.** `MlResultLogScopeExtensions.cs` pasa a ser `partial` y `MlResultLogScopeExtensions.Async.cs`
+> añade las **seis** firmas `Async` que cierran la fila aceptada de [`D-38`](#5-decisiones-abiertas):
+> tres por plantilla y tres por diccionario, con las tres formas del convenio de la
+> [épica 4](../../2.2.0/Logging/Epica-04-Nomenclatura-y-Firmas-Publicas.md) —receptor síncrono con
+> tramo asíncrono, receptor asíncrono con tramo asíncrono y receptor asíncrono con tramo síncrono—.
+> Comparten el núcleo privado `RunInScopeAsync`, que hace `await sectionAsync(source)` dentro de un
+> `try` y cierra el ámbito en el `finally`, de modo que el ámbito **sobrevive a los `await` internos**
+> del tramo y se cierra una sola vez.
+>
+> **La promesa del `await`, medida y no supuesta** · resuelve [`D-36`](#5-decisiones-abiertas) por la
+> opción **(b)**. Cuando el receptor es una `Task<MlResult<T>>`, esa tarea se **espera antes** de abrir
+> el ámbito, porque hace falta su valor para invocar el tramo. Consecuencia: **las trazas que emita la
+> tarea de origen quedan FUERA del ámbito**. Los tests lo afirman sobre el espía de la US-41
+> (`IsInsideScope == false` y `Scopes` vacío para la traza del origen, frente a
+> `ScopeProperty("PedidoId") == 17` para la del tramo), y queda escrito en la **particularidad 8** del
+> [`README.md`](../../../../MoralesLarios.OOFP.Logging/README.md) del proyecto, con el patrón correcto
+> para meter la carga dentro del ámbito: arrancarla **desde** el tramo, no antes.
+>
+> **Dentro** del tramo, en cambio, el ámbito sí viaja con la continuación: un test registra después de
+> un `await Task.Yield()` y la traza sigue viendo las propiedades. Y **dos tuberías concurrentes no se
+> contaminan**: el test abre dos tuberías con `Task.Run`, las sincroniza con dos
+> `TaskCompletionSource` para forzar el solape real y comprueba que cada traza ve **exactamente un**
+> ámbito, el suyo, con su propio `Nombre`; los dos ámbitos quedan registrados y ninguno se filtra.
+>
+> `MlResultLogScopeExtensionsAsyncTests.cs` añade **21 tests** en siete regiones: forma de la API por
+> plantilla, forma por diccionario, cobertura de la continuación del tramo, la promesa del `await` con
+> la tarea ya iniciada, concurrencia y guardas de nulos. El espía **no** afirma `ActiveScopeCount` en
+> esta batería, y está explicado en el `<remarks>` de la clase: su `AsyncLocal` se escribe en la
+> continuación, que no propaga de vuelta al contexto del test; las afirmaciones de cierre se hacen con
+> `LeakedScopes`, `IsClosed` y `DisposeCallCount`, que sí son fiables.
+>
+> Totales: build `EXIT = 0`, 0 errores, **236 avisos** (sin avisos nuevos), `CS1591 = 0`,
+> `CS0618 = 0`; tests `EXIT = 0`, **1.568** totales (desde 1.547), 0 con error, 0 omitidos. Firmas
+> públicas del proyecto: **643 → 649** (ver [§7.3](#73--recuento-de-firmas-públicas-tras-la-us-43)).
+> El registro en el prompt de migración se hace de una vez para toda la familia de ámbitos en la
+> **US-46**; esta historia es puramente aditiva y no rompe nada.
 
 ### US-44 · Semántica de la excepción y del fallo dentro del ámbito
 
@@ -589,13 +626,13 @@ apéndice», para que **se rompan** si el comportamiento medido cambia.
 
 **Mediciones** (se completan al cerrar la épica):
 
-| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la US-42 | Tras la épica |
-|---------|-----------------:|--------------:|-------------:|--------------:|
-| Firmas públicas del proyecto | 640 | 641 | **643** | *pendiente* |
-| Avisos del build en Release | 236 | **236** | **236** | *pendiente* |
-| Tests | 1.502 | **1.527** | **1.547** | *pendiente* |
-| `BeginScope` en el proyecto | **0** | 0 | **2** | *pendiente* |
-| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *sin medir* | *pendiente* |
+| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la US-42 | Tras la US-43 | Tras la épica |
+|---------|-----------------:|--------------:|-------------:|-------------:|--------------:|
+| Firmas públicas del proyecto | 640 | 641 | 643 | **649** | *pendiente* |
+| Avisos del build en Release | 236 | **236** | **236** | **236** | *pendiente* |
+| Tests | 1.502 | **1.527** | **1.547** | **1.568** | *pendiente* |
+| `BeginScope` en el proyecto | **0** | 0 | 2 | **4** | *pendiente* |
+| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *sin medir* | *sin medir* | *pendiente* |
 
 > ℹ️ El recuento real de tests medido sobre la 2.3.0 es **1.510**, no 1.502: la cifra del enunciado se
 > escribió antes de las últimas historias de la épica 8. El criterio de la
@@ -645,6 +682,27 @@ La US-42 añade **dos firmas y ni una más**, que son las dos síncronas de
 [`D-38`](#5-decisiones-abiertas): la de plantilla con argumentos y la de diccionario de propiedades.
 Las **ocho** de la fila aceptada en `D-38` son el total de la épica; las seis restantes —las `Async`—
 son de la US-43.
+
+### 7.3 · Recuento de firmas públicas tras la US-43
+
+Continúa la [§7.2](#72--recuento-de-firmas-públicas-tras-la-us-42) con el mismo contador sintáctico.
+Solo se listan los ficheros que cambian; los dieciséis restantes mantienen su recuento.
+
+| Fichero | Tras la US-42 | Tras la US-43 |
+|---------|--------------:|-------------:|
+| `MlResultLogScopeExtensions.cs` | 2 | 2 |
+| `MlResultLogScopeExtensions.Async.cs` | — | **6** |
+| **TOTAL** | **643** | **649** |
+
+Con esto queda **cerrada la fila aceptada de [`D-38`](#5-decisiones-abiertas)**: las **ocho** firmas
+prometidas —dos síncronas en la US-42 y seis `Async` en la US-43— y ni una más. Las seis `Async` son
+las tres formas del convenio de la épica 4 por cada una de las dos fuentes de propiedades:
+
+| Receptor | Tramo | Plantilla | Diccionario |
+|----------|-------|:---------:|:-----------:|
+| `MlResult<T>` | `Task<MlResult<U>>` | ✅ | ✅ |
+| `Task<MlResult<T>>` | `Task<MlResult<U>>` | ✅ | ✅ |
+| `Task<MlResult<T>>` | `MlResult<U>` | ✅ | ✅ |
 
 ---
 

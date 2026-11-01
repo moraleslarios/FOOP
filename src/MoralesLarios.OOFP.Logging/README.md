@@ -846,6 +846,39 @@ esas familias, no del proyecto entero — desde la 2.3.0 el raíl de
 [plantillas](#familia-8--registro-estructurado-con-plantillas) entrega la plantilla intacta y sí
 produce campos. Ver [Lo que NO incluye](#️-lo-que-no-incluye).
 
+### 8. El ámbito asíncrono **no** cubre una tarea que ya estaba en marcha
+
+Desde la 2.4.0, `WithLogScopeAsync` abre el ámbito **justo antes** de invocar el tramo, y lo cierra en
+un `finally`. Cuando el receptor es una `Task<MlResult<T>>`, esa tarea se **espera antes** de abrir el
+ámbito, así que **las trazas que la propia tarea emita quedan fuera**.
+
+```csharp
+var origen = CargarPedidoAsync();                 // ⚠️ ya está corriendo, y ya registra
+
+await origen.WithLogScopeAsync(_logger,
+                               "pedido {PedidoId}", [17],
+                               sectionAsync: r => r.LogMlResultInformationTemplate(_logger, "tramo"));
+// "tramo"                → DENTRO del ámbito  → ScopeProperty("PedidoId") == 17
+// trazas de CargarPedido → FUERA del ámbito   → Scopes vacío
+```
+
+Para meterlas dentro, **arranca la tarea desde el tramo**, no antes:
+
+```csharp
+await MlResult.Empty()                           // ✅ nada ha corrido todavía
+              .WithLogScopeAsync(_logger,
+                                 "pedido {PedidoId}", [17],
+                                 sectionAsync: _ => CargarPedidoAsync());
+```
+
+> ℹ️ **Resultado medido, no supuesto.** Es la decisión `D-36` opción **(b)**: el ámbito solo se promete
+> para los tramos que arranca la librería. Lo comprueban dos tests
+> (`WithLogScopeAsync_TareaDeOrigenYaIniciada_SusTrazasQuedanFueraDelAmbito` y su gemelo con
+> diccionario), que afirman `IsInsideScope == false` para la traza del origen. **Dentro** del tramo, en
+> cambio, el ámbito **sí** sobrevive a los `await`: una traza posterior a un `await Task.Yield()` sigue
+> viendo las propiedades, porque el `AsyncLocal` del proveedor viaja con la continuación. Y dos
+> tuberías concurrentes **no se contaminan** el ámbito entre ellas.
+
 ---
 
 ## ⚠️ Lo que NO incluye

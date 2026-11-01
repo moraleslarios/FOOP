@@ -37,7 +37,7 @@ namespace MoralesLarios.OOFP.Logging;
 ///   </description></item>
 /// </list>
 /// </remarks>
-public static class MlResultLogScopeExtensions
+public static partial class MlResultLogScopeExtensions
 {
 
     /// <summary>
