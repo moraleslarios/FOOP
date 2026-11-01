@@ -404,14 +404,28 @@ prompt de migración.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-38`](#5-decisiones-abiertas)** · hasta dónde se cruza el ámbito con `EventId`,
+- [x] **Resuelta [`D-38`](#5-decisiones-abiertas)** · hasta dónde se cruza el ámbito con `EventId`,
       con los seis niveles y con `ILogger<TCategory>`, con el mismo criterio de contención que aplicó
       [`D-28`](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#5-decisiones-abiertas) (b) en la épica 8.
-- [ ] Si la decisión aprueba un identificador automático, su nombre de campo es **contrato público**
+- [x] Si la decisión aprueba un identificador automático, su nombre de campo es **contrato público**
       y vive junto a los de `MlResultLogErrorFields`, con el mismo aviso de ruptura silenciosa que
       el [punto 54](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) del prompt.
-- [ ] La combinatoria **no explota**: se documenta el recuento de firmas que añade cada cruce
+- [x] La combinatoria **no explota**: se documenta el recuento de firmas que añade cada cruce
       aprobado y se justifica cada uno de los que se descartan.
+
+> ✅ **Hecha.** `D-38` queda cerrada con la **(a)**: el ámbito **no se cruza con ningún eje**. El
+> detalle del recuento, de los tres cruces descartados y de la **medición 3** del apéndice está en la
+> [§7.5](#75--qué-se-cruza-con-el-ámbito-y-qué-cuesta-abrirlo-us-45).
+>
+> El segundo criterio se cumple **en vacío**, y conviene dejar escrito por qué: la opción **(d)** de
+> `D-38` —el identificador de correlación generado por la librería— se **aplaza a la 3.0.0**, así que
+> esta historia **no añade ningún nombre de campo público** y `MlResultLogErrorFields` **no cambia**.
+> El consumidor que quiera correlación la aporta hoy él mismo con una propiedad del ámbito, que es
+> justo lo que habilita [`D-37`](#5-decisiones-abiertas).
+>
+> La historia no añade **ninguna** firma pública: el recuento se queda en **657**, el mismo que dejó
+> la US-44. Lo único que aporta en código es el arnés de medición, en
+> `MlResultLogScopeExtensionsAsignacionesTests.cs`.
 
 ### US-46 · Documentar los ámbitos de cara al consumidor
 
@@ -676,7 +690,7 @@ decisiones:
 |:-:|----------|------------|-----------|
 | 1 | Escribir el caso del punto 34 con `using logger.BeginScope(...)` **a mano** y contar qué estorba de verdad | si la opción **(c)** de `D-33` basta, y entonces esta épica se cierra sin código | ✅ **hecha** · funciona, pero parte la cadena en dos sentencias y obliga a una variable intermedia ⇒ `D-33` = **(a)**, hay código |
 | 2 | Comprobar con el espía si un `Task<MlResult<T>>` **ya iniciado** lleva o no las propiedades del ámbito | `D-36`, que es la única pregunta de `D-29` con una respuesta medible | ✅ **hecha** · lo iniciado **dentro** hereda; el `Task` ya arrancado **no** ⇒ `D-36` = **(b)** |
-| 3 | Medir las asignaciones por llamada con el nivel **apagado**, igual que hizo la épica 6 (línea base **240,0 B**) | si el ámbito hay que abrirlo también cuando nadie escucha | ⬜ **aplazada a la US-45** · ver la nota de abajo |
+| 3 | Medir las asignaciones por llamada con el nivel **apagado**, igual que hizo la épica 6 (línea base **240,0 B**) | si el ámbito hay que abrirlo también cuando nadie escucha | ✅ **hecha** en la US-45 · **+56,0 B** con plantilla y **+240,0 B** con diccionario sobre el tramo suelto ⇒ se abre siempre, sin condicionar |
 | 4 | Contar cuántas firmas añadiría cada cruce de `D-38` | si la combinatoria se paga o se contiene, como ya decidió `D-28` (b) | ✅ **hecha** · 8 firmas la genérica, +64 los tres cruces descartados ⇒ `D-38` = **(a)** |
 
 Las mediciones 1 y 2 no son prosa: están escritas como tests en
@@ -685,13 +699,13 @@ apéndice», para que **se rompan** si el comportamiento medido cambia.
 
 **Mediciones** (se completan al cerrar la épica):
 
-| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la US-42 | Tras la US-43 | Tras la US-44 | Tras la épica |
-|---------|-----------------:|--------------:|-------------:|-------------:|-------------:|--------------:|
-| Firmas públicas del proyecto | 640 | 641 | 643 | 649 | **657** | *pendiente* |
-| Avisos del build en Release | 236 | **236** | **236** | **236** | **236** | *pendiente* |
-| Tests | 1.502 | **1.527** | **1.547** | **1.568** | **1.603** | *pendiente* |
-| `BeginScope` en el proyecto | **0** | 0 | 2 | 4 | **8** | *pendiente* |
-| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *sin medir* | *sin medir* | *sin medir* | *pendiente* |
+| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la US-42 | Tras la US-43 | Tras la US-44 | Tras la US-45 | Tras la épica |
+|---------|-----------------:|--------------:|-------------:|-------------:|-------------:|-------------:|--------------:|
+| Firmas públicas del proyecto | 640 | 641 | 643 | 649 | **657** | **657** | *pendiente* |
+| Avisos del build en Release | 236 | **236** | **236** | **236** | **236** | **236** | *pendiente* |
+| Tests | 1.502 | **1.527** | **1.547** | **1.568** | **1.603** | **1.606** | *pendiente* |
+| `BeginScope` en el proyecto | **0** | 0 | 2 | 4 | **8** | **8** | *pendiente* |
+| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *sin medir* | *sin medir* | *sin medir* | **248,0 B** el tramo suelto · **304,0 B** con ámbito de plantilla · **488,0 B** con ámbito de diccionario | *pendiente* |
 
 > ℹ️ El recuento real de tests medido sobre la 2.3.0 es **1.510**, no 1.502: la cifra del enunciado se
 > escribió antes de las últimas historias de la épica 8. El criterio de la
@@ -702,13 +716,13 @@ apéndice», para que **se rompan** si el comportamiento medido cambia.
 > añadió la [US-39](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md) al devolver el
 > sufijo `Async` a `LogCompletedResult`.
 
-> ⚠️ **La medición 3 se aplaza a la US-45.** La US-42 abre el ámbito **sin** consultar `IsEnabled`, y
-> es lo correcto por [`D-35`](#5-decisiones-abiertas): el ámbito es transparente y no decide qué se
-> escribe, así que preguntar al `logger` antes de abrirlo no ahorraría la traza, solo adelantaría una
-> llamada. Medir la asignación exige un arnés de asignaciones que **no existe** en el repositorio —la
-> épica 6 lo montó y lo retiró— y la respuesta solo cambia el diseño si se decide abrir el ámbito de
-> forma condicional, que es precisamente lo que se discute en la US-45 al cruzar ejes. Hasta entonces
-> la cifra se deja **sin medir**, no estimada.
+> ✅ **La medición 3 está hecha en la US-45**, y corrige de paso una afirmación equivocada que esta
+> misma nota sostuvo mientras estuvo aplazada: el arnés de asignaciones de la épica 6 **no se retiró**,
+> sigue vivo en `MlResultLogExtensionsPerezaTests.cs` (US-31). La US-45 lo **replica** —mismo
+> `GC.GetAllocatedBytesForCurrentThread()`, mismas 20.000 iteraciones, mismos dos calentamientos de
+> 1.000— en `MlResultLogScopeExtensionsAsignacionesTests.cs`, región «Medición 3 del apéndice», para
+> que la cifra **se rompa** si el coste cambia. El detalle está en la
+> [§7.5](#75--qué-se-cruza-con-el-ámbito-y-qué-cuesta-abrirlo-us-45).
 
 ### 7.2 · Recuento de firmas públicas tras la US-42
 
@@ -793,12 +807,80 @@ rejilla de `WithLogScope` replicada una vez, no un cruce nuevo:
 
 Dicho de otro modo: el coste de `D-34` **(c)** es exactamente **×2** sobre la familia de ámbitos
 —dieciséis firmas en total—, y no **×2 por cada eje**, que es lo que `D-38` sigue impidiendo. Si la
-US-45 aprobara cualquiera de los tres cruces descartados, el coste se pagaría **dos veces**, una por
-`WithLogScope` y otra por `TryWithLogScope`; es un argumento más para mantener `D-38` en la **(a)**.
+US-45 hubiera aprobado cualquiera de los tres cruces descartados, el coste se habría pagado **dos
+veces**, una por `WithLogScope` y otra por `TryWithLogScope`; fue un argumento más para mantener
+`D-38` en la **(a)**, como acabó cerrándose en la
+[§7.5](#75--qué-se-cruza-con-el-ámbito-y-qué-cuesta-abrirlo-us-45).
 
 El parámetro opcional `errorMessageBuilder` **no** añade firmas: es un
 `Func<Exception, string>? = null` al final de cada una de las ocho, igual de opcional que en la
 familia `Try*` del núcleo.
+
+### 7.5 · Qué se cruza con el ámbito y qué cuesta abrirlo (US-45)
+
+Criterio de aceptación de la [US-45](#us-45--correlación-el-identificador-y-el-cruce-con-los-ejes-existentes).
+Esta sección cierra dos cosas: el **recuento de la combinatoria** que exige
+[`D-38`](#5-decisiones-abiertas) y la **medición 3** del apéndice, que estuvo aplazada hasta aquí.
+
+#### La combinatoria: 8 entran, 64 se quedan fuera
+
+`D-38` se cierra con la **(a)** por el mismo criterio de contención que aplicó
+[`D-28`](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#5-decisiones-abiertas) **(b)**
+en la épica 8: entra el eje que **aporta información que no se puede obtener de otra forma**, y se
+descarta el que solo multiplica firmas.
+
+| Cruce | Firmas que añadiría | Veredicto | Por qué |
+|-------|--------------------:|:---------:|---------|
+| Genérica, síncrona y `Async`, por plantilla y por diccionario | **8** | ✅ **entra** | es la familia misma; sin ella no hay épica |
+| `+ EventId` | +8 | ❌ **fuera** | el ámbito **no emite traza** por [`D-35`](#5-decisiones-abiertas) **(a)**, así que no hay suceso que identificar |
+| `+ los 6 niveles` | +48 | ❌ **fuera** | un ámbito **no tiene nivel**: el nivel es de la traza, no del contexto que la rodea |
+| `+ ILogger<TCategory>` | +8 | ❌ **fuera** | `ILogger<TCategory>` ya **es** un `ILogger`, y la categoría la fija la traza, no el ámbito |
+| Identificador de correlación automático | +0 firmas, **+1 nombre de campo público** | ⏭️ **a la 3.0.0** | un nombre de campo generado por la librería es contrato público, y cambiarlo sería una ruptura **silenciosa** del tipo del punto 54 del prompt |
+
+Las cifras cuadran con las de la
+[§7.2](#72--recuento-de-firmas-públicas-tras-la-us-42) y la
+[§7.3](#73--recuento-de-firmas-públicas-tras-la-us-43): las **8** aceptadas son exactamente las dos
+síncronas de la US-42 más las seis `Async` de la US-43. Los **64** descartados son `8 + 48 + 8`, y
+por la [§7.4](#74--recuento-de-firmas-públicas-tras-la-us-44) se habrían pagado **dos veces** —una
+por `WithLogScope` y otra por `TryWithLogScope`—, es decir **128** firmas, contra las 16 que tiene
+hoy la familia completa.
+
+> ℹ️ **Esta historia no añade ni una firma.** El recuento se queda en **657**. El único código que
+> aporta es el arnés de medición, que vive en el proyecto de tests.
+
+#### La medición 3: lo que cuesta abrir un ámbito con el nivel apagado
+
+Replica el arnés de la [épica 6](../../2.2.0/Logging/Epica-06-Rendimiento-y-Estandar-de-Logging.md)
+(US-31), que **sigue vivo** en `MlResultLogExtensionsPerezaTests.cs`: `net8.0`, `Release`,
+`GC.GetAllocatedBytesForCurrentThread()` y `Stopwatch`, **20.000 iteraciones** y dos calentamientos
+de **1.000**. El destino es un `LoggerSpy` con `MinimumLevel = LogLevel.None`, para medir
+exactamente el caso en el que **nadie escucha**.
+
+| Escenario | Bytes por llamada | Sobrecoste del ámbito |
+|-----------|------------------:|----------------------:|
+| Tramo suelto, sin ámbito | **248,0 B** | — |
+| `WithLogScope` con plantilla y argumentos | **304,0 B** | **+56,0 B** |
+| `WithLogScope` con diccionario de propiedades | **488,0 B** | **+240,0 B** |
+
+Los **248,0 B** del tramo suelto son, igual que los **240,0 B** de la épica 6, el `MlResult<string>`
+que la propia fuente del test crea en cada vuelta: **no son del registro**. Sobre esa base, el ámbito
+cuesta **56 bytes** en la variante de plantilla —el `object?[]` de argumentos y el boxeo de sus
+valores— y **240 bytes** en la de diccionario, que es el `Dictionary<string, object?>` que **escribe
+el propio consumidor** en la llamada, no la librería.
+
+Con un destino que materializa los ámbitos de verdad —`StructuredLoggerSpy`— la cifra sube a
+**673,5 B** por llamada, y esos bytes son **del destino**: el registro del ámbito, sus propiedades y
+la pila `AsyncLocal`. La librería no puede ahorrarlos, porque es el `ILogger` del consumidor el que
+decide qué hace con el `BeginScope`.
+
+> ✅ **Conclusión: el ámbito se abre siempre, sin consultar `IsEnabled`.** Es lo que ya hacía la
+> US-42, y la medición lo confirma por dos motivos. El primero es de diseño: por
+> [`D-35`](#5-decisiones-abiertas) **(a)** el ámbito es **transparente** y no decide qué se escribe,
+> así que preguntar al `logger` antes de abrirlo no ahorraría ninguna traza. El segundo es de coste:
+> **56 bytes** no justifican una rama condicional que, además, cambiaría el comportamiento observable
+> —el consumidor dejaría de ver el ámbito en un destino que sí los materializa aunque tenga el nivel
+> apagado—, y eso sería una **ruptura silenciosa** a cambio de nada. Un tercer test de la región lo
+> deja fijado: `IsEnabledCallCount` es **`0`** y el ámbito se abre y se cierra igualmente.
 
 ---
 
