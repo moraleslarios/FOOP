@@ -4,7 +4,7 @@
 > **Origen** · [`D-29`](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#5-decisiones-abiertas) opción **(b)** de la [épica 8](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md) · hallazgo del [punto 32](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#punto-32--cero-beginscope-no-hay-forma-de-correlacionar)
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.4.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
-> **Estado** · ⬜ no iniciada · **6 decisiones abiertas**, todas bloqueantes
+> **Estado** · ✅ **completada** · US-41 … US-46 implementadas y publicadas · las **6 decisiones** (`D-33` … `D-38`) cerradas
 > **Esfuerzo** · **XL** (~3,5 jornadas)
 > **Riesgo** · 🟠 alto · el ámbito es la primera pieza de la librería con **estado vivo** y con un `IDisposable` que hay que cerrar sí o sí
 >

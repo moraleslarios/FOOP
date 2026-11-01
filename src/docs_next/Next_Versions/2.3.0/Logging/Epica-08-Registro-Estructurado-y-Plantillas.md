@@ -4,7 +4,7 @@
 > **Origen** · petición del propietario · hallazgo `D2` del análisis, diferido en la [épica 6](../../2.2.0/Logging/Epica-06-Rendimiento-y-Estandar-de-Logging.md)
 > **Plan del que se desgaja** · [`README.md`](README.md) de la versión 2.3.0
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
-> **Estado** · ⬜ no iniciada
+> **Estado** · ✅ **completada** · US-34 … US-40 implementadas y publicadas · las **7 decisiones** (`D-26` … `D-32`) cerradas
 > **Esfuerzo** · **XL** (~3,5 jornadas)
 > **Riesgo** · 🟠 alto · la US-34 puede crear una **captura silenciosa de llamadas existentes** si se resuelve mal (ver [`D-26`](#5-decisiones-abiertas))
 >
@@ -889,25 +889,26 @@ Esta épica no se da por cerrada hasta que **todo** lo siguiente es cierto:
 
 - [x] **Las seis decisiones `D-26` … `D-31` están resueltas** y escritas en este documento, con la
       opción elegida marcada. ✅ 31-10-2026, todas con la opción recomendada.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` ⇒ **`EXIT = 0`**,
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` ⇒ **`EXIT = 0`**,
       **0 errores**, **0 `CS1591`**, **0 `CS1572`/`CS1573`/`CS1574`**, **0 `CS0618`** y **sin avisos
       nuevos** sobre la línea base de **236**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` ⇒ **`EXIT = 0`**, **0 con error**,
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` ⇒ **`EXIT = 0`**, **0 con error**,
       **0 omitidos**, y el total **por encima** de los 1.397 de la 2.2.0.
-- [ ] Los **dos tests de paridad** de `MatrixTests.cs` —recuento de firmas por nivel y nombres de
+- [x] Los **dos tests de paridad** de `MatrixTests.cs` —recuento de firmas por nivel y nombres de
       región— están **actualizados** y en verde.
-- [ ] Existe el test que demuestra que el `state` del `ILogger` **lleva los campos con su nombre**, y
+- [x] Existe el test que demuestra que el `state` del `ILogger` **lleva los campos con su nombre**, y
       el que demuestra que `{OriginalFormat}` llega **sin sustituir**.
-- [ ] El `Sample` se ejecuta con **`EXIT = 0`**.
-- [ ] `scripts\check-md-anchors4.ps1` ⇒ **`revisados ≥ 1268`, `rotos = 0`**.
-- [ ] El `README.md` del proyecto refleja la API **real**, con la tabla de recuentos actualizada.
-- [ ] Toda ruptura y todo aditivo relevante están registrados en los **6 sitios** de
+- [x] El `Sample` se ejecuta con **`EXIT = 0`**.
+- [x] `scripts\check-md-anchors4.ps1` ⇒ **`revisados ≥ 1268`, `rotos = 0`**.
+- [x] El `README.md` del proyecto refleja la API **real**, con la tabla de recuentos actualizada.
+- [x] Toda ruptura y todo aditivo relevante están registrados en los **6 sitios** de
       `oofp-upgrade-2.prompt.md`, **continuando la numeración desde el punto 52**, y el renombrado
       `LogCompletedResult` → `LogCompletedResultAsync` —aprobado por `D-31`— en
       `oofp-upgrade-2.renames.md`.
-- [ ] Los commits siguen **Conventional Commits en castellano**, con `!` si rompen, creados con
+- [x] Los commits siguen **Conventional Commits en castellano**, con `!` si rompen, creados con
       `git commit -F` desde un fichero **UTF-8 sin BOM**.
-- [ ] **No se publica sin confirmación** del propietario.
+- [x] **No se publica sin confirmación** del propietario · autorizado y publicado en
+      `release/2.0.0-nomenclatura`.
 
 ---
 

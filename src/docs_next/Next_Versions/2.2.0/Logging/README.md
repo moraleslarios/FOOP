@@ -1,6 +1,6 @@
 # Versión 2.2.0 · `MoralesLarios.OOFP.Logging` · Épicas de saneamiento
 
-> **Estado global** · ⬜ ninguna épica iniciada
+> **Estado global** · ✅ **las 7 épicas completadas** · US-01 … US-33 implementadas y publicadas
 > **Proyectos afectados** · `src/MoralesLarios.OOFP.Logging` · `src/MoralesLarios.OOFP.Logging.Sample`
 > **Origen** · [`Mejoras/Logging/README.md`](../../../Mejoras/Logging/README.md) (35 hallazgos) · [`Mejoras/Logging/01-Nomenclatura-y-Estandares.md`](../../../Mejoras/Logging/01-Nomenclatura-y-Estandares.md) (puntos 01-06)
 > **Versiones destino** · 2.2.0 (todo lo aditivo, los arreglos y los puentes `[Obsolete]`) · 3.0.0 (retirada de puentes y rupturas de diseño)
@@ -270,18 +270,18 @@ graph TD
 
 Aplica a **todas** las historias de todas las épicas de esta carpeta:
 
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**, **0 errores**,
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**, **0 errores**,
       **0 `CS1591`**, **0 `CS0618`** y **no más de 236 avisos**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
       nuevos de la épica 1.
-- [ ] Toda ruptura está registrada en los **seis sitios** de
+- [x] Toda ruptura está registrada en los **seis sitios** de
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md): fila de
       la §3.3, subsección `#### N`, barrido de la Fase 5, lista de la Fase 6, tabla del apéndice y
       —si hay renombrado— [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md).
-- [ ] Las rupturas **silenciosas** incluyen en su registro **cómo detectarlas**, con un patrón de
+- [x] Las rupturas **silenciosas** incluyen en su registro **cómo detectarlas**, con un patrón de
       búsqueda aplicable al código del consumidor.
-- [ ] El criterio de aceptación correspondiente está marcado en el documento de la épica.
-- [ ] El commit sigue *Conventional Commits* en castellano, con `!` si rompe algo, creado con
+- [x] El criterio de aceptación correspondiente está marcado en el documento de la épica.
+- [x] El commit sigue *Conventional Commits* en castellano, con `!` si rompe algo, creado con
       `git commit -F` desde un fichero UTF-8 sin BOM.
 
 > ⚠️ **Obligatorio.** El registro en el prompt de migración se hace **en la misma tanda de cambios**

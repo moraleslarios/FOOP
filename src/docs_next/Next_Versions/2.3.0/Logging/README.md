@@ -160,21 +160,22 @@ Seis decisiones, numeradas a continuación de las 25 que se cerraron en la 2.2.0
 
 Vale para **todas** las historias de esta versión:
 
-- [ ] Build en Release con `--no-incremental` ⇒ `EXIT = 0`, **0 errores**, **0 `CS1591`**, **0
+- [x] Build en Release con `--no-incremental` ⇒ `EXIT = 0`, **0 errores**, **0 `CS1591`**, **0
       `CS0618`**, y **sin avisos nuevos** sobre la línea base de **236**.
-- [ ] Tests en Release ⇒ `EXIT = 0`, **0 con error**, **0 omitidos**, total **> 1.397**.
-- [ ] Los **dos tests de paridad** de `MatrixTests.cs` actualizados y en verde.
-- [ ] El `Sample` se ejecuta con `EXIT = 0`.
-- [ ] `scripts\check-md-anchors4.ps1` ⇒ `rotos = 0`.
-- [ ] Documentación XML en cada miembro público nuevo.
-- [ ] Registro en los **6 sitios** de
+- [x] Tests en Release ⇒ `EXIT = 0`, **0 con error**, **0 omitidos**, total **> 1.397**.
+- [x] Los **dos tests de paridad** de `MatrixTests.cs` actualizados y en verde.
+- [x] El `Sample` se ejecuta con `EXIT = 0`.
+- [x] `scripts\check-md-anchors4.ps1` ⇒ `rotos = 0`.
+- [x] Documentación XML en cada miembro público nuevo.
+- [x] Registro en los **6 sitios** de
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md),
       continuando la numeración **desde el punto 52**, y en
       [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md) si hay
       renombrados.
-- [ ] Commits con **Conventional Commits en castellano**, con `!` si rompen, creados con
+- [x] Commits con **Conventional Commits en castellano**, con `!` si rompen, creados con
       `git commit -F` desde fichero **UTF-8 sin BOM**.
-- [ ] **Sin publicar sin confirmación** del propietario.
+- [x] **Sin publicar sin confirmación** del propietario · autorizado y publicado en
+      `release/2.0.0-nomenclatura`.
 
 ---
 
