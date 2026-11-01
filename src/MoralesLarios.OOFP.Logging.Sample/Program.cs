@@ -160,4 +160,40 @@ calculoValido.LogMlResultIfFailTemplate(logger,
 
 logger.LogInformation("**** El registro estructurado con plantillas FINALIZADO ****");
 
+logger.LogInformation("**** Probando los ámbitos de registro con WithLogScope ****");
+
+// El ámbito NO registra nada por sí mismo: cuelga propiedades comunes de TODAS las trazas que se
+// emitan dentro del tramo, sin tocar ni uno de los mensajes. Y se cierra siempre en un finally.
+calculoValido.WithLogScope(logger,
+                           "pedido {PedidoId} del cliente {ClienteId}",
+                           [17, 4],
+                           section: r => r.LogMlResultInformationTemplate(logger,
+                                                                          "Correcto: traza dentro del ámbito con plantilla, valor {Valor}",
+                                                                          42));
+
+// Sobrecarga de diccionario: las propiedades llegan TAL CUAL al BeginScope estándar, así que es la
+// vía para colgar tu propio identificador de correlación.
+calculoValido.WithLogScope(logger,
+                           new Dictionary<string, object?>
+                           {
+                               ["PedidoId"]    = 17,
+                               ["Correlacion"] = Guid.NewGuid()
+                           },
+                           section: r => r.LogMlResultInformationTemplate(logger,
+                                                                          "Correcto: traza dentro del ámbito con diccionario, pedido {PedidoId}",
+                                                                          17));
+
+// TryWithLogScope convierte en fallo la excepción que lance el tramo y deja la excepción en los
+// metadatos, recuperable con GetException(). WithLogScope, en cambio, la propagaría.
+MlResult<int> ambitoQueLanza = calculoValido.TryWithLogScope<int, int>(logger,
+                                                                      "pedido {PedidoId}",
+                                                                      [17],
+                                                                      section: _ => throw new InvalidOperationException("fallo dentro del ámbito"));
+
+ambitoQueLanza.LogMlResultIfFailWithException<int>(logger          : logger,
+                                                   logLevel        : LogLevel.Information,
+                                                   failBuildMessage: (errorsDetails, ex) => $"Correcto: TryWithLogScope ha convertido en fallo la excepción con el mensaje {ex.Message}");
+
+logger.LogInformation("**** Los ámbitos de registro FINALIZADO ****");
+
 logger.LogInformation($"{Environment.NewLine}{Environment.NewLine}DEMOSTRACIÓN FINALIZADA");

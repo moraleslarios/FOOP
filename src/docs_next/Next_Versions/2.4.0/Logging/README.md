@@ -1,11 +1,11 @@
 # Plan de la versión 2.4.0 · `MoralesLarios.OOFP.Logging`
 
-> **Estado global** · 🟡 en curso · **las 6 decisiones están cerradas** · US-41 ✅ · US-42 ✅ · US-43 ✅ · US-44 ✅ · US-45 ✅ · US-46 ⬜
+> **Estado global** · ✅ **cerrada** · **las 6 decisiones están cerradas** · US-41 ✅ · US-42 ✅ · US-43 ✅ · US-44 ✅ · US-45 ✅ · US-46 ✅
 > **Versión destino** · 2.4.0 (US-41 … US-46)
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
 > **Origen** · [`D-29`](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#5-decisiones-abiertas) opción **(b)** de la épica 8: los ámbitos de registro se desgajan a una épica propia
 >
-> **Puerta de entrada** · la 2.3.0 cerrada, con **1.502 tests en verde**, **236 avisos** y **640 firmas públicas**
+> **Puerta de entrada** · la 2.3.0 cerrada, con **1.502 tests en verde**, **236 avisos** y **641 firmas públicas**
 
 ---
 
@@ -43,7 +43,7 @@ La 2.3.0 cerró el primero de los dos ceros del estándar de `Microsoft.Extensio
 | **US-43** ✅ | El ámbito en la tubería asíncrona, con la promesa medida sobre el `await` | L | no |
 | **US-44** ✅ | Semántica de la excepción y del fallo dentro del tramo envuelto, con la variante `TryWithLogScope` que captura | M | no |
 | **US-45** ✅ | Correlación: identificador de ejecución y cruce con los ejes existentes | M | no |
-| **US-46** | `README.md`, `Sample` y registro en el prompt de migración | S | no |
+| **US-46** ✅ | `README.md`, `Sample` y registro en el prompt de migración | S | no |
 
 ---
 
@@ -55,12 +55,17 @@ La 2.3.0 cerró el primero de los dos ceros del estándar de `Microsoft.Extensio
 | `EventId` | 123 | > 123 | sin cambios |
 | `ILogger<TCategory>` | 21 | 21 | ver [`D-38`](#5-decisiones-abiertas) |
 | Plantilla de mensaje con argumentos | 0 | **242 firmas** | sin cambios |
-| **`BeginScope`** | **0** | **0** | **8** tras la US-45 · objetivo de esta versión |
+| **`BeginScope`** | **0** | **0** | **8** · objetivo de esta versión, cumplido |
 | `LoggerMessage` | 0 | 0 | fuera de alcance |
-| Firmas públicas del proyecto | 398 | 640 | **657** tras la US-45 · las **8** de [`D-38`](#5-decisiones-abiertas) más las **8** de [`D-34`](#5-decisiones-abiertas) **(c)** |
+| Firmas públicas del proyecto | 398 | 641 | **657** · las **8** de [`D-38`](#5-decisiones-abiertas) más las **8** de [`D-34`](#5-decisiones-abiertas) **(c)** |
 
 **Naturaleza prevista: aditiva.** Ninguna firma existente se toca. El único cambio de contrato es que
 el `README.md` deja de decir que no hay ámbitos.
+
+> ✅ **Confirmado al cerrar la versión** · las **16 firmas** son todas nuevas, no se ha tocado ni
+> retirado ninguna existente y no hay renombrados. El consumidor lo tiene registrado como
+> [punto 60](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) del prompt de migración,
+> marcado **✅ sin rupturas**.
 
 ---
 
@@ -72,7 +77,7 @@ el `README.md` deja de decir que no hay ámbitos.
 3. **US-42** · el ámbito síncrono, que es la pieza de la que cuelgan las demás.
 4. **US-43** y **US-44** · en paralelo sobre la US-42: una mide el `await`, la otra la excepción.
 5. **US-45** · el cruce con los ejes, al final de lo técnico, como ya enseñó la US-36.
-6. **US-46** · la documentación, siempre al final, para que no mienta.
+6. **US-46** ✅ · la documentación, siempre al final, para que no mienta.
 
 > ⚠️ **Antes de empezar, hacer la medición 1 de la
 > [§7 de la épica](Epica-09-Ambitos-de-Registro.md#7-apéndice--lo-que-hay-que-medir-antes-de-decidir)**:
@@ -119,16 +124,18 @@ el `README.md` deja de decir que no hay ámbitos.
 ## 7. Definición de terminado común
 
 - [x] Las **seis decisiones** `D-33` … `D-38` resueltas y escritas en el documento de la épica.
-- [ ] `dotnet build … -c Release --no-incremental` ⇒ **`EXIT = 0`**, **0 errores**, **0 `CS1591`**,
+- [x] `dotnet build … -c Release --no-incremental` ⇒ **`EXIT = 0`**, **0 errores**, **0 `CS1591`**,
       **0 `CS0618`** y **sin avisos nuevos** sobre los **236** de la línea base.
-- [ ] `dotnet test … -c Release --no-build` ⇒ **`EXIT = 0`**, **0 con error**, **0 omitidos** y el
+- [x] `dotnet test … -c Release --no-build` ⇒ **`EXIT = 0`**, **0 con error**, **0 omitidos** y el
       total **por encima** de los **1.502** de la 2.3.0.
-- [ ] Los dos tests de paridad de `MatrixTests.cs` en verde.
-- [ ] El `Sample` se ejecuta con **`EXIT = 0`**.
-- [ ] `scripts\check-md-anchors4.ps1` ⇒ **`rotos = 0`**.
-- [ ] El `README.md` del proyecto refleja la API **real**.
-- [ ] Todo aditivo relevante registrado en los **6 sitios** del prompt de migración.
-- [ ] Commits en **Conventional Commits en castellano**, creados con `git commit -F`.
+- [x] Los dos tests de paridad de `MatrixTests.cs` en verde · `D-38` **(a)** no añade firmas por
+      nivel, así que no han necesitado cambios.
+- [x] El `Sample` se ejecuta con **`EXIT = 0`**.
+- [x] `scripts\check-md-anchors4.ps1` ⇒ **`rotos = 0`**.
+- [x] El `README.md` del proyecto refleja la API **real**.
+- [x] Todo aditivo relevante registrado en los **6 sitios** del prompt de migración · es el
+      **punto 60**; el anexo de renombrados no aplica porque no hay renombrados.
+- [x] Commits en **Conventional Commits en castellano**, creados con `git commit -F`.
 - [ ] **No se publica sin confirmación** del propietario.
 
 ---

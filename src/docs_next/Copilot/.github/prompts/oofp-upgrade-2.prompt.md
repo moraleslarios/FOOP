@@ -390,6 +390,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 57 | Los parámetros de plantilla se anotan con `[StringSyntax("MessageTemplate")]` (**2.3.0**) | el parámetro `messageTemplate` era un `string` cualquiera: el editor no lo coloreaba y los analizadores no lo reconocían como plantilla de registro | **241 parámetros anotados** en los nueve ficheros de plantilla, de modo que el editor y los analizadores del consumidor tratan la cadena como lo que es; `CA2254 = 0` medido en una sonda con analizadores estrictos | ✅ **Ninguna** · anotación declarativa; no cambia ninguna firma ni ningún comportamiento |
 | 58 | La sobrecarga `async` de `LogCompletedResult` recupera el sufijo `Async` (**2.3.0**) | `LogCompletedResult(this Task<MlResult<T>>, ILogger, string, string)`: era `async`, devolvía `Task<MlResult<T>>` y **no** terminaba en `Async`, el único incumplimiento del convenio que sobrevivió a la épica 4 de la 2.2.0 | `LogCompletedResultAsync`; el nombre sin sufijo queda como puente `[Obsolete(…, false)]` + `[EditorBrowsable(Never)]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.3.0 → `CS1061` en 3.0.0) |
 | 59 | El `README.md` de `MoralesLarios.OOFP.Logging` **ya no dice que no haya registro estructurado** (**2.3.0**) | el `README.md` afirmaba en **seis** sitios que «no hay logging estructurado», que las sobrecargas con plantilla «NO existen» y que, si hacían falta campos, había que bajarse a `ILogger` en un `ExecSelf`/`Match` | una **familia 8** nueva documenta el raíl de plantillas de extremo a extremo —marcadores, captura silenciosa del punto 30, `MlResultLogErrorFields` y recuentos— y las seis afirmaciones falsificadas quedan corregidas | ✅ **Ninguna** · documentación; pero **invalida una recomendación anterior**, así que conviene leerlo |
+| 60 | Familia `WithLogScope` de **ámbitos de registro** sobre `ILogger.BeginScope` (**2.4.0**) | el recuento de `BeginScope` en la librería era **`0`** (punto 56): para correlacionar las trazas de una misma ejecución había que abrir el ámbito a mano alrededor de la tubería, saliéndose del raíl | **16 firmas nuevas** en cuatro ficheros `partial`: `WithLogScope` y `WithLogScopeAsync`, que envuelven un **tramo recibido como función**, y `TryWithLogScope` y `TryWithLogScopeAsync`, que convierten en **fallo** la excepción que lance el tramo. El ámbito **no emite traza propia** y se cierra siempre en un `finally` | ✅ **Ninguna** · aditivo; deja sin efecto la afirmación del punto 56 de que los ámbitos no existían |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1518,6 +1519,76 @@ misma advertencia del punto 54, repetida aquí porque es el sitio donde el consu
 
 ---
 
+#### 60 — Los ámbitos de registro ya existen: la familia `WithLogScope` (2.4.0) ✅ SIN RUPTURAS
+
+El punto 56 dejó escrito que el recuento de `BeginScope` en `MoralesLarios.OOFP.Logging` era **`0`** y
+que eso era deliberado, porque los ámbitos planteaban tres preguntas de diseño propias. La 2.4.0 las
+responde: la familia **`WithLogScope`** aporta **16 firmas nuevas** y el recuento de `BeginScope` en
+producción pasa a **`8`**. **No hay ninguna ruptura**: ningún nombre anterior cambia y ninguna firma
+previa se modifica.
+
+**El problema que resuelve.** Un `EventId` dice **qué clase de suceso** es una traza; no dice **en qué
+ejecución** se ha producido. Dos altas de pedido simultáneas emiten los mismos `EventId` y el destino de
+registro no puede separarlas. Eso es precisamente lo que hace un ámbito: cuelga unas propiedades
+comunes de **todas** las trazas que se emitan dentro de un tramo.
+
+```csharp
+// antes — el ámbito había que abrirlo a mano, y la tubería quedaba partida en dos
+using (_logger.BeginScope("pedido {PedidoId}", nuevo.Id))
+{
+    var resultado = await MlResult.Empty()
+                                  .BindAsync(_ => Validar(nuevo))
+                                  .BindAsync(_repo.AddAsync);
+}
+
+// después — el ámbito envuelve el tramo sin salir del raíl
+var resultado = await MlResult.Empty()
+                              .WithLogScopeAsync(_logger,
+                                                 "pedido {PedidoId} del cliente {ClienteId}",
+                                                 [nuevo.Id, nuevo.ClienteId],
+                                                 sectionAsync: _ => Validar(nuevo)
+                                                                        .BindAsync(_repo.AddAsync));
+```
+
+**El catálogo: 16 firmas en cuatro ficheros.**
+
+| Fichero | Firmas | Qué aporta |
+| --- | --- | --- |
+| `MlResultLogScopeExtensions.cs` | **2** | `WithLogScope` sincrónico: una sobrecarga con **plantilla + argumentos** y otra con **diccionario de propiedades** |
+| `MlResultLogScopeExtensions.Async.cs` | **6** | `WithLogScopeAsync`: las tres combinaciones habituales de receptor y tramo (`MlResult<T>`/`Task<MlResult<T>>` × tramo sincrónico/asíncrono), por cada una de las dos formas de dar las propiedades |
+| `MlResultLogScopeExtensions.Try.cs` | **2** | `TryWithLogScope`: igual que la anterior, pero **captura** la excepción del tramo |
+| `MlResultLogScopeExtensions.TryAsync.cs` | **6** | `TryWithLogScopeAsync` |
+
+Las propiedades se pueden dar de **dos** formas, y la elección no es estética:
+
+- **Plantilla + argumentos** — `"pedido {PedidoId} del cliente {ClienteId}", [17, 4]` — es la forma
+  recomendada. El parámetro va anotado con `[StringSyntax("MessageTemplate")]` (punto 57), así que el
+  editor colorea los marcadores y los analizadores vigilan el recuento.
+- **Diccionario** — `IEnumerable<KeyValuePair<string, object?>>` — se entrega **tal cual** a
+  `BeginScope`. Es la vía para colgar un identificador de correlación propio.
+
+**Tres garantías de comportamiento que conviene conocer:**
+
+1. **El ámbito es transparente**: no emite ninguna traza propia, ni al abrirse ni al cerrarse. Si
+   quieres una traza de apertura, emítela tú **dentro** del tramo.
+2. **Se cierra siempre**, en un `finally`, también cuando el tramo lanza.
+3. **La excepción**: `WithLogScope` la **propaga** —el ámbito se cierra, pero la excepción sigue su
+   camino—; `TryWithLogScope` la convierte en un `MlResult<T>` **fallido** con la excepción en los
+   metadatos, recuperable con `GetException()`.
+
+**Qué tienes que hacer como consumidor.** Nada obligatorio: todo lo anterior sigue compilando y
+comportándose igual. Si ya abrías ámbitos a mano con `using (_logger.BeginScope(...))`, puedes dejarlo
+tal cual —no choca con nada— o pasarlo a `WithLogScope` para que la tubería no quede partida.
+
+> ⚠️ **El límite que queda.** El ámbito asíncrono **no** cubre una tarea que ya estuviera en marcha
+> antes de abrirlo: si la `Task` se creó fuera, sus trazas pueden emitirse fuera del ámbito. Arranca la
+> tarea **desde** el tramo. Y el cruce del ámbito con `EventId`, con los seis niveles o con
+> `ILogger<TCategory>` **no existe**, y es una decisión medida: habría multiplicado las 8 firmas
+> genéricas por 8 sin aportar nada que el tramo no pueda hacer ya. El identificador de correlación
+> generado por la librería queda aplazado a la **3.0.0**.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -1681,6 +1752,18 @@ dotnet build --nologo /p:WarningLevel=4
    `LogMlResult*Template`, que mantiene el raíl. ⚠️ **No** toques las que además hagan otra cosa
    (publicar un evento, actualizar una métrica, mutar estado): ahí el `ExecSelf` sigue siendo lo
    correcto. Este barrido es **opcional**: no hay nada que rompa si no se aplica.
+   Y, para el punto 60 (familia `WithLogScope` de ámbitos de registro), busca además — **solo para
+   limpiar**, porque es aditivo:
+   ```
+   BeginScope
+   using\s*\(\s*_?[Ll]ogger\.BeginScope
+   ```
+   Cada coincidencia es un ámbito abierto a mano. **No rompe nada** y puede quedarse como está; pero
+   si el `using` envuelve una tubería de `MlResult<T>`, pasarlo a `WithLogScope` deja la tubería de
+   una pieza y garantiza el cierre en un `finally`. ⚠️ **No** toques los `BeginScope` que envuelvan
+   código que no sea una tubería de la librería. Y revisa si alguno de ellos envuelve un `await` de
+   una `Task` **creada antes** del `using`: ese caso ya estaba mal antes y sigue estándolo, porque las
+   trazas de esa tarea pueden emitirse fuera del ámbito.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -1787,7 +1870,14 @@ Entrega al usuario, **en español**, un informe con:
    único contenido era una llamada a `_logger.Log*` se han sustituido por la familia
    `LogMlResult*Template` y cuántos se han **descartado** por hacer algo más que registrar; deja
    escrito que los tres nombres de campo de `MlResultLogErrorFields` son **contrato** y que cualquier
-   consulta o panel del destino de registro puede depender de ellos.
+   consulta o panel del destino de registro puede depender de ellos. Para el punto **60**, haz constar
+   que es **aditivo** y que **deja sin efecto** lo que el punto 56 decía —los ámbitos ya existen—,
+   cuántos `using (_logger.BeginScope(...))` escritos a mano se han encontrado, cuántos se han pasado a
+   `WithLogScope` y cuántos se han **descartado** por no envolver una tubería de la librería; indica si
+   se ha usado la sobrecarga de **plantilla** o la de **diccionario** y por qué, y deja escrito que el
+   ámbito **no emite traza propia**, que se cierra siempre en un `finally`, que `WithLogScope`
+   **propaga** la excepción del tramo mientras `TryWithLogScope` la convierte en fallo recuperable con
+   `GetException()`, y que el ámbito asíncrono **no** cubre una tarea que ya estuviera en marcha.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1828,9 +1918,10 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 | 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
+| 2.4.0 | 60 | **16 firmas nuevas aditivas**: la familia **`WithLogScope`** de **ámbitos de registro**, que responde a lo que el punto 56 había dejado abierto a propósito. El recuento de `BeginScope` en producción pasa de **`0`** a **`8`**. Son cuatro ficheros `partial`: `WithLogScope` sincrónico (2 firmas), `WithLogScopeAsync` (6), `TryWithLogScope` (2) y `TryWithLogScopeAsync` (6). El ámbito envuelve un **tramo recibido como función**, admite las propiedades como **plantilla + argumentos** —anotada con `[StringSyntax]`, igual que el punto 57— o como **diccionario** entregado tal cual a `BeginScope`, **no emite traza propia** y se cierra siempre en un `finally`. `WithLogScope` **propaga** la excepción del tramo; `TryWithLogScope` la convierte en un `MlResult<T>` fallido con la excepción en los metadatos, recuperable con `GetException()`. ✅ **Sin rupturas**: ningún nombre anterior cambia y ninguna firma previa se modifica. ⚠️ Dos límites conocidos: el ámbito asíncrono **no** cubre una tarea que ya estuviera en marcha antes de abrirlo —hay que arrancarla desde el tramo— y el **cruce** del ámbito con `EventId`, con los seis niveles o con `ILogger<TCategory>` **no existe**; el identificador de correlación generado por la librería queda aplazado a la 3.0.0 |
 
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
-> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58 y 59** de la sección 3.3 más el barrido
+> nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59 y 60** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.
 >
 > 🧭 El salto **2.2.0 → 2.3.0** exige **una sola cosa**: atender el punto **58**, el renombrado de la
@@ -1843,6 +1934,12 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 > a cero a propósito y cómo correlacionar trazas mientras tanto. Y el **57** solo te interesa si
 > tienes analizadores estrictos: puedes **retirar** las supresiones de `CA2254` que hubieras escrito
 > alrededor de estas llamadas, aunque los avisos `CA1848` seguirán ahí y son esperados.
+>
+> 🧭 El salto **2.3.0 → 2.4.0** **no exige nada**: el único punto de la versión, el **60**, es
+> aditivo. Léelo si quieres dejar de abrir ámbitos a mano, si necesitas agrupar las trazas de **una
+> ejecución concreta** —que es lo que el `EventId` no hace— o si quieres que una excepción del tramo
+> envuelto no propague. Lo que sí conviene hacer es un barrido de `BeginScope` en el proyecto: lo que
+> encuentres seguirá funcionando, pero probablemente quepa dentro de un `WithLogScope`.
 >
 > ⚠️ Aun así, **no te saltes el punto 40**: es el único de la 2.1.1 cuyos cambios son en su mayoría
 > invisibles para el compilador. Un salto 2.0.x → 2.1.1 que compile a la primera y pase los tests puede

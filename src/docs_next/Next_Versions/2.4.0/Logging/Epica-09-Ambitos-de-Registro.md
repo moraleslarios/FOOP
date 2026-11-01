@@ -437,22 +437,43 @@ prompt de migración.
 
 **Criterios de aceptación**
 
-- [ ] El `README.md` del proyecto tiene una sección nueva para los ámbitos, con su entrada en el
+- [x] El `README.md` del proyecto tiene una sección nueva para los ámbitos, con su entrada en el
       índice y la tabla de recuentos actualizada.
-- [ ] Se **retira** el aviso «No hay `scopes` ni `BeginScope`» del apartado «Lo que NO incluye», y se
+- [x] Se **retira** el aviso «No hay `scopes` ni `BeginScope`» del apartado «Lo que NO incluye», y se
       sustituye por el límite real que quede tras esta épica.
-- [ ] Se actualiza la tabla de decisión rápida: hoy manda al `EventId` para correlacionar, y debe
+- [x] Se actualiza la tabla de decisión rápida: hoy manda al `EventId` para correlacionar, y debe
       distinguir **tipo de suceso** (`EventId`) de **instancia de ejecución** (ámbito), según el
       [punto 37](#punto-37--el-eventid-tapa-el-agujero-pero-sólo-a-medias).
-- [ ] Hay un ejemplo de extremo a extremo con la traza renderizada **y** las propiedades del ámbito
+- [x] Hay un ejemplo de extremo a extremo con la traza renderizada **y** las propiedades del ámbito
       tal como las ve el *sink*.
-- [ ] El `Sample` incorpora un ámbito y sigue ejecutándose con **`EXIT = 0`**.
-- [ ] `scripts\check-md-anchors4.ps1` termina con **`rotos = 0`**.
-- [ ] **Registro en los 6 sitios** de
+- [x] El `Sample` incorpora un ámbito y sigue ejecutándose con **`EXIT = 0`**.
+- [x] `scripts\check-md-anchors4.ps1` termina con **`rotos = 0`**.
+- [x] **Registro en los 6 sitios** de
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md),
       continuando la numeración desde el último punto usado, y en
       [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md) si
       hubiera renombrados.
+
+> ✅ **Hecha.** El `README.md` del proyecto estrena la **Familia 9 — Ámbitos de registro con
+> `BeginScope`**, con su entrada en el índice, las dos formas de poner las propiedades, el catálogo de
+> las **16 firmas** repartidas en cuatro ficheros, el ejemplo de extremo a extremo con la traza
+> renderizada **y** las propiedades tal como las ve el *sink*, y el apartado de lo que cuesta abrir el
+> ámbito con las cifras de la **medición 3**.
+>
+> El aviso «No hay `scopes` ni `BeginScope`» se ha **retirado** de «Lo que NO incluye» y se ha
+> sustituido por los **tres límites reales** que quedan: el tramo asíncrono que ya estaba en marcha,
+> la ausencia de cruce con `EventId`, con los seis niveles y con `ILogger<TCategory>`, y el
+> identificador de correlación automático, aplazado a la **3.0.0**. La tabla de decisión rápida gana
+> tres filas que distinguen **tipo de suceso** (`EventId`) de **instancia de ejecución** (ámbito), y
+> el recuento de firmas pasa a leerse **641 + 16 = 657**.
+>
+> El `Sample` incorpora una sección propia con las tres variantes —plantilla, diccionario y
+> `TryWithLogScope`— y sigue en **`EXIT = 0`**, con `Correcto = 13` y `FINALIZADO = 6`.
+>
+> El registro del consumidor es el **punto 60** del prompt de migración, en los **5 sitios** que le
+> corresponden —tabla de la §3.3, subsección de detalle, barrido de la Fase 5, informe de la Fase 6 y
+> tabla del apéndice de versiones—. El **sexto**, `oofp-upgrade-2.renames.md`, **no aplica**: esta
+> épica es puramente aditiva y **no renombra nada**.
 
 ---
 
@@ -655,26 +676,28 @@ graph TD
 
 Esta épica no se da por cerrada hasta que **todo** lo siguiente es cierto:
 
-- [ ] **Las seis decisiones `D-33` … `D-38` están resueltas** y escritas en este documento, con la
+- [x] **Las seis decisiones `D-33` … `D-38` están resueltas** y escritas en este documento, con la
       opción elegida marcada.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` ⇒ **`EXIT = 0`**,
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` ⇒ **`EXIT = 0`**,
       **0 errores**, **0 `CS1591`**, **0 `CS1572`/`CS1573`/`CS1574`**, **0 `CS0618`** y **sin avisos
       nuevos** sobre la línea base de **236**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` ⇒ **`EXIT = 0`**, **0 con error**,
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` ⇒ **`EXIT = 0`**, **0 con error**,
       **0 omitidos**, y el total **por encima** de los 1.502 de la 2.3.0.
-- [ ] Los **dos tests de paridad** de `MatrixTests.cs` siguen en verde, actualizados si el cruce de
-      `D-38` añade firmas por nivel.
-- [ ] Existe el test que demuestra que el ámbito **se cierra** aunque el tramo lance, y el que
+- [x] Los **dos tests de paridad** de `MatrixTests.cs` siguen en verde, actualizados si el cruce de
+      `D-38` añade firmas por nivel. `D-38` se cerró con la **(a)**, así que **no hay firmas nuevas
+      por nivel** y los dos tests siguen valiendo tal cual.
+- [x] Existe el test que demuestra que el ámbito **se cierra** aunque el tramo lance, y el que
       demuestra que dos tuberías concurrentes no se contaminan.
-- [ ] El `Sample` se ejecuta con **`EXIT = 0`**.
-- [ ] `scripts\check-md-anchors4.ps1` ⇒ **`rotos = 0`**.
-- [ ] El `README.md` del proyecto refleja la API **real** y ha retirado el aviso de que no hay
+- [x] El `Sample` se ejecuta con **`EXIT = 0`**.
+- [x] `scripts\check-md-anchors4.ps1` ⇒ **`rotos = 0`**.
+- [x] El `README.md` del proyecto refleja la API **real** y ha retirado el aviso de que no hay
       ámbitos.
-- [ ] Todo aditivo relevante está registrado en los **6 sitios** de
+- [x] Todo aditivo relevante está registrado en los **6 sitios** de
       [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md), y los
       renombrados —si hubiera— en
-      [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md).
-- [ ] Los commits siguen **Conventional Commits en castellano**, con `!` si rompen, creados con
+      [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md). El
+      aditivo de esta épica es el **punto 60**; no hay renombrados.
+- [x] Los commits siguen **Conventional Commits en castellano**, con `!` si rompen, creados con
       `git commit -F` desde un fichero **UTF-8 sin BOM**.
 - [ ] **No se publica sin confirmación** del propietario.
 

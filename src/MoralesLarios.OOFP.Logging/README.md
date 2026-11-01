@@ -20,14 +20,15 @@ Es el equivalente funcional del "punto de observación": no transforma, no valid
 10. [Familia 6 — `LogActionResult`](#familia-6--logactionresult)
 11. [Familia 7 — `EventId` e `ILogger<TCategory>`](#familia-7--eventid-e-iloggertcategory)
 12. [Familia 8 — Registro estructurado con plantillas](#familia-8--registro-estructurado-con-plantillas)
-13. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
-14. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
-15. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
-16. [Ejemplos prácticos](#ejemplos-prácticos)
-17. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
-18. [Mejores prácticas](#mejores-prácticas)
-19. [Resumen](#resumen)
-20. [Ver también](#ver-también)
+13. [Familia 9 — Ámbitos de registro con `BeginScope`](#familia-9--ámbitos-de-registro-con-beginscope)
+14. [Variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas)
+15. [⚠️ Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente)
+16. [⚠️ Lo que NO incluye](#️-lo-que-no-incluye)
+17. [Ejemplos prácticos](#ejemplos-prácticos)
+18. [Tabla de decisión rápida](#tabla-de-decisión-rápida)
+19. [Mejores prácticas](#mejores-prácticas)
+20. [Resumen](#resumen)
+21. [Ver también](#ver-también)
 
 ---
 
@@ -114,6 +115,10 @@ MoralesLarios.OOFP.Logging/
 ├── MlResultLogExtensions.TemplateFail.cs       → plantillas en la rama de fallo (2.3.0)
 ├── MlResultLogExtensions.TemplateEventId.cs    → plantillas cruzadas con EventId (2.3.0)
 ├── MlResultLogErrorFields.cs                   → campos canónicos del fallo: contrato (2.3.0)
+├── MlResultLogScopeExtensions.cs               → ámbitos: WithLogScope síncrono (2.4.0)
+├── MlResultLogScopeExtensions.Async.cs         → ámbitos en la tubería asíncrona (2.4.0)
+├── MlResultLogScopeExtensions.Try.cs           → TryWithLogScope: captura la excepción (2.4.0)
+├── MlResultLogScopeExtensions.TryAsync.cs      → TryWithLogScopeAsync (2.4.0)
 ├── MlResultLogExtensions.Obsolete.cs           → puentes [Obsolete] de LogMlResultFinal
 ├── MlResultLogActionExtensions.cs              → LogActionResult (atajo de más alto nivel)
 └── MlResultLogActionExtensions.Obsolete.cs     → puente [Obsolete] de MyMethodFinalLog
@@ -121,9 +126,11 @@ MoralesLarios.OOFP.Logging/
 
 Las seis clases por nivel y las de `EventId`/`Categoria`/`Template…` son **`partial` de la misma
 clase `MlResultLogExtensions`**: se reparten en ficheros por legibilidad, pero para el consumidor es
-un único tipo. La única excepción es `MlResultLogErrorFields`, que es una clase propia porque no
-aporta extensiones, sino el **contrato de campos** de la rama de fallo. Todo lo demás son **métodos
-de extensión estáticos**. La arquitectura es una pirámide:
+un único tipo. Hay **dos excepciones**: `MlResultLogErrorFields`, que es una clase propia porque no
+aporta extensiones, sino el **contrato de campos** de la rama de fallo, y `MlResultLogScopeExtensions`
+—con sus cuatro ficheros `partial`—, que es otra clase porque los ámbitos **no registran nada**: solo
+envuelven un tramo. Todo lo demás son **métodos de extensión estáticos**. La arquitectura es una
+pirámide:
 
 ```
 MlResultLogActionExtensions.LogActionResult     ← atajo con mensajes prefabricados
@@ -477,8 +484,10 @@ return await _repo.AddAsync(pedido)
 ```
 
 El `EventId` llega al `ILogger` tal cual (`logger.Log(logLevel, eventId, message)`), así que **Serilog,
-Seq o Application Insights pueden filtrar y agrupar por él**. Es la forma recomendada de correlacionar
-un conjunto de trazas sin recurrir a `BeginScope`.
+Seq o Application Insights pueden filtrar y agrupar por él**. El `EventId` identifica el **tipo de
+suceso**; para agrupar las trazas de **una ejecución concreta** está el ámbito de la
+[familia 9](#familia-9--ámbitos-de-registro-con-beginscope), disponible desde la 2.4.0. Son cosas
+distintas y se usan juntas.
 
 ### `ILogger<TCategory>` — fijar la categoría
 
@@ -723,10 +732,138 @@ MlResult<Pedido> resultado = await _repo.GetAsync(17)
 | `MlResultLogErrorFields.cs` | campos canónicos del fallo | 4 | — |
 | Cada uno de los **seis** ficheros de nivel | sus cinco regiones de plantilla | 89 en total | 11 |
 
-> 💡 La superficie pública total del proyecto es de **640 firmas**. Un test de matriz vigila que cada
-> fichero de nivel exponga exactamente **89** y que toda firma que reciba una `Task` termine en
-> `Async`.
+> 💡 La superficie pública total del proyecto es de **657 firmas** (641 hasta la 2.3.0, más las **16**
+> de los ámbitos de la 2.4.0). Un test de matriz vigila que cada fichero de nivel exponga exactamente
+> **89** y que toda firma que reciba una `Task` termine en `Async`.
 
+
+---
+
+## Familia 9 — Ámbitos de registro con `BeginScope`
+
+Añadida en la **2.4.0** y **puramente aditiva**. Un ámbito agrupa en el *sink* todas las trazas que
+caen dentro de un tramo de la tubería y les cuelga unas propiedades comunes. Es lo que te permite
+preguntar en Seq «enséñame **todo** lo que pasó con el pedido 17», sin tocar ni uno de los mensajes.
+
+La dificultad era que `ILogger.BeginScope` devuelve un `IDisposable`, y un `using` **parte la cadena en
+dos sentencias** y obliga a una variable intermedia. La solución —decisión `D-33` opción **(a)**— es que
+el ámbito **envuelva un tramo recibido como función**, de modo que la cadena siga siendo una sola
+expresión:
+
+```csharp
+var resultado = ObtenerPedido(17)
+                    .WithLogScope(_logger, "pedido {PedidoId}", [17],
+                                  section: r => r.LogMlResultInformationTemplate(_logger, "validando")
+                                                 .Bind(Validar)
+                                                 .LogMlResultInformationTemplate(_logger, "validado"));
+```
+
+El ámbito se cierra **siempre** en un `finally`, también si el tramo lanza, y devuelve lo que devuelva
+el tramo: para la cadena es transparente.
+
+### Las dos formas de poner las propiedades
+
+| Forma | Firma | Cuándo |
+|---|---|---|
+| **Plantilla + argumentos** | `WithLogScope(logger, scopeTemplate, scopeArgs, section)` | la habitual: se lee igual que una traza |
+| **Diccionario de propiedades** | `WithLogScope(logger, scopeProperties, section)` | cuando las propiedades las decides en tiempo de ejecución |
+
+```csharp
+// (a) plantilla: los marcadores se rellenan POR POSICIÓN, igual que en la familia 8
+source.WithLogScope(_logger, "pedido {PedidoId} del cliente {ClienteId}", [17, 4], section);
+
+// (b) diccionario: lo recibe como IEnumerable<KeyValuePair<string, object?>> y lo pasa TAL CUAL
+source.WithLogScope(_logger,
+                    new Dictionary<string, object?> { ["PedidoId"] = 17, ["Correlacion"] = idEjecucion },
+                    section);
+```
+
+> ℹ️ Decisión `D-37`: la plantilla es la forma **primaria** y va anotada con
+> `[StringSyntax(StringSyntaxAttribute.CompositeFormat)]`, para que el editor te avise si te dejas un
+> marcador a medias. El diccionario llega **intacto** al `BeginScope` estándar, así que es la vía para
+> meter tu propio identificador de correlación.
+
+### El catálogo: 16 firmas en cuatro ficheros
+
+| Fichero | Qué aporta | Firmas |
+|---|---|---:|
+| `MlResultLogScopeExtensions.cs` | `WithLogScope` síncrono (plantilla + diccionario) | 2 |
+| `MlResultLogScopeExtensions.Async.cs` | `WithLogScopeAsync`, las tres combinaciones de receptor y tramo | 6 |
+| `MlResultLogScopeExtensions.Try.cs` | `TryWithLogScope` síncrono | 2 |
+| `MlResultLogScopeExtensions.TryAsync.cs` | `TryWithLogScopeAsync` | 6 |
+
+Las tres combinaciones asíncronas son las mismas de siempre: receptor síncrono con tramo `async`,
+receptor `Task<MlResult<T>>` con tramo `async`, y receptor `Task<MlResult<T>>` con tramo síncrono. Ver
+[variantes síncronas y asíncronas](#variantes-síncronas-y-asíncronas).
+
+### Qué pasa si el tramo lanza
+
+Las dos variantes están descritas en la
+[particularidad 9](#9-withlogscope-propaga-la-excepción-trywithlogscope-la-convierte-en-fallo): en
+resumen, `WithLogScope` **propaga** la excepción hacia tu `try/catch` y `TryWithLogScope` la convierte
+en un `MlResult` fallido con la excepción en los metadatos, recuperable con `GetException()`. En ambos
+casos el ámbito se cierra.
+
+### Ejemplo de extremo a extremo: la traza y las propiedades del ámbito
+
+```csharp
+private static readonly EventId PedidoValidado = new(1001, nameof(PedidoValidado));
+
+public Task<MlResult<Pedido>> CrearAsync(NuevoPedido nuevo) =>
+    MlResult.Empty()
+            .WithLogScopeAsync(_logger,
+                               "pedido {PedidoId} del cliente {ClienteId}", [nuevo.Id, nuevo.ClienteId],
+                               sectionAsync: _ => Validar(nuevo)
+                                                      .LogMlResultInformationTemplate(_logger, PedidoValidado,
+                                                                                      "pedido validado")
+                                                      .BindAsync(_repo.AddAsync)
+                                                      .LogCompletedResultAsync(_logger,
+                                                                               p => $"pedido {p.Id} creado",
+                                                                               e => e.GetErrorsSummary()));
+```
+
+Lo que se renderiza en consola con `IncludeScopes = true`:
+
+```text
+info: Pedidos.ServicioPedidos[1001]
+      => pedido 17 del cliente 4
+      pedido validado
+info: Pedidos.ServicioPedidos[0]
+      => pedido 17 del cliente 4
+      pedido 17 creado
+```
+
+Y lo que ve el *sink* de **cada una** de esas dos trazas:
+
+| Propiedad | Valor | De dónde sale |
+|---|---|---|
+| `PedidoId` | `17` | del **ámbito** |
+| `ClienteId` | `4` | del **ámbito** |
+| `{OriginalFormat}` del ámbito | `pedido {PedidoId} del cliente {ClienteId}` | del **ámbito** |
+| `EventId` | `1001` / `PedidoValidado` | de la [familia 7](#familia-7--eventid-e-iloggertcategory) |
+| mensaje | `pedido validado` | de la [familia 8](#familia-8--registro-estructurado-con-plantillas) |
+
+> 🔑 **Lo importante**: las propiedades del ámbito **no están en el texto** de ninguna de las dos
+> trazas, y aun así una consulta `PedidoId = 17` te devuelve **las dos**. Eso es exactamente lo que el
+> `EventId` no podía hacer: el `EventId` dice **qué tipo de suceso** fue; el ámbito, **de qué ejecución
+> concreta** salió.
+
+### Lo que cuesta, y por qué se abre siempre
+
+El ámbito **no consulta `IsEnabled`**, porque un ámbito no tiene nivel: se abre siempre. La medición de
+la US-45 de la [épica 9](../docs_next/Next_Versions/2.4.0/Logging/Epica-09-Ambitos-de-Registro.md), con
+el nivel **apagado** y 20.000 iteraciones, explica por qué:
+
+| Qué se mide | Bytes por llamada | Sobrecoste |
+|---|---:|---:|
+| El tramo suelto, sin ámbito | 248,0 B | — |
+| El tramo dentro de un ámbito con **plantilla** | 304,0 B | **+56,0 B** |
+| El tramo dentro de un ámbito con **diccionario** | 488,0 B | **+240,0 B** |
+
+Los `+56,0 B` son el `object?[]` de los argumentos y el boxeo de sus valores. Los `+240,0 B` son el
+`Dictionary` que **escribes tú**, no la librería. Cincuenta y seis bytes no justifican una rama
+condicional que, además, haría que el ámbito apareciese o no según el nivel configurado: eso sí sería
+un cambio silencioso de comportamiento. Es la decisión `D-35` opción **(a)**.
 
 ---
 
@@ -945,17 +1082,19 @@ quieres otro, el último parámetro —opcional— te deja construirlo sin perde
 
 > ⚠️ **No se pasa la `Exception` al `ILogger`.** Aunque `LogMlResultIfFailWithException` **detecta** la excepción y te la deja usar en el mensaje, **nunca** llama a `logger.Log(level, exception, message)`. Por tanto **el stack trace no se registra** salvo que lo incluyas tú en el texto (`ex.ToString()`).
 
-> ⚠️ **No hay `scopes` ni `BeginScope`.** El recuento de `BeginScope` en el proyecto es **`0`**, y lo
-> sigue siendo a propósito: los ámbitos **no son una omisión, son trabajo planificado**. La decisión
-> `D-29` de la [épica 8](../docs_next/Next_Versions/2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md)
-> los desgajó a la [**épica 9** de la 2.4.0](../docs_next/Next_Versions/2.4.0/Logging/Epica-09-Ambitos-de-Registro.md),
-> porque un ámbito es un `IDisposable` y encajarlo en una tubería de métodos de extensión plantea tres
-> preguntas de diseño propias —qué pasa si el tramo lanza, cómo se compone con `Bind` y si el ámbito
-> debe sobrevivir al `await`— que no se podían resolver de paso.
+> ⚠️ **Los ámbitos ya existen, pero tienen tres límites.** Desde la 2.4.0 el recuento de `BeginScope`
+> en el proyecto es **`8`** y los expone la
+> [familia 9](#familia-9--ámbitos-de-registro-con-beginscope). Lo que **sigue** quedando fuera es:
 >
-> Mientras tanto, para correlacionar un conjunto de trazas usa el `EventId` de la
-> [familia 7](#familia-7--eventid-e-iloggertcategory), que **sí existe desde la 2.2.0**: no agrupa las
-> trazas en el *sink* como lo haría un ámbito, pero sí permite filtrarlas por evento.
+> - **una tarea que ya estaba corriendo** antes de abrir el ámbito: sus trazas caen **fuera**, porque
+>   la librería solo promete lo que ella arranca
+>   ([particularidad 8](#8-el-ámbito-asíncrono-no-cubre-una-tarea-que-ya-estaba-en-marcha));
+> - **el identificador de correlación generado por la librería**, aplazado a la 3.0.0 por la decisión
+>   `D-38`: el nombre de ese campo sería contrato público y cambiarlo después sería una ruptura
+>   silenciosa. Mientras tanto lo pones tú como propiedad del ámbito, con la sobrecarga de diccionario;
+> - **el cruce del ámbito con los otros ejes**: no hay `WithLogScope` con `EventId`, ni uno por nivel,
+>   ni uno con `ILogger<TCategory>`. Son **8** firmas frente a las **64** que costaría cruzarlos, y el
+>   ámbito **no registra nada por sí mismo**, así que ni el nivel ni el `EventId` le aportan.
 
 > ⚠️ **No existe `LogCompletedResult` ni `LogGeneralErrorIfFail` por nivel** (`LogMlResultErrorFinal`, etc.).
 
@@ -1128,7 +1267,9 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 | Nivel decidido en tiempo de ejecución | `LogMlResult(_logger, logLevel, …)` |
 | Escribir una traza suelta y seguir en el raíl | `_logger.LogMlResultXxx("mensaje")` → `MlResult<ILogger>` |
 | Registrar dentro de una cadena `async` | La sobrecarga `…Async` que recibe `Task<MlResult<T>>` |
-| Correlacionar un conjunto de trazas | La sobrecarga con `EventId` ([familia 7](#familia-7--eventid-e-iloggertcategory)) |
+| Marcar el **tipo de suceso** para filtrar por él | La sobrecarga con `EventId` ([familia 7](#familia-7--eventid-e-iloggertcategory)) |
+| Agrupar las trazas de **una ejecución concreta** | `WithLogScope(_logger, "pedido {PedidoId}", [17], section)` ([familia 9](#familia-9--ámbitos-de-registro-con-beginscope)) |
+| Que una excepción del tramo envuelto **no** propague | `TryWithLogScope(…)` en lugar de `WithLogScope(…)` |
 | Emitir **campos indexables** en el *sink* | La familia `…Template` ([familia 8](#familia-8--registro-estructurado-con-plantillas)) |
 | Registrar un fallo con campos canónicos | `…IfFailTemplate(_logger, MlResultLogErrorFields.DefaultTemplate, MlResultLogErrorFields.From)` |
 | Fijar la categoría del logger en el punto de uso | La sobrecarga con `ILogger<TCategory>` |
@@ -1151,6 +1292,8 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 12. **No registres información sensible**: los `MlErrorDetails` pueden arrastrar el valor de entrada completo (`…WithValue`).
 13. **Usa `validBuildMessage` / `failBuildMessage`**: desde la 2.2.0 los nombres son uniformes en toda la superficie pública; los antiguos (`validBuilMessage`, `faildMessage`) ya no compilan.
 14. **Usa un `EventId` estático por tipo de suceso** en lugar de literales: así puedes filtrar y agrupar en Seq o Application Insights.
+15. **Un ámbito por unidad de trabajo, no por paso**: envuelve el caso de uso completo con `WithLogScope` ([familia 9](#familia-9--ámbitos-de-registro-con-beginscope)) y deja el `EventId` para distinguir los sucesos de dentro. El `EventId` dice *qué* pasó; el ámbito, *en qué ejecución*.
+16. **Arranca la tarea desde el tramo del ámbito**, no antes: si la `Task` ya está en marcha, sus trazas quedan fuera ([particularidad 8](#8-el-ámbito-asíncrono-no-cubre-una-tarea-que-ya-estaba-en-marcha)).
 
 ---
 
@@ -1163,7 +1306,8 @@ return await pipeline.LogGeneralErrorIfFailAsync(_logger);
 - Atajos de alto nivel: **`LogGeneralErrorIfFail`** (una línea, registra los fallos en `Error`) y **`LogCompletedResult`** (`Information` si va bien, `Error` si falla).
 - Desde la 2.2.0: **`EventId`** y **`ILogger<TCategory>`** como ejes aditivos, **guarda de `logger` nulo** y **cortocircuito por `IsEnabled`** antes de construir el mensaje.
 - Desde la 2.3.0: **registro estructurado con plantillas** ([familia 8](#familia-8--registro-estructurado-con-plantillas)) en la rama válida, en las cuatro condicionales de fallo y cruzado con `EventId`, más **`MlResultLogErrorFields`**, que fija los tres campos canónicos del fallo (`ErrorMessage`, `ErrorCount`, `ExceptionType`) como **contrato**.
-- ⚠️ Límites importantes: las familias de **mensaje compuesto** siguen sin producir campos indexables (para eso está `…Template`), **no se pasa la `Exception` al logger** (ni stack trace), **no hay `scopes`** (planificados en la épica 9 de la 2.4.0), y las excepciones dentro de tus `Func` **no están protegidas**.
+- Desde la 2.4.0: **ámbitos de registro** ([familia 9](#familia-9--ámbitos-de-registro-con-beginscope)) con `WithLogScope` y `TryWithLogScope`, síncronos y asíncronos, que envuelven un tramo recibido como función para no partir la cadena, cuelgan propiedades comunes de todas sus trazas y se cierran siempre en un `finally`. Son **16 firmas** y **no emiten traza propia**.
+- ⚠️ Límites importantes: las familias de **mensaje compuesto** siguen sin producir campos indexables (para eso está `…Template`), **no se pasa la `Exception` al logger** (ni stack trace), el ámbito **no cubre una tarea ya iniciada** ni genera **identificador de correlación** (aplazado a la 3.0.0), y las excepciones dentro de tus `Func` **no están protegidas** salvo que uses la variante `Try…`.
 - ⚠️ Lo que queda por limpiar en la 3.0.0: solo los puentes **`[Obsolete]`** — los de `MyMethodFinalLog` y `LogMlResultFinal` de la 2.2.0, más el de `LogCompletedResult` sin sufijo de la 2.3.0. Las dos erratas cosméticas (la sobrecarga `async` sin sufijo y la región mal etiquetada en el fichero de `Trace`) **ya están cerradas** desde la 2.3.0.
 
 ---
