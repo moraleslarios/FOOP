@@ -222,17 +222,49 @@ prompt de migración.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-33`](#5-decisiones-abiertas)**, que fija la forma de la API, y
+- [x] **Resuelta [`D-33`](#5-decisiones-abiertas)**, que fija la forma de la API, y
       **[`D-37`](#5-decisiones-abiertas)**, que fija de dónde salen las propiedades.
-- [ ] Existe la familia nueva en `MlResultLogScopeExtensions.cs`, con documentación XML en cada
+- [x] Existe la familia nueva en `MlResultLogScopeExtensions.cs`, con documentación XML en cada
       miembro público y `0 CS1591`.
-- [ ] El ámbito se cierra **siempre**, verificado con un test que lanza dentro del tramo.
-- [ ] El ámbito se abre **antes** de evaluar el tramo y se cierra **después** de la última traza del
+- [x] El ámbito se cierra **siempre**, verificado con un test que lanza dentro del tramo.
+- [x] El ámbito se abre **antes** de evaluar el tramo y se cierra **después** de la última traza del
       tramo, verificado con el espía de la US-41.
-- [ ] Un `logger` nulo no revienta: se evalúa el tramo sin ámbito, igual que hoy un `logger` nulo
+- [x] Un `logger` nulo no revienta: se evalúa el tramo sin ámbito, igual que hoy un `logger` nulo
       devuelve el `source` intacto.
-- [ ] El recuento de firmas públicas del proyecto queda documentado antes y después, continuando la
+- [x] El recuento de firmas públicas del proyecto queda documentado antes y después, continuando la
       tabla de la [§7.1 de la épica 8](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#71--recuento-de-firmas-públicas-por-fichero-us-36).
+
+> ✅ **Hecha.** `MlResultLogScopeExtensions.cs` entrega las **dos** firmas síncronas de
+> [`D-37`](#5-decisiones-abiertas): `WithLogScope(logger, scopeTemplate, scopeArgs, section)`, con la
+> plantilla anotada con `[StringSyntax("MessageTemplate")]`, y
+> `WithLogScope(logger, scopeProperties, section)`, que pasa la secuencia de pares **tal cual** a
+> `BeginScope`, sin copiarla ni reordenarla. Las dos delegan en un núcleo privado `RunInScope`, que
+> evalúa el tramo dentro de un `try` y cierra el ámbito en el `finally`, de modo que la excepción se
+> **propaga** intacta tal y como fija [`D-34`](#5-decisiones-abiertas) para esta historia; el
+> `TryWithLogScope` que la convierte en fallo es de la US-44. El ámbito es **transparente** por
+> [`D-35`](#5-decisiones-abiertas): no emite ninguna traza propia, así que un ámbito sobre un tramo
+> que no registra nada deja el espía vacío. Y no se cruza con los seis niveles, ni con `EventId`, ni
+> con `ILogger<TCategory>`, por [`D-38`](#5-decisiones-abiertas).
+>
+> Las guardas viven en **cada sobrecarga pública**, no en el núcleo: un `section` nulo devuelve un
+> resultado fallido con `NullSectionMessage`, y un `logger` o una plantilla nulos evalúan el tramo
+> **sin abrir ámbito**, devolviendo lo que devuelva el tramo. Ponerlas en el borde, y no dentro del
+> núcleo compartido, es lo que permite que el análisis de nulabilidad estreche los tipos y que la
+> llamada a `BeginScope` no arrastre avisos nuevos.
+>
+> `MlResultLogScopeExtensionsTests.cs` añade **20 tests** repartidos en seis regiones: forma de la API
+> por plantilla, forma de la API por diccionario, cierre garantizado —incluido el tramo que lanza—,
+> orden de apertura y de cierre, transparencia y guardas de nulos.
+>
+> De paso se corrigió el espía de la US-41: su `BeginScope` solo reconocía las propiedades cuando el
+> `state` era una `IReadOnlyList<KeyValuePair<string, object?>>`, con lo que un `Dictionary` pasado
+> por la sobrecarga de diccionario quedaba **invisible** para `Property(n)` y para `ScopeProperty(n)`.
+> Ahora acepta **cualquier** `IEnumerable` de pares y la materializa, que es lo que hacen los
+> proveedores reales.
+>
+> Totales: build `EXIT = 0`, 0 errores, **236 avisos** (sin avisos nuevos), `CS1591 = 0`,
+> `CS0618 = 0`; tests `EXIT = 0`, **1.547** totales (desde 1.527), 0 con error, 0 omitidos. Firmas
+> públicas del proyecto: **641 → 643** (ver [§7.2](#72--recuento-de-firmas-públicas-tras-la-us-42)).
 
 ### US-43 · El ámbito en la tubería asíncrona
 
@@ -548,7 +580,7 @@ decisiones:
 |:-:|----------|------------|-----------|
 | 1 | Escribir el caso del punto 34 con `using logger.BeginScope(...)` **a mano** y contar qué estorba de verdad | si la opción **(c)** de `D-33` basta, y entonces esta épica se cierra sin código | ✅ **hecha** · funciona, pero parte la cadena en dos sentencias y obliga a una variable intermedia ⇒ `D-33` = **(a)**, hay código |
 | 2 | Comprobar con el espía si un `Task<MlResult<T>>` **ya iniciado** lleva o no las propiedades del ámbito | `D-36`, que es la única pregunta de `D-29` con una respuesta medible | ✅ **hecha** · lo iniciado **dentro** hereda; el `Task` ya arrancado **no** ⇒ `D-36` = **(b)** |
-| 3 | Medir las asignaciones por llamada con el nivel **apagado**, igual que hizo la épica 6 (línea base **240,0 B**) | si el ámbito hay que abrirlo también cuando nadie escucha | ⬜ pendiente de la US-42 |
+| 3 | Medir las asignaciones por llamada con el nivel **apagado**, igual que hizo la épica 6 (línea base **240,0 B**) | si el ámbito hay que abrirlo también cuando nadie escucha | ⬜ **aplazada a la US-45** · ver la nota de abajo |
 | 4 | Contar cuántas firmas añadiría cada cruce de `D-38` | si la combinatoria se paga o se contiene, como ya decidió `D-28` (b) | ✅ **hecha** · 8 firmas la genérica, +64 los tres cruces descartados ⇒ `D-38` = **(a)** |
 
 Las mediciones 1 y 2 no son prosa: están escritas como tests en
@@ -557,17 +589,62 @@ apéndice», para que **se rompan** si el comportamiento medido cambia.
 
 **Mediciones** (se completan al cerrar la épica):
 
-| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la épica |
-|---------|-----------------:|--------------:|--------------:|
-| Firmas públicas del proyecto | 640 | 640 | *pendiente* |
-| Avisos del build en Release | 236 | **236** | *pendiente* |
-| Tests | 1.502 | **1.527** | *pendiente* |
-| `BeginScope` en el proyecto | **0** | 0 | *pendiente* |
-| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *pendiente* |
+| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la US-42 | Tras la épica |
+|---------|-----------------:|--------------:|-------------:|--------------:|
+| Firmas públicas del proyecto | 640 | 641 | **643** | *pendiente* |
+| Avisos del build en Release | 236 | **236** | **236** | *pendiente* |
+| Tests | 1.502 | **1.527** | **1.547** | *pendiente* |
+| `BeginScope` en el proyecto | **0** | 0 | **2** | *pendiente* |
+| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *sin medir* | *pendiente* |
 
 > ℹ️ El recuento real de tests medido sobre la 2.3.0 es **1.510**, no 1.502: la cifra del enunciado se
 > escribió antes de las últimas historias de la épica 8. El criterio de la
 > [§6](#6-definición-de-terminado) se mide contra **1.510**.
+
+> ℹ️ Las **641** firmas de la columna «Tras la US-41» no son un cambio de esa historia, que es solo de
+> tests: son las **640** de la puerta de entrada de la 2.3.0 más el puente de compatibilidad que
+> añadió la [US-39](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md) al devolver el
+> sufijo `Async` a `LogCompletedResult`.
+
+> ⚠️ **La medición 3 se aplaza a la US-45.** La US-42 abre el ámbito **sin** consultar `IsEnabled`, y
+> es lo correcto por [`D-35`](#5-decisiones-abiertas): el ámbito es transparente y no decide qué se
+> escribe, así que preguntar al `logger` antes de abrirlo no ahorraría la traza, solo adelantaría una
+> llamada. Medir la asignación exige un arnés de asignaciones que **no existe** en el repositorio —la
+> épica 6 lo montó y lo retiró— y la respuesta solo cambia el diseño si se decide abrir el ámbito de
+> forma condicional, que es precisamente lo que se discute en la US-45 al cruzar ejes. Hasta entonces
+> la cifra se deja **sin medir**, no estimada.
+
+### 7.2 · Recuento de firmas públicas tras la US-42
+
+Criterio de aceptación de la US-42. Continúa la
+[§7.1 de la épica 8](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#71--recuento-de-firmas-públicas-por-fichero-us-36),
+medido con el mismo contador sintáctico sobre cada fichero del proyecto `MoralesLarios.OOFP.Logging`:
+
+| Fichero | Tras la épica 8 | Tras la US-42 |
+|---------|----------------:|-------------:|
+| `MlResultLogExtensions.cs` | 57 | 57 |
+| `MlResultLogExtensions.Trace.cs` | 75 | 75 |
+| `MlResultLogExtensions.Debug.cs` | 75 | 75 |
+| `MlResultLogExtensions.Information.cs` | 75 | 75 |
+| `MlResultLogExtensions.Warning.cs` | 75 | 75 |
+| `MlResultLogExtensions.Error.cs` | 75 | 75 |
+| `MlResultLogExtensions.Critical.cs` | 75 | 75 |
+| `MlResultLogExtensions.EventId.cs` | 35 | 35 |
+| `MlResultLogExtensions.Categoria.cs` | 21 | 21 |
+| `MlResultLogExtensions.Template.cs` | 5 | 5 |
+| `MlResultLogExtensions.TemplateFail.cs` | 24 | 24 |
+| `MlResultLogExtensions.TemplateEventId.cs` | 35 | 35 |
+| `MlResultLogErrorFields.cs` | 4 | 4 |
+| `MlResultLogExtensions.Obsolete.cs` | 6 | 6 |
+| `MlResultLogActionExtensions.cs` | 2 | 2 |
+| `MlResultLogActionExtensions.Obsolete.cs` | 2 | 2 |
+| `MlResultLogScopeExtensions.cs` | — | **2** |
+| **TOTAL** | **641** | **643** |
+
+La US-42 añade **dos firmas y ni una más**, que son las dos síncronas de
+[`D-38`](#5-decisiones-abiertas): la de plantilla con argumentos y la de diccionario de propiedades.
+Las **ocho** de la fila aceptada en `D-38` son el total de la épica; las seis restantes —las `Async`—
+son de la US-43.
 
 ---
 

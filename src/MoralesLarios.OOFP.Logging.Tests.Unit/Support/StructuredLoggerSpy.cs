@@ -157,7 +157,7 @@ public sealed class StructuredLoggerSpy : ILogger
     {
         var pila   = active.Value ?? ImmutableStack<LoggerScopeRecord>.Empty;
         var record = new LoggerScopeRecord(state,
-                                           state as IReadOnlyList<KeyValuePair<string, object?>>,
+                                           ComoPropiedades(state),
                                            pila.Count(),
                                            Stopwatch.GetTimestamp());
 
@@ -166,6 +166,27 @@ public sealed class StructuredLoggerSpy : ILogger
 
         return new Scope(this, record);
     }
+
+    /// <summary>
+    /// Extrae las propiedades por nombre del estado de un ámbito, del mismo modo que lo hacen los
+    /// proveedores reales: aceptando <b>cualquier</b> secuencia de pares, no solo las listas.
+    /// </summary>
+    /// <param name="state">Estado recibido en <see cref="BeginScope{TState}(TState)"/>.</param>
+    /// <returns>
+    /// Las propiedades del ámbito, o <see langword="null"/> si el estado no es una secuencia de pares.
+    /// </returns>
+    /// <remarks>
+    /// Una plantilla con argumentos llega como <c>FormattedLogValues</c>, que ya es una
+    /// <see cref="IReadOnlyList{T}"/>; un diccionario de propiedades, en cambio, solo es
+    /// <see cref="IEnumerable{T}"/> y hay que materializarlo para poder consultarlo por índice.
+    /// </remarks>
+    private static IReadOnlyList<KeyValuePair<string, object?>>? ComoPropiedades(object? state)
+        => state switch
+           {
+               IReadOnlyList<KeyValuePair<string, object?>> lista     => lista,
+               IEnumerable<KeyValuePair<string, object?>>   secuencia => secuencia.ToList(),
+               _                                                     => null
+           };
 
     /// <inheritdoc/>
     public bool IsEnabled(LogLevel logLevel)
