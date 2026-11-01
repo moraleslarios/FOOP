@@ -334,16 +334,65 @@ prompt de migración.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-34`](#5-decisiones-abiertas)** · propagar la excepción o convertirla en fallo, y
+- [x] **Resuelta [`D-34`](#5-decisiones-abiertas)** · propagar la excepción o convertirla en fallo, y
       **[`D-35`](#5-decisiones-abiertas)** · qué se registra al entrar y al salir del tramo.
-- [ ] El ámbito se cierra en un `finally`, y hay un test que lo prueba con una excepción que
+- [x] El ámbito se cierra en un `finally`, y hay un test que lo prueba con una excepción que
       atraviesa el tramo.
-- [ ] Si la decisión es convertir la excepción en `MlResult` fallido, el `MlErrorDetails` resultante
+- [x] Si la decisión es convertir la excepción en `MlResult` fallido, el `MlErrorDetails` resultante
       arrastra la excepción, comprobado con `GetException()`.
-- [ ] Un tramo que devuelve un `MlResult` **fallido** no impide el cierre del ámbito ni altera lo que
+- [x] Un tramo que devuelve un `MlResult` **fallido** no impide el cierre del ámbito ni altera lo que
       se registra respecto al caso válido, salvo lo que `D-35` decida de forma explícita.
-- [ ] Se puede **anidar** un ámbito dentro de otro y las propiedades de los dos llegan a la traza,
+- [x] Se puede **anidar** un ámbito dentro de otro y las propiedades de los dos llegan a la traza,
       verificado con el espía.
+
+> ✅ **Hecha.** `D-34` se cierra con la opción **(c)** y `D-35` con la **(a)**, y las dos quedan
+> **aplicadas en código**, no sólo decididas.
+>
+> La parte de `D-34` que ya existía es la de por omisión: `WithLogScope` cierra el ámbito en un
+> `finally` y **propaga** la excepción, y eso lo afirman dos tests de la US-42 que esta historia
+> **reutiliza en vez de duplicar** —`WithLogScope_TramoQueLanza_CierraElAmbitoYPropagaLaExcepcion` y
+> `WithLogScope_ConDiccionario_TramoQueLanza_CierraElAmbito`—, igual que el anidamiento del quinto
+> criterio lo afirma `WithLogScope_Anidado_CadaTrazaVeLosDosAmbitos`.
+>
+> La parte nueva es la variante que **captura**: `TryWithLogScope` y `TryWithLogScopeAsync`, en
+> `MlResultLogScopeExtensions.Try.cs` y `MlResultLogScopeExtensions.TryAsync.cs`. Convierten la
+> excepción del tramo en un `MlResult` fallido cuyo `MlErrorDetails` **arrastra la excepción
+> original**, recuperable con `GetException()`; el test
+> `TryWithLogScope_TramoQueLanza_ElFalloArrastraLaExcepcionOriginal` lo comprueba con `BeSameAs`, es
+> decir, la **misma instancia**, no una copia ni una envoltura. El mensaje por omisión es el del
+> núcleo —`EnsureFpMessages.DefaultExceptionError`, el mismo que usa la familia `Try*` de `MlResult`—
+> y un parámetro opcional `errorMessageBuilder` permite sustituirlo sin perder la excepción.
+>
+> La transparencia de `D-35` **(a)** se mantiene intacta en la variante que captura: ni al entrar ni al
+> salir se emite traza propia, ni siquiera cuando el tramo lanza, y eso lo fijan dos tests,
+> `TryWithLogScope_TramoQueLanza_NoEmiteNingunaTraza` y
+> `TryWithLogScope_TramoQueDevuelveFallo_CierraElAmbitoYRegistraLoMismoQueElCasoValido`, el segundo
+> comparando dos espías para exigir el mismo recuento de ámbitos, el mismo recuento de trazas y el
+> mismo `OriginalFormat` en el caso válido y en el fallido. Y hay una frontera que conviene tener
+> escrita: **un `MlResult` fallido no es una excepción**, así que `TryWithLogScope` lo devuelve **tal
+> cual**, sin tocarlo y sin añadirle metadatos.
+>
+> La asimetría del receptor asíncrono queda también medida y escrita: la tarea de origen se espera
+> **antes** de abrir el ámbito y, por tanto, **fuera** del `try`, de modo que su excepción **propaga**
+> en vez de convertirse en fallo. Es consecuencia directa de [`D-36`](#5-decisiones-abiertas) **(b)**,
+> está en el `<remarks>` de las tres sobrecargas con receptor `Task<MlResult<T>>` y lo fija el test
+> `TryWithLogScopeAsync_ReceptorAsincronoQueLanza_PropagaLaExcepcionYNoAbreAmbito`, que además
+> comprueba que en ese caso **no se abre ningún ámbito**.
+>
+> Dos baterías nuevas, **35 tests** en total: `MlResultLogScopeExtensionsTryTests.cs` aporta 20 en seis
+> regiones —conversión por plantilla, conversión por diccionario, el tramo correcto, el tramo fallido,
+> el anidamiento y las guardas de nulos— y `MlResultLogScopeExtensionsTryAsyncTests.cs` aporta 15 en
+> ocho, cubriendo los tres cruces receptor/tramo del convenio de la épica 4 por las dos fuentes de
+> propiedades, la asimetría del origen y los nulos. Igual que en la US-43, el cierre en las pruebas
+> asíncronas se afirma con `LeakedScopes`, `IsClosed` y `DisposeCallCount`, nunca con
+> `ActiveScopeCount`, y el motivo está en el `<remarks>` de la clase.
+>
+> Totales: build `EXIT = 0`, 0 errores, **236 avisos** (sin avisos nuevos), `CS1591 = 0`,
+> `CS0618 = 0`; tests `EXIT = 0`, **1.603** totales (desde 1.568), 0 con error, 0 omitidos. Firmas
+> públicas del proyecto: **649 → 657** (ver [§7.4](#74--recuento-de-firmas-públicas-tras-la-us-44),
+> donde se justifica por qué estas ocho **no** salen del presupuesto cerrado de `D-38`). El registro en
+> el prompt de migración se hace de una vez para toda la familia de ámbitos en la **US-46**; esta
+> historia es puramente aditiva y no rompe nada.
 
 ### US-45 · Correlación: el identificador y el cruce con los ejes existentes
 
@@ -486,6 +535,11 @@ graph TD
 > excepción; `TryWithLogScope` la convierte en `MlResult` fallido con la excepción en los metadatos,
 > recuperable con `GetException()`. El nombre avisa de la captura, igual que en el núcleo.
 
+> 🛠️ **Aplicada en la US-44.** `WithLogScope` propaga —ya lo hacía desde la US-42— y
+> `TryWithLogScope`/`TryWithLogScopeAsync` capturan, con la excepción original en los metadatos y un
+> `errorMessageBuilder` opcional para el mensaje. Ocho firmas nuevas, justificadas en la
+> [§7.4](#74--recuento-de-firmas-públicas-tras-la-us-44).
+
 ### `D-35` · ¿Cómo se compone con `Bind`?
 
 | Opción | Propuesta |
@@ -501,6 +555,11 @@ graph TD
 > ✅ **Cerrada con la opción (a)**: el ámbito es **transparente**. No emite ninguna traza propia; sólo
 > añade propiedades a lo que el tramo registre. Consecuencia buscada: un ámbito sobre un tramo que no
 > registra nada no produce **ninguna** traza, y eso queda documentado en el `README.md`.
+
+> 🛠️ **Aplicada en la US-44.** La transparencia se mantiene **también cuando el tramo lanza**: ni la
+> variante que propaga ni la que captura emiten traza de entrada o de salida. Lo fijan
+> `TryWithLogScope_TramoQueLanza_NoEmiteNingunaTraza` y la comparación de dos espías de
+> `TryWithLogScope_TramoQueDevuelveFallo_CierraElAmbitoYRegistraLoMismoQueElCasoValido`.
 
 ### `D-36` · ¿El ámbito sobrevive al `await`?
 
@@ -626,13 +685,13 @@ apéndice», para que **se rompan** si el comportamiento medido cambia.
 
 **Mediciones** (se completan al cerrar la épica):
 
-| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la US-42 | Tras la US-43 | Tras la épica |
-|---------|-----------------:|--------------:|-------------:|-------------:|--------------:|
-| Firmas públicas del proyecto | 640 | 641 | 643 | **649** | *pendiente* |
-| Avisos del build en Release | 236 | **236** | **236** | **236** | *pendiente* |
-| Tests | 1.502 | **1.527** | **1.547** | **1.568** | *pendiente* |
-| `BeginScope` en el proyecto | **0** | 0 | 2 | **4** | *pendiente* |
-| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *sin medir* | *sin medir* | *pendiente* |
+| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la US-42 | Tras la US-43 | Tras la US-44 | Tras la épica |
+|---------|-----------------:|--------------:|-------------:|-------------:|-------------:|--------------:|
+| Firmas públicas del proyecto | 640 | 641 | 643 | 649 | **657** | *pendiente* |
+| Avisos del build en Release | 236 | **236** | **236** | **236** | **236** | *pendiente* |
+| Tests | 1.502 | **1.527** | **1.547** | **1.568** | **1.603** | *pendiente* |
+| `BeginScope` en el proyecto | **0** | 0 | 2 | 4 | **8** | *pendiente* |
+| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *sin medir* | *sin medir* | *sin medir* | *pendiente* |
 
 > ℹ️ El recuento real de tests medido sobre la 2.3.0 es **1.510**, no 1.502: la cifra del enunciado se
 > escribió antes de las últimas historias de la épica 8. El criterio de la
@@ -703,6 +762,43 @@ las tres formas del convenio de la épica 4 por cada una de las dos fuentes de p
 | `MlResult<T>` | `Task<MlResult<U>>` | ✅ | ✅ |
 | `Task<MlResult<T>>` | `Task<MlResult<U>>` | ✅ | ✅ |
 | `Task<MlResult<T>>` | `MlResult<U>` | ✅ | ✅ |
+
+### 7.4 · Recuento de firmas públicas tras la US-44
+
+Continúa la [§7.3](#73--recuento-de-firmas-públicas-tras-la-us-43) con el mismo contador sintáctico.
+Sólo se listan los ficheros que cambian; los dieciocho restantes mantienen su recuento.
+
+| Fichero | Tras la US-43 | Tras la US-44 |
+|---------|--------------:|-------------:|
+| `MlResultLogScopeExtensions.cs` | 2 | 2 |
+| `MlResultLogScopeExtensions.Async.cs` | 6 | 6 |
+| `MlResultLogScopeExtensions.Try.cs` | — | **2** |
+| `MlResultLogScopeExtensions.TryAsync.cs` | — | **6** |
+| **TOTAL** | **649** | **657** |
+
+**Estas ocho firmas no salen del presupuesto de [`D-38`](#5-decisiones-abiertas).** Conviene dejarlo
+escrito, porque la [§7.3](#73--recuento-de-firmas-públicas-tras-la-us-43) afirma que las ocho de
+`WithLogScope` cierran la fila aceptada de `D-38` «y ni una más», y eso **sigue siendo cierto**:
+`D-38` decide **con qué ejes se cruza el ámbito** —niveles, `EventId`, `ILogger<TCategory>`— y la
+respuesta sigue siendo «con ninguno». Las ocho de la US-44 vienen de **otra** decisión, la
+[`D-34`](#5-decisiones-abiertas) **(c)**, que es la que exige una variante que capture; son la misma
+rejilla de `WithLogScope` replicada una vez, no un cruce nuevo:
+
+| Receptor | Tramo | Plantilla | Diccionario |
+|----------|-------|:---------:|:-----------:|
+| `MlResult<T>` | `MlResult<U>` | ✅ | ✅ |
+| `MlResult<T>` | `Task<MlResult<U>>` | ✅ | ✅ |
+| `Task<MlResult<T>>` | `Task<MlResult<U>>` | ✅ | ✅ |
+| `Task<MlResult<T>>` | `MlResult<U>` | ✅ | ✅ |
+
+Dicho de otro modo: el coste de `D-34` **(c)** es exactamente **×2** sobre la familia de ámbitos
+—dieciséis firmas en total—, y no **×2 por cada eje**, que es lo que `D-38` sigue impidiendo. Si la
+US-45 aprobara cualquiera de los tres cruces descartados, el coste se pagaría **dos veces**, una por
+`WithLogScope` y otra por `TryWithLogScope`; es un argumento más para mantener `D-38` en la **(a)**.
+
+El parámetro opcional `errorMessageBuilder` **no** añade firmas: es un
+`Func<Exception, string>? = null` al final de cada una de las ocho, igual de opcional que en la
+familia `Try*` del núcleo.
 
 ---
 

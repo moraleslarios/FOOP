@@ -1,6 +1,6 @@
 # Plan de la versión 2.4.0 · `MoralesLarios.OOFP.Logging`
 
-> **Estado global** · 🟡 en curso · **las 6 decisiones están cerradas** · US-41 ✅ · US-42 ✅ · US-43 ✅ · US-44 … US-46 ⬜
+> **Estado global** · 🟡 en curso · **las 6 decisiones están cerradas** · US-41 ✅ · US-42 ✅ · US-43 ✅ · US-44 ✅ · US-45 … US-46 ⬜
 > **Versión destino** · 2.4.0 (US-41 … US-46)
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
 > **Origen** · [`D-29`](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#5-decisiones-abiertas) opción **(b)** de la épica 8: los ámbitos de registro se desgajan a una épica propia
@@ -41,7 +41,7 @@ La 2.3.0 cerró el primero de los dos ceros del estándar de `Microsoft.Extensio
 | **US-41** ✅ | Que el espía de pruebas capture los ámbitos en vez de devolver `NullScope` | M | no |
 | **US-42** ✅ | El ámbito mínimo sobre un tramo síncrono de la tubería | L | no |
 | **US-43** ✅ | El ámbito en la tubería asíncrona, con la promesa medida sobre el `await` | L | no |
-| **US-44** | Semántica de la excepción y del fallo dentro del tramo envuelto | M | no |
+| **US-44** ✅ | Semántica de la excepción y del fallo dentro del tramo envuelto, con la variante `TryWithLogScope` que captura | M | no |
 | **US-45** | Correlación: identificador de ejecución y cruce con los ejes existentes | M | no |
 | **US-46** | `README.md`, `Sample` y registro en el prompt de migración | S | no |
 
@@ -55,9 +55,9 @@ La 2.3.0 cerró el primero de los dos ceros del estándar de `Microsoft.Extensio
 | `EventId` | 123 | > 123 | sin cambios |
 | `ILogger<TCategory>` | 21 | 21 | ver [`D-38`](#5-decisiones-abiertas) |
 | Plantilla de mensaje con argumentos | 0 | **242 firmas** | sin cambios |
-| **`BeginScope`** | **0** | **0** | **4** tras la US-43 · objetivo de esta versión |
+| **`BeginScope`** | **0** | **0** | **8** tras la US-44 · objetivo de esta versión |
 | `LoggerMessage` | 0 | 0 | fuera de alcance |
-| Firmas públicas del proyecto | 398 | 640 | **649** tras la US-43 · las **8** de [`D-38`](#5-decisiones-abiertas) ya están |
+| Firmas públicas del proyecto | 398 | 640 | **657** tras la US-44 · las **8** de [`D-38`](#5-decisiones-abiertas) más las **8** de [`D-34`](#5-decisiones-abiertas) **(c)** |
 
 **Naturaleza prevista: aditiva.** Ninguna firma existente se toca. El único cambio de contrato es que
 el `README.md` deja de decir que no hay ámbitos.
@@ -91,8 +91,8 @@ el `README.md` deja de decir que no hay ámbitos.
 | Id | Asunto | Historia | Estado |
 |----|--------|:--------:|--------|
 | [`D-33`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Forma de la API: envolver un tramo o devolver el `IDisposable` | US-42 | ✅ **(a)** · envolver el tramo, por la medición 1 |
-| [`D-34`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Qué pasa si el tramo lanza | US-44 | ✅ **(c)** · propaga, y `TryWithLogScope` captura |
-| [`D-35`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Cómo se compone con `Bind` y qué registra el ámbito | US-44 | ✅ **(a)** · transparente, sin traza propia |
+| [`D-34`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Qué pasa si el tramo lanza | US-44 | ✅ **(c)** · propaga, y `TryWithLogScope` captura · **aplicada** en la US-44 |
+| [`D-35`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Cómo se compone con `Bind` y qué registra el ámbito | US-44 | ✅ **(a)** · transparente, sin traza propia · **aplicada** en la US-44 |
 | [`D-36`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Si el ámbito sobrevive al `await` | US-43 | ✅ **(b)** · sólo lo que arranca la librería · **aplicada** en la US-43 y escrita en el `README.md` del proyecto |
 | [`D-37`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | De dónde salen las propiedades: plantilla o diccionario | US-42 | ✅ **(c)** · las dos, con la plantilla como principal |
 | [`D-38`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Hasta dónde se cruza con `EventId`, niveles y `ILogger<TCategory>` | US-45 | ✅ **(a)** · sólo la genérica, por la medición 4 |

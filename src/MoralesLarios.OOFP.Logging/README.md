@@ -879,6 +879,55 @@ await MlResult.Empty()                           // ✅ nada ha corrido todavía
 > viendo las propiedades, porque el `AsyncLocal` del proveedor viaja con la continuación. Y dos
 > tuberías concurrentes **no se contaminan** el ámbito entre ellas.
 
+### 9. `WithLogScope` propaga la excepción; `TryWithLogScope` la convierte en fallo
+
+Desde la 2.4.0 hay **dos** variantes del ámbito, y la diferencia está en el nombre, igual que en el
+núcleo de `MlResult`:
+
+| Si el tramo lanza | `WithLogScope` / `WithLogScopeAsync` | `TryWithLogScope` / `TryWithLogScopeAsync` |
+|-------------------|--------------------------------------|--------------------------------------------|
+| El ámbito | se cierra en un `finally` | se cierra en un `finally` |
+| La excepción | **propaga** hacia tu `try/catch` | se convierte en **`MlResult` fallido** |
+| La excepción original | la tienes en el `catch` | está en los metadatos, con `GetException()` |
+
+```csharp
+var resultado = ObtenerCliente(17)
+                    .TryWithLogScope(_logger,
+                                     "cliente {ClienteId}", [17],
+                                     section: r => r.Map(Facturar));   // 💥 Facturar lanza
+
+resultado.IsFailure.Should().BeTrue();                                 // no se propaga nada
+
+if (resultado.TryGetErrors(out var errores) &&
+    errores.GetException().TryGetValue(out var original))
+{
+    // `original` es LA MISMA instancia que lanzó Facturar
+}
+```
+
+El mensaje del fallo es, por omisión, el del núcleo (`EnsureFpMessages.DefaultExceptionError`). Si
+quieres otro, el último parámetro —opcional— te deja construirlo sin perder la excepción:
+
+```csharp
+.TryWithLogScope(_logger, "cliente {ClienteId}", [17],
+                 section            : r => r.Map(Facturar),
+                 errorMessageBuilder: ex => $"No se pudo facturar al cliente 17: {ex.Message}")
+```
+
+> ⚠️ **Un `MlResult` fallido no es una excepción.** Si el tramo **devuelve** un fallo en vez de lanzar,
+> `TryWithLogScope` lo entrega **tal cual**, sin tocarlo y sin añadirle metadatos: ahí no hay nada que
+> capturar. Y `GetException()` sobre ese fallo es, a su vez, un fallo.
+
+> ⚠️ **La captura no alcanza a la tarea de origen.** Con receptor `Task<MlResult<T>>` esa tarea se
+> espera **antes** de abrir el ámbito y, por tanto, **fuera** del `try`, así que su excepción
+> **propaga** en vez de convertirse en fallo. Es la misma frontera de la
+> [particularidad 8](#8-el-ámbito-asíncrono-no-cubre-una-tarea-que-ya-estaba-en-marcha), y por el mismo
+> motivo: la librería solo promete lo que ella arranca.
+
+> ℹ️ Ninguna de las dos variantes emite traza propia al entrar ni al salir: el ámbito es
+> **transparente** —decisión `D-35` opción **(a)**— incluso cuando el tramo lanza. Un ámbito sobre un
+> tramo que no registra nada no produce **ninguna** traza.
+
 ---
 
 ## ⚠️ Lo que NO incluye
