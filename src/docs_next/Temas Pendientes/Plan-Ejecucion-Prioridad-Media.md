@@ -231,7 +231,7 @@ graph LR
 
 ## Ver también
 
-- [`Next_Versions/2.1/README.md`](../Next_Versions/2.1/README.md) — **las 5 épicas** en las que se ha desglosado este plan, con historias de usuario y apéndices de código.
+- [`Next_Versions/2.0.0/Pendientes/README.md`](../Next_Versions/2.0.0/Pendientes/README.md) — **las 5 épicas** en las que se ha desglosado este plan, con historias de usuario y apéndices de código.
 - [`Mejoras-Prioridad-Media.md`](Mejoras-Prioridad-Media.md) — enunciado original de los puntos 38-63.
 - [`Mejoras-Prioridad-Critica-y-Alta.md`](Mejoras-Prioridad-Critica-y-Alta.md) — puntos 1-37.
 - [`Mejoras-Prioridad-Baja.md`](Mejoras-Prioridad-Baja.md) — prioridad 🟢 baja.

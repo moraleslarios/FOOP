@@ -589,6 +589,30 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `__Doc/Types/` | `docs/core-types/` |
 | `__Doc/` | `docs/` |
 
+Y, por el punto **61** del prompt, la carpeta de planificación deja de tener una subcarpeta por versión
+—ninguna de esas versiones se publicó— y pasa a tener una sola, `2.0.0`, con `Pendientes/` para lo que
+queda por hacer y `Realizados/` para lo ya aplicado:
+
+| Antes | Después |
+| --- | --- |
+| `docs_next/Next_Versions/2.1/` | `docs_next/Next_Versions/2.0.0/Pendientes/` |
+| `docs_next/Next_Versions/2.1.1/Core/` | `docs_next/Next_Versions/2.0.0/Realizados/Core/` |
+| `docs_next/Next_Versions/2.2.0/Logging/` | `docs_next/Next_Versions/2.0.0/Realizados/Logging/` |
+| `docs_next/Next_Versions/2.3.0/Logging/` | `docs_next/Next_Versions/2.0.0/Realizados/Logging/` |
+| `docs_next/Next_Versions/2.4.0/Logging/` | `docs_next/Next_Versions/2.0.0/Realizados/Logging/` |
+
+⚠️ Los **tres** `README.md` de Logging colisionaban al juntarse en una sola carpeta, así que dos de
+ellos se han **renombrado**. Reemplaza la ruta completa, no solo la carpeta:
+
+| Antes | Después |
+| --- | --- |
+| `docs_next/Next_Versions/2.2.0/Logging/README.md` | `docs_next/Next_Versions/2.0.0/Realizados/Logging/README.md` |
+| `docs_next/Next_Versions/2.3.0/Logging/README.md` | `docs_next/Next_Versions/2.0.0/Realizados/Logging/README-Epica-08.md` |
+| `docs_next/Next_Versions/2.4.0/Logging/README.md` | `docs_next/Next_Versions/2.0.0/Realizados/Logging/README-Epica-09.md` |
+
+> ℹ️ Nada de esto afecta al código. Solo hay que tocarlo si **enlazabas** a estos documentos desde tu
+> documentación, tus notas de migración o tus incidencias.
+
 ---
 
 ## 16. Resumen de riesgo

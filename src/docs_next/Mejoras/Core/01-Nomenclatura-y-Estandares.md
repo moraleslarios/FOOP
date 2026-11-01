@@ -279,7 +279,7 @@ estructurada rompe la expectativa de `ToString()` → se trata en
 [`02-Interoperabilidad-BCL.md`](02-Interoperabilidad-BCL.md) (`IFormattable`).
 
 > La localización completa es objeto de la épica
-> [`Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.1/Epica-Mensajes-Y-Localizacion.md).
+> [`Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md).
 > Aquí sólo se aporta el **inventario del núcleo** y la decisión de idioma por defecto
 > → [D-05](#5-decisiones-abiertas).
 
@@ -490,7 +490,7 @@ Más incoherencias del mismo tipo detectadas:
 
 ### Punto 12 — Erratas no cubiertas por la épica 2.1
 
-La épica [`Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.1/Epica-Erratas-Identificadores-Publicos.md)
+La épica [`Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md)
 ya cubre `Faild`, `Diferent`, `Erros`, `Alwais`, `Lenght` y `FusionFailErros`. El análisis del
 núcleo ha encontrado **erratas adicionales**, todas en identificadores **internos** (lo que las hace
 de coste XS y riesgo 🟢):
@@ -1232,7 +1232,7 @@ public static class TaskLiftExtensions
 - [`03-Modelo-de-Error.md`](03-Modelo-de-Error.md) — localización de los mensajes y `catch (Exception)`.
 - [`04-Nulabilidad-Genericos-y-Contratos.md`](04-Nulabilidad-Genericos-y-Contratos.md) — ambigüedad de sobrecargas y operadores implícitos.
 - [`08-Calidad-Pruebas-y-Documentacion.md`](08-Calidad-Pruebas-y-Documentacion.md) — activación de analizadores y deriva del `README.md`.
-- [`../../Next_Versions/2.1/Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.1/Epica-Erratas-Identificadores-Publicos.md) — campaña de erratas públicas.
-- [`../../Next_Versions/2.1/Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.1/Epica-Mensajes-Y-Localizacion.md) — localización de mensajes.
+- [`../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) — campaña de erratas públicas.
+- [`../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md) — localización de mensajes.
 - [Framework Design Guidelines · Naming Guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/naming-guidelines)
 - [CA1707 · Identifiers should not contain underscores](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1707)

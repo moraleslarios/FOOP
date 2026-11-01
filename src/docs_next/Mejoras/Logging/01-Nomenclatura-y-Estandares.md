@@ -436,7 +436,7 @@ Búsqueda *case-sensitive* que debe devolver **0** en código vivo al cerrar la 
 
 - [`README.md`](README.md) — índice del análisis de `MoralesLarios.OOFP.Logging` y catálogo completo de los 35 hallazgos.
 - [`../Core/01-Nomenclatura-y-Estandares.md`](../Core/01-Nomenclatura-y-Estandares.md) — documento equivalente del núcleo, cuya metodología se replica.
-- [`../../Next_Versions/2.1.1/Core/Epica-03-Miembros-Publicos-y-Firmas.md`](../../Next_Versions/2.1.1/Core/Epica-03-Miembros-Publicos-y-Firmas.md) — precedente ya cerrado: la US-11 troceó la clase `Extensions` del núcleo.
+- [`../../Next_Versions/2.0.0/Realizados/Core/Epica-03-Miembros-Publicos-y-Firmas.md`](../../Next_Versions/2.0.0/Realizados/Core/Epica-03-Miembros-Publicos-y-Firmas.md) — precedente ya cerrado: la US-11 troceó la clase `Extensions` del núcleo.
 - [`../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) — contrato de migración donde se registran las rupturas.
 - [`../../Copilot/.github/prompts/oofp-upgrade-2.renames.md`](../../Copilot/.github/prompts/oofp-upgrade-2.renames.md) — anexo de renombrados en formato buscar-y-reemplazar.
 - [Names of Parameters](https://learn.microsoft.com/dotnet/standard/design-guidelines/names-of-type-members#names-of-parameters) — referencia normativa de .NET sobre nombres de parámetros.

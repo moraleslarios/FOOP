@@ -253,10 +253,10 @@ estaba recogido en otro documento, se referencia en lugar de repetirse:
 
 | Documento existente | Qué cubre ya | Cómo se relaciona |
 |---------------------|--------------|-------------------|
-| [`../../Next_Versions/2.1/Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.1/Epica-Erratas-Identificadores-Publicos.md) | Campaña de erratas `Faild`, `Diferent`, `Erros`, `Alwais`, `Lenght`, `FusionFailErros` | El documento [01](01-Nomenclatura-y-Estandares.md) **referencia** esa épica y sólo añade las erratas no cubiertas (`Succes`, `Valu`, `Aggregat`, `Witout`, `printipal`) |
-| [`../../Next_Versions/2.1/Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.1/Epica-Mensajes-Y-Localizacion.md) | Centralización y localización de mensajes | El documento [03](03-Modelo-de-Error.md) aporta el inventario de literales **del núcleo** |
-| [`../../Next_Versions/2.1/Epica-Serializacion-y-Errores-Http.md`](../../Next_Versions/2.1/Epica-Serializacion-y-Errores-Http.md) | RFC 7807 y serialización en la capa HTTP | El documento [03](03-Modelo-de-Error.md) aporta los **cambios en el núcleo** que esa épica necesita (`MlError.Code`) |
-| [`../../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md`](../../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) | Coherencia de la documentación XML | El documento [08](08-Calidad-Pruebas-y-Documentacion.md) añade `<example>`, `<exception>` y el sitio DocFX |
+| [`../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) | Campaña de erratas `Faild`, `Diferent`, `Erros`, `Alwais`, `Lenght`, `FusionFailErros` | El documento [01](01-Nomenclatura-y-Estandares.md) **referencia** esa épica y sólo añade las erratas no cubiertas (`Succes`, `Valu`, `Aggregat`, `Witout`, `printipal`) |
+| [`../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md) | Centralización y localización de mensajes | El documento [03](03-Modelo-de-Error.md) aporta el inventario de literales **del núcleo** |
+| [`../../Next_Versions/2.0.0/Pendientes/Epica-Serializacion-y-Errores-Http.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Serializacion-y-Errores-Http.md) | RFC 7807 y serialización en la capa HTTP | El documento [03](03-Modelo-de-Error.md) aporta los **cambios en el núcleo** que esa épica necesita (`MlError.Code`) |
+| [`../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) | Coherencia de la documentación XML | El documento [08](08-Calidad-Pruebas-y-Documentacion.md) añade `<example>`, `<exception>` y el sitio DocFX |
 | [`../../Temas Pendientes/Revision-Map-Bind-ExecSelf.md`](../../Temas%20Pendientes/Revision-Map-Bind-ExecSelf.md) | Revisión R1-R4 de los combinadores | El documento [04](04-Nulabilidad-Genericos-y-Contratos.md) retoma los puntos de inferencia de `TException` y ambigüedad de sobrecargas |
 | [`../../Temas Pendientes/consejos_mejora_mlresult.md`](../../Temas%20Pendientes/consejos_mejora_mlresult.md) | Consejos previos sobre `MlResult` | Base histórica; este análisis la supera en alcance y aporta medidas |
 
@@ -310,7 +310,7 @@ Cualquier historia de estos documentos sólo se considera terminada cuando:
 
 ## Ver también
 
-- [`../../Next_Versions/2.1/README.md`](../../Next_Versions/2.1/README.md) — índice de las 9 épicas de la versión 2.1.
+- [`../../Next_Versions/2.0.0/Pendientes/README.md`](../../Next_Versions/2.0.0/Pendientes/README.md) — índice de las 9 épicas de la versión 2.1.
 - [`../../Temas Pendientes/README.md`](../../Temas%20Pendientes/README.md) — índice de temas pendientes.
 - [`../../../MoralesLarios.OOFP.Core/README.md`](../../../MoralesLarios.OOFP.Core/README.md) — documentación funcional del núcleo.
 - [Framework Design Guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/) — referencia normativa usada en todo el análisis.

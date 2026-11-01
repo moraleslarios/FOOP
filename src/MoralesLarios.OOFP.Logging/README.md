@@ -851,7 +851,7 @@ Y lo que ve el *sink* de **cada una** de esas dos trazas:
 ### Lo que cuesta, y por qué se abre siempre
 
 El ámbito **no consulta `IsEnabled`**, porque un ámbito no tiene nivel: se abre siempre. La medición de
-la US-45 de la [épica 9](../docs_next/Next_Versions/2.4.0/Logging/Epica-09-Ambitos-de-Registro.md), con
+la US-45 de la [épica 9](../docs_next/Next_Versions/2.0.0/Realizados/Logging/Epica-09-Ambitos-de-Registro.md), con
 el nivel **apagado** y 20.000 iteraciones, explica por qué:
 
 | Qué se mide | Bytes por llamada | Sobrecoste |

@@ -391,6 +391,7 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 58 | La sobrecarga `async` de `LogCompletedResult` recupera el sufijo `Async` (**2.3.0**) | `LogCompletedResult(this Task<MlResult<T>>, ILogger, string, string)`: era `async`, devolvía `Task<MlResult<T>>` y **no** terminaba en `Async`, el único incumplimiento del convenio que sobrevivió a la épica 4 de la 2.2.0 | `LogCompletedResultAsync`; el nombre sin sufijo queda como puente `[Obsolete(…, false)]` + `[EditorBrowsable(Never)]` y se **elimina** en 3.0.0 | **Compilación** (`CS0618` en 2.3.0 → `CS1061` en 3.0.0) |
 | 59 | El `README.md` de `MoralesLarios.OOFP.Logging` **ya no dice que no haya registro estructurado** (**2.3.0**) | el `README.md` afirmaba en **seis** sitios que «no hay logging estructurado», que las sobrecargas con plantilla «NO existen» y que, si hacían falta campos, había que bajarse a `ILogger` en un `ExecSelf`/`Match` | una **familia 8** nueva documenta el raíl de plantillas de extremo a extremo —marcadores, captura silenciosa del punto 30, `MlResultLogErrorFields` y recuentos— y las seis afirmaciones falsificadas quedan corregidas | ✅ **Ninguna** · documentación; pero **invalida una recomendación anterior**, así que conviene leerlo |
 | 60 | Familia `WithLogScope` de **ámbitos de registro** sobre `ILogger.BeginScope` (**2.4.0**) | el recuento de `BeginScope` en la librería era **`0`** (punto 56): para correlacionar las trazas de una misma ejecución había que abrir el ámbito a mano alrededor de la tubería, saliéndose del raíl | **16 firmas nuevas** en cuatro ficheros `partial`: `WithLogScope` y `WithLogScopeAsync`, que envuelven un **tramo recibido como función**, y `TryWithLogScope` y `TryWithLogScopeAsync`, que convierten en **fallo** la excepción que lance el tramo. El ámbito **no emite traza propia** y se cierra siempre en un `finally` | ✅ **Ninguna** · aditivo; deja sin efecto la afirmación del punto 56 de que los ámbitos no existían |
+| 61 | La planificación del repositorio se **centraliza en una sola versión `2.0.0`** y las carpetas `2.1`, `2.1.1`, `2.2.0`, `2.3.0` y `2.4.0` desaparecen (**2.0.0**) ✅ SIN RUPTURAS | `docs_next/Next_Versions/` tenía **cinco** carpetas de versión, y los puntos 38 a 60 de esta sección las citan como si cada una fuera un paquete publicado | una sola carpeta `docs_next/Next_Versions/2.0.0/` con `Pendientes/` (lo que queda por hacer) y `Realizados/Core/` + `Realizados/Logging/` (lo ya implementado). **Ninguna** de esas versiones llegó a publicarse: todo el código que describen los puntos 38 a 60 **está dentro de la 2.0.0**, y los 17 paquetes del repositorio declaran `2.0.0` | ✅ **Ninguna** · documental; no cambia ni una firma. Solo afecta a quien **enlazara** a esos documentos del repositorio |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1589,6 +1590,59 @@ tal cual —no choca con nada— o pasarlo a `WithLogScope` para que la tubería
 
 ---
 
+#### 61 — La planificación se centraliza en una sola versión `2.0.0` (2.0.0) ✅ SIN RUPTURAS
+
+Este punto **no toca código**. Está aquí porque los puntos **38 a 60** de esta misma sección citan las
+versiones `2.1.1`, `2.2.0`, `2.3.0` y `2.4.0`, y conviene dejar escrito, de una vez y en el sitio donde
+se va a leer, qué eran realmente esas versiones: **etiquetas de planificación internas**, no paquetes.
+
+**Ninguna de ellas se publicó nunca en NuGet.** Se usaron para ordenar el trabajo mientras se hacía, y
+el resultado de todas ellas —el renombrado del núcleo, el saneamiento de `MoralesLarios.OOFP.Logging`,
+el registro estructurado con plantillas y los ámbitos de registro— forma parte de la **2.0.0**. Los
+**17** proyectos del repositorio que declaran versión dicen `2.0.0`, y no hay ningún
+`Directory.Build.props` ni `VersionPrefix` que lo contradiga.
+
+En consecuencia, la carpeta de planificación se ha reorganizado:
+
+```text
+ANTES                                   AHORA
+docs_next/Next_Versions/                docs_next/Next_Versions/
+  2.1/            (sin empezar)           2.0.0/
+  2.1.1/Core/     (hecho)                   README.md          ← índice de la planificación
+  2.2.0/Logging/  (hecho)                   Pendientes/        ← 10 documentos por hacer
+  2.3.0/Logging/  (hecho)                   Realizados/Core/   ← 5 documentos ya aplicados
+  2.4.0/Logging/  (hecho)                   Realizados/Logging/← 12 documentos ya aplicados
+```
+
+Y tres documentos de `Realizados/Logging/` han tenido que **desambiguarse**, porque los tres se
+llamaban `README.md` en su carpeta de origen:
+
+| Antes | Ahora |
+| --- | --- |
+| `2.2.0/Logging/README.md` | `Realizados/Logging/README.md` (épicas 1-7) |
+| `2.3.0/Logging/README.md` | `Realizados/Logging/README-Epica-08.md` |
+| `2.4.0/Logging/README.md` | `Realizados/Logging/README-Epica-09.md` |
+
+**Qué tienes que hacer como consumidor.** Nada, salvo que **enlaces** a los documentos de planificación
+de este repositorio desde tu propia documentación, tus notas de migración o tus incidencias. En ese
+caso, reescribe las rutas con la tabla de equivalencias de la **sección 15 del anexo de renombrados**
+(`oofp-upgrade-2.renames.md`).
+
+> 🧭 **Cómo leer los puntos 38 a 60 a partir de ahora.** La versión que aparece entre paréntesis en
+> cada título es el **tramo de planificación** en el que se hizo el trabajo, no la versión en la que lo
+> vas a recibir: lo recibes todo en la **2.0.0**. Las notas de salto del apéndice («si vienes de una
+> 2.0.x y solo quieres subir a la 2.1.1…») se conservan por trazabilidad histórica, pero en la práctica
+> **solo existe un salto**: `1.x → 2.0.0`, y se aplica este prompt de principio a fin.
+
+> ⚠️ **El texto histórico no se ha reescrito a propósito.** Dentro de los documentos de planificación y
+> de algunos comentarios XML del código siguen apareciendo frases como «*la épica 6 de la 2.2.0*» o
+> «*hasta la 2.3.0 el espía devolvía un `NullScope`*». Son **narrativa histórica** y describen
+> correctamente el orden en que ocurrieron las cosas; cambiarlas habría falseado el relato sin aportar
+> nada. Lo que sí se ha normalizado son las **cabeceras** de los documentos, que son las que declaran la
+> versión de destino.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -1764,6 +1818,16 @@ dotnet build --nologo /p:WarningLevel=4
    código que no sea una tubería de la librería. Y revisa si alguno de ellos envuelve un `await` de
    una `Task` **creada antes** del `using`: ese caso ya estaba mal antes y sigue estándolo, porque las
    trazas de esa tarea pueden emitirse fuera del ámbito.
+   Y, para el punto 61 (la planificación se centraliza en una sola versión `2.0.0`), busca además
+   — **solo si enlazabas a los documentos de planificación de este repositorio**:
+   ```
+   Next_Versions/2\.1/|Next_Versions/2\.1\.1/|Next_Versions/2\.[234]\.0/
+   ```
+   Cada coincidencia es un enlace a una carpeta que **ya no existe**. Reescríbela con la tabla de
+   equivalencias de la **sección 15** de `oofp-upgrade-2.renames.md`. ⚠️ Este barrido **no** toca
+   código: si no enlazas a los documentos del repositorio, no hay absolutamente nada que hacer.
+   Y **no** reescribas las menciones a `2.1.1`, `2.2.0`, `2.3.0` o `2.4.0` que aparezcan en **prosa**
+   o en comentarios: son narrativa histórica y siguen siendo correctas.
    Y, para el punto 43 (`MlResult._` → `MlResult.Discard`), busca además:
    ```
    MlResult\s*\.\s*_\b
@@ -1878,6 +1942,12 @@ Entrega al usuario, **en español**, un informe con:
    ámbito **no emite traza propia**, que se cierra siempre en un `finally`, que `WithLogScope`
    **propaga** la excepción del tramo mientras `TryWithLogScope` la convierte en fallo recuperable con
    `GetException()`, y que el ámbito asíncrono **no** cubre una tarea que ya estuviera en marcha.
+   Para el punto **61**, haz constar que es **documental** y que las versiones **2.1.1**, **2.2.0**,
+   **2.3.0** y **2.4.0** **nunca se publicaron**: todo lo que describen los puntos 38 a 60 forma parte
+   de la **2.0.0**, y por tanto **solo hay un salto real**, `1.x → 2.0.0`. Si el proyecto enlazaba a
+   `Next_Versions/2.x/`, indica cuántos enlaces se han reescrito con la sección 15 del anexo de
+   renombrados; si no enlazaba a ninguno, dilo expresamente para que quede claro que no se ha omitido
+   el barrido.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1914,12 +1984,20 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
-| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37 | Renombrado masivo de la API + correcciones de comportamiento |
+| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61 | Renombrado masivo de la API + correcciones de comportamiento. Y el punto **61**, documental: la planificación del repositorio se **centraliza en una sola carpeta `2.0.0`** con `Pendientes/` y `Realizados/`, porque las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 **nunca se publicaron** y todo su contenido forma parte de la 2.0.0. Tres documentos de planificación de Logging se han **renombrado** para desambiguarlos (sección 15 del anexo de renombrados) |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 | 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
 | 2.4.0 | 60 | **16 firmas nuevas aditivas**: la familia **`WithLogScope`** de **ámbitos de registro**, que responde a lo que el punto 56 había dejado abierto a propósito. El recuento de `BeginScope` en producción pasa de **`0`** a **`8`**. Son cuatro ficheros `partial`: `WithLogScope` sincrónico (2 firmas), `WithLogScopeAsync` (6), `TryWithLogScope` (2) y `TryWithLogScopeAsync` (6). El ámbito envuelve un **tramo recibido como función**, admite las propiedades como **plantilla + argumentos** —anotada con `[StringSyntax]`, igual que el punto 57— o como **diccionario** entregado tal cual a `BeginScope`, **no emite traza propia** y se cierra siempre en un `finally`. `WithLogScope` **propaga** la excepción del tramo; `TryWithLogScope` la convierte en un `MlResult<T>` fallido con la excepción en los metadatos, recuperable con `GetException()`. ✅ **Sin rupturas**: ningún nombre anterior cambia y ninguna firma previa se modifica. ⚠️ Dos límites conocidos: el ámbito asíncrono **no** cubre una tarea que ya estuviera en marcha antes de abrirlo —hay que arrancarla desde el tramo— y el **cruce** del ámbito con `EventId`, con los seis niveles o con `ILogger<TCategory>` **no existe**; el identificador de correlación generado por la librería queda aplazado a la 3.0.0 |
 
+> ⚠️ **Las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 de esta tabla nunca se publicaron como paquete.** Se
+> usaron como **etiquetas de planificación** internas mientras se trabajaba, y las filas se conservan
+> porque los puntos de la sección 3.3 las citan por su número. A efectos prácticos: **todo** lo que
+> describen los puntos **38 a 60** está **dentro de la 2.0.0**, los **17** paquetes del repositorio
+> declaran `2.0.0`, y por tanto **el único salto que existe es `1.x → 2.0.0`**. Las tres notas de salto
+> que siguen se conservan por trazabilidad histórica: si vienes de una 1.x, aplica este prompt de
+> principio a fin y no tienes que elegir ningún subconjunto de puntos. Ver el punto **61**.
+>
 > 🧭 Si vienes de una 2.0.x y solo quieres subir a la 2.1.1, **sáltate las fases 1 a 3** (los namespaces y la
 > nomenclatura no cambian) y aplica únicamente los puntos **38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59 y 60** de la sección 3.3 más el barrido
 > específico del punto 4 de la Fase 5.

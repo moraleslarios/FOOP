@@ -479,7 +479,7 @@ Cualquier historia de estos documentos sólo se considera terminada cuando:
 
 - [`../Core/README.md`](../Core/README.md) — análisis equivalente del núcleo, cuya metodología se replica aquí.
 - [`../Core/01-Nomenclatura-y-Estandares.md`](../Core/01-Nomenclatura-y-Estandares.md) — convenciones de nombres aplicadas al núcleo.
-- [`../../Next_Versions/2.1.1/Core/README.md`](../../Next_Versions/2.1.1/Core/README.md) — épicas ya cerradas del núcleo, modelo de formato para las de Logging.
+- [`../../Next_Versions/2.0.0/Realizados/Core/README.md`](../../Next_Versions/2.0.0/Realizados/Core/README.md) — épicas ya cerradas del núcleo, modelo de formato para las de Logging.
 - [`../../../MoralesLarios.OOFP.Logging/README.md`](../../../MoralesLarios.OOFP.Logging/README.md) — documentación funcional de la capa de *logging*.
 - [Logging in .NET](https://learn.microsoft.com/dotnet/core/extensions/logging) — referencia normativa de `Microsoft.Extensions.Logging`.
 - [High-performance logging](https://learn.microsoft.com/dotnet/core/extensions/high-performance-logging) — `LoggerMessage` y patrones sin asignaciones.

@@ -3,7 +3,7 @@
 > **Proyecto** · `MoralesLarios.OOFP.Core`
 > **Versión destino** · 2.1.1 (sólo el inventario documental) · 3.0.0 (los cambios de tipo y de firma)
 > **Origen** · análisis profundo del núcleo, posterior al commit `0a6f8fc`
-> **Estado** · inventario cerrado en la US-16 de la [Épica 03](../../Next_Versions/2.1.1/Core/Epica-03-Miembros-Publicos-y-Firmas.md) · resto pendiente de aprobación
+> **Estado** · inventario cerrado en la US-16 de la [Épica 03](../../Next_Versions/2.0.0/Realizados/Core/Epica-03-Miembros-Publicos-y-Firmas.md) · resto pendiente de aprobación
 > **Esfuerzo total** · XL
 > **Riesgo** · 🟡 medio el inventario · 🔴 muy alto el cambio de `record` a `readonly struct`
 
@@ -202,7 +202,7 @@ documental** y no forman parte del alcance de la 2.1.1:
 ## 4. Ver también
 
 - [README de mejoras del núcleo](README.md) — índice de los 8 documentos y matriz de prioridad.
-- [Épica 03 · Miembros públicos y firmas](../../Next_Versions/2.1.1/Core/Epica-03-Miembros-Publicos-y-Firmas.md)
+- [Épica 03 · Miembros públicos y firmas](../../Next_Versions/2.0.0/Realizados/Core/Epica-03-Miembros-Publicos-y-Firmas.md)
   — US-16, que cierra la parte documental.
 - [`README.md` del núcleo · §15 Convenios de nomenclatura](../../../MoralesLarios.OOFP.Core/README.md#15-convenios-de-nomenclatura)
   — la documentación de cara al consumidor.

@@ -35,28 +35,28 @@
 
 Los **26 puntos** (64-89) se han auditado contra el código de la 2.0.0 y **todos** están gestionados
 como tareas en las cuatro épicas de prioridad baja de
-[`Next_Versions/2.1`](../Next_Versions/2.1/README.md).
+[`Next_Versions/2.0.0/Pendientes`](../Next_Versions/2.0.0/Pendientes/README.md).
 
 | Punto | Estado | Épica que lo gestiona |
 |---|---|---|
-| 64 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-01 |
-| 65 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
-| 66 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
-| 67 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
-| 68 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-02 |
-| 69 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-03 |
-| 70 | ⬜ Vivo ⚠️ rompe firmas | [Limpieza de código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) · US-05 |
-| 71-76 | ⬜ Vivos | [Erratas en identificadores públicos](../Next_Versions/2.1/Epica-Erratas-Identificadores-Publicos.md) |
-| 77-80 | ⬜ Vivos | [Mensajes, idioma e instrumentación](../Next_Versions/2.1/Epica-Mensajes-Y-Localizacion.md) |
-| 81 | ⬜ Vivo | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-01 |
-| 82 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-02 |
-| 83 | ⬜ Vivo · 3 apariciones | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-03 |
-| 84 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-04 |
-| 85 | ✅ Resuelto en 2.0.0 | [Código muerto](../Next_Versions/2.1/Epica-Limpieza-Codigo-Muerto.md) y [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) (constancia) |
-| 86 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-05 |
-| 87 | ⬜ Vivo | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-06 |
-| 88 | ✅ Resuelto en 2.0.0 | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · §1 (constancia) |
-| 89 | ⬜ Vivo · 13 proyectos, no 2 | [Coherencia y documentación](../Next_Versions/2.1/Epica-Coherencia-Y-Documentacion.md) · US-07 |
+| 64 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) · US-01 |
+| 65 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 66 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 67 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 68 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) · US-02 |
+| 69 | ⬜ Vivo | [Limpieza de código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) · US-03 |
+| 70 | ⬜ Vivo ⚠️ rompe firmas | [Limpieza de código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) · US-05 |
+| 71-76 | ⬜ Vivos | [Erratas en identificadores públicos](../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) |
+| 77-80 | ⬜ Vivos | [Mensajes, idioma e instrumentación](../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md) |
+| 81 | ⬜ Vivo | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-01 |
+| 82 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-02 |
+| 83 | ⬜ Vivo · 3 apariciones | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-03 |
+| 84 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-04 |
+| 85 | ✅ Resuelto en 2.0.0 | [Código muerto](../Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md) y [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) (constancia) |
+| 86 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-05 |
+| 87 | ⬜ Vivo | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-06 |
+| 88 | ✅ Resuelto en 2.0.0 | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · §1 (constancia) |
+| 89 | ⬜ Vivo · 13 proyectos, no 2 | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-07 |
 
 **Leyenda:** ✅ resuelto durante la 2.0.0 · 🟡 parcial (el renombrado de la 2.0.0 arregló una parte,
 el resto sigue vivo) · ⬜ vivo, pendiente de la 2.1.0.
@@ -248,7 +248,7 @@ el resto sigue vivo) · ⬜ vivo, pendiente de la 2.1.0.
 
 - [`Mejoras-Prioridad-Critica-y-Alta.md`](Mejoras-Prioridad-Critica-y-Alta.md) — prioridades 🔴 crítica y 🟠 alta.
 - [`Mejoras-Prioridad-Media.md`](Mejoras-Prioridad-Media.md) — rendimiento, diseño y API pública.
-- [`Next_Versions/2.1/README.md`](../Next_Versions/2.1/README.md) — las 9 épicas de la versión 2.1.0.
+- [`Next_Versions/2.0.0/Pendientes/README.md`](../Next_Versions/2.0.0/Pendientes/README.md) — las 9 épicas de la versión 2.1.0.
 - [`Profesionalizacion-Ingenieria-y-Calidad.md`](Profesionalizacion-Ingenieria-y-Calidad.md) ·
   [`Profesionalizacion-Diseno-API-y-Producto.md`](Profesionalizacion-Diseno-API-y-Producto.md)
 - [`Consejos-Nomenclatura.md`](Consejos-Nomenclatura.md) — propuesta de renombrado.
