@@ -189,15 +189,28 @@ prompt de migración.
 
 **Criterios de aceptación**
 
-- [ ] `Support/StructuredLoggerSpy.cs` deja de devolver `NullScope.Instance` en `BeginScope` y pasa a
+- [x] `Support/StructuredLoggerSpy.cs` deja de devolver `NullScope.Instance` en `BeginScope` y pasa a
       registrar cada ámbito: el `state`, sus propiedades si es enumerable, el instante de apertura y
       el de cierre.
-- [ ] El espía expone los ámbitos **abiertos en el momento de cada traza**, de modo que se pueda
+- [x] El espía expone los ámbitos **abiertos en el momento de cada traza**, de modo que se pueda
       afirmar que una traza concreta cayó dentro del ámbito y no fuera.
-- [ ] Existe un test que demuestra que el espía detecta un ámbito **sin cerrar**, porque es el fallo
+- [x] Existe un test que demuestra que el espía detecta un ámbito **sin cerrar**, porque es el fallo
       que la opción (b) de [`D-33`](#5-decisiones-abiertas) haría posible.
-- [ ] Los tests que hoy usan el espía siguen en verde: el cambio es aditivo sobre su API de 17
+- [x] Los tests que hoy usan el espía siguen en verde: el cambio es aditivo sobre su API de 17
       miembros.
+
+> ✅ **Hecha.** El tipo nuevo `Support/LoggerScopeRecord.cs` conserva de cada ámbito el `state`, sus
+> propiedades, el `OriginalFormat`, la profundidad, el instante de apertura y de cierre y el recuento
+> de llamadas a `Dispose`. `StructuredEntry` gana `Scopes`, `IsInsideScope`, `HasScopeProperty(n)` y
+> `ScopeProperty(n)` —con el ámbito **más interno** ganando en caso de nombre repetido—, y el espía
+> gana `Scopes`, `LastScope`, `LeakedScopes`, `ActiveScopeCount` y una sobrecarga
+> `BeginScope(plantilla, args)`. La pila de ámbitos activos es un `ImmutableStack` en un
+> `AsyncLocal`, para que dos tuberías concurrentes no se contaminen.
+>
+> `StructuredLoggerSpyScopeTests.cs` añade **17 tests**, que incluyen el del ámbito filtrado, el del
+> `Dispose` repetido y las **mediciones 1 y 2** de la [§7](#7-apéndice--lo-que-hay-que-medir-antes-de-decidir).
+> Totales: build `EXIT = 0`, 0 errores, **236 avisos** (sin avisos nuevos), `CS1591 = 0`,
+> `CS0618 = 0`; tests `EXIT = 0`, **1.527** totales (desde 1.510), 0 con error, 0 omitidos.
 
 ### US-42 · El ámbito mínimo sobre un tramo síncrono
 
@@ -373,6 +386,19 @@ graph TD
 > [§7](#7-apéndice--lo-que-hay-que-medir-antes-de-decidir)—, porque si el `using` manual cubre el 90 %
 > de los casos, la superficie nueva no se paga.
 
+> ✅ **Cerrada con la opción (a)**, tras hacer la **medición 1** del apéndice.
+>
+> La medición está escrita como test (`Medicion1_ElUsingManualFunciona_PeroRompeElEstiloDeExpresion`)
+> y el resultado es que el `using` manual **sí funciona** —las dos trazas comparten contexto y no se
+> filtra nada—, pero **obliga a partir la cadena en dos sentencias** y a declarar una variable
+> intermedia `MlResult<string> resultado;` para sacar el valor del bloque. Eso es exactamente salirse
+> del estilo de expresión que la librería mantiene en todas sus familias, así que la (c) **no basta**
+> y la épica **no se cierra sin código**.
+>
+> La (b) queda descartada por el riesgo de filtrado, que la US-41 ya sabe detectar: el test
+> `BeginScope_SinCerrar_SeDetectaComoAmbitoFiltrado` demuestra que un ámbito sin `using` contamina
+> las trazas posteriores. La (d) se descarta por no documentar dos estilos para el mismo problema.
+
 ### `D-34` · ¿Qué pasa si el tramo lanza?
 
 | Opción | Propuesta |
@@ -387,6 +413,10 @@ graph TD
 > comportamiento por omisión escondería una captura, y el convenio `Try*` existe precisamente para
 > que capturar sea **explícito en el nombre**.
 
+> ✅ **Cerrada con la opción (c)**: `WithLogScope` cierra el ámbito en un `finally` y **propaga** la
+> excepción; `TryWithLogScope` la convierte en `MlResult` fallido con la excepción en los metadatos,
+> recuperable con `GetException()`. El nombre avisa de la captura, igual que en el núcleo.
+
 ### `D-35` · ¿Cómo se compone con `Bind`?
 
 | Opción | Propuesta |
@@ -398,6 +428,10 @@ graph TD
 > **Recomendación.** La **(a)**. Es lo que hace `BeginScope` en el estándar, y respeta el patrón
 > fundamental de la librería: el log es **transparente** y no decide por el consumidor. La (b)
 > duplicaría trazas en una tubería que ya registra lo que quiere registrar.
+
+> ✅ **Cerrada con la opción (a)**: el ámbito es **transparente**. No emite ninguna traza propia; sólo
+> añade propiedades a lo que el tramo registre. Consecuencia buscada: un ámbito sobre un tramo que no
+> registra nada no produce **ninguna** traza, y eso queda documentado en el `README.md`.
 
 ### `D-36` · ¿El ámbito sobrevive al `await`?
 
@@ -412,6 +446,19 @@ graph TD
 > `Task<MlResult<T>>` que el consumidor **ya ha iniciado**, y sus trazas internas pueden haberse
 > emitido antes. Hay que medirlo y escribirlo, no suponerlo.
 
+> ✅ **Cerrada con la opción (b)**, tras hacer la **medición 2** del apéndice, que son tres tests:
+>
+> | Caso medido | Test | Resultado |
+> |-------------|------|-----------|
+> | Flujo **iniciado dentro** del ámbito | `Medicion2_LoQueSeIniciaDentroDelAmbito_LoHereda` | **lo hereda** · las propiedades llegan a la traza aunque medie un `await Task.Yield()` |
+> | `Task` **ya iniciado antes** del ámbito | `Medicion2_UnTaskYaIniciadoAntesDelAmbito_NoLoHereda` | **NO lo hereda** · `IsInsideScope` es `false` |
+> | Dos tuberías concurrentes | `Medicion2_DosTuberiasConcurrentes_NoSeContaminanElAmbito` | **no se contaminan** · cada traza ve sólo su ámbito |
+>
+> Por tanto se promete el ámbito **sólo para los tramos que la librería arranca ella misma** —los que
+> recibe como `Func`— y se **documenta explícitamente** que un `Task<MlResult<T>>` ya iniciado que se
+> pasa a una sobrecarga `Async` queda **fuera** del ámbito. Es un límite medido, no supuesto, y va al
+> apartado de particularidades reales del `README.md` (US-43).
+
 ### `D-37` · ¿De dónde salen las propiedades del ámbito?
 
 | Opción | Propuesta | Nota |
@@ -424,6 +471,11 @@ graph TD
 > coherencia con la épica 8 y la que el consumidor va a escribir; el diccionario es el que necesita
 > quien compone el contexto en tiempo de ejecución, por ejemplo desde una cabecera HTTP. El coste de
 > añadir la (b) es una sobrecarga por firma, no una familia nueva.
+
+> ✅ **Cerrada con la opción (c)**, con la **(a) como forma principal**: la plantilla va anotada con
+> `[StringSyntax(StringSyntaxAttribute.CompositeFormat)]`, igual que las 241 anotaciones de la épica
+> 8, y la sobrecarga de diccionario toma un `IEnumerable<KeyValuePair<string, object?>>` y lo pasa
+> **tal cual** al `BeginScope` del estándar, sin reinterpretar nada.
 
 ### `D-38` · ¿Hasta dónde se cruza el ámbito con los ejes existentes?
 
@@ -439,6 +491,21 @@ graph TD
 > declinarlo por los seis niveles ni darle un `EventId`. La (c) multiplicaría la superficie sin
 > ganancia. La (d) es atractiva, pero convierte un nombre de campo en contrato público, con el mismo
 > riesgo de ruptura silenciosa que el punto 54 del prompt: merece su propia decisión.
+
+> ✅ **Cerrada con la opción (a)**, tras hacer la **medición 4** del apéndice. El cruce de ejes se
+> **contiene**, con el mismo criterio que `D-28` (b) aplicó en la épica 8:
+>
+> | Cruce | Firmas que añadiría | Veredicto |
+> |-------|--------------------:|-----------|
+> | Genérica, síncrona y `Async`, por plantilla y por diccionario | **8** | ✅ **entra** |
+> | `+ EventId` | +8 | ❌ el ámbito no emite traza (`D-35` (a)), así que no tiene suceso que identificar |
+> | `+ 6 niveles` | +48 | ❌ un ámbito no tiene nivel: el nivel es de la traza, no del contexto |
+> | `+ ILogger<TCategory>` | +8 | ❌ `ILogger<TCategory>` ya **es** un `ILogger`, y la categoría la fija la traza |
+> | Identificador de correlación automático | +0 firmas, **+1 nombre de campo público** | ⏭️ pasa a la 3.0.0 como decisión propia |
+>
+> La (d) se aplaza: un nombre de campo generado por la librería es contrato público y su cambio sería
+> una **ruptura silenciosa**, del mismo tipo que el punto 54 del prompt. Si el consumidor quiere
+> correlación, hoy la aporta él con una propiedad del ámbito, que es justo lo que `D-37` habilita.
 
 ---
 
@@ -477,22 +544,30 @@ La épica 8 cerró `D-26` con una **prueba compilada**, no con una intuición, y
 diseño. Aquí hay cuatro mediciones del mismo tipo, y conviene hacerlas **antes** de cerrar las
 decisiones:
 
-| # | Medición | Qué decide |
-|:-:|----------|------------|
-| 1 | Escribir el caso del punto 34 con `using logger.BeginScope(...)` **a mano** y contar qué estorba de verdad | si la opción **(c)** de `D-33` basta, y entonces esta épica se cierra sin código |
-| 2 | Comprobar con el espía si un `Task<MlResult<T>>` **ya iniciado** lleva o no las propiedades del ámbito | `D-36`, que es la única pregunta de `D-29` con una respuesta medible |
-| 3 | Medir las asignaciones por llamada con el nivel **apagado**, igual que hizo la épica 6 (línea base **240,0 B**) | si el ámbito hay que abrirlo también cuando nadie escucha |
-| 4 | Contar cuántas firmas añadiría cada cruce de `D-38` | si la combinatoria se paga o se contiene, como ya decidió `D-28` (b) |
+| # | Medición | Qué decide | Resultado |
+|:-:|----------|------------|-----------|
+| 1 | Escribir el caso del punto 34 con `using logger.BeginScope(...)` **a mano** y contar qué estorba de verdad | si la opción **(c)** de `D-33` basta, y entonces esta épica se cierra sin código | ✅ **hecha** · funciona, pero parte la cadena en dos sentencias y obliga a una variable intermedia ⇒ `D-33` = **(a)**, hay código |
+| 2 | Comprobar con el espía si un `Task<MlResult<T>>` **ya iniciado** lleva o no las propiedades del ámbito | `D-36`, que es la única pregunta de `D-29` con una respuesta medible | ✅ **hecha** · lo iniciado **dentro** hereda; el `Task` ya arrancado **no** ⇒ `D-36` = **(b)** |
+| 3 | Medir las asignaciones por llamada con el nivel **apagado**, igual que hizo la épica 6 (línea base **240,0 B**) | si el ámbito hay que abrirlo también cuando nadie escucha | ⬜ pendiente de la US-42 |
+| 4 | Contar cuántas firmas añadiría cada cruce de `D-38` | si la combinatoria se paga o se contiene, como ya decidió `D-28` (b) | ✅ **hecha** · 8 firmas la genérica, +64 los tres cruces descartados ⇒ `D-38` = **(a)** |
 
-**Mediciones pendientes** (se rellenan al cerrar la épica):
+Las mediciones 1 y 2 no son prosa: están escritas como tests en
+`StructuredLoggerSpyScopeTests.cs`, en las regiones «Medición 1 del apéndice» y «Medición 2 del
+apéndice», para que **se rompan** si el comportamiento medido cambia.
 
-| Métrica | Línea base 2.3.0 | Tras la épica |
-|---------|-----------------:|--------------:|
-| Firmas públicas del proyecto | 640 | *pendiente* |
-| Avisos del build en Release | 236 | *pendiente* |
-| Tests | 1.502 | *pendiente* |
-| `BeginScope` en el proyecto | **0** | *pendiente* |
-| Asignaciones por llamada, nivel apagado | 240,0 B | *pendiente* |
+**Mediciones** (se completan al cerrar la épica):
+
+| Métrica | Línea base 2.3.0 | Tras la US-41 | Tras la épica |
+|---------|-----------------:|--------------:|--------------:|
+| Firmas públicas del proyecto | 640 | 640 | *pendiente* |
+| Avisos del build en Release | 236 | **236** | *pendiente* |
+| Tests | 1.502 | **1.527** | *pendiente* |
+| `BeginScope` en el proyecto | **0** | 0 | *pendiente* |
+| Asignaciones por llamada, nivel apagado | 240,0 B | *sin medir* | *pendiente* |
+
+> ℹ️ El recuento real de tests medido sobre la 2.3.0 es **1.510**, no 1.502: la cifra del enunciado se
+> escribió antes de las últimas historias de la épica 8. El criterio de la
+> [§6](#6-definición-de-terminado) se mide contra **1.510**.
 
 ---
 

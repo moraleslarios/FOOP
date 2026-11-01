@@ -1,6 +1,6 @@
 # Plan de la versión 2.4.0 · `MoralesLarios.OOFP.Logging`
 
-> **Estado global** · ⬜ no iniciada · **las 6 decisiones están abiertas** y son bloqueantes
+> **Estado global** · 🟡 en curso · **las 6 decisiones están cerradas** · US-41 ✅ · US-42 … US-46 ⬜
 > **Versión destino** · 2.4.0 (US-41 … US-46)
 > **Proyecto** · `src/MoralesLarios.OOFP.Logging`
 > **Origen** · [`D-29`](../../2.3.0/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md#5-decisiones-abiertas) opción **(b)** de la épica 8: los ámbitos de registro se desgajan a una épica propia
@@ -38,7 +38,7 @@ La 2.3.0 cerró el primero de los dos ceros del estándar de `Microsoft.Extensio
 
 | Historia | Qué entrega | Esfuerzo | Rompe |
 |----------|-------------|:--------:|:-----:|
-| **US-41** | Que el espía de pruebas capture los ámbitos en vez de devolver `NullScope` | M | no |
+| **US-41** ✅ | Que el espía de pruebas capture los ámbitos en vez de devolver `NullScope` | M | no |
 | **US-42** | El ámbito mínimo sobre un tramo síncrono de la tubería | L | no |
 | **US-43** | El ámbito en la tubería asíncrona, con la promesa medida sobre el `await` | L | no |
 | **US-44** | Semántica de la excepción y del fallo dentro del tramo envuelto | M | no |
@@ -79,21 +79,28 @@ el `README.md` deja de decir que no hay ámbitos.
 > escribir el caso a mano con `using logger.BeginScope(...)` y comprobar qué estorba de verdad. Si no
 > estorba lo suficiente, `D-33` se cierra con la opción (c) y esta versión se cierra **sin código**.
 
+> ✅ **Medición 1 hecha en la US-41** · el `using` manual funciona, pero **parte la cadena en dos
+> sentencias** y obliga a una variable intermedia. `D-33` se cierra con la **(a)** y esta versión
+> **sí lleva código**. El detalle está en la
+> [§5 de la épica](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas).
+
 ---
 
 ## 5. Decisiones abiertas
 
 | Id | Asunto | Historia | Estado |
 |----|--------|:--------:|--------|
-| [`D-33`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Forma de la API: envolver un tramo o devolver el `IDisposable` | US-42 | ⬜ **recomendada (a)** |
-| [`D-34`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Qué pasa si el tramo lanza | US-44 | ⬜ **recomendada (c)** |
-| [`D-35`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Cómo se compone con `Bind` y qué registra el ámbito | US-44 | ⬜ **recomendada (a)** |
-| [`D-36`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Si el ámbito sobrevive al `await` | US-43 | ⬜ **recomendada (b)** |
-| [`D-37`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | De dónde salen las propiedades: plantilla o diccionario | US-42 | ⬜ **recomendada (c)** |
-| [`D-38`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Hasta dónde se cruza con `EventId`, niveles y `ILogger<TCategory>` | US-45 | ⬜ **recomendada (a)** |
+| [`D-33`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Forma de la API: envolver un tramo o devolver el `IDisposable` | US-42 | ✅ **(a)** · envolver el tramo, por la medición 1 |
+| [`D-34`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Qué pasa si el tramo lanza | US-44 | ✅ **(c)** · propaga, y `TryWithLogScope` captura |
+| [`D-35`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Cómo se compone con `Bind` y qué registra el ámbito | US-44 | ✅ **(a)** · transparente, sin traza propia |
+| [`D-36`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Si el ámbito sobrevive al `await` | US-43 | ✅ **(b)** · sólo lo que arranca la librería, por la medición 2 |
+| [`D-37`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | De dónde salen las propiedades: plantilla o diccionario | US-42 | ✅ **(c)** · las dos, con la plantilla como principal |
+| [`D-38`](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas) | Hasta dónde se cruza con `EventId`, niveles y `ILogger<TCategory>` | US-45 | ✅ **(a)** · sólo la genérica, por la medición 4 |
 
-> La numeración continúa desde `D-32`, la última de la 2.3.0. **Las seis bloquean** el código de
-> producción: `D-33` y `D-37` fijan la superficie pública, y lo que se publica no se puede cambiar.
+> La numeración continúa desde `D-32`, la última de la 2.3.0. **Las seis están cerradas** en la
+> [§5 de la épica](Epica-09-Ambitos-de-Registro.md#5-decisiones-abiertas), con la opción elegida y la
+> medición que la respalda. `D-33` y `D-37` fijan la superficie pública, y lo que se publica no se
+> puede cambiar.
 
 ---
 
@@ -111,7 +118,7 @@ el `README.md` deja de decir que no hay ámbitos.
 
 ## 7. Definición de terminado común
 
-- [ ] Las **seis decisiones** `D-33` … `D-38` resueltas y escritas en el documento de la épica.
+- [x] Las **seis decisiones** `D-33` … `D-38` resueltas y escritas en el documento de la épica.
 - [ ] `dotnet build … -c Release --no-incremental` ⇒ **`EXIT = 0`**, **0 errores**, **0 `CS1591`**,
       **0 `CS0618`** y **sin avisos nuevos** sobre los **236** de la línea base.
 - [ ] `dotnet test … -c Release --no-build` ⇒ **`EXIT = 0`**, **0 con error**, **0 omitidos** y el
