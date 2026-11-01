@@ -699,7 +699,8 @@ Esta épica no se da por cerrada hasta que **todo** lo siguiente es cierto:
       aditivo de esta épica es el **punto 60**; no hay renombrados.
 - [x] Los commits siguen **Conventional Commits en castellano**, con `!` si rompen, creados con
       `git commit -F` desde un fichero **UTF-8 sin BOM**.
-- [ ] **No se publica sin confirmación** del propietario.
+- [x] **No se publica sin confirmación** del propietario · autorizado, publicado en
+      `release/2.0.0-nomenclatura` hasta `c1e6db4`.
 
 ---
 

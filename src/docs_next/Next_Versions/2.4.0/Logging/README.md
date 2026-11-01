@@ -136,7 +136,8 @@ el `README.md` deja de decir que no hay ámbitos.
 - [x] Todo aditivo relevante registrado en los **6 sitios** del prompt de migración · es el
       **punto 60**; el anexo de renombrados no aplica porque no hay renombrados.
 - [x] Commits en **Conventional Commits en castellano**, creados con `git commit -F`.
-- [ ] **No se publica sin confirmación** del propietario.
+- [x] **No se publica sin confirmación** del propietario · autorizado, publicado en
+      `release/2.0.0-nomenclatura` hasta `c1e6db4`.
 
 ---
 
