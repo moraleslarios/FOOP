@@ -520,8 +520,8 @@ Sobre las 1037 líneas y 50 encabezados actuales:
 - [x] ✅ Renombrados y cambios de namespace en `oofp-upgrade-2.renames.md`.
 - [x] ✅ Numeración continuada **desde el 62** sin huecos ni reutilizaciones (puntos **62**, **63** y **64**).
 - [x] ✅ Build `--no-incremental` y suite completa en verde; `CS1591 = CS0618 = 0` (0 errores, 236 avisos, 1606 pruebas).
-- [ ] Commit con Conventional Commits en castellano, con `!`, creado con `git commit -F` desde un
-      fichero UTF-8 sin BOM.
+- [x] ✅ Commit con Conventional Commits en castellano, con `!`, creado con `git commit -F` desde un
+      fichero UTF-8 sin BOM (`9d84ec2`).
 
 ---
 
