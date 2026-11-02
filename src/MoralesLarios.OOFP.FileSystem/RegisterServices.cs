@@ -13,13 +13,13 @@ public static class RegisterServices
 {
 
     /// <summary>
-    /// Añade el elemento indicado de <c>OOFPIO</c>.
+    /// Registra, con ciclo de vida <c>Transient</c>, el servicio de acceso al sistema de archivos.
     /// </summary>
     /// <param name="services">Colección de servicios donde se registran las dependencias.</param>
-    /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
+    /// <returns>La misma colección de servicios, para permitir el encadenado.</returns>
     public static IServiceCollection AddOOFPIO(this IServiceCollection services)
     {
-        services.AddSingleton<IMlFileSystem, MlFileSystem>();
+        services.AddTransient<IMlFileSystem, MlFileSystem>();
 
         return services;
     }

@@ -8,15 +8,16 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 
 /// <summary>
 /// Clase base de los repositorios imperativos sobre Entity Framework Core.
-/// Encapsula el <see cref="DbContext"/> compartido por las operaciones concretas y gestiona su
-/// liberación.
+/// Encapsula el <see cref="DbContext"/> compartido por las operaciones concretas.
 /// </summary>
 /// <remarks>
 /// Las clases derivadas lanzan excepciones ante errores en lugar de devolver <c>MlResult</c>.
 /// Para la variante funcional utilice los repositorios equivalentes del espacio de nombres
 /// <c>MoralesLarios.OOFP.EntityFrameworkCore.Repositories</c>.
+/// El repositorio <b>no es dueño</b> del <see cref="DbContext"/>: lo gestiona el contenedor de
+/// dependencias, que lo libera al cerrar el ámbito.
 /// </remarks>
-internal class ThrowingEfRepository : IDisposable, IGetContextable
+internal class ThrowingEfRepository : IGetContextable
 {
     protected internal DbContext internalDbContext { get; set; }
 
@@ -24,16 +25,6 @@ internal class ThrowingEfRepository : IDisposable, IGetContextable
     public ThrowingEfRepository(DbContext dbContext)
     {
         internalDbContext = dbContext;
-    }
-
-
-
-
-
-
-    public virtual void Dispose()
-    {
-        internalDbContext?.Dispose();
     }
 
     public DbContext GetContext() => internalDbContext;

@@ -4,8 +4,9 @@
 > **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) (puntos 38-63) · [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) (puntos 64-89)
 > **Plan maestro del que se desgajan:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md)
 
-Esta carpeta contiene las **9 épicas** en las que se ha descompuesto la auditoría de los puntos
-**38 a 89**: cinco de prioridad media (38-63) y cuatro de prioridad baja (64-89). Cada documento es
+Esta carpeta contiene **10 épicas**: las **9** en las que se ha descompuesto la auditoría de los
+puntos **38 a 89** —cinco de prioridad media (38-63) y cuatro de prioridad baja (64-89)— y una
+**décima**, pedida expresamente por el propietario, que no procede del inventario. Cada documento es
 autosuficiente: parte del **código real de hoy** (con fichero y número de línea), propone el
 contrato de destino, desglosa historias de usuario con criterios de aceptación verificables y cierra
 con un apéndice de ejemplos antes/después.
@@ -17,7 +18,7 @@ cerrados y no generan épica.
 
 ## Índice
 
-1. [Las nueve épicas](#1-las-nueve-épicas)
+1. [Las diez épicas](#1-las-diez-épicas)
 2. [Orden de ejecución recomendado](#2-orden-de-ejecución-recomendado)
 3. [Decisiones pendientes del propietario](#3-decisiones-pendientes-del-propietario)
 4. [Rupturas de compatibilidad previstas](#4-rupturas-de-compatibilidad-previstas)
@@ -26,7 +27,7 @@ cerrados y no generan épica.
 
 ---
 
-## 1. Las nueve épicas
+## 1. Las diez épicas
 
 ### 1.1 · Prioridad media · puntos 38-63
 
@@ -47,6 +48,18 @@ cerrados y no generan épica.
 | 8 | [Mensajes, idioma e instrumentación de logs](Epica-Mensajes-Y-Localizacion.md) | `OOFP.Validation*` · `AspNetCore.Controllers` · `Application` | 77, 78, 79, 80 | **L** (~2 j) | 🟡 / 🟠 |
 | 9 | [Coherencia de contratos y documentación](Epica-Coherencia-Y-Documentacion.md) | `OOFP.Shared` · `Http` · `AspNetCore.Controllers` | 81-89 | **M** (~5-6 j con los `README`) | 🟢 / 🟠 |
 
+### 1.3 · Épica nueva · auditoría a petición del propietario
+
+| # | Épica | Proyecto principal | Puntos cubiertos | Esfuerzo | Riesgo |
+|---|---|---|---|---|---|
+| 10 | [Simplificación de los repositorios de EF Core](Epica-Simplificacion-Repositorios-EFCore.md) | `OOFP.EntityFrameworkCore` | — (rupturas nuevas 62-69) | **XL** (~4-6 j) | 🔴 |
+
+> No procede del inventario 38-89: nace de una auditoría específica del proyecto
+> `MoralesLarios.OOFP.EntityFrameworkCore` solicitada por el propietario. Conserva los repositorios
+> funcionales (los que devuelven `MlResult`), retira los imperativos y reduce el registro en el
+> contenedor a un único método. Absorbe además el punto **64**, cuya ubicación está mal anotada en la
+> épica 6.
+
 > **Leyenda de esfuerzo:** XS (<2 h) · S (½ jornada) · M (1 jornada) · L (2 jornadas) · XL (3+ jornadas)
 > **Leyenda de riesgo:** 🟢 bajo · 🟡 medio · 🟠 alto · 🔴 muy alto (rompe compatibilidad)
 
@@ -58,6 +71,8 @@ cerrados y no generan épica.
 | Prioridad media con la épica 5 | ~13-16 |
 | Prioridad baja (épicas 6-9) | ~10-12 |
 | **Versión 2.1.0 completa** | **~23-28** |
+| Épica 10 · simplificación de repositorios EF Core | ~4-6 |
+| **Total con la épica 10** | **~27-34** |
 
 ---
 
@@ -75,7 +90,8 @@ graph LR
     H  --> R["Contrato REST<br/>(43 48-52 60 61)<br/>XL · 🔴"]
     R  --> A["Servicio y paginación<br/>(41 53 54)<br/>M · 🔴"]
     A  --> V2["Validación · tramo B<br/>(56 57 58)<br/>S · 🔴"]
-    V2 --> UOW["Unidad de trabajo<br/>(40)<br/>XL · 🔴"]
+    V2 --> SR["Repos EF Core · simplificar<br/>(62-69)<br/>XL · 🔴"]
+    SR --> UOW["Unidad de trabajo<br/>(40)<br/>XL · 🔴"]
     UOW --> DM["Código muerto<br/>(64-70 85)<br/>S · 🟢"]
     DM --> ER["Erratas públicas<br/>(71-76)<br/>M · 🟠"]
     ER --> MS["Mensajes y logs<br/>(77-80)<br/>L · 🟡"]
@@ -89,11 +105,12 @@ graph LR
 | 3 | Contrato REST | Depende de la forma del error ya estabilizada |
 | 4 | Servicio y paginación | Los controladores ya tienen contrato estable al que adaptarse |
 | 5 | Validación (resto) | Limpieza que no bloquea a nadie |
-| 6 | Unidad de trabajo | Épica independiente y la más larga; se puede paralelizar |
-| 7 | Limpieza de código muerto | Borrar antes de renombrar: no tiene sentido renombrar lo que se va a eliminar |
-| 8 | Erratas en identificadores públicos | Renombrados con puente `[Obsolete]`; requiere superficie estable |
-| 9 | Mensajes y logs | Reescribe textos; mejor cuando las firmas ya no se mueven |
-| 10 | Coherencia y documentación | 🎯 Hito final: documenta el estado definitivo, no uno intermedio |
+| 6 | Simplificación de repositorios EF Core | 🎯 Hito habilitante del proyecto: deja una sola familia de repositorios sobre la que construir la unidad de trabajo |
+| 7 | Unidad de trabajo | Épica independiente y la más larga; sobre la superficie ya reducida en el paso 6 |
+| 8 | Limpieza de código muerto | Borrar antes de renombrar: no tiene sentido renombrar lo que se va a eliminar |
+| 9 | Erratas en identificadores públicos | Renombrados con puente `[Obsolete]`; requiere superficie estable |
+| 10 | Mensajes y logs | Reescribe textos; mejor cuando las firmas ya no se mueven |
+| 11 | Coherencia y documentación | 🎯 Hito final: documenta el estado definitivo, no uno intermedio |
 
 > 💡 **Entrega incremental sugerida:** publicar tras el paso 2 una `2.1.0-preview`, y dejar el paso 3
 > (que rompe rutas y firmas públicas) para una `2.1.0` o incluso `3.0.0` según la decisión D-6 del plan.
@@ -130,6 +147,15 @@ Ninguna épica puede cerrarse sin estas respuestas. Cada documento las detalla e
 | 10 | ¿`Headers` pasa a `IReadOnlyDictionary` (ruptura) o solo se le quita el `null!`? | Coherencia y doc |
 | 11 | ¿Los 11 proyectos de test llevan `README.md` propio o uno agregado en `docs/`? | Coherencia y doc |
 
+### 3.3 · Épica 10 · repositorios de EF Core
+
+| # | Decisión | Afecta a |
+|---|---|---|
+| 12 | `D-01`: ¿cómo resuelven sus colaboradores los agregados? ¿Herencia, composición con factorías o núcleo estático interno? | Simplificación de repositorios |
+| 13 | `D-02`: ¿`IGetContextable` sigue siendo `public` o pasa a `internal`? | Simplificación de repositorios |
+| 14 | `D-03`: ¿debe `AddOofpRepositories` rechazar `ServiceLifetime.Singleton` o solo documentar el riesgo? | Simplificación de repositorios |
+| 15 | `D-06`: ¿`EfRepository` sigue implementando `IDisposable` con un `Dispose` vacío, o se retira? | Simplificación de repositorios |
+
 ---
 
 ## 4. Rupturas de compatibilidad previstas
@@ -145,11 +171,12 @@ Ninguna épica puede cerrarse sin estas respuestas. Cada documento las detalla e
 | Serialización HTTP | El error deja de ser texto plano y pasa a llevar código de estado | ⚠️ parcial |
 | Contrato REST | Rutas `id-str/{id}` unificadas; sobrecargas retiradas | ✅ en firmas · ❌ en rutas |
 | Servicio y paginación | `GetAllAsync` deja de devolver la colección completa | ✅ |
-| Unidad de trabajo | `AddOofpRepositoriesSingleton` pasa a `[Obsolete(error: true)]` | ✅ |
+| Unidad de trabajo | ✅ **Ya aplicada**: `AddOofpRepositoriesSingleton`, `AddOofpRepositoriesScoped` y `AddOofpRepositoriesTransient` se **retiran** (no se marcan obsoletas) y queda un único `AddOofpRepositories`, siempre `Transient` (punto **62**) | ✅ en las firmas · ⚠️ silenciosa en el ciclo de vida (`Scoped`→`Transient`) |
 | Código muerto | Cambian firmas de constructor público (parámetro `ILogger`) | ✅ |
 | Erratas públicas | `TryMapIAsyncf`, `…Alwais…`, `…Lenght…`, `Bydouble`, `TEnumrableResponse` renombrados | ⚠️ advertencia con puente `[Obsolete]` |
 | Mensajes y logs | Cambia el **texto** de los mensajes de error y validación | ❌ no — rompe aserciones de tests y consumidores que comparan texto |
 | Coherencia y doc | `[Range]` empieza a validar de verdad · `Headers` cambia de tipo · Swagger pasa de `200` a `204` | ❌ en `[Range]` y Swagger · ✅ en `Headers` |
+| Repos EF Core | Desaparecen las 3 interfaces `IThrowingEf*` públicas, `GetRepository<TRepo>()` y los 3 métodos de registro · `Dispose` deja de cerrar el `DbContext` · los agregados comparten una única instancia de contexto | ✅ en los tipos y métodos retirados · ❌ en `Dispose` y en el contexto compartido |
 
 > Las rupturas marcadas con ❌ son las **más peligrosas**: no hay error ni advertencia que avise al
 > consumidor, así que necesitan entrada destacada en la guía de migración.
@@ -158,8 +185,10 @@ Ninguna épica puede cerrarse sin estas respuestas. Cada documento las detalla e
 
 ## 5. Estructura común de los documentos
 
-Las nueve épicas comparten exactamente el mismo esqueleto, de modo que se puedan leer en cualquier
-orden sin reaprender el formato:
+Las nueve épicas del inventario comparten exactamente el mismo esqueleto, de modo que se puedan leer
+en cualquier orden sin reaprender el formato. La **épica 10** sigue una variante propia —añade
+«Radiografía del código actual», «Debilidades detectadas» y «Arquitectura de destino»— porque su
+punto de partida es una auditoría de un proyecto y no una lista de puntos del inventario:
 
 | Sección | Contenido |
 |---|---|
@@ -198,6 +227,11 @@ el tipo que citaban se renombró.
 | 71, 72, 73, 74, 75, 76 | [Erratas públicas](Epica-Erratas-Identificadores-Publicos.md) | |
 | 77, 78, 79, 80 | [Mensajes y logs](Epica-Mensajes-Y-Localizacion.md) | |
 | 81, 82, 83, 84, 86, 87, 89 | [Coherencia y documentación](Epica-Coherencia-Y-Documentacion.md) | 82, 84, 86 y 89 **reubicados**: los tipos citados se renombraron en 2.0.0 |
+
+> La [épica 10](Epica-Simplificacion-Repositorios-EFCore.md) **no aparece en esta tabla**: no cubre
+> ningún punto del inventario 38-89, sino una auditoría específica pedida por el propietario. Sí
+> absorbe el punto **64**, que la épica 6 sitúa en `Repositories/IEfWriteRepository.cs` (L13-34)
+> cuando en realidad son **26 líneas** comentadas en `Repositories/IEfRepository.cs` (L14-39).
 | 85 | [Código muerto](Epica-Limpieza-Codigo-Muerto.md) · [Coherencia y doc](Epica-Coherencia-Y-Documentacion.md) | ✅ Resuelto en la 2.0.0; citado en las dos épicas |
 | 88 | [Coherencia y documentación](Epica-Coherencia-Y-Documentacion.md) | ✅ Resuelto: 0 `global using` duplicados en 27 ficheros |
 

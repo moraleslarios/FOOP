@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2023 Juan Francisco Morales Larios
+// Copyright (c) 2023 Juan Francisco Morales Larios
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
@@ -24,10 +24,10 @@ public static class RegisterServices
         services.AddDbContext<TestDbContext>(options =>
             options.UseSqlite(connectionString));
 
-        services.AddOofpRepositoriesTransient<Vino, TestDbContext>();
-        services.AddOofpRepositoriesTransient<Cata                , TestDbContext>();
-        services.AddOofpRepositoriesTransient<VinosCata, TestDbContext>();
-        services.AddOofpRepositoriesTransient<VinosCatasPuntuacion, TestDbContext>();
+        services.AddOofpRepositories<Vino, TestDbContext>();
+        services.AddOofpRepositories<Cata                , TestDbContext>();
+        services.AddOofpRepositories<VinosCata, TestDbContext>();
+        services.AddOofpRepositories<VinosCatasPuntuacion, TestDbContext>();
 
         // Register specific repository implementations
         services.AddTransient<IVinosRepo, VinosRepo>();

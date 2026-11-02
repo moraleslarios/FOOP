@@ -566,7 +566,7 @@ builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddOofpRepositories<User, AppDbContext>();
 
 // 3) Servicios genéricos (MoralesLarios.OOFP.Application)
-builder.Services.AddScopedCrudServicesFpWithoutRepositories();   // ⚠️ la errata "Scopedt" es real
+builder.Services.AddCrudServicesFpWithoutRepositories();         // Transient, el único ciclo de vida admitido
 
 // 4) MVC
 builder.Services.AddControllers();
@@ -644,7 +644,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddOofpRepositories<User, AppDbContext>();
-builder.Services.AddScopedCrudServicesFpWithoutRepositories();
+builder.Services.AddCrudServicesFpWithoutRepositories();
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -920,7 +920,7 @@ builder.Services.AddMlControllers();
 
 // ✅ bórralo y registra lo que de verdad hace falta
 builder.Services.AddOofpRepositories<User, AppDbContext>();
-builder.Services.AddScopedCrudServicesFpWithoutRepositories();
+builder.Services.AddCrudServicesFpWithoutRepositories();
 builder.Services.AddControllers();
 ```
 
@@ -1027,7 +1027,7 @@ public override Task<IActionResult> PostAsync([FromBody] UserDto dto, Cancellati
 
 12. **No expones los mensajes de error tal cual** si tu API es pública: reescríbelos con `MapIfFail` para no filtrar textos internos en inglés defectuoso.
 
-13. **No llames a `AddMlControllers()`**: no registra nada y está marcado `[Obsolete]` (desaparece en la 3.0.0). Registra `AddOofpRepositories<,>` y `AddScopedCrudServicesFpWithoutRepositories()`.
+13. **No llames a `AddMlControllers()`**: no registra nada y está marcado `[Obsolete]` (desaparece en la 3.0.0). Registra `AddOofpRepositories<,>` y `AddCrudServicesFpWithoutRepositories()`.
 
 14. **Añade un endpoint paginado** en cuanto una tabla pueda crecer: `GetAllAsync` trae la tabla completa.
 

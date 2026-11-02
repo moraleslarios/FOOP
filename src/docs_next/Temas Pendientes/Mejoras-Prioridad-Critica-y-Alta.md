@@ -360,33 +360,9 @@ servidor donde se despliegue.
       - **Propuesta:** no construir proveedores dentro del registro. Registrar los repositorios como
         `scoped` y resolverlos por constructor o mediante `IServiceProvider` inyectado.
 
-- [ ] **21. Los repositorios liberan el `DbContext` que no les pertenece**
-      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
-      - **Archivo / clase:** `OopRepos/EFRepoBase`, `Repos/EFRepoBaseFp`
-      - **Miembro:** `Dispose()`
-      - **Problema:** el `Dispose` del repositorio llama al `Dispose` del `DbContext`, pero ese
-        `DbContext` lo ha creado y lo posee **el contenedor de DI**.
-      - **Impacto:** `ObjectDisposedException` intermitente. Si en la misma petición hay otro
-        repositorio o servicio que usa el mismo `DbContext` *scoped*, el primero que se libere
-        **rompe a todos los demás**. El error aparece de forma aleatoria según el orden de liberación.
-      - **Propuesta:** regla general: **quien no crea, no libera**. Quitar el `Dispose` del
-        `DbContext` del repositorio. Si se quiere permitir la propiedad, añadir un flag `ownsContext`
-        que solo sea `true` cuando el repositorio haya creado el contexto (por ejemplo vía
-        `IDbContextFactory`).
+- [x] ✅ **21. Los repositorios liberan el `DbContext` que no les pertenece** — **RESUELTO en la 2.0.0** (punto **63** de `oofp-upgrade-2.prompt.md` §3.3): se ha aplicado la regla *quien no crea, no libera*. `EfRepository` y `ThrowingEfRepository` **dejan de implementar `IDisposable`** y su `Dispose()` se ha retirado por completo, así que ya no pueden liberar un `DbContext` que no poseen. No se ha añadido ningún flag `ownsContext`: el contexto lo gestiona siempre el anfitrión con `AddDbContext`.
 
-- [ ] **22. `AddSingletonOOFPRepos` crea una dependencia cautiva**
-      - **Proyecto:** `MoralesLarios.OOFP.EFCore`
-      - **Archivo / clase:** `RegisterServices`
-      - **Miembro:** `AddSingletonOOFPRepos<T, TContext>()`
-      - **Problema:** registra como **singleton** repositorios que dependen de un `DbContext`, que es
-        *scoped* por diseño.
-      - **Impacto:** **dependencia cautiva** (*captive dependency*). El `DbContext` queda atrapado en
-        el singleton y vive durante toda la aplicación: acumula entidades rastreadas (fuga de
-        memoria), **no es *thread-safe*** (excepciones al usarlo desde peticiones concurrentes) y
-        sirve datos obsoletos de su caché de primer nivel.
-      - **Propuesta:** eliminar el método o, si se mantiene, que el repositorio reciba un
-        `IDbContextFactory<TContext>` y cree un contexto por operación. Documentarlo con un aviso
-        muy visible.
+- [x] ✅ **22. `AddSingletonOOFPRepos` crea una dependencia cautiva** — **RESUELTO en la 2.0.0 por eliminación** (punto **62** de `oofp-upgrade-2.prompt.md` §3.3): se retiran `AddSingletonOOFPRepos`, `AddScopedOOFPRepos` y `AddTransientOOFPRepos` junto con `AddOofpRepositoriesSingleton`/`…Scoped`/`…Transient`. Hoy solo existe `AddOofpRepositories<T, TContext>()`, que registra **siempre `Transient`**, por lo que ya no es posible crear la dependencia cautiva.
 
 - [ ] **23. `_pkFields` no se puede resolver por inyección de dependencias**
       - **Proyecto:** `MoralesLarios.OOFP.WebControllers`

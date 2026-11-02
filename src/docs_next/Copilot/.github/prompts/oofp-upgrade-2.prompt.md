@@ -1,4 +1,4 @@
-﻿---
+---
 mode: agent
 description: 'Migra automáticamente un proyecto que consume MoralesLarios.OOFP 1.x a la versión 2.0.0: actualiza los paquetes NuGet (incluidos los renombrados), reescribe los using/namespaces, aplica los 888 cambios de nomenclatura de la API y verifica la compilación.'
 tools: ['codebase', 'search', 'editFiles', 'runCommands', 'problems', 'usages', 'changes']
@@ -332,20 +332,22 @@ Los constructores de `Age`, `Id` e `IdLite` pasaron de `public` a **`protected`*
 | `AddMlUtilitiesConfig()` | `AddMlConfigurationReader()` |
 | `AddGenClientFp<…>()` | `AddRestClient<…>()` |
 | `AddGenClientComplexFp<…>()` / `AddGenClientDuplexComplexFp<…>()` | `AddCompositeKeyRestClient<…>()` |
-| `AddScopedOOFPRepos()` | `AddOofpRepositoriesScoped()` |
-| `AddSingletonOOFPRepos()` | `AddOofpRepositoriesSingleton()` |
-| `AddTransientOOFPRepos()` | `AddOofpRepositoriesTransient()` |
-| `AddOofpRepositoriesScoped()` *(si venías de una 1.x tardía)* | `AddOofpRepositories()` |
-| `AddScopedtGenServicesFpWithoutReposGeneral()` | `AddScopedCrudServicesFpWithoutRepositories()` |
-| `AddSingletonGenServicesFpWithoutReposGeneral()` | `AddSingletonCrudServicesFpWithoutRepositories()` |
-| `AddTransientGenServicesFpWithoutReposGeneral()` | `AddTransientCrudServicesFpWithoutRepositories()` |
-| `AddScopedtGenServicesDuplexFpWithoutReposGeneral()` | `AddScopedCrudServicesDuplexFpWithoutRepositories()` |
-| `AddSingletonGenServicesDuplexFpWithoutReposGeneral()` | `AddSingletonCrudServicesDuplexFpWithoutRepositories()` |
-| `AddTransientGenServicesDuplexFpWithoutReposGeneral()` | `AddTransientCrudServicesDuplexFpWithoutRepositories()` |
+| `AddScopedOOFPRepos()` | `AddOofpRepositories()` *(ver punto 62)* |
+| `AddSingletonOOFPRepos()` | `AddOofpRepositories()` *(ver punto 62)* |
+| `AddTransientOOFPRepos()` | `AddOofpRepositories()` *(ver punto 62)* |
+| `AddOofpRepositoriesScoped()` / `AddOofpRepositoriesTransient()` / `AddOofpRepositoriesSingleton()` | `AddOofpRepositories()` *(ver punto 62)* |
+| `AddScopedtGenServicesFpWithoutReposGeneral()` | `AddCrudServicesFpWithoutRepositories()` *(ver punto 62)* |
+| `AddSingletonGenServicesFpWithoutReposGeneral()` | `AddCrudServicesFpWithoutRepositories()` *(ver punto 62)* |
+| `AddTransientGenServicesFpWithoutReposGeneral()` | `AddCrudServicesFpWithoutRepositories()` *(ver punto 62)* |
+| `AddScopedtGenServicesDuplexFpWithoutReposGeneral()` | `AddCrudServicesDuplexFpWithoutRepositories()` *(ver punto 62)* |
+| `AddSingletonGenServicesDuplexFpWithoutReposGeneral()` | `AddCrudServicesDuplexFpWithoutRepositories()` *(ver punto 62)* |
+| `AddTransientGenServicesDuplexFpWithoutReposGeneral()` | `AddCrudServicesDuplexFpWithoutRepositories()` *(ver punto 62)* |
 
-> ⚠️ Ojo con `AddOofpRepositoriesScoped`: en la 2.0.0 **existe**, pero el método que antes se llamaba así
-> pasó a llamarse `AddOofpRepositories`. Revisa cuál quieres: `AddOofpRepositories()` registra con el *lifetime*
-> por defecto; `AddOofpRepositoriesScoped()` es el antiguo `AddScopedOOFPRepos()`.
+> ⚠️ **El ciclo de vida ya no es un eje de la API.** En la 1.x había una variante `Transient`, otra
+> `Scoped` y otra `Singleton` de cada registro; la 2.0.0 las **retira todas** y deja un único método por
+> cosa registrable, que registra **siempre `Transient`**. No busques un sustituto «equivalente» a tu
+> variante: hay **uno solo**. El detalle completo, las dos rupturas silenciosas que esto arrastra y qué
+> hacer si de verdad necesitabas un `Singleton` están en el **punto 62** de la sección 3.3.
 
 ### 3.3 Cambios de COMPORTAMIENTO por corrección de bugs (auditoría 2.0.0) ⚠️⚠️
 
@@ -392,6 +394,9 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 59 | El `README.md` de `MoralesLarios.OOFP.Logging` **ya no dice que no haya registro estructurado** (**2.3.0**) | el `README.md` afirmaba en **seis** sitios que «no hay logging estructurado», que las sobrecargas con plantilla «NO existen» y que, si hacían falta campos, había que bajarse a `ILogger` en un `ExecSelf`/`Match` | una **familia 8** nueva documenta el raíl de plantillas de extremo a extremo —marcadores, captura silenciosa del punto 30, `MlResultLogErrorFields` y recuentos— y las seis afirmaciones falsificadas quedan corregidas | ✅ **Ninguna** · documentación; pero **invalida una recomendación anterior**, así que conviene leerlo |
 | 60 | Familia `WithLogScope` de **ámbitos de registro** sobre `ILogger.BeginScope` (**2.4.0**) | el recuento de `BeginScope` en la librería era **`0`** (punto 56): para correlacionar las trazas de una misma ejecución había que abrir el ámbito a mano alrededor de la tubería, saliéndose del raíl | **16 firmas nuevas** en cuatro ficheros `partial`: `WithLogScope` y `WithLogScopeAsync`, que envuelven un **tramo recibido como función**, y `TryWithLogScope` y `TryWithLogScopeAsync`, que convierten en **fallo** la excepción que lance el tramo. El ámbito **no emite traza propia** y se cierra siempre en un `finally` | ✅ **Ninguna** · aditivo; deja sin efecto la afirmación del punto 56 de que los ámbitos no existían |
 | 61 | La planificación del repositorio se **centraliza en una sola versión `2.0.0`** y las carpetas `2.1`, `2.1.1`, `2.2.0`, `2.3.0` y `2.4.0` desaparecen (**2.0.0**) ✅ SIN RUPTURAS | `docs_next/Next_Versions/` tenía **cinco** carpetas de versión, y los puntos 38 a 60 de esta sección las citan como si cada una fuera un paquete publicado | una sola carpeta `docs_next/Next_Versions/2.0.0/` con `Pendientes/` (lo que queda por hacer) y `Realizados/Core/` + `Realizados/Logging/` (lo ya implementado). **Ninguna** de esas versiones llegó a publicarse: todo el código que describen los puntos 38 a 60 **está dentro de la 2.0.0**, y los 17 paquetes del repositorio declaran `2.0.0` | ✅ **Ninguna** · documental; no cambia ni una firma. Solo afecta a quien **enlazara** a esos documentos del repositorio |
+| 62 | `Transient` pasa a ser el **único ciclo de vida** del registro de dependencias (**2.0.0**) | tres métodos para registrar los repositorios (`AddOofpRepositories` → `Scoped`, `AddOofpRepositoriesTransient`, `AddOofpRepositoriesSingleton`), seis para registrar los servicios CRUD (`Add{Transient\|Scoped\|Singleton}CrudServices[Duplex]FpWithoutRepositories`) y nueve puentes `[Obsolete]` que replicaban el eje del ciclo de vida | **un** método para los repositorios, `AddOofpRepositories<T, TContext>()`, que registra las 16 interfaces como `Transient`, y **dos** para los servicios, `AddCrudServicesFpWithoutRepositories()` y `AddCrudServicesDuplexFpWithoutRepositories()`, también `Transient` | **Compilación** (12 métodos públicos y 9 puentes `[Obsolete]` retirados) + ⚠️ **Contrato · SILENCIOSA** (`AddOofpRepositories` pasa de `Scoped` a `Transient`) |
+| 63 | `EfRepository` y `ThrowingEfRepository` **dejan de implementar `IDisposable`** (**2.0.0**) | ambas clases base implementaban `IDisposable` y su `Dispose()` llamaba a `GetContext()?.Dispose()`, liberando un `DbContext` del que el repositorio **no** es dueño | el repositorio ya no implementa `IDisposable`: el `DbContext` lo libera **solo** el contenedor, al cerrar el ámbito que lo creó | **Compilación** (`using (var repo = …)`, `repo.Dispose()` y `override void Dispose()` dejan de compilar) |
+| 64 | El servicio de `MoralesLarios.OOFP.FileSystem` pasa de `Singleton` a `Transient` (**2.0.0**) | `AddOOFPIO()` registraba `IMlFileSystem` como `Singleton` | lo registra como `Transient`, igual que el resto de la librería | ⚠️ **Contrato · SILENCIOSA** (compila igual, pero deja de haber una única instancia compartida) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1643,6 +1648,193 @@ caso, reescribe las rutas con la tabla de equivalencias de la **sección 15 del 
 
 ---
 
+#### 62 — `Transient` pasa a ser el único ciclo de vida del registro de dependencias (2.0.0) ⚠️ **RUPTURA DE COMPILACIÓN + SILENCIOSA**
+
+Hasta ahora la librería ofrecía el **ciclo de vida como eje de la API**: por cada cosa registrable había
+una variante `Transient`, otra `Scoped` y otra `Singleton`. Eso sumaba **12 métodos públicos** y **9
+puentes `[Obsolete]`** que no aportaban nada: en una tubería funcional los repositorios y los servicios
+CRUD **no tienen estado propio** —el estado vive en el `DbContext`, que lo gestiona el contenedor—, así
+que la única elección correcta era siempre la misma. Peor aún: la variante `Singleton` era **una trampa**,
+porque un repositorio `Singleton` que depende de un `DbContext` `Scoped` es una *captive dependency*
+y el contenedor la rechaza (o, con `ValidateScopes` desactivado, la deja pasar y revienta en producción).
+
+La 2.0.0 **retira el eje entero** y deja un solo ciclo de vida: `Transient`.
+
+**Antes (1.x / 2.0.0 preliminar):**
+
+```csharp
+// Repositorios: tres métodos, uno por ciclo de vida
+builder.Services.AddOofpRepositories<Vino, VinosContext>();            // registraba Scoped
+builder.Services.AddOofpRepositoriesTransient<Vino, VinosContext>();
+builder.Services.AddOofpRepositoriesSingleton<Vino, VinosContext>();   // ⚠️ captive dependency
+
+// Y los tres puentes [Obsolete] heredados de la 1.x
+builder.Services.AddScopedOOFPRepos<Vino, VinosContext>();
+builder.Services.AddTransientOOFPRepos<Vino, VinosContext>();
+builder.Services.AddSingletonOOFPRepos<Vino, VinosContext>();
+
+// Servicios CRUD: seis métodos, tres ciclos de vida x dos modos
+builder.Services.AddScopedCrudServicesFpWithoutRepositories();
+builder.Services.AddTransientCrudServicesFpWithoutRepositories();
+builder.Services.AddSingletonCrudServicesFpWithoutRepositories();
+builder.Services.AddScopedCrudServicesDuplexFpWithoutRepositories();
+builder.Services.AddTransientCrudServicesDuplexFpWithoutRepositories();
+builder.Services.AddSingletonCrudServicesDuplexFpWithoutRepositories();
+```
+
+**Ahora (2.0.0):**
+
+```csharp
+// Repositorios: UN método. Registra las 16 interfaces como Transient.
+builder.Services.AddOofpRepositories<Vino, VinosContext>();
+
+// Servicios CRUD: DOS métodos, uno por modo. Los dos registran como Transient.
+builder.Services.AddCrudServicesFpWithoutRepositories();
+builder.Services.AddCrudServicesDuplexFpWithoutRepositories();
+```
+
+**Métodos públicos retirados (12):**
+
+| Retirado | Sustituto |
+| --- | --- |
+| `AddOofpRepositoriesTransient<T, TContext>()` | `AddOofpRepositories<T, TContext>()` |
+| `AddOofpRepositoriesSingleton<T, TContext>()` | `AddOofpRepositories<T, TContext>()` |
+| `AddTransientOOFPRepos<T, TContext>()` *(puente `[Obsolete]`)* | `AddOofpRepositories<T, TContext>()` |
+| `AddScopedOOFPRepos<T, TContext>()` *(puente `[Obsolete]`)* | `AddOofpRepositories<T, TContext>()` |
+| `AddSingletonOOFPRepos<T, TContext>()` *(puente `[Obsolete]`)* | `AddOofpRepositories<T, TContext>()` |
+| `AddTransientCrudServicesFpWithoutRepositories()` | `AddCrudServicesFpWithoutRepositories()` |
+| `AddScopedCrudServicesFpWithoutRepositories()` | `AddCrudServicesFpWithoutRepositories()` |
+| `AddSingletonCrudServicesFpWithoutRepositories()` | `AddCrudServicesFpWithoutRepositories()` |
+| `AddTransientCrudServicesDuplexFpWithoutRepositories()` | `AddCrudServicesDuplexFpWithoutRepositories()` |
+| `AddScopedCrudServicesDuplexFpWithoutRepositories()` | `AddCrudServicesDuplexFpWithoutRepositories()` |
+| `AddSingletonCrudServicesDuplexFpWithoutRepositories()` | `AddCrudServicesDuplexFpWithoutRepositories()` |
+| los 6 puentes `[Obsolete]` de `Add*GenServicesFpWithoutReposGeneral` *(fichero completo eliminado)* | `AddCrudServices[Duplex]FpWithoutRepositories()` |
+
+> ✅ **El único puente que sobrevive** en `MoralesLarios.OOFP.EntityFrameworkCore` es
+> `ResolveRepoFp<TRepo>()` → `GetRepository<TRepo>()`, que **no** tiene nada que ver con el ciclo de vida.
+
+**Qué tienes que hacer como consumidor.**
+
+1. Si llamabas a `AddOofpRepositoriesTransient` o a `AddOofpRepositoriesSingleton`, cámbialas por
+   `AddOofpRepositories`. El compilador te lo señala con `CS1061`.
+2. Si llamabas a `Add{Transient|Scoped|Singleton}OOFPRepos`, cámbialas también por `AddOofpRepositories`.
+   Antes eran avisos `CS0618`; ahora son **errores**.
+3. Si llamabas a cualquiera de las seis `Add{Transient|Scoped|Singleton}CrudServices[Duplex]FpWithoutRepositories`,
+   quítale el prefijo del ciclo de vida.
+4. ⚠️ **Y, sobre todo, revisa si dependías de que `AddOofpRepositories` registrara `Scoped`.** Esta parte
+   es la **ruptura silenciosa**: la llamada se escribe igual y compila igual, pero **el ciclo de vida
+   cambia**.
+
+**Cómo detectar la ruptura silenciosa.** Con `Scoped`, dos inyecciones del mismo repositorio dentro de
+la misma petición recibían **la misma instancia**; con `Transient` reciben **dos instancias distintas**.
+Busca código que dependiera de eso:
+
+```csharp
+// ❌ Antes funcionaba por accidente: los dos campos eran el MISMO objeto
+public class VinosController(IEfReadRepository<Vino> lector, IEfWriteRepository<Vino> escritor)
+{
+    // si guardabas estado en el repositorio (un contador, una caché, un flag),
+    // con Scoped se compartía y con Transient YA NO.
+}
+```
+
+> ✅ **Lo que NO cambia, y es lo importante**: el `DbContext` **sigue siendo `Scoped`** (lo registra
+> `AddDbContext`), así que **todos** los repositorios de la misma petición siguen compartiendo el
+> **mismo** `DbContext` y la misma unidad de trabajo. Lo único que se multiplica es el envoltorio, que no
+> tiene estado. Si tus repositorios no guardan estado propio —y los de la librería no lo guardan—,
+> **no hay nada que hacer**.
+
+> ⚠️ Si tenías una clase **`Singleton`** que inyectaba un repositorio, antes podías registrarlo con
+> `AddOofpRepositoriesSingleton` para que el contenedor no se quejara. Eso **ya no es posible**, y es
+> intencionado: ese montaje era una *captive dependency* del `DbContext`. Inyecta un
+> `IServiceScopeFactory` en la clase `Singleton`, abre un ámbito y resuelve el repositorio dentro.
+
+#### 63 — `EfRepository` y `ThrowingEfRepository` dejan de implementar `IDisposable` (2.0.0) ⚠️ **RUPTURA DE COMPILACIÓN**
+
+Las dos clases base de los repositorios implementaban `IDisposable`, y su `Dispose()` hacía esto:
+
+```csharp
+// ANTES (1.x / 2.0.0 preliminar)
+public void Dispose() => GetContext()?.Dispose();
+```
+
+Eso es **incorrecto por diseño**: el repositorio **no es dueño** del `DbContext`, lo recibe del
+contenedor. Y con el ciclo de vida `Transient` del punto 62 se vuelve además **peligroso**, porque el
+contenedor **rastrea las instancias `IDisposable` que crea** y llama a su `Dispose()` al cerrar el
+ámbito. Resultado: cada repositorio destruía un `DbContext` compartido que todavía estaban usando los
+demás.
+
+**Ahora (2.0.0):** ninguna de las dos clases implementa `IDisposable`. El `DbContext` lo libera **solo**
+el contenedor, al cerrar el ámbito que lo creó.
+
+```csharp
+// ANTES
+using (var repo = serviceProvider.GetRequiredService<IEfCrudRepository<Vino>>())
+{
+    var resultado = await repo.TryGetAllAsync();
+}   // ⚠️ aquí se destruía el DbContext de TODA la petición
+
+// AHORA
+var repo = serviceProvider.GetRequiredService<IEfCrudRepository<Vino>>();
+var resultado = await repo.TryGetAllAsync();
+// el DbContext lo libera el contenedor al cerrar el ámbito
+```
+
+**Qué tienes que hacer como consumidor.**
+
+1. Quita los `using` (declaración o sentencia) que envolvieran un repositorio de la librería. El
+   compilador te lo señala con `CS1674` (*«no implementa IDisposable»*).
+2. Quita las llamadas explícitas a `repo.Dispose()` → `CS1061`.
+3. Si derivabas de `EfRepository` o de `ThrowingEfRepository` y escribías
+   `public override void Dispose()`, quita el `override` → `CS0115`.
+4. Si **tu** repositorio derivado tiene recursos propios que liberar, implementa `IDisposable` **en tu
+   clase** y libera **solo lo tuyo**: **no** llames a `Dispose()` sobre el `DbContext`.
+
+> 🧭 Esta ruptura **no es silenciosa**: todo lo que había que tocar deja de compilar. Si tu proyecto
+> compila sin cambios, no te afecta.
+
+#### 64 — El servicio de `MoralesLarios.OOFP.FileSystem` pasa de `Singleton` a `Transient` (2.0.0) ⚠️ **RUPTURA SILENCIOSA**
+
+Para que el criterio del punto 62 sea **uno solo en toda la librería**, `AddOOFPIO()` deja de registrar
+`IMlFileSystem` como `Singleton`:
+
+```csharp
+// ANTES
+services.AddSingleton<IMlFileSystem, MlFileSystem>();
+
+// AHORA
+services.AddTransient<IMlFileSystem, MlFileSystem>();
+```
+
+`MlFileSystem` **no tiene estado**: cada método abre, lee o escribe y vuelve. Por eso el cambio es
+inocuo en la práctica y por eso compila igual. Pero **es una ruptura de contrato silenciosa**, porque ya
+no se garantiza una única instancia compartida en todo el proceso.
+
+**Cómo detectarla.** Busca código que dependiera de la identidad de la instancia:
+
+```csharp
+// ❌ Esto antes era true y ahora es false
+var a = sp.GetRequiredService<IMlFileSystem>();
+var b = sp.GetRequiredService<IMlFileSystem>();
+Assert.Same(a, b);
+```
+
+**Qué tienes que hacer como consumidor.** Normalmente **nada**. Dos casos a revisar:
+
+1. **Tests** que afirmaran `Assert.Same` / `ReferenceEquals` sobre `IMlFileSystem`: invierte la
+   aserción a `Assert.NotSame`.
+2. **Decoradores propios con estado** (una caché de rutas, un contador de accesos) registrados como
+   `IMlFileSystem` sobre el de la librería: ese estado ya **no** se comparte. Si lo necesitas
+   compartido, registra **tu** decorador explícitamente como `Singleton` después de `AddOOFPIO()`
+   —la última llamada gana— o mueve el estado a un servicio `Singleton` aparte.
+
+> ✅ El único `AddSingleton` que queda en el repositorio está en
+> `MoralesLarios.OOFP.Logging.Sample/Program.cs` y registra el `ILoggerFactory` de **Serilog** con
+> `dispose: false`. Es infraestructura de un tercero que **debe** ser `Singleton`, no forma parte de la
+> API pública de la librería y por tanto **queda fuera** de este criterio.
+
+---
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -1658,8 +1850,15 @@ caso, reescribe las rutas con la tabla de equivalencias de la **sección 15 del 
 
 ### 4.1 Avisos de los puentes `[Obsolete]`
 
-La 2.0.0 conserva **187 puentes `[Obsolete]`** para que el código 1.x compile con avisos. Si el build termina
-con `0 errores` pero con **`CS0618`** (*"'X' is obsolete"*), significa que **aún quedan llamadas al nombre antiguo**.
+La 2.0.0 conserva un buen número de **puentes `[Obsolete]`** para que el código 1.x compile con avisos.
+Si el build termina con `0 errores` pero con **`CS0618`** (*"'X' is obsolete"*), significa que **aún quedan
+llamadas al nombre antiguo**.
+
+> ⚠️ **Los puentes del ciclo de vida ya no existen.** Los 9 puentes `[Obsolete]` del eje
+> `Transient`/`Scoped`/`Singleton` (`AddTransientOOFPRepos`, `AddScopedOOFPRepos`,
+> `AddSingletonOOFPRepos` y los 6 `Add{Transient|Scoped|Singleton}CrudServices[Duplex]FpWithoutRepositories`)
+> se han **retirado**, no marcado como obsoletos: esas llamadas dan **`CS0103`/`CS1061`**, no `CS0618`.
+> El único puente que sobrevive en ese eje es `ResolveRepoFp` → `GetRepository`. Detalle en el **punto 62**.
 
 ```powershell
 dotnet build --nologo /p:WarningLevel=4
@@ -1834,6 +2033,42 @@ dotnet build --nologo /p:WarningLevel=4
    ```
    ⚠️ Busca **solo** esa forma cualificada. `_` a secas es el patrón de descarte de C# y produciría
    cientos de falsos positivos (`.Bind(_ => ...)`, `out _`): esos **no** se tocan.
+   Y, para los puntos 62, 63 y 64 (**ciclo de vida `Transient` único**), busca estos patrones:
+   ```
+   AddOofpRepositoriesTransient|AddOofpRepositoriesSingleton|AddOofpRepositoriesScoped
+   Add(Transient|Scoped|Singleton)OOFPRepos
+   Add(Transient|Scoped|Singleton)CrudServices(Duplex)?FpWithoutRepositories
+   Add(Scopedt|Scoped|Singleton|Transient)GenServices(Duplex)?FpWithoutReposGeneral
+   ```
+   Toda coincidencia se sustituye por `AddOofpRepositories<T, TContext>()`,
+   `AddCrudServicesFpWithoutRepositories()` o `AddCrudServicesDuplexFpWithoutRepositories()`, según
+   corresponda (punto 62). Son **errores de compilación**, así que el build de la Fase 4 ya te los habrá
+   señalado; este barrido sirve para encontrarlos también en **documentación, comentarios y plantillas**.
+   Y, para la parte **silenciosa** del punto 62, busca además:
+   ```
+   AddOofpRepositories\s*<
+   ```
+   ⚠️ Esta llamada **existe en las dos versiones y compila igual**, pero en la 1.x registraba `Scoped` y
+   ahora registra `Transient`. Por cada coincidencia, comprueba si alguna clase tuya **guardaba estado**
+   en un repositorio inyectado o dependía de recibir **la misma instancia** dos veces en la misma
+   petición. El `DbContext` sigue siendo `Scoped`, así que la unidad de trabajo **no** cambia.
+   Para el punto 63 (`IDisposable` retirado de los repositorios), busca:
+   ```
+   using\s*\(\s*var\s+\w*[Rr]epo
+   using\s+var\s+\w*[Rr]epo
+   \w*[Rr]epo\w*\s*\.\s*Dispose\s*\(\s*\)
+   override\s+void\s+Dispose
+   ```
+   Quita el `using`, la llamada a `Dispose()` y el `override`. Si tu repositorio derivado tiene recursos
+   **propios**, implementa `IDisposable` en tu clase y libera **solo lo tuyo**: nunca el `DbContext`.
+   Y, para el punto 64 (`IMlFileSystem` de `Singleton` a `Transient`), busca:
+   ```
+   AddOOFPIO
+   Assert\.Same.*IMlFileSystem|ReferenceEquals.*IMlFileSystem
+   ```
+   ⚠️ También **silenciosa**. Si afirmabas identidad de instancia sobre `IMlFileSystem`, invierte la
+   aserción; si tenías un decorador **con estado** encima, regístralo tú como `Singleton` después de
+   `AddOOFPIO()`.
    - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
      `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
    - Si se añaden cabeceras de paginación sobre `HttpClient`, migra a las sobrecargas de
@@ -1895,7 +2130,7 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, 45, 46, 47, 48 y 49, indicando, para cada uno, si **afecta** al proyecto, qué se
+   36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, 45, 46, 47, 48 y 49, y los puntos 62, 63 y 64 del ciclo de vida, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
@@ -1948,6 +2183,22 @@ Entrega al usuario, **en español**, un informe con:
    `Next_Versions/2.x/`, indica cuántos enlaces se han reescrito con la sección 15 del anexo de
    renombrados; si no enlazaba a ninguno, dilo expresamente para que quede claro que no se ha omitido
    el barrido.
+   Para los puntos **62**, **63** y **64** (**ciclo de vida `Transient` único**), haz constar: cuántas
+   llamadas a los **12 métodos retirados** se han encontrado y por cuál de los tres supervivientes
+   (`AddOofpRepositories`, `AddCrudServicesFpWithoutRepositories`,
+   `AddCrudServicesDuplexFpWithoutRepositories`) se ha sustituido cada una; **si el proyecto llamaba a
+   `AddOofpRepositories` y por tanto le afecta la ruptura silenciosa** de pasar de `Scoped` a
+   `Transient`, y en ese caso cuántas clases se han revisado por **guardar estado** en un repositorio
+   inyectado o por depender de recibir la misma instancia dos veces en la misma petición; deja escrito
+   expresamente que el `DbContext` **sigue siendo `Scoped`** y que la unidad de trabajo **no** cambia.
+   Para el punto **63**, indica cuántos `using` sobre repositorios, cuántas llamadas a `repo.Dispose()`
+   y cuántos `override void Dispose()` se han retirado, y si algún repositorio derivado tenía recursos
+   **propios** que hayan obligado a implementar `IDisposable` en la clase del consumidor. Para el punto
+   **64**, indica si se afirmaba identidad de instancia sobre `IMlFileSystem` (`Assert.Same`,
+   `ReferenceEquals`) y si existía algún **decorador con estado** registrado encima de `AddOOFPIO()`
+   que haya habido que registrar explícitamente como `Singleton`. Si ninguno de los tres puntos afecta
+   al proyecto, **dilo expresamente** para que quede claro que no se ha omitido el barrido: las partes
+   silenciosas de los puntos 62 y 64 **no las señala el compilador**.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -1984,7 +2235,7 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
-| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61 | Renombrado masivo de la API + correcciones de comportamiento. Y el punto **61**, documental: la planificación del repositorio se **centraliza en una sola carpeta `2.0.0`** con `Pendientes/` y `Realizados/`, porque las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 **nunca se publicaron** y todo su contenido forma parte de la 2.0.0. Tres documentos de planificación de Logging se han **renombrado** para desambiguarlos (sección 15 del anexo de renombrados) |
+| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64 | Renombrado masivo de la API + correcciones de comportamiento. Y el punto **61**, documental: la planificación del repositorio se **centraliza en una sola carpeta `2.0.0`** con `Pendientes/` y `Realizados/`, porque las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 **nunca se publicaron** y todo su contenido forma parte de la 2.0.0. Tres documentos de planificación de Logging se han **renombrado** para desambiguarlos (sección 15 del anexo de renombrados). Y los puntos **62**, **63** y **64**, del **ciclo de vida**: `Transient` pasa a ser el único, se retiran **12 métodos públicos** y **9 puentes `[Obsolete]`** del eje `Transient`/`Scoped`/`Singleton`, `EfRepository` y `ThrowingEfRepository` **dejan de implementar `IDisposable`**, y hay **dos rupturas silenciosas**: `AddOofpRepositories` pasa de `Scoped` a `Transient` y `AddOOFPIO()` registra `IMlFileSystem` como `Transient` en vez de `Singleton` |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 | 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |
