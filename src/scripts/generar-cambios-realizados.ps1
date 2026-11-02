@@ -39,7 +39,7 @@ $ordenLotes = @(
  'fase13-docs',
  'fase13-genericos',
  'fase14-residuos',
- 'fase15-transient-unico'
+ 'fase15-scoped-unico'
 )
 
 $tituloLote = @{}
@@ -62,7 +62,7 @@ $tituloLote['fase11d-residuos'] = 'Residuos detectados por el inventario'
 $tituloLote['fase13-docs'] = 'Fase 13 ' + $fl + ' Documentaci' + $oc + 'n (`README.md` y `docs/`)'
 $tituloLote['fase13-genericos'] = 'Fase 13b ' + $fl + ' Unificaci' + $oc + 'n del par' + $ac + 'metro gen' + $ec + 'rico `TReturn` en `TResult`'
 $tituloLote['fase14-residuos'] = 'Fase 14 ' + $fl + ' Residuos de los sufijos `...Manager` y `...Info` en `Http` y `AspNetCore.Results`'
-$tituloLote['fase15-transient-unico'] = 'Fase 15 ' + $fl + ' Unificaci' + $oc + 'n del ciclo de vida en `Transient`'
+$tituloLote['fase15-scoped-unico'] = 'Fase 15 ' + $fl + ' Unificaci' + $oc + 'n del ciclo de vida en `Scoped`'
 
 # Recolectar filas
 $filas = @{}

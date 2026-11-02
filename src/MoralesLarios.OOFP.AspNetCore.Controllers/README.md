@@ -566,7 +566,7 @@ builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 builder.Services.AddOofpRepositories<User, AppDbContext>();
 
 // 3) Servicios genéricos (MoralesLarios.OOFP.Application)
-builder.Services.AddCrudServicesFpWithoutRepositories();         // Transient, el único ciclo de vida admitido
+builder.Services.AddCrudServicesFpWithoutRepositories();         // Scoped, el único ciclo de vida admitido
 
 // 4) MVC
 builder.Services.AddControllers();

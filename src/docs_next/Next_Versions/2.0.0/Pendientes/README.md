@@ -171,7 +171,7 @@ Ninguna épica puede cerrarse sin estas respuestas. Cada documento las detalla e
 | Serialización HTTP | El error deja de ser texto plano y pasa a llevar código de estado | ⚠️ parcial |
 | Contrato REST | Rutas `id-str/{id}` unificadas; sobrecargas retiradas | ✅ en firmas · ❌ en rutas |
 | Servicio y paginación | `GetAllAsync` deja de devolver la colección completa | ✅ |
-| Unidad de trabajo | ✅ **Ya aplicada**: `AddOofpRepositoriesSingleton`, `AddOofpRepositoriesScoped` y `AddOofpRepositoriesTransient` se **retiran** (no se marcan obsoletas) y queda un único `AddOofpRepositories`, siempre `Transient` (punto **62**) | ✅ en las firmas · ⚠️ silenciosa en el ciclo de vida (`Scoped`→`Transient`) |
+| Unidad de trabajo | ✅ **Ya aplicada**: `AddOofpRepositoriesSingleton`, `AddOofpRepositoriesScoped` y `AddOofpRepositoriesTransient` se **retiran** (no se marcan obsoletas) y queda un único `AddOofpRepositories`, siempre `Scoped`, el mismo ciclo de vida que el `DbContext` (punto **62**) | ✅ en las firmas · quien ya llamaba a `AddOofpRepositories` **no cambia de comportamiento** |
 | Código muerto | Cambian firmas de constructor público (parámetro `ILogger`) | ✅ |
 | Erratas públicas | `TryMapIAsyncf`, `…Alwais…`, `…Lenght…`, `Bydouble`, `TEnumrableResponse` renombrados | ⚠️ advertencia con puente `[Obsolete]` |
 | Mensajes y logs | Cambia el **texto** de los mensajes de error y validación | ❌ no — rompe aserciones de tests y consumidores que comparan texto |

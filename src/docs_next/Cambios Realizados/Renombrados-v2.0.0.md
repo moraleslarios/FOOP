@@ -53,7 +53,7 @@ Este documento recoge **todos** los cambios de nomenclatura aplicados a la soluc
 | `fase13-docs` | 13 | 19 |
 | `fase13-genericos` | 13 | 10 |
 | `fase14-residuos` | 14 | 24 |
-| `fase15-transient-unico` | 15 | 16 |
+| `fase15-scoped-unico` | 15 | 19 |
 | `fase12-contratos` | 12 | 19 |
 
 ---
@@ -990,39 +990,51 @@ La columna **Puente** indica si el nombre antiguo sigue disponible:
 | 23 | Metodo | AspNetCore.Results | `HttpRequestPaginationExtensions` | `GetHeaderPaginationInfoAsync` | `GetPageRequestAsync` | Sí | Sufijo Info prohibido. Devuelve un PageRequest |
 | 24 | Fichero | AspNetCore.Results | `Helpers` | *(inexistente)* | `HttpRequestPaginationExtensions.Obsolete.cs` | No | Nuevo fichero con los 12 puentes Obsolete de la clase |
 
-### Fase 15 → Unificación del ciclo de vida en `Transient`
+### Fase 15 → Unificación del ciclo de vida en `Scoped`
 
-<sub>Lote `fase15-transient-unico` → 16 cambios</sub>
+<sub>Lote `fase15-scoped-unico` → 19 cambios</sub>
 
 Esta fase **no renombra**: **retira** el ciclo de vida como eje de la API de registro.
-La librería pasa a ofrecer **un solo método por cosa registrable** y registra **siempre `Transient`**.
-Está documentada como **puntos 62, 63 y 64** de
+La librería pasa a ofrecer **un solo método por cosa registrable** y registra **siempre `Scoped`**,
+el mismo ciclo de vida que el `DbContext` al que acompañan los repositorios.
+Está documentada como **puntos 62, 63, 64, 65 y 66** de
 [`oofp-upgrade-2.prompt.md`](../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
 
 | # | Tipo | Proyecto | Contenedor | Antes | Después | Puente | Nota |
 |---:|---|---|---|---|---|:-:|---|
-| 1 | Metodo | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddOofpRepositoriesTransient` | `AddOofpRepositories` | No | Retirado: el ciclo de vida deja de ser un eje de la API. Punto 62 del prompt de migracion |
-| 2 | Metodo | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddOofpRepositoriesSingleton` | `AddOofpRepositories` | No | Retirado: creaba una dependencia cautiva sobre un DbContext Scoped. Punto 62 |
-| 3 | Comportamiento | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddOofpRepositories (registraba Scoped)` | `AddOofpRepositories (registra Transient)` | No | RUPTURA SILENCIOSA: compila igual pero deja de reutilizarse la misma instancia de repositorio dentro de una peticion. El DbContext sigue siendo Scoped. Deteccion: Assert.Same pasa a Assert.NotSame. Punto 62 |
-| 4 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddTransientCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Transient. Punto 62 |
-| 5 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddScopedCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Transient. Punto 62 |
-| 6 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddSingletonCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Transient. Punto 62 |
-| 7 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddTransientCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Transient. Punto 62 |
-| 8 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddScopedCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Transient. Punto 62 |
-| 9 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddSingletonCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Transient. Punto 62 |
-| 10 | Puente | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddTransientOOFPRepos` | *(puente retirado)* | No | Puente Obsolete RETIRADO porque su destino ya no existe. Produce CS0103, no CS0618. Sustituto: AddOofpRepositories. Punto 62 |
-| 11 | Puente | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddScopedOOFPRepos` | *(puente retirado)* | No | Puente Obsolete RETIRADO porque su destino ya no existe. Produce CS0103, no CS0618. Sustituto: AddOofpRepositories. Punto 62 |
-| 12 | Puente | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddSingletonOOFPRepos` | *(puente retirado)* | No | Puente Obsolete RETIRADO porque su destino ya no existe. Produce CS0103, no CS0618. Sustituto: AddOofpRepositories. Punto 62 |
-| 13 | Fichero | Application |  | `RegisterServices.Obsolete.cs` | *(eliminado)* | No | Fichero completo retirado con sus 6 puentes Obsolete del eje del ciclo de vida. Producen CS0103, no CS0618. Punto 62 |
-| 14 | Contrato | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.Repos` | `EfRepository : IEfRepository(T), IDisposable` | `EfRepository : IEfRepository(T)` | No | Deja de implementar IDisposable: con Transient el contenedor llamaria a Dispose sobre un DbContext que el repositorio no posee. Punto 63 |
-| 15 | Contrato | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.OopRepos` | `ThrowingEfRepository : IThrowingEfRepository(T), IDisposable` | `ThrowingEfRepository : IThrowingEfRepository(T)` | No | Deja de implementar IDisposable por el mismo motivo. Un override de Dispose en el consumidor produce CS0115 y una llamada a .Dispose() produce CS1061. Punto 63 |
-| 16 | Comportamiento | FileSystem | `MoralesLarios.OOFP.FileSystem.RegisterServices` | `AddOOFPIO (registraba IMlFileSystem como Singleton)` | `AddOOFPIO (registra IMlFileSystem como Transient)` | No | RUPTURA SILENCIOSA: compila igual. Si el consumidor dependia de una unica instancia debe registrarla el mismo. Punto 64 |
+| 1 | Metodo | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddOofpRepositoriesTransient` | `AddOofpRepositories` | No | Retirado: el ciclo de vida deja de ser un eje de la API. El metodo unico registra Scoped. Punto 62 del prompt de migracion |
+| 2 | Metodo | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddOofpRepositoriesScoped` | `AddOofpRepositories` | No | Retirado: el metodo unico ya registra Scoped, asi que el comportamiento es identico. Punto 62 |
+| 3 | Metodo | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddOofpRepositoriesSingleton` | `AddOofpRepositories` | No | Retirado: creaba una dependencia cautiva sobre un DbContext Scoped. Punto 62 |
+| 4 | Comportamiento | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddOofpRepositories (registraba Scoped)` | `AddOofpRepositories (sigue registrando Scoped)` | No | SIN ruptura de comportamiento: el ciclo de vida se alinea con el del DbContext, que es Scoped. Quien ya llamaba a AddOofpRepositories no nota ningun cambio. Punto 62 |
+| 5 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddTransientCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Scoped. Punto 62 |
+| 6 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddScopedCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Scoped. Punto 62 |
+| 7 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddSingletonCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Scoped. Punto 62 |
+| 8 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddTransientCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Scoped. Punto 62 |
+| 9 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddScopedCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Scoped. Punto 62 |
+| 10 | Metodo | Application | `MoralesLarios.OOFP.Application.RegisterServices` | `AddSingletonCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | No | Retirado: queda una sola variante que registra siempre Scoped. Punto 62 |
+| 11 | Puente | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddTransientOOFPRepos` | *(puente retirado)* | No | Puente Obsolete RETIRADO porque su destino ya no existe. Produce CS0103, no CS0618. Sustituto: AddOofpRepositories. Punto 62 |
+| 12 | Puente | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddScopedOOFPRepos` | *(puente retirado)* | No | Puente Obsolete RETIRADO porque su destino ya no existe. Produce CS0103, no CS0618. Sustituto: AddOofpRepositories, que mantiene el mismo ciclo de vida Scoped. Punto 62 |
+| 13 | Puente | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.RegisterServices` | `AddSingletonOOFPRepos` | *(puente retirado)* | No | Puente Obsolete RETIRADO porque su destino ya no existe. Produce CS0103, no CS0618. Sustituto: AddOofpRepositories. Punto 62 |
+| 14 | Fichero | Application |  | `RegisterServices.Obsolete.cs` | *(eliminado)* | No | Fichero completo retirado con sus 6 puentes Obsolete del eje del ciclo de vida. Producen CS0103, no CS0618. Punto 62 |
+| 15 | Contrato | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.Repos` | `EfRepository : IEfRepository(T), IDisposable` | `EfRepository : IEfRepository(T)` | No | Deja de implementar IDisposable: el propietario del DbContext es AddDbContext, no el repositorio, y el contenedor lo libera al cerrar el ambito. Punto 63 |
+| 16 | Contrato | EntityFrameworkCore | `MoralesLarios.OOFP.EntityFrameworkCore.OopRepos` | `ThrowingEfRepository : IThrowingEfRepository(T), IDisposable` | `ThrowingEfRepository : IThrowingEfRepository(T)` | No | Deja de implementar IDisposable por el mismo motivo. Un override de Dispose en el consumidor produce CS0115 y una llamada a .Dispose() produce CS1061. Punto 63 |
+| 17 | Comportamiento | FileSystem | `MoralesLarios.OOFP.FileSystem.RegisterServices` | `AddOOFPIO (registraba IMlFileSystem como Singleton)` | `AddOOFPIO (registra IMlFileSystem como Scoped)` | No | RUPTURA SILENCIOSA: compila igual. Si el consumidor dependia de una unica instancia debe registrarla el mismo. Punto 64 |
+| 18 | Comportamiento | Configuration | `MoralesLarios.OOFP.Configuration.RegisterServices` | `AddMlConfigurationReader (registraba Transient)` | `AddMlConfigurationReader (registra Scoped)` | No | RUPTURA SILENCIOSA: compila igual. Un servicio Singleton del consumidor ya no puede depender de IMlConfigurationReader sin provocar una dependencia cautiva. Punto 65 |
+| 19 | Comportamiento | Http | `MoralesLarios.OOFP.Http.RegisterServices` | `AddMlHttp / AddRestClient / AddCompositeKeyRestClient (registraban Transient)` | `los mismos metodos (registran Scoped)` | No | RUPTURA SILENCIOSA: compila igual. Los 6 registros de IHttpApiInvoker y de los clientes REST pasan a Scoped. Punto 66 |
 
-> ⚠️ **Dos de estos cambios son rupturas SILENCIOSAS**: `AddOofpRepositories` registraba
-> `Scoped` y ahora registra `Transient`, y `AddOOFPIO()` registraba `IMlFileSystem` como
-> `Singleton` y ahora como `Transient`. El código **compila igual**. El `DbContext` **sigue
-> siendo `Scoped`**, así que la unidad de trabajo no cambia. Detección: una aserción
-> `Assert.Same` sobre dos resoluciones del mismo ámbito pasa a `Assert.NotSame`.
+> ✅ **`AddOofpRepositories` NO cambia de comportamiento**: en la 1.x ya registraba `Scoped` y en la
+> 2.0.0 sigue registrando `Scoped`. Para quien ya usaba ese método, la ruptura es **solo de
+> compilación** (desaparecen las variantes por ciclo de vida). El repositorio vive al lado del
+> `DbContext` que recibe por constructor, y ese contexto es `Scoped`: alinear los dos hace que todos
+> los repositorios de un mismo ámbito compartan contexto y unidad de trabajo.
+
+> ⚠️ **Las rupturas SILENCIOSAS de esta fase son tres**: `AddOOFPIO()` registraba `IMlFileSystem`
+> como `Singleton` y ahora como `Scoped` (punto 64); `AddMlConfigurationReader()` registraba
+> `IMlConfigurationReader` como `Transient` y ahora como `Scoped` (punto 65); y los seis registros de
+> `MoralesLarios.OOFP.Http` pasan de `Transient` a `Scoped` (punto 66). El código **compila igual**.
+> Detección: un servicio `Singleton` del consumidor que dependa de cualquiera de ellos provoca ahora
+> una *captive dependency*, y una aserción `Assert.NotSame` sobre dos resoluciones del mismo ámbito
+> pasa a `Assert.Same`.
 
 > ⚠️ **Los 9 puentes `[Obsolete]` del eje del ciclo de vida se han RETIRADO, no marcado
 > obsoletos**: su destino ya no existe. El consumidor obtiene `CS0103`/`CS1061`, **no** `CS0618`.

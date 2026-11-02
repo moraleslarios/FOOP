@@ -30,10 +30,10 @@ public static class RegisterServices
         services.AddOofpRepositories<VinosCatasPuntuacion, TestDbContext>();
 
         // Register specific repository implementations
-        services.AddTransient<IVinosRepo, VinosRepo>();
-        services.AddTransient<ICatasRepo, CatasRepo>();
-        services.AddTransient<IVinosCatasRepo, VinosCatasRepo>();
-        services.AddTransient<IVinosCatasPuntuacionesRepo, VinosCatasPuntuacionesRepo>();
+        services.AddScoped<IVinosRepo, VinosRepo>();
+        services.AddScoped<ICatasRepo, CatasRepo>();
+        services.AddScoped<IVinosCatasRepo, VinosCatasRepo>();
+        services.AddScoped<IVinosCatasPuntuacionesRepo, VinosCatasPuntuacionesRepo>();
 
         return services;
     }

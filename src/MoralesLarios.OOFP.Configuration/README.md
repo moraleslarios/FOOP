@@ -111,7 +111,7 @@ MoralesLarios.OOFP.Configuration/
 public static IServiceCollection AddMlConfigurationReader(this IServiceCollection services,
                                                           IConfiguration      configuration)
 {
-    services.AddTransient<IMlConfigurationReader>(x => new MlConfigurationReader(configuration));
+    services.AddScoped<IMlConfigurationReader>(x => new MlConfigurationReader(configuration));
     return services;
 }
 ```
@@ -137,9 +137,9 @@ public class Startup
 }
 ```
 
-> ⚠️ **Se registra como `Transient`**, y la lambda **captura la `IConfiguration` que le pasas**, no la resuelve del contenedor. Si en tu aplicación recargas la configuración o registras una `IConfiguration` distinta después, `MlConfigurationReader` seguirá usando la que capturó aquí.
+> ⚠️ **Se registra como `Scoped`**, y la lambda **captura la `IConfiguration` que le pasas**, no la resuelve del contenedor. Si en tu aplicación recargas la configuración o registras una `IConfiguration` distinta después, `MlConfigurationReader` seguirá usando la que capturó aquí.
 
-> 💡 Un `Singleton` habría sido más eficiente (la clase no tiene estado mutable), pero `Transient` es inofensivo: crear el objeto es trivial.
+> 💡 `Scoped` es el ciclo de vida que la 2.0.0 unificó en toda la librería, para que todo lo que se registra desde `MoralesLarios.OOFP` viva el mismo ámbito que el `DbContext`. Un `Singleton` habría sido algo más eficiente (la clase no tiene estado mutable), pero la coherencia vale más: crear el objeto es trivial y así solo hay un ciclo de vida que recordar.
 
 ---
 
@@ -608,7 +608,7 @@ foreach (var item in items) { /* usa urlResult.Value */ }
 - **Tres operaciones**: `ReadAppSettingKey<T>` (con conversión), `ReadAppSettingKey` (crudo, `object`) y `ReadConnectionStringKey`.
 - **Dos formas de describir el error** para cada una: `MlErrorDetails` o `string`. Sin ninguna, se usa un mensaje por defecto en inglés.
 - Internamente todo pasa por una única tubería: `EnsureFp.NotNullEmptyOrWhitespace(clave)` → `Map(lectura)` → `MapEnsure(valor is not null)`.
-- Registro: `services.AddMlConfigurationReader(configuration)` (como `Transient`, capturando la `IConfiguration`).
+- Registro: `services.AddMlConfigurationReader(configuration)` (como `Scoped`, capturando la `IConfiguration`).
 - ⚠️ **El riesgo principal**: con tipos valor no anulables (`int`, `bool`), una clave ausente devuelve `Valid` con el valor por defecto. **Usa siempre `int?`, `bool?`.**
 - ⚠️ Otros límites: una conversión inválida **lanza excepción**, una cadena vacía se considera **valor válido**, el mensaje de clave inválida tiene erratas (`"Tkey … white"`) y **no es personalizable**, y **no hay binding de secciones a objetos**.
 

@@ -23,7 +23,7 @@ public static partial class RegisterServices
     public static IServiceCollection AddMlConfigurationReader(this IServiceCollection services, IConfiguration configuration)
     {
         
-        services.AddTransient<IMlConfigurationReader>(x => new MlConfigurationReader(configuration));
+        services.AddScoped<IMlConfigurationReader>(x => new MlConfigurationReader(configuration));
 
         return services;
     }

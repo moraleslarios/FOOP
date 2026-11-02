@@ -19,7 +19,7 @@ public static partial class RegisterServices
     /// <returns>Valor de tipo <c>IServiceCollection</c> obtenido por la operación.</returns>
     public static IServiceCollection AddMlHttp(this IServiceCollection services)
     {
-        services.AddTransient<IHttpApiInvoker, HttpApiInvoker>();
+        services.AddScoped<IHttpApiInvoker, HttpApiInvoker>();
 
         return services;
     }
@@ -48,7 +48,7 @@ public static partial class RegisterServices
             if (configureClient is not null) configureClient(client);
         });
 
-        services.AddTransient<TService>(sp => CreateClient<TImplementation>(sp, clientName));
+        services.AddScoped<TService>(sp => CreateClient<TImplementation>(sp, clientName));
 
         return services;
     }
@@ -80,8 +80,8 @@ public static partial class RegisterServices
         });
 
 
-        services.AddTransient<IRestClientFp<TDto>>(sp => CreateClient<RestClientFp<TDto>>(sp, clientName));
-        services.AddTransient<TService           >(sp => CreateClient<TImplementation   >(sp, clientName));
+        services.AddScoped<IRestClientFp<TDto>>(sp => CreateClient<RestClientFp<TDto>>(sp, clientName));
+        services.AddScoped<TService           >(sp => CreateClient<TImplementation   >(sp, clientName));
 
         return services;
     }
@@ -115,8 +115,8 @@ public static partial class RegisterServices
         });
 
 
-        services.AddTransient<IRestClientFp<TRequest, TResponse>>(sp => CreateClient<RestClientFp<TRequest, TResponse>>(sp, clientName));
-        services.AddTransient<TService                          >(sp => CreateClient<TImplementation                  >(sp, clientName));
+        services.AddScoped<IRestClientFp<TRequest, TResponse>>(sp => CreateClient<RestClientFp<TRequest, TResponse>>(sp, clientName));
+        services.AddScoped<TService                          >(sp => CreateClient<TImplementation                  >(sp, clientName));
 
         return services;
     }

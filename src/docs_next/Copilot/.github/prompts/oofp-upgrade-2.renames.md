@@ -352,12 +352,12 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `TryLast[Async]` | `TryGetLast[Async]` | NO |
 | `GetPkValues` | `FormatCompositeKey` | NO |
 | `ResolveRepoFp` | `GetRepository` | sí |
-| `AddScopedOOFPRepos` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Transient` |
-| `AddSingletonOOFPRepos` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Transient` |
-| `AddTransientOOFPRepos` | `AddOofpRepositories` | sí |
-| `AddOofpRepositoriesScoped` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Transient` |
-| `AddOofpRepositoriesSingleton` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Transient` |
-| `AddOofpRepositoriesTransient` | `AddOofpRepositories` | sí |
+| `AddScopedOOFPRepos` | `AddOofpRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
+| `AddSingletonOOFPRepos` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddTransientOOFPRepos` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddOofpRepositoriesScoped` | `AddOofpRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
+| `AddOofpRepositoriesSingleton` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddOofpRepositoriesTransient` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
 | parámetro `pk` | `keyValues` | NO |
 
 ### 8.5 Namespaces internos
@@ -486,18 +486,18 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `UpdateProblemDetailsAsync` | `UpdateAsync` | NO |
 | `GetPkValues` | `FormatCompositeKey` | NO |
 | `BuildNotFoundPkError` | `BuildEntityNotFoundError` | sí |
-| `AddScopedtGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí |
-| `AddSingletonGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí |
-| `AddTransientGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí |
-| `AddScopedCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí |
-| `AddSingletonCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí |
-| `AddTransientCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí |
-| `AddScopedtGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí |
-| `AddSingletonGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí |
-| `AddTransientGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí |
-| `AddScopedCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí |
-| `AddSingletonCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí |
-| `AddTransientCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí |
+| `AddScopedtGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
+| `AddSingletonGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddTransientGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddScopedCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
+| `AddSingletonCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddTransientCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddScopedtGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
+| `AddSingletonGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddTransientGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddScopedCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
+| `AddSingletonCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddTransientCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
 
 > ℹ️ La clase `GenService` (versión no funcional) **se eliminó**. Si la usabas, migra a `CrudServiceFp`.
 

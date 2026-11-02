@@ -4,39 +4,46 @@
 > **Origen:** punto **40** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
 > (*"No hay unidad de trabajo: un `SaveChanges` por operación"*), sacado de la versión `2.0.0` por su coste y su riesgo.
 > **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tarea 4.4.
-> **Estado:** 🔄 Parcialmente realizada · US-02 y US-03 ✅ hechas con la unificación en `Transient`; US-01 y el resto, pendientes
+> **Estado:** 🔄 Parcialmente realizada · US-02 y US-03 ✅ hechas con la unificación en `Scoped`; US-01 y el resto, pendientes
 > **Esfuerzo estimado:** **XL** (~5-7 jornadas) · **Riesgo:** 🔴 Alto (ruptura de comportamiento silenciosa)
 
 ---
 
-> ## ⚠️ Actualización · parte de esta épica ya está resuelta (`Transient` único)
+> ## ⚠️ Actualización · parte de esta épica ya está resuelta (`Scoped` único)
 >
 > Por decisión expresa del propietario, dentro de la simplificación general de la librería,
-> **`Transient` es el único ciclo de vida de toda la solución** y el ciclo de vida **deja de ser un eje
-> de la API pública**. Esto afecta de lleno a esta épica y hay que leerla con estas correcciones:
+> **`Scoped` es el único ciclo de vida de toda la solución** y el ciclo de vida **deja de ser un eje
+> de la API pública**. El criterio es el de esta épica: un repositorio vive al lado del `DbContext`
+> que recibe por constructor, y ese contexto es `Scoped`. Hay que leer la épica con estas
+> correcciones:
 >
-> **Ya hecho** (registrado como puntos **62**, **63** y **64** de
+> **Ya hecho** (registrado como puntos **62** a **66** de
 > [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3):
 >
 > - ✅ **US-03 · resuelta por eliminación** · `AddOofpRepositoriesSingleton` y
 >   `AddOofpRepositoriesTransient` (y también `AddOofpRepositoriesScoped`) **se han retirado**, junto con
 >   sus 3 puentes `[Obsolete]`. Queda un **único** `AddOofpRepositories<T, TContext>()` que registra las
->   16 interfaces con `AddTransient`. La hipótesis **D-2** («¿se retira
+>   16 interfaces con `AddScoped`, que es exactamente el ciclo de vida que ya usaba
+>   `AddOofpRepositories` en la 1.x. La hipótesis **D-2** («¿se retira
 >   `AddOofpRepositoriesSingleton`?») queda **cerrada por la opción (a): eliminar**, no por la (b).
 >   Por tanto esas llamadas dan **`CS1061`**, no `CS0618`.
 > - ✅ **US-02 · resuelta** · `EfRepository` y `ThrowingEfRepository` **ya no implementan `IDisposable`**
->   ni llaman a `GetContext().Dispose()`. Era **obligatorio** con `Transient`: el contenedor rastrea las
->   instancias `IDisposable` y las dispone al cerrar el ámbito, con lo que el repositorio habría
->   destruido un `DbContext` del que no es dueño. Se cumple la regla general del apéndice:
->   *quien no construye un `IDisposable`, no lo destruye*.
+>   ni llaman a `GetContext().Dispose()`. El **propietario** del `DbContext` es `AddDbContext`, no el
+>   repositorio: el contenedor lo libera al cerrar el ámbito. Si el repositorio fuera `IDisposable`, el
+>   contenedor lo rastrearía y el repositorio destruiría un `DbContext` ajeno. Se cumple la regla
+>   general del apéndice: *quien no construye un `IDisposable`, no lo destruye*.
 >
 > **Pendiente y matizado:**
 >
-> - ⬜ **US-01 · sigue pendiente, y es la clave de la épica.** Que los repositorios sean `Transient`
->   **no** impide la unidad de trabajo: el **`DbContext` sigue siendo `Scoped`** (lo registra el
->   anfitrión con `AddDbContext`), así que dos repositorios `Transient` de la misma petición **reciben
->   el mismo `DbContext`** y pueden compartir transacción. Lo que falta es el `SaveChanges` explícito y
->   el tipo de unidad de trabajo, no el ciclo de vida del repositorio.
+> - ⬜ **US-01 · sigue pendiente, pero el contenedor ya aporta la mitad del camino.** Con los
+>   repositorios en `Scoped`, dos repositorios resueltos en la misma petición son **la misma
+>   instancia** y comparten el **mismo `DbContext`** (que el anfitrión registra con `AddDbContext`,
+>   también `Scoped`), así que comparten `ChangeTracker` y pueden compartir transacción **por
+>   construcción**. Lo que falta es lo que esta épica aporta de verdad: el **`SaveChanges` explícito**
+>   (hoy cada operación hace el suyo) y el **tipo de unidad de trabajo** que exponga el `Commit`.
+> - ⚠️ El `BuildServiceProvider()` interno de `RegisterServices` **rompe esa garantía**: crea un
+>   proveedor paralelo, y lo que se resuelva por `GetRepository<T>()` cae en un ámbito distinto al de
+>   la petición. Mientras exista, la unidad de trabajo no se puede dar por cerrada.
 > - ⬜ `RegisterServices.GetRepository<T>()` y su `BuildServiceProvider()` **se conservan** por ahora
 >   (con el puente `ResolveRepoFp`). Su retirada sigue siendo parte de esta épica.
 > - El apéndice (tabla de los 3 métodos de registro, los ejemplos con
@@ -138,7 +145,7 @@ Efectos:
 | 1 | **Cada repositorio interno vive en un contenedor distinto** | Obtiene su **propio `DbContext`**. Aunque se registre con `AddScoped` (L84-101), el scope se pierde porque el provider es nuevo. Dos repositorios **nunca** comparten contexto |
 | 2 | **Una transacción compartida es imposible hoy** | Aunque se retiraran los 12 `SaveChanges`, no hay un `DbContext` común sobre el que abrirla |
 | 3 | **`Dispose()` cruzado** | `ThrowingEfRepository : IDisposable` hace `internalDbContext?.Dispose()` (L33-36): un repositorio puede destruir el contexto que otro está usando |
-| 4 | **`AddOofpRepositoriesSingleton` era inseguro** (✅ **retirado** en la 2.0.0, punto **62**; hoy solo existe `AddOofpRepositories`, que registra `Transient`) | `DbContext` no es *thread-safe* |
+| 4 | **`AddOofpRepositoriesSingleton` era inseguro** (✅ **retirado** en la 2.0.0, punto **62**; hoy solo existe `AddOofpRepositories`, que registra `Scoped`, igual que el `DbContext`) | `DbContext` no es *thread-safe* |
 | 5 | **Fuga de memoria** | Cada `BuildServiceProvider()` crea un contenedor que se registra para *disposal* y no se libera nunca |
 
 **Por tanto la historia US-01 es prerrequisito técnico de todo lo demás.**
@@ -212,7 +219,7 @@ Efectos:
 - [x] ✅ `ThrowingEfRepository` **ya no implementa `IDisposable`**: el `Dispose()` se ha retirado por completo, no solo su llamada a `internalDbContext.Dispose()` (punto **63**).
 - [ ] Se documenta que el `DbContext` lo libera el scope de DI (`AddDbContext` ya lo hace).
 - [ ] Un test usa dos repositorios en secuencia sobre el mismo scope y **no** lanza `ObjectDisposedException`.
-- [x] ✅ Revisado y decidido: **no** debe implementarlo. `EfRepository` y `ThrowingEfRepository` dejan de implementar `IDisposable`, porque con `Transient` el contenedor llamaría a `Dispose()` sobre un `DbContext` que el repositorio no posee (punto **63**).
+- [x] ✅ Revisado y decidido: **no** debe implementarlo. `EfRepository` y `ThrowingEfRepository` dejan de implementar `IDisposable`, porque el propietario del `DbContext` es `AddDbContext` y es el contenedor quien lo libera al cerrar el ámbito; si el repositorio fuera `IDisposable`, el contenedor lo rastrearía y el repositorio destruiría un `DbContext` ajeno (punto **63**).
 
 ---
 
@@ -228,8 +235,8 @@ Efectos:
 **Criterios de aceptación**
 
 - [x] ✅ `AddOofpRepositoriesSingleton<T, TContext>` **se ha eliminado** (opción (a) de **D-2**), junto con su puente `[Obsolete]` (punto **62**).
-- [x] ✅ `AddOofpRepositoriesTransient<T, TContext>` **se ha retirado**, igual que `AddOofpRepositoriesScoped` (punto **62**).
-- [x] ✅ `AddOofpRepositories<T, TContext>` es la **única** vía, y registra `Transient`. El `DbContext` sigue siendo `Scoped`, así que la unidad de trabajo se mantiene viable.
+- [x] ✅ `AddOofpRepositoriesTransient<T, TContext>` **se ha retirado**, igual que `AddOofpRepositoriesScoped` y `AddOofpRepositoriesSingleton` (punto **62**).
+- [x] ✅ `AddOofpRepositories<T, TContext>` es la **única** vía, y registra `Scoped`, el mismo ciclo de vida que el `DbContext`: los repositorios de un mismo ámbito comparten contexto y `ChangeTracker`, así que la unidad de trabajo es viable por construcción.
 - [ ] El XML doc de los tres métodos explica la implicación transaccional de cada ciclo de vida.
 - [ ] La ruptura queda registrada en la guía de migración.
 
@@ -370,7 +377,7 @@ el compilador no la detecta. Mitigaciones obligatorias en US-07 y US-08.
 
 - [ ] La ruptura queda documentada en el prompt de actualización (`oofp-upgrade-2.prompt.md` o su equivalente de `2.1`), tal como exige la convención del proyecto para **todo** cambio incompatible.
 - [ ] Incluye tabla **antes / después** con código real para los tres escenarios: alta simple, alta múltiple y actualización + borrado.
-- [x] ✅ Documentada la retirada de `AddOofpRepositoriesSingleton` y `AddOofpRepositoriesTransient` (puntos **62** y **63** de `oofp-upgrade-2.prompt.md` §3.3, con su tabla «Retirado → Sustituto» y el barrido de la Fase 5). `RegisterServices.GetRepository<T>()` **se mantiene**; lo que queda marcado `[Obsolete]` es su antiguo nombre `ResolveRepoFp<TRepo>()`.
+- [x] ✅ Documentada la retirada de `AddOofpRepositoriesSingleton`, `AddOofpRepositoriesTransient` y `AddOofpRepositoriesScoped` (punto **62** de `oofp-upgrade-2.prompt.md` §3.3, con su tabla «Retirado → Sustituto» y el barrido de la Fase 5). `RegisterServices.GetRepository<T>()` **se mantiene**; lo que queda marcado `[Obsolete]` es su antiguo nombre `ResolveRepoFp<TRepo>()`.
 - [ ] Explica el cambio de constructores de los repositorios (impacto en herencia).
 - [ ] Enlaza con el diagnóstico de US-07.
 - [ ] Se actualiza el `README.md` del proyecto `EntityFrameworkCore`.

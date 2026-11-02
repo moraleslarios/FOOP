@@ -388,7 +388,7 @@ public static MlErrorDetails BadRequestError(string title, string detail, string
 
 ## Registro en el contenedor
 
-**Dos extensiones, un modo cada una, y un único ciclo de vida: `Transient`.**
+**Dos extensiones, un modo cada una, y un único ciclo de vida: `Scoped`.**
 
 ```csharp
 // Modo simple: ICrudServiceFp<,>
@@ -401,10 +401,10 @@ services.AddCrudServicesDuplexFpWithoutRepositories();
 Cada una registra el tipo genérico **abierto**, así que sirve para cualquier combinación de entidad y DTO sin registrar nada más:
 
 ```csharp
-services.AddTransient(typeof(ICrudServiceFp<,>), typeof(CrudServiceFp<,>));
+services.AddScoped(typeof(ICrudServiceFp<,>), typeof(CrudServiceFp<,>));
 ```
 
-> ✅ **`Transient` es el único ciclo de vida admitido en la librería.** El servicio no guarda estado propio: solo compone el repositorio y el `ILogger` que recibe por constructor. Con `Transient` cada resolución crea una instancia nueva sobre el `DbContext` del ámbito actual, lo que elimina de raíz la *captive dependency* que provocaban las variantes `Singleton` de la 1.x.
+> ✅ **`Scoped` es el único ciclo de vida admitido en la librería.** El servicio no guarda estado propio: solo compone el repositorio y el `ILogger` que recibe por constructor. Y ese repositorio vive *al lado* del `DbContext`, que es `Scoped`: registrar el servicio con el mismo ciclo de vida hace que servicio, repositorio y contexto compartan ámbito y unidad de trabajo, y elimina de raíz la *captive dependency* que provocaban las variantes `Singleton` de la 1.x.
 
 > ✅ **Simplificado en 2.0.0:** la 1.x tenía **seis** métodos (`Add{Transient|Scoped|Singleton}CrudServices[Duplex]FpWithoutRepositories`, y antes aún `AddScopedtGenServicesFpWithoutReposGeneral` con la errata `Scopedt`). Ahora son **dos**, sin prefijo de ciclo de vida, porque solo hay uno.
 
@@ -425,7 +425,7 @@ builder.Services.AddCrudServicesFpWithoutRepositories();
 
 > 🔑 **El registro de repositorios es por entidad; el del servicio, una sola vez.** El servicio genérico resuelve `IEfRepository<TEntity>` por constructor, así que si olvidas el `AddOofpRepositories<TEntity, TContext>()` la inyección del servicio fallará al resolverse.
 
-> ✅ **No hay que elegir ciclo de vida**: tanto el servicio como los repositorios se registran como `Transient`, igual que en [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md).
+> ✅ **No hay que elegir ciclo de vida**: tanto el servicio como los repositorios se registran como `Scoped`, igual que en [`EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) y que el propio `DbContext`.
 
 ---
 
@@ -731,7 +731,7 @@ public class VinosServiceConReglas(IEfRepository<Vino>                          
 Registro de la clase derivada (sustituye al genérico para esa entidad):
 
 ```csharp
-builder.Services.AddTransient<ICrudServiceFp<Vino, VinoDto>, VinosServiceConReglas>();
+builder.Services.AddScoped<ICrudServiceFp<Vino, VinoDto>, VinosServiceConReglas>();
 ```
 
 ### Ejemplo 6 — Errores HTTP con `MlProblemDetails`
@@ -858,14 +858,14 @@ MlProblemDetails.NotFoundError(detail: "No existe",
 | Añadir reglas de negocio | Heredar de `CrudServiceFp<,>` y sobrescribir el método |
 | Paginar, filtrar o proyectar | ❌ No disponible: usa `IEfPagedRepository<T>` directamente |
 | Validar | ❌ No lo hace: usa [`Validation`](../MoralesLarios.OOFP.Validation/README.md) antes |
-| Registrar | `AddCrudServicesFpWithoutRepositories()` ✅ (`Transient`) |
+| Registrar | `AddCrudServicesFpWithoutRepositories()` ✅ (`Scoped`) |
 
 ---
 
 ## Mejores prácticas
 
 1. **Usa el modo duplex en APIs públicas**: separa el DTO de entrada del de salida para no exponer `Id` ni campos internos.
-2. **Registra con `AddCrudServicesFpWithoutRepositories()`**, que registra el servicio como `Transient`, el único ciclo de vida admitido en la librería.
+2. **Registra con `AddCrudServicesFpWithoutRepositories()`**, que registra el servicio como `Scoped`, el único ciclo de vida admitido en la librería y el mismo que el del `DbContext`.
 3. **No olvides `AddOofpRepositories<TEntity, TContext>()`** por cada entidad: el servicio resuelve `IEfRepository<TEntity>` por constructor.
 4. **Usa siempre las variantes `ProblemDetailsAsync` con `MlProblemDetails`** si el error va a convertirse en respuesta HTTP. Las versiones cortas **no producen un 404 real**.
 5. **Prefiere `UpdateAsync(dto, ct)` sin `pk`** para evitar el doble `Find` y los conflictos de seguimiento.

@@ -208,7 +208,7 @@ un JSON malformado lo captura el último `TryMapAsync`. **Ningún camino sale po
 ## `IHttpApiInvoker` — la capa de transporte
 
 Es la única clase que toca `HttpClient` directamente. Regístrala con `services.AddMlHttp()`
-(`AddTransient<IHttpApiInvoker, HttpApiInvoker>()`).
+(`AddScoped<IHttpApiInvoker, HttpApiInvoker>()`).
 
 ### Contrato real
 
@@ -663,8 +663,8 @@ public static IServiceCollection AddCompositeKeyRestClient<TService, TImplementa
 
 | Método | Qué registra | Cuándo usarlo |
 |---|---|---|
-| `AddMlHttp()` | `IHttpApiInvoker → HttpApiInvoker` (**Transient**) | **Siempre**, una sola vez. Es el prerrequisito de todo lo demás. |
-| `AddRestClient<TService, TImpl>()` | `AddHttpClient(nombre, configureClient)` + `TService → TImpl` (Transient) con la `ServiceKey` inyectada | Cliente de **clave simple** (derivado de `RestClientFp<…>`). |
+| `AddMlHttp()` | `IHttpApiInvoker → HttpApiInvoker` (**Scoped**) | **Siempre**, una sola vez. Es el prerrequisito de todo lo demás. |
+| `AddRestClient<TService, TImpl>()` | `AddHttpClient(nombre, configureClient)` + `TService → TImpl` (Scoped) con la `ServiceKey` inyectada | Cliente de **clave simple** (derivado de `RestClientFp<…>`). |
 | `AddCompositeKeyRestClient<TService, TImpl, TDto>()` | Lo anterior **más** `IRestClientFp<TDto> → RestClientFp<TDto>` | Cliente de **clave compuesta simplex** (derivado de `CompositeKeyRestClientFp<TDto>`). |
 | `AddCompositeKeyRestClient<TService, TImpl, TRequest, TResponse>()` | Idem con `IRestClientFp<TRequest, TResponse>` | Cliente de **clave compuesta duplex**. |
 

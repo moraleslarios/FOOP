@@ -123,7 +123,7 @@ MoralesLarios.OOFP.EntityFrameworkCore/
 │   ├── Extensions.cs                   → ParseKeyValues, PrivateOrderBy
 │   └── Constants.cs                    → ⚠️ vacío
 ├── Enums/SortDirection.cs                    → Ascending, Descending
-├── RegisterServices.cs                 → AddOofpRepositories (siempre Transient)
+├── RegisterServices.cs                 → AddOofpRepositories (siempre Scoped)
 └── GlobalUsings.cs
 ```
 
@@ -219,13 +219,13 @@ builder.Services.AddOofpRepositories<Vino, TestDbContext>();
 builder.Services.AddOofpRepositories<Cata, TestDbContext>();   // una llamada por entidad
 ```
 
-**Un solo método y un solo ciclo de vida.** Todos los repositorios se registran como `Transient`:
+**Un solo método y un solo ciclo de vida.** Todos los repositorios se registran como `Scoped`:
 
 | Método | Ciclo de vida |
 |---|---|
-| `AddOofpRepositories<T, TContext>()` | `Transient` |
+| `AddOofpRepositories<T, TContext>()` | `Scoped` |
 
-> ✅ **`Transient` es el único ciclo de vida admitido en la librería.** Un repositorio no guarda estado propio: solo envuelve el `DbContext` que recibe por constructor. Crear una instancia nueva por resolución es la opción correcta, es compatible con un `DbContext` registrado como `Scoped` —todos los repositorios de un mismo ámbito reciben el mismo contexto— y elimina de raíz la *captive dependency* que provocaba la variante `Singleton` de la 1.x.
+> ✅ **`Scoped` es el único ciclo de vida admitido en la librería.** Un repositorio vive *al lado* del `DbContext` que recibe por constructor, y ese contexto es `Scoped`. Alinear los dos es lo natural: todos los repositorios de un mismo ámbito comparten contexto y unidad de trabajo, dos resoluciones del mismo repositorio dentro de la misma petición devuelven la misma instancia, y la vida del repositorio termina exactamente cuando termina la del contexto. Así desaparecen de raíz la *captive dependency* que provocaba la variante `Singleton` de la 1.x y la duplicación inútil de instancias de la variante `Transient`.
 
 ### ❗ Cómo resuelven sus dependencias los repositorios: el punto crítico
 
@@ -537,10 +537,10 @@ public class EfRepository(DbContext dbContext) : IGetContextable
 
 | Escenario | Qué ocurre |
 |---|---|
-| Repositorio `Transient`, contexto `Scoped` | ✅ Cada resolución crea un repositorio nuevo sobre el **mismo** contexto del ámbito, que el contenedor libera al cerrarlo |
+| Repositorio `Scoped`, contexto `Scoped` | ✅ Repositorio y contexto viven el **mismo** ámbito: todos los repositorios de la petición comparten contexto, y el contenedor libera el contexto al cerrar el ámbito |
 | `using (var repo = …)` explícito | ✅ Ya **no compila**: el repositorio no es `IDisposable` |
 
-> ✅ **Esto es lo que hace seguro el ciclo de vida `Transient`**: el contenedor ya no invoca ningún `Dispose()` del repositorio que destruyese el contexto compartido del ámbito.
+> ✅ **Esto es lo que hace seguro el ciclo de vida `Scoped`**: el repositorio no es el propietario del `DbContext`, así que no debe liberarlo. Al no ser `IDisposable`, el contenedor no invoca ningún `Dispose()` del repositorio que destruyese el contexto compartido del ámbito; el contexto lo libera quien lo registró (`AddDbContext`) cuando el ámbito termina.
 
 ### 3. ⚠️ `SaveChanges` en cada operación: no hay unidad de trabajo
 
@@ -774,12 +774,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<TestDbContext>(o => o.UseSqlServer(cs));
 
-// 🔑 Transient, y ANTES de registrar los repos concretos
+// 🔑 Scoped, y ANTES de registrar los repos concretos
 builder.Services.AddOofpRepositories<Vino,                 TestDbContext>();
 builder.Services.AddOofpRepositories<VinosCatasPuntuacion, TestDbContext>();
 
 // Repos concretos propios (opcional)
-builder.Services.AddTransient<IVinosRepo, VinosRepo>();
+builder.Services.AddScoped<IVinosRepo, VinosRepo>();
 ```
 
 ### Ejemplo 2 — Repositorio propio con interfaz específica
@@ -875,12 +875,12 @@ public async Task<MlResult<Vino>> CrearConPuntuacionAsync(
 
 ```csharp
 // ❌ MAL: el repo concreto se registra antes que los de la librería
-services.AddTransient<IVinosRepo, VinosRepo>();
+services.AddScoped<IVinosRepo, VinosRepo>();
 services.AddOofpRepositories<Vino, TestDbContext>();
 
 // ✅ BIEN: primero la librería, después los repos concretos
 services.AddOofpRepositories<Vino, TestDbContext>();
-services.AddTransient<IVinosRepo, VinosRepo>();
+services.AddScoped<IVinosRepo, VinosRepo>();
 ```
 
 **Paginación sin ordenación:**
@@ -964,7 +964,7 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 
 ## Mejores prácticas
 
-1. **Registra siempre con `AddOofpRepositories`**: registra las 16 interfaces de la entidad con ciclo de vida `Transient`, el único admitido en la librería.
+1. **Registra siempre con `AddOofpRepositories`**: registra las 16 interfaces de la entidad con ciclo de vida `Scoped`, el único admitido en la librería y el mismo que el del `DbContext`.
 2. **Llama a `AddOofpRepositories` al principio** de la configuración de servicios, antes de cualquier registro que dependa de repositorios.
 3. **No intentes liberar un repositorio a mano**: desde la 2.0.0 no implementa `IDisposable`, porque el `DbContext` lo gestiona el contenedor.
 4. **Usa siempre las versiones asíncronas** en aplicaciones web, y en paginación además por el problema del `TotalCount`.
@@ -986,7 +986,7 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 - Repositorios genéricos sobre **EF Core 8** que devuelven `MlResult<T>`: el "no encontrado" es un `Fail` con mensaje personalizable, no una excepción, y los argumentos se validan con `EnsureFp` antes de tocar la base de datos.
 - **Dos capas paralelas**: la funcional (`*Fp`, pública, `MlResult`) envuelve a la OOP (`internal`, devuelve `T`). **Usa solo la funcional**; la OOP es inaccesible desde fuera.
 - **Ocho repositorios componibles** por entidad, desde `IEfCreateRepository<T>` hasta `IEfPagedRepository<T>`. Todos los métodos son `virtual`: puedes heredar y sobrescribir.
-- Registro: `AddOofpRepositories<T, TContext>()` ✅ registra las 16 interfaces de una entidad con ciclo de vida **`Transient`**, el único admitido en la librería.
+- Registro: `AddOofpRepositories<T, TContext>()` ✅ registra las 16 interfaces de una entidad con ciclo de vida **`Scoped`**, el único admitido en la librería y el mismo que el del `DbContext`.
 - ❗ **El punto más delicado**: los repos resuelven sus colaboradores con un **localizador de servicios estático que llama a `BuildServiceProvider()` en cada acceso**. Implica coste, providers sin liberar y que el `DbContext` interno pueda no ser el del ámbito actual.
 - ✅ **El repositorio no es dueño del `DbContext`**: desde la 2.0.0 no implementa `IDisposable`; el contenedor libera el contexto al cerrar el ámbito.
 - ❗ **Sin unidad de trabajo**: cada operación hace su propio `SaveChanges`. Para atomicidad, transacción explícita con `GetContext().Database.BeginTransaction()`.

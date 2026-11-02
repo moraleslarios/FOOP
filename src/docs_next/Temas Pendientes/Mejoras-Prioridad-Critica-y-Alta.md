@@ -359,10 +359,14 @@ servidor donde se despliegue.
         emite el aviso ASP0000 precisamente por esto.
       - **Propuesta:** no construir proveedores dentro del registro. Registrar los repositorios como
         `scoped` y resolverlos por constructor o mediante `IServiceProvider` inyectado.
+      - 🔄 **Mitad hecha en la 2.0.0** (punto **62**): los repositorios **ya se registran `Scoped`**,
+        el mismo ciclo de vida que el `DbContext`. Lo que sigue pendiente es retirar el
+        `BuildServiceProvider()`, que es quien crea el contenedor paralelo y rompe que los `scoped`
+        compartan `DbContext` con el resto de la petición.
 
 - [x] ✅ **21. Los repositorios liberan el `DbContext` que no les pertenece** — **RESUELTO en la 2.0.0** (punto **63** de `oofp-upgrade-2.prompt.md` §3.3): se ha aplicado la regla *quien no crea, no libera*. `EfRepository` y `ThrowingEfRepository` **dejan de implementar `IDisposable`** y su `Dispose()` se ha retirado por completo, así que ya no pueden liberar un `DbContext` que no poseen. No se ha añadido ningún flag `ownsContext`: el contexto lo gestiona siempre el anfitrión con `AddDbContext`.
 
-- [x] ✅ **22. `AddSingletonOOFPRepos` crea una dependencia cautiva** — **RESUELTO en la 2.0.0 por eliminación** (punto **62** de `oofp-upgrade-2.prompt.md` §3.3): se retiran `AddSingletonOOFPRepos`, `AddScopedOOFPRepos` y `AddTransientOOFPRepos` junto con `AddOofpRepositoriesSingleton`/`…Scoped`/`…Transient`. Hoy solo existe `AddOofpRepositories<T, TContext>()`, que registra **siempre `Transient`**, por lo que ya no es posible crear la dependencia cautiva.
+- [x] ✅ **22. `AddSingletonOOFPRepos` crea una dependencia cautiva** — **RESUELTO en la 2.0.0 por eliminación** (punto **62** de `oofp-upgrade-2.prompt.md` §3.3): se retiran `AddSingletonOOFPRepos`, `AddScopedOOFPRepos` y `AddTransientOOFPRepos` junto con `AddOofpRepositoriesSingleton`/`…Scoped`/`…Transient`. Hoy solo existe `AddOofpRepositories<T, TContext>()`, que registra **siempre `Scoped`**, el mismo ciclo de vida que el `DbContext`, por lo que ya no es posible crear la dependencia cautiva.
 
 - [ ] **23. `_pkFields` no se puede resolver por inyección de dependencias**
       - **Proyecto:** `MoralesLarios.OOFP.WebControllers`

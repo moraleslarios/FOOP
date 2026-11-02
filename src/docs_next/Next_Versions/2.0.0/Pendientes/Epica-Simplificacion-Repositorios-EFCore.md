@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0
 > **Proyecto afectado:** `MoralesLarios.OOFP.EntityFrameworkCore` (en exclusiva)
 > **Origen:** auditoría específica de la capa `Repositories` solicitada por el propietario
-> **Estado:** 🔄 Parcialmente realizada · el eje del ciclo de vida ✅ completado (`Transient` único); el desacople de los imperativos, pendiente
+> **Estado:** 🔄 Parcialmente realizada · el eje del ciclo de vida ✅ completado (`Scoped` único); el desacople de los imperativos, pendiente
 > **Esfuerzo:** XL (~4-6 jornadas: ~1 para la red de seguridad, ~2-3 para desacoplar, ~1 para el registro y el `README`)
 > **Riesgo:** 🔴 muy alto · retira 18 ficheros, 149 métodos y 4 miembros públicos de registro
 > **Objetivo del propietario:** conservar **solo** los repositorios funcionales (los que devuelven
@@ -11,28 +11,34 @@
 
 ---
 
-> ## ⚠️ Actualización · el eje del ciclo de vida ya está resuelto (`Transient` único)
+> ## ⚠️ Actualización · el eje del ciclo de vida ya está resuelto (`Scoped` único)
 >
 > Parte de esta épica **ya se ha ejecutado**, por decisión expresa del propietario, dentro de la
-> simplificación general de la librería: **`Transient` es el único ciclo de vida de toda la solución** y
-> el ciclo de vida **deja de ser un eje de la API pública**.
+> simplificación general de la librería: **`Scoped` es el único ciclo de vida de toda la solución** y
+> el ciclo de vida **deja de ser un eje de la API pública**. Un repositorio vive al lado del
+> `DbContext` que recibe por constructor, y ese contexto es `Scoped`: alinear los dos es lo natural.
 >
-> **Lo que ya está hecho** (registrado como puntos **62**, **63** y **64** de
+> **Lo que ya está hecho** (registrado como puntos **62** a **66** de
 > [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3):
 >
 > - ✅ **D11 resuelto** · `AddOofpRepositoriesTransient`, `AddOofpRepositoriesScoped` y
 >   `AddOofpRepositoriesSingleton` **se han retirado**. Queda un **único**
->   `AddOofpRepositories<T, TContext>()` que registra las 16 interfaces con `AddTransient`.
+>   `AddOofpRepositories<T, TContext>()` que registra las 16 interfaces con `AddScoped`, que es
+>   exactamente el ciclo de vida que ya tenía `AddOofpRepositories` en la 1.x: quien lo llamara **no
+>   cambia de comportamiento**.
 > - ✅ **D10 resuelto por eliminación** · ya no existe forma de registrar un repositorio como
 >   `Singleton`, así que la *captive dependency* sobre el `DbContext` **es inalcanzable**.
 > - ✅ **D9 resuelto** · `EfRepository` y `ThrowingEfRepository` **ya no implementan `IDisposable`**
->   ni llaman a `GetContext().Dispose()`. Un repositorio no es dueño del `DbContext` que le inyectan.
->   Esto era **obligatorio** con `Transient`: el contenedor rastrea las instancias `IDisposable` y las
->   dispone al cerrar el ámbito, con lo que el repositorio habría destruido un `DbContext` ajeno.
+>   ni llaman a `GetContext().Dispose()`. El **propietario** del `DbContext` es `AddDbContext`, no el
+>   repositorio, y el contenedor lo libera al cerrar el ámbito. Si el repositorio fuera `IDisposable`,
+>   el contenedor lo rastrearía y el repositorio destruiría un `DbContext` ajeno.
 > - ✅ En la capa de aplicación, los 6 métodos
 >   `Add{Transient|Scoped|Singleton}CrudServices[Duplex]FpWithoutRepositories` se han reducido a
 >   `AddCrudServicesFpWithoutRepositories()` y `AddCrudServicesDuplexFpWithoutRepositories()`.
-> - ✅ `AddOOFPIO()` registra `IMlFileSystem` como `Transient` (antes `Singleton`).
+> - ✅ `AddOOFPIO()` registra `IMlFileSystem` como `Scoped` (antes `Singleton`).
+> - ✅ `AddMlConfigurationReader()` registra `IMlConfigurationReader` como `Scoped` (antes
+>   `Transient`), y la capa HTTP (`AddMlHttp`, `AddRestClient`, `AddCompositeKeyRestClient`) registra
+>   sus **seis** servicios como `Scoped` (antes `Transient`).
 > - ✅ **9 puentes `[Obsolete]`** del eje del ciclo de vida **retirados**. El único superviviente en
 >   `RegisterServices.Obsolete.cs` es `ResolveRepoFp` → `GetRepository`.
 > - ✅ `TestSupport/RegisterServices.cs` actualizado a `AddOofpRepositories`.
@@ -44,7 +50,7 @@
 >   no hay nada que elegir. Si el anfitrión necesita de verdad un `Singleton`, registra él su propia
 >   envoltura e inyecta `IServiceScopeFactory` para abrir un ámbito por operación.
 > - La firma propuesta en la **§4.4** queda **superada**: léela sin el parámetro
->   `ServiceLifetime lifetime` y con `services.AddTransient<…>()` en lugar de `services.Add(new
+>   `ServiceLifetime lifetime` y con `services.AddScoped<…>()` en lugar de `services.Add(new
 >   ServiceDescriptor(…, lifetime))`.
 >
 > **Excepción documentada** · el único `AddSingleton` que sobrevive en la solución está en
@@ -250,7 +256,7 @@ repetirse** en el diseño de destino.
 
 | # | Debilidad | Cifra | Consecuencia |
 |---|---|---|---|
-| D11 ✅ **RESUELTA** | **3 métodos casi idénticos** | `…Transient`, `…Scoped`, `…Singleton` | La única diferencia era el tiempo de vida. **Ya corregido**: se ha unificado en un solo `AddOofpRepositories` que registra siempre `Transient`, sin parámetro de ciclo de vida (punto **62**) |
+| D11 ✅ **RESUELTA** | **3 métodos casi idénticos** | `…Transient`, `…Scoped`, `…Singleton` | La única diferencia era el tiempo de vida. **Ya corregido**: se ha unificado en un solo `AddOofpRepositories` que registra siempre `Scoped`, el mismo ciclo de vida que el `DbContext`, sin parámetro de ciclo de vida (punto **62**) |
 | D12 | **16 servicios registrados por llamada** | 8 `IThrowingEf*` + 8 `IEf*` | La mitad sobra en cuanto desaparezca la familia imperativa |
 | D13 | **Nombres de interfaz y clase que no concuerdan** | `IEfRepository<T>` → `EfCrudRepository<T,TContext>` | Dificulta leer el registro; además coexisten `EfRepository` (base no genérica) e `IEfRepository<T>` |
 | D14 | **Formato roto** | alineación de espacios desalineada tras los renombrados | Ruido en cada diff |
@@ -342,9 +348,9 @@ reescribir los 178 cuerpos: más alcance y más riesgo para el mismo beneficio f
 ### 4.4 El nuevo `RegisterServices`
 
 > ✅ **Ya implementado**, aunque con dos desviaciones respecto al diseño original de esta sección:
-> **no hay parámetro `lifetime`** (el ciclo de vida ya no es un eje de la API: siempre `Transient`) y
-> **se siguen registrando las 16 interfaces**, porque el desacople de los repositorios imperativos
-> (US-03/04/05) todavía no se ha hecho. Registrado como punto **62** de
+> **no hay parámetro `lifetime`** (el ciclo de vida ya no es un eje de la API: siempre `Scoped`, el
+> mismo que el `DbContext`) y **se siguen registrando las 16 interfaces**, porque el desacople de los
+> repositorios imperativos (US-03/04/05) todavía no se ha hecho. Registrado como punto **62** de
 > [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
 
 Un **único** punto de entrada, sin parámetros y con un **único ciclo de vida**:
@@ -356,14 +362,14 @@ public static IServiceCollection AddOofpRepositories<T, TContext>(this IServiceC
 {
     // 8 interfaces imperativas (IThrowingEf*Repository<T>)  -> ThrowingEf*Repository<T, TContext>
     // 8 interfaces funcionales  (IEf*Repository<T>)         -> Ef*Repository<T, TContext>
-    services.AddTransient<IEfReadRepository<T>,      EfReadRepository<T, TContext>>();
-    services.AddTransient<IEfCreateRepository<T>,    EfCreateRepository<T, TContext>>();
-    services.AddTransient<IEfUpdateRepository<T>,    EfUpdateRepository<T, TContext>>();
-    services.AddTransient<IEfDeleteRepository<T>,    EfDeleteRepository<T, TContext>>();
-    services.AddTransient<IEfWriteRepository<T>,     EfWriteRepository<T, TContext>>();
-    services.AddTransient<IEfRepository<T>,          EfCrudRepository<T, TContext>>();
-    services.AddTransient<IEfPagedReadRepository<T>, EfPagedReadRepository<T, TContext>>();
-    services.AddTransient<IEfPagedRepository<T>,     EfPagedRepository<T, TContext>>();
+    services.AddScoped<IEfReadRepository<T>,      EfReadRepository<T, TContext>>();
+    services.AddScoped<IEfCreateRepository<T>,    EfCreateRepository<T, TContext>>();
+    services.AddScoped<IEfUpdateRepository<T>,    EfUpdateRepository<T, TContext>>();
+    services.AddScoped<IEfDeleteRepository<T>,    EfDeleteRepository<T, TContext>>();
+    services.AddScoped<IEfWriteRepository<T>,     EfWriteRepository<T, TContext>>();
+    services.AddScoped<IEfRepository<T>,          EfCrudRepository<T, TContext>>();
+    services.AddScoped<IEfPagedReadRepository<T>, EfPagedReadRepository<T, TContext>>();
+    services.AddScoped<IEfPagedRepository<T>,     EfPagedRepository<T, TContext>>();
     // … y las 8 imperativas equivalentes
 
     return services;
@@ -381,7 +387,9 @@ public static IServiceCollection AddOofpRepositories<T, TContext>(this IServiceC
 > `ServiceLifetime.Singleton`: se ha **eliminado**, y con ella la posibilidad de elegir. Al no existir
 > ningún parámetro `lifetime`, la pregunta de si el método debe rechazar `Singleton` en tiempo de
 > ejecución (**D-03**) deja de tener sentido. El `DbContext` lo sigue registrando el anfitrión con
-> `AddDbContext`, normalmente `Scoped`, y los repositorios `Transient` lo comparten dentro del ámbito.
+> `AddDbContext`, normalmente `Scoped`, y los repositorios son **`Scoped` también**: comparten
+> contexto y unidad de trabajo dentro del ámbito, y mueren exactamente cuando muere el contexto.
+
 ---
 
 ## 5. Alcance
@@ -518,10 +526,10 @@ Sobre las 1037 líneas y 50 encabezados actuales:
 
 - [x] ✅ Cada ruptura de §8 presente en los **6 sitios** de `oofp-upgrade-2.prompt.md`.
 - [x] ✅ Renombrados y cambios de namespace en `oofp-upgrade-2.renames.md`.
-- [x] ✅ Numeración continuada **desde el 62** sin huecos ni reutilizaciones (puntos **62**, **63** y **64**).
-- [x] ✅ Build `--no-incremental` y suite completa en verde; `CS1591 = CS0618 = 0` (0 errores, 236 avisos, 1606 pruebas).
+- [x] ✅ Numeración continuada **desde el 62** sin huecos ni reutilizaciones (puntos **62** a **66**).
+- [x] ✅ Build `--no-incremental` y suite completa en verde; `CS1591 = CS0618 = 0` (0 errores, 234 avisos, 1606 pruebas).
 - [x] ✅ Commit con Conventional Commits en castellano, con `!`, creado con `git commit -F` desde un
-      fichero UTF-8 sin BOM (`9d84ec2`).
+      fichero UTF-8 sin BOM.
 
 ---
 
@@ -563,27 +571,35 @@ graph LR
 > (punto 4), lista de la Fase 6 (punto 5), tabla del apéndice de versiones y, si hay renombrado o
 > cambio de namespace, `oofp-upgrade-2.renames.md`.
 
-**Último `#### N` usado en el prompt: 61 ⇒ esta épica arranca en el 62.** La asignación definitiva se
-confirma en el momento de registrar cada punto.
+**Último `#### N` usado en el prompt: 66 ⇒ los puntos que quedan por registrar arrancan en el 67.** Los
+números «previstos» de las tres primeras filas se escribieron cuando el último punto era el 61, así que
+**se reasignarán** en el momento de registrar cada uno; las filas marcadas con ✅ llevan ya su número
+definitivo.
 
 | Nº previsto | Ruptura | Tipo | US |
 |---:|---|---|---|
 | 62 | `IGetContextable` cambia de `…Repositories.Imperative` a `…Repositories` | compilación + renombrado de namespace | US-02 |
 | 63 | Desaparecen `IThrowingEfCreateRepository<T>`, `IThrowingEfUpdateRepository<T>` e `IThrowingEfDeleteRepository<T>` | compilación | US-05 |
 | 64 | Desaparece `RegisterServices.GetRepository<TRepo>()` (y su puente `ResolveRepoFp`) | compilación | US-06 |
-| **62** ✅ | Desaparecen `AddOofpRepositoriesTransient`, `AddOofpRepositoriesScoped` y `AddOofpRepositoriesSingleton` (y sus 3 puentes), y los 6 `Add*CrudServices[Duplex]FpWithoutRepositories`; queda un método por cosa registrable, siempre `Transient` | compilación + ⚠️ silenciosa (`Scoped`→`Transient`) | US-06 · **ya registrada** |
+| **62** ✅ | Desaparecen `AddOofpRepositoriesTransient`, `AddOofpRepositoriesScoped` y `AddOofpRepositoriesSingleton` (y sus 3 puentes), y los 6 `Add*CrudServices[Duplex]FpWithoutRepositories`; queda un método por cosa registrable, siempre `Scoped` | compilación (quien ya llamaba a `AddOofpRepositories` **no cambia de comportamiento**) | US-06 · **ya registrada** |
 | **63** ✅ | `EfRepository` y `ThrowingEfRepository` dejan de implementar `IDisposable` | compilación | US-08 · **ya registrada** |
-| **64** ✅ | `AddOOFPIO()` registra `IMlFileSystem` como `Transient` en vez de `Singleton` | ⚠️ silenciosa | US-06 · **ya registrada** |
-| 66 | `AddOofpRepositories<T, TContext>` gana el parámetro opcional `ServiceLifetime lifetime` | **binaria** (compila, no enlaza) | US-06 |
+| **64** ✅ | `AddOOFPIO()` registra `IMlFileSystem` como `Scoped` en vez de `Singleton` | ⚠️ silenciosa | US-06 · **ya registrada** |
+| **65** ✅ | `AddMlConfigurationReader()` registra `IMlConfigurationReader` como `Scoped` en vez de `Transient` | ⚠️ silenciosa | US-06 · **ya registrada** |
+| **66** ✅ | La capa HTTP registra sus 6 servicios (`IHttpApiInvoker`, clientes REST y sus `TService`) como `Scoped` en vez de `Transient` | ⚠️ silenciosa | US-06 · **ya registrada** |
+| ~~66~~ ❌ **ANULADA** | ~~`AddOofpRepositories<T, TContext>` gana el parámetro opcional `ServiceLifetime lifetime`~~ | — | El eje del ciclo de vida **se ha eliminado**, no se ha parametrizado: ya no habrá parámetro `lifetime` (ver punto **62**) |
 | 67 | El contenedor ya **no** registra las 8 interfaces `IThrowingEf*` | compilación para quien las resolviera | US-06 |
-| 68 | `EfRepository.Dispose()` **deja de disponer** el `DbContext` inyectado | **silenciosa** ⚠️ | US-08 |
+| ~~68~~ ✅ **YA HECHA** | ~~`EfRepository.Dispose()` **deja de disponer** el `DbContext` inyectado~~ | — | Ejecutada y registrada como punto **63**: los repositorios ya no implementan `IDisposable`, así que no hay `Dispose()` que cambiar |
 | 69 | Los agregados comparten la misma instancia de `DbContext` que el agregado (antes resolvían una propia) | **silenciosa** ⚠️ | US-04 |
 
-Las dos rupturas **silenciosas** (68 y 69) son las peligrosas: el consumidor compila igual y el
-comportamiento cambia. La 68 **arregla** un doble `Dispose`, pero quien se apoyase en que el
-repositorio cerraba el contexto verá contextos abiertos; la 69 **arregla** el seguimiento de
-entidades, pero quien dependiera de tener grafos de cambios separados verá un único
-`ChangeTracker`. Ambas necesitan su apartado «cómo detectarla» y sus patrones `grep`.
+La ruptura **silenciosa** que queda (69) es la peligrosa: el consumidor compila igual y el
+comportamiento cambia. **Arregla** el seguimiento de entidades, pero quien dependiera de tener grafos
+de cambios separados verá un único `ChangeTracker`. Necesita su apartado «cómo detectarla» y sus
+patrones `grep`.
+
+> ℹ️ Con `Scoped` como único ciclo de vida, el riesgo de la 69 **se reduce mucho**: dos repositorios
+> resueltos en el mismo ámbito ya comparten hoy la misma instancia de `DbContext`, porque el contexto
+> es `Scoped`. Lo que queda por eliminar es el `BuildServiceProvider()` interno, que es quien crea un
+> proveedor paralelo y rompe esa garantía.
 
 > Si la decisión **D-02** deja `IGetContextable` como `internal`, el punto 62 pasa de cambio de
 > namespace a **retirada de un tipo público**: hay que reflejarlo.
@@ -596,7 +612,7 @@ entidades, pero quien dependiera de tener grafos de cambios separados verá un �
 |---|---|---|---|
 | **D-01** | Cómo resuelven sus colaboradores los agregados | A herencia en cadena · **B composición con factorías** · C núcleo estático interno | **B**: no toca firmas ni jerarquía, y conserva los cuerpos actuales |
 | **D-02** | ¿`IGetContextable` sigue siendo `public`? | mantener `public` en `…Repositories` · pasar a `internal` · eliminar y dejar solo `EfRepository.GetContext()` | **Mantener `public`**: `GetContext()` ya es público en `EfRepository` y es el punto de extensión natural |
-| **D-03** ✅ **CERRADA · sin efecto** | ¿Debe `AddOofpRepositories` rechazar `ServiceLifetime.Singleton`? | aceptarlo y documentar el riesgo · lanzar `ArgumentException` · avisar por log | **La pregunta desaparece**: no se añade ningún parámetro `lifetime`, así que no hay nada que rechazar. El método registra siempre `Transient` (punto **62**) |
+| **D-03** ✅ **CERRADA · sin efecto** | ¿Debe `AddOofpRepositories` rechazar `ServiceLifetime.Singleton`? | aceptarlo y documentar el riesgo · lanzar `ArgumentException` · avisar por log | **La pregunta desaparece**: no se añade ningún parámetro `lifetime`, así que no hay nada que rechazar. El método registra siempre `Scoped`, el mismo ciclo de vida que el `DbContext` (punto **62**) |
 | **D-04** | `virtual` en toda la superficie funcional | hacer virtuales los 2 métodos de `EfUpdateRepository` · corregir el `README` | **Hacerlos virtuales**: coherencia con los otros 135 |
 | **D-05** 🔄 **PARCIAL** | Destino de los 5 `[Obsolete]` | retirarlos ahora con el resto de la poda · mantenerlos hasta la 3.0.0 como anuncia su comentario | **Retirar los de `RegisterServices`** (su destino desaparece) y **mantener `GetPkValues`**. ✅ Ya retirados 3 de los 4 (`AddTransientOOFPRepos`, `AddScopedOOFPRepos`, `AddSingletonOOFPRepos`); sobrevive `ResolveRepoFp` porque `GetRepository<TRepo>()` aún existe |
 | **D-06** | ¿`EfRepository` sigue implementando `IDisposable`? | sí, con `Dispose` vacío · **no**, retirarlo | **Retirarlo**: un `Dispose` vacío invita al mal uso; pero es ruptura de compilación para quien haga `using` |
@@ -703,11 +719,11 @@ public static IServiceCollection AddOofpRepositories<T, TContext>(this IServiceC
     return services;
 }
 // ✅ AddOofpRepositoriesTransient / …Scoped / …Singleton ya se han retirado (punto 62)
-// + AddOofpRepositoriesSingleton (idéntico con AddSingleton)  ⚠️ captive dependency
+// ⚠️ AddOofpRepositoriesSingleton era idéntico pero con AddSingleton → captive dependency
 
-// ───────── DESPUÉS · 1 método × 8 registros, sin estado
-services.AddOofpRepositories<Vino, BodegaContext>();                              // Scoped
-services.AddOofpRepositories<Cata, BodegaContext>(ServiceLifetime.Transient);      // Transient
+// ───────── DESPUÉS · 1 método × 16 registros, sin eje de ciclo de vida
+services.AddOofpRepositories<Vino, BodegaContext>();   // Scoped, igual que el DbContext
+services.AddOofpRepositories<Cata, BodegaContext>();   // Scoped, no hay nada que elegir
 ```
 
 ### 11.4 Cómo reconocer el problema para no repetirlo
