@@ -2016,6 +2016,13 @@ dotnet build --nologo /p:WarningLevel=4
    AddMetadataRange|AddMetadataOrThrow|AddValueMetadata|AddValueDetailIfFail
    \.Merge\(|GetDetail<|GetMetadataValue<|GetException
    ```
+   Y, para el punto 42 (troceado de la clase `Extensions` del núcleo), busca además — solo si la
+   usabas en forma **estática**, porque como extensión no rompe nada:
+   ```
+   Extensions\.(ToNullable|With|WithAsync|AppendExDetails|VoidToAsync|ToFuncTask)\(
+   ```
+   Cada coincidencia compila con `CS0618`; sustitúyela por la clase nueva o por la forma de extensión
+   (ver el punto 42).
    Y, para el punto 44 (`LogMlResultIfFailWithExceptionAsync` sobre una `Task`), busca además:
    ```
    LogMlResultIfFailWithExceptionAsync
