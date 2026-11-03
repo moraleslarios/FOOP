@@ -450,6 +450,11 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 > Los dos nombres finales del convenio son `validBuildMessage` para `Func<T, string>` y
 > `failBuildMessage` para `Func<MlErrorDetails, string>` y `Func<MlErrorDetails, Exception, string>`.
 >
+> ⚠️ **`Extensions` es un nombre AMBIGUO**: lo usan muchas librerías y el propio núcleo (punto 42). Renómbralo
+> **solo** si resuelve a la clase de `MoralesLarios.OOFP.Logging` (hay `using MoralesLarios.OOFP.Logging;` y la
+> invocación es **estática**: `Extensions.MyMethodFinalLog(...)`). Si llamabas a `MyMethodFinalLog` como método de
+> extensión, el nombre de la clase no aparece en tu código y no hay nada que cambiar.
+>
 > 🔎 **Cómo detectarlo.** Los dos parámetros solo rompen la compilación si los pasabas como argumento
 > con nombre: búscalos como `validBuilMessage:` y `faildMessage:`, **con los dos puntos**. El cambio de
 > idioma de los mensajes que construye la librería (punto 49) es **silencioso**: búscalo con
