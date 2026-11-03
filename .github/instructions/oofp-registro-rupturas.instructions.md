@@ -11,7 +11,7 @@ description: 'Regla obligatoria del repositorio MoralesLarios.OOFP: toda ruptura
 ## 1. Por qué existe esta regla
 
 El fichero
-[`docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md)
+[`src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md)
 es el **único artefacto** que permite a un proyecto de terceros migrar de una versión de
 `MoralesLarios.OOFP` a la siguiente. Es el contrato con el consumidor.
 
@@ -54,7 +54,7 @@ Por **cada** ruptura nueva, en `oofp-upgrade-2.prompt.md`:
 Y, además:
 
 6. **Anexo de renombrados**
-   [`oofp-upgrade-2.renames.md`](../../docs_next/Copilot/.github/prompts/oofp-upgrade-2.renames.md) ·
+   [`oofp-upgrade-2.renames.md`](../../src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.renames.md) ·
    obligatorio **siempre que haya un renombrado**: tabla `antiguo → nuevo` en la sección del paquete
    correspondiente, en **formato apto para buscar y reemplazar**, con una nota si el nombre es ambiguo
    (`Value`, `Name`, `Key`, `Empty`, `Do`, `Combine`, `OrderBy`…).
@@ -102,7 +102,7 @@ Por tanto:
 
 ## 7. Documento de la épica
 
-El registro en el prompt **no sustituye** al documento de la épica en `docs_next/Next_Versions/<versión>/`:
+El registro en el prompt **no sustituye** al documento de la épica en `src/docs_next/Next_Versions/<versión>/`:
 
 - la épica explica **el diseño y la decisión** (criterios de aceptación, decisiones abiertas `D-NN`);
 - el prompt explica **la migración** del consumidor.

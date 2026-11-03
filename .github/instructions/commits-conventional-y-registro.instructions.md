@@ -23,7 +23,7 @@ Esta regla tiene **dos mitades inseparables**:
 
 - El **historial de commits**, que le dice *qué pasó* y, sobre todo, **si algo rompió** (`!`).
 - El **prompt de migración**
-  [`docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md),
+  [`src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md),
   que le dice *qué tiene que tocar* para subir de versión.
 
 Si el commit marca `!` pero el prompt no registra la ruptura, el consumidor **sabe que algo se rompió y
@@ -147,7 +147,7 @@ son las que se escapan, precisamente porque el build sigue verde.
 
 ### 6.2 Si rompe algo, comprueba que el prompt lo registra — **los 6 sitios**
 
-En [`oofp-upgrade-2.prompt.md`](../../docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md):
+En [`oofp-upgrade-2.prompt.md`](../../src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md):
 
 1. **Fila en la tabla resumen de la §3.3** (`### 3.3 Cambios de COMPORTAMIENTO…`).
 2. **Subsección de detalle `#### N — …`**, en orden numérico, con el antes/después, **qué tiene que
@@ -156,7 +156,7 @@ En [`oofp-upgrade-2.prompt.md`](../../docs_next/Copilot/.github/prompts/oofp-upg
 4. **Lista del informe final, Fase 6, punto 5** · el número añadido a la enumeración.
 5. **Tabla del apéndice «Versiones posteriores a la 2.0.0»** · número y resumen en la fila de su versión.
 6. **Anexo de renombrados**
-   [`oofp-upgrade-2.renames.md`](../../docs_next/Copilot/.github/prompts/oofp-upgrade-2.renames.md) ·
+   [`oofp-upgrade-2.renames.md`](../../src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.renames.md) ·
    obligatorio **siempre que haya un renombrado**, en formato apto para buscar-y-reemplazar.
 
 > ⚠️ Registrar la ruptura **solo** en la tabla de la §3.3 es trabajo **incompleto**. La tabla es un
@@ -187,7 +187,7 @@ Criterio: **EXITCODE=0, 0 errores, 0 `CS1591`**. Usa siempre `--no-incremental`:
 
 ### 6.5 Actualiza el documento de la épica
 
-El registro en el prompt **no sustituye** al documento de la épica en `docs_next/Next_Versions/<versión>/`:
+El registro en el prompt **no sustituye** al documento de la épica en `src/docs_next/Next_Versions/<versión>/`:
 
 - la **épica** explica el diseño y la decisión (criterios de aceptación, decisiones `D-NN`);
 - el **prompt** explica la migración del consumidor.

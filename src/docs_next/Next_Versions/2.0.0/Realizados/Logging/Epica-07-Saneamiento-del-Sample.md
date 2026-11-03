@@ -362,7 +362,7 @@ hacen con `ILogger`, al que el registrador tipado convierte de forma implícita.
 - [x] **Sin rupturas que registrar**: el `Sample` **no se publica como paquete**, de modo que nada de
       esta épica es observable por el consumidor. Se hace constar explícitamente en el cuerpo del
       commit, conforme a la §6 de
-      [`commits-conventional-y-registro.instructions.md`](../../../../../.github/instructions/commits-conventional-y-registro.instructions.md).
+      [`commits-conventional-y-registro.instructions.md`](../../../../../../.github/instructions/commits-conventional-y-registro.instructions.md).
 - [x] **Sin renombrados públicos** ⇒ nada que añadir a `oofp-upgrade-2.renames.md`. Se hace constar.
 - [x] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM:
       - `chore(logging): limpiar los residuos de plantilla del Sample (US-32)`
