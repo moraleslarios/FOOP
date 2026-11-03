@@ -1,0 +1,22 @@
+name: prompt-migracion
+
+# Falla si el prompt de migración 1.x -> 2.x es incoherente o si un commit marca ruptura sin tocarlo.
+on:
+  pull_request:
+    branches: [ main, 'release/**' ]
+    paths:
+      - 'src/**'
+      - '.github/**'
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Comprobar el prompt de migración y los commits con ruptura
+        shell: pwsh
+        working-directory: src
+        run: ./scripts/check-migration-prompt.ps1 -BaseRef "origin/${{ github.base_ref }}"
