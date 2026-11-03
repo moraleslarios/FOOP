@@ -8,6 +8,11 @@ description: 'Regla obligatoria del repositorio MoralesLarios.OOFP: todos los co
 > 🚨 **ESTA REGLA NO ES OPCIONAL Y NO CADUCA.** Se aplica a **todas** las sesiones de trabajo en este
 > repositorio, aunque el usuario no la mencione en su petición.
 
+> 🎯 **El objetivo de fondo** es que el prompt de migración `oofp-upgrade-2.prompt.md` pueda migrar un
+> proyecto 1.x a la 2.x **sin incidencias**. Por eso la puerta de control de la §6 se aplica igual a los
+> commits propios, a los de **otros contribuyentes** que integres o continues, y a los **pasados** que
+> descubras sin registrar (ver `oofp-registro-rupturas.instructions.md` §8 y §9).
+
 Esta regla tiene **dos mitades inseparables**:
 
 1. **Cómo** se escribe el mensaje de commit → Conventional Commits, en castellano (§2 … §5).

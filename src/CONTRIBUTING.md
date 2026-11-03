@@ -4,7 +4,7 @@ Gracias por contribuir. Este documento recoge las **convenciones de nomenclatura
 biblioteca fija a partir de la versión **2.0.0**, además del flujo de trabajo de ramas y commits.
 
 Todas las reglas de nomenclatura se aplicaron de forma masiva en la 2.0.0; el detalle completo de
-qué se renombró está en [`Cambios Realizados/Renombrados-v2.0.0.md`](./Cambios%20Realizados/Renombrados-v2.0.0.md).
+qué se renombró está en [`Cambios Realizados/Renombrados-v2.0.0.md`](./docs_next/Cambios%20Realizados/Renombrados-v2.0.0.md).
 El objetivo de esta guía es que **no se vuelvan a introducir** los patrones que allí se eliminaron.
 
 ---
@@ -169,11 +169,42 @@ Reglas:
 2. El mensaje está **en inglés** y nombra el sustituto y la versión de retirada.
 3. `EditorBrowsableState.Never` para que no aparezca en IntelliSense.
 4. Se registra el cambio como una fila nueva en
-   [`Cambios Realizados/_registro.csv`](./Cambios%20Realizados/_registro.csv).
+   [`Cambios Realizados/_registro.csv`](./docs_next/Cambios%20Realizados/_registro.csv).
 5. Los puentes se eliminan en la siguiente versión **mayor**.
 
 > Cuando el cambio afecta a un **tipo** (no a un miembro), no siempre es posible un puente.
 > En ese caso se documenta como ruptura y se refleja en la tabla de contratos del entregable.
+
+### El prompt de migración 1.x → 2.x (obligatorio)
+
+> 🎯 **Objetivo:** que [`oofp-upgrade-2.prompt.md`](./docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md)
+> pueda migrar **cualquier** proyecto 1.x a la 2.x **sin incidencias**. Es el entregable más importante del
+> repositorio y solo es fiable si se rellena y se actualiza **con cada cambio que rompa compatibilidad**.
+
+Cuenta como ruptura **todo** lo que obligue a un consumidor a tocar algo, **incluso si su código sigue
+compilando**: renombrados y retiradas, cambios de firma, puentes `[Obsolete]`, y los cambios **silenciosos**
+(texto de un mensaje, URL o cabecera, orden o número de consultas, copia frente a mutación, igualdad).
+
+Quién y cuándo:
+
+- **Quien introduce la ruptura** la registra **en el mismo PR**, en los **seis sitios** del prompt (tabla de la
+  §3.3, subsección `#### N`, barrido de la Fase 5, lista de la Fase 6, apéndice de versiones y, si hay
+  renombrado, `oofp-upgrade-2.renames.md`). No se deja «para luego».
+- **Quien revisa o integra el trabajo de otra persona** comprueba que ese registro está hecho; si falta, el PR
+  **no se da por bueno**: se completa o se devuelve con la lista de lo que falta.
+- **Quien detecta una ruptura antigua sin registrar** (de un commit pasado, de una rama o de un PR ya
+  fusionado) la registra o abre una incidencia; un hueco conocido es una incidencia futura en un consumidor.
+
+Herramientas:
+
+```powershell
+# coherencia del prompt + commits con ruptura que no lo han tocado
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-migration-prompt.ps1 -BaseRef origin/<rama-destino>
+```
+
+La misma comprobación corre en la integración continua (`.github/workflows/prompt-migracion.yml`) y la
+plantilla de PR (`.github/pull_request_template.md`) trae la lista de verificación. Las instrucciones para
+los agentes están en `.github/instructions/oofp-registro-rupturas.instructions.md`.
 
 ### El registro de cambios
 
