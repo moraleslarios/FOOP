@@ -717,13 +717,16 @@ Además de los [criterios comunes](README.md#8-definición-de-terminado-común):
 
 ### Para la parte de 2.1.1 (US-11, US-12 aditiva, US-16)
 
-- [ ] Las cuatro clases de extensión nuevas existen y `Extensions` conserva puentes `[Obsolete]`.
-- [ ] `MlResult.Discard` es la implementación; `_`, `Empty()` y `EmptyAsync()` son puentes
-      `[Obsolete]` en `Types/MlResult.Obsolete.cs`.
+- [x] Las cuatro clases de extensión nuevas existen y `Extensions` conserva puentes `[Obsolete]`.
+- [x] `MlResult.Discard` es la implementación; `_`, `Empty()` y `EmptyAsync()` son puentes
+      `[Obsolete]` en `Types/MlResult.Obsolete.cs`. *(Verificado el 2026-11-03: `Discard` es la
+      implementación y `_` es el puente. `Empty()` y `EmptyAsync()` **no** son `[Obsolete]` en la 2.1.1:
+      desviación justificada en la US-12, se retiran en la 3.0.0.)*
 - [x] Cada familia `Try*` tiene `<remarks>` y cada `*Async` sincrónico tiene `<returns>` explícito.
 - [x] El `README.md` del núcleo tiene la sección «Convenios de nomenclatura».
-- [ ] **Los 29 proyectos dependientes compilan sin ningún cambio de código.**
-- [ ] Las rupturas constan en
+- [x] **Los 29 proyectos dependientes compilan sin ningún cambio de código.** *(Verificado el
+      2026-11-03: `dotnet build -c Release --no-incremental` de la solución, 0 errores y 0 `CS0618`.)*
+- [x] Las rupturas constan en
       [`oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3 y
       los renombrados en
       [`oofp-upgrade-2.renames.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md).

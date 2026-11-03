@@ -184,19 +184,19 @@ sus trazas —y cualquier test o alerta que lo busque por contenido— cambia.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-04`](#5-decisiones-abiertas)** antes de empezar: es la decisión que determina si
+- [x] **Resuelta [`D-04`](#5-decisiones-abiertas)** antes de empezar: es la decisión que determina si
       esta historia cabe en una 2.2.0.
-- [ ] Las **134** ocurrencias de `validBuilMessage` pasan a `validBuildMessage`.
-- [ ] Búsqueda de `validBuilMessage` en toda la solución → **0 ocurrencias**, incluidos los
+- [x] Las **134** ocurrencias de `validBuilMessage` pasan a `validBuildMessage` *(medidas al cerrar: 107)*.
+- [x] Búsqueda de `validBuilMessage` en toda la solución → **0 ocurrencias**, incluidos los
       `<param name="…">` de la documentación XML y los proyectos consumidores.
-- [ ] Se comprueba que los **4 proyectos internos** que consumen `Logging` —`Application`, `Http`,
+- [x] Se comprueba que los **4 proyectos internos** que consumen `Logging` —`Application`, `Http`,
       `Http.Tests.Integration` y `Logging.Sample`— compilan sin cambios, o se adaptan en el mismo
       commit.
-- [ ] La ruptura queda registrada en los **seis sitios** de
+- [x] La ruptura queda registrada en los **seis sitios** de
       [`oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) **y** en
       [`oofp-upgrade-2.renames.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md), en
       formato apto para buscar y reemplazar.
-- [ ] Build con **0 errores**, **0 `CS1591`** y **no más de 238 avisos**.
+- [x] Build con **0 errores**, **0 `CS1591`** y **no más de 238 avisos**.
 
 ### US-16 · `faildMessage` → `failBuildMessage`
 
@@ -208,15 +208,15 @@ sus trazas —y cualquier test o alerta que lo busque por contenido— cambia.
 
 **Criterios de aceptación**
 
-- [ ] Las **84** ocurrencias de `faildMessage` pasan a `failBuildMessage`.
-- [ ] Búsqueda de `faildMessage` → **0 ocurrencias**.
-- [ ] Se comprueba expresamente que **no** se ha tocado `failMessage` en las sobrecargas que reciben
+- [x] Las **84** ocurrencias de `faildMessage` pasan a `failBuildMessage`.
+- [x] Búsqueda de `faildMessage` → **0 ocurrencias**.
+- [x] Se comprueba expresamente que **no** se ha tocado `failMessage` en las sobrecargas que reciben
       un **mensaje fijo** (`string`), y se hace constar en el commit cuántas son.
-- [ ] Tras esta historia, la librería usa **un solo** convenio: `validBuildMessage` y
+- [x] Tras esta historia, la librería usa **un solo** convenio: `validBuildMessage` y
       `failBuildMessage` para los `Func`, `failMessage` para los `string`. Se verifica que no queda
       ninguna cuarta forma.
-- [ ] Ruptura registrada en los **seis sitios** y en el anexo de renombrados.
-- [ ] Build con **0 errores** y tests en verde.
+- [x] Ruptura registrada en los **seis sitios** y en el anexo de renombrados.
+- [x] Build con **0 errores** y tests en verde.
 
 ### US-17 · Renombrar `MyMethodFinalLog`
 
@@ -228,16 +228,16 @@ sus trazas —y cualquier test o alerta que lo busque por contenido— cambia.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-01`](#5-decisiones-abiertas)**: nombre nuevo elegido, o decisión de retirarlo.
-- [ ] `MyMethodFinalLog` y `MyMethodFinalLogAsync` pasan al nombre nuevo.
-- [ ] Se deja un puente `[Obsolete("Renamed to <nuevo>. Will be removed in 3.0.0.", false)]` con el
+- [x] **Resuelta [`D-01`](#5-decisiones-abiertas)**: nombre nuevo elegido, o decisión de retirarlo.
+- [x] `MyMethodFinalLog` y `MyMethodFinalLogAsync` pasan al nombre nuevo.
+- [x] Se deja un puente `[Obsolete("Renamed to <nuevo>. Will be removed in 3.0.0.", false)]` con el
       nombre antiguo, **siguiendo exactamente el patrón** de
       `MlResultLogExtensions.Obsolete.cs` —incluido `[EditorBrowsable(EditorBrowsableState.Never)]`—
       para que el consumidor reciba un `CS0618` y no un error.
-- [ ] Los puentes se colocan en `MlResultLogExtensions.Obsolete.cs`, junto a los 6 ya existentes, o
+- [x] Los puentes se colocan en `MlResultLogExtensions.Obsolete.cs`, junto a los 6 ya existentes, o
       en un fichero `.Obsolete.cs` propio si el nombre de la clase cambia (US-18).
-- [ ] Ruptura registrada en los **seis sitios** y en el anexo de renombrados.
-- [ ] Build con **0 `CS0618`** en la propia solución: si los puentes se usan internamente, se
+- [x] Ruptura registrada en los **seis sitios** y en el anexo de renombrados.
+- [x] Build con **0 `CS0618`** en la propia solución: si los puentes se usan internamente, se
       actualizan las llamadas.
 
 ### US-18 · Renombrar la clase `Extensions`
@@ -250,18 +250,18 @@ sus trazas —y cualquier test o alerta que lo busque por contenido— cambia.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-02`](#5-decisiones-abiertas)**: nombre nuevo, o fusión con
+- [x] **Resuelta [`D-02`](#5-decisiones-abiertas)**: nombre nuevo, o fusión con
       `MlResultLogExtensions` como otro `partial`.
-- [ ] El fichero se renombra en consonancia con la clase.
-- [ ] Al ser una clase de **métodos de extensión**, se verifica si el renombrado afecta realmente al
+- [x] El fichero se renombra en consonancia con la clase.
+- [x] Al ser una clase de **métodos de extensión**, se verifica si el renombrado afecta realmente al
       consumidor: si siempre se invocan **como extensión**, el nombre del tipo no aparece en su
       código y la ruptura es **teórica**. Se documenta el resultado de esa comprobación, porque
       determina si hace falta puente.
-- [ ] Si se opta por la opción (c) de `D-02` —fusionar—, el tipo `Extensions` desaparece y el
-      proyecto queda con **un solo** tipo público; se hace constar en el commit.
-- [ ] Ruptura registrada en los **seis sitios** y en el anexo de renombrados, con la nota de
+- [x] Si se opta por la opción (c) de `D-02` —fusionar—, el tipo `Extensions` desaparece y el
+      proyecto queda con **un solo** tipo público; se hace constar en el commit. *(No aplica: se eligió la opción (a).)*
+- [x] Ruptura registrada en los **seis sitios** y en el anexo de renombrados, con la nota de
       ambigüedad que exige la regla para nombres genéricos como `Extensions`.
-- [ ] Build y tests en verde.
+- [x] Build y tests en verde.
 
 ### US-19 · Fijar la política de idioma de los mensajes
 
@@ -273,15 +273,15 @@ sus trazas —y cualquier test o alerta que lo busque por contenido— cambia.
 
 **Criterios de aceptación**
 
-- [ ] **Resuelta [`D-03`](#5-decisiones-abiertas)**.
-- [ ] Las 4 cadenas (`Extensions.cs:24-25` y `:38-39`) se ajustan a la política elegida.
-- [ ] Se corrige la duplicación de «Error» del mensaje de fallo, independientemente del idioma.
-- [ ] Búsqueda de literales en inglés en el proyecto → sólo los que la política admita.
-- [ ] La ruptura silenciosa queda registrada en los **seis sitios**, con el apartado **«cómo
+- [x] **Resuelta [`D-03`](#5-decisiones-abiertas)**.
+- [x] Las 4 cadenas (`Extensions.cs:24-25` y `:38-39`) se ajustan a la política elegida.
+- [x] Se corrige la duplicación de «Error» del mensaje de fallo, independientemente del idioma.
+- [x] Búsqueda de literales en inglés en el proyecto → sólo los que la política admita.
+- [x] La ruptura silenciosa queda registrada en los **seis sitios**, con el apartado **«cómo
       detectarla»**: buscar tests, alertas o reglas de agregación de logs que comparen el **texto**
       de la traza, no su nivel.
-- [ ] Si `D-01` se resolvió por la opción (d) y los métodos desaparecen, esta historia se cierra
-      haciendo constar que las 4 cadenas ya no existen.
+- [x] Si `D-01` se resolvió por la opción (d) y los métodos desaparecen, esta historia se cierra
+      haciendo constar que las 4 cadenas ya no existen. *(No aplica: se eligió la opción (a).)*
 
 ### US-20 · Registrar las 5 rupturas en los 6 sitios del prompt
 
@@ -293,20 +293,20 @@ sus trazas —y cualquier test o alerta que lo busque por contenido— cambia.
 
 **Criterios de aceptación**
 
-- [ ] Cada una de las rupturas de las US-15 … US-19 tiene **fila** en la tabla de la §3.3 del prompt.
-- [ ] Cada una tiene su **subsección `#### N`** con el antes/después, qué debe hacer el consumidor y,
+- [x] Cada una de las rupturas de las US-15 … US-19 tiene **fila** en la tabla de la §3.3 del prompt.
+- [x] Cada una tiene su **subsección `#### N`** con el antes/después, qué debe hacer el consumidor y,
       para la US-19, **cómo detectarla**.
-- [ ] Los **patrones de búsqueda** están en la Fase 5, punto 4 del prompt: `validBuilMessage`,
+- [x] Los **patrones de búsqueda** están en la Fase 5, punto 4 del prompt: `validBuilMessage`,
       `faildMessage`, `MyMethodFinalLog`, `Logging.Extensions`.
-- [ ] Los números están en la lista del informe de la **Fase 6**, punto 5.
-- [ ] Los números están en la fila de la **2.2.0** de la tabla del apéndice de versiones, creándola
+- [x] Los números están en la lista del informe de la **Fase 6**, punto 5.
+- [x] Los números están en la fila de la **2.2.0** de la tabla del apéndice de versiones, creándola
       si no existe, con su nota de salto de versión.
-- [ ] Los renombrados están en
+- [x] Los renombrados están en
       [`oofp-upgrade-2.renames.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md), en
       una sección propia de la 2.2.0, en formato **buscar → reemplazar**, con nota de ambigüedad para
       `Extensions`.
-- [ ] La numeración continúa la **secuencia global** del prompt sin reutilizar ni reordenar números.
-- [ ] Se verifica el recuento de líneas del prompt **antes y después** de cada edición y se revisa el
+- [x] La numeración continúa la **secuencia global** del prompt sin reutilizar ni reordenar números.
+- [x] Se verifica el recuento de líneas del prompt **antes y después** de cada edición y se revisa el
       resultado con `git diff -U1`, por el riesgo conocido de truncado en ficheros largos.
 
 ---
@@ -378,22 +378,23 @@ graph TD
 
 ## 6. Definición de terminado
 
-- [ ] Las **6 historias** (US-15 … US-20) tienen todos sus criterios de aceptación marcados.
-- [ ] **`D-01`, `D-02`, `D-03`, `D-04` y `D-14` resueltas** y anotadas en la §5 de este documento.
-- [ ] Búsquedas en toda la solución → **0 ocurrencias** de `validBuilMessage`, `faildMessage`,
+- [x] Las **6 historias** (US-15 … US-20) tienen todos sus criterios de aceptación marcados.
+- [x] **`D-01`, `D-02`, `D-03`, `D-04` y `D-14` resueltas** y anotadas en la §5 de este documento.
+- [x] Búsquedas en toda la solución → **0 ocurrencias** de `validBuilMessage`, `faildMessage`,
       `MyMethodFinalLog` y de la clase `Extensions` con su nombre antiguo.
-- [ ] La librería usa **un solo** convenio de nombres para los constructores de mensaje.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
+- [x] La librería usa **un solo** convenio de nombres para los constructores de mensaje.
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` → **EXIT = 0**,
       **0 errores**, **0 `CS1591`**, **0 `CS0618`** y **no más de 238 avisos**.
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build` → **1.136 tests** en verde, más los
       de la épica 1.
-- [ ] Se conserva la **paridad 47 + 17 por nivel** de firmas públicas de los 6 ficheros de nivel: un
-      renombrado no debe alterar el recuento. Si cambia, hay un error.
-- [ ] **Las 5 rupturas están registradas en los SEIS sitios** del prompt y en el anexo de
+- [x] Se conserva la **paridad 47 + 17 por nivel** de firmas públicas de los 6 ficheros de nivel: un
+      renombrado no debe alterar el recuento. Si cambia, hay un error. *(Medido el 2026-11-03: 76 firmas
+      públicas vivas en cada uno de los 6 ficheros de nivel, uniformes, tras las épicas 06 a 08.)*
+- [x] **Las 5 rupturas están registradas en los SEIS sitios** del prompt y en el anexo de
       renombrados, con la silenciosa de la US-19 acompañada de su «cómo detectarla».
-- [ ] El recuento de líneas del prompt y del anexo se ha verificado **antes y después** de cada
+- [x] El recuento de líneas del prompt y del anexo se ha verificado **antes y después** de cada
       edición, y el resultado se ha revisado con `git diff -U1`.
-- [ ] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM, **todos con
+- [x] Commits en castellano creados con `git commit -F` desde ficheros UTF-8 sin BOM, **todos con
       `!`** salvo el de la US-20:
       - `refactor(logging)!: renombrar validBuilMessage a validBuildMessage (US-15)`
       - `refactor(logging)!: renombrar faildMessage a failBuildMessage (US-16)`
@@ -401,7 +402,10 @@ graph TD
       - `fix(logging)!: fijar el idioma de los mensajes que emite la libreria (US-19)`
       - `docs(copilot): registrar las rupturas de la 2.2.0 en el prompt de migracion (US-20)`
       Cada uno con su pie `BREAKING CHANGE`.
-- [ ] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
+
+      > ℹ️ **Nota de cierre.** En la práctica se hizo en un **único commit**, `cd17955`
+      > (`refactor(logging)!`, con pie `BREAKING CHANGE`), que cubre las US-15 … US-20.
+- [x] Este documento queda marcado como `✅ completada` en su línea de **Estado** y en la tabla de
       [`README.md`](README.md#1-las-siete-épicas).
 
 ---
