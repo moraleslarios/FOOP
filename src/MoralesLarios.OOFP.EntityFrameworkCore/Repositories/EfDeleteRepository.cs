@@ -15,10 +15,7 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     where TContext : DbContext
 {
 
-    internal readonly IThrowingEfDeleteRepository <T>? _internalRepoDeleter = RegisterServices.GetRepository<IThrowingEfDeleteRepository <T>>();
-    internal readonly IEfReadRepository<T>? _repoReaderFp        = RegisterServices.GetRepository<IEfReadRepository<T>>();
-
-
+    private static readonly string typeName = typeof(T).Name;
 
 
     /// <summary>
@@ -30,7 +27,11 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual MlResult<T> TryRemove(T item)
     {
         var result = EnsureFp.NotNull(item, "The entity item to remove cannot be null")
-                            .TryMap(x => _internalRepoDeleter!.Remove(item));
+                            .TryMap(x =>
+                            {
+                                GetContext().Set<T>().Remove(item);
+                                return item;
+                            });
         return result;
     }
 
@@ -52,11 +53,16 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual MlResult<T> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] keyValues)
     {
+        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+
         var result = EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty")
-                                .Bind  ( pk      => notFoundErrorDetails is null        
-                                                        ? _repoReaderFp!.TryFind(pk)
-                                                        : _repoReaderFp!.TryFind(notFoundErrorDetails, pk))
-                                .TryMap( bdItem  => _internalRepoDeleter!.Remove(bdItem));
+                                .TryMap (x       => GetContext().Set<T>().Find(keyValues)!) 
+                                .TryBind(bdItem  => bdItem.FailIfNull(errorDetails))
+                                .TryMap( bdItem  =>
+                                {
+                                    GetContext().Set<T>().Remove(bdItem);
+                                    return bdItem;
+                                });
         return result;
     }
 
@@ -71,7 +77,11 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to remove cannot be null")
-                            .TryMapAsync(x => _internalRepoDeleter!.RemoveAsync(item, token));
+                            .TryMapAsync(async x =>
+                            {
+                                GetContext().Set<T>().Remove(item);
+                                return item;
+                            });
         return result;
     }
 
@@ -83,13 +93,8 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     /// <param name="token">Token para cancelar la operación.</param>
     /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues)
-    {
-        var result = await EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty")
-                                    .BindAsync  ( _       => _repoReaderFp!.TryFindAsync(token, keyValues))
-                                    .TryMapAsync( bdItem  => _internalRepoDeleter!.RemoveAsync(bdItem, token));
-        return result;
-    }
+    public virtual Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues)
+        => TryRemoveAsync(null!, token, keyValues);
 
     /// <summary>
     /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
@@ -101,14 +106,22 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
     {
+        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+
         var result = await EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty")
-                                    .BindAsync  ( _       => notFoundErrorDetails is null
-                                                                ? _repoReaderFp!.TryFindAsync(token, keyValues)
-                                                                : _repoReaderFp!.TryFindAsync(notFoundErrorDetails, token, keyValues))
-                                    .TryMapAsync( bdItem  => _internalRepoDeleter!.RemoveAsync(bdItem, token));
+                                    .TryMapAsync ( async x      =>
+                                    {
+                                        var found = await GetContext().Set<T>().FindAsync(keyValues, token);
+                                        return found!;
+                                    })
+                                    .TryBindAsync( bdItem        => bdItem.FailIfNullAsync(errorDetails))
+                                    .TryMapAsync( async bdItem  =>
+                                    {
+                                        GetContext().Set<T>().Remove(bdItem);
+                                        return bdItem;
+                                    });
         return result;
     }
-
 
     /// <summary>
     /// Elimina el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
@@ -119,7 +132,11 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to remove cannot be null")
-                            .TryMap(x => _internalRepoDeleter!.RemoveRange(items));
+                            .TryMap(x =>
+                            {
+                                GetContext().Set<T>().RemoveRange(items);
+                                return items;
+                            });
         return result;
     }
 
@@ -137,7 +154,11 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual async Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(items, "The entity items to remove cannot be null")
-                            .TryMapAsync(x => _internalRepoDeleter!.RemoveRangeAsync(items, token));
+                            .TryMapAsync(async x =>
+                            {
+                                GetContext().Set<T>().RemoveRange(items);
+                                return items;
+                            });
         return result;
     }
 

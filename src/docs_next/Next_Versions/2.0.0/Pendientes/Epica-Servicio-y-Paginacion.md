@@ -8,7 +8,7 @@
 > **Esfuerzo estimado:** **M** (~1-2 jornadas) · **Riesgo:** 🔴 Alto (cambia la firma de un método público muy usado)
 
 > ⚠️ La tarea **4.4** de la fase 4 (punto **40**, `IMlUnitOfWork`) **no entra en esta épica**: se ha
-> desgajado a [`Epica-Unidad-de-Trabajo-y-Transacciones.md`](Epica-Unidad-de-Trabajo-y-Transacciones.md).
+> desgajado a [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md), ya completada.
 > Reproducimos el aviso del plan porque explica por qué:
 >
 > > ⚠️ **4.4 es el punto más caro del documento.** Es un rediseño del modelo de persistencia, no un arreglo.
@@ -141,7 +141,7 @@ Es decir: el trabajo de esta épica es **de contrato**, no de algoritmo.
 
 ### Fuera del alcance
 
-- **Punto 40 · `IMlUnitOfWork` y transacciones** → [`Epica-Unidad-de-Trabajo-y-Transacciones.md`](Epica-Unidad-de-Trabajo-y-Transacciones.md).
+- **Punto 40 · `IMlUnitOfWork` y transacciones** → [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md), completada.
 - **Puntos 38 y 39** (`LastOrDefault()` en `ThrowingEfReadRepository`, `TryFind`+`Update` en `EfUpdateRepository`): viven en `EntityFrameworkCore`, no en `Application`.
 - Las cabeceras HTTP de paginación (`MlPaginationHeaders`): **ya resueltas** en el punto 55.
 - El contrato REST de los controladores → [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md).
@@ -945,6 +945,6 @@ notas de versión con el mismo énfasis que la ruptura de firma.
 
 - [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 41, 53 y 54, origen de esta épica
 - [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tareas 4.1, 4.2 y 4.3
-- [`Epica-Unidad-de-Trabajo-y-Transacciones.md`](Epica-Unidad-de-Trabajo-y-Transacciones.md) · tarea 4.4 (punto 40), desgajada de la fase 4
+- [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · tarea 4.4 (punto 40), completada y archivada
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) · la otra ruptura de la `2.1.0`; conviene publicarlas juntas
 - [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37

@@ -4,6 +4,15 @@
 - El usuario prefiere que las respuestas se den en castellano, y que **todos los documentos** (prompts,
   instrucciones, análisis, épicas) se escriban y traten en castellano.
 
+## 🚨 Archivar épicas completadas
+
+Al cerrar una épica de `docs_next/Next_Versions/2.0.0/`, comprueba sus criterios de aceptación y su
+definición de terminado. Mueve las épicas completas de `Pendientes/` a `Realizados/<Área>/` con `git mv`;
+mantén las parciales en `Pendientes/`. Actualiza ambos índices de la versión, el índice del área, los
+estados y todos los enlaces relativos, y ejecuta el verificador de anclajes Markdown.
+
+📄 Detalle y checklist: `.github/instructions/epicas-completadas.instructions.md`
+
 ## 🎯 EL PROMPT DE MIGRACIÓN ES EL ENTREGABLE MÁS IMPORTANTE DE ESTE REPOSITORIO
 
 `src/docs_next/Copilot/.github/prompts/oofp-upgrade-2.prompt.md` (y su anexo

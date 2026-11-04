@@ -41,6 +41,9 @@
     <None Update="appsettings.test.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\MoralesLarios.OOFP.EntityFrameworkCore.TestSupport\App_Data\jfcatas.db" Link="App_Data\jfcatas.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

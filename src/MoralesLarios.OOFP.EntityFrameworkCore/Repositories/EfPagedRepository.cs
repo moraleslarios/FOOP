@@ -2,7 +2,6 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
-using MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
@@ -11,12 +10,47 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// </summary>
 /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
 /// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfPagedRepository<T, TContext>(TContext dbContext) : EfRepository(dbContext), IEfPagedRepository<T>
+public class EfPagedRepository<T, TContext> : EfRepository, IEfPagedRepository<T>
     where T : class
     where TContext : DbContext
 {
-    private readonly IEfPagedReadRepository<T> _repoReaderPaginatorFp = RegisterServices.GetRepository<IEfPagedReadRepository<T>>();
-    private readonly IEfWriteRepository<T>           _repoWriterFp          = RegisterServices.GetRepository<IEfWriteRepository          <T>>();
+    private readonly IEfPagedReadRepository<T> _repoReaderPaginatorFp;
+    private readonly IEfWriteRepository<T> _repoWriterFp;
+    private readonly IMlUnitOfWork<TContext> _unitOfWork;
+
+    /// <summary>Obtiene la unidad de trabajo ligada al contexto de este agregado.</summary>
+    public IMlUnitOfWork UnitOfWork => _unitOfWork;
+
+    /// <summary>
+    /// Representa <c>EfPagedRepository</c>.
+    /// </summary>
+    /// <param name="dbContext">Contexto de datos.</param>
+    public EfPagedRepository(TContext dbContext) : this(dbContext, new MlUnitOfWork<TContext>(dbContext))
+    {
+    }
+
+    internal EfPagedRepository(TContext dbContext, IMlUnitOfWork<TContext> unitOfWork) : base(dbContext)
+    {
+        _unitOfWork = unitOfWork;
+        _repoReaderPaginatorFp = CreateReaderPaginator(dbContext);
+        _repoWriterFp          = CreateWriter(dbContext);
+    }
+
+    /// <summary>
+    /// Crea el colaborador de lectura paginada, sobre el mismo <typeparamref name="TContext"/> del agregado.
+    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// </summary>
+    /// <param name="context">Contexto de datos compartido con el agregado.</param>
+    /// <returns>Instancia del colaborador de lectura paginada.</returns>
+    protected virtual IEfPagedReadRepository<T> CreateReaderPaginator(TContext context) => new EfPagedReadRepository<T, TContext>(context);
+
+    /// <summary>
+    /// Crea el colaborador de escritura, sobre el mismo <typeparamref name="TContext"/> del agregado.
+    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// </summary>
+    /// <param name="context">Contexto de datos compartido con el agregado.</param>
+    /// <returns>Instancia del colaborador de escritura.</returns>
+    protected virtual IEfWriteRepository<T> CreateWriter(TContext context) => new EfWriteRepository<T, TContext>(context);
 
 
 

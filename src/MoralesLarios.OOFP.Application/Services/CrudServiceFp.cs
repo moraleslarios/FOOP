@@ -114,6 +114,7 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))
                             .TryMapAsync( _     => dto.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryAddAsync(bdData, token: ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => successMessageFactory is null ? $"The record was created successfully in the table corresponding to dto {typeof(TDto).Name}" : successMessageFactory(x),
@@ -171,6 +172,7 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                                                                         notFoundErrorDetails: notFoundErrorDetails,
                                                                         token               : ct,
                                                                         keyValues                  : pk))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => successMessageFactory is null ? $"The record was updated successfully in the table corresponding to dto {typeof(TDto).Name}" : successMessageFactory(x),
@@ -201,6 +203,7 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))
                             .TryMapAsync( _     => dto.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryUpdateAsync(bdData, ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => successMessageFactory is null ? $"The record was updated successfully in the table corresponding to dto {typeof(TDto).Name}" : successMessageFactory(x),
@@ -245,6 +248,7 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                                                                       token               : ct,
                                                                       keyValues                  : pk))
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to dto {typeof(TDto).Name}",
@@ -270,6 +274,7 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                             .BindAsync  ( _     => EnsureFp.NotNull(dto, $"{nameof(dto)} can't be null"))
                             .MapAsync   ( _     => dto.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to dto {typeof(TDto).Name}",
@@ -411,6 +416,7 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
                             .BindAsync  ( _     => EnsureFp.NotNull(dtoRequest, $"{nameof(dtoRequest)} can't be null"))
                             .TryMapAsync( _     => dtoRequest.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryAddAsync(bdData, token: ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger            : _logger,
                                                    validBuildMessage : x      => successMessageFactory is null ? $"The record was created successfully in the table corresponding to {DtosDescType}" : successMessageFactory(x),
@@ -468,6 +474,7 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
                                                                         notFoundErrorDetails: notFoundErrorDetails,
                                                                         token               : ct,
                                                                         keyValues                  : pk))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => successMessageFactory is null ? $"The record was updated successfully in the table corresponding to {DtosDescType}" : successMessageFactory(x),
@@ -498,6 +505,7 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
                             .BindAsync  ( _     => EnsureFp.NotNull(dtoRequest, $"{nameof(dtoRequest)} can't be null"))
                             .TryMapAsync( _     => dtoRequest.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryUpdateAsync(bdData, ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => successMessageFactory is null ? $"The record was updated successfully in the table corresponding to {DtosDescType}" : successMessageFactory(x),
@@ -542,6 +550,7 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
                                                                       token               : ct,
                                                                       keyValues                  : pk))
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to dto {typeof(TResponse).Name}",
@@ -567,6 +576,7 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
                             .BindAsync  ( _     => EnsureFp.NotNull(dtoRequest, $"{nameof(dtoRequest)} can't be null"))
                             .MapAsync   ( _     => dtoRequest.Adapt<TEntity>())
                             .BindAsync  (bdData => _repo.TryRemoveAsync(bdData, ct))
+                            .BindAsync  (bdData => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => bdData))
                             .MapAsync   (bdData => bdData.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: _      => $"The record was deleted successfully in the table corresponding to {DtosDescType}",

@@ -1435,4 +1435,4 @@ public class HttpSerializationContractTests(HttpFixture fixture)
 - [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) · el otro lado del protocolo (puntos 43, 48-52, 60, 61)
 - [`Epica-Validacion.md`](Epica-Validacion.md) · diseño conjunto de `MlError.Details` (punto 59) y decisión sobre `*Async` (punto 58)
-- [`Epica-Unidad-de-Trabajo-y-Transacciones.md`](Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40
+- [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, completada

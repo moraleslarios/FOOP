@@ -2,6 +2,9 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
 namespace MoralesLarios.OOFP.EntityFrameworkCore;
 /// <summary>
 /// Registro de los repositorios de Entity Framework Core en el contenedor de dependencias.
@@ -16,23 +19,6 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore;
 public static partial class RegisterServices
 {
 
-    private static IServiceCollection? _services;
-
-    internal static IServiceProvider ServiceProvider
-    {
-        get => _services?.BuildServiceProvider() ?? throw new ArgumentNullException("The field Provider is null");
-    }
-
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Repository</c>.
-    /// </summary>
-    /// <typeparam name="TRepo">Tipo del repositorio que se desea resolver.</typeparam>
-    /// <returns>Valor de tipo <c>TRepo</c> obtenido por la operación.</returns>
-    public static TRepo GetRepository<TRepo>()
-            => ServiceProvider.GetService<TRepo>()
-                    ?? throw new ArgumentException($"{typeof(TRepo).Name} is not registered in the IServiceCollection. It must be registered individually or using the AddOofpRepositories<T, TContext> method.");
-
-
     /// <summary>
     /// Registra, con ciclo de vida <c>Scoped</c>, los repositorios de la entidad indicada sobre
     /// el contexto indicado.
@@ -45,19 +31,20 @@ public static partial class RegisterServices
         where T        : class
         where TContext : DbContext
     {
-        _services = services;
+        services.AddOptions<MlUnitOfWorkDiagnostics>();
+        services.AddScoped<IMlUnitOfWork<TContext>>(serviceProvider =>
+            new MlUnitOfWork<TContext>(serviceProvider.GetRequiredService<TContext>(),
+                                       serviceProvider.GetRequiredService<ILogger<MlUnitOfWork<TContext>>>(),
+                                       serviceProvider.GetRequiredService<IOptions<MlUnitOfWorkDiagnostics>>()));
+        services.AddScoped<IMlUnitOfWork>(serviceProvider =>
+            serviceProvider.GetRequiredService<IMlUnitOfWork<TContext>>());
 
-        services.AddScoped<IThrowingEfRepository         <T>, ThrowingEfCrudRepository     <T, TContext>>();
-        services.AddScoped<IThrowingEfPagedRepository    <T>, ThrowingEfPagedRepository    <T, TContext>>();
-        services.AddScoped<IThrowingEfCreateRepository   <T>, ThrowingEfCreateRepository   <T, TContext>>();
-        services.AddScoped<IThrowingEfDeleteRepository   <T>, ThrowingEfDeleteRepository   <T, TContext>>();
-        services.AddScoped<IThrowingEfReadRepository     <T>, ThrowingEfReadRepository     <T, TContext>>();
-        services.AddScoped<IThrowingEfPagedReadRepository<T>, ThrowingEfPagedReadRepository<T, TContext>>();
-        services.AddScoped<IThrowingEfUpdateRepository   <T>, ThrowingEfUpdateRepository   <T, TContext>>();
-        services.AddScoped<IThrowingEfWriteRepository    <T>, ThrowingEfWriteRepository    <T, TContext>>();
-
-        services.AddScoped<IEfRepository         <T>, EfCrudRepository     <T, TContext>>();
-        services.AddScoped<IEfPagedRepository    <T>, EfPagedRepository    <T, TContext>>();
+        services.AddScoped<IEfRepository<T>>(serviceProvider =>
+            new EfCrudRepository<T, TContext>(serviceProvider.GetRequiredService<TContext>(),
+                                              serviceProvider.GetRequiredService<IMlUnitOfWork<TContext>>()));
+        services.AddScoped<IEfPagedRepository<T>>(serviceProvider =>
+            new EfPagedRepository<T, TContext>(serviceProvider.GetRequiredService<TContext>(),
+                                               serviceProvider.GetRequiredService<IMlUnitOfWork<TContext>>()));
         services.AddScoped<IEfCreateRepository   <T>, EfCreateRepository   <T, TContext>>();
         services.AddScoped<IEfDeleteRepository   <T>, EfDeleteRepository   <T, TContext>>();
         services.AddScoped<IEfReadRepository     <T>, EfReadRepository     <T, TContext>>();

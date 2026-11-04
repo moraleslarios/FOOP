@@ -1,8 +1,8 @@
 ﻿# MoralesLarios.OOFP.EntityFrameworkCore — Repositorios sobre EF Core en el raíl funcional
 
-Capa de repositorios genéricos sobre **Entity Framework Core 8** que convierte el acceso a datos en operaciones que devuelven [`MlResult<T>`](../docs/core-types/MlResult.md): sin `try`/`catch`, sin comprobaciones de `null` y con el "no encontrado" tratado como un `Fail` con mensaje propio en lugar de como una excepción.
+Capa de repositorios genéricos sobre **Entity Framework Core 8** que convierte el acceso a datos en operaciones que devuelven [`MlResult<T>`](../docs/core-types/MlResult.md): con captura de excepciones y el "no encontrado" tratado como un `Fail` con mensaje propio.
 
-Es el proyecto **más grande y ambicioso** de la periferia de la solución: 35 ficheros, dos capas paralelas y ocho repositorios componibles por entidad.
+Expone ocho interfaces funcionales por entidad, todas sobre el mismo `DbContext` del ámbito.
 
 ---
 
@@ -11,7 +11,7 @@ Es el proyecto **más grande y ambicioso** de la periferia de la solución: 35 f
 1. [¿Qué problema resuelve?](#qué-problema-resuelve)
 2. [Instalación y dependencias](#instalación-y-dependencias)
 3. [Estructura del proyecto](#estructura-del-proyecto)
-4. [Arquitectura: dos capas paralelas](#arquitectura-dos-capas-paralelas)
+4. [Composición de los repositorios](#composición-de-los-repositorios)
 5. [Jerarquía de interfaces](#jerarquía-de-interfaces)
 6. [Registro en el contenedor](#registro-en-el-contenedor)
 7. [`IEfReadRepository<T>` — lectura](#iefreadrepositoryt--lectura)
@@ -86,7 +86,7 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | `PageRequest`, `PagedResult<T>` |
 | [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | — | `IntNonNegative` (conversiones de paginación) |
 
-Destino: **`net8.0`**. Versión del paquete: **1.0.14**.
+Destino: **`net8.0`**. Versión del paquete: **2.0.0**.
 
 > ⚠️ **`Microsoft.Extensions.DependencyInjection` se usa sin declararse** como paquete propio: llega de forma transitiva a través de EF Core. Funciona, pero es una dependencia implícita.
 
@@ -103,25 +103,19 @@ using MoralesLarios.OOFP.Shared.Pagination;      // PageRequest, PagedResult<T>
 
 ```
 MoralesLarios.OOFP.EntityFrameworkCore/
-├── Repos/                          ← 🟢 API PÚBLICA funcional (devuelve MlResult)
-│   ├── EfRepository.cs                 → base: GetContext()
-│   ├── IEfReadRepository.cs   / EfReadRepository.cs
-│   ├── IEfCreateRepository.cs    / EfCreateRepository.cs
-│   ├── IEfUpdateRepository.cs  / EfUpdateRepository.cs
-│   ├── IEfDeleteRepository.cs  / EfDeleteRepository.cs
-│   ├── IEfWriteRepository.cs   / EfWriteRepository.cs        (adder+updater+deleter)
-│   ├── IEfRepository.cs         / EfCrudRepository.cs              (reader+writer)
-│   ├── IEfPaginator.cs                               (solo paginación)
+├── Repositories/                   ← API funcional pública (devuelve MlResult)
+│   ├── EfRepository.cs             → base: GetContext()
+│   ├── IEfReadRepository.cs / EfReadRepository.cs
+│   ├── IEfCreateRepository.cs / EfCreateRepository.cs
+│   ├── IEfUpdateRepository.cs / EfUpdateRepository.cs
+│   ├── IEfDeleteRepository.cs / EfDeleteRepository.cs
+│   ├── IEfWriteRepository.cs / EfWriteRepository.cs
+│   ├── IEfRepository.cs / EfCrudRepository.cs
+│   ├── IEfPaginator.cs
 │   ├── IEfPagedReadRepository.cs / EfPagedReadRepository.cs
-│   └── IEfPagedRepository.cs       / EfPagedRepository.cs
-├── OopRepos/                       ← 🔒 MOTOR INTERNO (devuelve T, clases internal)
-│   ├── ThrowingEfRepository.cs, ThrowingEfCrudRepository.cs, ThrowingEfReadRepository.cs
-│   ├── ThrowingEfCreateRepository.cs, ThrowingEfUpdateRepository.cs, ThrowingEfDeleteRepository.cs
-│   ├── ThrowingEfPagedRepository.cs, ThrowingEfPagedReadRepository.cs
-│   └── IGetContextable.cs
+│   └── IEfPagedRepository.cs / EfPagedRepository.cs
 ├── Helpers/
-│   ├── Extensions.cs                   → ParseKeyValues, PrivateOrderBy
-│   └── Constants.cs                    → ⚠️ vacío
+│   └── Extensions.cs                  → FormatCompositeKey, PrivateOrderBy
 ├── Enums/SortDirection.cs                    → Ascending, Descending
 ├── RegisterServices.cs                 → AddOofpRepositories (siempre Scoped)
 └── GlobalUsings.cs
@@ -129,52 +123,9 @@ MoralesLarios.OOFP.EntityFrameworkCore/
 
 ---
 
-## Arquitectura: dos capas paralelas
+## Composición de los repositorios
 
-Cada repositorio existe **dos veces**: una versión OOP interna que habla con EF Core, y una versión funcional pública que la envuelve.
-
-```
-Tu servicio
-     │
-     ▼
-IEfReadRepository<T>          🟢 pública — devuelve MlResult<T>
-  EfReadRepository<T, TContext>
-     │  valida con EnsureFp, envuelve en TryMap, FailIfNull
-     ▼
-IThrowingEfReadRepository<T>            🔒 internal — devuelve T (puede ser null, puede lanzar)
-  ThrowingEfReadRepository<T, TContext>
-     │
-     ▼
-DbContext.Set<T>()          EF Core
-```
-
-| Capa | Namespace | Visibilidad | Devuelve | Rol |
-|---|---|---|---|---|
-| **Funcional** (`*Fp`) | `…EFCore.Repos` | **pública** | `MlResult<T>` | 🟢 **La que debes usar** |
-| **OOP** | `…EFCore.OopRepos` | `internal` | `T` | 🔒 Motor interno |
-
-Ejemplo del envoltorio, en `EfCreateRepository`:
-
-```csharp
-public virtual MlResult<T> TryAdd(T item)
-    => EnsureFp.NotNull(item, "The entity item to add cannot be null")   // 1️⃣ valida
-               .TryMap(x => _internalRepoAdder!.Add(item));             // 2️⃣ delega y captura
-```
-
-Y el motor OOP correspondiente:
-
-```csharp
-public T Add(T item)
-{
-    internalDbContext.Set<T>().Add(item);
-    internalDbContext.SaveChanges();     // ⚠️ guarda en CADA operación
-    return item;
-}
-```
-
-> ⚠️ **Las clases OOP son `internal`**, así que **no puedes usarlas ni heredarlas** desde tu proyecto. Solo la capa `*Fp` es accesible. Las interfaces `IThrowingEfReadRepository<T>` etc. son públicas, pero sus implementaciones no.
-
-> 💡 **Todos los métodos de la capa funcional son `virtual`**: puedes heredar de `EfReadRepository<T, TContext>` y sobrescribir solo lo que necesites.
+Los agregados `EfCrudRepository<T, TContext>` y `EfPagedRepository<T, TContext>` crean sus colaboradores mediante factorías `protected virtual`. Las factorías reciben el mismo `TContext` que el agregado, por lo que todas las operaciones del ámbito comparten el mismo `ChangeTracker` y unidad de trabajo. Las ocho interfaces públicas devuelven `MlResult` o `Task<MlResult<…>>`.
 
 ---
 
@@ -210,7 +161,7 @@ IEfPagedRepository<T>        : Repo + Paginator                   ← 🟢 el m�
 
 ## Registro en el contenedor
 
-Un solo método registra **las 16 interfaces** (8 OOP + 8 funcionales) para una entidad y su contexto:
+Un solo método registra las **ocho interfaces funcionales** para una entidad y su contexto:
 
 ```csharp
 builder.Services.AddDbContext<TestDbContext>(o => o.UseSqlServer(cs));
@@ -225,51 +176,7 @@ builder.Services.AddOofpRepositories<Cata, TestDbContext>();   // una llamada po
 |---|---|
 | `AddOofpRepositories<T, TContext>()` | `Scoped` |
 
-> ✅ **`Scoped` es el único ciclo de vida admitido en la librería.** Un repositorio vive *al lado* del `DbContext` que recibe por constructor, y ese contexto es `Scoped`. Alinear los dos es lo natural: todos los repositorios de un mismo ámbito comparten contexto y unidad de trabajo, dos resoluciones del mismo repositorio dentro de la misma petición devuelven la misma instancia, y la vida del repositorio termina exactamente cuando termina la del contexto. Así desaparecen de raíz la *captive dependency* que provocaba la variante `Singleton` de la 1.x y la duplicación inútil de instancias de la variante `Transient`.
-
-### ❗ Cómo resuelven sus dependencias los repositorios: el punto crítico
-
-Los repos `*Fp` **no reciben sus colaboradores por constructor**. Los resuelven mediante un localizador de servicios estático:
-
-```csharp
-public static class RegisterServices
-{
-    private static IServiceCollection? _services;      // ⚠️ estático
-
-    internal static IServiceProvider ServiceProvider
-        => _services?.BuildServiceProvider()           // ⚠️❗ construye un provider NUEVO cada vez
-           ?? throw new ArgumentNullException("The field Provider is null");
-
-    public static TRepo GetRepository<TRepo>()
-        => ServiceProvider.GetService<TRepo>() ?? throw new ArgumentException(…);
-}
-```
-
-Y en cada repositorio:
-
-```csharp
-public class EfCreateRepository<T, TContext>(TContext dbContext) : EfRepository(dbContext), IEfCreateRepository<T>
-{
-    internal readonly IThrowingEfCreateRepository<T>? _internalRepoAdder =
-        RegisterServices.GetRepository<IThrowingEfCreateRepository<T>>();   // ⚠️ en la construcción del objeto
-}
-```
-
-**Consecuencias que debes conocer:**
-
-| Consecuencia | Detalle |
-|---|---|
-| ⚠️ **Orden obligatorio** | `AddOofpRepositories<T, TContext>()` debe llamarse **antes** de que se construya cualquier repositorio |
-| ⚠️ **Un contenedor nuevo por resolución** | `BuildServiceProvider()` se ejecuta en **cada** acceso, y cada provider queda sin liberar |
-| ⚠️ **Coste en rendimiento** | Construir un `ServiceProvider` es costoso; aquí ocurre varias veces por cada repositorio creado |
-| ⚠️ **`DbContext` distinto** | El colaborador interno se resuelve del provider secundario, **no del ámbito actual**: puede no ser el mismo `DbContext` que recibió el repositorio por constructor |
-| ⚠️ **Registro tardío invisible** | Los servicios añadidos después de la primera resolución sí aparecen (se re-construye), pero de forma imprevisible |
-| ✅ **Error claro si falta** | Si no registraste la entidad, `ArgumentException` con el nombre del tipo y los métodos a usar |
-| ⚠️ **La última llamada gana** | `_services` se sobrescribe en cada `AddOofpRepositories`. Con varias entidades queda la última colección asignada (normalmente la misma instancia, así que suele funcionar) |
-
-> ❗ **Este es el aspecto más delicado del proyecto.** Funciona en aplicaciones normales de ASP.NET Core porque `_services` apunta a la misma `IServiceCollection` que acaba en el contenedor real, pero el patrón de *service locator* con `BuildServiceProvider()` repetido es un antipatrón reconocido. Ten presente que **el `DbContext` que usa el motor interno puede no ser el del ámbito de la petición**, lo que afecta al seguimiento de entidades y a las transacciones.
-
-> 💡 **Mitigación práctica**: registra siempre con `AddOofpRepositories`, haz las llamadas **al principio** de la configuración de servicios, y no dependas de que dos operaciones consecutivas compartan el mismo *change tracker*.
+> ✅ **`Scoped` es el único ciclo de vida admitido.** Cada repositorio y agregado recibe por constructor el `DbContext` registrado para el ámbito. Las factorías de los agregados pasan esa misma instancia a sus colaboradores; no se construyen proveedores secundarios ni se usa un localizador estático.
 
 ---
 
@@ -340,9 +247,9 @@ MlResult<IEnumerable<T>>       TryAddRange     (IEnumerable<T> items);
 Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 ```
 
-Valida que el argumento no sea nulo y delega. **Cada llamada hace `SaveChanges` por su cuenta** (ver [Particularidades](#️-particularidades-reales-del-código-fuente)).
+Valida que el argumento no sea nulo y añade la entidad al `ChangeTracker`. **No confirma la base de datos**: después de una o varias escrituras, usa `UnitOfWork.TryCommit[Async]` o `TryExecuteInTransaction[Async]`.
 
-> 💡 **`TryAddRange` es una sola transacción implícita**: inserta todas las entidades y llama a `SaveChanges` una única vez. Prefiérelo a un bucle de `TryAdd`.
+> 💡 `TryAddRange` añade varias entidades al mismo contexto; `UnitOfWork.TryCommit[Async]` las confirma en una sola llamada a `SaveChanges`.
 
 ---
 
@@ -359,20 +266,25 @@ MlResult<IEnumerable<T>>       TryUpdateRange     (IEnumerable<T> items);
 Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 ```
 
-**Dos comportamientos distintos según pases `pk` o no:**
+**Dos comportamientos distintos según pases `keyValues` o no:**
 ```csharp
 public MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues)
-    => EnsureFp.NotNull  (item, "The entity item to update cannot be null")
-               .Bind  ( _  => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
-               .Bind  ( pk => notFoundErrorDetails is null
-                                ? _repoReaderFp!.TryFind(pk)
-                                : _repoReaderFp!.TryFind(notFoundErrorDetails, pk))
-               .TryMap( x  => _internalRepoUpdater!.Update(item));   // ⚠️ actualiza `item`, no `x`
+    => EnsureFp.NotNull(item, "The entity item to update cannot be null")
+       .Bind(_ => EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty"))
+       .TryMap(_ => GetContext().Set<T>().Find(keyValues))
+       .TryBind(found => found.FailIfNull(notFoundErrorDetails))
+       .TryMap(found =>
+       {
+           if (!ReferenceEquals(found, item))
+               GetContext().Entry(found).State = EntityState.Detached;
+           GetContext().Update(item);
+           return item;
+       });
 ```
 
-> ✅ **Usa la sobrecarga con `pk`** si quieres un `Fail` claro cuando la fila no existe, en lugar de una `DbUpdateConcurrencyException`.
+> ✅ **Usa la sobrecarga con `keyValues`** si quieres un `Fail` claro cuando la fila no existe. Los errores de persistencia se informan al llamar a `UnitOfWork.TryCommit[Async]`.
 
-> ⚠️ **La entidad encontrada se descarta**: el `TryFind` sirve solo como comprobación de existencia y luego se actualiza el `item` que pasaste. Como `Find` **hace seguimiento**, la entidad de la base de datos queda en el *change tracker* y actualizar otra instancia con la misma clave puede provocar `InvalidOperationException` ("*The instance of entity type cannot be tracked because another instance with the same key value is already being tracked*"). Ver [Particularidades](#️-particularidades-reales-del-código-fuente).
+> ✅ **La entidad encontrada sirve para comprobar que la fila existe.** Si `item` es otra instancia, el repositorio desvincula la instancia encontrada antes de actualizar `item`, evitando el conflicto de seguimiento de EF Core.
 
 ---
 
@@ -389,11 +301,16 @@ MlResult<IEnumerable<T>>       TryRemoveRange     (IEnumerable<T> items);
 Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default);
 ```
 
-> ✅ **Las sobrecargas con `pk` sí son correctas aquí**: hacen `TryFind`, y **borran la entidad encontrada** (`bdItem`), no una instancia externa. Es el patrón adecuado, a diferencia del *updater*.
+> ✅ **Las sobrecargas con clave** hacen `Find` y borran la entidad encontrada, no una instancia externa.
 
 ```csharp
-.Bind  ( pk     => _repoReaderFp!.TryFind(notFoundErrorDetails, pk))
-.TryMap( bdItem => _internalRepoDeleter!.Remove(bdItem));   // ✅ borra la entidad de la BD
+.TryMap (pk => GetContext().Set<T>().Find(keyValues))
+.TryBind(bdItem => bdItem.FailIfNull(notFoundErrorDetails))
+.TryMap (bdItem =>
+{
+    GetContext().Set<T>().Remove(bdItem);
+    return bdItem;
+});
 ```
 
 > ⚠️ **`TryRemove(params object[] keyValues)` puede confundirse con `TryRemove(T item)`** si tu entidad es un `object[]`, caso raro pero posible. Y ojo: `TryRemove(MlErrorDetails, params object[])` frente a `TryRemove(params object[])` se resuelven por el primer argumento, así que un `string` como primera clave podría convertirse implícitamente en `MlErrorDetails`. **Con PK de tipo `string`, usa siempre la sobrecarga explícita con mensaje.**
@@ -410,7 +327,7 @@ public interface IEfRepository<T> : IEfReadRepository<T>, IEfWriteRepository<T> 
 
 No añaden métodos: solo combinan. Las clases `EfWriteRepository` y `EfCrudRepository` son **delegadores puros**, resuelven los repos especializados y reenvían cada llamada.
 
-> ⚠️ **`IEfWriteRepository<T>` contiene ~19 líneas de firmas comentadas**, restos de cuando declaraba los métodos antes de heredarlos. Sin efecto funcional, pero es ruido.
+Las interfaces agregadas solo expresan composición; sus implementaciones delegan en colaboradores creados con factorías protegidas y comparten el mismo `DbContext`.
 
 ---
 
@@ -479,11 +396,11 @@ await repo.TryFindAsync($"No existe el vino con id {42}", ct, 42);
 await repo.TryFindAsync(MlErrorDetails.FromErrorMessageWithValue(42, "Vino inexistente"), ct, 42);
 ```
 
-Los mensajes por defecto vienen de `ParseKeyValues`:
+Los mensajes por defecto usan `FormatCompositeKey`:
 
 ```csharp
-new object[] { 10 }.ParseKeyValues();        // "10"
-new object[] { 10, "A" }.ParseKeyValues();   // "(10, A)"
+new object[] { 10 }.FormatCompositeKey();        // "10"
+new object[] { 10, "A" }.FormatCompositeKey();   // "(10, A)"
 ```
 
 > 💡 **Personaliza el mensaje si va a llegar al usuario final**: los mensajes por defecto están en inglés e incluyen el nombre del tipo de la entidad, lo cual **filtra detalles internos** en una API pública.
@@ -498,18 +415,18 @@ public enum SortDirection { Ascending, Descending }
 
 | Helper | Firma | Uso |
 |---|---|---|
-| `ParseKeyValues` | `this object[] → string` | Formatea las claves para los mensajes |
+| `FormatCompositeKey` | `this object[] → string` | Formatea las claves para los mensajes |
 | `PrivateOrderBy` | `this IQueryable<T> → IQueryable<T>` | Ordenación condicional |
 
-> ⚠️ **`Helpers/Constants.cs` está completamente vacío** (una clase `internal static` sin miembros). Residuo sin efecto.
+`Helpers/Extensions.cs` contiene los auxiliares de formato de claves y ordenación usados por los repositorios.
 
 ---
 
 ## ⚠️ Particularidades reales del código fuente
 
-### 1. ❗ `BuildServiceProvider()` en cada resolución
+### 1. ✅ El `DbContext` se comparte dentro del ámbito
 
-Ya descrito en [Registro en el contenedor](#-cómo-resuelven-sus-dependencias-los-repositorios-el-punto-crítico). Es el problema estructural más importante: **cada acceso a `RegisterServices.ServiceProvider` construye un contenedor nuevo**, que nunca se libera, y del que se resuelven los colaboradores internos.
+`AddOofpRepositories<T, TContext>()` registra ocho interfaces funcionales como `Scoped`. Los agregados crean sus colaboradores con el mismo contexto que reciben por constructor. Consulta [Registro en el contenedor](#registro-en-el-contenedor).
 
 ### 2. ✅ El repositorio **no** es dueño del `DbContext` (corregido en la 2.0.0)
 
@@ -542,42 +459,51 @@ public class EfRepository(DbContext dbContext) : IGetContextable
 
 > ✅ **Esto es lo que hace seguro el ciclo de vida `Scoped`**: el repositorio no es el propietario del `DbContext`, así que no debe liberarlo. Al no ser `IDisposable`, el contenedor no invoca ningún `Dispose()` del repositorio que destruyese el contexto compartido del ámbito; el contexto lo libera quien lo registró (`AddDbContext`) cuando el ámbito termina.
 
-### 3. ⚠️ `SaveChanges` en cada operación: no hay unidad de trabajo
+### 3. Unidad de trabajo y transacciones
 
 ```csharp
-public T Add(T item)
-{
-    internalDbContext.Set<T>().Add(item);
-    internalDbContext.SaveChanges();     // ⚠️ commit inmediato
-    return item;
-}
-```
-
-**Cada `TryAdd`, `TryUpdate` y `TryRemove` confirma su propio cambio.** No existe `SaveChanges` público ni gestión de transacciones.
-
-```csharp
-// ⚠️ NO es atómico: si el segundo falla, el primero YA está confirmado
+// Registrar cambios y confirmarlos explícitamente.
 await repo.TryAddAsync(vino, ct);
-await repoCatas.TryAddAsync(cata, ct);
+var commit = await repo.UnitOfWork.TryCommitAsync(ct);
 ```
 
-> ⚠️ **Para operaciones atómicas necesitas una transacción explícita**, accediendo al contexto con `GetContext()`:
-> ```csharp
-> await using var tx = repo.GetContext().Database.BeginTransaction();
->
-> var resultado = await repo.TryAddAsync(vino, ct)
->                           .BindAsync(_ => repoCatas.TryAddAsync(cata, ct));
->
-> await resultado.MatchAsync(valid: async _ => { await tx.CommitAsync(ct);   return resultado; },
->                            fail:  async _ => { await tx.RollbackAsync(ct); return resultado; });
-> ```
-> ⚠️ Esto solo funciona si **ambos repositorios comparten el mismo `DbContext`**, lo que no está garantizado por el punto 1.
+Los 16 métodos síncronos y asíncronos de `TryAdd`, `TryUpdate` y `TryRemove` preparan cambios en el contexto; no ejecutan `SaveChanges`. El agregado `IEfRepository<T>` expone `IMlUnitOfWork` mediante `UnitOfWork`. Si inyectas una interfaz especializada, puedes resolver `IMlUnitOfWork<TContext>` del mismo ámbito.
+
+```csharp
+// Un fallo en cualquiera de las escrituras revierte ambas.
+var resultado = await repoVinos.UnitOfWork.TryExecuteInTransactionAsync(async token =>
+{
+    var vinoResult = await repoVinos.TryAddAsync(vino, token);
+    if (vinoResult.IsFailure)
+        return vinoResult.GetFailureDetailsOrThrow().ToMlResultFail<Vino>();
+
+    var cataResult = await repoCatas.TryAddAsync(cata, token);
+    if (cataResult.IsFailure)
+        return cataResult.GetFailureDetailsOrThrow().ToMlResultFail<Vino>();
+
+    return vinoResult;
+}, ct);
+```
+
+`TryExecuteInTransactionAsync` confirma una vez si el callback devuelve un resultado válido y revierte
+si devuelve un fallo, lanza una excepción o se cancela. Las transacciones existentes se reutilizan y
+no se confirman desde el callback anidado; el propietario de la transacción externa decide cómo
+finalizarla.
+
+El aviso de cambios pendientes al cerrar el ámbito está desactivado por defecto. Para localizar
+commits olvidados durante el desarrollo, actívalo y configura el nivel `Warning` en el proveedor de
+logs:
+
+```csharp
+services.Configure<MlUnitOfWorkDiagnostics>(options =>
+    options.WarnOnUncommittedChanges = true);
+```
 
 ### 4. ❗ `TryGetLast` trae **todos** los registros filtrados a memoria
 
 ```csharp
 public T LastOrDefault(Expression<Func<T, bool>> filter)
-    => internalDbContext.Set<T>()
+    => GetContext().Set<T>()
                         .AsNoTracking()
                         .Where(filter)
                         .AsEnumerable()      // ⚠️❗ ejecuta el SELECT completo
@@ -598,94 +524,76 @@ public T LastOrDefault(Expression<Func<T, bool>> filter)
 >                        .MapAsync(p => p.Items.First());
 > ```
 
-### 5. ❗ En la capa OOP de paginación, el `ORDER BY` se aplica **después** de `Skip`/`Take`
+### 5. ✅ La paginación ordena antes de aplicar `Skip` y `Take`
 
 ```csharp
-// ThrowingEfPagedReadRepository (capa OOP interna)
-public IEnumerable<T> GetDataOrderby<TKey>(int pageNumber, int pageSize,
-                                           Expression<Func<T, TKey>> orderBy, …)
-    => GetInternalData(pageNumber, pageSize, filter)   // ya aplicó Skip().Take()
-           .OrderBy(orderBy)                          // ⚠️❗ ordena DESPUÉS
-           .ToList();
+GetContext().Set<T>()
+    .AsNoTracking()
+    .Where(effectiveFilter)
+    .PrivateOrderBy(orderBy, orderByField)
+    .Skip((pageNumber - 1) * pageSize)
+    .Take(pageSize)
+    .ToList();
 ```
 
-Esto **ordena solo las filas de la página**, no el conjunto completo: el contenido de cada página es esencialmente arbitrario.
+La consulta aplica primero el filtro y la ordenación, y después pagina. Si `filter` es `null`, se trata como `x => true`. Proporciona `orderByField` para obtener páginas deterministas.
 
-> ✅ **La capa funcional lo hace bien**: `EfPagedReadRepository.TryQueryPage` ordena antes de paginar.
-> ```csharp
-> .Where(filter)
-> .PrivateOrderBy(orderBy, orderByField)   // ✅ primero ordena
-> .Skip((pageNumber - 1) * pageSize)       // ✅ luego pagina
-> .Take(pageSize)
-> ```
-> Como la capa OOP es `internal`, **no te afecta si usas la API funcional**. Es un motivo más para no intentar acceder a la capa OOP.
-
-### 6. ❗ El `TotalCount` es incoherente entre la versión síncrona y la asíncrona
+### 6. ✅ `TotalCount` respeta el filtro en ambas variantes
 
 ```csharp
-// TryQueryPage (SÍNCRONO)
-.TryMap(items => new { Count = GetContext().Set<T>().Count(),               // ⚠️ SIN filtro
-                       Items = items })
-
-// TryGetInternalDataAsync (ASÍNCRONO)
-.TryMapAsync(items => new { Count = GetContext().Set<T>().Where(filter!).Count(),   // ✅ CON filtro
-                            Items = items })
+var effectiveFilter = filter ?? (x => true);
+var count = GetContext().Set<T>().Where(effectiveFilter).Count();
 ```
 
 | Versión | `TotalCount` |
 |---|---|
-| `TryGetDataPagination` (sync) | ⚠️ **Total de la tabla**, ignorando el filtro |
+| `TryGetDataPagination` (sync) | ✅ Total de filas que cumplen el filtro |
 | `TryGetDataPaginationAsync` | ✅ Total de filas que cumplen el filtro |
 
-> ❗ **El `TotalCount` de la versión síncrona con filtro es incorrecto**: si filtras 50 registros de una tabla de 10 000, devuelve `10000`. El número de páginas calculado en la interfaz de usuario sería erróneo. **Usa la versión asíncrona cuando pases filtro.**
+El filtro nulo se normaliza a `x => true`; `TryAllPagination[Async]` incluye todas las filas.
 
-> ⚠️ **Y en la versión asíncrona hay un riesgo complementario**: `Where(filter!)` usa el parámetro `filter`, que **es `null` cuando la llamada viene de `TryAllPaginationAsync`**. Eso produce una `ArgumentNullException` que el `TryMapAsync` convierte en `Fail`. Es decir, **`TryAllPaginationAsync` puede devolver `Fail` al calcular el total**. Si necesitas paginar todo, pasa un filtro trivial:
-> ```csharp
-> // ✅ Evita el null interno
-> await repo.TryGetDataPaginationAsync((1, 25), SortDirection.Ascending, x => x.Id, x => true, ct);
-> ```
+### 7. ✅ `TryUpdate(item, keyValues)` evita el conflicto de seguimiento
 
-### 7. ⚠️ `TryUpdate(item, pk)` puede provocar un conflicto de seguimiento
-
-Como se explicó en el [*updater*](#iefupdaterepositoryt--modificación): `TryFind` deja la entidad **con seguimiento** y luego se llama a `Update(item)` con **otra instancia** de la misma clave.
+Al pasar una clave, el repositorio busca la entidad. Si la instancia encontrada es distinta de `item`, la desvincula antes de llamar a `Update(item)`.
 
 ```csharp
-// ⚠️ Riesgo: dos instancias con la misma PK en el change tracker
+// La instancia hallada se desvincula antes de actualizar esta entidad.
 var vinoModificado = new Vino { Id = 42, Nombre = "Nuevo" };
 await repo.TryUpdateAsync(vinoModificado, ct, 42);   // TryFind trae la original, luego Update(la nueva)
 ```
 
-> ✅ **Patrón seguro**: recupera, modifica la instancia recuperada, y actualiza **esa misma**.
+> ✅ También puedes recuperar, modificar y actualizar **la misma instancia**:
 > ```csharp
 > await repo.TryFindAsync($"El vino {id} no existe", ct, id)
 >           .MapAsync (v => { v.Nombre = nombre; return v; })
 >           .BindAsync(v => repo.TryUpdateAsync(v, ct));      // ⬅ sin pk: no repite el Find
 > ```
 
-### 8. ⚠️ `TryRemoveRangeAsync` no usa la variante asíncrona de `EnsureFp`
+### 8. ✅ `TryRemoveRangeAsync` usa guardas y persistencia asíncronas
 
 ```csharp
-public virtual Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default)
-{
-    var result = EnsureFp.NotNull(items, "…")        // ⚠️ NotNull, no NotNullAsync
-                         .TryMapAsync(x => _internalRepoDeleter!.RemoveRangeAsync(items, token));
-    return result;                                    // ⚠️ sin await
-}
+var result = await EnsureFp.NotNullAsync(items, "The entity items to remove cannot be null")
+    .TryMapAsync(async _ =>
+    {
+        GetContext().Set<T>().RemoveRange(items);
+        await GetContext().SaveChangesAsync(token);
+        return items;
+    });
 ```
 
-Funciona (devuelve la `Task` sin esperar), pero **es el único método del proyecto con ese estilo**; el resto usa `await` y `EnsureFp.NotNullAsync`.
+La operación valida `items` de forma asíncrona y espera a `SaveChangesAsync`.
 
-### 9. ⚠️ `EfPagedReadRepository` no usa la capa OOP
+### 9. `EfPagedReadRepository` consulta el contexto directamente
 
-A diferencia de todos los demás repos funcionales, este **accede al `DbContext` directamente**:
+El repositorio construye la consulta directamente sobre el `DbContext` recibido:
 
 ```csharp
-.TryMap(filter => GetContext().Set<T>()      // ⚠️ directo, sin pasar por IThrowingEfPagedReadRepository
+.TryMap(filter => GetContext().Set<T>()
                               .AsNoTracking()
                               …)
 ```
 
-> 💡 **Es en realidad una ventaja**: al no pasar por el motor interno, evita el bug del `OrderBy` tras `Skip` descrito en el punto 5. Pero significa que `ThrowingEfPagedReadRepository` (OOP) **queda registrado y sin usar**.
+La consulta opera sobre el `DbContext` y aplica el filtro, la ordenación y la paginación en ese orden.
 
 ### 10. ⚠️ `IntNonNegative` en `PageRequest` con anotaciones incorrectas
 
@@ -696,23 +604,24 @@ public record PageRequest([property: Range(0, int.MinValue)] int PageNumber,   /
 
 El máximo del rango es **`int.MinValue`**, menor que el mínimo. La anotación es inválida, pero **no tiene efecto** porque la normalización real la hacen `Math.Max` y `Math.Clamp`, y nadie valida ese atributo. (Reside en [`Shared`](../MoralesLarios.OOFP.Shared/README.md).)
 
-### 11. Las clases OOP son `internal`, sus interfaces públicas
+### 11. `IGetContextable` expone el contexto del repositorio
 
-Puedes **declarar** una dependencia de `IThrowingEfReadRepository<T>` pero no implementarla con las clases del paquete ni heredarlas. En la práctica, **la capa OOP es inaccesible**.
+`IGetContextable` está en `MoralesLarios.OOFP.EntityFrameworkCore.Repositories` y permite obtener el `DbContext` inyectado. Úsalo para consultas no cubiertas por las interfaces, como `Include`, proyecciones o transacciones; no dispongas el contexto desde el repositorio.
 
-### 12. `typeName` se calcula por instancia
+### 12. `typeName` se almacena como campo estático de solo lectura
 
 ```csharp
-private string typeName = typeof(T).Name;   // campo de instancia, no static
+private static readonly string typeName = typeof(T).Name;
 ```
 
-Se recalcula en cada repositorio construido. Detalle menor de rendimiento.
+El nombre se calcula una vez por tipo de entidad.
 
 ---
 
 ## ⚠️ Lo que NO incluye
 
-> ⚠️ **No hay unidad de trabajo ni transacciones.** Cada operación hace su propio `SaveChanges`. No hay `SaveChangesAsync` público, ni `BeginTransaction`, ni patrón *Unit of Work*.
+> ✅ La API de unidad de trabajo está disponible como `repo.UnitOfWork`. `TryCommit[Async]` confirma
+> cambios de una escritura directa; `TryExecuteInTransaction[Async]` coordina commit y rollback.
 
 > ⚠️ **No hay `Include` / carga de relaciones.** No puedes traer entidades relacionadas: `TryGetData` no acepta `Expression<Func<IQueryable<T>, IIncludableQueryable<T, object>>>`. Necesitarás `GetContext()` para consultas con `Include`.
 
@@ -830,7 +739,7 @@ public Task<MlResult<PagedResult<Vino>>> PaginaAsync(
                  ct:             ct);
 ```
 
-> 💡 **Tres claves**: usa la versión **asíncrona** (el `TotalCount` síncrono ignora el filtro), pasa **siempre** `orderByField` (sin él el orden no está garantizado) y pasa **siempre** un `filter` no nulo (evita el `Where(null)` interno).
+> 💡 **Dos claves**: pasa `orderByField` para que el orden de las páginas sea determinista; si `filter` es `null`, se interpreta como `x => true`. Ambas variantes, síncrona y asíncrona, calculan `TotalCount` con el filtro efectivo.
 
 ### Ejemplo 6 — Composición con validación y logging
 
@@ -848,37 +757,33 @@ public class AltaVinosService(IVinosRepo _repo, IValidator<Vino> _validator, ILo
 }
 ```
 
-### Ejemplo 7 — Transacción explícita cuando necesitas atomicidad
+### Ejemplo 7 — Transacción con la unidad de trabajo
 
 ```csharp
-public async Task<MlResult<Vino>> CrearConPuntuacionAsync(
-        Vino vino, VinosCatasPuntuacion punto, CancellationToken ct)
-{
-    await using var tx = _vinos.GetContext().Database.BeginTransaction();
+public Task<MlResult<Vino>> CrearConCataAsync(Vino vino, Cata cata, CancellationToken ct)
+    => _vinos.UnitOfWork.TryExecuteInTransactionAsync(async token =>
+    {
+        var vinoResult = await _vinos.TryAddAsync(vino, token);
+        if (vinoResult.IsFailure)
+            return vinoResult.GetFailureDetailsOrThrow().ToMlResultFail<Vino>();
 
-    var resultado = await _vinos.TryAddAsync(vino, ct)
-                                .BindAsync(v => _puntos.TryAddAsync(punto, ct)
-                                                       .MapAsync(_ => v));
+        var cataResult = await _catas.TryAddAsync(cata, token);
+        if (cataResult.IsFailure)
+            return cataResult.GetFailureDetailsOrThrow().ToMlResultFail<Vino>();
 
-    if (resultado.IsSuccess) await tx.CommitAsync(ct);
-    else                   await tx.RollbackAsync(ct);
-
-    return resultado;
-}
+        return vinoResult;
+    }, ct);
 ```
 
-> ⚠️ **Requiere que ambos repositorios compartan el `DbContext`**, lo que depende del ciclo de vida y del localizador de servicios. Verifícalo en tu escenario.
+`_vinos` y `_catas` deben compartir el mismo `TContext` y ámbito. El helper confirma ambos cambios
+una vez si el resultado es válido y revierte si alguna operación falla.
 
 ### Ejemplo 8 — ❌ Qué no hacer / ✅ qué hacer
 
-**Orden del registro:**
+**Registro del contexto, repositorios y contrato propio:**
 
 ```csharp
-// ❌ MAL: el repo concreto se registra antes que los de la librería
-services.AddScoped<IVinosRepo, VinosRepo>();
-services.AddOofpRepositories<Vino, TestDbContext>();
-
-// ✅ BIEN: primero la librería, después los repos concretos
+services.AddDbContext<TestDbContext>(options => options.UseSqlServer(connectionString));
 services.AddOofpRepositories<Vino, TestDbContext>();
 services.AddScoped<IVinosRepo, VinosRepo>();
 ```
@@ -905,22 +810,19 @@ await repo.TryGetDataPaginationAsync((1, 1), SortDirection.Descending, x => x.Fe
           .MapAsync(p => p.Items.First());
 ```
 
-**El `TotalCount` con filtro:**
+**El `TotalCount` con filtro (ambas variantes lo respetan):**
 
 ```csharp
-// ❌ MAL: la versión síncrona cuenta TODA la tabla, ignorando el filtro
-var paginaMal = repo.TryGetDataPagination((1, 20), SortDirection.Ascending, x => x.Id,
-                                          x => x.Anyo == 2020);
-
-// ✅ BIEN: la asíncrona sí aplica el filtro al total
-var paginaBien = await repo.TryGetDataPaginationAsync((1, 20), SortDirection.Ascending, x => x.Id,
-                                                      x => x.Anyo == 2020, ct);
+var paginaSync = repo.TryGetDataPagination((1, 20), SortDirection.Ascending, x => x.Id,
+                                           x => x.Año == 2020);
+var paginaAsync = await repo.TryGetDataPaginationAsync((1, 20), SortDirection.Ascending, x => x.Id,
+                                                       x => x.Año == 2020, ct);
 ```
 
 **Modificación de entidades:**
 
 ```csharp
-// ❌ MAL: Update con pk sobre una instancia nueva → posible conflicto de tracking
+// El repositorio desvincula la instancia hallada antes de actualizar la instancia nueva.
 await repo.TryUpdateAsync(new Vino { Id = 42, Nombre = "X" }, ct, 42);
 
 // ✅ BIEN: recuperar, modificar y actualizar la misma instancia
@@ -931,11 +833,19 @@ await repo.TryFindAsync(ct, 42).MapAsync (v => { v.Nombre = "X"; return v; })
 **Atomicidad entre operaciones:**
 
 ```csharp
-// ❌ MAL: cada operación confirma por su cuenta
-await repoVinos.TryAddAsync(vino, ct);      // ya confirmado en la BD
-await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revierte
+// ✅ BIEN: el helper confirma o revierte el conjunto de escrituras
+var resultado = await repoVinos.UnitOfWork.TryExecuteInTransactionAsync(async token =>
+{
+    var vinoResult = await repoVinos.TryAddAsync(vino, token);
+    if (vinoResult.IsFailure)
+        return vinoResult.GetFailureDetailsOrThrow().ToMlResultFail<Vino>();
 
-// ✅ BIEN: transacción explícita (ver ejemplo 7)
+    var cataResult = await repoCatas.TryAddAsync(cata, token);
+    if (cataResult.IsFailure)
+        return cataResult.GetFailureDetailsOrThrow().ToMlResultFail<Vino>();
+
+    return vinoResult;
+}, ct);
 ```
 
 ---
@@ -956,7 +866,8 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 | Insertar varios de golpe | `TryAddRangeAsync(items, ct)` |
 | Borrar comprobando existencia | `TryRemoveAsync("mensaje", ct, pk)` |
 | El último registro | ❌ **No uses `TryGetLast`**: ordena descendente y toma el primero |
-| Atomicidad entre operaciones | Transacción manual con `GetContext().Database.BeginTransaction()` |
+| Confirmar escritura directa | `await repo.UnitOfWork.TryCommitAsync(ct)` |
+| Varias escrituras atómicas | `await repo.UnitOfWork.TryExecuteInTransactionAsync(...)` |
 | `Include`, proyecciones, agregados | ❌ No disponible: baja a `GetContext()` |
 | Registrar en DI | `AddOofpRepositories<T, TContext>()` ✅ |
 
@@ -964,33 +875,33 @@ await repoCatas.TryAddAsync(cata, ct);      // si falla, el anterior NO se revie
 
 ## Mejores prácticas
 
-1. **Registra siempre con `AddOofpRepositories`**: registra las 16 interfaces de la entidad con ciclo de vida `Scoped`, el único admitido en la librería y el mismo que el del `DbContext`.
+1. **Registra siempre con `AddOofpRepositories`**: registra las ocho interfaces funcionales de la entidad con ciclo de vida `Scoped`, el mismo que el del `DbContext`.
 2. **Llama a `AddOofpRepositories` al principio** de la configuración de servicios, antes de cualquier registro que dependa de repositorios.
 3. **No intentes liberar un repositorio a mano**: desde la 2.0.0 no implementa `IDisposable`, porque el `DbContext` lo gestiona el contenedor.
-4. **Usa siempre las versiones asíncronas** en aplicaciones web, y en paginación además por el problema del `TotalCount`.
-5. **Al paginar, pasa siempre `orderByField` y un `filter` no nulo.**
+4. **Usa las versiones asíncronas** en aplicaciones web para no bloquear el hilo durante el acceso a datos.
+5. **Al paginar, pasa `orderByField`** para obtener un orden estable; el filtro nulo se interpreta como `x => true`.
 6. **Evita `TryGetLast`/`TryGetLastAsync`**: materializa toda la consulta. Ordena descendente y toma el primero.
 7. **Para modificar, recupera y actualiza la misma instancia** (`TryFind` → modificar → `TryUpdate(v)` sin `pk`).
 8. **Personaliza los `MlErrorDetails`** si el mensaje va a llegar al usuario: los de serie están en inglés e incluyen el nombre del tipo.
 9. **Segrega las interfaces**: inyecta `IEfReadRepository<T>` donde solo consultes.
 10. **Declara una interfaz por entidad** (`IVinosRepo : IEfPagedRepository<Vino>`) para poder ampliarla sin romper llamadas.
-11. **Si necesitas atomicidad, usa una transacción explícita** con `GetContext().Database.BeginTransaction()`.
-12. **Para `Include`, proyecciones o agregados, baja a `GetContext()`**: la API no los cubre y forzarla es peor que usar EF Core directamente.
-13. **Combina con [`Validation`](../MoralesLarios.OOFP.Validation/README.md)** para validar la entidad antes de persistirla, y con [`Extensions.Loggers`](../MoralesLarios.OOFP.Logging/README.md) para trazar.
-14. **No des por hecho que dos operaciones comparten el *change tracker***: el localizador de servicios puede entregar contextos distintos.
+11. **Si necesitas atomicidad entre repositorios, usa `TryExecuteInTransactionAsync`** desde el UoW que comparten.
+12. **Confirma explícitamente las escrituras directas** con `UnitOfWork.TryCommit[Async]`; los servicios `CrudServiceFp` ya confirman tras cada operación.
+13. **Para `Include`, proyecciones o agregados, baja a `GetContext()`**: la API no los cubre y forzarla es peor que usar EF Core directamente.
+14. **Combina con [`Validation`](../MoralesLarios.OOFP.Validation/README.md)** para validar la entidad antes de persistirla, y con [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) para trazar.
+15. **Los repositorios del mismo ámbito comparten el *change tracker***: sus agregados y colaboradores usan el `DbContext` `Scoped` inyectado.
 
 ---
 
 ## Resumen
 
-- Repositorios genéricos sobre **EF Core 8** que devuelven `MlResult<T>`: el "no encontrado" es un `Fail` con mensaje personalizable, no una excepción, y los argumentos se validan con `EnsureFp` antes de tocar la base de datos.
-- **Dos capas paralelas**: la funcional (`*Fp`, pública, `MlResult`) envuelve a la OOP (`internal`, devuelve `T`). **Usa solo la funcional**; la OOP es inaccesible desde fuera.
+- Repositorios genéricos sobre **EF Core 8** que devuelven `MlResult<T>`: el "no encontrado" es un `Fail` con mensaje personalizable y los argumentos se validan antes de tocar la base de datos.
 - **Ocho repositorios componibles** por entidad, desde `IEfCreateRepository<T>` hasta `IEfPagedRepository<T>`. Todos los métodos son `virtual`: puedes heredar y sobrescribir.
-- Registro: `AddOofpRepositories<T, TContext>()` ✅ registra las 16 interfaces de una entidad con ciclo de vida **`Scoped`**, el único admitido en la librería y el mismo que el del `DbContext`.
-- ❗ **El punto más delicado**: los repos resuelven sus colaboradores con un **localizador de servicios estático que llama a `BuildServiceProvider()` en cada acceso**. Implica coste, providers sin liberar y que el `DbContext` interno pueda no ser el del ámbito actual.
+- Registro: `AddOofpRepositories<T, TContext>()` registra las ocho interfaces funcionales con ciclo de vida **`Scoped`**.
+- Los agregados y sus colaboradores comparten el mismo `DbContext` y `ChangeTracker` dentro del ámbito.
 - ✅ **El repositorio no es dueño del `DbContext`**: desde la 2.0.0 no implementa `IDisposable`; el contenedor libera el contexto al cerrar el ámbito.
-- ❗ **Sin unidad de trabajo**: cada operación hace su propio `SaveChanges`. Para atomicidad, transacción explícita con `GetContext().Database.BeginTransaction()`.
-- ⚠️ **Tres trampas concretas**: `TryGetLast` materializa toda la consulta; el `TotalCount` de la paginación **síncrona** ignora el filtro; y `TryUpdate(item, pk)` puede provocar conflicto de seguimiento.
+- ✅ **Unidad de trabajo explícita**: las escrituras preparan cambios; `TryCommit[Async]` los confirma y `TryExecuteInTransaction[Async]` coordina commit/rollback entre operaciones.
+- ⚠️ **Límites concretos**: `TryGetLast` materializa toda la consulta; la paginación necesita orden explícito para que las páginas sean deterministas.
 - ⚠️ **No cubre** `Include`, proyecciones, agregados, `ThenBy`, SQL crudo ni operaciones por lotes: para eso, `GetContext()`.
 
 ---

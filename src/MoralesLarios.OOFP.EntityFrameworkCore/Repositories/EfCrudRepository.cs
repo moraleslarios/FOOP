@@ -9,12 +9,47 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// </summary>
 /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
 /// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfCrudRepository<T, TContext>(TContext dbContext): EfRepository(dbContext), IEfRepository<T>
+public class EfCrudRepository<T, TContext> : EfRepository, IEfRepository<T>
     where T        : class
     where TContext : DbContext
 {
-    internal readonly IEfReadRepository<T> _repoReaderFp = RegisterServices.GetRepository<IEfReadRepository<T>>();
-    internal readonly IEfWriteRepository<T> _repoWriterFp = RegisterServices.GetRepository<IEfWriteRepository<T>>();
+    internal readonly IEfReadRepository<T> _repoReaderFp;
+    internal readonly IEfWriteRepository<T> _repoWriterFp;
+    private readonly IMlUnitOfWork<TContext> _unitOfWork;
+
+    /// <summary>Obtiene la unidad de trabajo ligada al contexto de este agregado.</summary>
+    public IMlUnitOfWork UnitOfWork => _unitOfWork;
+
+    /// <summary>
+    /// Representa <c>EfCrudRepository</c>.
+    /// </summary>
+    /// <param name="dbContext">Contexto de datos.</param>
+    public EfCrudRepository(TContext dbContext) : this(dbContext, new MlUnitOfWork<TContext>(dbContext))
+    {
+    }
+
+    internal EfCrudRepository(TContext dbContext, IMlUnitOfWork<TContext> unitOfWork) : base(dbContext)
+    {
+        _unitOfWork = unitOfWork;
+        _repoReaderFp = CreateReader(dbContext);
+        _repoWriterFp = CreateWriter(dbContext);
+    }
+
+    /// <summary>
+    /// Crea el colaborador de lectura, sobre el mismo <typeparamref name="TContext"/> del agregado.
+    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// </summary>
+    /// <param name="context">Contexto de datos compartido con el agregado.</param>
+    /// <returns>Instancia del colaborador de lectura.</returns>
+    protected virtual IEfReadRepository<T> CreateReader(TContext context) => new EfReadRepository<T, TContext>(context);
+
+    /// <summary>
+    /// Crea el colaborador de escritura, sobre el mismo <typeparamref name="TContext"/> del agregado.
+    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// </summary>
+    /// <param name="context">Contexto de datos compartido con el agregado.</param>
+    /// <returns>Instancia del colaborador de escritura.</returns>
+    protected virtual IEfWriteRepository<T> CreateWriter(TContext context) => new EfWriteRepository<T, TContext>(context);
 
 
 

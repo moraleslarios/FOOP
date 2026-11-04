@@ -5,7 +5,6 @@ global using System.Text;
 global using System.Threading.Tasks;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.DependencyInjection;
-global using MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
 global using System.Linq.Expressions;
 global using MoralesLarios.OOFP.EntityFrameworkCore.Helpers;
 global using MoralesLarios.OOFP.EntityFrameworkCore.Repositories;

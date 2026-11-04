@@ -146,7 +146,7 @@ Efectos:
 - **El formato final de `MlError.Details` para HTTP** → [`Epica-Serializacion-y-Errores-Http.md`](Epica-Serializacion-y-Errores-Http.md), tarea 2.2 (punto 46). Esta épica aporta el **dato**; aquella decide cómo **se serializa**.
 - Reescribir el motor de validación: se siguen usando `System.ComponentModel.DataAnnotations` y `FluentValidation`.
 - Los `ProblemDetails` de los controladores → [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md).
-- La unidad de trabajo → [`Epica-Unidad-de-Trabajo-y-Transacciones.md`](Epica-Unidad-de-Trabajo-y-Transacciones.md).
+- La unidad de trabajo → [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md), ya completada.
 
 ---
 
@@ -1171,5 +1171,5 @@ validaciones que antes pasaban.
 - [`Epica-Serializacion-y-Errores-Http.md`](Epica-Serializacion-y-Errores-Http.md) · **tarea 2.2 (punto 46): depende de US-01**; hay que diseñar `MlError` una sola vez
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) · consumidor final del `Target` para construir `ProblemDetails`
 - [`Epica-Servicio-y-Paginacion.md`](Epica-Servicio-y-Paginacion.md) · la otra ruptura de la `2.1.0`
-- [`Epica-Unidad-de-Trabajo-y-Transacciones.md`](Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, desgajado de la fase 4
+- [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, completada y archivada
 - [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37

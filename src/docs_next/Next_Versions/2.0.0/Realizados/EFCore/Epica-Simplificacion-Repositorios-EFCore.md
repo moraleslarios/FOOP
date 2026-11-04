@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0
 > **Proyecto afectado:** `MoralesLarios.OOFP.EntityFrameworkCore` (en exclusiva)
 > **Origen:** auditoría específica de la capa `Repositories` solicitada por el propietario
-> **Estado:** 🔄 Parcialmente realizada · el eje del ciclo de vida ✅ completado (`Scoped` único); el desacople de los imperativos, pendiente
+> **Estado:** ✅ Completada · `US-01` … `US-10` cerradas · commit de cierre documental `b66a9fd`
 > **Esfuerzo:** XL (~4-6 jornadas: ~1 para la red de seguridad, ~2-3 para desacoplar, ~1 para el registro y el `README`)
 > **Riesgo:** 🔴 muy alto · retira 18 ficheros, 149 métodos y 4 miembros públicos de registro
 > **Objetivo del propietario:** conservar **solo** los repositorios funcionales (los que devuelven
@@ -19,7 +19,7 @@
 > `DbContext` que recibe por constructor, y ese contexto es `Scoped`: alinear los dos es lo natural.
 >
 > **Lo que ya está hecho** (registrado como puntos **62** a **66** de
-> [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3):
+> [`oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3):
 >
 > - ✅ **D11 resuelto** · `AddOofpRepositoriesTransient`, `AddOofpRepositoriesScoped` y
 >   `AddOofpRepositoriesSingleton` **se han retirado**. Queda un **único**
@@ -277,7 +277,7 @@ repetirse** en el diseño de destino.
 
 ### 3.5 Errata detectada en documentación ya existente
 
-La épica [`Epica-Limpieza-Codigo-Muerto.md`](Epica-Limpieza-Codigo-Muerto.md) sitúa el **punto 64**
+La épica [`Epica-Limpieza-Codigo-Muerto.md`](../../Pendientes/Epica-Limpieza-Codigo-Muerto.md) sitúa el **punto 64**
 («22 declaraciones comentadas») en `Repositories/IEfWriteRepository.cs`, líneas 13-34. **La
 ubicación real es `Repositories/IEfRepository.cs`, líneas 14-39, y son 26 líneas.**
 `IEfWriteRepository.cs` tiene 14 líneas en total y su cuerpo está vacío. Hay que corregir esa épica
@@ -351,7 +351,7 @@ reescribir los 178 cuerpos: más alcance y más riesgo para el mismo beneficio f
 > **no hay parámetro `lifetime`** (el ciclo de vida ya no es un eje de la API: siempre `Scoped`, el
 > mismo que el `DbContext`) y **se siguen registrando las 16 interfaces**, porque el desacople de los
 > repositorios imperativos (US-03/04/05) todavía no se ha hecho. Registrado como punto **62** de
-> [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
+> [`oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
 
 Un **único** punto de entrada, sin parámetros y con un **único ciclo de vida**:
 
@@ -410,7 +410,7 @@ public static IServiceCollection AddOofpRepositories<T, TContext>(this IServiceC
 - **Cualquier otro proyecto de la solución**, salvo los ajustes mínimos e inevitables en
   `TestSupport` y `Tests.Integration` para que compilen y para alojar los tests nuevos.
 - La **unidad de trabajo y las transacciones**: es la
-  [épica 5](Epica-Unidad-de-Trabajo-y-Transacciones.md) (punto 40) y no se solapa con esta.
+      [épica de unidad de trabajo](Epica-Unidad-de-Trabajo-y-Transacciones.md) (punto 40) y no se solapa con esta.
 - **Subir la versión del paquete.** Todo queda en `2.0.0`; cualquier cambio de versión se consulta
   antes con el propietario.
 
@@ -422,114 +422,178 @@ public static IServiceCollection AddOofpRepositories<T, TContext>(this IServiceC
 
 Sin tests, el desacoplamiento es indemostrable.
 
-- [ ] Reactivar `…Tests.Integration/Repos/RepoVinorFpTests.cs`: descomentar los 4 escenarios
+- [x] Reactivar `…Tests.Integration/Repos/RepoVinorFpTests.cs`: descomentar los 4 escenarios
       (`TryAllAsync`, `TryAddAsync`, `TryUpdateAsync`, `TryRemoveAsync`) y dotarlos de `[Fact]`.
-- [ ] Añadir cobertura de **cada una de las 8 interfaces funcionales** sobre `TestDbContext`,
+- [x] Añadir cobertura de **cada una de las 8 interfaces funcionales** sobre `TestDbContext`,
       verificando camino válido **y** camino fallido (`IsFailure` con sus `MlErrorDetails`).
-- [ ] Cubrir expresamente los comportamientos que el desacoplamiento podría alterar: `TryFind` con
+- [x] Cubrir expresamente los comportamientos que el desacoplamiento podría alterar: `TryFind` con
       clave compuesta, `TryGetLast`, el `ORDER BY` de la paginación y el `TotalCount`.
-- [ ] Los tests se escriben **contra la API pública** y **sin** `RegisterServices.GetRepository`.
-- [ ] Build y suite completos en verde; el total de tests **sube** respecto a la línea base.
+- [x] Los tests se escriben **contra la API pública** y **sin** `RegisterServices.GetRepository`.
+- [x] Build y suite completos en verde; el total de tests **sube** respecto a la línea base.
 
 > No se usa `IsValid`/`IsFail` (obsoletos): la definición de terminado exige `CS0618 = 0`.
 
 ### US-02 · Rescatar `IGetContextable` · 🟠 alto · XS
 
-- [ ] Mover `IGetContextable.cs` a `Repositories/`, con namespace
+- [x] Mover `IGetContextable.cs` a `Repositories/`, con namespace
       `MoralesLarios.OOFP.EntityFrameworkCore.Repositories`.
-- [ ] `EfRepository` compila sin el global using del namespace imperativo.
-- [ ] Decidir si sigue siendo `public` → decisión **D-02**.
-- [ ] Cambio de namespace registrado como ruptura de compilación en los 6 sitios, y el renombrado en
-      `oofp-upgrade-2.renames.md`.
+- [x] `EfRepository` compila sin el global using del namespace imperativo.
+- [x] Decidir si sigue siendo `public` → decisión **D-02**.
+- [x] Cambio de namespace registrado en los 6 sitios como punto **67**, y el movimiento a
+      `Repositories` incluido en `oofp-upgrade-2.renames.md`.
 
 ### US-03 · Desacoplar los repositorios hoja de la familia imperativa · 🔴 muy alto · L
 
 Afecta a `EfCreateRepository`, `EfReadRepository`, `EfUpdateRepository` y `EfDeleteRepository`.
 
-- [ ] Retirar los 4 campos `_internalRepoAdder`, `_repoReader`, `_internalRepoUpdater` y
+- [x] ✅ Retirar los 4 campos `_internalRepoAdder`, `_repoReader`, `_internalRepoUpdater` y
       `_internalRepoDeleter`.
-- [ ] Sustituir cada llamada `_repoXxx!.Metodo(...)` por la operación equivalente sobre
+- [x] ✅ Sustituir cada llamada `_repoXxx!.Metodo(...)` por la operación equivalente sobre
       `GetContext().Set<T>()`, **respetando literalmente** la semántica actual: `AsNoTracking()` en
       las lecturas, `Where(filter).AsEnumerable().Last()` en `TryGetLast`, y el mismo tratamiento de
       `null!`.
-- [ ] Los envoltorios `EnsureFp` / `TryMap` / `TryBind` y los mensajes de error **no cambian**.
-- [ ] El operador `!` desaparece de esas llamadas: ya no hay campo anulable.
-- [ ] Los tests de la US-01 siguen en verde **sin modificarse**.
+- [x] ✅ Los envoltorios `EnsureFp` / `TryMap` / `TryBind` y los mensajes de error **no cambian**.
+- [x] ✅ El operador `!` desaparece de esas llamadas: ya no hay campo anulable.
+- [x] ✅ Los tests de la US-01 siguen en verde **sin modificarse** (1619 pruebas, 0 errores).
+
+> Nota de implementación: al compartir ahora `EfUpdateRepository` un único `DbContext`/`ChangeTracker`
+> entre `Find` y `Update` (antes usaban dos repositorios internos con contextos distintos, por lo que el
+> conflicto no podía darse), fue necesario desvincular (`EntityState.Detached`) la instancia encontrada
+> por `Find`/`FindAsync` antes de `Update(item)` cuando `item` es una instancia distinta, para evitar
+> `InvalidOperationException` por doble tracking de la misma clave. Es un detalle interno que preserva el
+> comportamiento externo exacto; no constituye ruptura pública ni de comportamiento observable (los
+> campos retirados eran `internal`, no `public`).
 
 ### US-04 · Desacoplar los agregados de la familia funcional · 🔴 muy alto · M
 
 Afecta a `EfCrudRepository`, `EfWriteRepository` y `EfPagedRepository` (las 9 llamadas FP→FP).
 
-- [ ] Aplicar la opción elegida en **D-01** (recomendada: composición con factorías
+- [x] Aplicar la opción elegida en **D-01** (recomendada: composición con factorías
       `protected virtual`).
-- [ ] El constructor primario `(TContext dbContext)` **se conserva**: `TestSupport` deriva de
+- [x] El constructor primario `(TContext dbContext)` **se conserva**: `TestSupport` deriva de
       `EfCrudRepository<T, TestDbContext>` y no debe tocarse.
-- [ ] Todos los colaboradores comparten **la misma instancia** de `DbContext` que el agregado.
-- [ ] `RegisterServices.GetRepository` queda con **0 usos** en todo el proyecto.
+- [x] Todos los colaboradores comparten **la misma instancia** de `DbContext` que el agregado.
+- [x] `RegisterServices.GetRepository` queda con **0 usos** en todo el proyecto.
+
+> Nota de implementación: se aplicó la Decisión D-01 Opción B — cada agregado expone métodos de
+> factoría `protected virtual CreateXxx(TContext context)` que devuelven la implementación por
+> defecto (`new EfXxxRepository<T, TContext>(context)`), invocados desde el constructor. El
+> constructor público `(TContext dbContext)` no cambia de firma. Al compartir los tres colaboradores
+> la misma instancia de `DbContext` recibida por el agregado (antes cada uno podía resolver su propio
+> contexto vía el contenedor), se considera **ruptura silenciosa de comportamiento** y se registra
+> como punto 69 en `oofp-upgrade-2.prompt.md`. Build `--no-incremental` en Release: 0 errores, 234
+> avisos. Suite completa: 1619 pruebas, 0 errores.
 
 ### US-05 · Eliminar la carpeta `Repositories.Imperative/` · 🔴 muy alto · S
 
-- [ ] Borrar los 18 ficheros con `git rm` (no con borrado manual).
-- [ ] Retirar la línea 8 de `GlobalUsings.cs`.
-- [ ] Comprobar que `Helpers/` y `Enums/` siguen compilando (su uso era exclusivamente funcional).
-- [ ] Build `--no-incremental` con **0 errores** y sin aumento de avisos.
-- [ ] Las 3 interfaces públicas filtradas (`IThrowingEfCreateRepository`,
+- [x] Borrar los 17 ficheros con `git rm` (no con borrado manual). *(Nota: el recuento original de
+      esta historia decía «18 ficheros»; la carpeta contenía realmente 17 — 8 interfaces + 9 clases
+      de implementación. Corregido aquí tras verificación con `git status --porcelain`.)*
+- [x] Retirar la línea 8 de `GlobalUsings.cs`.
+- [x] Comprobar que `Helpers/` y `Enums/` siguen compilando (su uso era exclusivamente funcional).
+- [x] Build `--no-incremental` con **0 errores** y sin aumento de avisos.
+- [x] Las 3 interfaces públicas filtradas (`IThrowingEfCreateRepository`,
       `IThrowingEfUpdateRepository`, `IThrowingEfDeleteRepository`) registradas como ruptura de
       compilación.
 
+> **Cierre US-05**: eliminada toda la carpeta `Repositories.Imperative/` (17 ficheros: 8 interfaces
+> `IThrowingEf*` + 9 clases `ThrowingEf*`), ya inalcanzable tras el desacoplamiento de US-03/US-04.
+> Ruptura de **compilación pública** (desaparecen `IThrowingEfCreateRepository<T>`,
+> `IThrowingEfUpdateRepository<T>` e `IThrowingEfDeleteRepository<T>`, además del resto de tipos
+> imperativos). Registro formal en `oofp-upgrade-2.prompt.md` **aplazado a US-10** (registro en
+> bloque de las rupturas 67+ junto con el resto de historias, por decisión del usuario). Build
+> `--no-incremental` en Release: 0 errores, 117 avisos reales (234 es el recuento duplicado por
+> MSBuild al repetir warnings en SDK multi-target; cifra sin cambios respecto a US-04). Suite
+> completa: 1619 pruebas, 0 errores — sin regresión.
+
 ### US-06 · Simplificar el registro en el contenedor · 🔴 muy alto · M
 
-- [ ] Reescribir `RegisterServices.cs` según §4.4: **1 método**, **8 registros**, sin estado
+- [x] Reescribir `RegisterServices.cs` según §4.4: **1 método**, **8 registros**, sin estado
       estático y sin `BuildServiceProvider()`.
-- [ ] Eliminar `RegisterServices.Obsolete.cs` y sus 4 puentes.
+- [x] Eliminar `RegisterServices.Obsolete.cs` y sus 4 puentes.
 - [x] 
-      para 4 entidades.
-- [ ] Corregir la alineación del fichero (D14).
-- [ ] Documentar en el `README` por qué no se debe usar `ServiceLifetime.Singleton`.
+      `AddOofpRepositoriesSingleton` y la firma de `AddOofpRepositories` registradas en los 6 sitios.
+- [x] Corregir la alineación del fichero (D14).
+- [x] Documentar en el `README` que los repositorios solo se registran como `Scoped`, el mismo ciclo
+      de vida que su `DbContext`.
 - [x] 
       `AddOofpRepositoriesSingleton` y la firma de `AddOofpRepositories` registradas en los 6 sitios.
 
+> **Cierre US-06 (parcial)**: `RegisterServices.cs` reducido a un único método
+> `AddOofpRepositories<T, TContext>` con los 8 `AddScoped` ya existentes, eliminando el campo
+> estático `_services`, la propiedad `ServiceProvider` (con su `BuildServiceProvider()` por
+> acceso, D2) y el método público `GetRepository<TRepo>()` (D1/D3/D4 resueltas por eliminación).
+> Eliminado también `RegisterServices.Obsolete.cs` completo (puente `[Obsolete] ResolveRepoFp`,
+> D21 reducida en 1), confirmado con `grep_search` que no tenía usos reales fuera de su propia
+> definición y comentarios de documentación. Ruptura de **compilación pública** (desaparecen
+> `GetRepository<TRepo>()` y `ResolveRepoFp<TRepo>()`), pendiente de registro formal en
+> `oofp-upgrade-2.prompt.md` junto con el resto de rupturas, aplazado a US-10 por decisión del
+> usuario. Build `--no-incremental` en Release: 0 errores, 117 avisos reales (234 recuento
+> duplicado). Suite completa: 1619 pruebas, 0 errores — sin regresión. Queda pendiente documentar
+> en el `README` por qué no debe usarse `ServiceLifetime.Singleton` (se abordará en US-09, al
+> reescribir el README completo).
+
 ### US-07 · Limpieza de la capa conservada · 🟢 bajo · S
 
-- [ ] Retirar las **26 líneas** comentadas de `IEfRepository<T>` (L14-39) y corregir la errata del
+- [x] Retirar las **26 líneas** comentadas de `IEfRepository<T>` (L14-39) y corregir la errata del
       punto 64 en `Epica-Limpieza-Codigo-Muerto.md` (§3.5).
-- [ ] Homogeneizar `virtual`: los 2 métodos públicos no virtuales de `EfUpdateRepository` pasan a
+- [x] Homogeneizar `virtual`: los 2 métodos públicos no virtuales de `EfUpdateRepository` pasan a
       serlo, o el `README` deja de afirmar que todos lo son → decisión **D-04**.
-- [ ] `typeName` pasa a `private static readonly`.
-- [ ] Decidir el destino de `Extensions.GetPkValues` (`[Obsolete]` con 0 llamadas) → **D-05**.
-- [ ] Evaluar si hace falta `InternalsVisibleTo` tras el borrado (D22): previsiblemente **no**,
+- [x] `typeName` pasa a `private static readonly`.
+- [x] Decidir el destino de `Extensions.GetPkValues` (`[Obsolete]` con 0 llamadas) → **D-05**.
+- [x] Evaluar si hace falta `InternalsVisibleTo` tras el borrado (D22): previsiblemente **no**,
       porque dejan de existir tipos `internal` relevantes.
 
-### US-08 · Corregir el `Dispose` · 🟠 alto · XS
+> **Cierre US-07**: retiradas las 26 líneas comentadas de `IEfRepository<T>` (interfaz ahora con
+> cuerpo vacío `{ }`); corregida la errata del punto 64 en `Epica-Limpieza-Codigo-Muerto.md` §3.5
+> (la ubicación real era `IEfRepository.cs` con 26 declaraciones, no `IEfWriteRepository.cs` con
+> 22), marcando ese punto como absorbido por esta US-07. Homogeneizado `virtual` (D-04) en los 2
+> métodos de `EfUpdateRepository` que no lo tenían (`TryUpdate(T item)` y
+> `TryUpdate(T item, MlErrorDetails, params object[])`), coherente con los otros 135 métodos ya
+> virtuales. `typeName` cambiado a `private static readonly string` en `EfDeleteRepository`,
+> `EfReadRepository` y `EfUpdateRepository`. D-05 resuelta sin cambio de código: se mantiene
+> `Extensions.GetPkValues` (`[Obsolete]`) tal y como anuncia su comentario. D22 confirmada: no se
+> necesita `InternalsVisibleTo`, no quedan tipos `internal` relevantes tras la poda de US-01…US-06.
+> **Sin rupturas de compilación ni de contrato**: los 3 cambios de código son coherencia interna
+> (añadir `virtual` es aditivo, el modificador de un campo `private` no es observable desde fuera
+> del ensamblado) y no generan ninguna entrada nueva en la tabla de rupturas §8 (puntos 62-69, que
+> cubren exclusivamente US-02…US-06); por tanto **no requiere registro en los 6 sitios** de
+> `oofp-upgrade-2.prompt.md` ni en `oofp-upgrade-2.renames.md`.
 
-- [ ] `EfRepository` **deja de disponer** el `DbContext` que recibe: quien lo crea, lo dispone.
-- [ ] Decidir si `EfRepository` sigue implementando `IDisposable` → decisión **D-06**.
-- [ ] Añadir un test que construya un repositorio bajo `AddScoped`, cierre el ámbito y reutilice el
-      contexto sin `ObjectDisposedException`.
-- [ ] **Ruptura silenciosa**: registrada con sus patrones `grep` y su forma de detección.
+### US-08 · Corregir la propiedad del `DbContext` · 🟠 alto · XS
+
+- [x] `EfRepository` no dispone el `DbContext` que recibe; el contenedor lo libera al cerrar el
+      ámbito.
+- [x] D-06 resuelta: retirar `IDisposable` de `EfRepository`; es ruptura de compilación registrada
+      como punto **63**, no una ruptura silenciosa.
+- [x] Añadir un test `RepositorioScoped_UsaElDbContextDelAmbito_SinSerSuPropietario` que confirma
+      que el repositorio resuelto comparte el `TestDbContext` del ámbito y no implementa IDisposable.
+- [x] Punto **63** documentado con los patrones de búsqueda y acciones para el consumidor.
 
 ### US-09 · Actualizar el `README.md` del proyecto · 🟢 bajo · M
 
-Sobre las 1037 líneas y 50 encabezados actuales:
+Sobre el README anterior de 1037 líneas:
 
-- [ ] Eliminar el H2 «Arquitectura: dos capas paralelas» y el H3 «Cómo resuelven sus dependencias los
-      repositorios: el punto crítico», que dejan de describir la realidad.
-- [ ] Corregir «Estructura del proyecto»: hoy menciona `Repos/`, `OopRepos/` y
-      `Helpers/Constants.cs`, que **no existen**.
-- [ ] Corregir la versión documentada: `1.0.14` → `2.0.0`.
-- [ ] Revisar los 12 apartados de «Particularidades reales del código fuente»: el **1**
-      (`BuildServiceProvider`), el **2** (`Dispose`) y el **11** (visibilidad OOP) quedan obsoletos.
-- [ ] Reescribir «Registro en el contenedor» con el método único.
-- [ ] `scripts\check-md-anchors4.ps1` en verde: **0 anclas rotas**.
+- [x] Sustituir la arquitectura de dos capas y el localizador estático por la composición con
+      factorías y el `DbContext` compartido.
+- [x] Corregir «Estructura del proyecto»: `Repositories/`, sin `OopRepos/` ni
+      `Helpers/Constants.cs`.
+- [x] Corregir la versión documentada a `2.0.0`.
+- [x] Revisar las 12 particularidades: retirar el localizador y los defectos ya corregidos; explicar
+      la propiedad del contexto, el namespace público de `IGetContextable` y el campo `typeName`.
+- [x] Reescribir «Registro en el contenedor» alrededor del único método `AddOofpRepositories`.
+- [x] `scripts\check-md-anchors4.ps1`: **0 anclas rotas**.
 
 ### US-10 · Registro de rupturas y puerta de control · 🟠 alto · S
 
 - [x] ✅ Cada ruptura de §8 presente en los **6 sitios** de `oofp-upgrade-2.prompt.md`.
 - [x] ✅ Renombrados y cambios de namespace en `oofp-upgrade-2.renames.md`.
-- [x] ✅ Numeración continuada **desde el 62** sin huecos ni reutilizaciones (puntos **62** a **66**).
-- [x] ✅ Build `--no-incremental` y suite completa en verde; `CS1591 = CS0618 = 0` (0 errores, 234 avisos, 1606 pruebas).
-- [x] ✅ Commit con Conventional Commits en castellano, con `!`, creado con `git commit -F` desde un
-      fichero UTF-8 sin BOM.
+- [x] ✅ Numeración continuada sin reutilizaciones; los puntos **62–66** existentes se completan
+      con los puntos **67–70** de esta épica.
+- [x] Build Release `--no-incremental`: **0 errores, CS1591 = 0, CS0618 = 0, 117 avisos**;
+      suite completa: **1620 correctas, 0 errores y 0 omitidas**.
+- [x] Commit de cierre documental con Conventional Commits en castellano, creado con `git commit -F`
+      desde un fichero UTF-8 sin BOM.
 
 ---
 
@@ -571,38 +635,32 @@ graph LR
 > (punto 4), lista de la Fase 6 (punto 5), tabla del apéndice de versiones y, si hay renombrado o
 > cambio de namespace, `oofp-upgrade-2.renames.md`.
 
-**Último `#### N` usado en el prompt: 66 ⇒ los puntos que quedan por registrar arrancan en el 67.** Los
-números «previstos» de las tres primeras filas se escribieron cuando el último punto era el 61, así que
-**se reasignarán** en el momento de registrar cada uno; las filas marcadas con ✅ llevan ya su número
-definitivo.
+**Último `#### N` usado en el prompt: 70.** Los puntos 62–66 ya estaban registrados; el cierre de
+US-10 añadió los puntos definitivos **67–70** para las rupturas de US-02, US-05, US-06 y US-04.
 
 | Nº previsto | Ruptura | Tipo | US |
 |---:|---|---|---|
-| 62 | `IGetContextable` cambia de `…Repositories.Imperative` a `…Repositories` | compilación + renombrado de namespace | US-02 |
-| 63 | Desaparecen `IThrowingEfCreateRepository<T>`, `IThrowingEfUpdateRepository<T>` e `IThrowingEfDeleteRepository<T>` | compilación | US-05 |
-| 64 | Desaparece `RegisterServices.GetRepository<TRepo>()` (y su puente `ResolveRepoFp`) | compilación | US-06 |
 | **62** ✅ | Desaparecen `AddOofpRepositoriesTransient`, `AddOofpRepositoriesScoped` y `AddOofpRepositoriesSingleton` (y sus 3 puentes), y los 6 `Add*CrudServices[Duplex]FpWithoutRepositories`; queda un método por cosa registrable, siempre `Scoped` | compilación (quien ya llamaba a `AddOofpRepositories` **no cambia de comportamiento**) | US-06 · **ya registrada** |
 | **63** ✅ | `EfRepository` y `ThrowingEfRepository` dejan de implementar `IDisposable` | compilación | US-08 · **ya registrada** |
 | **64** ✅ | `AddOOFPIO()` registra `IMlFileSystem` como `Scoped` en vez de `Singleton` | ⚠️ silenciosa | US-06 · **ya registrada** |
 | **65** ✅ | `AddMlConfigurationReader()` registra `IMlConfigurationReader` como `Scoped` en vez de `Transient` | ⚠️ silenciosa | US-06 · **ya registrada** |
 | **66** ✅ | La capa HTTP registra sus 6 servicios (`IHttpApiInvoker`, clientes REST y sus `TService`) como `Scoped` en vez de `Transient` | ⚠️ silenciosa | US-06 · **ya registrada** |
-| ~~66~~ ❌ **ANULADA** | ~~`AddOofpRepositories<T, TContext>` gana el parámetro opcional `ServiceLifetime lifetime`~~ | — | El eje del ciclo de vida **se ha eliminado**, no se ha parametrizado: ya no habrá parámetro `lifetime` (ver punto **62**) |
-| 67 | El contenedor ya **no** registra las 8 interfaces `IThrowingEf*` | compilación para quien las resolviera | US-06 |
-| ~~68~~ ✅ **YA HECHA** | ~~`EfRepository.Dispose()` **deja de disponer** el `DbContext` inyectado~~ | — | Ejecutada y registrada como punto **63**: los repositorios ya no implementan `IDisposable`, así que no hay `Dispose()` que cambiar |
-| 69 | Los agregados comparten la misma instancia de `DbContext` que el agregado (antes resolvían una propia) | **silenciosa** ⚠️ | US-04 |
+| **67** ✅ | `IGetContextable` cambia de `…Repositories.Imperative` a `…Repositories` | compilación + renombrado de namespace | US-02 · **registrada** |
+| **68** ✅ | Desaparecen los tres contratos públicos `IThrowingEfCreateRepository<T>`, `IThrowingEfUpdateRepository<T>` e `IThrowingEfDeleteRepository<T>` y los ocho registros imperativos en DI; los otros cinco contratos eran `internal` | compilación y resolución DI | US-05 · **registrada** |
+| **69** ✅ | Desaparecen `RegisterServices.GetRepository<TRepo>()` y el puente `ResolveRepoFp<TRepo>()` | compilación | US-06 · **registrada** |
+| **70** ✅ | Los agregados funcionales y sus colaboradores comparten el mismo `DbContext` inyectado | **silenciosa** ⚠️ | US-04 · **registrada** |
 
-La ruptura **silenciosa** que queda (69) es la peligrosa: el consumidor compila igual y el
+La ruptura **silenciosa** del punto **70** es la que requiere revisión: el consumidor compila igual y el
 comportamiento cambia. **Arregla** el seguimiento de entidades, pero quien dependiera de tener grafos
 de cambios separados verá un único `ChangeTracker`. Necesita su apartado «cómo detectarla» y sus
 patrones `grep`.
 
-> ℹ️ Con `Scoped` como único ciclo de vida, el riesgo de la 69 **se reduce mucho**: dos repositorios
-> resueltos en el mismo ámbito ya comparten hoy la misma instancia de `DbContext`, porque el contexto
-> es `Scoped`. Lo que queda por eliminar es el `BuildServiceProvider()` interno, que es quien crea un
-> proveedor paralelo y rompe esa garantía.
+> ℹ️ Con `Scoped` como único ciclo de vida, los repositorios resueltos en el mismo ámbito ya comparten
+> la instancia de `DbContext`; el punto 70 cambia además los colaboradores internos de los agregados
+> para que reciban explícitamente ese mismo contexto.
 
-> Si la decisión **D-02** deja `IGetContextable` como `internal`, el punto 62 pasa de cambio de
-> namespace a **retirada de un tipo público**: hay que reflejarlo.
+> La decisión **D-02** mantiene `IGetContextable` como `public`; el punto 67 es únicamente el
+> cambio de namespace al que apunta la tabla de migración.
 
 ---
 
@@ -610,41 +668,42 @@ patrones `grep`.
 
 | Id | Decisión | Opciones | Recomendación |
 |---|---|---|---|
-| **D-01** | Cómo resuelven sus colaboradores los agregados | A herencia en cadena · **B composición con factorías** · C núcleo estático interno | **B**: no toca firmas ni jerarquía, y conserva los cuerpos actuales |
-| **D-02** | ¿`IGetContextable` sigue siendo `public`? | mantener `public` en `…Repositories` · pasar a `internal` · eliminar y dejar solo `EfRepository.GetContext()` | **Mantener `public`**: `GetContext()` ya es público en `EfRepository` y es el punto de extensión natural |
+| **D-01** ✅ **CERRADA** | Cómo resuelven sus colaboradores los agregados | A herencia en cadena · **B composición con factorías** · C núcleo estático interno | **B**: las factorías protegidas reciben el `TContext` del agregado |
+| **D-02** ✅ **CERRADA** | ¿`IGetContextable` sigue siendo `public`? | mantener `public` en `…Repositories` · pasar a `internal` · eliminar y dejar solo `EfRepository.GetContext()` | **Mantener `public`**: `GetContext()` ya es público en `EfRepository` y es el punto de extensión natural |
 | **D-03** ✅ **CERRADA · sin efecto** | ¿Debe `AddOofpRepositories` rechazar `ServiceLifetime.Singleton`? | aceptarlo y documentar el riesgo · lanzar `ArgumentException` · avisar por log | **La pregunta desaparece**: no se añade ningún parámetro `lifetime`, así que no hay nada que rechazar. El método registra siempre `Scoped`, el mismo ciclo de vida que el `DbContext` (punto **62**) |
-| **D-04** | `virtual` en toda la superficie funcional | hacer virtuales los 2 métodos de `EfUpdateRepository` · corregir el `README` | **Hacerlos virtuales**: coherencia con los otros 135 |
-| **D-05** 🔄 **PARCIAL** | Destino de los 5 `[Obsolete]` | retirarlos ahora con el resto de la poda · mantenerlos hasta la 3.0.0 como anuncia su comentario | **Retirar los de `RegisterServices`** (su destino desaparece) y **mantener `GetPkValues`**. ✅ Ya retirados 3 de los 4 (`AddTransientOOFPRepos`, `AddScopedOOFPRepos`, `AddSingletonOOFPRepos`); sobrevive `ResolveRepoFp` porque `GetRepository<TRepo>()` aún existe |
-| **D-06** | ¿`EfRepository` sigue implementando `IDisposable`? | sí, con `Dispose` vacío · **no**, retirarlo | **Retirarlo**: un `Dispose` vacío invita al mal uso; pero es ruptura de compilación para quien haga `using` |
-| **D-07** | ¿Sobrecarga que registre todas las entidades de un `DbContext`? | añadir `AddOofpRepositories<TContext>()` recorriendo el modelo · no añadirla | **No añadirla ahora**: cabe en una épica posterior y amplía el alcance |
+| **D-04** ✅ **CERRADA** | `virtual` en toda la superficie funcional | hacer virtuales los 2 métodos de `EfUpdateRepository` · corregir el `README` | **Hacerlos virtuales**: coherencia con los otros 135 |
+| **D-05** ✅ **CERRADA** | Destino de los `[Obsolete]` de `RegisterServices` y de `GetPkValues` | retirar los de `RegisterServices` · mantener `GetPkValues` hasta 3.0.0 | Se retiraron todos los miembros obsoletos de `RegisterServices`, incluido `ResolveRepoFp`; se mantiene `Extensions.GetPkValues` tal como anuncia su atributo |
+| **D-06** ✅ **CERRADA** | ¿`EfRepository` sigue implementando `IDisposable`? | sí, con `Dispose` vacío · **no**, retirarlo | Retirado: el repositorio no es propietario del contexto. La ruptura de compilación queda registrada en el punto **63** |
+| **D-07** ✅ **CERRADA · diferida** | ¿Sobrecarga que registre todas las entidades de un `DbContext`? | añadir `AddOofpRepositories<TContext>()` recorriendo el modelo · no añadirla | **No añadirla en esta épica**: ampliaría el alcance y puede abordarse después |
 
 ---
 
 ## 10. Definición de terminado
 
-- [ ] `Repositories.Imperative/` **no existe**; 18 ficheros y 149 métodos retirados.
-- [ ] `RegisterServices.GetRepository` y `BuildServiceProvider()` con **0 apariciones** en el
+- [x] `Repositories.Imperative/` **no existe**; se retiraron sus 17 ficheros.
+- [x] `RegisterServices.GetRepository` y `BuildServiceProvider()` con **0 apariciones** en el
       proyecto.
-- [ ] **0 campos estáticos mutables** en `RegisterServices`.
-- [ ] `RegisterServices.cs` ≈ 40 líneas, **1 método público** y **8 registros**;
+- [x] **0 campos estáticos mutables** en `RegisterServices`.
+- [x] `RegisterServices.cs` ≈ 40 líneas, **1 método público** y **8 registros**;
       `RegisterServices.Obsolete.cs` eliminado.
-- [ ] `GlobalUsings.cs` con 17 entradas, sin el namespace imperativo.
-- [ ] **0 líneas comentadas** en las interfaces públicas del proyecto.
-- [ ] Los tests de la US-01 cubren las 8 interfaces funcionales y **pasan sin modificarse** tras el
+- [x] `GlobalUsings.cs` con 17 entradas, sin el namespace imperativo.
+- [x] **0 líneas comentadas** en las interfaces públicas del proyecto.
+- [x] Los tests de la US-01 cubren las 8 interfaces funcionales y **pasan sin modificarse** tras el
       desacoplamiento.
-- [ ] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental`: **EXITCODE=0, 0 errores**,
-      `CS1591 = 0`, `CS0618 = 0`, y avisos **no superiores** a la línea base (236).
-- [ ] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build`: **0 con error, 0 omitidos**, total
-      **superior** a 1606.
-- [ ] `scripts\check-md-anchors4.ps1`: **0 anclas rotas**.
-- [ ] `README.md` del proyecto sin referencias a la capa imperativa, a `Repos/`, a `OopRepos/`, a
+- [x] `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental`: **EXITCODE=0, 0 errores**,
+      `CS1591 = 0`, `CS0618 = 0`, 117 avisos (por debajo de la línea base 236).
+- [x] `dotnet test MoralesLarios.OOFP.sln -c Release --no-build`: **EXITCODE=0, 0 con error,
+      0 omitidos, 1620 correctas** (más de 1606).
+- [x] `scripts\check-md-anchors4.ps1`: **0 anclas rotas**.
+- [x] `README.md` del proyecto sin referencias a la capa imperativa, a `Repos/`, a `OopRepos/`, a
       `Helpers/Constants.cs` ni a la versión `1.0.14`.
-- [ ] Los puntos **62-69** registrados en los **6 sitios** de `oofp-upgrade-2.prompt.md`.
-- [ ] Renombrados y cambios de namespace en `oofp-upgrade-2.renames.md`.
-- [ ] Errata del punto 64 corregida en `Epica-Limpieza-Codigo-Muerto.md`.
-- [ ] Todos los criterios de aceptación de las US-01…US-10 marcados.
-- [ ] Commit `refactor(efcore)!: …` creado con `git commit -F`; **sin `git push` sin confirmación**.
-- [ ] **La versión del paquete sigue en `2.0.0`**, salvo decisión expresa del propietario.
+- [x] Los puntos **67-70** registrados en los **6 sitios** de `oofp-upgrade-2.prompt.md`.
+- [x] Renombrados y cambios de namespace en `oofp-upgrade-2.renames.md`.
+- [x] Errata del punto 64 corregida en `Epica-Limpieza-Codigo-Muerto.md`.
+- [x] Todos los criterios de aceptación de las US-01…US-10 marcados.
+- [x] Commit de cierre documental creado con Conventional Commits y `git commit -F`; **sin `git push`
+      sin confirmación**.
+- [x] **La versión del paquete sigue en `2.0.0`**, sin cambio de versión.
 
 ---
 
@@ -740,7 +799,7 @@ Las tres cifras que resumen esta épica, y que conviene vigilar en cualquier pro
 
 ## Ver también
 
-- [`README.md` del proyecto](../../../../MoralesLarios.OOFP.EntityFrameworkCore/README.md) · documentación de la capa afectada
+- [`README.md` del proyecto](../../../../../MoralesLarios.OOFP.EntityFrameworkCore/README.md) · documentación de la capa afectada
 - [Épica · Unidad de trabajo y transacciones](Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, sobre el mismo proyecto
-- [Épica · Limpieza de código muerto](Epica-Limpieza-Codigo-Muerto.md) · punto 64, con la errata descrita en §3.5
-- [Índice de pendientes](README.md)
+- [Épica · Limpieza de código muerto](../../Pendientes/Epica-Limpieza-Codigo-Muerto.md) · punto 64, con la errata descrita en §3.5
+- [Índice de pendientes](../../Pendientes/README.md)

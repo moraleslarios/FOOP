@@ -22,14 +22,14 @@ ha visto nunca. Por eso toda la planificación se ha centralizado **aquí**, en 
 | [`Pendientes/`](Pendientes/README.md) | épicas y trabajos **por hacer** |
 | [`Realizados/`](#3-realizados--trabajo-ya-implementado) | épicas y trabajos **ya implementados** y publicados en la rama |
 
-> 🔑 **El código no ha cambiado por esta reorganización.** Sólo se han movido documentos y se han
-> repuntado sus enlaces relativos. La versión del código es exactamente la que había.
+> 🔑 La reorganización de estos documentos no cambia código por sí sola. Las épicas archivadas sí
+> reflejan cambios implementados antes de la primera publicación de los paquetes `2.0.0`.
 
 ---
 
 ## 2. Pendientes · trabajo por hacer
 
-Plan de ejecución en [`Pendientes/README.md`](Pendientes/README.md) · **ninguna épica iniciada**.
+Plan de ejecución en [`Pendientes/README.md`](Pendientes/README.md) · **8 épicas sin iniciar**.
 
 | Épica | Proyecto principal |
 | --- | --- |
@@ -40,7 +40,6 @@ Plan de ejecución en [`Pendientes/README.md`](Pendientes/README.md) · **ningun
 | [Mensajes, idioma e instrumentación](Pendientes/Epica-Mensajes-Y-Localizacion.md) | transversal |
 | [Serialización y errores HTTP](Pendientes/Epica-Serializacion-y-Errores-Http.md) | `Http` |
 | [Servicio y paginación](Pendientes/Epica-Servicio-y-Paginacion.md) | `Application` |
-| [Unidad de trabajo y transacciones](Pendientes/Epica-Unidad-de-Trabajo-y-Transacciones.md) | `EntityFrameworkCore` |
 | [Validación](Pendientes/Epica-Validacion.md) | `Validation*` |
 
 ---
@@ -76,6 +75,15 @@ Planes en [`Realizados/Logging/README.md`](Realizados/Logging/README.md) (épica
 | [8 · Registro estructurado y plantillas](Realizados/Logging/Epica-08-Registro-Estructurado-y-Plantillas.md) | ✅ |
 | [9 · Ámbitos de registro](Realizados/Logging/Epica-09-Ambitos-de-Registro.md) | ✅ |
 
+### 3.3 `MoralesLarios.OOFP.EntityFrameworkCore`
+
+Plan en [`Realizados/EFCore/README.md`](Realizados/EFCore/README.md) · **US-01 … US-10** y **US-01 … US-11**.
+
+| Épica | Estado |
+|---|---|
+| [Simplificación de repositorios EF Core](Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md) | ✅ |
+| [Unidad de trabajo y transacciones](Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) | ✅ |
+
 ---
 
 ## 4. De dónde viene cada documento
@@ -85,11 +93,13 @@ los documentos y en los comentarios del código:
 
 | Carpeta antigua | Carpeta actual | Contenido |
 | --- | --- | --- |
-| `Next_Versions/2.1/` | [`2.0.0/Pendientes/`](Pendientes/README.md) | las 9 épicas de ejecución sin iniciar |
+| `Next_Versions/2.1/` | [`2.0.0/Pendientes/`](Pendientes/README.md) | las 8 épicas que siguen pendientes |
 | `Next_Versions/2.1.1/Core/` | [`2.0.0/Realizados/Core/`](Realizados/Core/README.md) | épicas 1-4 del núcleo |
 | `Next_Versions/2.2.0/Logging/` | [`2.0.0/Realizados/Logging/`](Realizados/Logging/README.md) | épicas 1-7 de registro |
 | `Next_Versions/2.3.0/Logging/README.md` | [`Realizados/Logging/README-Epica-08.md`](Realizados/Logging/README-Epica-08.md) | plan de la épica 8 |
 | `Next_Versions/2.4.0/Logging/README.md` | [`Realizados/Logging/README-Epica-09.md`](Realizados/Logging/README-Epica-09.md) | plan de la épica 9 |
+| `Next_Versions/2.0.0/Pendientes/Epica-Simplificacion-Repositorios-EFCore.md` | [`Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md`](Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md) | épica completada y archivada por área |
+| `Next_Versions/2.0.0/Pendientes/Epica-Unidad-de-Trabajo-y-Transacciones.md` | [`Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md`](Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) | épica completada y archivada por área |
 
 > ℹ️ Las **XML-docs y los comentarios del código** siguen citando esas versiones antiguas («*de la
 > épica 6 de la versión 2.2.0*», «*puentes `[Obsolete]` de la v2.1.1*»). Se han dejado **a propósito**:

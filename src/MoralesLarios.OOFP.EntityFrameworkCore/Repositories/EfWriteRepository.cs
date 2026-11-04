@@ -11,13 +11,48 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// </summary>
 /// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
 /// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfWriteRepository<T, TContext>(TContext dbContext) : EfRepository(dbContext), IEfWriteRepository<T>
+public class EfWriteRepository<T, TContext> : EfRepository, IEfWriteRepository<T>
     where T : class
     where TContext : DbContext
 {
-    internal readonly IEfCreateRepository<T>   _repoAdderFp   = RegisterServices.GetRepository<IEfCreateRepository  <T>>();
-    internal readonly IEfDeleteRepository<T> _repoDeleterFp = RegisterServices.GetRepository<IEfDeleteRepository<T>>();
-    internal readonly IEfUpdateRepository<T> _repoUpdaterFp = RegisterServices.GetRepository<IEfUpdateRepository<T>>();
+    internal readonly IEfCreateRepository<T> _repoAdderFp;
+    internal readonly IEfDeleteRepository<T> _repoDeleterFp;
+    internal readonly IEfUpdateRepository<T> _repoUpdaterFp;
+
+    /// <summary>
+    /// Representa <c>EfWriteRepository</c>.
+    /// </summary>
+    /// <param name="dbContext">Contexto de datos.</param>
+    public EfWriteRepository(TContext dbContext) : base(dbContext)
+    {
+        _repoAdderFp   = CreateAdder(dbContext);
+        _repoDeleterFp = CreateDeleter(dbContext);
+        _repoUpdaterFp = CreateUpdater(dbContext);
+    }
+
+    /// <summary>
+    /// Crea el colaborador de creación, sobre el mismo <typeparamref name="TContext"/> del agregado.
+    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// </summary>
+    /// <param name="context">Contexto de datos compartido con el agregado.</param>
+    /// <returns>Instancia del colaborador de creación.</returns>
+    protected virtual IEfCreateRepository<T> CreateAdder(TContext context) => new EfCreateRepository<T, TContext>(context);
+
+    /// <summary>
+    /// Crea el colaborador de borrado, sobre el mismo <typeparamref name="TContext"/> del agregado.
+    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// </summary>
+    /// <param name="context">Contexto de datos compartido con el agregado.</param>
+    /// <returns>Instancia del colaborador de borrado.</returns>
+    protected virtual IEfDeleteRepository<T> CreateDeleter(TContext context) => new EfDeleteRepository<T, TContext>(context);
+
+    /// <summary>
+    /// Crea el colaborador de actualización, sobre el mismo <typeparamref name="TContext"/> del agregado.
+    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// </summary>
+    /// <param name="context">Contexto de datos compartido con el agregado.</param>
+    /// <returns>Instancia del colaborador de actualización.</returns>
+    protected virtual IEfUpdateRepository<T> CreateUpdater(TContext context) => new EfUpdateRepository<T, TContext>(context);
 
 
 
@@ -180,8 +215,5 @@ public class EfWriteRepository<T, TContext>(TContext dbContext) : EfRepository(d
     /// <param name="token">Token para cancelar la operación.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateRangeAsync(items, token);
-
-
-
 }
 

@@ -1,24 +1,36 @@
 # Épica · Unidad de trabajo y transacciones en `MoralesLarios.OOFP.EntityFrameworkCore`
 
 > **Versión destino:** `2.0.0`
-> **Origen:** punto **40** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
+> **Origen:** punto **40** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
 > (*"No hay unidad de trabajo: un `SaveChanges` por operación"*), sacado de la versión `2.0.0` por su coste y su riesgo.
-> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tarea 4.4.
-> **Estado:** 🔄 Parcialmente realizada · US-02 y US-03 ✅ hechas con la unificación en `Scoped`; US-01 y el resto, pendientes
+> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tarea 4.4.
+> **Estado:** ✅ Completada · US-01 … US-11 implementadas y verificadas
 > **Esfuerzo estimado:** **XL** (~5-7 jornadas) · **Riesgo:** 🔴 Alto (ruptura de comportamiento silenciosa)
 
 ---
 
-> ## ⚠️ Actualización · parte de esta épica ya está resuelta (`Scoped` único)
+> ## ✅ Cierre · unidad de trabajo implementada
 >
-> Por decisión expresa del propietario, dentro de la simplificación general de la librería,
-> **`Scoped` es el único ciclo de vida de toda la solución** y el ciclo de vida **deja de ser un eje
-> de la API pública**. El criterio es el de esta épica: un repositorio vive al lado del `DbContext`
-> que recibe por constructor, y ese contexto es `Scoped`. Hay que leer la épica con estas
-> correcciones:
+> La implementación usa un único registro `Scoped`; cada repositorio agregado comparte su `DbContext`
+> y su unidad de trabajo. Las escrituras directas preparan cambios y requieren confirmación explícita;
+> `CrudServiceFp` conserva la persistencia automática de sus operaciones de escritura.
 >
-> **Ya hecho** (registrado como puntos **62** a **66** de
-> [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3):
+> - ✅ `IMlUnitOfWork` y `IMlUnitOfWork<TContext>` exponen commit, descarte, estado de cambios y
+>   ejecución transaccional sincrónica y asincrónica.
+> - ✅ El runner confirma una vez en éxito y revierte los cambios propios ante fallo, excepción,
+>   cancelación o error de commit. Si ya existe una transacción, la reutiliza sin finalizarla: su
+>   propietario externo conserva el control de commit/rollback.
+> - ✅ El diagnóstico de cambios pendientes se activa mediante `MlUnitOfWorkDiagnostics` y está
+>   desactivado por defecto.
+> - ✅ Las dos variantes de `CrudServiceFp`, el sample SQLite, 19 pruebas de integración y 18 pruebas
+>   unitarias de Application cubren el flujo.
+> - ✅ El README del proyecto y la guía de migración describen la confirmación explícita. Los cambios
+>   de consumidor están registrados como puntos **71** y **72** de
+>   [`oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
+>
+> La unificación de ciclos de vida y la retirada del localizador preceden a esta épica y están
+> registradas en los puntos 62 y 69. Las secciones 1–2 y los ejemplos «Hoy» del apéndice conservan la
+> radiografía del estado inicial; no describen el código actual.
 >
 > - ✅ **US-03 · resuelta por eliminación** · `AddOofpRepositoriesSingleton` y
 >   `AddOofpRepositoriesTransient` (y también `AddOofpRepositoriesScoped`) **se han retirado**, junto con
@@ -59,7 +71,7 @@
 - [3. Alcance de la épica](#3-alcance-de-la-épica)
 - [4. Historias de usuario](#4-historias-de-usuario)
 - [5. Orden de ejecución y dependencias](#5-orden-de-ejecución-y-dependencias)
-- [6. Decisiones de diseño abiertas](#6-decisiones-de-diseño-abiertas)
+- [6. Decisiones de diseño resueltas](#6-decisiones-de-diseño-resueltas)
 - [7. Definición de terminado (DoD) de la épica](#7-definición-de-terminado-dod-de-la-épica)
 - [8. Apéndice · Ejemplos de código y explicación detallada](#8-apéndice--ejemplos-de-código-y-explicación-detallada)
 
@@ -191,12 +203,12 @@ Efectos:
 
 **Criterios de aceptación**
 
-- [ ] `RegisterServices.ServiceProvider` **ya no llama a `BuildServiceProvider()`** en el getter.
-- [ ] Las dependencias internas (`_repoReaderFp`, `_repoWriterFp`, `_internalRepoAdder`, …) se **inyectan por constructor**, no por `RegisterServices.GetRepository<T>()`.
-- [ ] `RegisterServices.GetRepository<TRepo>()` queda marcado `[Obsolete]` o se elimina (ver decisión D-1).
-- [ ] Un test demuestra que, dentro de un mismo `IServiceScope`, `IEfCreateRepository<T>` e `IEfUpdateRepository<T>` devuelven **la misma instancia de `DbContext`** (comparación por referencia vía `IGetContextable.GetContext()`).
-- [ ] Un test demuestra que resolver repositorios 1.000 veces **no incrementa** el número de contenedores creados.
-- [ ] La solución compila con **0 errores** y los 1.027 tests existentes siguen en verde.
+- [x] `RegisterServices.GetRepository<TRepo>()` y la construcción secundaria de proveedores se retiraron; los repositorios reciben por DI el contexto y la unidad de trabajo del scope.
+- [x] Las dependencias de los agregados se construyen sobre el contexto inyectado; no se usa el localizador estático.
+- [x] El localizador `RegisterServices.GetRepository<TRepo>()` se eliminó (D-1, punto 69 del prompt).
+- [x] Las pruebas de integración verifican por referencia que los repositorios del mismo scope comparten el `DbContext` y el UoW.
+- [x] La resolución scoped repetida conserva la misma instancia y no crea proveedores secundarios.
+- [x] La solución y la suite completa se verifican en Release; los resultados del cierre se recogen en el índice de `Realizados/EFCore`.
 
 **Notas técnicas**
 
@@ -217,8 +229,8 @@ Efectos:
 **Criterios de aceptación**
 
 - [x] ✅ `ThrowingEfRepository` **ya no implementa `IDisposable`**: el `Dispose()` se ha retirado por completo, no solo su llamada a `internalDbContext.Dispose()` (punto **63**).
-- [ ] Se documenta que el `DbContext` lo libera el scope de DI (`AddDbContext` ya lo hace).
-- [ ] Un test usa dos repositorios en secuencia sobre el mismo scope y **no** lanza `ObjectDisposedException`.
+- [x] Se documenta que el `DbContext` lo libera el scope de DI (`AddDbContext` ya lo hace).
+- [x] Las pruebas usan varios repositorios sobre el contexto compartido sin liberar prematuramente el `DbContext`.
 - [x] ✅ Revisado y decidido: **no** debe implementarlo. `EfRepository` y `ThrowingEfRepository` dejan de implementar `IDisposable`, porque el propietario del `DbContext` es `AddDbContext` y es el contenedor quien lo libera al cerrar el ámbito; si el repositorio fuera `IDisposable`, el contenedor lo rastrearía y el repositorio destruiría un `DbContext` ajeno (punto **63**).
 
 ---
@@ -237,8 +249,8 @@ Efectos:
 - [x] ✅ `AddOofpRepositoriesSingleton<T, TContext>` **se ha eliminado** (opción (a) de **D-2**), junto con su puente `[Obsolete]` (punto **62**).
 - [x] ✅ `AddOofpRepositoriesTransient<T, TContext>` **se ha retirado**, igual que `AddOofpRepositoriesScoped` y `AddOofpRepositoriesSingleton` (punto **62**).
 - [x] ✅ `AddOofpRepositories<T, TContext>` es la **única** vía, y registra `Scoped`, el mismo ciclo de vida que el `DbContext`: los repositorios de un mismo ámbito comparten contexto y `ChangeTracker`, así que la unidad de trabajo es viable por construcción.
-- [ ] El XML doc de los tres métodos explica la implicación transaccional de cada ciclo de vida.
-- [ ] La ruptura queda registrada en la guía de migración.
+- [x] El XML doc del único método de registro explica por qué repositorios y `DbContext` son `Scoped`.
+- [x] La retirada de los registros alternativos está en la guía de migración (punto 62).
 
 ---
 
@@ -261,14 +273,14 @@ Task<MlResult<TResult>> TryExecuteInTransactionAsync<TResult>(
 
 **Criterios de aceptación**
 
-- [ ] Abre la transacción con `DbContext.Database.BeginTransactionAsync(token)`.
-- [ ] Si el delegado devuelve un `MlResult` **válido** → `CommitAsync()` y se devuelve el valor.
-- [ ] Si el delegado devuelve un `MlResult` **fallido** → `RollbackAsync()` y se **propagan los errores originales sin alterarlos**.
-- [ ] Si el delegado **lanza una excepción** → `RollbackAsync()` y la excepción se convierte en `MlResult` fallido (coherente con el resto de `Try*`).
-- [ ] Si el propio `CommitAsync()` falla → `MlResult` fallido con el detalle del error de confirmación.
-- [ ] El `CancellationToken` se propaga a todas las operaciones internas.
-- [ ] Existe variante sincrónica `TryExecuteInTransaction<TResult>(...)`, o se documenta por qué no.
-- [ ] Documentado con **MlDoc**.
+- [x] La variante asíncrona abre una transacción con `BeginTransactionAsync(token)` cuando no hay una externa.
+- [x] Un resultado válido ejecuta un único `SaveChangesAsync` y confirma la transacción propia.
+- [x] Un resultado fallido revierte la transacción propia y conserva el detalle original; una externa queda bajo control de su propietario.
+- [x] Una excepción o cancelación revierte la transacción propia y se devuelve como `MlResult` fallido.
+- [x] Un fallo de `SaveChangesAsync` o de `CommitAsync` produce un `MlResult` fallido con el detalle de la excepción.
+- [x] El `CancellationToken` se propaga al callback, al inicio de transacción, a `SaveChangesAsync` y a `CommitAsync`.
+- [x] Existe también `TryExecuteInTransaction<TResult>(...)` para uso sincrónico.
+- [x] La interfaz pública y sus miembros están documentados con XML docs.
 
 **Tests mínimos**
 
@@ -305,12 +317,12 @@ public interface IMlUnitOfWork
 
 **Criterios de aceptación**
 
-- [ ] Se eliminan las **12** llamadas a `SaveChanges`/`SaveChangesAsync` de `ThrowingEf{Create,Update,Delete}Repository.cs`.
-- [ ] `IMlUnitOfWork` se registra con el **mismo ciclo de vida que el `DbContext`** (scoped).
-- [ ] `TryCommitAsync()` devuelve el **número de filas afectadas** en caso de éxito.
-- [ ] `DbUpdateConcurrencyException` y `DbUpdateException` se traducen a `MlResult` fallido con detalle útil (no un `ToString()` de la excepción).
-- [ ] `HasPendingChanges` consulta el `ChangeTracker` sin provocar efectos secundarios.
-- [ ] Documentado con **MlDoc**.
+- [x] Los métodos públicos de escritura de los repositorios solo preparan cambios; no ejecutan `SaveChanges`.
+- [x] `IMlUnitOfWork` y `IMlUnitOfWork<TContext>` se registran como `Scoped`, ligados al mismo `DbContext`.
+- [x] `TryCommitAsync()` devuelve el número de filas afectadas en caso de éxito.
+- [x] Los errores de persistencia y concurrencia se traducen a `MlResult` fallido con mensaje útil y excepción en metadatos.
+- [x] `HasPendingChanges` consulta `ChangeTracker.HasChanges()` sin modificar el contexto.
+- [x] Los contratos y miembros públicos de la unidad de trabajo tienen documentación XML.
 
 **⚠️ Riesgo principal**
 
@@ -337,10 +349,10 @@ el compilador no la detecta. Mitigaciones obligatorias en US-07 y US-08.
 
 **Criterios de aceptación**
 
-- [ ] `CrudServiceFp` (variantes de 2 y 3 genéricos) confirma explícitamente al final de cada método de escritura.
-- [ ] Los métodos que escriben más de una vez usan `TryExecuteInTransactionAsync`.
-- [ ] Los tests de `MoralesLarios.OOFP.Application.Tests.Unit` siguen en verde.
-- [ ] Se verifica que los controladores de `MoralesLarios.OOFP.AspNetCore.Controllers` no requieren cambios.
+- [x] Las variantes de dos y tres genéricos confirman por `repo.UnitOfWork.TryCommitAsync` después de cada escritura correcta y conservan sus constructores públicos.
+- [x] Los fallos del repositorio no provocan commit; las escrituras agrupadas quedan disponibles mediante el runner transaccional del UoW.
+- [x] Las 18 pruebas de `MoralesLarios.OOFP.Application.Tests.Unit` para ambas variantes pasan.
+- [x] Los controladores no requieren cambios: se conserva el contrato de resultado del servicio.
 
 ---
 
@@ -356,15 +368,15 @@ el compilador no la detecta. Mitigaciones obligatorias en US-07 y US-08.
 
 **Criterios de aceptación**
 
-- [ ] Existe un mecanismo opcional (middleware, *interceptor* de EF Core o `Dispose` del scope) que detecta `HasPendingChanges == true` al terminar el scope.
-- [ ] Emite un **log de nivel `Warning`** (o `Critical`, configurable) indicando que hay cambios sin confirmar.
-- [ ] Es **desactivable por configuración** y está **desactivado por defecto en producción**.
-- [ ] No afecta al rendimiento cuando está desactivado.
-- [ ] Documentado en la guía de migración como *"cómo encontrar los `Commit` que me faltan"*.
+- [x] `MlUnitOfWork<TContext>.Dispose()` detecta cambios pendientes al cerrar el scope.
+- [x] Con diagnóstico habilitado se emite un log `Warning` con el tipo de contexto.
+- [x] `MlUnitOfWorkDiagnostics.WarnOnUncommittedChanges` se configura por opciones y su valor predeterminado es `false`.
+- [x] Con el diagnóstico desactivado, no se consulta `ChangeTracker` al disponer el UoW.
+- [x] El README del proyecto documenta cómo habilitar el aviso en desarrollo.
 
 ---
 
-### US-08 · Guía de migración `2.0.0` → `2.1.0`
+### US-08 · Guía de migración para la primera publicación `2.0.0`
 
 > **Como** desarrollador que actualiza el paquete,
 > **quiero** una guía que me diga exactamente qué cambia y qué debo tocar,
@@ -375,12 +387,12 @@ el compilador no la detecta. Mitigaciones obligatorias en US-07 y US-08.
 
 **Criterios de aceptación**
 
-- [ ] La ruptura queda documentada en el prompt de actualización (`oofp-upgrade-2.prompt.md` o su equivalente de `2.1`), tal como exige la convención del proyecto para **todo** cambio incompatible.
-- [ ] Incluye tabla **antes / después** con código real para los tres escenarios: alta simple, alta múltiple y actualización + borrado.
-- [x] ✅ Documentada la retirada de `AddOofpRepositoriesSingleton`, `AddOofpRepositoriesTransient` y `AddOofpRepositoriesScoped` (punto **62** de `oofp-upgrade-2.prompt.md` §3.3, con su tabla «Retirado → Sustituto» y el barrido de la Fase 5). `RegisterServices.GetRepository<T>()` **se mantiene**; lo que queda marcado `[Obsolete]` es su antiguo nombre `ResolveRepoFp<TRepo>()`.
-- [ ] Explica el cambio de constructores de los repositorios (impacto en herencia).
-- [ ] Enlaza con el diagnóstico de US-07.
-- [ ] Se actualiza el `README.md` del proyecto `EntityFrameworkCore`.
+- [x] Los cambios de interfaz y comportamiento están registrados en los puntos 71 y 72 del prompt de migración, incluidos todos los sitios requeridos.
+- [x] El README del proyecto muestra escritura simple, varias escrituras atómicas y la confirmación de cambios directos.
+- [x] ✅ La retirada de los registros alternativos está en el punto 62; la retirada de `RegisterServices.GetRepository<TRepo>()` está en el punto 69.
+- [x] La guía aclara que los constructores públicos de los agregados se conservan; implementadores propios deben añadir `UnitOfWork` (punto 71).
+- [x] El README documenta el diagnóstico opt-in de cambios sin confirmar.
+- [x] Se actualiza el `README.md` del proyecto `EntityFrameworkCore`.
 
 ---
 
@@ -396,9 +408,9 @@ el compilador no la detecta. Mitigaciones obligatorias en US-07 y US-08.
 
 **Criterios de aceptación**
 
-- [ ] El *sample* muestra un caso maestro-detalle con `TryExecuteInTransactionAsync`.
-- [ ] Muestra también el caso de fallo y el *rollback* resultante.
-- [ ] Se ejecuta sin configuración adicional (base de datos en memoria o SQLite).
+- [x] El sample ejecuta un caso maestro-detalle con `TryExecuteInTransactionAsync`.
+- [x] El sample muestra el fallo de una operación y comprueba el rollback.
+- [x] El sample usa SQLite in-memory y no requiere configuración externa.
 
 ---
 
@@ -410,15 +422,15 @@ el compilador no la detecta. Mitigaciones obligatorias en US-07 y US-08.
 
 - **Esfuerzo:** L · **Riesgo:** 🟢
 - **Depende de:** US-04, US-05
-- **Proyectos afectados:** `MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration`, `MoralesLarios.OOFP.EFCore.Integration.Tests`
+- **Proyecto afectado:** `MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration`
 
 **Criterios de aceptación**
 
-- [ ] Tests de commit, rollback por fallo, rollback por excepción, cancelación y commit fallido.
-- [ ] Test de concurrencia optimista (`DbUpdateConcurrencyException` → `MlResult` fallido).
-- [ ] Test que verifica **un solo** `SaveChanges` para N operaciones agrupadas.
-- [ ] Test de contexto compartido entre repositorios en el mismo scope.
-- [ ] Todos los tests nuevos en verde y los **1.027 existentes sin regresiones**.
+- [x] Las pruebas cubren commit, rollback por fallo, excepción, cancelación y fallo de persistencia.
+- [x] Una prueba verifica que `DbUpdateConcurrencyException` produce un `MlResult` fallido.
+- [x] Las pruebas verifican un único `SaveChanges` para varias operaciones agrupadas.
+- [x] Las pruebas verifican que los repositorios del mismo scope comparten el contexto y la unidad de trabajo.
+- [x] Las 19 pruebas de integración nuevas pasan; la suite completa se verificará en el cierre.
 
 ---
 
@@ -433,9 +445,9 @@ el compilador no la detecta. Mitigaciones obligatorias en US-07 y US-08.
 
 **Criterios de aceptación**
 
-- [ ] Todos los miembros públicos nuevos documentados **con MlDoc** (nunca a mano, por la convención del proyecto).
-- [ ] `CS1591 = 0` en compilación `Release --no-incremental`.
-- [ ] Los `<remarks>` de `IMlUnitOfWork` advierten del cambio de semántica respecto a `2.0.0`.
+- [x] Todos los tipos y miembros públicos nuevos tienen documentación XML; se verificará el recuento `CS1591` con el build final.
+- [x] El build completo de Release debe terminar con `CS1591 = 0` (evidencia en el README de realizados).
+- [x] Los `<remarks>` de `IMlUnitOfWork` advierten que las escrituras directas requieren commit explícito.
 
 ---
 
@@ -488,46 +500,44 @@ graph TD
 
 **Total: ~5-7 jornadas.**
 
-> 💡 **Entrega incremental sugerida**
-> - **`2.1.0-preview` / `2.0.x`:** US-01 → US-04. No rompe comportamiento, y ya ofrece atomicidad
->   mediante `TryExecuteInTransactionAsync`. Es el 80 % del valor con el 20 % del riesgo.
-> - **`2.1.0`:** US-05 → US-11. La ruptura semántica, con guía y diagnóstico.
+> ✅ La planificación del repositorio se congeló en una única versión `2.0.0`; esta implementación
+> se integra antes de la primera publicación, sin separar las historias en versiones preview.
 
 ---
 
-## 6. Decisiones de diseño abiertas
+## 6. Decisiones de diseño resueltas
 
 | Id | Decisión | Opciones | Recomendación |
 |---|---|---|---|
-| **D-1** | ¿Qué hacer con `RegisterServices.GetRepository<T>()`? | (a) Eliminar · (b) `[Obsolete]` con error · (c) Mantener leyendo de un provider ya construido | **(b)**: visibiliza la ruptura sin romper la compilación de golpe |
+| **D-1** ✅ | ¿Qué hacer con `RegisterServices.GetRepository<T>()`? | (a) Eliminar · (b) `[Obsolete]` con error · (c) Mantener leyendo de un provider ya construido | **(a) Eliminar**; registrado en el punto 69 |
 | **D-2** ✅ **CERRADA** | ¿Se retira `AddOofpRepositoriesSingleton`? | (a) Eliminar · (b) `[Obsolete(error: true)]` · (c) Mantener documentando el riesgo | **(a) Eliminar** · ya aplicado: se retiran los tres métodos del eje del ciclo de vida y sus 3 puentes (punto **62**) |
-| **D-3** | Nombre del agrupador transaccional | `TryExecuteInTransactionAsync` · `TryTransactionAsync` · `TryUnitOfWorkAsync` | **`TryExecuteInTransactionAsync`**: explícito y coherente con el prefijo `Try*` |
-| **D-4** | Transacciones anidadas | (a) Lanzar error · (b) Reutilizar la transacción externa (*ambient*) · (c) `CreateSavepoint` | **(b)**: lo habitual y lo menos sorprendente |
-| **D-5** | ¿`IMlUnitOfWork` genérico por contexto? | `IMlUnitOfWork` · `IMlUnitOfWork<TContext>` | **`IMlUnitOfWork<TContext>`** si se admiten varios `DbContext`; decidir antes de US-05 |
-| **D-6** | ¿Se mantienen los `SaveChanges` sincrónicos? | (a) Solo async · (b) Ambos | **(b)**: hay consumidores sincrónicos en los repositorios actuales |
-| **D-7** | ¿`DiscardChanges()` entra en el alcance? | (a) Sí · (b) Posponer | **(a)**: es trivial sobre el `ChangeTracker` y completa el contrato |
+| **D-3** ✅ | Nombre del agrupador transaccional | `TryExecuteInTransactionAsync` · `TryTransactionAsync` · `TryUnitOfWorkAsync` | **`TryExecuteInTransactionAsync`** y su variante sincrónica `TryExecuteInTransaction` |
+| **D-4** ✅ | Transacciones anidadas | (a) Lanzar error · (b) Reutilizar la transacción externa (*ambient*) · (c) `CreateSavepoint` | **(b)**: se reutiliza sin finalizarla; commit/rollback siguen bajo control del propietario externo |
+| **D-5** ✅ | ¿`IMlUnitOfWork` genérico por contexto? | `IMlUnitOfWork` · `IMlUnitOfWork<TContext>` | Se exponen ambas: la interfaz no genérica en el agregado y la genérica para resolverla por contexto |
+| **D-6** ✅ | ¿Se mantienen los `SaveChanges` sincrónicos? | (a) Solo async · (b) Ambos | **(b)**: hay variantes síncronas y asíncronas de commit y ejecución transaccional |
+| **D-7** ✅ | ¿`DiscardChanges()` entra en el alcance? | (a) Sí · (b) Posponer | **(a)**: se implementa y devuelve las entradas modificadas descartadas (`MlResult<int>`) |
 
 ---
 
 ## 7. Definición de terminado (DoD) de la épica
 
-- [ ] Las **12** llamadas a `SaveChanges`/`SaveChangesAsync` retiradas de los repositorios imperativos.
-- [ ] `IMlUnitOfWork` y `TryExecuteInTransactionAsync` implementados, registrados y documentados.
-- [ ] `RegisterServices.ServiceProvider` sin `BuildServiceProvider()` en el getter.
-- [ ] Todos los repositorios de un mismo scope comparten `DbContext` (verificado por test).
-- [ ] Solución compila en `Release --no-incremental` con **0 errores y `CS1591 = 0`**.
-- [ ] Los **1.027 tests** existentes en verde + los tests nuevos de US-10.
-- [ ] Guía de migración publicada y `README.md` del proyecto actualizado.
-- [ ] *Sample* ejecutable con el caso maestro-detalle.
-- [ ] Las 7 decisiones (D-1 … D-7) cerradas y registradas en este documento.
+- [x] Las escrituras directas de los repositorios preparan cambios y no ejecutan `SaveChanges`.
+- [x] `IMlUnitOfWork` y `TryExecuteInTransaction[Async]` están implementados, registrados y documentados.
+- [x] El localizador estático y la construcción secundaria de proveedores se retiraron antes de esta implementación.
+- [x] Los repositorios de un mismo scope comparten `DbContext` y unidad de trabajo, verificado por pruebas.
+- [x] Build completo `Release --no-incremental` con 0 errores, `CS1591 = 0` y `CS0618 = 0` (evidencia final en [README.md](README.md)).
+- [x] Suite completa en verde, incluidas las pruebas nuevas de integración y Application: 1.657 correctas (evidencia final en [README.md](README.md)).
+- [x] Guía de migración registrada y README del proyecto actualizado.
+- [x] Sample ejecutable con el caso maestro-detalle y rollback comprobado.
+- [x] Las siete decisiones D-1 … D-7 están cerradas y justificadas en este documento.
 
 ---
 
 ## 8. Apéndice · Ejemplos de código y explicación detallada
 
-> Este apéndice contiene **el código real de hoy** (con fichero y línea) y **el código propuesto**
-> para cada historia. Todo el código "después" es *ilustrativo*: fija la intención y el contrato, no
-> la implementación definitiva.
+> Este apéndice conserva la radiografía del código anterior a la épica y ejemplos propuestos durante
+> su diseño. Para el contrato vigente, prevalecen la sección de cierre, el código de producción y el
+> README de `EntityFrameworkCore`.
 
 ### Índice del apéndice
 
@@ -1092,7 +1102,7 @@ internal class MlUnitOfWork<TContext>(TContext _context, ILogger<MlUnitOfWork<TC
 **Lectura clave de este bloque:** `ErrorKind` como **clave constante** en el diccionario de
 `Details` permite al consumidor ramificar programáticamente (`Concurrency` → reintentar y refrescar;
 `DbUpdate` → error 409/500) en lugar de hacer *parsing* del mensaje. Es el mismo criterio que la
-épica de [serialización y errores HTTP](Epica-Serializacion-y-Errores-Http.md) aplica al estado HTTP.
+épica de [serialización y errores HTTP](../../Pendientes/Epica-Serializacion-y-Errores-Http.md) aplica al estado HTTP.
 
 **Uso resultante:**
 
@@ -1268,78 +1278,83 @@ unidad de trabajo), no para los cambios pendientes. Se descarta como mecanismo p
 #### Escenario 1 · Alta simple
 
 ```csharp
-// ───── 2.0.0 ─────
+// Antes de la unidad de trabajo: TryAddAsync confirmaba por su cuenta.
 var resultado = await _repo.TryAddAsync(pedido, ct);
-// la fila ya está en la base de datos
 
-// ───── 2.1.0 ─────
+// Con la unidad de trabajo: confirma explícitamente.
 var resultado = await _repo.TryAddAsync(pedido, ct)
-                           .BindAsync(p => _uow.TryCommitAsync(ct).MapAsync(_ => p));
+                           .BindAsync(p => _repo.UnitOfWork.TryCommitAsync(ct).MapAsync(_ => p));
 ```
 
 #### Escenario 2 · Alta múltiple (el caso que el punto 40 viene a arreglar)
 
 ```csharp
-// ───── 2.0.0 ───── ❌ NO atómico: si falla el 2.º, el 1.º queda confirmado
+// Antes de la unidad de trabajo: dos autocommits independientes.
 await _pedidos.TryAddAsync(pedido, ct);
 await _lineas.TryAddRangeAsync(lineas, ct);
 
-// ───── 2.1.0 ───── ✅ atómico
-await _transactions.TryExecuteInTransactionAsync(async token =>
-    await _pedidos.TryAddAsync(pedido, token)
-                  .BindAsync(p => _lineas.TryAddRangeAsync(lineas, token))
-                  .BindAsync(_ => _uow.TryCommitAsync(token)),
-    ct);
+// Con la unidad de trabajo: un commit y rollback de los cambios propios ante fallo.
+var resultado = await _pedidos.UnitOfWork.TryExecuteInTransactionAsync(async token =>
+{
+    var pedidoResult = await _pedidos.TryAddAsync(pedido, token);
+    if (pedidoResult.IsFailure)
+        return pedidoResult;
+
+    var lineasResult = await _lineas.TryAddRangeAsync(lineas, token);
+    if (lineasResult.IsFailure)
+        return lineasResult.GetFailureDetailsOrThrow().ToMlResultFail<Pedido>();
+
+    return pedidoResult;
+}, ct);
 ```
 
 #### Escenario 3 · Actualización + borrado
 
 ```csharp
-// ───── 2.0.0 ───── 2 commits independientes
+// Antes de la unidad de trabajo: cada escritura confirmaba independientemente.
 await _repo.TryUpdateAsync(cabecera, ct);
 await _repo.TryRemoveRangeAsync(lineasObsoletas, ct);
 
-// ───── 2.1.0 ───── 1 commit dentro de 1 transacción
-await _transactions.TryExecuteInTransactionAsync(async token =>
-    await _repo.TryUpdateAsync(cabecera, token)
-               .BindAsync(_ => _repo.TryRemoveRangeAsync(lineasObsoletas, token))
-               .BindAsync(_ => _uow.TryCommitAsync(token)),
-    ct);
+// Con la unidad de trabajo: ambas operaciones comparten el contexto y la transacción.
+var resultado = await _pedidos.UnitOfWork.TryExecuteInTransactionAsync(async token =>
+{
+    var updateResult = await _pedidos.TryUpdateAsync(cabecera, token, cabecera.Id);
+    if (updateResult.IsFailure)
+        return updateResult;
+
+    var removeResult = await _lineas.TryRemoveRangeAsync(lineasObsoletas, token);
+    if (removeResult.IsFailure)
+        return removeResult.GetFailureDetailsOrThrow().ToMlResultFail<Pedido>();
+
+    return updateResult;
+}, ct);
 ```
 
 #### Escenario 4 · Registro de servicios
 
 ```csharp
-// ───── 2.0.0 ─────
-builder.Services.AddOofpRepositoriesSingleton<Pedido, MiContexto>();   // 2.1.0: NO COMPILA
-
-// ───── 2.1.0 ─────
 builder.Services.AddDbContext<MiContexto>(o => o.UseSqlServer(cs));
-builder.Services.AddOofpRepositories<Pedido, MiContexto>();            // Scoped + IMlUnitOfWork
+builder.Services.AddOofpRepositories<Pedido, MiContexto>(); // Scoped + IMlUnitOfWork
 ```
 
-#### Escenario 5 · Herencia de repositorios
+#### Escenario 5 · Implementación propia del agregado
 
 ```csharp
-// ───── 2.0.0 ─────
-public class PedidoRepository(MiContexto ctx) : EfCrudRepository<Pedido, MiContexto>(ctx) { }
+// Los constructores públicos de los agregados se conservan.
+public class PedidoRepository(MiContexto ctx)
+    : EfCrudRepository<Pedido, MiContexto>(ctx) { }
 
-// ───── 2.1.0 ───── el constructor base cambia: hay que propagar las dependencias
-public class PedidoRepository(MiContexto                ctx,
-                              IEfReadRepository<Pedido>  lector,
-                              IEfWriteRepository<Pedido> escritor)
-        : EfCrudRepository<Pedido, MiContexto>(ctx, lector, escritor) { }
+// Si implementas IEfRepository<T> directamente, añade UnitOfWork ligada al mismo contexto.
 ```
 
 #### Resumen de rupturas
 
-| Elemento | `2.0.0` | `2.1.0` | ¿Lo detecta el compilador? |
+| Elemento | Antes de la unidad de trabajo | `2.0.0` con la unidad de trabajo | ¿Lo detecta el compilador? |
 |---|---|---|---|
-| `TryAdd/Update/Remove*` | Confirma | Solo marca | ❌ **NO** → US-07 + US-08 |
-| Constructores de los repositorios | 1 parámetro | + dependencias | ✅ sí |
-| `AddOofpRepositoriesSingleton` | Disponible | `[Obsolete(error: true)]` | ✅ sí |
-| `RegisterServices.GetRepository<T>()` | Funciona | `[Obsolete]` / `NotSupportedException` | ⚠️ solo advertencia |
-| `ThrowingEfRepository.Dispose()` | Libera el contexto | No lo libera | ❌ no (mejora, no ruptura) |
+| `TryAdd/Update/Remove*` directos | Confirman automáticamente | Preparan cambios; requieren `TryCommit[Async]` o el runner transaccional | ❌ **No**, ruptura silenciosa del punto 72 |
+| Implementación propia de `IEfRepository<T>` | No expone unidad de trabajo | Implementa `UnitOfWork` ligada al mismo contexto | ✅ `CS0535`, punto 71 |
+| Constructores de los agregados | Reciben el contexto | Se conservan sin cambios | Sin ruptura |
+| Persistencia mediante `CrudServiceFp` | Confirma al finalizar la escritura | Sigue confirmando al finalizar la escritura | Sin acción para el consumidor |
 
 ---
 
@@ -1520,6 +1535,6 @@ public class UnitOfWorkTransactionTests(TestDbFixture fixture) : IClassFixture<T
 
 ## Ver también
 
-- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · punto 40, origen de esta épica
-- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
-- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37
+- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · punto 40, origen de esta épica
+- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
+- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37

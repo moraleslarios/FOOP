@@ -17,9 +17,7 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
         where TContext : DbContext
 {
 
-    internal readonly IThrowingEfUpdateRepository<T>?  _internalRepoUpdater = RegisterServices.GetRepository<IThrowingEfUpdateRepository <T>>();
-    internal readonly IEfReadRepository<T>? _repoReaderFp        = RegisterServices.GetRepository<IEfReadRepository<T>>();
-
+    private static readonly string typeName = typeof(T).Name;
 
 
 
@@ -30,10 +28,14 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     /// </summary>
     /// <param name="item">Elemento sobre el que se opera.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public MlResult<T> TryUpdate(T item)
+    public virtual MlResult<T> TryUpdate(T item)
     {
         var result = EnsureFp.NotNull(item, "The entity item to update cannot be null")
-                            .TryMap(x => _internalRepoUpdater!.Update(item));
+                            .TryMap(x =>
+                            {
+                                GetContext().Update(item);
+                                return item;
+                            });
         return result;
     }
 
@@ -55,14 +57,30 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
     /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues)
+    public virtual MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues)
     {
+        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+
         var result = EnsureFp.NotNull  (item, "The entity item to update cannot be null")
                                 .Bind  ( _  => EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty"))
-                                .Bind  ( pk => notFoundErrorDetails is null 
-                                                ? _repoReaderFp!.TryFind(pk) 
-                                                : _repoReaderFp!.TryFind(notFoundErrorDetails, pk))
-                                .TryMap( x  => _internalRepoUpdater!.Update(item));
+                                .TryMap ( pk =>
+                                {
+                                    var found = GetContext().Set<T>().Find(keyValues);
+                                    return found!;
+                                })
+                                .TryBind(x  => x.FailIfNull(errorDetails))
+                                .TryMap( x  =>
+                                {
+                                    // Find ya trackea 'x' con la misma clave que 'item'. Si son instancias
+                                    // distintas, EF Core no permite trackear 'item' sin antes desvincular 'x'.
+                                    if (!ReferenceEquals(x, item))
+                                    {
+                                        GetContext().Entry(x).State = EntityState.Detached;
+                                    }
+
+                                    GetContext().Update(item);
+                                    return item;
+                                });
         return result;
     }
 
@@ -77,7 +95,11 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to update cannot be null")
-                            .TryMapAsync(x => _internalRepoUpdater!.UpdateAsync(item, token));
+                            .TryMapAsync(async x =>
+                            {
+                                GetContext().Update(item);
+                                return item;
+                            });
         return result;
     }
 
@@ -90,14 +112,8 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     /// <param name="token">Token para cancelar la operación.</param>
     /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] keyValues)
-    {
-        var result = await EnsureFp.NotNullAsync( item, "The entity item to update cannot be null")
-                                    .BindAsync  ( _  => EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty"))
-                                    .BindAsync  ( _ => _repoReaderFp!.TryFindAsync(token, keyValues))
-                                    .TryMapAsync( x  => _internalRepoUpdater!.UpdateAsync(item, token));
-        return result;
-    }
+    public virtual Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] keyValues)
+        => TryUpdateAsync(item, null!, token, keyValues);
 
     /// <summary>
     /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
@@ -110,15 +126,31 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
     {
+        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+
         var result = await EnsureFp.NotNullAsync( item, "The entity item to update cannot be null")
                                     .BindAsync  ( _  => EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty"))
-                                    .BindAsync  ( _ => notFoundErrorDetails is null 
-                                                        ? _repoReaderFp!.TryFindAsync(token, keyValues) 
-                                                        : _repoReaderFp!.TryFindAsync(notFoundErrorDetails, token, keyValues))
-                                    .TryMapAsync( x  => _internalRepoUpdater!.UpdateAsync(item, token));
+                                    .TryMapAsync( async _ =>
+                                    {
+                                        var found = await GetContext().Set<T>().FindAsync(keyValues, token);
+                                        return found!;
+                                    })
+                                    .TryBindAsync( x => x.FailIfNullAsync(errorDetails))
+                                    .TryMapAsync( async x =>
+                                    {
+                                        // FindAsync ya trackea 'x' con la misma clave que 'item'. Si son
+                                        // instancias distintas, EF Core no permite trackear 'item' sin antes
+                                        // desvincular 'x'.
+                                        if (!ReferenceEquals(x, item))
+                                        {
+                                            GetContext().Entry(x).State = EntityState.Detached;
+                                        }
+
+                                        GetContext().Update(item);
+                                        return item;
+                                    });
         return result;
     }
-
 
     /// <summary>
     /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
@@ -129,7 +161,11 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to update cannot be null")
-                            .TryMap(x => _internalRepoUpdater!.UpdateRange(items));
+                            .TryMap(x =>
+                            {
+                                GetContext().UpdateRange(items);
+                                return items;
+                            });
         return result;
     }
 
@@ -143,7 +179,11 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(items, "The entity items to update cannot be null")
-                            .TryMapAsync(x => _internalRepoUpdater!.UpdateRangeAsync(items, token));
+                            .TryMapAsync(async x =>
+                            {
+                                GetContext().UpdateRange(items);
+                                return items;
+                            });
         return result;
     }
 

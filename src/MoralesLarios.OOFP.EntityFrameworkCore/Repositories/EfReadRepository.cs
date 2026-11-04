@@ -17,11 +17,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     where TContext : DbContext
 {
 
-    internal readonly IThrowingEfReadRepository<T>? _repoReader = RegisterServices.GetRepository<IThrowingEfReadRepository<T>>();
-
-    private string typeName = typeof(T).Name;
-
-
+    private static readonly string typeName = typeof(T).Name;
 
 
     /// <summary>
@@ -35,7 +31,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     {
         var result = EnsureFp.NotNull(keyValues, "The object array pk cannot be null")
                                 .TryMap (x => EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty"))
-                                .TryMap (x => _repoReader!.Find(keyValues))
+                                .TryMap (x => GetContext().Set<T>().Find(keyValues)!) 
                                 .TryBind(x => x.FailIfNull(notFoundErrorDetails));
         return result;
     }
@@ -62,7 +58,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     {
         var result = await EnsureFp.NotNullAsync(keyValues, "The object array pk cannot be null")
                                     .TryMapAsync (x => EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty"))
-                                    .TryMapAsync (x => _repoReader!.FindAsync(token, keyValues))
+                                    .TryMapAsync (async x => (await GetContext().Set<T>().FindAsync(keyValues, token))!) 
                                     .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
         return result;
     }
@@ -88,7 +84,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails)
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
-                                .TryMap (x => _repoReader!.FirstOrDefault(filter))
+                                .TryMap (x => GetContext().Set<T>().FirstOrDefault(filter)!)
                                 .TryBind(x => x.FailIfNull(notFoundErrorDetails));
         return result;
     }
@@ -103,7 +99,6 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter)
         => TryFirst(filter, $"The query did not return any elements");
 
-
     /// <summary>
     /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
     /// fallido. Versión asíncrona.
@@ -115,7 +110,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default!)
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
-                                    .TryMapAsync (x => _repoReader!.FirstOrDefaultAsync(filter, token))
+                                    .TryMapAsync (async x => (await GetContext().Set<T>().FirstOrDefaultAsync(filter, token))!) 
                                     .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
         return result;
     }
@@ -130,8 +125,6 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
         => TryFirstAsync(filter, $"The query did not return any elements", token);
 
-
-
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
     /// en un resultado fallido.
@@ -142,7 +135,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual MlResult<T> TryGetLast(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails)
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
-                                .TryMap (x => _repoReader!.LastOrDefault(filter))
+                                .TryMap (x => GetContext().Set<T>().AsNoTracking().Where(filter).AsEnumerable().LastOrDefault()!)
                                 .TryBind(x => x.FailIfNull(notFoundErrorDetails));
 
         return result;
@@ -158,7 +151,6 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual MlResult<T> TryGetLast(Expression<Func<T, bool>> filter)
         => TryGetLast(filter, $"The query did not return any elements");
 
-
     /// <summary>
     /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
     /// en un resultado fallido. Versión asíncrona.
@@ -170,7 +162,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual async Task<MlResult<T>> TryGetLastAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default!)
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
-                                    .TryMapAsync (x => _repoReader!.LastOrDefaultAsync(filter, token))
+                                    .TryMapAsync (async x => (await GetContext().Set<T>().AsNoTracking().Where(filter).ToListAsync(token)).LastOrDefault()!)
                                     .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
 
         return result;
@@ -196,7 +188,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual MlResult<IEnumerable<T>> TryGetData(Expression<Func<T, bool>> filter)
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
-                                .TryMap(x => _repoReader!.GetData(filter));
+                                .TryMap(x => (IEnumerable<T>)GetContext().Set<T>().AsNoTracking().Where(filter));
 
         return result;
     }
@@ -212,7 +204,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual async Task<MlResult<IEnumerable<T>>> TryGetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
-                                    .TryMapAsync(x => _repoReader!.GetDataAsync(filter, token));
+                                    .TryMapAsync(async x => (IEnumerable<T>)await GetContext().Set<T>().AsNoTracking().Where(filter).ToListAsync(token));
 
         return result;
     }
@@ -226,7 +218,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual MlResult<IEnumerable<T>> TryAll()
     {
         var result = MlResult<IEnumerable<T>>._
-                            .TryMap(x => _repoReader!.All());
+                            .TryMap(x => (IEnumerable<T>)GetContext().Set<T>().AsNoTracking());
 
         return result;
     }
@@ -241,7 +233,7 @@ public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(db
     public virtual async Task<MlResult<IEnumerable<T>>> TryAllAsync(CancellationToken token = default!)
     {
         var result = await MlResult<IEnumerable<T>>._
-                                .TryMapAsync(x => _repoReader!.AllAsync(token: token));
+                                .TryMapAsync(async x => (IEnumerable<T>)await GetContext().Set<T>().AsNoTracking().ToListAsync(token));
 
         return result;
     }

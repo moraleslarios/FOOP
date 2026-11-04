@@ -308,15 +308,15 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 
 | Antes | Después | 🔗 |
 | --- | --- | --- |
-| `EFRepoBase` | `ThrowingEfRepository` | NO |
-| `EFRepo` | `ThrowingEfCrudRepository` | NO |
-| `EFRepoAdder` | `ThrowingEfCreateRepository` | NO |
-| `EFRepoDeleter` | `ThrowingEfDeleteRepository` | NO |
-| `EFRepoReader` | `ThrowingEfReadRepository` | NO |
-| `EFRepoUpdater` | `ThrowingEfUpdateRepository` | NO |
-| `EFRepoWriter` | `ThrowingEfWriteRepository` | NO |
-| `EFRepoPagination` | `ThrowingEfPagedRepository` | NO |
-| `EFRepoReaderPagination` | `ThrowingEfPagedReadRepository` | NO |
+| `EFRepoBase` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepo` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepoAdder` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepoDeleter` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepoReader` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepoUpdater` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepoWriter` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepoPagination` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
+| `EFRepoReaderPagination` | *(retirado en 2.0.0; sin sustituto directo)* | NO |
 
 ### 8.3 Interfaces
 
@@ -330,18 +330,21 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `IEFRepoWriterFp` | `IEfWriteRepository` | NO |
 | `IEFRepoPaginationFp` | `IEfPagedRepository` | NO |
 | `IEFRepoReaderPaginationFp` | `IEfPagedReadRepository` | NO |
-| `IEFRepo` | `IThrowingEfRepository` | NO |
-| `IEFRepoAdder` | `IThrowingEfCreateRepository` | NO |
-| `IEFRepoDeleter` | `IThrowingEfDeleteRepository` | NO |
-| `IEFRepoReader` | `IThrowingEfReadRepository` | NO |
-| `IEFRepoUpdater` | `IThrowingEfUpdateRepository` | NO |
-| `IEFRepoWriter` | `IThrowingEfWriteRepository` | NO |
-| `IEFRepoPagination` | `IThrowingEfPagedRepository` | NO |
-| `IEFRepoReaderPagination` | `IThrowingEfPagedReadRepository` | NO |
+| `IEFRepo` | *(retirado en 2.0.0; migrar manualmente a `IEfRepository`)* | NO |
+| `IEFRepoAdder` | *(retirado en 2.0.0; migrar manualmente a `IEfCreateRepository`)* | NO |
+| `IEFRepoDeleter` | *(retirado en 2.0.0; migrar manualmente a `IEfDeleteRepository`)* | NO |
+| `IEFRepoReader` | *(retirado en 2.0.0; migrar manualmente a `IEfReadRepository`)* | NO |
+| `IEFRepoUpdater` | *(retirado en 2.0.0; migrar manualmente a `IEfUpdateRepository`)* | NO |
+| `IEFRepoWriter` | *(retirado en 2.0.0; migrar manualmente a `IEfWriteRepository`)* | NO |
+| `IEFRepoPagination` | *(retirado en 2.0.0; migrar manualmente a `IEfPagedRepository`)* | NO |
+| `IEFRepoReaderPagination` | *(retirado en 2.0.0; migrar manualmente a `IEfPagedReadRepository`)* | NO |
 | `IEFPaginatorFp` | `IEfPaginator` | NO |
 
 > ⚠️ **ORDEN**: reemplaza siempre de más largo a más corto dentro de este bloque
 > (`IEFRepoReaderPaginationFp` → `IEFRepoReaderPagination` → `IEFRepoReaderFp` → `IEFRepoReader` → `IEFRepo`).
+>
+> Las interfaces `IThrowingEf*` se eliminaron en la 2.0.0. La interfaz funcional de la tabla es una
+> guía de destino, no un reemplazo mecánico: sus métodos `Try*` devuelven `MlResult` en vez de lanzar.
 
 ### 8.4 Miembros y enums
 
@@ -351,13 +354,14 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `TryGetInternalData` | `TryQueryPage` | NO |
 | `TryLast[Async]` | `TryGetLast[Async]` | NO |
 | `GetPkValues` | `FormatCompositeKey` | NO |
-| `ResolveRepoFp` | `GetRepository` | sí |
-| `AddScopedOOFPRepos` | `AddOofpRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
-| `AddSingletonOOFPRepos` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddTransientOOFPRepos` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddOofpRepositoriesScoped` | `AddOofpRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
-| `AddOofpRepositoriesSingleton` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddOofpRepositoriesTransient` | `AddOofpRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `ResolveRepoFp` | *(retirado; inyectar la interfaz funcional necesaria)* | NO |
+| `RegisterServices.GetRepository<TRepo>()` | *(retirado; inyectar la interfaz funcional necesaria)* | NO |
+| `AddScopedOOFPRepos` | `AddOofpRepositories` | NO · retirado en 2.0.0; ciclo de vida sin cambio |
+| `AddSingletonOOFPRepos` | `AddOofpRepositories` | NO · retirado en 2.0.0; ahora `Scoped` |
+| `AddTransientOOFPRepos` | `AddOofpRepositories` | NO · retirado en 2.0.0; ahora `Scoped` |
+| `AddOofpRepositoriesScoped` | `AddOofpRepositories` | NO · retirado en 2.0.0; ciclo de vida sin cambio |
+| `AddOofpRepositoriesSingleton` | `AddOofpRepositories` | NO · retirado en 2.0.0; ahora `Scoped` |
+| `AddOofpRepositoriesTransient` | `AddOofpRepositories` | NO · retirado en 2.0.0; ahora `Scoped` |
 | parámetro `pk` | `keyValues` | NO |
 
 ### 8.5 Namespaces internos
@@ -365,8 +369,16 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | Antes | Después |
 | --- | --- |
 | `…EFCore.Repos` | `…EntityFrameworkCore.Repositories` |
-| `…EFCore.OopRepos` | `…EntityFrameworkCore.Repositories.Imperative` |
+| `…EFCore.OopRepos` | *(retirado en 2.0.0)* |
+| `…EntityFrameworkCore.Repositories.Imperative.IGetContextable` | `…EntityFrameworkCore.Repositories.IGetContextable` |
 | `…EFCore.Helpers.Constants` | *(eliminado)* |
+
+La carpeta `Repositories.Imperative` y sus ocho interfaces `IThrowingEf*` se eliminaron en la 2.0.0
+(punto 68). Solo `IThrowingEfCreateRepository<T>`, `IThrowingEfUpdateRepository<T>` e
+`IThrowingEfDeleteRepository<T>` eran públicas; las otras cinco eran `internal` y no se podían
+referenciar desde un consumidor ordinario. Las implementaciones imperativas y sus registros DI se
+retiraron; adapta las tres interfaces públicas a los contratos funcionales y sus métodos `Try*`.
+`IGetContextable` es la excepción: se movió a `Repositories` (punto 67).
 
 ---
 
@@ -491,18 +503,21 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `UpdateProblemDetailsAsync` | `UpdateAsync` | NO |
 | `GetPkValues` | `FormatCompositeKey` | NO |
 | `BuildNotFoundPkError` | `BuildEntityNotFoundError` | sí |
-| `AddScopedtGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
-| `AddSingletonGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddTransientGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddScopedCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
-| `AddSingletonCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddTransientCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddScopedtGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
-| `AddSingletonGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddTransientGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddScopedCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ✅ el *lifetime* sigue siendo `Scoped` |
-| `AddSingletonCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
-| `AddTransientCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | sí ⚠️ y el *lifetime* pasa a `Scoped` |
+| `AddScopedtGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddSingletonGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddTransientGenServicesFpWithoutReposGeneral` | `AddCrudServicesFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddScopedCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddSingletonCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddTransientCrudServicesFpWithoutRepositories` | `AddCrudServicesFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddScopedtGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddSingletonGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddTransientGenServicesDuplexFpWithoutReposGeneral` | `AddCrudServicesDuplexFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddScopedCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddSingletonCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | NO · retirado en 2.0.0 |
+| `AddTransientCrudServicesDuplexFpWithoutRepositories` | `AddCrudServicesDuplexFpWithoutRepositories` | NO · retirado en 2.0.0 |
+
+> ⚠️ Estos doce métodos antiguos no conservan puentes `[Obsolete]` en 2.0.0. Sustitúyelos por uno
+> de los dos métodos funcionales según el modo de servicio; el registro resultante es `Scoped`.
 
 > ℹ️ La clase `GenService` (versión no funcional) **se eliminó**. Si la usabas, migra a `CrudServiceFp`.
 

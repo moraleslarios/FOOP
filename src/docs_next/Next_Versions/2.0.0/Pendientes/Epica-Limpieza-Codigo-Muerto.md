@@ -31,7 +31,7 @@ resolvieron** durante el renombrado 2.0.0 y no generan historia.
 
 | Punto | Fichero | Líneas | Naturaleza |
 |---|---|---|---|
-| 64 | `MoralesLarios.OOFP.EntityFrameworkCore/Repositories/IEfWriteRepository.cs` | 13-34 (de 35) | 22 declaraciones comentadas dentro de una interfaz pública |
+| 64 | ~~`IEfWriteRepository.cs`, 13-34 (de 35), 22 declaraciones~~ → **errata**: el cuerpo comentado real está en `MoralesLarios.OOFP.EntityFrameworkCore/Repositories/IEfRepository.cs`, L12-37 (de 38), 26 declaraciones comentadas. **Ya resuelto** vía US-07 de [`Epica-Simplificacion-Repositorios-EFCore.md`](../Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md) (no genera historia en esta épica) |
 | 68 | `MoralesLarios.OOFP.AspNetCore.Controllers/Controllers/MlCompositeKeyCrudControllerBase.cs` | 154-174 **y** 341-361 | ~21 líneas comentadas, **duplicadas** en las dos variantes genéricas |
 | 69 | `MoralesLarios.OOFP.Http/HttpApiInvoker.cs` | 545-552 (de 557) | `#region private methods` sin contenido |
 | 70 | `MoralesLarios.OOFP.Http/RestClientFp.cs` · `CompositeKeyRestClientFp.cs` | 14, 140 · 7, 190 | `ILogger<>` inyectado y **nunca** utilizado en 4 clases |
@@ -39,19 +39,29 @@ resolvieron** durante el renombrado 2.0.0 y no generan historia.
 
 ### Punto 64 — una interfaz pública cuyo cuerpo es íntegramente comentario
 
-`IEfWriteRepository<T>` **sí tiene utilidad**: agrupa por herencia los tres contratos de escritura.
-El problema es que su cuerpo contiene el contrato antiguo completo, comentado.
+> ⚠️ **Errata corregida.** La redacción original de este punto citaba `IEfWriteRepository.cs` y
+> «22 declaraciones comentadas». Verificado contra la rama `release/2.0.0-nomenclatura`:
+> `IEfWriteRepository<T>` **está limpia** (su cuerpo nunca tuvo código comentado; ver §8.1). El
+> cuerpo íntegramente comentado estaba en **`IEfRepository<T>`** (la interfaz de agregación lectura
+> + escritura), con **26** declaraciones, no 22. El punto **ya se resolvió** como parte de la
+> US-07 de [`Epica-Simplificacion-Repositorios-EFCore.md`](../Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md)
+> (pendiente de commit en el momento de esta corrección). US-01 de esta épica queda, por tanto,
+> **absorbida/no aplicable**: no hay trabajo pendiente contra `IEfWriteRepository<T>`.
+
+`IEfWriteRepository<T>` **sí tiene utilidad**: agrupa por herencia los tres contratos de escritura,
+y su cuerpo ya está vacío (ver «Después» en §8.1, que coincide con la realidad). La interfaz que
+realmente arrastraba el contrato antiguo completo, comentado, es `IEfRepository<T>`:
 
 ```csharp
-// MoralesLarios.OOFP.EntityFrameworkCore/Repositories/IEfWriteRepository.cs, L13-34
-public interface IEfWriteRepository<T> : IEfCreateRepository<T>, IEfUpdateRepository<T>, IEfDeleteRepository<T>
+// MoralesLarios.OOFP.EntityFrameworkCore/Repositories/IEfRepository.cs, L12-37 (antes de la limpieza)
+public interface IEfRepository<T> : IEfReadRepository<T>, IEfWriteRepository<T>
     where T : class
 {
-    //MlResult<T> TryAdd(T item);                                             // ← 22 líneas de contrato antiguo
-    //Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default);
-    //MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items);
-    // … 19 declaraciones más, todas comentadas …
-    //Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default);
+    //MlResult<T> TryFind(params object[] pk);                                // ← 26 líneas de contrato antiguo
+    //Task<MlResult<T>> TryFindAsync(CancellationToken token = default, params object[] pk);
+    //MlResult<T> TryFirstOrDefault(Expression<Func<T, bool>> filter);
+    // … 23 declaraciones más, todas comentadas …
+    //MlResult<T> TryUpdate(T item, params object[] pk);
 }
 ```
 

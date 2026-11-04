@@ -394,11 +394,17 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 59 | El `README.md` de `MoralesLarios.OOFP.Logging` **ya no dice que no haya registro estructurado** (**2.3.0**) | el `README.md` afirmaba en **seis** sitios que «no hay logging estructurado», que las sobrecargas con plantilla «NO existen» y que, si hacían falta campos, había que bajarse a `ILogger` en un `ExecSelf`/`Match` | una **familia 8** nueva documenta el raíl de plantillas de extremo a extremo —marcadores, captura silenciosa del punto 30, `MlResultLogErrorFields` y recuentos— y las seis afirmaciones falsificadas quedan corregidas | ✅ **Ninguna** · documentación; pero **invalida una recomendación anterior**, así que conviene leerlo |
 | 60 | Familia `WithLogScope` de **ámbitos de registro** sobre `ILogger.BeginScope` (**2.4.0**) | el recuento de `BeginScope` en la librería era **`0`** (punto 56): para correlacionar las trazas de una misma ejecución había que abrir el ámbito a mano alrededor de la tubería, saliéndose del raíl | **16 firmas nuevas** en cuatro ficheros `partial`: `WithLogScope` y `WithLogScopeAsync`, que envuelven un **tramo recibido como función**, y `TryWithLogScope` y `TryWithLogScopeAsync`, que convierten en **fallo** la excepción que lance el tramo. El ámbito **no emite traza propia** y se cierra siempre en un `finally` | ✅ **Ninguna** · aditivo; deja sin efecto la afirmación del punto 56 de que los ámbitos no existían |
 | 61 | La planificación del repositorio se **centraliza en una sola versión `2.0.0`** y las carpetas `2.1`, `2.1.1`, `2.2.0`, `2.3.0` y `2.4.0` desaparecen (**2.0.0**) ✅ SIN RUPTURAS | `docs_next/Next_Versions/` tenía **cinco** carpetas de versión, y los puntos 38 a 60 de esta sección las citan como si cada una fuera un paquete publicado | una sola carpeta `docs_next/Next_Versions/2.0.0/` con `Pendientes/` (lo que queda por hacer) y `Realizados/Core/` + `Realizados/Logging/` (lo ya implementado). **Ninguna** de esas versiones llegó a publicarse: todo el código que describen los puntos 38 a 60 **está dentro de la 2.0.0**, y los 17 paquetes del repositorio declaran `2.0.0` | ✅ **Ninguna** · documental; no cambia ni una firma. Solo afecta a quien **enlazara** a esos documentos del repositorio |
-| 62 | `Scoped` pasa a ser el **único ciclo de vida** del registro de dependencias (**2.0.0**) | tres métodos para registrar los repositorios (`AddOofpRepositories` → `Scoped`, `AddOofpRepositoriesTransient`, `AddOofpRepositoriesSingleton`), seis para registrar los servicios CRUD (`Add{Transient\|Scoped\|Singleton}CrudServices[Duplex]FpWithoutRepositories`) y nueve puentes `[Obsolete]` que replicaban el eje del ciclo de vida | **un** método para los repositorios, `AddOofpRepositories<T, TContext>()`, que registra las 16 interfaces como `Scoped` —el mismo ciclo de vida que el `DbContext` del que vive al lado—, y **dos** para los servicios, `AddCrudServicesFpWithoutRepositories()` y `AddCrudServicesDuplexFpWithoutRepositories()`, también `Scoped` | **Compilación** (12 métodos públicos y 9 puentes `[Obsolete]` retirados). ✅ `AddOofpRepositories` **mantiene** el `Scoped` que ya tenía en la 1.x: quien lo llamara **no cambia de comportamiento**. ⚠️ **SILENCIOSA solo** para quien llamara a `AddOofpRepositoriesTransient`/`AddTransientOOFPRepos` o a las variantes `Singleton` |
+| 62 | `Scoped` pasa a ser el **único ciclo de vida** del registro de dependencias (**2.0.0**) | tres métodos para registrar los repositorios (`AddOofpRepositories` → `Scoped`, `AddOofpRepositoriesTransient`, `AddOofpRepositoriesSingleton`), seis para registrar los servicios CRUD (`Add{Transient\|Scoped\|Singleton}CrudServices[Duplex]FpWithoutRepositories`) y nueve puentes `[Obsolete]` que replicaban el eje del ciclo de vida | **un** método para los repositorios, `AddOofpRepositories<T, TContext>()`, que registra las ocho interfaces funcionales como `Scoped` —el mismo ciclo de vida que el `DbContext` del que vive al lado—, y **dos** para los servicios, `AddCrudServicesFpWithoutRepositories()` y `AddCrudServicesDuplexFpWithoutRepositories()`, también `Scoped` | **Compilación** (12 métodos públicos y 9 puentes `[Obsolete]` retirados). ✅ `AddOofpRepositories` **mantiene** el `Scoped` que ya tenía en la 1.x: quien lo llamara **no cambia de comportamiento**. ⚠️ **SILENCIOSA solo** para quien llamara a `AddOofpRepositoriesTransient`/`AddTransientOOFPRepos` o a las variantes `Singleton` |
 | 63 | `EfRepository` y `ThrowingEfRepository` **dejan de implementar `IDisposable`** (**2.0.0**) | ambas clases base implementaban `IDisposable` y su `Dispose()` llamaba a `GetContext()?.Dispose()`, liberando un `DbContext` del que el repositorio **no** es dueño | el repositorio ya no implementa `IDisposable`: el **propietario** del `DbContext` es `AddDbContext`, y el contenedor lo libera al cerrar el ámbito | **Compilación** (`using (var repo = …)`, `repo.Dispose()` y `override void Dispose()` dejan de compilar) |
 | 64 | El servicio de `MoralesLarios.OOFP.FileSystem` pasa de `Singleton` a `Scoped` (**2.0.0**) | `AddOOFPIO()` registraba `IMlFileSystem` como `Singleton` | lo registra como `Scoped`, igual que el resto de la librería | ⚠️ **Contrato · SILENCIOSA** (compila igual, pero deja de haber una única instancia compartida en toda la aplicación: ahora hay una por ámbito) |
 | 65 | El lector de configuración pasa de `Transient` a `Scoped` (**2.0.0**) | `AddMlConfigurationReader(configuration)` registraba `IMlConfigurationReader` como `Transient` | lo registra como `Scoped`, igual que el resto de la librería; la lambda sigue **capturando** la `IConfiguration` que se le pasa | ⚠️ **Contrato · SILENCIOSA** (compila igual, pero dos resoluciones dentro del mismo ámbito devuelven ahora la **misma** instancia) |
 | 66 | La capa HTTP pasa de `Transient` a `Scoped` (**2.0.0**) | `AddMlHttp()` registraba `IHttpApiInvoker` como `Transient`, y `AddRestClient<…>()` / `AddCompositeKeyRestClient<…>()` registraban el servicio y los `IRestClientFp<…>` también como `Transient` | las **seis** registraciones pasan a `Scoped`. El `HttpClient` lo sigue gestionando `IHttpClientFactory` con su propio ciclo de vida de *handlers*, que **no** cambia | ⚠️ **Contrato · SILENCIOSA** (compila igual, pero dos resoluciones del mismo cliente dentro del mismo ámbito devuelven ahora la **misma** instancia; si tu cliente REST guarda estado mutable, ese estado se comparte durante toda la petición) |
+| 67 | `IGetContextable` cambia de namespace (**2.0.0**) | `MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative.IGetContextable` | `MoralesLarios.OOFP.EntityFrameworkCore.Repositories.IGetContextable` | **Compilación** (`CS0234`/`CS0246` en el `using` o nombre cualificado; sin puente) |
+| 68 | Se retiran tres contratos públicos `IThrowingEf*` y sus registros (**2.0.0**) | se ofrecían como servicios `IThrowingEfCreateRepository<T>`, `IThrowingEfUpdateRepository<T>` e `IThrowingEfDeleteRepository<T>`; los otros cinco contratos `IThrowingEf*` eran `internal` | desaparecen los tres contratos públicos y los ocho registros de la familia imperativa; migra a `IEfCreateRepository<T>`, `IEfUpdateRepository<T>` o `IEfDeleteRepository<T>` y adapta a los métodos `Try*` | **Compilación** (`CS0246` en los tres contratos públicos); además, la resolución de cualquiera de esos servicios ya no tiene registro |
+| 69 | Se retira el localizador estático de repositorios (**2.0.0**) | `RegisterServices.GetRepository<TRepo>()` y el puente `[Obsolete]` `ResolveRepoFp<TRepo>()` | resolver por inyección de dependencias la interfaz funcional `IEf*Repository<T>` que necesita el servicio | **Compilación** (`CS0117`/`CS1061`; ambos miembros se eliminan, sin puente) |
+| 70 | Los agregados comparten el `DbContext` recibido (**2.0.0**) | `EfCrudRepository` y `EfPagedRepository` obtenían colaboradores de un proveedor secundario y podían usar otro contexto | las factorías de los agregados pasan a sus colaboradores la misma instancia `TContext` recibida por constructor | ⚠️ **Contrato · SILENCIOSA** (compila, pero el `ChangeTracker` y la unidad de trabajo de los colaboradores pasan a ser los del agregado) |
+| 71 | `IEfRepository<T>` expone la unidad de trabajo (**2.0.0**) | la interfaz agregada solo heredaba lectura y escritura | añade `IMlUnitOfWork UnitOfWork`; las implementaciones propias deben exponer la unidad ligada al mismo contexto | **Compilación para implementadores** (`CS0535` si una clase propia no implementa `UnitOfWork`); aditivo para consumidores del repositorio de la librería |
+| 72 | Las escrituras del repositorio dejan de confirmar automáticamente (**2.0.0**) | los 16 métodos `TryAdd`, `TryUpdate` y `TryRemove` (incluidas las variantes `Range`, por clave y async) ejecutaban `SaveChanges` | los métodos solo preparan cambios; confirma con `UnitOfWork.TryCommit[Async]` o agrupa el caso de uso con `TryExecuteInTransaction[Async]` | ⚠️ **Contrato · SILENCIOSA** (compila; una llamada directa devuelve éxito pero no persiste hasta el commit) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -1694,7 +1700,7 @@ builder.Services.AddSingletonCrudServicesDuplexFpWithoutRepositories();
 **Ahora (2.0.0):**
 
 ```csharp
-// Repositorios: UN método. Registra las 16 interfaces como Scoped.
+// Repositorios: UN método. Registra las ocho interfaces funcionales como Scoped.
 builder.Services.AddOofpRepositories<Vino, VinosContext>();
 
 // Servicios CRUD: DOS métodos, uno por modo. Los dos registran como Scoped.
@@ -1719,8 +1725,9 @@ builder.Services.AddCrudServicesDuplexFpWithoutRepositories();
 | `AddSingletonCrudServicesDuplexFpWithoutRepositories()` | `AddCrudServicesDuplexFpWithoutRepositories()` |
 | los 6 puentes `[Obsolete]` de `Add*GenServicesFpWithoutReposGeneral` *(fichero completo eliminado)* | `AddCrudServices[Duplex]FpWithoutRepositories()` |
 
-> ✅ **El único puente que sobrevive** en `MoralesLarios.OOFP.EntityFrameworkCore` es
-> `ResolveRepoFp<TRepo>()` → `GetRepository<TRepo>()`, que **no** tiene nada que ver con el ciclo de vida.
+> ⚠️ `ResolveRepoFp<TRepo>()` también se retiró junto con `GetRepository<TRepo>()`; no queda un
+> puente estático para resolver repositorios. La migración a inyección de dependencias se detalla en
+> el **punto 69**.
 
 **Qué tienes que hacer como consumidor.**
 
@@ -1918,7 +1925,102 @@ propio ciclo de vida de *handlers*, que **no** cambia.
 configuración, y cualquier test que afirmara `Assert.NotSame` sobre un cliente REST resuelto dos veces
 en el mismo ámbito.
 
+#### 67 — `IGetContextable` cambia de namespace (2.0.0) ⚠️ **RUPTURA DE COMPILACIÓN**
+
+El contrato continúa siendo público, pero se movió junto con `EfRepository` a `MoralesLarios.OOFP.EntityFrameworkCore.Repositories`.
+
+```csharp
+// ANTES
+using MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
+
+// AHORA
+using MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
+```
+
+Como consumidor, cambia el `using` o el nombre cualificado; no existe un puente en el namespace anterior.
+Detecta el caso buscando `MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative.IGetContextable`.
+
+#### 68 — Se retiran tres contratos públicos `IThrowingEf*` y sus registros (2.0.0) ⚠️ **RUPTURA DE COMPILACIÓN**
+
+De las ocho interfaces `IThrowingEf*` eliminadas, solo `IThrowingEfCreateRepository<T>`, `IThrowingEfUpdateRepository<T>` e `IThrowingEfDeleteRepository<T>` eran públicas. Las otras cinco eran `internal` y su retirada no requiere cambios en código consumidor.
+
+```csharp
+// ANTES
+var repo = serviceProvider.GetRequiredService<IThrowingEfCreateRepository<Vino>>();
+Vino creado = repo.Add(vino);
+
+// AHORA
+var repo = serviceProvider.GetRequiredService<IEfCreateRepository<Vino>>();
+MlResult<Vino> creado = repo.TryAdd(vino);
+```
+
+Los ocho registros de la familia imperativa también se eliminaron. Como consumidor, cambia las tres interfaces públicas por las funcionales y adapta el manejo de excepciones al resultado `MlResult`; `IThrowingEf*` no es un renombrado mecánico.
+Busca `IThrowingEf` y `Repositories.Imperative`, pero migra solo referencias a contratos públicos o usos de sus registros; descarta las cinco declaraciones `internal` y las menciones históricas.
+
+#### 69 — Se retira el localizador estático de repositorios (2.0.0) ⚠️ **RUPTURA DE COMPILACIÓN**
+
+`RegisterServices.GetRepository<TRepo>()` y el puente `[Obsolete]` `ResolveRepoFp<TRepo>()` desaparecen junto con el estado estático y `RegisterServices.Obsolete.cs`.
+
+```csharp
+// ANTES
+var repo = RegisterServices.GetRepository<IEfRepository<Vino>>();
+
+// AHORA
+public class VinosService(IEfRepository<Vino> repo) { }
+```
+
+Sustituye la resolución por constructor injection de una interfaz funcional; no construyas otro `ServiceProvider` para resolver el repositorio.
+Busca `RegisterServices.GetRepository` y `ResolveRepoFp`; ambos usos deben migrarse manualmente.
+
+#### 70 — Los agregados comparten el `DbContext` inyectado (2.0.0) ⚠️ **RUPTURA SILENCIOSA**
+
+Antes los colaboradores podían resolverse desde un proveedor secundario y recibir otro contexto; ahora las factorías de `EfCrudRepository` y `EfPagedRepository` reciben el mismo `TContext` del agregado.
+
+```csharp
+// ANTES
+_repoReaderFp = RegisterServices.GetRepository<IEfReadRepository<T>>();
+
+// AHORA
+_repoReaderFp = CreateReader(dbContext);
+```
+
+Revisa subclases o pruebas que dependieran de `ChangeTracker` separados, de grafos de entidades aislados o de transacciones distintas. La compartición dentro del mismo ámbito es intencionada.
+Detecta esos casos buscando subclases de `EfCrudRepository`/`EfPagedRepository`, `CreateReader`/`CreateWriter`, `ReferenceEquals` y aserciones sobre `ChangeTracker`.
+
 ---
+
+#### 71 — `IEfRepository<T>` expone la unidad de trabajo (2.0.0) ⚠️ **CAMBIO DE INTERFAZ PÚBLICA**
+
+El agregado funcional añade la propiedad `UnitOfWork`, ligada al mismo `DbContext` que usa el repositorio. Los constructores públicos de `EfCrudRepository<T, TContext>` y `EfPagedRepository<T, TContext>` se conservan; el cambio afecta a implementadores propios de `IEfRepository<T>` o `IEfPagedRepository<T>`.
+
+```csharp
+// ANTES
+public interface IEfRepository<T> : IEfReadRepository<T>, IEfWriteRepository<T> { }
+
+// AHORA
+public interface IEfRepository<T> : IEfReadRepository<T>, IEfWriteRepository<T>
+{
+  IMlUnitOfWork UnitOfWork { get; }
+}
+```
+
+Si implementas una de esas interfaces, añade una unidad de trabajo asociada al mismo contexto o usa los agregados de la librería. Busca `: IEfRepository<` y `: IEfPagedRepository<`; las clases derivadas de los agregados concretos heredan la implementación.
+
+#### 72 — Las escrituras del repositorio requieren confirmación explícita (2.0.0) ⚠️ **RUPTURA SILENCIOSA**
+
+Los 16 métodos síncronos y asíncronos de `TryAdd`, `TryUpdate` y `TryRemove` (incluidas las variantes por clave y `Range`) ya no ejecutan `SaveChanges`. El resultado válido indica que la operación quedó preparada en el `ChangeTracker`, no que ya esté persistida.
+
+```csharp
+// ANTES: TryAddAsync confirmaba por sí mismo.
+await repo.TryAddAsync(pedido, token);
+
+// AHORA: confirma explícitamente el contexto del agregado.
+await repo.TryAddAsync(pedido, token)
+      .BindAsync(added => repo.UnitOfWork.TryCommitAsync(token).MapAsync(_ => added));
+```
+
+Para varias escrituras atómicas, usa `repo.UnitOfWork.TryExecuteInTransactionAsync(...)`; el helper confirma una vez si el callback devuelve un resultado válido y revierte ante un fallo o excepción. Los métodos de `CrudServiceFp` mantienen la persistencia automática desde la perspectiva del consumidor porque ahora confirman explícitamente.
+Busca `Try(Add|AddRange|Update|UpdateRange|Remove|RemoveRange)(Async)?\s*\(` en el código consumidor. Revisa cada llamada directa a un repositorio: debe terminar en `UnitOfWork.TryCommit[Async]` o ejecutarse dentro de `TryExecuteInTransaction[Async]`. Los usos de `ICrudServiceFp` no requieren añadir un commit manual.
 
 ## Fase 4 — Compilar y resolver iterativamente
 
@@ -1943,8 +2045,7 @@ llamadas al nombre antiguo**.
 > `Transient`/`Scoped`/`Singleton` (`AddTransientOOFPRepos`, `AddScopedOOFPRepos`,
 > `AddSingletonOOFPRepos` y los 6 `Add{Transient|Scoped|Singleton}CrudServices[Duplex]FpWithoutRepositories`)
 > se han **retirado**, no marcado como obsoletos: esas llamadas dan **`CS0103`/`CS1061`**, no `CS0618`.
-> El único puente que sobrevive en ese eje es `ResolveRepoFp` → `GetRepository`. Detalle en el **punto 62**.
-
+> `ResolveRepoFp` y `GetRepository` también desaparecen; migra a inyección de dependencias (punto **69**).
 ```powershell
 dotnet build --nologo /p:WarningLevel=4
 ```
@@ -2177,6 +2278,36 @@ dotnet build --nologo /p:WarningLevel=4
    contador), ese estado se comparte ahora durante toda la petición: muévelo a un servicio con el ciclo
    de vida que de verdad necesite. El `HttpClient` lo sigue gestionando `IHttpClientFactory` y su ciclo
    de vida de *handlers* **no** cambia.
+  Para el punto 67 (`IGetContextable` cambia de namespace), busca:
+  ```
+  MoralesLarios\.OOFP\.EntityFrameworkCore\.Repositories\.Imperative\.IGetContextable
+  ```
+  Cambia ese `using` o nombre cualificado a `MoralesLarios.OOFP.EntityFrameworkCore.Repositories.IGetContextable`.
+  Para el punto 68 (familia `IThrowingEf*` retirada), busca:
+  ```
+  IThrowingEf(Create|Update|Delete)Repository|IThrowingEf(Read|Write|Paged|Repository)[A-Za-z]*|Repositories\.Imperative
+  ```
+  Migra las referencias públicas `IThrowingEfCreateRepository`, `IThrowingEfUpdateRepository` e `IThrowingEfDeleteRepository` a sus interfaces funcionales y adapta las llamadas al flujo `Try*`/`MlResult`; revisa registros y resoluciones DI. Las otras cinco interfaces eran `internal`: no las cuentes como usos del consumidor.
+  Para el punto 69 (localizador de repositorios retirado), busca:
+  ```
+  RegisterServices\.GetRepository\s*<|ResolveRepoFp\s*<
+  ```
+  Sustituye la resolución estática por inyección de dependencias de la interfaz funcional requerida.
+  Para el punto 70 (contexto compartido por los agregados), busca:
+  ```
+  Ef(Crud|Paged)Repository|Create(Reader|Writer)|ChangeTracker|ReferenceEquals
+  ```
+  Revisa subclases y tests que exigieran contextos, grafos de seguimiento o transacciones independientes; confirma si ahora deben compartir la unidad de trabajo del ámbito.
+  Para el punto 71 (implementadores propios de `IEfRepository<T>`), busca:
+  ```
+  class\s+\w+\s*:\s*IEf(Repository|PagedRepository)\s*<
+  ```
+  Implementa `UnitOfWork` ligado al mismo `DbContext`, o sustituye la implementación propia por el agregado de la librería. Las clases derivadas de `EfCrudRepository`/`EfPagedRepository` heredan la implementación.
+  Para el punto 72 (autocommit retirado), busca:
+  ```
+  \.Try(Add|AddRange|Update|UpdateRange|Remove|RemoveRange)(Async)?\s*\(
+  ```
+  Revisa las llamadas directas a repositorios: confirma con `UnitOfWork.TryCommit[Async]` o agrúpalas en `TryExecuteInTransaction[Async]`. Los usos de `ICrudServiceFp` ya confirman al completar cada escritura; no añadas un segundo commit.
    - Si aparece `PackageReference … Microsoft.AspNetCore.Mvc.Core`, **quítalo** y pon
      `<FrameworkReference Include="Microsoft.AspNetCore.App" />` (o cambia a `Microsoft.NET.Sdk.Web`).
    - Si se añaden cabeceras de paginación sobre `HttpClient`, migra a las sobrecargas de
@@ -2291,7 +2422,7 @@ Entrega al usuario, **en español**, un informe con:
    `Next_Versions/2.x/`, indica cuántos enlaces se han reescrito con la sección 15 del anexo de
    renombrados; si no enlazaba a ninguno, dilo expresamente para que quede claro que no se ha omitido
    el barrido.
-   Para los puntos **62** a **66** (**ciclo de vida `Scoped` único**), haz constar: cuántas
+    Para los puntos **62** a **66** (**ciclo de vida `Scoped` único**), haz constar: cuántas
    llamadas a los **12 métodos retirados** se han encontrado y por cuál de los tres supervivientes
    (`AddOofpRepositories`, `AddCrudServicesFpWithoutRepositories`,
    `AddCrudServicesDuplexFpWithoutRepositories`) se ha sustituido cada una; deja escrito expresamente
@@ -2313,6 +2444,12 @@ Entrega al usuario, **en español**, un informe con:
    ámbito. Si ninguno de los cinco puntos afecta
    al proyecto, **dilo expresamente** para que quede claro que no se ha omitido el barrido: las partes
    silenciosas de los puntos 64, 65 y 66 **no las señala el compilador**.
+  Para el punto **67**, indica cuántos `using` o nombres cualificados de `IGetContextable` se han encontrado y cambiado al namespace `Repositories`.
+  Para el punto **68**, enumera las referencias encontradas a los tres contratos públicos `IThrowingEfCreateRepository<T>`, `IThrowingEfUpdateRepository<T>` e `IThrowingEfDeleteRepository<T>`, la interfaz funcional a la que se migró cada uso y las resoluciones DI afectadas; deja constancia de que la adaptación no es un renombrado mecánico porque cambia de excepciones a `MlResult`. No cuentes las otras cinco interfaces `internal` como referencias de consumidor.
+  Para el punto **69**, indica cuántas llamadas a `RegisterServices.GetRepository<TRepo>()` y `ResolveRepoFp<TRepo>()` se encontraron y cómo se sustituyó cada una por inyección de dependencias.
+  Para el punto **70**, indica cuántas subclases o tests dependían de `DbContext`, `ChangeTracker` o transacciones separados, qué se cambió y confirma que el agregado y sus colaboradores comparten el contexto del ámbito.
+   Para el punto **71**, indica cuántas clases consumidoras implementaban `IEfRepository<T>` o `IEfPagedRepository<T>`, cómo se implementó `UnitOfWork` ligado al contexto o qué tipos propios se sustituyeron por los agregados de la librería.
+   Para el punto **72**, cuenta las llamadas directas de escritura a repositorios encontradas, cuántas ahora confirman con `UnitOfWork.TryCommit[Async]` o se agrupan con `TryExecuteInTransaction[Async]`, y valida que las rutas de `ICrudServiceFp` siguen persistiendo y que un fallo/cancelación no deja filas parciales.
 6. **Resultado del build**: errores y avisos, antes y después.
 7. **Resultado de los tests**: pasados/fallados, antes y después.
 8. **Pendientes / intervención manual**: todo `// TODO: OOFP 2.0 — revisar`, cualquier `CS0618` que quede,
@@ -2349,7 +2486,7 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
-| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64, 65, 66 | Renombrado masivo de la API + correcciones de comportamiento. Y el punto **61**, documental: la planificación del repositorio se **centraliza en una sola carpeta `2.0.0`** con `Pendientes/` y `Realizados/`, porque las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 **nunca se publicaron** y todo su contenido forma parte de la 2.0.0. Tres documentos de planificación de Logging se han **renombrado** para desambiguarlos (sección 15 del anexo de renombrados). Y los puntos **62** a **66**, del **ciclo de vida**: `Scoped` pasa a ser el único, el mismo que el del `DbContext`, se retiran **12 métodos públicos** y **9 puentes `[Obsolete]`** del eje `Transient`/`Scoped`/`Singleton`, y `EfRepository` y `ThrowingEfRepository` **dejan de implementar `IDisposable`** porque el repositorio **no es el propietario** del contexto. `AddOofpRepositories` **conserva** el `Scoped` que ya tenía en la 1.x, así que quien lo llamara **no cambia de comportamiento**; las rupturas silenciosas afectan a quien llamara a `AddOofpRepositoriesTransient`/`…Singleton`, y a `AddOOFPIO()` (punto 64, `IMlFileSystem` de `Singleton` a `Scoped`), `AddMlConfigurationReader()` (punto 65, `IMlConfigurationReader` de `Transient` a `Scoped`) y `AddMlHttp()` / `AddRestClient` / `AddCompositeKeyRestClient` (punto 66, de `Transient` a `Scoped`) |
+| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72 | Renombrado masivo de la API y correcciones de comportamiento. El punto **61** centraliza la planificación en `2.0.0`: las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 nunca se publicaron. Los puntos **62–66** unifican los ciclos de vida en `Scoped`; **67–70** completan el cambio de namespace y la simplificación de EFCore. El punto **71** añade `UnitOfWork` a `IEfRepository<T>`: afecta al compilador solo si el consumidor implementaba esas interfaces. El punto **72** retira el autocommit de las escrituras directas: esas llamadas ahora requieren `TryCommit[Async]` o `TryExecuteInTransaction[Async]` (**ruptura silenciosa**); `CrudServiceFp` conserva la persistencia automática. |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 | 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |

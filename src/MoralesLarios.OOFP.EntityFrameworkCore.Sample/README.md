@@ -1,42 +1,17 @@
 ﻿# MoralesLarios.OOFP.EntityFrameworkCore.Sample
 
-Proyecto de integración entre `MoralesLarios.OOFP.EntityFrameworkCore` y capa Web API.
+Ejemplo ejecutable de repositorios EF Core y unidad de trabajo con SQLite en memoria.
 
-> Estado actual: **base/skeleton** (mínimo).
+## Ejecutar
 
-## Qué contiene
-
-- `Managers/IApplicationManager<TEntity, TDto>`
-- `Managers/ApplicationManager<TEntity, TDto>`
-
-Actualmente el contrato e implementación están vacíos y listos para extender con lógica de aplicación específica (orquestación de repos EF + mapping DTO + respuestas web).
-
-## Dependencias
-
-- `MoralesLarios.OOFP.EntityFrameworkCore`
-- `MoralesLarios.OOFP.AspNetCore.Results`
-
-## Uso recomendado hoy
-
-Si necesitas funcionalidad real, utiliza directamente:
-
-- `MoralesLarios.OOFP.Application` (`ICrudServiceFp<,>`) para lógica CRUD funcional.
-- `MoralesLarios.OOFP.AspNetCore.Controllers` / `MoralesLarios.OOFP.AspNetCore.Results` para exponer endpoints.
-
-## Ejemplo de extensión
-
-```csharp
-public interface IApplicationManager<TEntity, TDto>
-{
-    Task<MlResult<IEnumerable<TDto>>> GetAllAsync(CancellationToken ct = default);
-}
-
-public class ApplicationManager<TEntity, TDto>(ICrudServiceFp<TEntity, TDto> service)
-    : IApplicationManager<TEntity, TDto>
-    where TEntity : class
-    where TDto : class
-{
-    public Task<MlResult<IEnumerable<TDto>>> GetAllAsync(CancellationToken ct = default)
-        => service.AllAsync(ct: ct);
-}
+```powershell
+dotnet run --project MoralesLarios.OOFP.EntityFrameworkCore.Sample/MoralesLarios.OOFP.EntityFrameworkCore.Sample.csproj
 ```
+
+El programa registra dos repositorios `Scoped` sobre el mismo `DbContext`, confirma un pedido y su
+detalle con un único `TryExecuteInTransactionAsync` y demuestra que un resultado fallido no deja
+filas parciales en la base de datos. No requiere servidor ni configuración externa.
+
+`Managers/IApplicationManager<TEntity, TDto>` y `Managers/ApplicationManager<TEntity, TDto>` se
+conservan como contratos vacíos para extensiones del consumidor; el ejemplo transaccional se ejecuta
+desde `Program.cs`.

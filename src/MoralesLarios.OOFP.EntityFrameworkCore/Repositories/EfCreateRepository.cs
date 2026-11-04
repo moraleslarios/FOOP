@@ -15,10 +15,6 @@ public class EfCreateRepository<T, TContext>(TContext dbContext) : EfRepository(
     where TContext : DbContext
 {
 
-    internal readonly IThrowingEfCreateRepository<T>? _internalRepoAdder = RegisterServices.GetRepository<IThrowingEfCreateRepository<T>>();
-
-
-
     /// <summary>
     /// Añade el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
     /// fallido.
@@ -28,7 +24,12 @@ public class EfCreateRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual MlResult<T> TryAdd(T item)
     {
         var result = EnsureFp.NotNull(item, "The entity item to add cannot be null")
-                            .TryMap(x => _internalRepoAdder!.Add(item));
+                            .TryMap(x =>
+                            {
+                                GetContext().Set<T>().Add(item);
+
+                                return item;
+                            });
 
         return result;
     }
@@ -43,7 +44,12 @@ public class EfCreateRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual async Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to add cannot be null")
-                            .TryMapAsync(x => _internalRepoAdder!.AddAsync(item, token));
+                            .TryMapAsync(async x =>
+                            {
+                                await GetContext().Set<T>().AddAsync(item, token);
+
+                                return item;
+                            });
 
         return result;
     }
@@ -58,7 +64,12 @@ public class EfCreateRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to addRange cannot be null")
-                            .TryMap(x => _internalRepoAdder!.AddRange(items));
+                            .TryMap(x =>
+                            {
+                                GetContext().Set<T>().AddRange(items);
+
+                                return items;
+                            });
 
         return result;
     }
@@ -73,7 +84,12 @@ public class EfCreateRepository<T, TContext>(TContext dbContext) : EfRepository(
     public virtual async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(items, "The entity items to addRange cannot be null")
-                            .TryMapAsync(x => _internalRepoAdder!.AddRangeAsync(items, token));
+                            .TryMapAsync(async x =>
+                            {
+                                await GetContext().Set<T>().AddRangeAsync(items, token);
+
+                                return items;
+                            });
 
         return result;
     }

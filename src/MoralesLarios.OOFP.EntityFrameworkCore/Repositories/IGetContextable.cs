@@ -1,5 +1,5 @@
-﻿
-namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
+
+namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// <summary>
 /// Contrato de <c>IGetContextable</c>.
 /// </summary>

@@ -2,8 +2,6 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
-using MoralesLarios.OOFP.EntityFrameworkCore.Repositories.Imperative;
-
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>

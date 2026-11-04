@@ -1682,4 +1682,4 @@ public class RestContractTests(WebAppFixture fixture)
 - [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
 - [`Epica-Serializacion-y-Errores-Http.md`](Epica-Serializacion-y-Errores-Http.md) · el lado cliente del mismo protocolo (puntos 42, 44, 45, 46, 47)
 - [`Epica-Servicio-y-Paginacion.md`](Epica-Servicio-y-Paginacion.md) · la paginación del `GET` de colección (punto 41)
-- [`Epica-Unidad-de-Trabajo-y-Transacciones.md`](Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40
+- [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, completada
