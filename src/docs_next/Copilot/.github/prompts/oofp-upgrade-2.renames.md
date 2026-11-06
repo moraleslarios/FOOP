@@ -234,7 +234,7 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `EndpointPattern` *(constante)* | `ValidationPattern` | NO |
 | `limit` *(propiedad)* | `MinAllowedValue` | NO |
 | `MinLenght` | `MinLength` | NO |
-| parámetros `lenght`, `maxLenght`, `minLenght` | `length`, `maxLength`, `minLength` | NO |
+| parámetros `lenght`, `maxLenght`, `minLenght` de los puentes de longitud | `length`, `maxLength`, `minLength` | NO · cambio de etiqueta de argumento nombrado, ver punto 79 |
 | `public Age(int)`, `public Id(double)`, `public IdLite(int)` | ahora **`protected`** → usa factorías | NO |
 | `public static decimal/double MinAllowedValue { get; private set; }` | ahora **`private const`** → inaccesible | NO |
 
@@ -363,6 +363,7 @@ Los métodos con prefijo `Try…` siguen la misma regla: `TryBoolToResult` → `
 | `AddOofpRepositoriesSingleton` | `AddOofpRepositories` | NO · retirado en 2.0.0; ahora `Scoped` |
 | `AddOofpRepositoriesTransient` | `AddOofpRepositories` | NO · retirado en 2.0.0; ahora `Scoped` |
 | parámetro `pk` | `keyValues` | NO |
+| parámetro genérico de entidad `T` en EntityFrameworkCore | `TEntity` | NO · no reemplazar globalmente; cambia metadatos de reflexión |
 
 ### 8.5 Namespaces internos
 

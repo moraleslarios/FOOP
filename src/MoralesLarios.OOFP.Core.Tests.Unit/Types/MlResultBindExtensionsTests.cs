@@ -351,7 +351,7 @@ public class MlResultBindExtensionsTests
 
 
     [Fact]
-    public void BindIfFail_diferentReturnValue_failSource_ExecuteFuncFail()
+    public void BindIfFail_differentReturnValue_failSource_ExecuteFuncFail()
     {
 
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
@@ -365,7 +365,7 @@ public class MlResultBindExtensionsTests
     }
 
     [Fact]
-    public void BindIfFail_diferentReturnValue_validSource_ExecuteFuncValid()
+    public void BindIfFail_differentReturnValue_validSource_ExecuteFuncValid()
     {
 
         MlResult<int> partialResult = -1;
@@ -418,7 +418,7 @@ public class MlResultBindExtensionsTests
 
 
     [Fact]
-    public void BindIfFailWithPreviousValue_faildInitialSource_returnFail()
+    public void BindIfFailWithPreviousValue_failedInitialSource_returnFail()
     {
 
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
@@ -430,7 +430,7 @@ public class MlResultBindExtensionsTests
     }
 
     [Fact]
-    public void BindIfFailWithPreviousValue_faildInitialSource_returnFail_with2Erros()
+    public void BindIfFailWithPreviousValue_failedInitialSource_returnFail_with2Errors()
     {
 
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();

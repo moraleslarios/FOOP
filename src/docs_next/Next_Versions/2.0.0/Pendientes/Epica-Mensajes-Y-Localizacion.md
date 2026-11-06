@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0
 > **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **77, 78, 79** y **80**
 > **Plan del que se desgaja:** bloque «Mensajes al usuario» (77-80)
-> **Estado:** ⬜ No iniciada
+> **Estado:** 🟡 Parcial · US-02 resuelta y US-03 parcial; infraestructura, literales de Http y logs estructurados pendientes
 > **Esfuerzo:** L (~5-6 jornadas con las siete historias; ~3 jornadas sin US-07)
 > **Riesgo:** 🟢 bajo en US-02, US-05 y US-06 · 🟡 medio en US-03 y US-04 · 🟠 alto en US-01 y US-07
 
@@ -367,12 +367,15 @@ proyectos. Mitigación: la fachada de US-01 permite cambiar de mecanismo sin toc
 
 **Esfuerzo:** XS · **Riesgo:** 🟢 · **Depende de:** US-01
 
-- [ ] `Validation.FluentValidation/Helpers/Extensions.cs` L38 emite un mensaje gramatical que
+- [x] `Validation.FluentValidation/Helpers/Extensions.cs` emite un mensaje gramatical que
       **nombra la causa** (el validador no se pudo instanciar) y **la acción** (registrarlo).
-- [ ] Se corrige **H-1**: la comilla sin cerrar de `Core/Helpers/Constants.cs` L14.
-- [ ] Se confirma por búsqueda que `"no be null"`, `"no be empty"` y `" no be "` siguen en **0**
+- [x] H-1 ya estaba corregido en `Core/Helpers/Constants.cs`: las comillas del mensaje por defecto
+      están balanceadas; no se cambió su contrato adicionalmente.
+- [x] Se confirma por búsqueda que `"no be null"`, `"no be empty"` y `" no be "` siguen en **0**
       apariciones, y se anota el resultado en el inventario.
 - [ ] Los 4 proyectos de validación compilan sin cambios en su superficie pública.
+- [x] El mensaje nuevo de creación automática queda registrado como cambio observable en el punto 82
+      de `oofp-upgrade-2.prompt.md`.
 
 **API propuesta**
 
@@ -407,16 +410,18 @@ antiguo en los proyectos de test antes de cambiarlo.
 
 **Esfuerzo:** S · **Riesgo:** 🟡 · **Depende de:** US-01
 
-- [ ] `BuildKeyParseErrorMessage` emite inglés gramatical, **no** filtra el identificador interno
-      `pkFields` y **sí** indica el separador y la cardinalidad esperados.
-- [ ] Los **6 llamantes** de `MlCompositeKeyCrudControllerBase` (L47, 91, 129, 210, 254, 292) siguen
+- [x] `BuildKeyParseErrorMessage` emite inglés gramatical, no filtra el identificador interno
+      `pkFields` e indica que los valores de la clave se separan por comas.
+- [ ] El mensaje indica la cardinalidad esperada de la clave; la firma actual no recibe el número
+      de campos, por lo que este criterio requiere un diseño adicional antes de marcar US-03 completa.
+- [x] Los **6 llamantes** de `MlCompositeKeyCrudControllerBase` (L47, 91, 129, 210, 254, 292) siguen
       compilando sin cambios de firma.
 - [ ] Los dos `FormatException` de `Extensions.cs` L74 y L99 incluyen **el valor que falló** y la
       lista de tipos admitidos.
-- [ ] El puente obsoleto `GetPkValuesErrorMessage` (`Extensions.Obsolete.cs` L33) **se conserva** y
+- [x] El puente obsoleto `GetPkValuesErrorMessage` (`Extensions.Obsolete.cs` L33) **se conserva** y
       sigue delegando: no se toca hasta 3.0.0.
-- [ ] El mensaje de cardinalidad de `ParseKeyValues` (L145) **no se reescribe**; sólo se mueve a la
-      fábrica de mensajes.
+- [x] El mensaje de cardinalidad de `ParseKeyValues` no se reescribe.
+- [x] El cambio textual de `BuildKeyParseErrorMessage` está registrado en `oofp-upgrade-2.prompt.md` §3.3, punto 82.
 
 **API propuesta**
 
@@ -1084,6 +1089,6 @@ var result = _logger.LogMlResultInformationAsync(ApplicationEvents.GetPagedStart
 - [`Next_Versions/2.0.0/Pendientes/README.md`](README.md) — índice de todas las épicas de la versión 2.1.0
 - [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) — códigos de error tipados que eliminan el reconocimiento por texto (H-7)
-- [`Epica-Limpieza-Codigo-Muerto.md`](Epica-Limpieza-Codigo-Muerto.md) — los `ILogger` no usados de los clientes REST
+- [`Epica-Limpieza-Codigo-Muerto.md`](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) — los `ILogger` no usados de los clientes REST
 - [`Epica-Erratas-Identificadores-Publicos.md`](Epica-Erratas-Identificadores-Publicos.md) — erratas en nombres públicos (puntos 71-76)
 - [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) — §3.3, registro de rupturas de compatibilidad

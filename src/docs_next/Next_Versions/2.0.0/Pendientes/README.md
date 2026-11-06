@@ -1,14 +1,18 @@
 # Pendientes · Épicas de ejecución por hacer
 
-> **Estado global:** 🔄 8 épicas sin iniciar · 2 completadas y archivadas (EFCore)
+> **Estado global:** 🔄 7 épicas pendientes (3 parciales) · 8 completadas y archivadas (7 EFCore, 1 Http)
 > **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) (puntos 38-63) · [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) (puntos 64-89)
 > **Plan maestro del que se desgajan:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md)
 
-Esta carpeta contiene **8 épicas pendientes** del inventario de los puntos **38 a 89**. Las épicas
-de simplificación de repositorios y de unidad de trabajo EFCore ya se completaron y están archivadas
-en [`Realizados/EFCore/`](../Realizados/EFCore/README.md). Cada épica pendiente parte del **código real
+Esta carpeta contiene **7 épicas pendientes** del inventario transversal de los puntos **38 a 89**.
+Las épicas de simplificación de repositorios, unidad de trabajo, lecturas, paginación, selección del último,
+DI y nomenclatura ya se completaron y están archivadas en
+[`Realizados/EFCore/`](../Realizados/EFCore/README.md). Cada épica pendiente parte del **código real
 de hoy** (con fichero y número de línea), propone el contrato de destino y desglosa historias de
 usuario con criterios de aceptación verificables.
+
+La épica de limpieza de código muerto ya está completada y archivada en
+[`Realizados/Http/`](../Realizados/Http/README.md).
 
 Los puntos **1-37** (prioridad crítica y alta) y el **objetivo 9** (documentación XML) están
 cerrados y no generan épica.
@@ -17,7 +21,7 @@ cerrados y no generan épica.
 
 ## Índice
 
-1. [Las ocho épicas pendientes](#1-las-ocho-épicas-pendientes)
+1. [Las épicas pendientes](#1-las-épicas-pendientes)
 2. [Orden de ejecución recomendado](#2-orden-de-ejecución-recomendado)
 3. [Decisiones pendientes del propietario](#3-decisiones-pendientes-del-propietario)
 4. [Rupturas de compatibilidad previstas](#4-rupturas-de-compatibilidad-previstas)
@@ -26,7 +30,7 @@ cerrados y no generan épica.
 
 ---
 
-## 1. Las ocho épicas pendientes
+## 1. Las épicas pendientes
 
 ### 1.1 · Prioridad media · puntos 38-63
 
@@ -41,21 +45,30 @@ cerrados y no generan épica.
 
 | # | Épica | Proyecto principal | Puntos cubiertos | Esfuerzo | Riesgo |
 |---|---|---|---|---|---|
-| 5 | [Limpieza de código muerto](Epica-Limpieza-Codigo-Muerto.md) | `OOFP.Http` · `AspNetCore.Controllers` · `EntityFrameworkCore` | 64, 68, 69, 70, 85 | **S** (~½-1 j) | 🟢 / 🟠 |
-| 6 | [Erratas en identificadores públicos](Epica-Erratas-Identificadores-Publicos.md) | `OOFP.Core` · `ValueObjects` · `Application` | 71, 72, 73, 74, 75, 76 | **M** (~1-2 j) | 🟠 |
-| 7 | [Mensajes, idioma e instrumentación de logs](Epica-Mensajes-Y-Localizacion.md) | `OOFP.Validation*` · `AspNetCore.Controllers` · `Application` | 77, 78, 79, 80 | **L** (~2 j) | 🟡 / 🟠 |
-| 8 | [Coherencia de contratos y documentación](Epica-Coherencia-Y-Documentacion.md) | `OOFP.Shared` · `Http` · `AspNetCore.Controllers` | 81-89 | **M** (~5-6 j con los `README`) | 🟢 / 🟠 |
+| 5 | [Erratas en identificadores públicos](Epica-Erratas-Identificadores-Publicos.md) | `OOFP.Core` · `ValueObjects` · `Application` | 71, 72, 73, 74, 75, 76 | **M** (~1-2 j) | 🟠 |
+| 6 | [Mensajes, idioma e instrumentación de logs](Epica-Mensajes-Y-Localizacion.md) | `OOFP.Validation*` · `AspNetCore.Controllers` · `Application` | 77, 78, 79, 80 | **L** (~2 j) | 🟡 / 🟠 |
+| 7 | [Coherencia de contratos y documentación](Epica-Coherencia-Y-Documentacion.md) | `OOFP.Shared` · `Http` · `AspNetCore.Controllers` | 81-89 | **M** (~5-6 j con los `README`) | 🟢 / 🟠 |
+
+### 1.3 · Auditoría específica · `MoralesLarios.OOFP.EntityFrameworkCore`
+
+| # | Épica | Hallazgos fuente | Esfuerzo/tamaño inicial | Riesgo | Estado |
+|---|---|---|---|---|---|
+
+El hallazgo **7** del análisis EFCore ya está cubierto por la guía del proyecto (`README.md:490`) y la
+[épica completada de unidad de trabajo](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md); no crea trabajo duplicado.
 
 > **Leyenda de esfuerzo:** XS (<2 h) · S (½ jornada) · M (1 jornada) · L (2 jornadas) · XL (3+ jornadas)
 > **Leyenda de riesgo:** 🟢 bajo · 🟡 medio · 🟠 alto · 🔴 muy alto (rompe compatibilidad)
 
-**Total estimado:**
+**Estimación existente · inventario transversal 38-89:**
 
 | Bloque | Jornadas |
 |---|---|
 | Prioridad media restante | ~8-11 |
-| Prioridad baja (épicas 5-8) | ~10-12 |
-| **Trabajo pendiente de 2.0.0** | **~18-23** |
+| Prioridad baja restante (Erratas, Mensajes y Coherencia) | ~9-11 |
+| **Trabajo transversal pendiente de 2.0.0** | **~17-22** |
+
+Las siete épicas EFCore y la épica de limpieza Http archivadas no se incluyen en esa suma. El esfuerzo restante incluye completar las tres épicas de prioridad baja que siguen en Pendientes.
 
 ---
 
@@ -73,10 +86,17 @@ graph LR
     H  --> R["Contrato REST<br/>(43 48-52 60 61)<br/>XL · 🔴"]
     R  --> A["Servicio y paginación<br/>(41 53 54)<br/>M · 🔴"]
     A  --> V2["Validación · tramo B<br/>(56 57 58)<br/>S · 🔴"]
-    V2 --> DM["Código muerto<br/>(64-70 85)<br/>S · 🟢"]
+    V2 --> DM["Código muerto<br/>(64-70 85)<br/>S · ✅ completada"]
     DM --> ER["Erratas públicas<br/>(71-76)<br/>M · 🟠"]
     ER --> MS["Mensajes y logs<br/>(77-80)<br/>L · 🟡"]
     MS --> CO["Coherencia y doc<br/>(81-89)<br/>M · 🟢"]
+    subgraph EFCore["EFCore · flujo independiente"]
+        F0["Decisiones de contrato"] --> F1["Lecturas y errores"]
+        F0 --> F2["Paginación estable"]
+        F0 --> F3["TryGetLast ordenado"]
+        F2 --> F4["Nomenclatura/API"]
+        F5["DI multicontexto y paquete"]
+    end
 ```
 
 | Orden | Épica | Por qué va aquí |
@@ -86,20 +106,32 @@ graph LR
 | 3 | Contrato REST | Depende de la forma del error ya estabilizada |
 | 4 | Servicio y paginación | Los controladores ya tienen contrato estable al que adaptarse |
 | 5 | Validación (resto) | Limpieza que no bloquea a nadie |
-| 6 | Limpieza de código muerto | Borrar antes de renombrar: no tiene sentido renombrar lo que se va a eliminar |
+| 6 | Limpieza de código muerto | ✅ Completada y archivada en `Realizados/Http/`; sus puntos ya están cerrados antes de Erratas |
 | 7 | Erratas en identificadores públicos | Renombrados con puente `[Obsolete]`; requiere superficie estable |
 | 8 | Mensajes y logs | Reescribe textos; mejor cuando las firmas ya no se mueven |
 | 9 | Coherencia y documentación | 🎯 Hito final: documenta el estado definitivo, no uno intermedio |
 
-> ✅ Las épicas de simplificación de repositorios y de unidad de trabajo EFCore están completadas;
+### 2.1 · Épicas EFCore · flujo independiente
+
+| Orden recomendado | Épica | Por qué va aquí |
+|---|---|---|
+| A | Registro DI multicontexto y dependencias | ✅ Completada y archivada; consumidor del `.nupkg` compilado |
+| B | Definir semántica de lecturas/paginación/último | ✅ Decisiones cerradas y documentadas en las épicas archivadas |
+| C | Lecturas funcionales y captura de errores | ✅ Completada y archivada; puntos 73–74 migratorios |
+| D | Paginación determinista y asíncrona | ✅ Completada y archivada; punto 76 migratorio |
+| E | Selección eficiente del último resultado | ✅ Completada y archivada; punto 75 aditivo |
+| F | Nomenclatura y documentación de API | ✅ Completada y archivada; `TEntity`, XML e `Extensions` compatibles |
+
+Esta secuencia no depende de la cadena REST/Validation de la tabla anterior; las épicas EFCore pueden planificarse como una rama paralela.
+
+> ✅ Las épicas de simplificación, unidad de trabajo, lecturas, paginación, selección del último y DI están completadas;
 > consulta [`Realizados/EFCore/`](../Realizados/EFCore/README.md).
 
 > 🔒 El producto permanece en `2.0.0` hasta que el propietario autorice la primera publicación. No se
 > prevén versiones *preview*; los cambios se priorizan por dependencias y se validan antes del cierre.
 >
-> 💡 **Atajo de bajo riesgo:** las épicas 5 y 8 contienen unas ~3 jornadas de trabajo 🟢 (borrado de
-> código muerto, `[Range]` imposibles, `[ProducesResponseType]`, `README` que faltan) que se pueden
-> adelantar en cualquier momento sin tocar ninguna firma pública.
+> 💡 **Atajo de bajo riesgo:** la épica 7 de Coherencia contiene trabajo de documentación y metadatos
+> que puede adelantarse sin tocar firmas públicas; la limpieza de código muerto ya se completó.
 
 ---
 
@@ -128,6 +160,16 @@ cerró D-1…D-7. Aquí están las decisiones **transversales** que siguen pendi
 | 9 | ¿`Headers` pasa a `IReadOnlyDictionary` (ruptura) o solo se le quita el `null!`? | Coherencia y doc |
 | 10 | ¿Los 11 proyectos de test llevan `README.md` propio o uno agregado en `docs/`? | Coherencia y doc |
 
+### 3.3 · Auditoría EFCore
+
+| Decisión | Épica afectada | Recomendación inicial |
+|---|---|---|
+| Materializar lecturas síncronas o conservar secuencias diferidas | Lecturas funcionales | Materializar para cumplir captura de errores; revisar coste de memoria |
+| Orden total por selector obligatorio o clave primaria EF como desempate | Paginación | Clave EF como desempate si se soportan claves compuestas y proveedores objetivo |
+| Definir selector estable para “último” | Last eficiente | Añadir operación ordenada sin alterar los métodos actuales |
+| Promesa de `IMlUnitOfWork` no genérica con varios contextos | Registro DI | Recomendar la interfaz genérica para multicontexto |
+| Transición del tipo público `Extensions` | Nomenclatura | Fachada compatible sin duplicar extensiones; el propietario decide `[Obsolete]`/versión |
+
 > Las decisiones D-01…D-07 de la épica de repositorios EFCore ya están resueltas o explícitamente
 > diferidas en [`Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md`](../Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md).
 
@@ -152,6 +194,11 @@ cerró D-1…D-7. Aquí están las decisiones **transversales** que siguen pendi
 | Mensajes y logs | Cambia el **texto** de los mensajes de error y validación | ❌ no — rompe aserciones de tests y consumidores que comparan texto |
 | Coherencia y doc | `[Range]` empieza a validar de verdad · `Headers` cambia de tipo · Swagger pasa de `200` a `204` | ❌ en `[Range]` y Swagger · ✅ en `Headers` |
 | Repos EF Core · ✅ completada | Puntos 67-70: cambia el namespace de `IGetContextable`, se retiran tres contratos públicos y sus registros, desaparece el localizador y los agregados comparten el `DbContext` | ✅ en firmas y resolución DI · ❌ en el contexto compartido |
+| Auditoría EFCore · Lecturas | Materialización síncrona y validación de claves | ⚠️ sí, en comportamiento |
+| Auditoría EFCore · Paginación | Orden estable puede cambiar las filas de cada página; anotaciones NRT pueden añadir avisos fuente | ❌ en orden · ⚠️ con warnings-as-errors |
+| Auditoría EFCore · `TryGetLast` | Nueva API ordenada y limitada a una fila | No, si se añade sin alterar los métodos actuales |
+| Auditoría EFCore · Registro DI | Uso genérico para distinguir contextos; dependencia DI explícita | No, mientras se conserve el alias existente |
+| Auditoría EFCore · Nomenclatura | Renombrar `Extensions` puede retirar un tipo público | ✅ si se elimina sin fachada; `[Obsolete]` también avisa |
 
 > Las rupturas marcadas con ❌ son las **más peligrosas**: no hay error ni advertencia que avise al
 > consumidor, así que necesitan entrada destacada en la guía de migración.
@@ -160,8 +207,9 @@ cerró D-1…D-7. Aquí están las decisiones **transversales** que siguen pendi
 
 ## 5. Estructura común de los documentos
 
-Las ocho épicas pendientes comparten el mismo esqueleto, de modo que se puedan leer en cualquier
-orden sin reaprender el formato. Las dos épicas de EFCore están completadas y archivadas en
+Las siete épicas transversales pendientes comparten el mismo esqueleto, de modo que se puedan leer en cualquier
+orden sin reaprender el formato. Las cinco épicas EFCore siguen la misma estructura numerada.
+Las dos épicas anteriores de EFCore están completadas y archivadas en
 `Realizados/EFCore/`; sus documentos conservan la variante de auditoría con «Radiografía del código
 actual», «Debilidades detectadas» y «Arquitectura de destino».
 
@@ -197,12 +245,12 @@ el tipo que citaban se renombró.
 | 43, 48, 49, 50, 51, 52, 60, 61 | [Contrato REST](Epica-Contrato-Rest.md) | |
 | 55, 62 | — | ✅ Resueltos en la 2.0.0 |
 | 56, 57, 58, 59 | [Validación](Epica-Validacion.md) | |
-| 64, 68, 69, 70 | [Código muerto](Epica-Limpieza-Codigo-Muerto.md) | |
-| 65, 66, 67 | [Código muerto](Epica-Limpieza-Codigo-Muerto.md) | ✅ Resueltos en la 2.0.0; citados para dejar constancia |
+| 64, 68, 69, 70 | [Código muerto](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) | ✅ Resueltos y archivados en Http |
+| 65, 66, 67 | [Código muerto](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) | ✅ Resueltos en la 2.0.0; citados para dejar constancia |
 | 71, 72, 73, 74, 75, 76 | [Erratas públicas](Epica-Erratas-Identificadores-Publicos.md) | |
 | 77, 78, 79, 80 | [Mensajes y logs](Epica-Mensajes-Y-Localizacion.md) | |
 | 81, 82, 83, 84, 86, 87, 89 | [Coherencia y documentación](Epica-Coherencia-Y-Documentacion.md) | 82, 84, 86 y 89 **reubicados**: los tipos citados se renombraron en 2.0.0 |
-| 85 | [Código muerto](Epica-Limpieza-Codigo-Muerto.md) · [Coherencia y doc](Epica-Coherencia-Y-Documentacion.md) | ✅ Resuelto en la 2.0.0; citado en las dos épicas |
+| 85 | [Código muerto](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · [Coherencia y doc](Epica-Coherencia-Y-Documentacion.md) | ✅ Resuelto en la 2.0.0; citado en las dos épicas |
 | 88 | [Coherencia y documentación](Epica-Coherencia-Y-Documentacion.md) | ✅ Resuelto: 0 `global using` duplicados en 27 ficheros |
 
 > La épica de simplificación EFCore no cubre los puntos 38-89; fue una auditoría específica del
@@ -211,6 +259,18 @@ el tipo que citaban se renombró.
 > en [`Realizados/EFCore/`](../Realizados/EFCore/README.md).
 
 ---
+
+### 6.1 · Trazabilidad de la auditoría EFCore
+
+| Hallazgo de `Mejoras/EntityFrameworkCore/README.md` | Destino |
+|---:|---|
+| 1-3 | Épica EFCore 5 · US-01 … US-04 |
+| 4-5 | Épica EFCore 1 · US-01 … US-03 |
+| 6, 10-11 | Épica EFCore 2 · US-01 … US-04 |
+| 7 | ✅ Cubierto por `MoralesLarios.OOFP.EntityFrameworkCore/README.md:490` y la épica UoW completada |
+| 8, 12 | Épica EFCore 4 · US-01 … US-02 |
+| 9 | Épica EFCore 3 · US-01 … US-02 |
+| 13 | Épica EFCore 1 · US-02 |
 
 ## Ver también
 

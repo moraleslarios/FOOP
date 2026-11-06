@@ -253,7 +253,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync         ( _       => EmptyValue.Create())
-                                            .LogActionResultAsync(_logger, $"{nameof(DeleteByIdAsync)}<{typeof(T).Name}");
+                                            .LogActionResultAsync(_logger, $"{nameof(DeleteByIdAsync)}<{typeof(T).Name}>");
 
         return result!;
     }
@@ -362,7 +362,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .TryMapAsync         (response => response.Content.ReadFromJsonAsync<T>(cancellationToken: ct))
-                                            .LogActionResultAsync(_logger, $"{nameof(PostAsync)}<{typeof(T).Name}");
+                                            .LogActionResultAsync(_logger, $"{nameof(PostAsync)}<{typeof(T).Name}>");
 
         return result!;
     }
@@ -391,7 +391,7 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                         ? response.ToMlResultValid()
                                                                         : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
                                     .MapAsync            ( _       => EmptyValue.Create().ToAsync())
-                                            .LogActionResultAsync(_logger, $"{nameof(ActionEmptyAsync)}<{typeof(T).Name}");
+                                            .LogActionResultAsync(_logger, $"{nameof(ActionEmptyAsync)}<{typeof(T).Name}>");
 
         return result!;
     }

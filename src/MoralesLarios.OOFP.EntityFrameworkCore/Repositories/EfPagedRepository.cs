@@ -6,25 +6,23 @@ using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// <summary>
-/// Representa <c>EfPagedRepository</c>.
+/// Combines entity CRUD operations with paged reads.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfPagedRepository<T, TContext> : EfRepository, IEfPagedRepository<T>
-    where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TContext">The EF Core context type.</typeparam>
+public class EfPagedRepository<TEntity, TContext> : EfRepository, IEfPagedRepository<TEntity>
+    where TEntity : class
     where TContext : DbContext
 {
-    private readonly IEfPagedReadRepository<T> _repoReaderPaginatorFp;
-    private readonly IEfWriteRepository<T> _repoWriterFp;
+    private readonly IEfPagedReadRepository<TEntity> _repoReaderPaginatorFp;
+    private readonly IEfWriteRepository<TEntity> _repoWriterFp;
     private readonly IMlUnitOfWork<TContext> _unitOfWork;
 
-    /// <summary>Obtiene la unidad de trabajo ligada al contexto de este agregado.</summary>
+    /// <summary>Gets the unit of work associated with this repository's context.</summary>
     public IMlUnitOfWork UnitOfWork => _unitOfWork;
 
-    /// <summary>
-    /// Representa <c>EfPagedRepository</c>.
-    /// </summary>
-    /// <param name="dbContext">Contexto de datos.</param>
+    /// <summary>Initializes a paged CRUD repository for the specified context.</summary>
+    /// <param name="dbContext">The context used by this repository.</param>
     public EfPagedRepository(TContext dbContext) : this(dbContext, new MlUnitOfWork<TContext>(dbContext))
     {
     }
@@ -37,323 +35,111 @@ public class EfPagedRepository<T, TContext> : EfRepository, IEfPagedRepository<T
     }
 
     /// <summary>
-    /// Crea el colaborador de lectura paginada, sobre el mismo <typeparamref name="TContext"/> del agregado.
-    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// Creates the paged-read collaborator using the aggregate's context.
     /// </summary>
-    /// <param name="context">Contexto de datos compartido con el agregado.</param>
-    /// <returns>Instancia del colaborador de lectura paginada.</returns>
-    protected virtual IEfPagedReadRepository<T> CreateReaderPaginator(TContext context) => new EfPagedReadRepository<T, TContext>(context);
+    /// <param name="context">The context shared with the aggregate.</param>
+    /// <returns>The paged-read collaborator.</returns>
+    protected virtual IEfPagedReadRepository<TEntity> CreateReaderPaginator(TContext context) => new EfPagedReadRepository<TEntity, TContext>(context);
 
     /// <summary>
-    /// Crea el colaborador de escritura, sobre el mismo <typeparamref name="TContext"/> del agregado.
-    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// Creates the write collaborator using the aggregate's context.
     /// </summary>
-    /// <param name="context">Contexto de datos compartido con el agregado.</param>
-    /// <returns>Instancia del colaborador de escritura.</returns>
-    protected virtual IEfWriteRepository<T> CreateWriter(TContext context) => new EfWriteRepository<T, TContext>(context);
+    /// <param name="context">The context shared with the aggregate.</param>
+    /// <returns>The write collaborator.</returns>
+    protected virtual IEfWriteRepository<TEntity> CreateWriter(TContext context) => new EfWriteRepository<TEntity, TContext>(context);
 
 
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFind(params object[] keyValues) => _repoReaderPaginatorFp.TryFind(keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFind(params object[] keyValues) => _repoReaderPaginatorFp.TryFind(keyValues);
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryFindAsync(CancellationToken token = default, params object[] keyValues) => await _repoReaderPaginatorFp.TryFindAsync(token, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryFindAsync(CancellationToken token = default, params object[] keyValues) => await _repoReaderPaginatorFp.TryFindAsync(token, keyValues);
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoReaderPaginatorFp.TryFind(notFoundErrorDetails, keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoReaderPaginatorFp.TryFind(notFoundErrorDetails, keyValues);
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoReaderPaginatorFp.TryFindAsync(notFoundErrorDetails, token, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoReaderPaginatorFp.TryFindAsync(notFoundErrorDetails, token, keyValues);
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryFirst(filter);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFirst(Expression<Func<TEntity, bool>> filter) => _repoReaderPaginatorFp.TryFirst(filter);
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryFirstAsync(filter, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryFirstAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryFirstAsync(filter, token);
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryFirst(filter, notFoundErrorDetails);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFirst(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryFirst(filter, notFoundErrorDetails);
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryFirstAsync(filter, notFoundErrorDetails, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryFirstAsync(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryFirstAsync(filter, notFoundErrorDetails, token);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryGetLast(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryGetLast(filter);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryGetLast(Expression<Func<TEntity, bool>> filter) => _repoReaderPaginatorFp.TryGetLast(filter);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryGetLastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryGetLastAsync(filter, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryGetLastAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryGetLastAsync(filter, token);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryGetLast(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryGetLast(filter, notFoundErrorDetails);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryGetLast(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails) => _repoReaderPaginatorFp.TryGetLast(filter, notFoundErrorDetails);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryGetLastAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryGetLastAsync(filter, notFoundErrorDetails, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryGetLastAsync(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default) => await _repoReaderPaginatorFp.TryGetLastAsync(filter, notFoundErrorDetails, token);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Data</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryGetData(Expression<Func<T, bool>> filter) => _repoReaderPaginatorFp.TryGetData(filter);
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryGetData(Expression<Func<TEntity, bool>> filter) => _repoReaderPaginatorFp.TryGetData(filter);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Data</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryGetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryGetDataAsync(filter, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryGetDataAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default!) => await _repoReaderPaginatorFp.TryGetDataAsync(filter, token);
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido.
-    /// </summary>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryAll() => _repoReaderPaginatorFp.TryAll();
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryAll() => _repoReaderPaginatorFp.TryAll();
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryAllAsync(CancellationToken token = default!) => await _repoReaderPaginatorFp.TryAllAsync(token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryAllAsync(CancellationToken token = default!) => await _repoReaderPaginatorFp.TryAllAsync(token);
 
 
 
-    /// <summary>
-    /// Añade el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryAdd(T item) => _repoWriterFp.TryAdd(item);
-    /// <summary>
-    /// Añade el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default) => await _repoWriterFp.TryAddAsync(item, token);
-    /// <summary>
-    /// Añade el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte en
-    /// un resultado fallido.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items) => _repoWriterFp.TryAddRange(items);
-    /// <summary>
-    /// Añade el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte en
-    /// un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoWriterFp.TryAddRangeAsync(items, token);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(T item) => _repoWriterFp.TryRemove(item);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(params object[] keyValues) => _repoWriterFp.TryRemove(keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoWriterFp.TryRemove(notFoundErrorDetails, keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default) => await _repoWriterFp.TryRemoveAsync(item, token);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryRemoveAsync(token, keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryRemoveAsync(notFoundErrorDetails, token, keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items) => _repoWriterFp.TryRemoveRange(items);
-    /// <summary>
-    /// Elimina el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoWriterFp.TryRemoveRangeAsync(items, token);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item) => _repoWriterFp.TryUpdate(item);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item, params object[] keyValues) => _repoWriterFp.TryUpdate(item, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoWriterFp.TryUpdate(item, notFoundErrorDetails, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default) => await _repoWriterFp.TryUpdateAsync(item, token);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryUpdateAsync(item, token, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryUpdateAsync(item, notFoundErrorDetails, token, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items) => _repoWriterFp.TryUpdateRange(items);
-    /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoWriterFp.TryUpdateRangeAsync(items, token);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryAdd(TEntity item) => _repoWriterFp.TryAdd(item);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryAddAsync(TEntity item, CancellationToken token = default) => await _repoWriterFp.TryAddAsync(item, token);
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryAddRange(IEnumerable<TEntity> items) => _repoWriterFp.TryAddRange(items);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryAddRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default) => await _repoWriterFp.TryAddRangeAsync(items, token);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryRemove(TEntity item) => _repoWriterFp.TryRemove(item);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryRemove(params object[] keyValues) => _repoWriterFp.TryRemove(keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoWriterFp.TryRemove(notFoundErrorDetails, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(TEntity item, CancellationToken token = default) => await _repoWriterFp.TryRemoveAsync(item, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryRemoveAsync(token, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryRemoveAsync(notFoundErrorDetails, token, keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryRemoveRange(IEnumerable<TEntity> items) => _repoWriterFp.TryRemoveRange(items);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryRemoveRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default) => await _repoWriterFp.TryRemoveRangeAsync(items, token);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item) => _repoWriterFp.TryUpdate(item);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item, params object[] keyValues) => _repoWriterFp.TryUpdate(item, keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item, MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoWriterFp.TryUpdate(item, notFoundErrorDetails, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default) => await _repoWriterFp.TryUpdateAsync(item, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryUpdateAsync(item, token, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoWriterFp.TryUpdateAsync(item, notFoundErrorDetails, token, keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryUpdateRange(IEnumerable<TEntity> items) => _repoWriterFp.TryUpdateRange(items);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryUpdateRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default) => await _repoWriterFp.TryUpdateRangeAsync(items, token);
 
 
 
@@ -362,63 +148,31 @@ public class EfPagedRepository<T, TContext> : EfRepository, IEfPagedRepository<T
 
 
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición de <c>Pagination</c>. Captura cualquier excepción
-    /// producida y la convierte en un resultado fallido.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<PagedResult<T>> TryAllPagination(PageRequest              paginationInfo, 
+    /// <inheritdoc/>
+    public virtual MlResult<PagedResult<TEntity>> TryAllPagination(PageRequest              paginationInfo,
                                                                       SortDirection                     orderBy      = SortDirection.Ascending, 
-                                                                      Expression<Func<T, object>> orderByField = null!)
+                                                                      Expression<Func<TEntity, object>>? orderByField = null)
          => _repoReaderPaginatorFp.TryAllPagination(paginationInfo, orderBy, orderByField);
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición de <c>Pagination</c>. Captura cualquier excepción
-    /// producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="ct">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual Task<MlResult<PagedResult<T>>> TryAllPaginationAsync(PageRequest              paginationInfo, 
+    /// <inheritdoc/>
+    public virtual Task<MlResult<PagedResult<TEntity>>> TryAllPaginationAsync(PageRequest              paginationInfo,
                                                                                  SortDirection                     orderBy      = SortDirection.Ascending, 
-                                                                                 Expression<Func<T, object>> orderByField = null!,
+                                                                                 Expression<Func<TEntity, object>>? orderByField = null,
                                                                                  CancellationToken ct                     = default!)
          => _repoReaderPaginatorFp.TryAllPaginationAsync(paginationInfo, orderBy, orderByField, ct);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>DataPagination</c>. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<PagedResult<T>> TryGetDataPagination(PageRequest              paginationInfo, 
+    /// <inheritdoc/>
+    public virtual MlResult<PagedResult<TEntity>> TryGetDataPagination(PageRequest              paginationInfo,
                                                                           SortDirection                     orderBy      = SortDirection.Ascending, 
-                                                                          Expression<Func<T, object>> orderByField = null, 
-                                                                          Expression<Func<T, bool>>   filter       = null!)
+                                                                          Expression<Func<TEntity, object>>? orderByField = null,
+                                                                          Expression<Func<TEntity, bool>>?   filter       = null)
          => _repoReaderPaginatorFp.TryGetDataPagination(paginationInfo, orderBy, orderByField, filter);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>DataPagination</c>. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="ct">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual Task<MlResult<PagedResult<T>>> TryGetDataPaginationAsync(PageRequest paginationInfo, 
+    /// <inheritdoc/>
+    public virtual Task<MlResult<PagedResult<TEntity>>> TryGetDataPaginationAsync(PageRequest paginationInfo,
                                                                                      SortDirection                     orderBy      = SortDirection.Ascending, 
-                                                                                     Expression<Func<T, object>> orderByField = null!, 
-                                                                                     Expression<Func<T, bool>>   filter       = null!,
+                                                                                     Expression<Func<TEntity, object>>? orderByField = null,
+                                                                                     Expression<Func<TEntity, bool>>?   filter       = null,
                                                                                      CancellationToken ct                     = default!)
          => _repoReaderPaginatorFp.TryGetDataPaginationAsync(paginationInfo, orderBy, orderByField, filter, ct);
 }

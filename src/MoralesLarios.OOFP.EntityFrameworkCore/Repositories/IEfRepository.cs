@@ -5,14 +5,14 @@
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Contrato de <c>IEfRepository</c>.
+/// Combines entity reads and writes with the unit of work associated with the same context.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-public interface IEfRepository<T> : IEfReadRepository<T>, IEfWriteRepository<T>
-    where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+public interface IEfRepository<TEntity> : IEfReadRepository<TEntity>, IEfWriteRepository<TEntity>
+    where TEntity : class
 {
     /// <summary>
-    /// Obtiene la unidad de trabajo asociada al mismo <see cref="DbContext"/> que usa este repositorio.
+    /// Gets the unit of work associated with the <see cref="DbContext"/> used by this repository.
     /// </summary>
     IMlUnitOfWork UnitOfWork { get; }
 }

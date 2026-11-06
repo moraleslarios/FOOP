@@ -2,7 +2,7 @@
 
 Capa de repositorios genéricos sobre **Entity Framework Core 8** que convierte el acceso a datos en operaciones que devuelven [`MlResult<T>`](../docs/core-types/MlResult.md): con captura de excepciones y el "no encontrado" tratado como un `Fail` con mensaje propio.
 
-Expone ocho interfaces funcionales por entidad, todas sobre el mismo `DbContext` del ámbito.
+Expone nueve interfaces funcionales por entidad, todas sobre el mismo `DbContext` del ámbito. `IEfOrderedReadRepository<T>` añade la consulta limitada de último elemento.
 
 ---
 
@@ -82,13 +82,14 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 | Dependencia | Versión | Para qué |
 |---|---|---|
 | `Microsoft.EntityFrameworkCore` | 8.0.3 | `DbContext`, `DbSet<T>`, `ToListAsync` |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 8.0.0 | `IServiceCollection` y resolución de servicios |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `EnsureFp`, `TryMap`, `FailIfNull` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | `PageRequest`, `PagedResult<T>` |
 | [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | — | `IntNonNegative` (conversiones de paginación) |
 
 Destino: **`net8.0`**. Versión del paquete: **2.0.0**.
 
-> ⚠️ **`Microsoft.Extensions.DependencyInjection` se usa sin declararse** como paquete propio: llega de forma transitiva a través de EF Core. Funciona, pero es una dependencia implícita.
+`Microsoft.Extensions.DependencyInjection.Abstractions` se declara directamente porque `AddOofpRepositories` expone `IServiceCollection` en su API pública.
 
 ```csharp
 using MoralesLarios.OOFP.EntityFrameworkCore;              // AddOofpRepositories
@@ -125,7 +126,7 @@ MoralesLarios.OOFP.EntityFrameworkCore/
 
 ## Composición de los repositorios
 
-Los agregados `EfCrudRepository<T, TContext>` y `EfPagedRepository<T, TContext>` crean sus colaboradores mediante factorías `protected virtual`. Las factorías reciben el mismo `TContext` que el agregado, por lo que todas las operaciones del ámbito comparten el mismo `ChangeTracker` y unidad de trabajo. Las ocho interfaces públicas devuelven `MlResult` o `Task<MlResult<…>>`.
+Los agregados `EfCrudRepository<T, TContext>` y `EfPagedRepository<T, TContext>` crean sus colaboradores mediante factorías `protected virtual`. Las factorías reciben el mismo `TContext` que el agregado, por lo que todas las operaciones del ámbito comparten el mismo `ChangeTracker` y unidad de trabajo. Las nueve interfaces públicas devuelven `MlResult` o `Task<MlResult<…>>`.
 
 ---
 
@@ -161,7 +162,7 @@ IEfPagedRepository<T>        : Repo + Paginator                   ← 🟢 el m�
 
 ## Registro en el contenedor
 
-Un solo método registra las **ocho interfaces funcionales** para una entidad y su contexto:
+Un solo método registra las **nueve interfaces funcionales** para una entidad y su contexto:
 
 ```csharp
 builder.Services.AddDbContext<TestDbContext>(o => o.UseSqlServer(cs));
@@ -177,6 +178,8 @@ builder.Services.AddOofpRepositories<Cata, TestDbContext>();   // una llamada po
 | `AddOofpRepositories<T, TContext>()` | `Scoped` |
 
 > ✅ **`Scoped` es el único ciclo de vida admitido.** Cada repositorio y agregado recibe por constructor el `DbContext` registrado para el ámbito. Las factorías de los agregados pasan esa misma instancia a sus colaboradores; no se construyen proveedores secundarios ni se usa un localizador estático.
+
+> 💡 **Varios `DbContext`:** inyecta `IMlUnitOfWork<TContext>` para seleccionar explícitamente la unidad de trabajo del contexto. La interfaz no genérica `IMlUnitOfWork` es una alias de conveniencia para aplicaciones con un único contexto registrado.
 
 ---
 
@@ -209,16 +212,16 @@ Task<MlResult<IEnumerable<T>>> TryAllAsync    (CancellationToken token = default
 | `TryFind` | `pk` nulo, vacío, o no existe la fila | `"{valores} values not found data in {Entidad}"` |
 | `TryFirst` | `filter` nulo o sin coincidencias | `"The query did not return any elements"` |
 | `TryGetLast` | `filter` nulo o sin coincidencias | `"The query did not return any elements"` |
-| `TryGetData` | `filter` nulo o error de BD | *(propaga la excepción como error)* |
-| `TryAll` | Error de BD | *(propaga la excepción como error)* |
+| `TryGetData` | `filter` nulo, clave de entrada inválida aguas arriba o error de consulta | `MlResult.Fail`; la consulta síncrona se materializa dentro del método |
+| `TryAll` | Error al ejecutar la consulta | `MlResult.Fail`; la consulta síncrona se materializa dentro del método |
 
 Implementación de `TryFind` (muestra el patrón completo):
 
 ```csharp
 public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues)
-    => EnsureFp.NotNull(pk, "The object array pk cannot be null")
-               .TryMap (x => EnsureFp.NotEmpty(pk, "The object array pk cannot be empty"))
-               .TryMap (x => _repoReader!.Find(pk))
+    => EnsureFp.NotNull(keyValues, "The object array pk cannot be null")
+               .TryMap (x => EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty"))
+               .TryMap (x => GetContext().Set<T>().Find(keyValues)!)
                .TryBind(x => x.FailIfNull(notFoundErrorDetails));   // 🔑 null → Fail
 ```
 
@@ -234,7 +237,7 @@ await repo.TryFindAsync(ct, idVino, idCata, idUsuario);
 
 > 💡 **No hay `TryFirstOrDefault` ni `TryLastOrDefault`, y no hacen falta**: `TryFirst`/`TryGetLast` ya devuelven `Fail` en lugar de lanzar, así que cubren el caso seguro.
 
-> 💡 **`TryAll` y `TryGetData` usan `AsNoTracking()`** en el motor interno: son de solo lectura y no cargan el *change tracker*. `TryFind`, en cambio, **sí hace seguimiento** (usa `Find`), lo que es correcto porque suele preceder a una modificación.
+> 💡 **`TryAll` y `TryGetData` usan `AsNoTracking()` y materializan sus resultados**: son de solo lectura, no cargan el *change tracker* y los errores de ejecución quedan dentro de `MlResult`. La variante síncrona ejecuta la consulta antes de retornar; la variante async usa `ToListAsync(token)`. Para conjuntos grandes, prefiere las operaciones paginadas. `TryFind`, en cambio, **sí hace seguimiento** (usa `Find`), lo que es correcto porque suele preceder a una modificación.
 
 ---
 
@@ -336,9 +339,9 @@ Las interfaces agregadas solo expresan composición; sus implementaciones delega
 ```csharp
 MlResult<PagedResult<T>>       TryAllPagination         (PageRequest paginationInfo,
                                                                   SortDirection orderBy = SortDirection.Ascending,
-                                                                  Expression<Func<T, object>> orderByField = null!);
+                                                                  Expression<Func<T, object>>? orderByField = null);
 Task<MlResult<PagedResult<T>>> TryAllPaginationAsync    (…, CancellationToken ct = default!);
-MlResult<PagedResult<T>>       TryGetDataPagination     (…, Expression<Func<T, bool>> filter = null!);
+MlResult<PagedResult<T>>       TryGetDataPagination     (…, Expression<Func<T, bool>>? filter = null);
 Task<MlResult<PagedResult<T>>> TryGetDataPaginationAsync(…, CancellationToken ct = default!);
 ```
 
@@ -375,7 +378,7 @@ public static IQueryable<T> PrivateOrderBy<T>(this IQueryable<T> source,
                                                            : source.OrderByDescending(orderByField);
 ```
 
-> ⚠️ **Si no pasas `orderByField`, no hay `ORDER BY`** y el resultado de `Skip`/`Take` **no está garantizado**: SQL Server puede devolver las filas en cualquier orden, así que dos páginas consecutivas podrían repetir u omitir registros. **Pasa siempre `orderByField` al paginar.**
+La paginación ordena por la clave primaria EF cuando no se proporciona selector. Si se proporciona, agrega todas las propiedades de la clave primaria como desempate, conservando el sentido de `SortDirection`. Esto estabiliza páginas consecutivas con claves simples o compuestas. Las entidades sin clave primaria EF devuelven un resultado fallido: no se puede prometer un orden total. La estabilización puede cambiar qué filas aparecen en páginas existentes; los selectores que ya eran únicos mantienen su orden.
 
 > 💡 **El campo es `Expression<Func<T, object>>`**, así que al ordenar por un tipo valor (`int`, `DateTime`) se genera un *boxing* en la expresión. EF Core lo traduce correctamente, pero es la razón de que no puedas encadenar varios criterios (no hay `ThenBy`).
 
@@ -426,7 +429,7 @@ public enum SortDirection { Ascending, Descending }
 
 ### 1. ✅ El `DbContext` se comparte dentro del ámbito
 
-`AddOofpRepositories<T, TContext>()` registra ocho interfaces funcionales como `Scoped`. Los agregados crean sus colaboradores con el mismo contexto que reciben por constructor. Consulta [Registro en el contenedor](#registro-en-el-contenedor).
+`AddOofpRepositories<T, TContext>()` registra nueve interfaces funcionales como `Scoped`. Los agregados crean sus colaboradores con el mismo contexto que reciben por constructor. Consulta [Registro en el contenedor](#registro-en-el-contenedor).
 
 ### 2. ✅ El repositorio **no** es dueño del `DbContext` (corregido en la 2.0.0)
 
@@ -512,17 +515,13 @@ public T LastOrDefault(Expression<Func<T, bool>> filter)
 
 **`AsEnumerable()` materializa toda la consulta** y luego toma el último elemento en memoria. En una tabla con un millón de filas coincidentes, se transfieren **todas**.
 
-> ❗ **Evita `TryGetLast`/`TryGetLastAsync` en tablas grandes.** SQL Server no soporta `LAST()`, y la alternativa correcta es invertir la ordenación y tomar el primero:
+> ❗ **Evita `TryGetLast`/`TryGetLastAsync` en tablas grandes.** Esos métodos preservan su comportamiento previo y materializan todas las coincidencias. Usa la interfaz aditiva `IEfOrderedReadRepository<T>`: ordena en el servidor, desempata por clave primaria y limita la consulta a una fila.
 > ```csharp
-> // ✅ Solo trae una fila
-> var ultimo = await repo.TryGetDataPaginationAsync(
->                             new PageRequest(1, 1),
->                             SortDirection.Descending,
->                             x => x.FechaEntrada,
->                             x => x.Bodega == "X",
->                             ct)
->                        .MapAsync(p => p.Items.First());
+> var orderedRepo = provider.GetRequiredService<IEfOrderedReadRepository<Vino>>();
+> var ultimo = await orderedRepo.TryGetLastByAsync(
+>     x => x.Bodega == "X", x => x.FechaEntrada, SortDirection.Ascending, ct);
 > ```
+> “Último” es el máximo del selector con `Ascending` y el mínimo con `Descending`; la clave primaria deshace empates en el mismo sentido. La API requiere una clave primaria EF.
 
 ### 5. ✅ La paginación ordena antes de aplicar `Skip` y `Take`
 
@@ -530,13 +529,13 @@ public T LastOrDefault(Expression<Func<T, bool>> filter)
 GetContext().Set<T>()
     .AsNoTracking()
     .Where(effectiveFilter)
-    .PrivateOrderBy(orderBy, orderByField)
+    .OrderByStableForPagination(GetContext(), orderBy, orderByField)
     .Skip((pageNumber - 1) * pageSize)
     .Take(pageSize)
     .ToList();
 ```
 
-La consulta aplica primero el filtro y la ordenación, y después pagina. Si `filter` es `null`, se trata como `x => true`. Proporciona `orderByField` para obtener páginas deterministas.
+La consulta aplica primero el filtro y el orden total, y después pagina. Si `filter` es `null`, se trata como `x => true`; `orderByField` también es opcional y la clave primaria define el orden por defecto. Un selector no único se desempata por todas las propiedades de la clave EF.
 
 ### 6. ✅ `TotalCount` respeta el filtro en ambas variantes
 
@@ -804,10 +803,10 @@ await repo.TryGetDataPaginationAsync((1, 20), SortDirection.Ascending, x => x.Id
 // ❌ MAL: TryGetLast en una tabla grande → trae todas las filas a memoria
 await repo.TryGetLastAsync(x => x.Bodega == "Rioja", ct);
 
-// ✅ BIEN: ordenar descendente y tomar el primero (una sola fila)
-await repo.TryGetDataPaginationAsync((1, 1), SortDirection.Descending, x => x.FechaEntrada,
-                                     x => x.Bodega == "Rioja", ct)
-          .MapAsync(p => p.Items.First());
+// ✅ BIEN: seleccionar una sola fila según un orden explícito
+var orderedRepo = provider.GetRequiredService<IEfOrderedReadRepository<Vino>>();
+await orderedRepo.TryGetLastByAsync(x => x.Bodega == "Rioja", x => x.FechaEntrada,
+                                    SortDirection.Ascending, ct);
 ```
 
 **El `TotalCount` con filtro (ambas variantes lo respetan):**
@@ -865,7 +864,7 @@ var resultado = await repoVinos.UnitOfWork.TryExecuteInTransactionAsync(async to
 | Página de resultados | `TryGetDataPaginationAsync(…)` ✅ con `orderByField` y `filter` |
 | Insertar varios de golpe | `TryAddRangeAsync(items, ct)` |
 | Borrar comprobando existencia | `TryRemoveAsync("mensaje", ct, pk)` |
-| El último registro | ❌ **No uses `TryGetLast`**: ordena descendente y toma el primero |
+| El último registro | `IEfOrderedReadRepository<T>.TryGetLastBy[Async]` ✅ ordena y limita a una fila |
 | Confirmar escritura directa | `await repo.UnitOfWork.TryCommitAsync(ct)` |
 | Varias escrituras atómicas | `await repo.UnitOfWork.TryExecuteInTransactionAsync(...)` |
 | `Include`, proyecciones, agregados | ❌ No disponible: baja a `GetContext()` |
@@ -875,12 +874,12 @@ var resultado = await repoVinos.UnitOfWork.TryExecuteInTransactionAsync(async to
 
 ## Mejores prácticas
 
-1. **Registra siempre con `AddOofpRepositories`**: registra las ocho interfaces funcionales de la entidad con ciclo de vida `Scoped`, el mismo que el del `DbContext`.
+1. **Registra siempre con `AddOofpRepositories`**: registra las nueve interfaces funcionales de la entidad con ciclo de vida `Scoped`, el mismo que el del `DbContext`.
 2. **Llama a `AddOofpRepositories` al principio** de la configuración de servicios, antes de cualquier registro que dependa de repositorios.
 3. **No intentes liberar un repositorio a mano**: desde la 2.0.0 no implementa `IDisposable`, porque el `DbContext` lo gestiona el contenedor.
 4. **Usa las versiones asíncronas** en aplicaciones web para no bloquear el hilo durante el acceso a datos.
-5. **Al paginar, pasa `orderByField`** para obtener un orden estable; el filtro nulo se interpreta como `x => true`.
-6. **Evita `TryGetLast`/`TryGetLastAsync`**: materializa toda la consulta. Ordena descendente y toma el primero.
+5. **La paginación es estable por defecto**: usa la clave primaria EF como orden o desempate; una entidad sin clave produce un fallo. El filtro nulo se interpreta como `x => true`.
+6. **Para una sola fila ordenada, usa `IEfOrderedReadRepository<T>.TryGetLastBy[Async]`**; `TryGetLast[Async]` conserva la lectura completa por compatibilidad.
 7. **Para modificar, recupera y actualiza la misma instancia** (`TryFind` → modificar → `TryUpdate(v)` sin `pk`).
 8. **Personaliza los `MlErrorDetails`** si el mensaje va a llegar al usuario: los de serie están en inglés e incluyen el nombre del tipo.
 9. **Segrega las interfaces**: inyecta `IEfReadRepository<T>` donde solo consultes.
@@ -896,12 +895,12 @@ var resultado = await repoVinos.UnitOfWork.TryExecuteInTransactionAsync(async to
 ## Resumen
 
 - Repositorios genéricos sobre **EF Core 8** que devuelven `MlResult<T>`: el "no encontrado" es un `Fail` con mensaje personalizable y los argumentos se validan antes de tocar la base de datos.
-- **Ocho repositorios componibles** por entidad, desde `IEfCreateRepository<T>` hasta `IEfPagedRepository<T>`. Todos los métodos son `virtual`: puedes heredar y sobrescribir.
-- Registro: `AddOofpRepositories<T, TContext>()` registra las ocho interfaces funcionales con ciclo de vida **`Scoped`**.
+- **Nueve interfaces componibles** por entidad, incluidas `IEfOrderedReadRepository<T>`. Los métodos de las clases repositorio son `virtual`: puedes heredar y sobrescribir.
+- Registro: `AddOofpRepositories<T, TContext>()` registra las nueve interfaces funcionales con ciclo de vida **`Scoped`**.
 - Los agregados y sus colaboradores comparten el mismo `DbContext` y `ChangeTracker` dentro del ámbito.
 - ✅ **El repositorio no es dueño del `DbContext`**: desde la 2.0.0 no implementa `IDisposable`; el contenedor libera el contexto al cerrar el ámbito.
 - ✅ **Unidad de trabajo explícita**: las escrituras preparan cambios; `TryCommit[Async]` los confirma y `TryExecuteInTransaction[Async]` coordina commit/rollback entre operaciones.
-- ⚠️ **Límites concretos**: `TryGetLast` materializa toda la consulta; la paginación necesita orden explícito para que las páginas sean deterministas.
+- ⚠️ **Límites concretos**: `TryGetLast` materializa toda la consulta; paginar requiere una clave primaria EF para garantizar el orden total.
 - ⚠️ **No cubre** `Include`, proyecciones, agregados, `ThenBy`, SQL crudo ni operaciones por lotes: para eso, `GetContext()`.
 
 ---

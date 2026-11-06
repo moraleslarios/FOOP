@@ -7,40 +7,36 @@
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Contrato de <c>IEfCreateRepository</c>.
+/// Defines entity-creation operations for an EF Core repository.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-public interface IEfCreateRepository<T>
-    where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+public interface IEfCreateRepository<TEntity>
+    where TEntity : class
 {
     /// <summary>
-    /// Añade el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Adds an entity to the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryAdd(T item);
+    /// <param name="item">The entity to add.</param>
+    /// <returns>A successful result containing the added entity, or a failed result.</returns>
+    MlResult<TEntity> TryAdd(TEntity item);
     /// <summary>
-    /// Añade el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously adds an entity to the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default);
+    /// <param name="item">The entity to add.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the added entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryAddAsync(TEntity item, CancellationToken token = default);
     /// <summary>
-    /// Añade el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte en
-    /// un resultado fallido.
+    /// Adds a collection of entities to the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items);
+    /// <param name="items">The entities to add.</param>
+    /// <returns>A successful result containing the added entities, or a failed result.</returns>
+    MlResult<IEnumerable<TEntity>> TryAddRange(IEnumerable<TEntity> items);
     /// <summary>
-    /// Añade el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte en
-    /// un resultado fallido. Versión asíncrona.
+    /// Asynchronously adds a collection of entities to the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default);
+    /// <param name="items">The entities to add.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the added entities or a failed result.</returns>
+    Task<MlResult<IEnumerable<TEntity>>> TryAddRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default);
 }

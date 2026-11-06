@@ -6,61 +6,61 @@
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Representa <c>EfDeleteRepository</c>.
+/// Implements entity-removal operations for an EF Core context.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(dbContext), IEfDeleteRepository<T>
-    where T        : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TContext">The EF Core context type.</typeparam>
+public class EfDeleteRepository<TEntity, TContext>(TContext dbContext) : EfRepository(dbContext), IEfDeleteRepository<TEntity>
+    where TEntity        : class
     where TContext : DbContext
 {
 
-    private static readonly string typeName = typeof(T).Name;
+    private static readonly string typeName = typeof(TEntity).Name;
 
 
     /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Removes an entity from the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(T item)
+    /// <param name="item">The entity to remove.</param>
+    /// <returns>A successful result containing the removed entity, or a failed result.</returns>
+    public virtual MlResult<TEntity> TryRemove(TEntity item)
     {
         var result = EnsureFp.NotNull(item, "The entity item to remove cannot be null")
                             .TryMap(x =>
                             {
-                                GetContext().Set<T>().Remove(item);
+                                GetContext().Set<TEntity>().Remove(item);
                                 return item;
                             });
         return result;
     }
 
     /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds and removes an entity by its primary-key values.
     /// </summary>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(params object[] keyValues)
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>The removed entity or a failed result.</returns>
+    public virtual MlResult<TEntity> TryRemove(params object[] keyValues)
         => TryRemove(null!, keyValues);
 
     /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds and removes an entity by its primary-key values using the supplied not-found error details.
     /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] keyValues)
+    /// <param name="notFoundErrorDetails">The error details returned when no entity is found.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>The removed entity or a failed result.</returns>
+    public virtual MlResult<TEntity> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] keyValues)
     {
-        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+        var errorDetails = notFoundErrorDetails ?? (keyValues is null
+            ? "The object array pk cannot be null"
+            : $"{keyValues.FormatCompositeKey()} values not found data in {typeName}");
 
-        var result = EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty")
-                                .TryMap (x       => GetContext().Set<T>().Find(keyValues)!) 
+        var result = EnsureFp.NotNull(keyValues, "The object array pk cannot be null")
+                                .Bind(validKeys => EnsureFp.NotEmptyCollection<object[], object>(validKeys!, "The object array pk cannot be empty"))
+                                .TryMap (validKeys => GetContext().Set<TEntity>().Find(validKeys)!)
                                 .TryBind(bdItem  => bdItem.FailIfNull(errorDetails))
                                 .TryMap( bdItem  =>
                                 {
-                                    GetContext().Set<T>().Remove(bdItem);
+                                    GetContext().Set<TEntity>().Remove(bdItem);
                                     return bdItem;
                                 });
         return result;
@@ -68,18 +68,17 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
 
 
     /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously removes an entity from the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default)
+    /// <param name="item">The entity to remove.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the removed entity or a failed result.</returns>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(TEntity item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to remove cannot be null")
                             .TryMapAsync(async x =>
                             {
-                                GetContext().Set<T>().Remove(item);
+                                GetContext().Set<TEntity>().Remove(item);
                                 return item;
                             });
         return result;
@@ -87,54 +86,54 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
 
 
     /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds and removes an entity by its primary-key values.
     /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues)
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the removed entity or a failed result.</returns>
+    public virtual Task<MlResult<TEntity>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues)
         => TryRemoveAsync(null!, token, keyValues);
 
     /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds and removes an entity by its primary-key values using the supplied not-found error details.
     /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
+    /// <param name="notFoundErrorDetails">The error details returned when no entity is found.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the removed entity or a failed result.</returns>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
     {
-        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+        var errorDetails = notFoundErrorDetails ?? (keyValues is null
+            ? "The object array pk cannot be null"
+            : $"{keyValues.FormatCompositeKey()} values not found data in {typeName}");
 
-        var result = await EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty")
-                                    .TryMapAsync ( async x      =>
+        var result = await EnsureFp.NotNullAsync(keyValues, "The object array pk cannot be null")
+                                    .BindAsync(validKeys => EnsureFp.NotEmptyCollection<object[], object>(validKeys!, "The object array pk cannot be empty"))
+                                    .TryMapAsync ( async validKeys =>
                                     {
-                                        var found = await GetContext().Set<T>().FindAsync(keyValues, token);
+                                        var found = await GetContext().Set<TEntity>().FindAsync(validKeys, token);
                                         return found!;
                                     })
                                     .TryBindAsync( bdItem        => bdItem.FailIfNullAsync(errorDetails))
                                     .TryMapAsync( async bdItem  =>
                                     {
-                                        GetContext().Set<T>().Remove(bdItem);
+                                        GetContext().Set<TEntity>().Remove(bdItem);
                                         return bdItem;
                                     });
         return result;
     }
 
     /// <summary>
-    /// Elimina el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
+    /// Removes a collection of entities from the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items)
+    /// <param name="items">The entities to remove.</param>
+    /// <returns>A successful result containing the removed entities, or a failed result.</returns>
+    public virtual MlResult<IEnumerable<TEntity>> TryRemoveRange(IEnumerable<TEntity> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to remove cannot be null")
                             .TryMap(x =>
                             {
-                                GetContext().Set<T>().RemoveRange(items);
+                                GetContext().Set<TEntity>().RemoveRange(items);
                                 return items;
                             });
         return result;
@@ -145,18 +144,17 @@ public class EfDeleteRepository<T, TContext>(TContext dbContext) : EfRepository(
     // y se devolvia la Task sin await, con lo que el metodo no era homogeneo con sus hermanos
     // (ni respecto a la propagacion de excepciones ni al punto de captura de la pila).
     /// <summary>
-    /// Elimina el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
+    /// Asynchronously removes a collection of entities from the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default)
+    /// <param name="items">The entities to remove.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the removed entities or a failed result.</returns>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryRemoveRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(items, "The entity items to remove cannot be null")
                             .TryMapAsync(async x =>
                             {
-                                GetContext().Set<T>().RemoveRange(items);
+                                GetContext().Set<TEntity>().RemoveRange(items);
                                 return items;
                             });
         return result;

@@ -5,11 +5,11 @@
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Contrato de <c>IEfWriteRepository</c>.
+/// Combines entity creation, update, and removal operations.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-public interface IEfWriteRepository<T> : IEfCreateRepository<T>, IEfUpdateRepository<T>, IEfDeleteRepository<T>
-    where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+public interface IEfWriteRepository<TEntity> : IEfCreateRepository<TEntity>, IEfUpdateRepository<TEntity>, IEfDeleteRepository<TEntity>
+    where TEntity : class
 {
 }
 

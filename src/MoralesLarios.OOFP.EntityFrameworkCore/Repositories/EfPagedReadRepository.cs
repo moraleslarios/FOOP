@@ -4,27 +4,20 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// <summary>
-/// Representa <c>EfPagedReadRepository</c>.
+/// Implements paged read operations for an EF Core context.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfPagedReadRepository<T, TContext>(TContext dbContext) : EfReadRepository<T, TContext>(dbContext), IEfPagedReadRepository<T>
-    where T        : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TContext">The EF Core context type.</typeparam>
+public class EfPagedReadRepository<TEntity, TContext>(TContext dbContext) : EfReadRepository<TEntity, TContext>(dbContext), IEfPagedReadRepository<TEntity>
+    where TEntity        : class
     where TContext : DbContext
 {
 
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición de <c>Pagination</c>. Captura cualquier excepción
-    /// producida y la convierte en un resultado fallido.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<PagedResult<T>> TryAllPagination(PageRequest              paginationInfo,
+    /// <inheritdoc/>
+    public virtual MlResult<PagedResult<TEntity>> TryAllPagination(PageRequest              paginationInfo,
                                                                       SortDirection                     orderBy           = SortDirection.Ascending,
-                                                                      Expression<Func<T, object>> orderByField = null!)
+                                                                      Expression<Func<TEntity, object>>? orderByField = null)
     {
         var result = EnsureFp.NotNull(paginationInfo, nameof(paginationInfo))
                                 .Bind(paginationInfo => TryQueryPage(paginationInfo.PageNumber, 
@@ -36,18 +29,10 @@ public class EfPagedReadRepository<T, TContext>(TContext dbContext) : EfReadRepo
     }
 
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición de <c>Pagination</c>. Captura cualquier excepción
-    /// producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="ct">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<PagedResult<T>>> TryAllPaginationAsync(PageRequest              paginationInfo,
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<PagedResult<TEntity>>> TryAllPaginationAsync(PageRequest              paginationInfo,
                                                                                       SortDirection                     orderBy      = SortDirection.Ascending,
-                                                                                      Expression<Func<T, object>> orderByField = null!,
+                                                                                      Expression<Func<TEntity, object>>? orderByField = null,
                                                                                       CancellationToken ct                     = default!)
     {
         var result = await EnsureFp.NotNullAsync(paginationInfo, nameof(paginationInfo))
@@ -62,19 +47,11 @@ public class EfPagedReadRepository<T, TContext>(TContext dbContext) : EfReadRepo
 
 
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>DataPagination</c>. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<PagedResult<T>> TryGetDataPagination(PageRequest              paginationInfo,
+    /// <inheritdoc/>
+    public virtual MlResult<PagedResult<TEntity>> TryGetDataPagination(PageRequest              paginationInfo,
                                                                           SortDirection                     orderBy           = SortDirection.Ascending,
-                                                                          Expression<Func<T, object>> orderByField    = null!,
-                                                                          Expression<Func<T, bool  >> filter          = null!)
+                                                                          Expression<Func<TEntity, object>>? orderByField    = null,
+                                                                          Expression<Func<TEntity, bool>>?   filter          = null)
     {
         var result = EnsureFp.NotNull(paginationInfo, nameof(paginationInfo))
                                 .Bind(paginationInfo => TryQueryPage(paginationInfo.PageNumber,
@@ -85,20 +62,11 @@ public class EfPagedReadRepository<T, TContext>(TContext dbContext) : EfReadRepo
         return result;
     }
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>DataPagination</c>. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="ct">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<PagedResult<T>>> TryGetDataPaginationAsync(PageRequest              paginationInfo,
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<PagedResult<TEntity>>> TryGetDataPaginationAsync(PageRequest              paginationInfo,
                                                                                           SortDirection                     orderBy      = SortDirection.Ascending,
-                                                                                          Expression<Func<T, object>> orderByField = null!,
-                                                                                          Expression<Func<T, bool  >> filter       = null!,
+                                                                                          Expression<Func<TEntity, object>>? orderByField = null,
+                                                                                          Expression<Func<TEntity, bool>>?   filter       = null,
                                                                                           CancellationToken ct                     = default!)
     {
         var result = await EnsureFp.NotNullAsync(paginationInfo, nameof(paginationInfo))
@@ -123,73 +91,71 @@ public class EfPagedReadRepository<T, TContext>(TContext dbContext) : EfReadRepo
 
 
     /// <summary>
-    /// Ejecuta la operación de forma protegida, capturando cualquier excepción y convirtiendola en un
-    /// resultado fallido indicada por query page.
+    /// Executes the paged query inside the functional error boundary.
     /// </summary>
-    /// <param name="pageNumber">Número de pagina solicitada, comenzando en uno.</param>
-    /// <param name="pageSize">Número de elementos por pagina.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    protected virtual MlResult<PagedResult<T>> TryQueryPage(int pageNumber, 
+    /// <param name="pageNumber">The one-based page number.</param>
+    /// <param name="pageSize">The maximum number of entities on the page.</param>
+    /// <param name="orderBy">The direction used for the selector and primary-key tie-breaker.</param>
+    /// <param name="filter">An optional predicate; all entities are included when omitted.</param>
+    /// <param name="orderByField">An optional ordering selector.</param>
+    /// <returns>The requested page and filtered total count, or a failed result.</returns>
+    protected virtual MlResult<PagedResult<TEntity>> TryQueryPage(int pageNumber,
                                                                            int pageSize,
                                                                            SortDirection                     orderBy      = SortDirection.Ascending,
-                                                                           Expression<Func<T, bool  >> filter       = null!,
-                                                                           Expression<Func<T, object>> orderByField = null!)
+                                                                           Expression<Func<TEntity, bool>>?   filter       = null,
+                                                                           Expression<Func<TEntity, object>>? orderByField = null)
     {
         var effectiveFilter = filter ?? (x => true);
 
         var result = effectiveFilter.ToMlResultValid()
-                        .TryMap(filter => GetContext().Set<T>()
+                        .TryMap(filter => GetContext().Set<TEntity>()
                                             .AsNoTracking()
                                             .Where(filter)
-                                            .PrivateOrderBy(orderBy, orderByField)
+                                            .OrderByStableForPagination(GetContext(), orderBy, orderByField)
                                             .Skip((pageNumber - 1) * pageSize)
                                             .Take(pageSize).ToList())
                         .TryMap(items => new {
                                                 // Punto 36: el total tiene que respetar el mismo filtro que la pagina,
                                                 // si no la paginacion que recibe el cliente es incoherente.
-                                                Count = GetContext().Set<T>().Where(effectiveFilter).Count(), 
-                                                Items = items 
+                                                Count = GetContext().Set<TEntity>().Where(effectiveFilter).Count(),
+                                                Items = items
                                              })
-                        .Map   (pagInfo => new PagedResult<T>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
+                        .Map   (pagInfo => new PagedResult<TEntity>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
         return result;
     }
 
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>InternalData</c>. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido. Versión asíncrona.
+    /// Asynchronously executes the paged query inside the functional error boundary.
     /// </summary>
-    /// <param name="pageNumber">Número de pagina solicitada, comenzando en uno.</param>
-    /// <param name="pageSize">Número de elementos por pagina.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="ct">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    protected virtual async Task<MlResult<PagedResult<T>>> TryGetInternalDataAsync(int                         pageNumber, 
+    /// <param name="pageNumber">The one-based page number.</param>
+    /// <param name="pageSize">The maximum number of entities on the page.</param>
+    /// <param name="orderBy">The direction used for the selector and primary-key tie-breaker.</param>
+    /// <param name="filter">An optional predicate; all entities are included when omitted.</param>
+    /// <param name="orderByField">An optional ordering selector.</param>
+    /// <param name="ct">A token that can cancel both queries.</param>
+    /// <returns>A task containing the requested page and filtered total count, or a failed result.</returns>
+    protected virtual async Task<MlResult<PagedResult<TEntity>>> TryGetInternalDataAsync(int                         pageNumber,
                                                                                             int                         pageSize,
                                                                                             SortDirection                     orderBy      = SortDirection.Ascending,
-                                                                                            Expression<Func<T, bool  >> filter       = null!,
-                                                                                            Expression<Func<T, object>> orderByField = null!,
+                                                                                            Expression<Func<TEntity, bool>>?   filter       = null,
+                                                                                            Expression<Func<TEntity, object>>? orderByField = null,
                                                                                             CancellationToken ct                     = default!)
     {
         var effectiveFilter = filter ?? (x => true);
 
         var result = await effectiveFilter.ToMlResultValidAsync()
-                        .TryMapAsync(filter => GetContext().Set<T>()
+                        .TryMapAsync(filter => GetContext().Set<TEntity>()
                                                 .AsNoTracking()
                                                 .Where(filter)
-                                                .PrivateOrderBy(orderBy, orderByField)
+                                                .OrderByStableForPagination(GetContext(), orderBy, orderByField)
                                                 .Skip((pageNumber - 1) * pageSize)
                                                 .Take(pageSize)
                                                 .ToListAsync(ct))
-                        .TryMapAsync(items => new {
-                                                      Count = GetContext().Set<T>().Where(effectiveFilter).Count(), 
-                                                      Items = items 
-                                                  })
-                        .MapAsync   (pagInfo => new PagedResult<T>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
+                        .TryMapAsync(async items => new {
+                                                            Count = await GetContext().Set<TEntity>().Where(effectiveFilter).CountAsync(ct),
+                                                            Items = items
+                                                        })
+                        .MapAsync   (pagInfo => new PagedResult<TEntity>(pagInfo.Items, pageNumber, pageSize, pagInfo.Count));
         return result;
     }
 

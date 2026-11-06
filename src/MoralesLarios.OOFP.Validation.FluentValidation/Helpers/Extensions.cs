@@ -35,7 +35,7 @@ public static partial class Extensions
         where TValidator : AbstractValidator<T>, new()
     {
         var result = MlResult.Empty()
-                                .TryMap( _          => Activator.CreateInstance<TValidator>(), $"Problems with automatic create instance of {typeof(TValidator).Name}")
+                                .TryMap( _          => Activator.CreateInstance<TValidator>(), $"The validator '{typeof(TValidator).Name}' could not be created automatically. Register it in the service container or provide an instance explicitly.")
                                 .TryMap( validator  => validator.Validate(source))
                                 .Map   ( valResults => valResults.Errors.Select(x => x.ErrorMessage))
                                 .Bind  ( errors     => errors.Any() ? errors.ToMlResultFail<T>() : source.ToMlResultValid<T>());

@@ -8,11 +8,9 @@ namespace MoralesLarios.OOFP.Http;
 /// Representa <c>RestClientFp</c>.
 /// </summary>
 /// <typeparam name="TDto">Tipo del objeto de transferencia de datos.</typeparam>
-/// <param name="_logger">Registrador utilizado para trazar las llamadas.</param>
 /// <param name="_apiInvoker">Invocador HTTP que ejecuta las peticiones.</param>
 /// <param name="_clientName">Clave del servicio que identifica el cliente HTTP a utilizar.</param>
-public partial class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
-                               IHttpApiInvoker  _apiInvoker,
+public partial class RestClientFp<TDto>(IHttpApiInvoker _apiInvoker,
                                ServiceKey                        _clientName) : IRestClientFp<TDto>
 { 
 
@@ -134,11 +132,9 @@ public partial class RestClientFp<TDto>(ILogger<RestClientFp<TDto>> _logger,
 /// </summary>
 /// <typeparam name="TRequest">Tipo de la petición.</typeparam>
 /// <typeparam name="TResponse">Tipo de la respuesta.</typeparam>
-/// <param name="_logger">Registrador utilizado para trazar las llamadas.</param>
 /// <param name="_apiInvoker">Invocador HTTP que ejecuta las peticiones.</param>
 /// <param name="_clientName">Clave del servicio que identifica el cliente HTTP a utilizar.</param>
-public partial class RestClientFp<TRequest, TResponse>(ILogger<RestClientFp<TRequest, TResponse>> _logger,
-                                              IHttpApiInvoker                 _apiInvoker,
+public partial class RestClientFp<TRequest, TResponse>(IHttpApiInvoker _apiInvoker,
                                               ServiceKey                                       _clientName) : IRestClientFp<TRequest, TResponse>
 { 
 

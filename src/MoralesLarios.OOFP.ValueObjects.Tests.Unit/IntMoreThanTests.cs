@@ -11,9 +11,9 @@ public class IntMoreThanTests
     public void IntMoreThan_ValueMoreThanLength_ReturnsValid()
     {
         var value     = 8;
-        var minLenght = 5;
+        var minLength = 5;
 
-        var result = IntMoreThan.FromIntLength(value, minLenght);
+        var result = IntMoreThan.FromIntLength(value, minLength);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -22,9 +22,9 @@ public class IntMoreThanTests
     public void IntMoreThan_ValueMoreThanLength_ReturnsFail()
     {
         var value     = 2;
-        var minLenght = 5;
+        var minLength = 5;
 
-        var result = IntMoreThan.FromIntLength(value, minLenght);
+        var result = IntMoreThan.FromIntLength(value, minLength);
 
         result.IsFailure.Should().BeTrue();
     }

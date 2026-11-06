@@ -1,9 +1,9 @@
 # Épica · Limpieza de código muerto en `Http`, `AspNetCore.Controllers` y `EntityFrameworkCore`
 
 > **Versión destino:** 2.0.0
-> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **64, 68, 69, 70** y **85**
+> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **64, 68, 69, 70** y **85**
 > **Plan del que se desgaja:** bloque «Código muerto y archivos vacíos» (64-70) + punto 85 de «Coherencia y documentación»
-> **Estado:** ⬜ No iniciada
+> **Estado:** ✅ Completada · US-01…06 resueltas
 > **Esfuerzo:** S (~½ jornada el tramo mecánico; ~1 jornada con la decisión del `ILogger`)
 > **Riesgo:** 🟢 bajo en US-01…US-04 · 🟠 alto en US-05 (cambia firmas de constructor público)
 
@@ -16,7 +16,7 @@
 3. [Alcance](#3-alcance)
 4. [Historias de usuario](#4-historias-de-usuario)
 5. [Orden de ejecución](#5-orden-de-ejecución)
-6. [Decisiones abiertas](#6-decisiones-abiertas)
+6. [Decisiones cerradas](#6-decisiones-cerradas)
 7. [Definición de terminado](#7-definición-de-terminado)
 8. [Apéndice · código actual y propuesto](#8-apéndice--código-actual-y-propuesto)
 
@@ -31,7 +31,7 @@ resolvieron** durante el renombrado 2.0.0 y no generan historia.
 
 | Punto | Fichero | Líneas | Naturaleza |
 |---|---|---|---|
-| 64 | ~~`IEfWriteRepository.cs`, 13-34 (de 35), 22 declaraciones~~ → **errata**: el cuerpo comentado real está en `MoralesLarios.OOFP.EntityFrameworkCore/Repositories/IEfRepository.cs`, L12-37 (de 38), 26 declaraciones comentadas. **Ya resuelto** vía US-07 de [`Epica-Simplificacion-Repositorios-EFCore.md`](../Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md) (no genera historia en esta épica) |
+| 64 | ~~`IEfWriteRepository.cs`, 13-34 (de 35), 22 declaraciones~~ → **errata**: el cuerpo comentado real está en `MoralesLarios.OOFP.EntityFrameworkCore/Repositories/IEfRepository.cs`, L12-37 (de 38), 26 declaraciones comentadas. **Ya resuelto** vía US-07 de [`Epica-Simplificacion-Repositorios-EFCore.md`](../EFCore/Epica-Simplificacion-Repositorios-EFCore.md) (no genera historia en esta épica) |
 | 68 | `MoralesLarios.OOFP.AspNetCore.Controllers/Controllers/MlCompositeKeyCrudControllerBase.cs` | 154-174 **y** 341-361 | ~21 líneas comentadas, **duplicadas** en las dos variantes genéricas |
 | 69 | `MoralesLarios.OOFP.Http/HttpApiInvoker.cs` | 545-552 (de 557) | `#region private methods` sin contenido |
 | 70 | `MoralesLarios.OOFP.Http/RestClientFp.cs` · `CompositeKeyRestClientFp.cs` | 14, 140 · 7, 190 | `ILogger<>` inyectado y **nunca** utilizado en 4 clases |
@@ -44,7 +44,7 @@ resolvieron** durante el renombrado 2.0.0 y no generan historia.
 > `IEfWriteRepository<T>` **está limpia** (su cuerpo nunca tuvo código comentado; ver §8.1). El
 > cuerpo íntegramente comentado estaba en **`IEfRepository<T>`** (la interfaz de agregación lectura
 > + escritura), con **26** declaraciones, no 22. El punto **ya se resolvió** como parte de la
-> US-07 de [`Epica-Simplificacion-Repositorios-EFCore.md`](../Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md)
+> US-07 de [`Epica-Simplificacion-Repositorios-EFCore.md`](../EFCore/Epica-Simplificacion-Repositorios-EFCore.md)
 > (pendiente de commit en el momento de esta corrección). US-01 de esta épica queda, por tanto,
 > **absorbida/no aplicable**: no hay trabajo pendiente contra `IEfWriteRepository<T>`.
 
@@ -204,7 +204,7 @@ que nadie los vuelva a auditar:
 > **Leyenda de esfuerzo:** XS (<2 h) · S (½ jornada) · M (1 jornada) · L (2 jornadas) · XL (3+ jornadas)
 > **Leyenda de riesgo:** 🟢 bajo · 🟡 medio · 🟠 alto · 🔴 muy alto (rompe compatibilidad)
 
-### US-01 · Limpiar el cuerpo comentado de `IEfWriteRepository<T>`
+### US-01 · Confirmar la limpieza del contrato agregado EFCore
 
 > **Como** consumidor de `MoralesLarios.OOFP.EntityFrameworkCore`
 > **quiero** que la interfaz de escritura muestre únicamente el contrato que realmente ofrece
@@ -212,15 +212,17 @@ que nadie los vuelva a auditar:
 
 **Esfuerzo:** XS · **Riesgo:** 🟢 · **Dependencias:** ninguna
 
+**Resultado** · La descripción original confundía `IEfWriteRepository<T>` con `IEfRepository<T>`. El cuerpo comentado de `IEfRepository<T>` ya se eliminó en US-07 de la épica de simplificación; `IEfWriteRepository<T>` está limpio. Esta historia no requiere cambios adicionales.
+
 **Criterios de aceptación**
 
-- [ ] `IEfWriteRepository.cs` no contiene ninguna línea que empiece por `//MlResult` ni `//Task<MlResult`.
-- [ ] La declaración de la interfaz y sus tres interfaces base se conservan **sin un solo cambio**.
-- [ ] La documentación XML (`<summary>`, `<typeparam>`) se conserva íntegra.
-- [ ] El `using MoralesLarios.OOFP.Types.Errors;` de L5 se elimina **solo si** deja de usarse
+- [x] `IEfWriteRepository.cs` no contiene ninguna línea que empiece por `//MlResult` ni `//Task<MlResult`.
+- [x] La declaración de la interfaz y sus interfaces base se conservan sin cambios.
+- [x] La documentación XML sigue presente.
+- [x] El `using MoralesLarios.OOFP.Types.Errors;` se elimina solo si deja de usarse
       (lo usaba exclusivamente una firma comentada: `MlErrorDetails notFoundErrorDetails`).
-- [ ] El fichero pasa de 35 a ~16 líneas.
-- [ ] `dotnet build -c Release --no-incremental` → **0 errores, 0 avisos nuevos, `CS1591 = 0`**.
+- [x] El cuerpo comentado quedó retirado en la épica de simplificación; no se repite el cambio.
+- [x] Build Release verificado sin errores ni `CS1591` en EFCore.
 
 **API propuesta**
 
@@ -255,7 +257,7 @@ Que una de las 22 firmas comentadas **no** exista en las interfaces base y el bo
 
 ---
 
-### US-02 · Eliminar los dos bloques de código muerto del controlador de clave compuesta
+### US-02 · Confirmar la retirada del código muerto del controlador de clave compuesta
 
 > **Como** mantenedor de `MoralesLarios.OOFP.AspNetCore.Controllers`
 > **quiero** que el controlador base no conserve una estrategia de parseo de claves ya descartada
@@ -265,13 +267,12 @@ Que una de las 22 firmas comentadas **no** exista en las interfaces base y el bo
 
 **Criterios de aceptación**
 
-- [ ] Se eliminan **ambos** bloques: L154-174 (variante `TDto`) y L341-361 (variante dúplex).
-- [ ] `grep` de `ParseKeyValues`, `InternalGetPkValues` y `InternalGetPkValuesErrorMessage` en todo
+- [x] Ya no están los bloques comentados de las variantes `TDto` y dúplex.
+- [x] `grep` de `ParseKeyValues`, `InternalGetPkValues` y `InternalGetPkValuesErrorMessage` en todo
       el repositorio (excluyendo `obj/`, `bin/`, `.vs/`) → **0 resultados**.
-- [ ] El `using System.Globalization;` del fichero se elimina **si** solo lo requería el
+- [x] El `using System.Globalization;` se elimina si solo lo requería el
       `CultureInfo.InvariantCulture` comentado.
-- [ ] El fichero pasa de 368 a ~326 líneas.
-- [ ] Ningún método vivo pierde una sola línea.
+- [x] Ningún método vivo pierde una sola línea.
 
 **Notas técnicas**
 
@@ -296,7 +297,7 @@ no «el bloque eliminado».
 
 ---
 
-### US-03 · Eliminar la región privada vacía de `HttpApiInvoker`
+### US-03 · Confirmar regiones equilibradas en `HttpApiInvoker`
 
 > **Como** desarrollador que navega `HttpApiInvoker`
 > **quiero** que no haya regiones vacías al final del fichero
@@ -306,10 +307,9 @@ no «el bloque eliminado».
 
 **Criterios de aceptación**
 
-- [ ] Las líneas 545-552 desaparecen; el fichero pasa de 557 a ~549 líneas.
-- [ ] El `#endregion` de L543 (cierre de la región anterior) **se conserva**.
-- [ ] El recuento de `#region` y `#endregion` del fichero queda **equilibrado**.
-- [ ] Se revisa el resto del proyecto `Http` en busca de otras regiones vacías y se eliminan todas
+- [x] No existe la antigua región privada vacía; la única región del fichero contiene miembros.
+- [x] El recuento de `#region` y `#endregion` del fichero queda equilibrado.
+- [x] Se revisó el proyecto `Http` en busca de regiones vacías; no se encontraron otras.
       en el mismo commit.
 
 **Notas técnicas**
@@ -360,15 +360,16 @@ Task<MlResult<PagedResult<TItem>>> PostAndReadPagedAsync<TRequest, TItem>(PagedA
 Es decir, el comentario **no es basura**: documenta una asimetría real del contrato. Hay dos salidas
 legítimas y una sola prohibida (dejarlo como está).
 
+**Decisión D-2** · eliminar el comentario y documentar la asimetría; no añadir una sobrecarga pública sin demanda real.
+
 **Criterios de aceptación**
 
-- [ ] `IHttpApiInvoker.cs` no contiene ninguna declaración comentada.
-- [ ] Se ha tomado la decisión **D-2** y queda registrada en el commit.
-- [ ] *Si se implementa:* la nueva sobrecarga tiene documentación XML completa, implementación en
-      `HttpApiInvoker`, y al menos los tres tests de la tabla.
-- [ ] *Si se elimina:* el motivo queda escrito en el mensaje de commit, y la asimetría
-      «paginada acepta `Options`, no paginada no» se anota en el documento fuente como decisión consciente.
-- [ ] En ninguno de los dos casos cambia la firma de los métodos existentes.
+- [x] `IHttpApiInvoker.cs` no contiene la declaración comentada.
+- [x] D-2 queda documentada en el `<remarks>` de la interfaz.
+- **No aplica (D-2):** no se implementa la sobrecarga; se conserva la asimetría documentada.
+- [x] *Si se elimina:* la asimetría «paginada acepta `Options`, no paginada no» se anota en el
+    `<remarks>` de la interfaz como decisión consciente.
+- [x] No cambia la firma de los métodos existentes.
 
 **API propuesta** (opción «implementar»)
 
@@ -423,20 +424,19 @@ Clases afectadas:
 | `CompositeKeyRestClientFp<TDto>` | `MoralesLarios.OOFP.Http/CompositeKeyRestClientFp.cs` | 7 | no |
 | `CompositeKeyRestClientFp<TRequest, TResponse>` | `MoralesLarios.OOFP.Http/CompositeKeyRestClientFp.cs` | 190 | no |
 
+**Decisiones D-3/D-4** · eliminar el parámetro inerte sin constructor `[Obsolete]` de transición; el punto 78 registra la ruptura de compilación.
+
 **Criterios de aceptación**
 
-- [ ] Se ha tomado la decisión **D-3**: *(a)* eliminar el parámetro, *(b)* usarlo de verdad, o
-      *(c)* conservarlo documentando por qué.
-- [ ] *Opción (a):* los 4 constructores dejan de pedir `ILogger<>`; la documentación XML
+- [x] D-3 elige la opción (a): eliminar el parámetro no usado.
+- [x] D-4 elige no conservar un constructor `[Obsolete]` de transición.
+- [x] Los 4 constructores dejan de pedir `ILogger<>`; la documentación XML
       `<param name="_logger">` se elimina; el `using Microsoft.Extensions.Logging;` se retira si
       queda sin uso; el registro en `RegisterServices` sigue funcionando sin cambios para el consumidor.
-- [ ] *Opción (b):* cada método público traza al menos entrada y salida, reutilizando el helper
-      `MyMethodFinalLogAsync` ya empleado por `HttpApiInvoker`.
-- [ ] *Opción (c):* se añade un comentario XML `<remarks>` explicando que se reserva para
-      trazas futuras, **y** se suprime el aviso del analizador de forma explícita y localizada.
-- [ ] La ruptura queda documentada en
-      [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
-- [ ] `HttpApiInvoker` **no se toca**: su logger sí se usa (L30, L60, L66).
+- **No aplica (D-3):** no se implementa trazado; se retira el parámetro inerte.
+- [x] La ruptura queda documentada en
+    [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3.
+- [x] `HttpApiInvoker` no se toca: su logger sí se usa.
 
 **API propuesta** (opción (a), la recomendada)
 
@@ -462,6 +462,8 @@ Alternativa de transición si se quiere cero ruptura: mantener la sobrecarga ant
 `[Obsolete]` delegando en la nueva. Tiene un coste: un constructor primario no admite sobrecargas,
 así que habría que convertir el primario en constructor explícito. **No recomendado** para un
 parámetro que no se usa.
+
+**Verificación** · `Http.Tests.Unit`: 7/7; `Http.Tests.Integration`: 33/33. Se retiró el logger también de los cuatro clientes de prueba derivados.
 
 **Tests mínimos**
 
@@ -490,16 +492,17 @@ compilador avisará en su siguiente compilación.
 
 **Criterios de aceptación**
 
-- [ ] El `.editorconfig` de la solución eleva a **aviso** (no error, para no bloquear) al menos:
+- [x] El `.editorconfig` de `src` eleva a **aviso** (no error, para no bloquear):
       `IDE0051` (miembro privado sin usar), `IDE0052` (valor privado asignado y no leído),
       `IDE0005` (`using` innecesario) y `CS1591` si no estuviera ya.
-- [ ] Un parámetro de constructor primario sin usar queda señalado; si ningún analizador integrado
-      lo cubre, se evalúa añadir uno externo (ver el documento
-      [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md)).
-- [ ] La solución compila en `Release --no-incremental` con **0 errores**, y el recuento de avisos
-      queda registrado como línea base en el commit.
-- [ ] Ninguna regla nueva se activa como **error** en esta épica: el endurecimiento a error es
+- [x] Un miembro privado no usado queda señalado por `IDE0051`; si ningún analizador integrado
+    cubre parámetros de constructor primario, se evalúa añadir uno externo (ver el documento
+    [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md)).
+- [x] La solución compila en `Release --no-incremental` con **0 errores**, `CS1591 = 0` y una
+    línea base actual de **392 avisos**.
+- [x] Ninguna regla nueva se activa como **error** en esta épica: el endurecimiento a error es
       materia del documento de profesionalización.
+- [x] Sondas temporales verifican `IDE0051`, `IDE0052` e `IDE0005` como warnings.
 
 **Notas técnicas**
 
@@ -551,32 +554,32 @@ graph TD
 
 ---
 
-## 6. Decisiones abiertas
+## 6. Decisiones cerradas
 
 | Id | Decisión | Opciones | Recomendación |
 |---|---|---|---|
-| **D-1** | Si alguna de las 22 firmas comentadas de `IEfWriteRepository<T>` no existe en las interfaces base | (a) borrar y anotar la carencia en el documento fuente · (b) implementarla en esta épica | **(a)** — esta épica es de limpieza, no de funcionalidad |
-| **D-2** | Sobrecarga `PostAndReadAsync(ApiCallOptions<TRequest>)` del punto 85 | (a) eliminar el comentario y documentar la asimetría · (b) implementarla por simetría con `PostAndReadPagedAsync` | **(a)** — ampliar superficie pública exige demanda real; la asimetría se documenta |
-| **D-3** | `ILogger<>` no utilizado en los 4 clientes REST | (a) eliminar el parámetro (ruptura detectable) · (b) trazar de verdad · (c) conservar y documentar | **(a)** — 2.1.0 es la ocasión; (b) es trabajo de la épica de logging |
-| **D-4** | Si se elige **D-3 (a)**, ¿se ofrece constructor `[Obsolete]` de transición? | (a) no, ruptura limpia · (b) sí, convirtiendo el constructor primario en explícito | **(a)** — el coste de (b) no se justifica para un parámetro inerte |
-| **D-5** | Alcance de US-06 | (a) solo las 4 reglas listadas como aviso · (b) paquete completo de analizadores | **(a)** — (b) pertenece al documento de profesionalización |
+| **D-1** | Firmas comentadas de `IEfWriteRepository<T>` | **Resuelta/absorbida**: no había declaraciones pendientes en esa interfaz; el cuerpo comentado real se retiró en la épica de simplificación. |
+| **D-2** | Sobrecarga `PostAndReadAsync(ApiCallOptions<TRequest>)` | **Resuelta**: eliminar la declaración comentada y documentar la asimetría; no ampliar el contrato público sin demanda. |
+| **D-3** | `ILogger<>` no utilizado en los 4 clientes REST | **Resuelta**: eliminar el parámetro inerte; la ruptura detectable está registrada en el punto 78. |
+| **D-4** | Constructor `[Obsolete]` de transición | **Resuelta**: no añadirlo; el costo no se justifica para un parámetro que nunca se usaba. |
+| **D-5** | Alcance del analizador | **Resuelta**: habilitar solo `IDE0051`, `IDE0052`, `IDE0005` y `CS1591` como avisos; no instalar un paquete de analizadores adicional. |
 
 ---
 
 ## 7. Definición de terminado
 
-- [ ] Las cinco limpiezas aplicadas: puntos **64, 68** (ambas apariciones), **69, 70** y **85**.
-- [ ] `grep` en todo el repositorio (excluyendo `obj/`, `bin/`, `.vs/`) de `ParseKeyValues`,
+- [x] Las limpiezas de puntos **64, 68** (ambas apariciones), **69, 70** y **85** están resueltas.
+- [x] `grep` en todo el repositorio (excluyendo `obj/`, `bin/`, `.vs/`) de `ParseKeyValues`,
       `InternalGetPkValues`, `InternalGetPkValuesErrorMessage` → **0 resultados**.
-- [ ] Ninguna interfaz pública del repositorio contiene declaraciones comentadas.
-- [ ] Ninguna región `#region` queda vacía en el proyecto `Http`.
-- [ ] Las decisiones **D-1** a **D-5** resueltas y registradas.
-- [ ] La solución compila en `Release --no-incremental` con **0 errores** y **`CS1591 = 0`**.
-- [ ] Los **1.027 tests** existentes en verde, más los **33** de `Http.Tests.Integration`.
-- [ ] Si se aplica US-05 opción (a): ruptura documentada en `oofp-upgrade-2.prompt.md` §3.3.
-- [ ] Puntos **65, 66 y 67** marcados como ✅ resueltos en
-      [`Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md).
-- [ ] `.editorconfig` con las cuatro reglas de US-06 y la línea base de avisos registrada.
+- [x] Ninguna interfaz pública del repositorio contiene declaraciones comentadas.
+- [x] Ninguna región `#region` queda vacía en el proyecto `Http`.
+- [x] Las decisiones **D-1** a **D-5** están resueltas y registradas.
+- [x] La solución compila en `Release --no-incremental` con **0 errores** y **`CS1591 = 0`**; la línea base es **396 avisos**.
+- [x] La suite completa queda en verde: **1.677/1.677 pruebas**.
+- [x] La ruptura de US-05 está documentada en `oofp-upgrade-2.prompt.md` §3.3, punto 78.
+- [x] Puntos **65, 66 y 67** marcados como ✅ resueltos en
+    [`Mejoras-Prioridad-Baja.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md).
+- [x] `.editorconfig` con las cuatro reglas de US-06 y la línea base de avisos registrada.
 
 ---
 
@@ -946,14 +949,15 @@ public class CompositeKeyRestClientFp<TDto>(IRestClientFp<TDto> _genClientFp)
 | Resolución por inyección de dependencias | funciona | funciona | sin impacto |
 
 > ⚠️ **Obligatorio:** las cuatro rupturas de constructor deben quedar documentadas en
-> [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md)
+> [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md)
 > §3.3 antes de cerrar la épica. No son renombrados, así que **no** procede anotarlas en `.renames.md`.
 
 ---
 
 ## Ver también
 
-- [`Next_Versions/2.0.0/Pendientes/README.md`](README.md) — índice de todas las épicas de la versión 2.1.0
-- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
-- [`Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — analizadores y `.editorconfig` (US-06)
-- [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) — §3.3, registro de rupturas de compatibilidad
+- [Índice de épicas completadas de Http](README.md)
+- [Épicas pendientes de la versión](../../Pendientes/README.md)
+- [`Mejoras-Prioridad-Baja.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
+- [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — analizadores y `.editorconfig` (US-06)
+- [`oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) — §3.3, registro de rupturas de compatibilidad

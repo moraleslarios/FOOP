@@ -7,76 +7,68 @@ using MoralesLarios.OOFP.Types.Errors;
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Contrato de <c>IEfUpdateRepository</c>.
+/// Defines entity-update operations for an EF Core repository.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-public interface IEfUpdateRepository<T>
-    where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+public interface IEfUpdateRepository<TEntity>
+    where TEntity : class
 {
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Marks an entity for update in the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryUpdate(T item);
+    /// <param name="item">The entity to update.</param>
+    /// <returns>A successful result containing the entity, or a failed result.</returns>
+    MlResult<TEntity> TryUpdate(TEntity item);
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds an entity by its primary-key values and marks it for update.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryUpdate(T item, params object[] keyValues);
+    /// <param name="item">The entity to update.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A successful result containing the entity, or a failed result.</returns>
+    MlResult<TEntity> TryUpdate(TEntity item, params object[] keyValues);
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds an entity by its primary-key values and marks it for update, using the supplied not-found error details.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues);
+    /// <param name="item">The entity to update.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when the entity is not found.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A successful result containing the entity, or a failed result.</returns>
+    MlResult<TEntity> TryUpdate(TEntity item, MlErrorDetails notFoundErrorDetails, params object[] keyValues);
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously marks an entity for update in the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default);
+    /// <param name="item">The entity to update.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default);
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds an entity by its primary-key values and marks it for update.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] keyValues);
+    /// <param name="item">The entity to update.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default, params object[] keyValues);
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds an entity by its primary-key values and marks it for update, using the supplied not-found error details.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues);
+    /// <param name="item">The entity to update.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when the entity is not found.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues);
     /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
+    /// Marks a collection of entities for update. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items);
+    /// <param name="items">The entities to update.</param>
+    /// <returns>A successful result containing the entities, or a failed result.</returns>
+    MlResult<IEnumerable<TEntity>> TryUpdateRange(IEnumerable<TEntity> items);
     /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
+    /// Asynchronously marks a collection of entities for update. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default);
+    /// <param name="items">The entities to update.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the entities or a failed result.</returns>
+    Task<MlResult<IEnumerable<TEntity>>> TryUpdateRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default);
 }

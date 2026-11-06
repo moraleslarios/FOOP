@@ -8,8 +8,8 @@ namespace MoralesLarios.OOFP.Types;
 public static partial class MlResultErrorDetailsExtensions
 {
     /// <summary>
-    /// Combina los resultados de <c>ErrorsDetailsIfFailDiferentTypes</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsDetailsIfFailDifferentTypes</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -22,8 +22,8 @@ public static partial class MlResultErrorDetailsExtensions
     [global::System.Obsolete("Renamed to MergeErrorsDetailsIfFailDifferentTypes. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<T> MergeErrorsDetailsIfFailDiferentTypes<T, T2>(this MlResult<T> source, MlResult<T2> secondary) => MergeErrorsDetailsIfFailDifferentTypes<T, T2>(source, secondary);
     /// <summary>
-    /// Combina los resultados de <c>ErrorsDetailsIfFailDiferentTypes</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsDetailsIfFailDifferentTypesAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -36,8 +36,8 @@ public static partial class MlResultErrorDetailsExtensions
     [global::System.Obsolete("Renamed to MergeErrorsDetailsIfFailDifferentTypesAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T, T2>(this MlResult<T> source, MlResult<T2> secondary) => MergeErrorsDetailsIfFailDifferentTypesAsync<T, T2>(source, secondary);
     /// <summary>
-    /// Combina los resultados de <c>ErrorsDetailsIfFailDiferentTypes</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsDetailsIfFailDifferentTypesAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -50,8 +50,8 @@ public static partial class MlResultErrorDetailsExtensions
     [global::System.Obsolete("Renamed to MergeErrorsDetailsIfFailDifferentTypesAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T, T2>(this Task<MlResult<T>> sourceAsync, MlResult<T2> secondary) => MergeErrorsDetailsIfFailDifferentTypesAsync<T, T2>(sourceAsync, secondary);
     /// <summary>
-    /// Combina los resultados de <c>ErrorsDetailsIfFailDiferentTypes</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsDetailsIfFailDifferentTypesAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -64,8 +64,8 @@ public static partial class MlResultErrorDetailsExtensions
     [global::System.Obsolete("Renamed to MergeErrorsDetailsIfFailDifferentTypesAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<T>> MergeErrorsDetailsIfFailDiferentTypesAsync<T, T2>(this Task<MlResult<T>> sourceAsync, Task<MlResult<T2>> secondaryAsync) => MergeErrorsDetailsIfFailDifferentTypesAsync<T, T2>(sourceAsync, secondaryAsync);
     /// <summary>
-    /// Combina los resultados de <c>ErrorsDetailsIfFailDiferentTypes</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsDetailsIfFailDifferentTypesAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.

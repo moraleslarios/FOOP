@@ -80,7 +80,7 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity>                
                             .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                     token               : ct,
                                                                     keyValues                  : pk))
-                            .MapAsync (vinoBd => vinoBd?.Adapt<TDto>())
+                            .MapAsync (databaseResult => databaseResult?.Adapt<TDto>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
                                                                                     ? (successMessageFactory is null
@@ -382,7 +382,7 @@ public class CrudServiceFp<TEntity, TRequest, TResponse>(IEfRepository<TEntity> 
                             .BindAsync( _     => _repo.TryFindAsync(notFoundErrorDetails: notFoundErrorDetails,
                                                                     token               : ct,
                                                                     keyValues                  : pk))
-                            .MapAsync (vinoBd => vinoBd?.Adapt<TResponse>())
+                            .MapAsync (databaseResult => databaseResult?.Adapt<TResponse>())
                             .LogCompletedResultAsync(logger           : _logger,
                                                    validBuildMessage: x      => x is not null
                                                                                     ? (successMessageFactory is null

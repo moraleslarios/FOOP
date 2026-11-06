@@ -7,45 +7,49 @@ using MoralesLarios.OOFP.Types.Errors;
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Confirma o descarta los cambios rastreados por el <c>DbContext</c> de un repositorio y ejecuta
-/// operaciones dentro de una transacción.
+/// Commits or discards changes tracked by a repository's <see cref="DbContext"/> and runs
+/// operations within a transaction.
 /// </summary>
 /// <remarks>
-/// Las escrituras directas de los repositorios solo preparan cambios y no persisten hasta llamar a
-/// <see cref="TryCommit"/> o <see cref="TryCommitAsync(CancellationToken)"/>. Para agrupar varias
-/// escrituras de forma atómica, usa <see cref="TryExecuteInTransactionAsync{TResult}"/>.
+/// Direct repository writes only prepare changes. They are not persisted until <see cref="TryCommit"/>
+/// or <see cref="TryCommitAsync(CancellationToken)"/> is called. Use
+/// <see cref="TryExecuteInTransactionAsync{TResult}"/> to commit multiple writes atomically.
 /// </remarks>
 public interface IMlUnitOfWork
 {
-    /// <summary>Indica si el <c>ChangeTracker</c> contiene cambios pendientes.</summary>
+    /// <summary>Gets whether the <c>ChangeTracker</c> contains pending changes.</summary>
     bool HasPendingChanges { get; }
 
-    /// <summary>Confirma los cambios pendientes y devuelve el número de filas afectadas.</summary>
+    /// <summary>Commits pending changes and returns the number of affected rows.</summary>
+    /// <returns>The number of affected rows, or a failed result if the commit fails.</returns>
     MlResult<int> TryCommit();
 
-    /// <summary>Confirma los cambios pendientes y devuelve el número de filas afectadas.</summary>
+    /// <summary>Asynchronously commits pending changes and returns the number of affected rows.</summary>
+    /// <param name="token">A token that can cancel the commit.</param>
+    /// <returns>A task containing the number of affected rows, or a failed result.</returns>
     Task<MlResult<int>> TryCommitAsync(CancellationToken token = default);
 
-    /// <summary>Descarta los cambios rastreados y devuelve cuántas entradas modificadas descartó.</summary>
+    /// <summary>Discards tracked changes and returns the number of changed entries discarded.</summary>
+    /// <returns>The number of discarded entries, or a failed result.</returns>
     MlResult<int> DiscardChanges();
 
     /// <summary>
-    /// Ejecuta operaciones dentro de una transacción. Confirma los cambios si el resultado es válido;
-    /// ante un resultado fallido o una excepción revierte la transacción.
+    /// Runs operations within a transaction. Commits when they return a successful result; rolls back
+    /// when they return a failed result or throw an exception.
     /// </summary>
-    /// <typeparam name="TResult">Tipo del valor producido por las operaciones.</typeparam>
-    /// <param name="operations">Operaciones que preparan los cambios del contexto.</param>
-    /// <returns>Resultado de las operaciones o fallo de ejecución/confirmación.</returns>
+    /// <typeparam name="TResult">The result type produced by the operations.</typeparam>
+    /// <param name="operations">The operations that prepare changes in the context.</param>
+    /// <returns>The operation result, or a failed result if execution or commit fails.</returns>
     MlResult<TResult> TryExecuteInTransaction<TResult>(Func<MlResult<TResult>> operations);
 
     /// <summary>
-    /// Ejecuta operaciones dentro de una transacción. Confirma los cambios si el resultado es válido;
-    /// ante un resultado fallido, una excepción o cancelación revierte la transacción.
+    /// Runs operations within a transaction. Commits when they return a successful result; rolls back
+    /// when they return a failed result, throw an exception, or are canceled.
     /// </summary>
-    /// <typeparam name="TResult">Tipo del valor producido por las operaciones.</typeparam>
-    /// <param name="operations">Operaciones que preparan los cambios del contexto.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Resultado de las operaciones o fallo de ejecución/confirmación.</returns>
+    /// <typeparam name="TResult">The result type produced by the operations.</typeparam>
+    /// <param name="operations">The operations that prepare changes in the context.</param>
+    /// <param name="token">A token that can cancel the transaction.</param>
+    /// <returns>The operation result, or a failed result if execution or commit fails.</returns>
     Task<MlResult<TResult>> TryExecuteInTransactionAsync<TResult>(
         Func<CancellationToken, Task<MlResult<TResult>>> operations,
         CancellationToken token = default);

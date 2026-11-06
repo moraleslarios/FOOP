@@ -5,11 +5,11 @@
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Contrato de <c>IEfPagedReadRepository</c>.
+/// Combines entity reads with paged read operations.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-public interface IEfPagedReadRepository<T> : IEfReadRepository<T> , IEfPaginator<T>
-    where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+public interface IEfPagedReadRepository<TEntity> : IEfReadRepository<TEntity> , IEfPaginator<TEntity>
+    where TEntity : class
 {
 
 

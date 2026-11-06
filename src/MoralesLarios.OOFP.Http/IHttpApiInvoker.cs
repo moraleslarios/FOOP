@@ -5,6 +5,11 @@ namespace MoralesLarios.OOFP.Http;
 /// <summary>
 /// Contrato de <c>IHttpApiInvoker</c>.
 /// </summary>
+/// <remarks>
+/// The non-paged <c>PostAndReadAsync</c> operation intentionally keeps its explicit URL, headers,
+/// and request-body parameters. The options-record overload is provided for paged requests, which
+/// need additional pagination metadata; no non-paged options overload is currently part of this API.
+/// </remarks>
 public interface IHttpApiInvoker
 {
     /// <summary>

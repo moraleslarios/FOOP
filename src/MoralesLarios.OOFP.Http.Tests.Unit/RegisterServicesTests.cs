@@ -14,8 +14,8 @@ public class RegisterServicesTests
     {
         public static ServiceKey? CapturedKey { get; private set; }
 
-        public TestClient(ILogger<RestClientFp<string>> logger, IHttpApiInvoker apiInvoker, ServiceKey clientName)
-            : base(logger, apiInvoker, clientName)
+        public TestClient(IHttpApiInvoker apiInvoker, ServiceKey clientName)
+            : base(apiInvoker, clientName)
         {
             CapturedKey = clientName;
         }
@@ -25,8 +25,8 @@ public class RegisterServicesTests
     {
         public static ServiceKey? CapturedKey { get; private set; }
 
-        public DuplexService(ILogger<RestClientFp<string, string>> logger, IHttpApiInvoker apiInvoker, ServiceKey clientName)
-            : base(logger, apiInvoker, clientName)
+        public DuplexService(IHttpApiInvoker apiInvoker, ServiceKey clientName)
+            : base(apiInvoker, clientName)
         {
             CapturedKey = clientName;
         }

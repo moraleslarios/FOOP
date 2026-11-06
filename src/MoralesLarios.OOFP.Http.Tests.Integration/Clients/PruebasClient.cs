@@ -6,9 +6,8 @@ using System.Reflection.PortableExecutable;
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
-public class PruebasClient(ILogger<PruebasClient>    _logger,
-                           IHttpApiInvoker _apiInvoker,
-                           ServiceKey                       _clientName) : RestClientFp<PruebasDto>(_logger, _apiInvoker, _clientName), IPruebasClient
+public class PruebasClient(IHttpApiInvoker _apiInvoker,
+                           ServiceKey _clientName) : RestClientFp<PruebasDto>(_apiInvoker, _clientName), IPruebasClient
 {
 
 

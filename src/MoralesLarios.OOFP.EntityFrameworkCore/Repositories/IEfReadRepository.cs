@@ -7,133 +7,117 @@ using MoralesLarios.OOFP.Types.Errors;
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Contrato de <c>IEfReadRepository</c>.
+/// Defines read operations for entities stored by Entity Framework Core.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-public interface IEfReadRepository<T> where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+public interface IEfReadRepository<TEntity> where TEntity : class
 {
     /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds an entity by its primary-key values. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryFind(params object[] keyValues);
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A successful result containing the entity, or a failed result when it cannot be found or the query fails.</returns>
+    MlResult<TEntity> TryFind(params object[] keyValues);
     /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds an entity by its primary-key values. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryFindAsync(CancellationToken token = default, params object[] keyValues);
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryFindAsync(CancellationToken token = default, params object[] keyValues);
     /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously returns the first entity that matches the filter. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <returns>A task containing the first matching entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryFirstAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default);
     /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Returns the first entity that matches the filter. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryFirst(Expression<Func<T, bool>> filter);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <returns>The first matching entity or a failed result.</returns>
+    MlResult<TEntity> TryFirst(Expression<Func<TEntity, bool>> filter);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
+    /// Asynchronously returns the last entity yielded by the filtered query. No explicit ordering is applied.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryGetLastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <returns>A task containing the last entity yielded by the query or a failed result.</returns>
+    Task<MlResult<TEntity>> TryGetLastAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
+    /// Returns the last entity yielded by the filtered query. No explicit ordering is applied.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryGetLast(Expression<Func<T, bool>> filter);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <returns>The last entity yielded by the query or a failed result.</returns>
+    MlResult<TEntity> TryGetLast(Expression<Func<TEntity, bool>> filter);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>Data</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
+    /// Returns all entities that match the filter. The query is materialized before this method returns.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<IEnumerable<T>> TryGetData(Expression<Func<T, bool>> filter);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <returns>A materialized sequence of matching entities or a failed result.</returns>
+    MlResult<IEnumerable<TEntity>> TryGetData(Expression<Func<TEntity, bool>> filter);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>Data</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
+    /// Asynchronously returns all entities that match the filter. The query is materialized before this method returns.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<IEnumerable<T>>> TryGetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <returns>A task containing a materialized sequence of matching entities or a failed result.</returns>
+    Task<MlResult<IEnumerable<TEntity>>> TryGetDataAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default);
     /// <summary>
-    /// Indica si todos los elementos cumplen la condición. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido.
+    /// Returns all entities. The query is materialized before this method returns.
     /// </summary>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<IEnumerable<T>> TryAll();
+    /// <returns>A materialized sequence of entities or a failed result.</returns>
+    MlResult<IEnumerable<TEntity>> TryAll();
     /// <summary>
-    /// Indica si todos los elementos cumplen la condición. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido. Versión asíncrona.
+    /// Asynchronously returns all entities. The query is materialized before this method returns.
     /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<IEnumerable<T>>> TryAllAsync(CancellationToken token = default);
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <returns>A task containing a materialized sequence of entities or a failed result.</returns>
+    Task<MlResult<IEnumerable<TEntity>>> TryAllAsync(CancellationToken token = default);
     /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds an entity by its primary-key values using the supplied not-found error details.
     /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues);
+    /// <param name="notFoundErrorDetails">The error details returned when no entity is found.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>The matching entity or a failed result.</returns>
+    MlResult<TEntity> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues);
     /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds an entity by its primary-key values using the supplied not-found error details.
     /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues);
+    /// <param name="notFoundErrorDetails">The error details returned when no entity is found.</param>
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the matching entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues);
     /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Returns the first entity that matches the filter, using the supplied not-found error details.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when no entity matches.</param>
+    /// <returns>The first matching entity or a failed result.</returns>
+    MlResult<TEntity> TryFirst(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails);
     /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously returns the first entity that matches the filter, using the supplied not-found error details.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when no entity matches.</param>
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <returns>A task containing the first matching entity or a failed result.</returns>
+    Task<MlResult<TEntity>> TryFirstAsync(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
+    /// Returns the last entity yielded by the filtered query, using the supplied not-found error details. No explicit ordering is applied.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<T> TryGetLast(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when no entity matches.</param>
+    /// <returns>The last entity yielded by the query or a failed result.</returns>
+    MlResult<TEntity> TryGetLast(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
+    /// Asynchronously returns the last entity yielded by the filtered query, using the supplied not-found error details. No explicit ordering is applied.
     /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<T>> TryGetLastAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
+    /// <param name="filter">The predicate used to filter entities.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when no entity matches.</param>
+    /// <param name="token">A token that can cancel the query.</param>
+    /// <returns>A task containing the last entity yielded by the query or a failed result.</returns>
+    Task<MlResult<TEntity>> TryGetLastAsync(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
 }

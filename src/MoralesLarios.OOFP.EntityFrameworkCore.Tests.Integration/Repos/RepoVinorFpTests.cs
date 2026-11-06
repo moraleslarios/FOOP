@@ -45,6 +45,9 @@ public class RepoVinorFpTests(IVinosRepo                    _sut,
             Comentarios  = "Comentarios de Prueba"
         };
 
+    private static bool IsNameIncludedByCustomMethod(string name)
+        => name.Contains("incluido", StringComparison.OrdinalIgnoreCase);
+
     private async Task CommitChangesAsync()
     {
         var result = await _sut.UnitOfWork.TryCommitAsync();
@@ -63,13 +66,109 @@ public class RepoVinorFpTests(IVinosRepo                    _sut,
     [Fact]
     public async Task TryAllAsync_Integration_DevuelveListaDeVinos()
     {
+        var tag = Guid.NewGuid().ToString("N");
+        var expected = CreateUniqueVino(tag);
+        var addResult = await _vinosCreateRepo.TryAddAsync(expected);
+
+        addResult.IsFailure.Should().BeFalse();
+        await CommitChangesAsync();
+
         var result = await _sut.TryAllAsync();
 
         result.IsFailure.Should().BeFalse();
 
-        var vinos = result.GetValueOrThrow();
+        result.GetValueOrThrow().Should().Contain(vino => vino.Id == expected.Id);
+        result.GetValueOrThrow().Should().NotBeAssignableTo<IQueryable<Vino>>();
 
-        vinos.Should().NotBeNull();
+        var synchronousResult = _sut.TryAll();
+        synchronousResult.IsFailure.Should().BeFalse();
+        synchronousResult.GetValueOrThrow().Should().NotBeAssignableTo<IQueryable<Vino>>();
+
+        await _vinosDeleteRepo.TryRemoveAsync(expected);
+        await CommitChangesAsync();
+    }
+
+
+    [Fact]
+    public void TryFind_ArregloDeClavesNulo_DevuelveFalloSinLanzar()
+    {
+        object[] keyValues = null!;
+        MlResult<Vino>? result = null;
+
+        var exception = Record.Exception(() => result = _vinosReadRepo.TryFind(keyValues));
+
+        exception.Should().BeNull();
+        result!.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryFindAsync_ArregloDeClavesNulo_DevuelveFalloSinLanzar()
+    {
+        object[] keyValues = null!;
+        MlResult<Vino>? result = null;
+
+        var exception = await Record.ExceptionAsync(async () =>
+            result = await _vinosReadRepo.TryFindAsync(default, keyValues));
+
+        exception.Should().BeNull();
+        result!.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryUpdateYTryRemove_ClavesNulas_DevuelvenFalloSinLanzar()
+    {
+        object[] keyValues = null!;
+        var item = CreateUniqueVino(Guid.NewGuid().ToString("N"));
+        var results = new List<MlResult<Vino>>();
+        var exceptions = new List<Exception?>
+        {
+            Record.Exception(() => results.Add(_vinosUpdateRepo.TryUpdate(item, keyValues))),
+            await Record.ExceptionAsync(async () =>
+                results.Add(await _vinosUpdateRepo.TryUpdateAsync(item, CancellationToken.None, keyValues))),
+            Record.Exception(() => results.Add(_vinosDeleteRepo.TryRemove(keyValues))),
+            await Record.ExceptionAsync(async () =>
+                results.Add(await _vinosDeleteRepo.TryRemoveAsync(CancellationToken.None, keyValues)))
+        };
+
+        exceptions.Should().OnlyContain(exception => exception == null);
+        results.Should().HaveCount(4);
+        results.Should().OnlyContain(result => result.IsFailure);
+    }
+
+    [Fact]
+    public async Task Repositorios_ClavesVacias_DevuelvenFallo()
+    {
+        var emptyKeys = Array.Empty<object>();
+        var item = CreateUniqueVino(Guid.NewGuid().ToString("N"));
+
+        var find = _vinosReadRepo.TryFind(emptyKeys);
+        var findAsync = await _vinosReadRepo.TryFindAsync(default, emptyKeys);
+        var update = _vinosUpdateRepo.TryUpdate(item, emptyKeys);
+        var updateAsync = await _vinosUpdateRepo.TryUpdateAsync(item, CancellationToken.None, emptyKeys);
+        var remove = _vinosDeleteRepo.TryRemove(emptyKeys);
+        var removeAsync = await _vinosDeleteRepo.TryRemoveAsync(CancellationToken.None, emptyKeys);
+
+        new[] { find, findAsync, update, updateAsync, remove, removeAsync }
+            .Should().OnlyContain(result => result.IsFailure);
+    }
+
+    [Fact]
+    public void TryGetData_FalloDeTraduccionSincrona_SeCapturaEnMlResult()
+    {
+        var result = _vinosReadRepo.TryGetData(vino => IsNameIncludedByCustomMethod(vino.Nombre));
+
+        result.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TryGetData_SinCoincidencias_DevuelveSecuenciaVacia()
+    {
+        var tag = Guid.NewGuid().ToString("N");
+
+        var result = _vinosReadRepo.TryGetData(vino => vino.Patrocinador == tag);
+
+        result.IsFailure.Should().BeFalse();
+        result.GetValueOrThrow().Should().BeEmpty();
     }
 
 
@@ -240,6 +339,15 @@ public class RepoVinorFpTests(IVinosRepo                    _sut,
         errorDetails.Should().NotBeNull();
     }
 
+    [Fact]
+    public void TryFind_ClaveCompuestaNoEncontrada_MensajeConservaElOrdenDeValores()
+    {
+        var result = _vinosCatasRepo.TryFind(-999_998, -999_997);
+
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().ToString().Should().Contain("(-999998, -999997)");
+    }
+
 
     [Fact]
     public async Task TryFind_ClaveCompuesta_VinosCatasPuntuacion_Existente_DevuelveExito()
@@ -370,6 +478,37 @@ public class RepoVinorFpTests(IVinosRepo                    _sut,
         await _vinosDeleteRepo.TryRemoveAsync(v2);
         await _vinosDeleteRepo.TryRemoveAsync(v3);
         await CommitChangesAsync();
+    }
+
+    [Fact]
+    public async Task TryGetDataPaginationAsync_SinCoincidencias_DevuelveTotalCeroYPaginaVacia()
+    {
+        var unmatchedTag = Guid.NewGuid().ToString("N");
+        var request = new PageRequest(1, 10);
+
+        var result = await _vinosPagedRepo.TryGetDataPaginationAsync(
+            request,
+            orderByField: vino => vino.Id,
+            filter: vino => vino.Patrocinador == unmatchedTag);
+
+        result.IsFailure.Should().BeFalse();
+        var page = result.GetValueOrThrow();
+        page.TotalCount.Should().Be(0);
+        page.Items.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task TryGetDataPaginationAsync_TokenCancelado_DevuelveFallo()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var result = await _vinosPagedRepo.TryGetDataPaginationAsync(
+            new PageRequest(1, 10),
+            orderByField: vino => vino.Id,
+            ct: cancellation.Token);
+
+        result.IsFailure.Should().BeTrue();
     }
 }
 

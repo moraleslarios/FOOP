@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0 (saneado) · 3.0.0 (retirada de puentes)
 > **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **71, 72, 73, 74, 75** y **76**
 > **Plan del que se desgaja:** bloque «Erratas en identificadores públicos» (71-76)
-> **Estado:** ⬜ No iniciada
+> **Estado:** 🟡 Parcial · US-01 y US-03 aplicadas; US-02 absorbida por el punto 46; US-04…07 pendientes
 > **Esfuerzo:** M (~1 jornada el saneado de 2.1.0; la retirada de puentes es trabajo de 3.0.0)
 > **Riesgo:** 🟢 bajo en US-01, US-04, US-05, US-06 · 🟠 alto en US-02 y US-03 · 🔴 muy alto en US-07
 
@@ -189,8 +189,11 @@ de ejecución.
   (§2.2), con su entrada obligatoria en la guía de migración.
 - Sanear los nombres de **parámetro** con errata dentro de los 8 puentes de `ValueObjects`
   (`minLenght`, `maxLenght`, `lenght`).
-- Limpiar las 67 menciones de erratas en documentación XML (§2.3).
-- Renombrar los 24 métodos de prueba con errata (§2.4).
+- Limpiar las 65 menciones de erratas XML que siguen presentes: 49 resúmenes obsoletos y 16
+  menciones asociadas a los ocho parámetros de longitud (§2.3). Los dos casos `Scopedt` de la
+  estimación original ya no existen en el código actual.
+- Renombrar los 26 métodos de prueba con errata detectados en el código actual (§2.4): los 23 de la
+  lista original y tres errores adicionales de `Dioferent`/`secuondaryFal`.
 - Ampliar el verificador `check-old-names.ps1` para que **también escanee `.cs`** y detecte erratas
   nuevas (hoy solo mira `.md`, y por eso estas se colaron).
 - Dejar por escrito el **plan de retirada** de los 51 puentes para la 3.0.0.
@@ -223,13 +226,13 @@ de ejecución.
 
 **Criterios de aceptación**
 
-- [ ] Los mensajes de `StringLengthBetween.Obsolete.cs` L19, `StringMaxLength.Obsolete.cs` L18 y
-      `StringMinLength.Obsolete.cs` L18 dicen `FromLength` y no `FromStringLength`.
+- [x] Los tres mensajes de los puentes de cadena recomiendan `CreateFromLength`, igual que el cuerpo;
+      `FromLength` es una factoría distinta que devuelve `MlResult<T>`.
 - [ ] Se verifica, uno a uno, que **cada** uno de los 51 mensajes `[Obsolete]` nombra un miembro que
       existe de verdad, con la aridad genérica correcta.
-- [ ] El mensaje distingue la factoría que **lanza** (`CreateFromLength`) de la que devuelve
+- [x] El mensaje distingue la factoría que **lanza** (`CreateFromLength`) de la que devuelve
       `MlResult<T>` (`FromLength`), y apunta a la que corresponde al cuerpo del puente.
-- [ ] `oofp-upgrade-2.renames.md` refleja el nombre destino corregido en esas 3 filas.
+- [x] `oofp-upgrade-2.renames.md` ya identifica `CreateFromLength` como destino de los tres puentes.
 
 **API propuesta**
 
@@ -260,24 +263,24 @@ falso y pierde tiempo.
 
 ---
 
-### US-02 · Renombrar el parámetro `faildMessage`
+### US-02 · Confirmar el saneamiento ya aplicado a `faildMessage`
 
 > **Como** usuario de las extensiones de registro,
 > **quiero** que el parámetro se llame `failedMessage`,
 > **para** que el nombre que escribo en un argumento nombrado esté bien escrito en inglés.
 
+**Resultado** · El parámetro ya se renombró a `failBuildMessage` y la ruptura está registrada como punto 46. La propuesta `failedMessage` de esta épica es obsoleta; no se aplica un segundo renombre.
+
 **Esfuerzo:** M (~3 h) · **Riesgo:** 🟠 alto · **Depende de:** nada
 
 **Criterios de aceptación**
 
-- [ ] Los 28 métodos públicos de los 7 ficheros `MlResultLogExtensions*.cs` declaran
-      `failedMessage`.
-- [ ] Las 28 menciones en `<param name="…">` se actualizan en el mismo movimiento (si no, aparece
+- [x] Los métodos públicos afectados declaran `failBuildMessage`, conforme al cambio ya registrado
+      en el punto 46; no se introduce `failedMessage`.
+- [x] Las menciones XML correspondientes se actualizaron en el mismo movimiento (si no, aparece
       **CS1572**, «parámetro documentado inexistente», y el build deja de estar en CS1591 = 0).
-- [ ] 0 ocurrencias de `faildMessage` en `**/*.cs`.
-- [ ] La ruptura queda documentada en `oofp-upgrade-2.prompt.md` §3.3 **y** en el anexo
-      `.renames.md`, marcada en la columna de puentes como **«❌ rompe la compilación»**.
-- [ ] La Fase 5 del prompt de migración incorpora un barrido de `faildMessage:` → `failedMessage:`.
+- [x] No quedan usos de `faildMessage` en el código de producción.
+- [x] La ruptura y su barrido están documentados en el punto 46 y el anexo de renombrados.
 
 **API propuesta**
 
@@ -307,8 +310,8 @@ public static MlResult<T> LogError<T>(this MlResult<T> source,
 
 | Test | Qué comprueba |
 |---|---|
-| `LogError_ConArgumentoNombrado_Compila` | Una llamada con `failedMessage:` compila |
-| `LogExtensions_NoDeclaranParametrosConErrata` | Reflexión sobre los 28 métodos: ningún `ParameterInfo.Name` contiene `faild` |
+| `LogError_ConArgumentoNombrado_Compila` | Una llamada con `failBuildMessage:` compila, según el nombre registrado en el punto 46 |
+| `LogExtensions_NoDeclaranParametrosConErrata` | Reflexión sobre los métodos: ningún `ParameterInfo.Name` contiene `faild` |
 
 **Riesgo principal**
 
@@ -329,13 +332,13 @@ puede pedir de una ruptura: falla al compilar, no en producción.
 
 **Criterios de aceptación**
 
-- [ ] Los parámetros `minLenght`, `maxLenght` y `lenght` de los 8 ficheros `*.Obsolete.cs` de
+- [x] Los parámetros `minLenght`, `maxLenght` y `lenght` de los 8 ficheros `*.Obsolete.cs` de
       `ValueObjects` pasan a `minLength`, `maxLength` y `length`.
-- [ ] El **nombre del método** (`FromStringLenght`, `FromIntLenght`, `MinLenght`) **se conserva**:
+- [x] El **nombre del método** (`FromStringLenght`, `FromIntLenght`, `MinLenght`) **se conserva**:
       es el puente, y cambiarlo haría inútil el puente.
-- [ ] Los `<param name="…">` correspondientes se actualizan (24 menciones XML).
-- [ ] Las 2 variables locales `minLenght` de `IntMoreThanTests.cs` (L14, 16, 25, 27) se renombran.
-- [ ] Tras el cambio, `Lenght` solo aparece en **8 nombres de método/propiedad** (los puentes) y en
+- [x] Los `<param name="…">` correspondientes se actualizan (24 menciones XML).
+- [x] Las 2 variables locales `minLenght` de `IntMoreThanTests.cs` se renombran.
+- [x] Tras el cambio, `Lenght` solo aparece en **8 nombres de método/propiedad** (los puentes) y en
       **0** nombres de parámetro.
 
 **API propuesta**
@@ -358,8 +361,8 @@ está en proceso de migración y recibe ya un CS0618 en esa misma línea.
 
 | Test | Qué comprueba |
 |---|---|
-| `Puentes_NoDeclaranParametrosConErrata` | Reflexión sobre los 8 puentes: ningún `ParameterInfo.Name` contiene `lenght` |
-| `FromStringLenght_SigueFuncionando` | El puente devuelve el mismo objeto que `CreateFromLength` |
+| `LengthBridges_ExposeCorrectParameterNames` | Reflexión sobre los seis métodos puente: los ocho parámetros tienen nombres correctos |
+| `StringLengthBridges_RecommendExistingCreateFactory` | Los tres avisos nombran `CreateFromLength`, que existe y corresponde al cuerpo |
 
 **Riesgo principal**
 
@@ -377,12 +380,14 @@ Bajo en la práctica: 0 llamadas internas y el consumidor afectado ya está vien
 
 **Criterios de aceptación**
 
-- [ ] Las 67 menciones de erratas en bloques `///` se reescriben con la grafía correcta.
-- [ ] En el `<summary>` de un puente, el texto explica que es un **alias obsoleto** y nombra el
-      miembro nuevo; no se limita a `Ejecuta <c>FromStringLenght</c>.`
-- [ ] Se conserva el `<remarks>` estándar de los puentes.
-- [ ] Build `Release --no-incremental`: **CS1591 = 0** y **CS1572 = 0**.
-- [ ] Se cuentan los BOM UTF-8 antes y después, y se restauran los que falten.
+- [x] Las 65 menciones XML verificadas se reescriben: 49 resúmenes en 12 ficheros y 16 menciones
+  asociadas a los nombres de parámetro corregidos.
+- [x] Cada `<summary>` afectado explica que el miembro es un alias obsoleto e indica el destino
+  citado por su atributo `[Obsolete]`.
+- [x] Se conserva el `<remarks>` estándar de los puentes.
+- [x] Build `Release --no-incremental`: **CS1591 = 0** y **CS1572 = 0**.
+- [x] Los 12 ficheros de resumen preservan su BOM UTF-8 y recuento de líneas; se verificaron los
+  ficheros de longitud junto a esta edición.
 
 **API propuesta**
 
@@ -432,14 +437,14 @@ Perder los BOM o introducir mojibake en los acentos de los resúmenes en castell
 
 **Criterios de aceptación**
 
-- [ ] Los 24 métodos de prueba con `diferent`, `faild` o `Erros` se renombran a `different`,
-      `failed` y `Errors`.
-- [ ] **Se respetan los 2 falsos positivos** de §2.4: los `diferent` de
+- [x] Los 26 métodos de prueba con erratas se renombran por símbolo; incluye `different`, `failed`,
+  `Errors`, `Dioferent` y `secuondaryFal`.
+- [x] **Se respetan los 2 falsos positivos** de §2.4: los `diferent` de
       `MlResultBindExtensions.cs` L3239 y `MlResultMapExtensions.cs` L2708 **no se tocan** (son la
       palabra española «diferente»).
-- [ ] Los tests que ejercitan un puente obsoleto **siguen nombrando el puente**: un test de
-      `ChangeReturnResultAlwaisValid` debe llamarse así, porque eso es lo que prueba.
-- [ ] **1.060 tests en verde**, el mismo número que antes: esta historia no añade ni quita casos.
+- [x] Los tests que ejercitan puentes obsoletos conservan sus nombres; el barrido no encontró
+  ninguno de `ChangeReturnResultAlwaisValid`, `FromStringLenght` o `FromIntLenght` como nombre de test.
+- [ ] Suite completa en verde, con el mismo número de casos antes y después de estos renombrados.
 
 **Notas técnicas**
 
@@ -451,7 +456,7 @@ Perder los BOM o introducir mojibake en los acentos de los resúmenes en castell
 
 | Test | Qué comprueba |
 |---|---|
-| — | El propio conjunto: 1.060 en verde, mismo recuento |
+| Suite Core | 857/857 en verde tras los renombrados; sin altas ni bajas de casos |
 
 **Riesgo principal**
 
@@ -470,17 +475,17 @@ Hay que revisar `scripts/test.ps1`.
 
 **Criterios de aceptación**
 
-- [ ] `scripts/check-old-names.ps1` admite un modificador para escanear `**/*.cs` además de `.md`.
-- [ ] Mantiene un **diccionario de erratas** con, al menos: `Alwais`, `Lenght`, `Faild`, `Diferent`,
+- [x] `scripts/check-old-names.ps1` admite `-IncludeCs` para escanear `**/*.cs` además de `.md`.
+- [x] Mantiene un **diccionario de erratas** con: `Alwais`, `Lenght`, `Faild`, `Diferent`,
       `Erros`, `Scopedt`, `Adress`, `Enumrable`, `IAsyncf`, `soported`, `Bydouble`, `Fromdouble`.
-- [ ] Soporta una **lista blanca** (los 51 puentes + los 2 falsos positivos de «diferente» + los
-      documentos históricos) para que la salida limpia sea **0 hallazgos** y cualquier aparición
-      nueva destaque.
-- [ ] Clasifica cada hallazgo en: nombre de **tipo/miembro**, nombre de **parámetro**, **literal de
+- [x] Soporta una **lista blanca** con rutas y cantidades exactas para los puentes públicos que
+  conservan erratas, el test de nomenclatura y los dos comentarios de «diferente»; mantiene las
+  exclusiones históricas del escaneo Markdown.
+- [x] Clasifica cada hallazgo en: nombre de **tipo/miembro**, nombre de **parámetro**, **literal de
       cadena**, **comentario XML** o **nombre de test**. Los dos primeros son los graves.
-- [ ] Cuenta las ocurrencias con
+- [x] Cuenta las ocurrencias con
       `[regex]::Matches([System.IO.File]::ReadAllText($p), [regex]::Escape($t)).Count`.
-- [ ] Documentado en `CONTRIBUTING.md` como paso previo a cualquier renombrado.
+- [x] Documentado en `CONTRIBUTING.md` como chequeo previo a renombrados de API.
 
 **Notas técnicas**
 
@@ -581,7 +586,7 @@ nada. US-02 y US-03 exigen esperar a la `2.1.0` por ser rupturas.
 | Id | Decisión | Opciones | Recomendación |
 |---|---|---|---|
 | **D-1** | Los 3 avisos erróneos de §2.1, ¿apuntan a `CreateFromLength` (lo que hace el cuerpo) o a `FromLength` (el contrato funcional)? | a) `CreateFromLength`, fiel al cuerpo · b) `FromLength`, empujando al estilo `MlResult<T>` | **a)** El aviso debe describir un sustituto **equivalente**; `FromLength` tiene otro tipo de retorno y la migración no sería mecánica. Si se quiere empujar hacia `FromLength`, mencionarlo en el `<summary>`, no en el aviso |
-| **D-2** | ¿Se renombra `faildMessage`? | a) Sí en 2.1.0, aceptando la ruptura · b) Sí, pero aplazado a 3.0.0 con el resto · c) No, se queda | **a)** Es un nombre de parámetro: la ruptura es **detectable por el compilador** (CS1739), afecta solo a quien use argumentos nombrados y 28 métodos es poco volumen. Aplazarlo a la 3.0.0 significa 28 erratas más en el paquete durante todo un ciclo |
+| **D-2** | ¿Se renombra `faildMessage`? | **Resuelta/absorbida**: el parámetro ya se llama `failBuildMessage` y la migración está en el punto 46. | No cambiarlo de nuevo a `failedMessage`; se conserva el nombre vigente para evitar una segunda ruptura innecesaria. |
 | **D-3** | Los parámetros de los 8 puentes (US-03), ¿se sanean o se dejan congelados? | a) Sanear · b) Dejarlos: un puente es una foto del pasado | **a)** El consumidor de un puente ya recibe CS0618 en esa línea; el coste marginal es nulo y la superficie pública queda limpia |
 | **D-4** | ¿Los 51 avisos pasan de advertencia (`false`) a error (`true`) en la 2.1.0? | a) Mantener `false` hasta la 3.0.0 · b) Pasar a `true` en 2.1.0 como último aviso | **a)** `EditorBrowsableState.Never` ya los oculta. Pasar a `true` en una **menor** rompería compilaciones y contradiría el versionado semántico |
 | **D-5** | ¿Se renombran los tests que ejercitan puentes obsoletos? | a) No: el nombre del test debe nombrar lo que prueba · b) Sí, por uniformidad | **a)** Un test llamado `ChangeReturnResultAlwaisValid_Delega_EnVersionNueva` es **autodocumentado**; «corregirlo» lo volvería engañoso |
@@ -591,19 +596,21 @@ nada. US-02 y US-03 exigen esperar a la `2.1.0` por ser rupturas.
 
 ## 7. Definición de terminado
 
-- [ ] Build `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` con **0 errores**,
+- [x] Build `dotnet build MoralesLarios.OOFP.sln -c Release --no-incremental` con **0 errores**,
       **CS1591 = 0** y **CS1572 = 0**.
-- [ ] **1.060 tests en verde** (el mismo recuento: esta épica no añade casos funcionales).
-- [ ] `check-old-names.ps1` ampliado a `.cs` devuelve **0 hallazgos** fuera de la lista blanca.
+- [ ] Suite completa en verde, con recuento actualizado tras añadir las dos pruebas de contrato.
+- [x] `check-old-names.ps1 -IncludeCs` devuelve **0 hallazgos** fuera de la lista blanca.
 - [ ] `check-md-anchors4.ps1`: 0 anclas rotas. `check-md-links2.ps1`: solo los 9 falsos positivos
       conocidos de `_Seccion-para-README.md`.
 - [ ] `check-md-encoding.ps1`: **0 mojibake**.
 - [ ] Recuento de **BOM UTF-8** idéntico antes y después de las ediciones masivas.
-- [ ] `oofp-upgrade-2.prompt.md` §3.3 incluye la ruptura de `faildMessage`, y el anexo
-      `.renames.md` recoge las 3 correcciones de nombre destino.
+- [x] `oofp-upgrade-2.prompt.md` §3.3 incluye los puntos **46** (`failBuildMessage`) y **79**
+  (parámetros de puentes); el anexo recoge el punto 79.
 - [ ] `Mejoras-Prioridad-Baja.md`: puntos 71 a 76 marcados `- [x]` con su veredicto.
-- [ ] 0 ocurrencias en `**/*.cs` de: `faildMessage`, `minLenght`, `maxLenght`, `lenght`,
-      `TryMapIAsyncf`, `TEnumrable`, `BaseAdress`, `Bydouble`, `Fromdouble`, `soported`.
+- [x] 0 nombres de **parámetro** con `faildMessage`, `minLenght`, `maxLenght` o `lenght`;
+  permanecen únicamente los nombres de método/propiedad puente expresamente conservados y la
+  aserción que comprueba la ausencia de `faildMessage`.
+- [ ] Se auditan y registran todas las erratas de miembro `[Obsolete]` en el documento de la 3.0.0.
 - [ ] Las 51 erratas restantes están **exclusivamente** en nombres de miembro de puentes
       `[Obsolete]`, inventariadas en el documento de la 3.0.0.
 
@@ -786,8 +793,8 @@ public void BindSaveValueInDetailsIfFailed_Should_Merge_Errors() { /* … */ }
 | Historia | Ruptura | ¿La detecta el compilador del consumidor? | ¿Hay puente posible? |
 |---|---|---|---|
 | US-01 | Ninguna. Solo cambia el **texto** de un aviso | — | — |
-| US-02 | `faildMessage` → `failedMessage` en 28 métodos | ✅ **CS1739**, solo si se usan argumentos nombrados | ❌ C# no admite alias de parámetro |
-| US-03 | `lenght` → `length` en 8 puentes | ✅ **CS1739**, y ya convivía con CS0618 | ❌ |
+| US-02 | `faildMessage` → `failBuildMessage` en Logging (punto 46, ya aplicado) | ✅ **CS1739**, solo si se usan argumentos nombrados | ❌ C# no admite alias de parámetro |
+| US-03 | `lenght` → `length` en ocho parámetros de seis puentes (punto 79) | ✅ **CS1739**, solo para argumentos nombrados; el puente mantiene `CS0618` | ❌ |
 | US-04 | Ninguna. Solo documentación | — | — |
 | US-05 | Ninguna. Solo tests internos | — | — |
 | US-06 | Ninguna. Herramienta de verificación | — | — |
@@ -802,7 +809,7 @@ public void BindSaveValueInDetailsIfFailed_Should_Merge_Errors() { /* … */ }
   textos **de mensaje** (incluido `ContieneCombinacion`), no los identificadores.
 - [`Epica-Coherencia-Y-Documentacion.md`](Epica-Coherencia-Y-Documentacion.md) — puntos 81-89;
   incluye el renombrado de `EndpointPattern` y el parámetro genérico `K` → `TKey`.
-- [`Epica-Limpieza-Codigo-Muerto.md`](Epica-Limpieza-Codigo-Muerto.md) — puntos 64-70 y 85.
+- [`Epica-Limpieza-Codigo-Muerto.md`](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) — puntos 64-70 y 85.
 - [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md)
   — inventario de origen, puntos 64-89.
 - [`CONTRIBUTING.md`](../../../../CONTRIBUTING.md) — guía de estilo viva, con la columna «A evitar».

@@ -1,13 +1,13 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// <summary>
-/// Contrato de <c>IGetContextable</c>.
+/// Provides access to the EF Core context used by an implementation.
 /// </summary>
 public interface IGetContextable
 {
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>Context</c>.
+    /// Gets the EF Core context used by the implementation.
     /// </summary>
-    /// <returns>Valor de tipo <c>DbContext</c> obtenido por la operación.</returns>
+    /// <returns>The EF Core context.</returns>
     DbContext GetContext();
 }

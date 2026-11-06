@@ -6,8 +6,8 @@ namespace MoralesLarios.OOFP.Types;
 public static partial class MlResultChangeReturnResult
 {
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisValid</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysValid</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -21,8 +21,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysValid. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> ChangeReturnResultAlwaisValid<T, TResult>(this MlResult<T> source, TResult validValue, TResult failValidValue) => ChangeReturnResultAlwaysValid<T, TResult>(source, validValue, failValidValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisValid</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysValidAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -36,8 +36,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysValidAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisValidAsync<T, TResult>(this MlResult<T> source, TResult validValue, TResult failValidValue) => ChangeReturnResultAlwaysValidAsync<T, TResult>(source, validValue, failValidValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisValid</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysValidAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -51,8 +51,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysValidAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisValidAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, TResult validValue, TResult failValidValue) => ChangeReturnResultAlwaysValidAsync<T, TResult>(sourceAsync, validValue, failValidValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFail</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -66,8 +66,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFail. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> ChangeReturnResultAlwaisFail<T, TResult>(this MlResult<T> source, MlErrorDetails validFailValue, MlErrorDetails failValue) => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFail</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -81,8 +81,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFail. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> ChangeReturnResultAlwaisFail<T, TResult>(this MlResult<T> source, MlError validFailValue, MlError failValue) => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFail</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -96,8 +96,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFail. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> ChangeReturnResultAlwaisFail<T, TResult>(this MlResult<T> source, IEnumerable<string> validFailValue, IEnumerable<string> failValue) => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFail</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -111,8 +111,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFail. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> ChangeReturnResultAlwaisFail<T, TResult>(this MlResult<T> source, string validFailValue, string failValue) => ChangeReturnResultAlwaysFail<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -126,8 +126,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFailAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisFailAsync<T, TResult>(this MlResult<T> source, MlErrorDetails validFailValue, MlErrorDetails failValue) => ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -141,8 +141,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFailAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisFailAsync<T, TResult>(this MlResult<T> source, MlError validFailValue, MlError failValue) => ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -156,8 +156,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFailAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisFailAsync<T, TResult>(this MlResult<T> source, IEnumerable<string> validFailValue, IEnumerable<string> failValue) => ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -171,8 +171,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFailAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisFailAsync<T, TResult>(this MlResult<T> source, string validFailValue, string failValue) => ChangeReturnResultAlwaysFailAsync<T, TResult>(source, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -186,8 +186,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFailAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisFailAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, MlErrorDetails validFailValue, MlErrorDetails failValue) => ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -201,8 +201,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFailAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisFailAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, MlError validFailValue, MlError failValue) => ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -216,8 +216,8 @@ public static partial class MlResultChangeReturnResult
     [global::System.Obsolete("Renamed to ChangeReturnResultAlwaysFailAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> ChangeReturnResultAlwaisFailAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, IEnumerable<string> validFailValue, IEnumerable<string> failValue) => ChangeReturnResultAlwaysFailAsync<T, TResult>(sourceAsync, validFailValue, failValue);
     /// <summary>
-    /// Ejecuta <c>ChangeReturnResultAlwaisFail</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>ChangeReturnResultAlwaysFailAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.

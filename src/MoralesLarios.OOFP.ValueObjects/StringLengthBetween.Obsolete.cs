@@ -6,18 +6,18 @@ namespace MoralesLarios.OOFP.ValueObjects;
 public partial class StringLengthBetween
 {
     /// <summary>
-    /// Ejecuta <c>FromStringLenght</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>CreateFromLength</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
     /// </remarks>
     /// <param name="value">Valor sobre el que se opera.</param>
-    /// <param name="minLenght">Valor de <c>minLenght</c>.</param>
-    /// <param name="maxLenght">Valor de <c>maxLenght</c>.</param>
+    /// <param name="minLength">Longitud mínima admitida, inclusive.</param>
+    /// <param name="maxLength">Longitud máxima admitida, inclusive.</param>
     /// <returns>Valor de tipo <c>StringLengthBetween</c> obtenido por la operación.</returns>
-    [global::System.Obsolete("Renamed to FromStringLength. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static StringLengthBetween FromStringLenght(string value, int minLenght, int maxLenght) => CreateFromLength(value, minLenght, maxLenght);
+    [global::System.Obsolete("Renamed to CreateFromLength. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public static StringLengthBetween FromStringLenght(string value, int minLength, int maxLength) => CreateFromLength(value, minLength, maxLength);
     /// <summary>
     /// Ejecuta <c>ByStringLength</c>.
     /// </summary>

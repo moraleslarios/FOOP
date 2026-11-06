@@ -1,15 +1,15 @@
 ﻿namespace MoralesLarios.OOFP.EntityFrameworkCore.Enums;
 /// <summary>
-/// Enumera los valores de <c>SortDirection</c>.
+/// Specifies the direction used to sort query results.
 /// </summary>
 public enum SortDirection
 {
     /// <summary>
-    /// Valor <c>Ascending</c> de la enumeración.
+    /// Sorts values in ascending order.
     /// </summary>
     Ascending,
     /// <summary>
-    /// Valor <c>Descending</c> de la enumeración.
+    /// Sorts values in descending order.
     /// </summary>
     Descending
 }

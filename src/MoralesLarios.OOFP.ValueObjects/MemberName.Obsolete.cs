@@ -6,8 +6,8 @@ namespace MoralesLarios.OOFP.ValueObjects;
 public partial class MemberName
 {
     /// <summary>
-    /// Obtiene el valor de <c>MinLenght</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>MinLength</c>.
+/// </summary>
     [global::System.Obsolete("Renamed to MinLength. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static int MinLenght => MinLength;
 

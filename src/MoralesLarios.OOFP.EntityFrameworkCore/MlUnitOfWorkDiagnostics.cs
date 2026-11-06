@@ -4,12 +4,12 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore;
 
-/// <summary>Opciones para diagnosticar cambios que quedan sin confirmar al cerrar un ámbito.</summary>
+/// <summary>Options for diagnosing uncommitted changes when a scope is disposed.</summary>
 public sealed class MlUnitOfWorkDiagnostics
 {
     /// <summary>
-    /// Obtiene o establece si se emite un aviso al cerrar la unidad de trabajo con cambios pendientes.
-    /// El valor predeterminado es <see langword="false"/>.
+    /// Gets or sets whether to log a warning when the unit of work is disposed with pending changes.
+    /// The default value is <see langword="false"/>.
     /// </summary>
     public bool WarnOnUncommittedChanges { get; set; }
 }

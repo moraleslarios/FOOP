@@ -6,17 +6,17 @@ namespace MoralesLarios.OOFP.ValueObjects;
 public partial class IntMoreThan
 {
     /// <summary>
-    /// Ejecuta <c>FromIntLenght</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>FromIntLength</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
     /// </remarks>
     /// <param name="value">Valor sobre el que se opera.</param>
-    /// <param name="lenght">Valor de <c>lenght</c>.</param>
+    /// <param name="length">Longitud mínima admitida, inclusive.</param>
     /// <returns>Valor de tipo <c>IntMoreThan</c> obtenido por la operación.</returns>
     [global::System.Obsolete("Renamed to FromIntLength. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static IntMoreThan FromIntLenght(int value, int lenght) => CreateFromIntLength(value, lenght);
+    public static IntMoreThan FromIntLenght(int value, int length) => CreateFromIntLength(value, length);
     /// <summary>
     /// Ejecuta <c>ByIntLength</c>.
     /// </summary>

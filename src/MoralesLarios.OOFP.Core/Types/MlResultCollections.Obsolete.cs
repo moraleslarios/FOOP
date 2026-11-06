@@ -6,8 +6,8 @@ namespace MoralesLarios.OOFP.Types;
 public static partial class MlResultCollections
 {
     /// <summary>
-    /// Ejecuta <c>FusionFailErros</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeFailureErrors</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -18,8 +18,8 @@ public static partial class MlResultCollections
     [global::System.Obsolete("Renamed to MergeFailureErrors. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<IEnumerable<T>> FusionFailErros<T>(this IEnumerable<MlResult<T>> source) => MergeFailureErrors<T>(source);
     /// <summary>
-    /// Ejecuta <c>FusionFailErros</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeFailureErrorsAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -30,8 +30,8 @@ public static partial class MlResultCollections
     [global::System.Obsolete("Renamed to MergeFailureErrorsAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<IEnumerable<T>>> FusionFailErrosAsync<T>(this IEnumerable<MlResult<T>> source) => MergeFailureErrorsAsync<T>(source);
     /// <summary>
-    /// Ejecuta <c>FusionFailErros</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeFailureErrorsAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -42,8 +42,8 @@ public static partial class MlResultCollections
     [global::System.Obsolete("Renamed to MergeFailureErrorsAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<IEnumerable<T>>> FusionFailErrosAsync<T>(this Task<IEnumerable<MlResult<T>>> sourceAsync) => MergeFailureErrorsAsync<T>(sourceAsync);
     /// <summary>
-    /// Ejecuta <c>FusionErrosIfExists</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsIfExists</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -54,8 +54,8 @@ public static partial class MlResultCollections
     [global::System.Obsolete("Renamed to MergeErrorsIfExists. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<IEnumerable<T>> FusionErrosIfExists<T>(this IEnumerable<MlResult<T>> source) => MergeErrorsIfExists<T>(source);
     /// <summary>
-    /// Ejecuta <c>FusionErrosIfExists</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsIfExistsAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -66,8 +66,8 @@ public static partial class MlResultCollections
     [global::System.Obsolete("Renamed to MergeErrorsIfExistsAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<IEnumerable<T>>> FusionErrosIfExistsAsync<T>(this IEnumerable<MlResult<T>> source) => MergeErrorsIfExistsAsync<T>(source);
     /// <summary>
-    /// Ejecuta <c>FusionErrosIfExists</c>. Versión asíncrona.
-    /// </summary>
+/// Alias obsoleto; use <c>MergeErrorsIfExistsAsync</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.

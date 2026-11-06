@@ -270,7 +270,17 @@ Los scripts auxiliares de verificación están en `scripts/`:
 | `check-md-links2.ps1` | Verifica los enlaces relativos entre `.md` |
 | `check-md-anchors4.ps1` | Verifica las anclas internas de los `.md` |
 | `check-md-encoding.ps1` | Detecta problemas de codificación en los `.md` |
+| `check-old-names.ps1` | Busca identificadores antiguos en Markdown; añade `-IncludeCs` para revisar C# antes de introducir o renombrar API |
 | `generar-cambios-realizados.ps1` | Regenera el entregable de renombrados desde el CSV |
+
+Antes de introducir o renombrar identificadores públicos, ejecuta desde `src/`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-old-names.ps1 -IncludeCs
+```
+
+La lista blanca C# está limitada a rutas y cantidades verificadas de puentes `[Obsolete]`, pruebas
+que comprueban nombres antiguos y comentarios que usan correctamente la palabra «diferente».
 
 > Los `.ps1` del repositorio se escriben en **ASCII puro**: PowerShell 5.1 interpreta un fichero
 > UTF-8 sin BOM como Windows-1252 y corrompe los acentos. Los caracteres no ASCII se construyen

@@ -29,18 +29,19 @@ ha visto nunca. Por eso toda la planificación se ha centralizado **aquí**, en 
 
 ## 2. Pendientes · trabajo por hacer
 
-Plan de ejecución en [`Pendientes/README.md`](Pendientes/README.md) · **8 épicas sin iniciar**.
+Plan de ejecución en [`Pendientes/README.md`](Pendientes/README.md) · **7 épicas pendientes, 3 parciales**.
 
 | Épica | Proyecto principal |
 | --- | --- |
 | [Coherencia de contratos y documentación](Pendientes/Epica-Coherencia-Y-Documentacion.md) | `Shared`, `Http`, `AspNetCore.Controllers` |
 | [Contrato REST](Pendientes/Epica-Contrato-Rest.md) | `AspNetCore.Controllers` |
 | [Erratas en identificadores públicos](Pendientes/Epica-Erratas-Identificadores-Publicos.md) | transversal |
-| [Limpieza de código muerto](Pendientes/Epica-Limpieza-Codigo-Muerto.md) | `Http`, `AspNetCore.Controllers`, `EntityFrameworkCore` |
 | [Mensajes, idioma e instrumentación](Pendientes/Epica-Mensajes-Y-Localizacion.md) | transversal |
 | [Serialización y errores HTTP](Pendientes/Epica-Serializacion-y-Errores-Http.md) | `Http` |
 | [Servicio y paginación](Pendientes/Epica-Servicio-y-Paginacion.md) | `Application` |
 | [Validación](Pendientes/Epica-Validacion.md) | `Validation*` |
+
+Las épicas EFCore y su orden independiente se detallan en [`Pendientes/EntityFrameworkCore/README.md`](Pendientes/EntityFrameworkCore/README.md). El hallazgo #7 de su análisis está cubierto por la guía del proyecto y la épica UoW ya completada.
 
 ---
 
@@ -77,12 +78,25 @@ Planes en [`Realizados/Logging/README.md`](Realizados/Logging/README.md) (épica
 
 ### 3.3 `MoralesLarios.OOFP.EntityFrameworkCore`
 
-Plan en [`Realizados/EFCore/README.md`](Realizados/EFCore/README.md) · **US-01 … US-10** y **US-01 … US-11**.
+Plan en [`Realizados/EFCore/README.md`](Realizados/EFCore/README.md) · **siete épicas completadas**.
 
 | Épica | Estado |
 |---|---|
 | [Simplificación de repositorios EF Core](Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md) | ✅ |
 | [Unidad de trabajo y transacciones](Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) | ✅ |
+| [Lecturas funcionales y captura de errores](Realizados/EFCore/Epica-Lecturas-Funcionales-y-Errores.md) | ✅ · US-01…03 |
+| [Paginación determinista y asíncrona](Realizados/EFCore/Epica-Paginacion-Determinista-y-Asincrona.md) | ✅ · US-01…04 |
+| [Selección eficiente del último resultado](Realizados/EFCore/Epica-Last-Eficiente.md) | ✅ · US-01…02 |
+| [Registro DI multicontexto y dependencias](Realizados/EFCore/Epica-Registro-DI-Multicontexto.md) | ✅ · US-01…02 |
+| [Nomenclatura y documentación de la API EFCore](Realizados/EFCore/Epica-Nomenclatura-y-Documentacion-API.md) | ✅ · US-01…04 |
+
+### 3.4 `MoralesLarios.OOFP.Http`
+
+Plan en [`Realizados/Http/README.md`](Realizados/Http/README.md).
+
+| Épica | Estado |
+|---|---|
+| [Limpieza de código muerto en Http y controladores](Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) | ✅ · US-01…06 |
 
 ---
 
@@ -93,13 +107,19 @@ los documentos y en los comentarios del código:
 
 | Carpeta antigua | Carpeta actual | Contenido |
 | --- | --- | --- |
-| `Next_Versions/2.1/` | [`2.0.0/Pendientes/`](Pendientes/README.md) | las 8 épicas que siguen pendientes |
+| `Next_Versions/2.1/` | [`2.0.0/Pendientes/`](Pendientes/README.md) | las 7 épicas que siguen pendientes |
 | `Next_Versions/2.1.1/Core/` | [`2.0.0/Realizados/Core/`](Realizados/Core/README.md) | épicas 1-4 del núcleo |
 | `Next_Versions/2.2.0/Logging/` | [`2.0.0/Realizados/Logging/`](Realizados/Logging/README.md) | épicas 1-7 de registro |
 | `Next_Versions/2.3.0/Logging/README.md` | [`Realizados/Logging/README-Epica-08.md`](Realizados/Logging/README-Epica-08.md) | plan de la épica 8 |
 | `Next_Versions/2.4.0/Logging/README.md` | [`Realizados/Logging/README-Epica-09.md`](Realizados/Logging/README-Epica-09.md) | plan de la épica 9 |
 | `Next_Versions/2.0.0/Pendientes/Epica-Simplificacion-Repositorios-EFCore.md` | [`Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md`](Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md) | épica completada y archivada por área |
 | `Next_Versions/2.0.0/Pendientes/Epica-Unidad-de-Trabajo-y-Transacciones.md` | [`Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md`](Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) | épica completada y archivada por área |
+| `Next_Versions/2.0.0/Pendientes/EntityFrameworkCore/Epica-Lecturas-Funcionales-y-Errores.md` | [`Realizados/EFCore/Epica-Lecturas-Funcionales-y-Errores.md`](Realizados/EFCore/Epica-Lecturas-Funcionales-y-Errores.md) | épica completada y archivada por área |
+| `Next_Versions/2.0.0/Pendientes/EntityFrameworkCore/Epica-Paginacion-Determinista-y-Asincrona.md` | [`Realizados/EFCore/Epica-Paginacion-Determinista-y-Asincrona.md`](Realizados/EFCore/Epica-Paginacion-Determinista-y-Asincrona.md) | épica completada y archivada por área |
+| `Next_Versions/2.0.0/Pendientes/EntityFrameworkCore/Epica-Last-Eficiente.md` | [`Realizados/EFCore/Epica-Last-Eficiente.md`](Realizados/EFCore/Epica-Last-Eficiente.md) | épica completada y archivada por área |
+| `Next_Versions/2.0.0/Pendientes/EntityFrameworkCore/Epica-Registro-DI-Multicontexto.md` | [`Realizados/EFCore/Epica-Registro-DI-Multicontexto.md`](Realizados/EFCore/Epica-Registro-DI-Multicontexto.md) | épica completada y archivada por área |
+| `Next_Versions/2.0.0/Pendientes/EntityFrameworkCore/Epica-Nomenclatura-y-Documentacion-API.md` | [`Realizados/EFCore/Epica-Nomenclatura-y-Documentacion-API.md`](Realizados/EFCore/Epica-Nomenclatura-y-Documentacion-API.md) | épica completada y archivada por área |
+| `Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md` | [`Realizados/Http/Epica-Limpieza-Codigo-Muerto.md`](Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) | épica completada y archivada por área |
 
 > ℹ️ Las **XML-docs y los comentarios del código** siguen citando esas versiones antiguas («*de la
 > épica 6 de la versión 2.2.0*», «*puentes `[Obsolete]` de la v2.1.1*»). Se han dejado **a propósito**:

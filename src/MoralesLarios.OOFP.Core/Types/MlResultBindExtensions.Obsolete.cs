@@ -6,8 +6,8 @@ namespace MoralesLarios.OOFP.Types;
 public static partial class MlResultBindExtensions
 {
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
-    /// </summary>
+/// Alias obsoleto; use <c>BindSaveValueInDetailsIfFailedFuncResult</c>.
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -20,9 +20,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to BindSaveValueInDetailsIfFailedFuncResult. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> BindSaveValueInDetailsIfFaildFuncResult<T, TResult>(this MlResult<T> source, Func<T, MlResult<TResult>> func) => BindSaveValueInDetailsIfFailedFuncResult<T, TResult>(source, func);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>BindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -35,9 +35,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to BindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> BindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this MlResult<T> source, Func<T, Task<MlResult<TResult>>> funcAsync) => BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(source, funcAsync);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>BindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -50,9 +50,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to BindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> BindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, Func<T, Task<MlResult<TResult>>> funcAsync) => BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(sourceAsync, funcAsync);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>BindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -65,9 +65,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to BindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> BindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, Func<T, MlResult<TResult>> func) => BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(sourceAsync, func);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>BindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -80,9 +80,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to BindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> BindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this MlResult<T> source, Func<T, MlResult<TResult>> func) => BindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(source, func);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResult</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -96,9 +96,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResult. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> TryBindSaveValueInDetailsIfFaildFuncResult<T, TResult>(this MlResult<T> source, Func<T, MlResult<TResult>> func, Func<Exception, string> errorMessageBuilder) => TryBindSaveValueInDetailsIfFailedFuncResult<T, TResult>(source, func, errorMessageBuilder);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResult</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -112,9 +112,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResult. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<TResult> TryBindSaveValueInDetailsIfFaildFuncResult<T, TResult>(this MlResult<T> source, Func<T, MlResult<TResult>> func, string errorMessage = null !) => TryBindSaveValueInDetailsIfFailedFuncResult<T, TResult>(source, func, errorMessage);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -128,9 +128,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this MlResult<T> source, Func<T, MlResult<TResult>> func, Func<Exception, string> errorMessageBuilder) => TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(source, func, errorMessageBuilder);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -144,9 +144,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this MlResult<T> source, Func<T, MlResult<TResult>> func, string errorMessage = null !) => TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(source, func, errorMessage);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -160,9 +160,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, Func<T, MlResult<TResult>> func, Func<Exception, string> errorMessageBuilder) => TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(sourceAsync, func, errorMessageBuilder);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -176,9 +176,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, Func<T, MlResult<TResult>> func, string errorMessage = null !) => TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(sourceAsync, func, errorMessage);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -192,9 +192,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, Func<T, Task<MlResult<TResult>>> funcAsync, Func<Exception, string> errorMessageBuilder) => TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(sourceAsync, funcAsync, errorMessageBuilder);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -208,9 +208,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this Task<MlResult<T>> sourceAsync, Func<T, Task<MlResult<TResult>>> funcAsync, string errorMessage = null !) => TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(sourceAsync, funcAsync, errorMessage);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.
@@ -224,9 +224,9 @@ public static partial class MlResultBindExtensions
     [global::System.Obsolete("Renamed to TryBindSaveValueInDetailsIfFailedFuncResultAsync. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<TResult>> TryBindSaveValueInDetailsIfFaildFuncResultAsync<T, TResult>(this MlResult<T> source, Func<T, Task<MlResult<TResult>>> funcAsync, Func<Exception, string> errorMessageBuilder) => TryBindSaveValueInDetailsIfFailedFuncResultAsync<T, TResult>(source, funcAsync, errorMessageBuilder);
     /// <summary>
-    /// Encadena una función que devuelve un resultado de <c>SaveValueInDetailsIfFaildFuncResult</c>.
+/// Alias obsoleto; use <c>TryBindSaveValueInDetailsIfFailedFuncResultAsync</c>.
     /// Captura cualquier excepción producida y la convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
+/// </summary>
     /// <remarks>
     /// Miembro obsoleto conservado por compatibilidad. Use la alternativa indicada en el atributo
     /// <c>Obsolete</c>.

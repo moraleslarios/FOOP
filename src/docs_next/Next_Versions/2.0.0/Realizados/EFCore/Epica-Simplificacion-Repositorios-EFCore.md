@@ -277,7 +277,7 @@ repetirse** en el diseño de destino.
 
 ### 3.5 Errata detectada en documentación ya existente
 
-La épica [`Epica-Limpieza-Codigo-Muerto.md`](../../Pendientes/Epica-Limpieza-Codigo-Muerto.md) sitúa el **punto 64**
+La épica [`Epica-Limpieza-Codigo-Muerto.md`](../Http/Epica-Limpieza-Codigo-Muerto.md) sitúa el **punto 64**
 («22 declaraciones comentadas») en `Repositories/IEfWriteRepository.cs`, líneas 13-34. **La
 ubicación real es `Repositories/IEfRepository.cs`, líneas 14-39, y son 26 líneas.**
 `IEfWriteRepository.cs` tiene 14 líneas en total y su cuerpo está vacío. Hay que corregir esa épica
@@ -801,5 +801,5 @@ Las tres cifras que resumen esta épica, y que conviene vigilar en cualquier pro
 
 - [`README.md` del proyecto](../../../../../MoralesLarios.OOFP.EntityFrameworkCore/README.md) · documentación de la capa afectada
 - [Épica · Unidad de trabajo y transacciones](Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, sobre el mismo proyecto
-- [Épica · Limpieza de código muerto](../../Pendientes/Epica-Limpieza-Codigo-Muerto.md) · punto 64, con la errata descrita en §3.5
+- [Épica · Limpieza de código muerto](../Http/Epica-Limpieza-Codigo-Muerto.md) · punto 64, con la errata descrita en §3.5
 - [Índice de pendientes](../../Pendientes/README.md)

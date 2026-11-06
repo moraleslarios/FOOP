@@ -8,49 +8,45 @@
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Contrato de <c>IEfPaginator</c>.
+/// Defines paged read operations for an EF Core repository.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-public interface IEfPaginator<T> where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+public interface IEfPaginator<TEntity> where TEntity : class
 {
     /// <summary>
-    /// Indica si todos los elementos cumplen la condición de <c>Pagination</c>. Captura cualquier excepción
-    /// producida y la convierte en un resultado fallido.
+    /// Returns a page containing all entities, ordered by the primary key when no selector is supplied.
     /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<PagedResult<T>>       TryAllPagination         (PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<T, object>> orderByField = null!);
+    /// <param name="paginationInfo">The requested page number and size.</param>
+    /// <param name="orderBy">The direction used for the selector and primary-key tie-breaker.</param>
+    /// <param name="orderByField">An optional selector; the primary key is used when omitted.</param>
+    /// <returns>The requested page and total count, or a failed result.</returns>
+    MlResult<PagedResult<TEntity>>       TryAllPagination         (PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<TEntity, object>>? orderByField = null);
     /// <summary>
-    /// Indica si todos los elementos cumplen la condición de <c>Pagination</c>. Captura cualquier excepción
-    /// producida y la convierte en un resultado fallido. Versión asíncrona.
+    /// Asynchronously returns a page containing all entities, ordered by the primary key when no selector is supplied.
     /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="ct">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<PagedResult<T>>> TryAllPaginationAsync    (PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<T, object>> orderByField = null!                                            , CancellationToken ct = default!);
+    /// <param name="paginationInfo">The requested page number and size.</param>
+    /// <param name="orderBy">The direction used for the selector and primary-key tie-breaker.</param>
+    /// <param name="orderByField">An optional selector; the primary key is used when omitted.</param>
+    /// <param name="ct">A token that can cancel the queries.</param>
+    /// <returns>A task containing the requested page and total count, or a failed result.</returns>
+    Task<MlResult<PagedResult<TEntity>>> TryAllPaginationAsync    (PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<TEntity, object>>? orderByField = null, CancellationToken ct = default!);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>DataPagination</c>. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido.
+    /// Returns a filtered page. The primary key provides a default order and breaks selector ties.
     /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    MlResult<PagedResult<T>>       TryGetDataPagination     (PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<T, object>> orderByField = null!, Expression<Func<T, bool>> filter = null!);
+    /// <param name="paginationInfo">The requested page number and size.</param>
+    /// <param name="orderBy">The direction used for the selector and primary-key tie-breaker.</param>
+    /// <param name="orderByField">An optional selector; the primary key is used when omitted.</param>
+    /// <param name="filter">An optional predicate; all entities are included when omitted.</param>
+    /// <returns>The requested page and filtered total count, or a failed result.</returns>
+    MlResult<PagedResult<TEntity>>       TryGetDataPagination     (PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<TEntity, object>>? orderByField = null, Expression<Func<TEntity, bool>>? filter = null);
     /// <summary>
-    /// Obtiene el elemento solicitado de <c>DataPagination</c>. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido. Versión asíncrona.
+    /// Asynchronously returns a filtered page. The primary key provides a default order and breaks selector ties.
     /// </summary>
-    /// <param name="paginationInfo">Valor de <c>paginationInfo</c>.</param>
-    /// <param name="orderBy">Expresión de ordenación aplicada a la consulta.</param>
-    /// <param name="orderByField">Valor de <c>orderByField</c>.</param>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="ct">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    Task<MlResult<PagedResult<T>>> TryGetDataPaginationAsync(PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<T, object>> orderByField = null!, Expression<Func<T, bool>> filter = null!  , CancellationToken ct = default!);
+    /// <param name="paginationInfo">The requested page number and size.</param>
+    /// <param name="orderBy">The direction used for the selector and primary-key tie-breaker.</param>
+    /// <param name="orderByField">An optional selector; the primary key is used when omitted.</param>
+    /// <param name="filter">An optional predicate; all entities are included when omitted.</param>
+    /// <param name="ct">A token that can cancel the queries.</param>
+    /// <returns>A task containing the requested page and filtered total count, or a failed result.</returns>
+    Task<MlResult<PagedResult<TEntity>>> TryGetDataPaginationAsync(PageRequest paginationInfo, SortDirection orderBy = SortDirection.Ascending, Expression<Func<TEntity, object>>? orderByField = null, Expression<Func<TEntity, bool>>? filter = null, CancellationToken ct = default!);
 }

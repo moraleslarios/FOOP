@@ -297,11 +297,11 @@ public static partial class MlResultActionResultExtensionsLegacy
 
 
 
-    static bool ContainsAnyKey(string cadena, string[] combinaciones)
+    static bool ContainsAnyKey(string keyText, string[] keyTokens)
     {
-        foreach (string combinacion in combinaciones)
+        foreach (string keyToken in keyTokens)
         {
-            if (cadena.IndexOf(combinacion, StringComparison.OrdinalIgnoreCase) >= 0)
+            if (keyText.IndexOf(keyToken, StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return true;
             }

@@ -4,8 +4,8 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
-/// <summary>Unidad de trabajo asociada a un tipo concreto de <see cref="DbContext"/>.</summary>
-/// <typeparam name="TContext">Tipo del contexto cuyas operaciones confirma.</typeparam>
+/// <summary>A unit of work associated with a specific <see cref="DbContext"/> type.</summary>
+/// <typeparam name="TContext">The context type whose changes are committed.</typeparam>
 public interface IMlUnitOfWork<TContext> : IMlUnitOfWork
     where TContext : DbContext
 {

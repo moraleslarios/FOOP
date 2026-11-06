@@ -405,6 +405,16 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 70 | Los agregados comparten el `DbContext` recibido (**2.0.0**) | `EfCrudRepository` y `EfPagedRepository` obtenían colaboradores de un proveedor secundario y podían usar otro contexto | las factorías de los agregados pasan a sus colaboradores la misma instancia `TContext` recibida por constructor | ⚠️ **Contrato · SILENCIOSA** (compila, pero el `ChangeTracker` y la unidad de trabajo de los colaboradores pasan a ser los del agregado) |
 | 71 | `IEfRepository<T>` expone la unidad de trabajo (**2.0.0**) | la interfaz agregada solo heredaba lectura y escritura | añade `IMlUnitOfWork UnitOfWork`; las implementaciones propias deben exponer la unidad ligada al mismo contexto | **Compilación para implementadores** (`CS0535` si una clase propia no implementa `UnitOfWork`); aditivo para consumidores del repositorio de la librería |
 | 72 | Las escrituras del repositorio dejan de confirmar automáticamente (**2.0.0**) | los 16 métodos `TryAdd`, `TryUpdate` y `TryRemove` (incluidas las variantes `Range`, por clave y async) ejecutaban `SaveChanges` | los métodos solo preparan cambios; confirma con `UnitOfWork.TryCommit[Async]` o agrupa el caso de uso con `TryExecuteInTransaction[Async]` | ⚠️ **Contrato · SILENCIOSA** (compila; una llamada directa devuelve éxito pero no persiste hasta el commit) |
+| 73 | Las claves `null` de los repositorios `Try*` se validan antes de construir el mensaje (**2.0.0**) | `TryFind[Async]`, `TryUpdate[Async]` y `TryRemove[Async]` podían lanzar desde `FormatCompositeKey` antes de devolver `MlResult` | las guardas devuelven un `MlResult` fallido antes de formatear el arreglo de claves | ⚠️ **Contrato · SILENCIOSA** (cambia una excepción directa por un resultado fallido) |
+| 74 | `TryGetData` y `TryAll` síncronos ejecutan la consulta dentro del rail (**2.0.0**) | devolvían una secuencia EF diferida; fallos de traducción/BD podían escapar durante la enumeración del consumidor | materializan antes de devolver `MlResult`; los fallos de consulta se convierten en `Fail` | ⚠️ **Contrato · SILENCIOSA** (cambia el momento de ejecución, memoria y frontera de captura) |
+| 75 | Lectura explícita del último elemento ordenado en EFCore (**2.0.0**) | no había una operación con orden declarado y las variantes existentes materializaban coincidencias | `IEfOrderedReadRepository<T>.TryGetLastBy[Async]` aplica el selector y la clave EF como desempate, y consulta una fila | ✅ Aditivo; los métodos anteriores conservan su comportamiento |
+| 76 | Orden total antes de paginar (**2.0.0**) | el selector nulo dejaba la consulta sin orden y los empates no tenían desempate | la clave EF ordena por defecto o desempata el selector; entidades sin clave EF devuelven `Fail` | ⚠️ **Contrato · SILENCIOSA** (pueden cambiar filas por página y las consultas keyless fallan) |
+| 77 | Los parámetros genéricos de entidad pasan de `T` a `TEntity` en EFCore (**2.0.0**) | interfaces, clases y miembros genéricos públicos de entidad usaban `T` | contratos, `AddOofpRepositories` y `PrivateOrderBy` usan `TEntity`; no cambian aridad, restricciones ni llamadas C# | ⚠️ Solo cambia el nombre de metadatos observable por reflexión; sin ruptura fuente/binaria |
+| 78 | Los clientes REST dejan de requerir un `ILogger<>` inerte (**2.0.0**) | los constructores públicos de `RestClientFp` y `CompositeKeyRestClientFp` aceptaban un logger que no se utilizaba | los cuatro constructores ya no reciben `ILogger<>`; el registro mediante `AddRestClient` mantiene su uso | **Compilación** (`CS1729` en subclases o llamadas manuales que pasaban el logger) |
+| 79 | Parámetros de los puentes de longitud y avisos `[Obsolete]` corregidos (**2.0.0**) | ocho parámetros públicos usaban `minLenght`, `maxLenght` o `lenght`; tres avisos recomendaban `FromStringLength`, que no existe | parámetros normalizados a `minLength`, `maxLength` y `length`; avisos apuntan a `CreateFromLength` | **Compilación** (`CS1739`) solo para argumentos nombrados de los puentes |
+| 80 | Metadatos de validación de `PageRequest` y `PagedResult<T>` corregidos (**2.0.0**) | rangos imposibles en `PageRequest` y `PagedResult<T>` hacían que DataAnnotations rechazara entradas válidas; atributos de `PagedResult<T>` decoraban parámetros, no propiedades | `PageNumber` y `PageSize` reflejan los límites normalizados; `TotalCount` acepta cero y rechaza negativos; `MaxPageSize` se expone como constante | **Contrato de validación** (cambia el resultado de `Validator.TryValidateObject`) |
+| 81 | Se cierran tres nombres genéricos en los logs de `HttpApiInvoker` (**2.0.0**) | `DeleteByIdAsync<T`, `PostAsync<T` y `ActionEmptyAsync<T` omitían el cierre del genérico | los tres mensajes terminan en `>` | **Contrato textual** (cambia el contenido del log; no cambia ninguna firma) |
+| 82 | Mensajes de validación y parseo de clave compuesta mejorados (**2.0.0**) | el mensaje del validador automático era inglés ininteligible; el error de parseo filtraba `pkFields` y no explicaba el formato | mensajes gramaticales explican la causa y la acción/formato esperado | ⚠️ **Contrato · SILENCIOSA** (cambia el texto de errores visible al consumidor) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -2022,6 +2032,222 @@ await repo.TryAddAsync(pedido, token)
 Para varias escrituras atómicas, usa `repo.UnitOfWork.TryExecuteInTransactionAsync(...)`; el helper confirma una vez si el callback devuelve un resultado válido y revierte ante un fallo o excepción. Los métodos de `CrudServiceFp` mantienen la persistencia automática desde la perspectiva del consumidor porque ahora confirman explícitamente.
 Busca `Try(Add|AddRange|Update|UpdateRange|Remove|RemoveRange)(Async)?\s*\(` en el código consumidor. Revisa cada llamada directa a un repositorio: debe terminar en `UnitOfWork.TryCommit[Async]` o ejecutarse dentro de `TryExecuteInTransaction[Async]`. Los usos de `ICrudServiceFp` no requieren añadir un commit manual.
 
+#### 73 — Las claves nulas se validan antes de formatearse (2.0.0) ⚠️ **RUPTURA SILENCIOSA**
+
+Las sobrecargas sin mensaje personalizado de `TryFind[Async]` construían el texto de no encontrado llamando a `FormatCompositeKey` antes de ejecutar la guarda. Las rutas por clave de `TryUpdate[Async]` y `TryRemove[Async]` tenían el mismo riesgo. Pasar explícitamente un arreglo `null` lanzaba `ArgumentNullException` desde `Count()` y no devolvía `MlResult`.
+
+```csharp
+// ANTES: el consumidor recibe una excepción.
+try { repository.TryFind((object[])null!); }
+catch (ArgumentNullException) { /* el test fijaba la excepción directa */ }
+
+// AHORA: el consumidor recibe un resultado fallido.
+MlResult<T> result = repository.TryFind((object[])null!);
+Assert.True(result.IsFailure);
+```
+
+**Qué revisar en tu código:** esta corrección no requiere cambiar llamadas válidas. Actualiza tests que esperaban una excepción para un arreglo de claves nulo: ahora deben afirmar `IsFailure` y revisar los detalles del error.
+
+Busca en el proyecto consumidor:
+
+```regex
+TryFind(?:Async)?\s*\([^;\n]*null|TryUpdate(?:Async)?\s*\([^;\n]*null|TryRemove(?:Async)?\s*\([^;\n]*null
+```
+
+Revisa las coincidencias que pasen `null` como arreglo `params` y sustituye la aserción de excepción por la aserción del resultado fallido. No cambies claves válidas ni mensajes personalizados.
+
+#### 74 — Las lecturas síncronas materializan dentro de `MlResult` (2.0.0) ⚠️ **RUPTURA SILENCIOSA**
+
+`TryGetData` y `TryAll` devolvían un `IEnumerable<T>` respaldado por una consulta EF diferida. El `MlResult` podía ser válido aunque la traducción o la ejecución SQL fallaran después, al enumerar fuera del límite funcional. Ahora la lectura síncrona materializa durante la operación protegida y devuelve `Fail` si la consulta falla.
+
+```csharp
+// ANTES: el resultado parecía válido; la ejecución podía fallar al enumerar.
+var result = repository.TryGetData(filter);
+Assert.True(result.IsSuccess);
+Assert.Throws<InvalidOperationException>(() => result.GetValueOrThrow().ToList());
+
+// AHORA: el error de consulta queda dentro de MlResult.
+var result = repository.TryGetData(filter);
+Assert.True(result.IsFailure);
+```
+
+**Qué revisar en tu código:** `TryGetData`/`TryAll` siguen devolviendo `IEnumerable<T>`, pero el resultado deja de ser una consulta componible o re-ejecutable y pasa a contener datos materializados. Si dependías de diferir la lectura, enumerarla varias veces para volver a consultar o consumir un conjunto sin límite, usa filtros/paginación o una API específica de consulta. La materialización ocupa memoria proporcional al resultado.
+
+Busca todas las llamadas y los usos que esperan composición o enumeración diferida:
+
+```regex
+TryGetData(?:Async)?\s*\(|TryAll(?:Async)?\s*\(|\.AsQueryable\s*\(|IQueryable\s*<
+```
+
+Para cada coincidencia de `TryGetData`/`TryAll`, comprueba si el consumidor compone otra consulta, enumera más de una vez o recibe un conjunto potencialmente grande. Ajusta esos casos a filtros/paginación. Actualiza tests que esperan el fallo durante `foreach`: ahora el resultado de la llamada ya es `Fail`.
+
+#### 75 — Nueva lectura ordenada de una sola fila en EFCore (2.0.0) ✅ **ADITIVA**
+
+Se añade `IEfOrderedReadRepository<T>.TryGetLastBy[Async]` sin alterar `TryGetLast[Async]`. El selector es obligatorio; `Ascending` elige el máximo y `Descending` el mínimo. La clave primaria EF, incluidas todas las propiedades de una clave compuesta, desempata en el mismo sentido. La consulta usa `FirstOrDefault[Async]` y el proveedor limita el resultado a una fila.
+
+```csharp
+var ordered = provider.GetRequiredService<IEfOrderedReadRepository<Order>>();
+var result = await ordered.TryGetLastByAsync(x => x.CustomerId == customerId,
+                                              x => x.CreatedAt,
+                                              SortDirection.Ascending, token);
+```
+
+**Qué revisar:** no hay migración para llamadas existentes. Si necesitas seleccionar una única fila sin cargar todas las coincidencias, inyecta la interfaz nueva y elige explícitamente selector y dirección. Una entidad sin clave primaria EF devuelve `Fail`.
+
+#### 76 — La paginación ahora aplica un orden total (2.0.0) ⚠️ **RUPTURA SILENCIOSA**
+
+Antes, omitir `orderByField` dejaba `Skip`/`Take` sin `ORDER BY`; un selector no único tampoco determinaba el orden entre empates. Ahora la clave primaria EF se usa como orden por defecto o como desempate para cada propiedad de la clave compuesta, en el mismo sentido que `SortDirection`. Si EF no informa clave primaria, la paginación devuelve `Fail` en vez de prometer estabilidad. Las anotaciones NRT también reflejan que filtro y selector son opcionales; no cambia la firma binaria.
+
+**Qué revisar:** las páginas existentes pueden contener filas distintas y las entidades keyless ya no se pueden paginar con este repositorio. Revisa aserciones de contenido paginado, snapshots y entidades configuradas con `HasNoKey`; si la consulta keyless necesita paginación, define una clave EF adecuada o usa una consulta propia. Las llamadas que omitían selector ahora quedan documentadas como válidas para entidades con clave.
+
+#### 77 — Los parámetros genéricos de entidad se llaman `TEntity` en EFCore (2.0.0)
+
+Los contratos y miembros públicos de EntityFrameworkCore que representan entidades, incluidos `AddOofpRepositories` y `PrivateOrderBy`, usan ahora `TEntity` en vez de `T`. La aridad, restricciones y firmas binarias no cambian; las llamadas C# no se editan. Sí cambia el nombre visible en metadatos: `typeof(IEfReadRepository<>).GetGenericArguments()[0].Name` devuelve `TEntity`, no `T`.
+
+**Qué revisar:** no hagas un reemplazo global de `T`. Busca código que inspeccione el nombre del parámetro genérico y actualiza solo las comprobaciones que esperen exactamente `T`.
+
+Busca posibles inspecciones de reflexión:
+
+```regex
+GetGenericArguments\s*\(|GenericTypeArguments|IsGenericParameter
+```
+
+Revisa cada coincidencia y cambia la expectativa de nombre de `T` a `TEntity` solo si se refiere a un tipo de entidad de `MoralesLarios.OOFP.EntityFrameworkCore`.
+
+#### 78 — Los clientes REST ya no reciben un logger que no usan (2.0.0)
+
+`RestClientFp<TDto>`, `RestClientFp<TRequest, TResponse>`, `CompositeKeyRestClientFp<TDto>` y `CompositeKeyRestClientFp<TRequest, TResponse>` ya no aceptan `ILogger<>` en sus constructores. Ninguna de las cuatro clases lo utilizaba. El registro con `AddRestClient` no cambia: solo se deben adaptar subclases o instanciaciones manuales.
+
+```csharp
+// ANTES
+public sealed class OrdersClient(ILogger<OrdersClient> logger,
+                 IHttpApiInvoker invoker,
+                 ServiceKey clientName)
+  : RestClientFp<OrderDto>(logger, invoker, clientName);
+
+// AHORA
+public sealed class OrdersClient(IHttpApiInvoker invoker, ServiceKey clientName)
+  : RestClientFp<OrderDto>(invoker, clientName);
+```
+
+**Qué revisar:** elimina el argumento `ILogger<>` de cada constructor base y de sus clases derivadas. No retires el logger del servicio consumidor si lo utiliza para sus propias trazas. Los registros `AddRestClient` no requieren cambios.
+
+Busca las clases base y llamadas explícitas:
+
+```regex
+RestClientFp<|CompositeKeyRestClientFp<|ILogger<\s*(?:RestClientFp|CompositeKeyRestClientFp)
+```
+
+Revisa cada subclase o llamada manual; la migración es `CS1729` si se mantiene el argumento antiguo. La firma retirada es la del constructor público de esas clases.
+
+#### 79 — Parámetros de los puentes de longitud y avisos corregidos (2.0.0)
+
+Los ocho parámetros públicos de seis puentes `[Obsolete(…, false)]` de `ValueObjects` corrigen la
+errata `lenght`. Los nombres de los métodos puente se conservan; las llamadas posicionales también
+conservan su compilación y siguen mostrando `CS0618`.
+
+| Método puente | Antes | Ahora |
+| --- | --- | --- |
+| `StringLengthBetween.FromStringLenght` | `minLenght`, `maxLenght` | `minLength`, `maxLength` |
+| `StringMaxLength.FromStringLenght`, `StringMinLength.FromStringLenght` | `lenght` | `length` |
+| `IntBetween.FromIntLenght` | `minLenght`, `maxLenght` | `minLength`, `maxLength` |
+| `IntLessThan.FromIntLenght`, `IntMoreThan.FromIntLenght` | `lenght` | `length` |
+
+Además, los avisos de los tres puentes de longitud de cadena ahora recomiendan `CreateFromLength`,
+que existe y coincide con el cuerpo del puente; antes indicaban `FromStringLength`, que no existe.
+
+```csharp
+// ANTES
+StringLengthBetween.FromStringLenght(value, minLenght: 1, maxLenght: 8);
+
+// AHORA
+StringLengthBetween.FromStringLenght(value, minLength: 1, maxLength: 8);
+```
+
+**Qué hacer:** si llamas a un puente de longitud con argumentos nombrados, cambia solo las etiquetas del argumento. No renombres el método puente ni cambies llamadas posicionales. Para migrar al API vigente, sustituye el puente completo por `CreateFromLength` o `CreateFromIntLength`.
+
+Busca las etiquetas antiguas en el código consumidor:
+
+```regex
+(?:minLenght|maxLenght|lenght)\s*:
+```
+
+Revisa cada coincidencia y corrige la etiqueta según el método. Los tres avisos de cadena deben decir `CreateFromLength`; no los cambies a `FromLength`, cuyo contrato devuelve `MlResult<T>` y no es equivalente al puente que lanza.
+
+#### 80 — Los rangos de paginación reflejan los valores admitidos (2.0.0)
+
+Antes, los rangos de `PageRequest` y `PagedResult<T>` eran imposibles (`minimum = 0`, `maximum = int.MinValue`) o se aplicaban a parámetros del constructor en vez de propiedades. `Validator.TryValidateObject` rechazaba páginas válidas. Ahora `PageNumber` usa `[1, int.MaxValue]`, `PageSize` usa `[1, PageRequest.MaxPageSize]` (máximo 1000) y `PagedResult<T>.TotalCount` usa `[0, int.MaxValue]`. Los valores de página y tamaño se normalizan antes de validar; `MaxPageSize` es una constante pública nueva.
+
+```csharp
+// ANTES: un rango imposible hacía fallar cualquier valor validado.
+[Range(0, int.MinValue)]
+
+// AHORA: el rango coincide con la propiedad normalizada.
+[Range(1, PageRequest.MaxPageSize)]
+```
+
+**Qué revisar:** si tus tests o validadores llaman a `Validator.TryValidateObject` sobre `PageRequest` o `PagedResult<T>`, actualiza las expectativas: páginas válidas pasan, `PageSize` se limita a 1000 y `TotalCount = 0` es válido, mientras que un total negativo falla. No cambian las firmas de los constructores ni el comportamiento de paginación.
+
+Busca el uso de estos contratos y de DataAnnotations:
+
+```regex
+PageRequest|PagedResult\s*<|Validator\.TryValidateObject|RangeAttribute
+```
+
+Revisa coincidencias que validen los records o reflejen sus atributos. `MaxPageSize` es aditivo; no reemplaces rangos ni límites propios del consumidor sin comprobar su intención.
+
+#### 81 — Los mensajes de `HttpApiInvoker` cierran el nombre genérico (2.0.0)
+
+Tres mensajes de log mostraban el nombre del método genérico incompleto: `DeleteByIdAsync<T`,
+`PostAsync<T` y `ActionEmptyAsync<T`. Ahora incluyen el `>` de cierre. No cambia ninguna firma,
+resultado HTTP ni flujo de control; solo cambia el texto emitido al logger.
+
+```csharp
+// ANTES
+$"{nameof(PostAsync)}<{typeof(T).Name}"
+
+// AHORA
+$"{nameof(PostAsync)}<{typeof(T).Name}>"
+```
+
+**Qué revisar:** si tests, filtros o snapshots comparan literalmente estos mensajes, actualiza el
+valor esperado para incluir `>`. No hay cambios en llamadas ni en la API pública.
+
+Busca los nombres afectados en el consumidor o en sus tests de logs:
+
+```regex
+(?:DeleteByIdAsync|PostAsync|ActionEmptyAsync)<[^>\r\n]*
+```
+
+Revisa coincidencias que procedan de los mensajes de `HttpApiInvoker`; descarta usos de código C# o
+mensajes independientes de la biblioteca.
+
+#### 82 — Los errores de validación y de clave compuesta explican qué hacer (2.0.0) ⚠️ **RUPTURA SILENCIOSA**
+
+Dos mensajes visibles al consumidor cambian. El error al crear un validador ahora explica que no
+pudo instanciarse y pide registrarlo o proporcionar una instancia. El error de clave compuesta deja
+de filtrar el nombre interno `pkFields` y describe los valores separados por comas.
+
+```text
+ANTES: Problems with automatic create instance of CustomerValidator
+AHORA: The validator 'CustomerValidator' could not be created automatically. Register it in the service container or provide an instance explicitly.
+
+ANTES: 1,abc not be extract values of pkFields. Ids string array not converted to pkFields. ex: ...
+AHORA: The key values '1,abc' could not be parsed as a comma-separated primary key. ...
+```
+
+**Qué revisar:** si tests, snapshots o clientes analizan literalmente estos errores, actualiza sus
+expectativas. El error de clave sigue incorporando el detalle de la excepción.
+
+Busca las rutas de emisión y las expectativas anteriores:
+
+```regex
+ValidateWithFluentValidation|BuildKeyParseErrorMessage|Problems with automatic create instance|not be extract values of pkFields
+```
+
+Revisa las coincidencias que comparen el texto completo y actualízalas a la nueva redacción. No
+cambian las firmas de los métodos ni el resultado de validación.
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -2352,6 +2578,26 @@ dotnet build --nologo /p:WarningLevel=4
    - **2.2.0**: si tus tests, tus *snapshots* o tus alertas comparaban el **texto** de los mensajes que
      construye la librería (punto 49), actualiza el valor esperado: ahora están **en inglés** y el del
      caso fallido ya no repite la palabra `Error`.
+  Y, para los puntos **73 y 74** (lecturas EFCore y claves nulas), busca además:
+   ```
+   TryFind(?:Async)?\s*\([^;\n]*null|TryUpdate(?:Async)?\s*\([^;\n]*null|TryRemove(?:Async)?\s*\([^;\n]*null
+   TryGetData(?:Async)?\s*\(|TryAll(?:Async)?\s*\(|\.AsQueryable\s*\(|IQueryable\s*<
+   ```
+   Para el punto 73, actualiza tests que esperaban una excepción al pasar `null` como arreglo `params`:
+   ahora deben comprobar `MlResult.Fail`. Para el punto 74, revisa los usos de secuencias diferidas,
+   composición y enumeración repetida; adapta los tests para comprobar el fallo al llamar al método,
+   no durante un `foreach` posterior.
+    Para los puntos **75 y 76**, busca además:
+    ```regex
+    IEfOrderedReadRepository|TryGetLastBy(?:Async)?\s*\(|Try(?:All|GetData)Pagination(?:Async)?\s*\(|HasNoKey\s*\(
+    ```
+    El punto 75 es aditivo: solo migra una llamada si quieres evitar materializar todas las coincidencias. Para el punto 76, comprueba los resultados de cada página y cualquier entidad `HasNoKey`; las páginas pueden cambiar y las entidades sin clave deben usar otra consulta o definir una clave EF.
+    Para el punto **77**, busca `GetGenericArguments`, `GenericTypeArguments` e `IsGenericParameter`; actualiza únicamente las comparaciones de reflexión que esperen el nombre `T` en un contrato EFCore de entidad. No cambies llamadas C# ni otros parámetros genéricos llamados `T`.
+    Para el punto **78**, busca `RestClientFp<`, `CompositeKeyRestClientFp<` e `ILogger<RestClientFp`/`ILogger<CompositeKeyRestClientFp`; elimina el logger de las subclases y llamadas manuales a los constructores base. Los registros `AddRestClient` no requieren cambios.
+  Para el punto **79**, busca `(?:minLenght|maxLenght|lenght)\s*:` en llamadas a los puentes de longitud. Renombra solo las etiquetas de argumentos nombrados y verifica que los tres avisos de `FromStringLenght` recomiendan `CreateFromLength`; conserva los nombres de método y las llamadas posicionales.
+  Para el punto **80**, busca `PageRequest|PagedResult\s*<|Validator\.TryValidateObject|RangeAttribute`; revisa validaciones y reflexiones sobre los rangos, el tamaño máximo y `TotalCount`.
+  Para el punto **81**, busca `DeleteByIdAsync|PostAsync|ActionEmptyAsync` en los tests, filtros y snapshots de logs; actualiza solo las expectativas de los tres mensajes que ahora cierran el genérico con `>`.
+  Para el punto **82**, busca `ValidateWithFluentValidation|BuildKeyParseErrorMessage|Problems with automatic create instance|not be extract values of pkFields`; actualiza tests, snapshots y consumidores que comparaban literalmente los mensajes.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -2362,6 +2608,8 @@ dotnet build --nologo /p:WarningLevel=4
 
 ## Fase 6 — Informe final (OBLIGATORIO)
 
+En el apartado 5 del informe, incluye también el punto **79**: indica si había argumentos nombrados en los puentes de longitud, qué etiquetas se actualizaron y confirma que se conservaron los métodos puente, las llamadas posicionales y la alternativa `CreateFromLength` de los tres avisos. Incluye el punto **80** indicando si el consumidor validaba `PageRequest` o `PagedResult<T>` con DataAnnotations, qué expectativas cambian y si dependía de los límites `[1, 1000]` para página y tamaño. Para el punto **81**, indica si tests, filtros o snapshots comparaban literalmente los tres logs y confirma que, si existían, se actualizaron para incluir `>`. Para el punto **82**, indica si el consumidor comparaba los mensajes de creación automática del validador o de parseo de clave compuesta y confirma que se actualizaron las expectativas al nuevo texto.
+
 Entrega al usuario, **en español**, un informe con:
 
 1. **Paquetes**: tabla de antiguo → nuevo → versión instalada, por proyecto.
@@ -2369,7 +2617,7 @@ Entrega al usuario, **en español**, un informe con:
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-   36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, 45, 46, 47, 48 y 49, y los puntos 62, 63 y 64 del ciclo de vida, indicando, para cada uno, si **afecta** al proyecto, qué se
+    36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, 45, 46, 47, 48 y 49, y los puntos 62, 63 y 64 del ciclo de vida, además de los puntos **73, 74, 75, 76, 77, 78, 79, 80, 81 y 82** de EFCore/Http/ValueObjects, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
@@ -2486,7 +2734,7 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
-| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72 | Renombrado masivo de la API y correcciones de comportamiento. El punto **61** centraliza la planificación en `2.0.0`: las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 nunca se publicaron. Los puntos **62–66** unifican los ciclos de vida en `Scoped`; **67–70** completan el cambio de namespace y la simplificación de EFCore. El punto **71** añade `UnitOfWork` a `IEfRepository<T>`: afecta al compilador solo si el consumidor implementaba esas interfaces. El punto **72** retira el autocommit de las escrituras directas: esas llamadas ahora requieren `TryCommit[Async]` o `TryExecuteInTransaction[Async]` (**ruptura silenciosa**); `CrudServiceFp` conserva la persistencia automática. |
+| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82 | Renombrado masivo de la API y correcciones de comportamiento. El punto **61** centraliza la planificación en `2.0.0`: las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 nunca se publicaron. Los puntos **62–66** unifican los ciclos de vida en `Scoped`; **67–70** completan el cambio de namespace y la simplificación de EFCore. El punto **71** añade `UnitOfWork` a `IEfRepository<T>`: afecta al compilador solo si el consumidor implementaba esas interfaces. El punto **72** retira el autocommit de las escrituras directas: esas llamadas ahora requieren `TryCommit[Async]` o `TryExecuteInTransaction[Async]` (**ruptura silenciosa**); `CrudServiceFp` conserva la persistencia automática. Los puntos **73–74** cambian la respuesta a claves `null` y el momento de ejecución/captura de `TryGetData`/`TryAll` síncronos; **75** añade la operación ordenada para obtener una sola fila; **76** estabiliza las páginas con clave EF y deja fallar las entidades keyless; **77** cambia a `TEntity` el nombre genérico observable por reflexión; **78** retira el parámetro `ILogger<>` de cuatro constructores públicos REST; **79** normaliza las etiquetas de argumentos nombrados de los puentes de longitud y corrige tres mensajes `[Obsolete]`; **80** corrige los rangos de DataAnnotations para paginación, de modo que validación refleja los valores que los records normalizan; **81** cierra el genérico en tres mensajes de log de `HttpApiInvoker`; **82** mejora los textos de fallo al instanciar validadores y al interpretar claves compuestas. |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 | 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |

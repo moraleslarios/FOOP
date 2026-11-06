@@ -313,7 +313,7 @@ public class MlResultMapExtensionsTests
 
 
     [Fact]
-    public void MapIfFail_diferentReturnValue_failSource_ExecuteFuncFail()
+    public void MapIfFail_differentReturnValue_failSource_ExecuteFuncFail()
     {
 
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
@@ -327,7 +327,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public void MapIfFail_diferentReturnValue_validSource_ExecuteFuncValid()
+    public void MapIfFail_differentReturnValue_validSource_ExecuteFuncValid()
     {
 
         MlResult<int> partialResult = -1;
@@ -355,7 +355,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public async Task MapIfFailAsync_diferentReturnValue_validSourceAsync_failSource_ExecuteFuncFail()
+    public async Task MapIfFailAsync_differentReturnValue_validSourceAsync_failSource_ExecuteFuncFail()
     {
 
         Task<MlResult<int>> partialResultAsync = "Error".ToMlResultFailAsync<int>();
@@ -567,7 +567,7 @@ public class MlResultMapExtensionsTests
     #region MapIf
 
     [Fact]
-    public void MapIf_diferentTypes_validSource_compTrue_return_funcTrueResult()
+    public void MapIf_differentTypes_validSource_compTrue_return_funcTrueResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -581,7 +581,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public void MapIf_diferentTypes_validSource_compFalse_return_funcFalseResult()
+    public void MapIf_differentTypes_validSource_compFalse_return_funcFalseResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -622,7 +622,7 @@ public class MlResultMapExtensionsTests
 
 
     [Fact]
-    public async Task MapIfAsync_diferentTypes_validSource_compTrue_return_funcTrueResult()
+    public async Task MapIfAsync_differentTypes_validSource_compTrue_return_funcTrueResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -636,7 +636,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public async Task MapIfAsync_diferentTypes_validSource_compFalse_return_funcFalseResult()
+    public async Task MapIfAsync_differentTypes_validSource_compFalse_return_funcFalseResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -650,7 +650,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public async Task MapIfAsync_diferentTypes_validSource_compTrue_return_funcTrueAsyncResult()
+    public async Task MapIfAsync_differentTypes_validSource_compTrue_return_funcTrueAsyncResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -664,7 +664,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public async Task MapIfAsync_diferentTypes_validSource_compFalse_return_funcFalseAsyncResult()
+    public async Task MapIfAsync_differentTypes_validSource_compFalse_return_funcFalseAsyncResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -678,7 +678,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public async Task MapIfAsync_diferentTypes_validSource_compTrueAsync_return_funcTrueAsyncResult()
+    public async Task MapIfAsync_differentTypes_validSource_compTrueAsync_return_funcTrueAsyncResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -692,7 +692,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public async Task MapIfAsync_diferentTypes_validSource_compFalseAsync_return_funcFalseAsyncResult()
+    public async Task MapIfAsync_differentTypes_validSource_compFalseAsync_return_funcFalseAsyncResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -707,7 +707,7 @@ public class MlResultMapExtensionsTests
 
 
     [Fact]
-    public async Task MapIfAsync_sourceAsync_diferentTypes_validSource_compTrueAsync_return_funcTrueAsyncResult()
+    public async Task MapIfAsync_sourceAsync_differentTypes_validSource_compTrueAsync_return_funcTrueAsyncResult()
     {
         Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
 
@@ -721,7 +721,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public async Task MapIfAsync_sourceAsync_diferentTypes_validSource_compFalseAsync_return_funcFalseAsyncResult()
+    public async Task MapIfAsync_sourceAsync_differentTypes_validSource_compFalseAsync_return_funcFalseAsyncResult()
     {
         Task<MlResult<int>> partialResultAsync = 1.ToMlResultValidAsync();
 
@@ -850,7 +850,7 @@ public class MlResultMapExtensionsTests
 
 
   [Fact]
-    public void TryMapIf_diferentTypes_validSource_compTrue_return_funcTrueResult()
+    public void TryMapIf_differentTypes_validSource_compTrue_return_funcTrueResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -864,7 +864,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public void TryMapIf_diferentTypes_validSource_compFalse_return_funcFalseResult()
+    public void TryMapIf_differentTypes_validSource_compFalse_return_funcFalseResult()
     {
         MlResult<int> partialResult = 1;
 
@@ -878,7 +878,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public void TryMapIf_diferentTypes_failSource_returnFail()
+    public void TryMapIf_differentTypes_failSource_returnFail()
     {
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
 
@@ -890,7 +890,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public void TryMapIf_diferentTypes_validSource_compTrue_funcTrueResultThrowException_returnFail()
+    public void TryMapIf_differentTypes_validSource_compTrue_funcTrueResultThrowException_returnFail()
     {
         MlResult<int> partialResult = 1;
 
@@ -904,7 +904,7 @@ public class MlResultMapExtensionsTests
     }
 
     [Fact]
-    public void TryMapIf_diferentTypes_validSource_compTrue_funcFalseResultThrowException_returnFail()
+    public void TryMapIf_differentTypes_validSource_compTrue_funcFalseResultThrowException_returnFail()
     {
         MlResult<int> partialResult = -1;
 

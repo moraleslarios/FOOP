@@ -24,50 +24,50 @@ public static partial class Extensions
 
         string fullNameTipe = property.FullName.Split('`')[0];
 
-        object resultado = null;
+        object result = null;
 
         if (value != null)
         {
             switch (fullNameTipe)
             {
                 //case "System.DateTime": resultado = DateTime.Parse(value); break;
-                case "System.DateTime": resultado = ParseDateTimeInvariant(value); break;
-                case "System.Int32"   : resultado = int     .Parse(value); break;
-                case "System.Int16"   : resultado = short   .Parse(value); break;
-                case "System.Char"    : resultado = char    .Parse(value); break;
-                case "System.Double"  : resultado = double  .Parse(value); break;
-                case "System.Decimal" : resultado = decimal .Parse(value); break;
-                case "System.Int64"   : resultado = long    .Parse(value); break;
-                case "System.SByte"   : resultado = sbyte   .Parse(value); break;
-                case "System.Byte"    : resultado = byte    .Parse(value); break;
-                case "System.UInt16"  : resultado = ushort  .Parse(value); break;
-                case "System.UInt32"  : resultado = uint    .Parse(value); break;
-                case "System.UInt64"  : resultado = ulong   .Parse(value); break;
-                case "System.Boolean" : resultado = bool    .Parse(value); break;
-                case "System.Single"  : resultado = float   .Parse(value); break;
+                case "System.DateTime": result = ParseDateTimeInvariant(value); break;
+                case "System.Int32"   : result = int     .Parse(value); break;
+                case "System.Int16"   : result = short   .Parse(value); break;
+                case "System.Char"    : result = char    .Parse(value); break;
+                case "System.Double"  : result = double  .Parse(value); break;
+                case "System.Decimal" : result = decimal .Parse(value); break;
+                case "System.Int64"   : result = long    .Parse(value); break;
+                case "System.SByte"   : result = sbyte   .Parse(value); break;
+                case "System.Byte"    : result = byte    .Parse(value); break;
+                case "System.UInt16"  : result = ushort  .Parse(value); break;
+                case "System.UInt32"  : result = uint    .Parse(value); break;
+                case "System.UInt64"  : result = ulong   .Parse(value); break;
+                case "System.Boolean" : result = bool    .Parse(value); break;
+                case "System.Single"  : result = float   .Parse(value); break;
 
-                case "System.String"  : resultado = value.ToString(); break;
+                case "System.String"  : result = value.ToString(); break;
 
                 case "System.Nullable":
-                    string tipoDelNulable = property.FullName.Split('`')[1];
+                    string nullableTypeName = property.FullName.Split('`')[1];
 
                     //if (tipoDelNulable.Contains("System.DateTime")) resultado = string.IsNullOrEmpty(value) ? null : (DateTime?)DateTime.Parse(value);
-                    if (tipoDelNulable.Contains("System.DateTime")) resultado = ParseDateTimeInvariant(value); 
-                    if (tipoDelNulable.Contains("System.Int32"   )) resultado = string.IsNullOrEmpty(value) ? null : (int?     )int     .Parse(value);
-                    if (tipoDelNulable.Contains("System.Int16"   )) resultado = string.IsNullOrEmpty(value) ? null : (short?   )short   .Parse(value);
-                    if (tipoDelNulable.Contains("System.Char"    )) resultado = string.IsNullOrEmpty(value) ? null : (char?    )char    .Parse(value);
-                    if (tipoDelNulable.Contains("System.Double"  )) resultado = string.IsNullOrEmpty(value) ? null : (double?  )double  .Parse(value);
-                    if (tipoDelNulable.Contains("System.Decimal" )) resultado = string.IsNullOrEmpty(value) ? null : (decimal? )decimal .Parse(value);
-                    if (tipoDelNulable.Contains("System.Int64"   )) resultado = string.IsNullOrEmpty(value) ? null : (long?    )long    .Parse(value);
-                    if (tipoDelNulable.Contains("System.SByte"   )) resultado = string.IsNullOrEmpty(value) ? null : (sbyte?   )sbyte   .Parse(value);
-                    if (tipoDelNulable.Contains("System.Byte"    )) resultado = string.IsNullOrEmpty(value) ? null : (byte?    )byte    .Parse(value);
-                    if (tipoDelNulable.Contains("System.UInt16"  )) resultado = string.IsNullOrEmpty(value) ? null : (ushort?  )ushort  .Parse(value);
-                    if (tipoDelNulable.Contains("System.UInt32"  )) resultado = string.IsNullOrEmpty(value) ? null : (uint?    )uint    .Parse(value);
-                    if (tipoDelNulable.Contains("System.UInt64"  )) resultado = string.IsNullOrEmpty(value) ? null : (ulong?   )ulong   .Parse(value);
-                    if (tipoDelNulable.Contains("System.Boolean" )) resultado = string.IsNullOrEmpty(value) ? null : (bool?    )bool    .Parse(value);
-                    if (tipoDelNulable.Contains("System.Single"  )) resultado = string.IsNullOrEmpty(value) ? null : (float?   )float   .Parse(value);
+                    if (nullableTypeName.Contains("System.DateTime")) result = ParseDateTimeInvariant(value);
+                    if (nullableTypeName.Contains("System.Int32"   )) result = string.IsNullOrEmpty(value) ? null : (int?     )int     .Parse(value);
+                    if (nullableTypeName.Contains("System.Int16"   )) result = string.IsNullOrEmpty(value) ? null : (short?   )short   .Parse(value);
+                    if (nullableTypeName.Contains("System.Char"    )) result = string.IsNullOrEmpty(value) ? null : (char?    )char    .Parse(value);
+                    if (nullableTypeName.Contains("System.Double"  )) result = string.IsNullOrEmpty(value) ? null : (double?  )double  .Parse(value);
+                    if (nullableTypeName.Contains("System.Decimal" )) result = string.IsNullOrEmpty(value) ? null : (decimal? )decimal .Parse(value);
+                    if (nullableTypeName.Contains("System.Int64"   )) result = string.IsNullOrEmpty(value) ? null : (long?    )long    .Parse(value);
+                    if (nullableTypeName.Contains("System.SByte"   )) result = string.IsNullOrEmpty(value) ? null : (sbyte?   )sbyte   .Parse(value);
+                    if (nullableTypeName.Contains("System.Byte"    )) result = string.IsNullOrEmpty(value) ? null : (byte?    )byte    .Parse(value);
+                    if (nullableTypeName.Contains("System.UInt16"  )) result = string.IsNullOrEmpty(value) ? null : (ushort?  )ushort  .Parse(value);
+                    if (nullableTypeName.Contains("System.UInt32"  )) result = string.IsNullOrEmpty(value) ? null : (uint?    )uint    .Parse(value);
+                    if (nullableTypeName.Contains("System.UInt64"  )) result = string.IsNullOrEmpty(value) ? null : (ulong?   )ulong   .Parse(value);
+                    if (nullableTypeName.Contains("System.Boolean" )) result = string.IsNullOrEmpty(value) ? null : (bool?    )bool    .Parse(value);
+                    if (nullableTypeName.Contains("System.Single"  )) result = string.IsNullOrEmpty(value) ? null : (float?   )float   .Parse(value);
 
-                    if (tipoDelNulable.Contains("System.String")) resultado = value;
+                    if (nullableTypeName.Contains("System.String")) result = value;
 
                     break;
 
@@ -77,7 +77,7 @@ public static partial class Extensions
         }
 
 
-        return resultado;
+        return result;
     }
 
 
@@ -126,7 +126,7 @@ public static partial class Extensions
     /// <param name="ex">Excepción capturada.</param>
     /// <param name="ids">Identificadores de las entidades.</param>
     /// <returns>Representación textual obtenida.</returns>
-    public static string BuildKeyParseErrorMessage(this Exception ex, string ids) => $"{ids} not be extract values of pkFields. Ids string array not converted to pkFields. ex: {ex.Message}";
+    public static string BuildKeyParseErrorMessage(this Exception ex, string ids) => $"The key values '{ids}' could not be parsed as a comma-separated primary key. {ex.Message}";
 
 
 

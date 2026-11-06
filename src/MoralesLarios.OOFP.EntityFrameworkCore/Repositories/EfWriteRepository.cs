@@ -7,22 +7,20 @@ using MoralesLarios.OOFP.Types.Errors;
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Representa <c>EfWriteRepository</c>.
+/// Delegates entity-write operations to focused repository collaborators.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfWriteRepository<T, TContext> : EfRepository, IEfWriteRepository<T>
-    where T : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TContext">The EF Core context type.</typeparam>
+public class EfWriteRepository<TEntity, TContext> : EfRepository, IEfWriteRepository<TEntity>
+    where TEntity : class
     where TContext : DbContext
 {
-    internal readonly IEfCreateRepository<T> _repoAdderFp;
-    internal readonly IEfDeleteRepository<T> _repoDeleterFp;
-    internal readonly IEfUpdateRepository<T> _repoUpdaterFp;
+    internal readonly IEfCreateRepository<TEntity> _repoAdderFp;
+    internal readonly IEfDeleteRepository<TEntity> _repoDeleterFp;
+    internal readonly IEfUpdateRepository<TEntity> _repoUpdaterFp;
 
-    /// <summary>
-    /// Representa <c>EfWriteRepository</c>.
-    /// </summary>
-    /// <param name="dbContext">Contexto de datos.</param>
+    /// <summary>Initializes a write repository for the specified context.</summary>
+    /// <param name="dbContext">The context shared by the repository collaborators.</param>
     public EfWriteRepository(TContext dbContext) : base(dbContext)
     {
         _repoAdderFp   = CreateAdder(dbContext);
@@ -31,189 +29,68 @@ public class EfWriteRepository<T, TContext> : EfRepository, IEfWriteRepository<T
     }
 
     /// <summary>
-    /// Crea el colaborador de creación, sobre el mismo <typeparamref name="TContext"/> del agregado.
-    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// Creates the entity-creation collaborator using the aggregate's context.
     /// </summary>
-    /// <param name="context">Contexto de datos compartido con el agregado.</param>
-    /// <returns>Instancia del colaborador de creación.</returns>
-    protected virtual IEfCreateRepository<T> CreateAdder(TContext context) => new EfCreateRepository<T, TContext>(context);
+    /// <param name="context">The context shared with the aggregate.</param>
+    /// <returns>The creation collaborator.</returns>
+    protected virtual IEfCreateRepository<TEntity> CreateAdder(TContext context) => new EfCreateRepository<TEntity, TContext>(context);
 
     /// <summary>
-    /// Crea el colaborador de borrado, sobre el mismo <typeparamref name="TContext"/> del agregado.
-    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// Creates the entity-removal collaborator using the aggregate's context.
     /// </summary>
-    /// <param name="context">Contexto de datos compartido con el agregado.</param>
-    /// <returns>Instancia del colaborador de borrado.</returns>
-    protected virtual IEfDeleteRepository<T> CreateDeleter(TContext context) => new EfDeleteRepository<T, TContext>(context);
+    /// <param name="context">The context shared with the aggregate.</param>
+    /// <returns>The removal collaborator.</returns>
+    protected virtual IEfDeleteRepository<TEntity> CreateDeleter(TContext context) => new EfDeleteRepository<TEntity, TContext>(context);
 
     /// <summary>
-    /// Crea el colaborador de actualización, sobre el mismo <typeparamref name="TContext"/> del agregado.
-    /// Sobrescribible para sustituir la implementación en pruebas.
+    /// Creates the entity-update collaborator using the aggregate's context.
     /// </summary>
-    /// <param name="context">Contexto de datos compartido con el agregado.</param>
-    /// <returns>Instancia del colaborador de actualización.</returns>
-    protected virtual IEfUpdateRepository<T> CreateUpdater(TContext context) => new EfUpdateRepository<T, TContext>(context);
+    /// <param name="context">The context shared with the aggregate.</param>
+    /// <returns>The update collaborator.</returns>
+    protected virtual IEfUpdateRepository<TEntity> CreateUpdater(TContext context) => new EfUpdateRepository<TEntity, TContext>(context);
 
 
 
 
-    /// <summary>
-    /// Añade el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryAdd(T item) => _repoAdderFp.TryAdd(item);
-    /// <summary>
-    /// Añade el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryAddAsync(T item, CancellationToken token = default) => await _repoAdderFp.TryAddAsync(item, token);
-    /// <summary>
-    /// Añade el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte en
-    /// un resultado fallido.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryAddRange(IEnumerable<T> items) => _repoAdderFp.TryAddRange(items);
-    /// <summary>
-    /// Añade el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte en
-    /// un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryAddRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoAdderFp.TryAddRangeAsync(items, token);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(T item) => _repoDeleterFp.TryRemove(item);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(params object[] keyValues) => _repoDeleterFp.TryRemove(keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoDeleterFp.TryRemove(notFoundErrorDetails, keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(T item, CancellationToken token = default) => await _repoDeleterFp.TryRemoveAsync(item, token);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues) => await _repoDeleterFp.TryRemoveAsync(token, keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoDeleterFp.TryRemoveAsync(notFoundErrorDetails, token, keyValues);
-    /// <summary>
-    /// Elimina el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryRemoveRange(IEnumerable<T> items) => _repoDeleterFp.TryRemoveRange(items);
-    /// <summary>
-    /// Elimina el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryRemoveRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoDeleterFp.TryRemoveRangeAsync(items, token);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item) => _repoUpdaterFp.TryUpdate(item);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item, params object[] keyValues) => _repoUpdaterFp.TryUpdate(item, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoUpdaterFp.TryUpdate(item, notFoundErrorDetails, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateAsync(item, token);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] keyValues) => await _repoUpdaterFp.TryUpdateAsync(item, token, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoUpdaterFp.TryUpdateAsync(item, notFoundErrorDetails, token, keyValues);
-    /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items) => _repoUpdaterFp.TryUpdateRange(items);
-    /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateRangeAsync(items, token);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryAdd(TEntity item) => _repoAdderFp.TryAdd(item);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryAddAsync(TEntity item, CancellationToken token = default) => await _repoAdderFp.TryAddAsync(item, token);
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryAddRange(IEnumerable<TEntity> items) => _repoAdderFp.TryAddRange(items);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryAddRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default) => await _repoAdderFp.TryAddRangeAsync(items, token);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryRemove(TEntity item) => _repoDeleterFp.TryRemove(item);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryRemove(params object[] keyValues) => _repoDeleterFp.TryRemove(keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryRemove(MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoDeleterFp.TryRemove(notFoundErrorDetails, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(TEntity item, CancellationToken token = default) => await _repoDeleterFp.TryRemoveAsync(item, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(CancellationToken token = default, params object[] keyValues) => await _repoDeleterFp.TryRemoveAsync(token, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryRemoveAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoDeleterFp.TryRemoveAsync(notFoundErrorDetails, token, keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryRemoveRange(IEnumerable<TEntity> items) => _repoDeleterFp.TryRemoveRange(items);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryRemoveRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default) => await _repoDeleterFp.TryRemoveRangeAsync(items, token);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item) => _repoUpdaterFp.TryUpdate(item);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item, params object[] keyValues) => _repoUpdaterFp.TryUpdate(item, keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item, MlErrorDetails notFoundErrorDetails, params object[] keyValues) => _repoUpdaterFp.TryUpdate(item, notFoundErrorDetails, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateAsync(item, token);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default, params object[] keyValues) => await _repoUpdaterFp.TryUpdateAsync(item, token, keyValues);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues) => await _repoUpdaterFp.TryUpdateAsync(item, notFoundErrorDetails, token, keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryUpdateRange(IEnumerable<TEntity> items) => _repoUpdaterFp.TryUpdateRange(items);
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryUpdateRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default) => await _repoUpdaterFp.TryUpdateRangeAsync(items, token);
 }
 

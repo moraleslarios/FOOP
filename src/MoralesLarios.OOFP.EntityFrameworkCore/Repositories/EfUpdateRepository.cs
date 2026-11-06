@@ -8,27 +8,26 @@ using MoralesLarios.OOFP.Types.Errors;
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 /// <summary>
-/// Representa <c>EfUpdateRepository</c>.
+/// Implements entity-update operations for an EF Core context.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(dbContext), IEfUpdateRepository<T>
-        where T        : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TContext">The EF Core context type.</typeparam>
+public class EfUpdateRepository<TEntity, TContext>(TContext dbContext) : EfRepository(dbContext), IEfUpdateRepository<TEntity>
+        where TEntity        : class
         where TContext : DbContext
 {
 
-    private static readonly string typeName = typeof(T).Name;
+    private static readonly string typeName = typeof(TEntity).Name;
 
 
 
 
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Marks an entity for update in the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item)
+    /// <param name="item">The entity to update.</param>
+    /// <returns>A successful result containing the entity, or a failed result.</returns>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item)
     {
         var result = EnsureFp.NotNull(item, "The entity item to update cannot be null")
                             .TryMap(x =>
@@ -41,31 +40,32 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
 
 
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds an entity by its primary-key values and marks it for update.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item, params object[] keyValues) => TryUpdate(item, null!, keyValues);
+    /// <param name="item">The entity to update.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A successful result containing the entity, or a failed result.</returns>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item, params object[] keyValues) => TryUpdate(item, null!, keyValues);
 
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
+    /// Finds an entity by its primary-key values and marks it for update, using the supplied not-found error details.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryUpdate(T item, MlErrorDetails notFoundErrorDetails, params object[] keyValues)
+    /// <param name="item">The entity to update.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when the entity is not found.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A successful result containing the entity, or a failed result.</returns>
+    public virtual MlResult<TEntity> TryUpdate(TEntity item, MlErrorDetails notFoundErrorDetails, params object[] keyValues)
     {
-        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+        var errorDetails = notFoundErrorDetails ?? (keyValues is null
+            ? "The object array pk cannot be null"
+            : $"{keyValues.FormatCompositeKey()} values not found data in {typeName}");
 
         var result = EnsureFp.NotNull  (item, "The entity item to update cannot be null")
-                                .Bind  ( _  => EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty"))
-                                .TryMap ( pk =>
+                                .Bind  (_  => EnsureFp.NotNull(keyValues, "The object array pk cannot be null"))
+                                .Bind  (validKeys => EnsureFp.NotEmptyCollection<object[], object>(validKeys!, "The object array pk cannot be empty"))
+                                .TryMap ( validKeys =>
                                 {
-                                    var found = GetContext().Set<T>().Find(keyValues);
+                                    var found = GetContext().Set<TEntity>().Find(validKeys);
                                     return found!;
                                 })
                                 .TryBind(x  => x.FailIfNull(errorDetails))
@@ -86,13 +86,12 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
 
 
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously marks an entity for update in the context. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default)
+    /// <param name="item">The entity to update.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the entity or a failed result.</returns>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(item, "The entity item to update cannot be null")
                             .TryMapAsync(async x =>
@@ -105,34 +104,35 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
 
 
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds an entity by its primary-key values and marks it for update.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual Task<MlResult<T>> TryUpdateAsync(T item, CancellationToken token = default, params object[] keyValues)
+    /// <param name="item">The entity to update.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the entity or a failed result.</returns>
+    public virtual Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, CancellationToken token = default, params object[] keyValues)
         => TryUpdateAsync(item, null!, token, keyValues);
 
     /// <summary>
-    /// Actualiza el elemento indicado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
+    /// Asynchronously finds an entity by its primary-key values and marks it for update, using the supplied not-found error details.
     /// </summary>
-    /// <param name="item">Elemento sobre el que se opera.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryUpdateAsync(T item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
+    /// <param name="item">The entity to update.</param>
+    /// <param name="notFoundErrorDetails">The error details returned when the entity is not found.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <param name="keyValues">The primary-key values, in the order defined by the EF model.</param>
+    /// <returns>A task containing the entity or a failed result.</returns>
+    public virtual async Task<MlResult<TEntity>> TryUpdateAsync(TEntity item, MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
     {
-        var errorDetails = notFoundErrorDetails ?? $"{keyValues.FormatCompositeKey()} values not found data in {typeName}";
+        var errorDetails = notFoundErrorDetails ?? (keyValues is null
+            ? "The object array pk cannot be null"
+            : $"{keyValues.FormatCompositeKey()} values not found data in {typeName}");
 
         var result = await EnsureFp.NotNullAsync( item, "The entity item to update cannot be null")
-                                    .BindAsync  ( _  => EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty"))
-                                    .TryMapAsync( async _ =>
+                                    .BindAsync  ( _  => EnsureFp.NotNullAsync(keyValues, "The object array pk cannot be null"))
+                                    .BindAsync  (validKeys => EnsureFp.NotEmptyCollection<object[], object>(validKeys!, "The object array pk cannot be empty"))
+                                    .TryMapAsync( async validKeys =>
                                     {
-                                        var found = await GetContext().Set<T>().FindAsync(keyValues, token);
+                                        var found = await GetContext().Set<TEntity>().FindAsync(validKeys, token);
                                         return found!;
                                     })
                                     .TryBindAsync( x => x.FailIfNullAsync(errorDetails))
@@ -153,12 +153,11 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     }
 
     /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
+    /// Marks a collection of entities for update. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryUpdateRange(IEnumerable<T> items)
+    /// <param name="items">The entities to update.</param>
+    /// <returns>A successful result containing the entities, or a failed result.</returns>
+    public virtual MlResult<IEnumerable<TEntity>> TryUpdateRange(IEnumerable<TEntity> items)
     {
         var result = EnsureFp.NotNull(items, "The entity items to update cannot be null")
                             .TryMap(x =>
@@ -170,13 +169,12 @@ public class EfUpdateRepository<T, TContext>(TContext dbContext) : EfRepository(
     }
 
     /// <summary>
-    /// Actualiza el elemento indicado de <c>Range</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
+    /// Asynchronously marks a collection of entities for update. Exceptions are returned as a failed result.
     /// </summary>
-    /// <param name="items">Elementos sobre los que se opera.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryUpdateRangeAsync(IEnumerable<T> items, CancellationToken token = default)
+    /// <param name="items">The entities to update.</param>
+    /// <param name="token">A token that can cancel the operation.</param>
+    /// <returns>A task containing the entities or a failed result.</returns>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryUpdateRangeAsync(IEnumerable<TEntity> items, CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(items, "The entity items to update cannot be null")
                             .TryMapAsync(async x =>

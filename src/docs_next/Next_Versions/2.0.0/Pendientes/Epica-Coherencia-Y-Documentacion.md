@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0
 > **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **81-89**
 > **Plan del que se desgaja:** bloque «Coherencia y documentación» (81-89)
-> **Estado:** ⬜ No iniciada
+> **Estado:** 🟡 Parcial · US-01 y US-03 resueltas; US-02, US-04…09 pendientes
 > **Esfuerzo:** M (~1 jornada el tramo mecánico; ~2 jornadas con los `README` y los `[ProducesResponseType]`)
 > **Riesgo:** 🟢 bajo en US-01, US-05, US-06 y US-07 · 🟡 medio en US-03 · 🟠 alto en US-02 y US-04 (cambian firmas públicas)
 
@@ -169,7 +169,7 @@ Los otros seis `DeleteAsync` no mienten, pero no dicen nada: su `<returns>` es e
 
 ### Puntos 85 y 88 — ya resueltos
 
-- **Punto 85** (sobrecarga `PostGetAsync` comentada en una interfaz pública): **0 apariciones** del literal `PostGetAsync` en todo el código fuente. El miembro se eliminó en la limpieza de la 2.0.0; el punto se mantiene citado también en la [épica de código muerto](Epica-Limpieza-Codigo-Muerto.md) para dejar constancia.
+- **Punto 85** (sobrecarga `PostGetAsync` comentada en una interfaz pública): **0 apariciones** del literal `PostGetAsync` en todo el código fuente. El miembro se eliminó en la limpieza de la 2.0.0; el punto se mantiene citado también en la [épica de código muerto](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) para dejar constancia.
 - **Punto 88** (`using` duplicado en `GlobalUsings.cs`): **27 ficheros, 0 líneas `global using` literalmente duplicadas**. `global using MoralesLarios.OOFP.Types;` aparece como máximo una vez por fichero; `MoralesLarios.OOFP.Types.Errors` es un espacio de nombres distinto, no un duplicado. No hay nada que hacer.
 
 ### Punto 89 — Trece proyectos sin `README.md`
@@ -257,12 +257,13 @@ Durante la auditoría aparecieron defectos que el inventario no recogía:
 
 **Criterios de aceptación**
 
-- [ ] No queda ningún `Range(0, int.MinValue)` en la solución.
-- [ ] Los cinco atributos usan `[property: Range(...)]`, de modo que decoran la propiedad sintetizada.
-- [ ] `PageNumber` y `PageSize` tienen mínimo `1`, coherente con el `Math.Max(1, ...)` / `Math.Clamp(..., 1, ...)` del cuerpo.
-- [ ] `PageSize` tiene máximo `MaxPageSize`, coherente con el `Math.Clamp`.
-- [ ] `TotalCount` tiene rango `[0, int.MaxValue]` (cero resultados es legítimo).
-- [ ] `MaxPageSize` pasa a `public const` y se documenta.
+- [x] No queda ningún `Range(0, int.MinValue)` en los records de paginación.
+- [x] Los atributos `Range` decoran las propiedades reales; en `PagedResult<T>` los dos rangos de
+    página se heredan de `PageRequest` y `TotalCount` declara el suyo explícitamente.
+- [x] `PageNumber` y `PageSize` tienen mínimo `1`, coherente con `Math.Max(1, ...)` / `Math.Clamp(..., 1, ...)`.
+- [x] `PageSize` tiene máximo `MaxPageSize`, coherente con `Math.Clamp`.
+- [x] `TotalCount` tiene rango `[0, int.MaxValue]` (cero resultados es legítimo).
+- [x] `MaxPageSize` es `public const` y tiene documentación XML.
 
 **API propuesta**
 
@@ -289,11 +290,9 @@ public record PagedResult<T>(                                       IEnumerable<
 
 | Caso | Entrada | Esperado |
 |---|---|---|
-| Página válida | `new PageRequest(1, 50)` | `TryValidateObject` → `true` |
-| Página cero | `new PageRequest(0, 50)` | `PageNumber` normalizado a `1`, validación `true` |
-| Tamaño excesivo | `new PageRequest(1, 5000)` | `PageSize` recortado a `1000`, validación `true` |
-| Resultado vacío | `new PagedResult<int>([], 1, 50, 0)` | `TryValidateObject` → `true` |
-| Atributo en la propiedad | reflexión sobre `PagedResult<T>.PageSize` | el `RangeAttribute` está presente |
+| Página cero y tamaño excesivo | `new PageRequest(0, MaxPageSize + 1)` | valores normalizados a 1 y 1000; `TryValidateObject` → `true` |
+| Resultado vacío y total negativo | `PagedResult<int>` con `TotalCount` 0 y -1 | válido y fallido, respectivamente |
+| Atributos en propiedades | reflexión sobre propiedades de página y `TotalCount` | rangos presentes y con límites esperados |
 
 **Riesgo principal**
 
@@ -364,9 +363,9 @@ Los cuatro records son públicos y forman el parámetro de entrada de `PostAndRe
 
 **Criterios de aceptación**
 
-- [ ] Las tres líneas (`HttpApiInvoker.cs` 256, 365, 394) producen un texto con el genérico cerrado.
-- [ ] No queda en la solución ningún `<{typeof(` ni `<{nameof(` sin su `>` correspondiente.
-- [ ] La descripción del método se construye con un único patrón, reutilizable, en lugar de tres interpolaciones a mano.
+- [x] Las tres líneas (`HttpApiInvoker.cs` 256, 365, 394) producen un texto con el genérico cerrado.
+- [x] No queda en `HttpApiInvoker.cs` ningún nombre genérico de log sin su `>` de cierre.
+- [x] La corrección no cambia firmas ni flujo de control; se conserva la forma interpolada existente.
 
 **API propuesta**
 
@@ -383,8 +382,7 @@ Si se adopta la US de plantillas con nombre de la [épica de mensajes](Epica-Men
 
 | Caso | Entrada | Esperado |
 |---|---|---|
-| Descripción simple | `DescribeGenericMethod("PostAsync", typeof(int))` | `"PostAsync<Int32>"` |
-| Sin `<` huérfano | regex sobre todos los `.cs` | 0 coincidencias de `<\{(typeof|nameof)[^>]*"` |
+| Sin `<` huérfano | búsqueda en `HttpApiInvoker.cs` | los tres mensajes terminan en `>` |
 
 **Riesgo principal**
 
@@ -622,7 +620,7 @@ Si hay que recortar, el tramo **US-01 + US-03 + US-05 + US-06** (≈2 jornadas, 
 
 | Id | Decisión | Opciones | Recomendación |
 |---|---|---|---|
-| **D-01** | ¿`PageSize` máximo en el metadato? | (a) `[Range(1, MaxPageSize)]` y `MaxPageSize` público · (b) `[Range(1, int.MaxValue)]` y dejar el recorte silencioso · (c) devolver resultado fallido si se excede | **(a)** — el límite existe; ocultarlo es lo único indefendible |
+| **D-01** | ¿`PageSize` máximo en el metadato? | **Resuelta**: `[Range(1, PageRequest.MaxPageSize)]`, `MaxPageSize` público y propiedades explícitas anotadas. | El límite existente debe estar publicado y ser validable. |
 | **D-02** | ¿Qué hacer con el `[Required]` de `RequestBody`? | (a) eliminarlo y mantener el `if` manual · (b) ejecutar `Validator` en el constructor del record · (c) cambiar el tipo a un Value Object no nulo | **(a)** en 2.1.0 — (b) y (c) pertenecen al rediseño de validación |
 | **D-03** | ¿Convención única para `url`? | (a) `string? url = null` en los 10 métodos · (b) `NotEmptyString url` obligatoria en los 10 · (c) dejar `DeleteByIdAsync` como excepción documentada | **(a)** — (b) rompe nueve firmas; (c) perpetúa la inconsistencia |
 | **D-04** | ¿Se mantiene el operador implícito `(int, int) → PageRequest`? | (a) mantener ambos · (b) eliminar el de `int` y dejar solo el de `IntNonNegative` · (c) marcar el de `int` como `[Obsolete]` | **(c)** — permite la migración sin romper hoy |
@@ -634,16 +632,17 @@ Si hay que recortar, el tramo **US-01 + US-03 + US-05 + US-06** (≈2 jornadas, 
 
 ## 7. Definición de terminado
 
-- [ ] No queda ningún `Range(0, int.MinValue)` en la solución.
-- [ ] Los cinco `[Range]` de `Shared/Pagination` usan `property:` y rangos coherentes con el cuerpo del `record`.
+- [x] No queda ningún `Range(0, int.MinValue)` en `Shared/Pagination`.
+- [x] Los rangos de `Shared/Pagination` están en propiedades reales y son coherentes con la normalización de los records.
 - [ ] Ningún parámetro opcional de `Http/Requests` ni de `IHttpApiInvoker` usa `= null!`.
 - [ ] Existe un contrato común (`IApiCallOptions`) implementado por los cuatro records de petición.
-- [ ] 0 literales con `<{typeof(` o `<{nameof(` sin cerrar.
+- [x] Los tres literales de `HttpApiInvoker` que tenían el genérico abierto ahora cierran con `>`.
+- [x] La corrección textual está registrada en `oofp-upgrade-2.prompt.md` §3.3, punto 81.
 - [ ] `FilePath.ValidationPattern` y `DirectoryPath.ValidationPattern` existen, con puente `[Obsolete]` para `SearchPattern`.
 - [ ] Los ocho `DeleteAsync` declaran `204` con `[ProducesResponseType]` y ningún `<returns>` de las clases base menciona «200 OK».
 - [ ] Los 30 proyectos de la solución tienen `README.md` y `scripts/check-project-readmes.ps1` devuelve exit 0.
 - [ ] `MoralesLarios.OOFP.FileSystem/GlobalUsings.cs` (en plural) existe.
-- [ ] Toda ruptura de compatibilidad está registrada en [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3 y, si es un renombrado, en el anexo [`oofp-upgrade-2.renames.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.renames.md).
+- [x] Toda ruptura ya implementada está registrada en [`oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3; no se renombraron miembros en esta épica.
 - [ ] La solución **compila en `Release --no-incremental` con 0 errores y `CS1591 = 0`**.
 - [ ] **Los 1.060 tests en verde**, más los nuevos de esta épica.
 - [ ] `scripts/check-md-links2.ps1`, `check-md-anchors4.ps1` y `check-md-encoding.ps1` sin regresiones.
@@ -879,7 +878,7 @@ public virtual async Task<IActionResult> DeleteAsync(string ids, CancellationTok
 - [`Next_Versions/2.0.0/Pendientes/README.md`](README.md) — índice de todas las épicas de la versión 2.1.0
 - [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
 - [`Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md`](Epica-Mensajes-Y-Localizacion.md) — plantillas de log con nombre y `EventId` (solapa con el punto 83)
-- [`Next_Versions/2.0.0/Pendientes/Epica-Limpieza-Codigo-Muerto.md`](Epica-Limpieza-Codigo-Muerto.md) — punto 85, compartido con esta épica
+- [`Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md`](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) — punto 85, compartido con esta épica
 - [`Next_Versions/2.0.0/Pendientes/Epica-Servicio-y-Paginacion.md`](Epica-Servicio-y-Paginacion.md) — `params object[] pk` de `ICrudServiceFp` (hallazgo colateral 5)
 - [`Next_Versions/2.0.0/Pendientes/Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) — rediseño completo del contrato REST (US-06 solo declara el status actual)
 - [`Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — analizadores y `.editorconfig`

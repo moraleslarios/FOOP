@@ -4,19 +4,16 @@
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 /// <summary>
-/// Clase base de los repositorios funcionales sobre Entity Framework Core.
+/// Base class for functional repositories that use Entity Framework Core.
 /// </summary>
 /// <remarks>
-/// El repositorio <b>no es dueño</b> del <see cref="DbContext"/> que recibe: lo gestiona el
-/// contenedor de dependencias, que lo libera al cerrar el ámbito. Por eso esta clase no implementa
-/// <c>IDisposable</c>.
+/// The repository does not own the <see cref="DbContext"/> it receives. The dependency-injection
+/// container manages and disposes the context when its scope ends, so this class does not implement
+/// <see cref="IDisposable"/>.
 /// </remarks>
 public class EfRepository(DbContext dbContext) : IGetContextable
 {
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Context</c>.
-    /// </summary>
-    /// <returns>Valor de tipo <c>DbContext</c> obtenido por la operación.</returns>
+    /// <inheritdoc/>
     public DbContext GetContext() => dbContext;
 
 }

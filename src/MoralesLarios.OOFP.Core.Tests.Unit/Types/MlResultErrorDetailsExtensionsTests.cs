@@ -40,7 +40,7 @@ public class MlResultErrorDetailsExtensionsTests
 
 
     [Fact]
-    public void GetDetail_keyExist_diferentTypeOfT_return_fail()
+    public void GetDetail_keyExist_differentTypeOfT_return_fail()
     {
         MlErrorDetails errors1 = ("miError", new Dictionary<string, object> 
                                             { 
@@ -99,7 +99,7 @@ public class MlResultErrorDetailsExtensionsTests
 
 
     [Fact]
-    public void MergeErrorsDetailsIfFail_sourceValid_secuondaryFal_return_source()
+    public void MergeErrorsDetailsIfFail_sourceValid_secondaryFail_return_source()
     {
         MlResult<int> partialResult = 1;
 
@@ -126,7 +126,7 @@ public class MlResultErrorDetailsExtensionsTests
 
 
     [Fact]
-    public void MergeErrorsDetailsIfFailDioferentTypes_sourceValid_secuondaryFal_return_source()
+    public void MergeErrorsDetailsIfFailDifferentTypes_sourceValid_secondaryFail_return_source()
     {
         MlResult<int> partialResult = 1;
 
@@ -138,7 +138,7 @@ public class MlResultErrorDetailsExtensionsTests
     }
 
     [Fact]
-    public void MergeErrorsDetailsIfFailDioferentTypes_sourceFAil_secondaryValid_return_source()
+    public void MergeErrorsDetailsIfFailDifferentTypes_sourceFail_secondaryValid_return_source()
     {
         MlResult<int> partialResult = "Error".ToMlResultFail<int>();
 

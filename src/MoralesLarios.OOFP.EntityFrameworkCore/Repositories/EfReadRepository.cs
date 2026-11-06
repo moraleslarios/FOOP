@@ -8,232 +8,207 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore.Repositories;
 
 
 /// <summary>
-/// Representa <c>EfReadRepository</c>.
+/// Implements entity-read operations for an EF Core context.
 /// </summary>
-/// <typeparam name="T">Tipo del valor transportado por el resultado.</typeparam>
-/// <typeparam name="TContext">Tipo del contexto de datos.</typeparam>
-public class EfReadRepository<T, TContext>(TContext dbContext) : EfRepository(dbContext), IEfReadRepository<T>
-    where T        : class
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TContext">The EF Core context type.</typeparam>
+public class EfReadRepository<TEntity, TContext>(TContext dbContext) : EfRepository(dbContext), IEfOrderedReadRepository<TEntity>
+    where TEntity        : class
     where TContext : DbContext
 {
 
-    private static readonly string typeName = typeof(T).Name;
+    private static readonly string typeName = typeof(TEntity).Name;
 
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues)
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFind(MlErrorDetails notFoundErrorDetails, params object[] keyValues)
     {
         var result = EnsureFp.NotNull(keyValues, "The object array pk cannot be null")
                                 .TryMap (x => EnsureFp.NotEmpty(keyValues, "The object array pk cannot be empty"))
-                                .TryMap (x => GetContext().Set<T>().Find(keyValues)!) 
+                                .TryMap (x => GetContext().Set<TEntity>().Find(keyValues)!)
                                 .TryBind(x => x.FailIfNull(notFoundErrorDetails));
         return result;
     }
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFind(params object[] keyValues)
-        => TryFind($"{keyValues.FormatCompositeKey()} values not found data in {typeName}", keyValues);
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFind(params object[] keyValues)
+        => EnsureFp.NotNull(keyValues, "The object array pk cannot be null")
+                   .Bind(validKeys => TryFind(
+                       $"{validKeys.FormatCompositeKey()} values not found data in {typeName}", validKeys));
 
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryFindAsync(MlErrorDetails notFoundErrorDetails, CancellationToken token = default, params object[] keyValues)
     {
         var result = await EnsureFp.NotNullAsync(keyValues, "The object array pk cannot be null")
                                     .TryMapAsync (x => EnsureFp.NotEmptyAsync(keyValues, "The object array pk cannot be empty"))
-                                    .TryMapAsync (async x => (await GetContext().Set<T>().FindAsync(keyValues, token))!) 
+                                    .TryMapAsync (async x => (await GetContext().Set<TEntity>().FindAsync(keyValues, token))!)
                                     .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
         return result;
     }
 
-    /// <summary>
-    /// Busca el elemento solicitado. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <param name="keyValues">Colección de <c>keyValues</c>.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual Task<MlResult<T>> TryFindAsync(CancellationToken token = default, params object[] keyValues)
-        => TryFindAsync($"{keyValues.FormatCompositeKey()} values not found data in {typeName}", token, keyValues);
+    /// <inheritdoc/>
+    public virtual Task<MlResult<TEntity>> TryFindAsync(CancellationToken token = default, params object[] keyValues)
+        => EnsureFp.NotNullAsync(keyValues, "The object array pk cannot be null")
+                   .BindAsync(validKeys => TryFindAsync(
+                       $"{validKeys.FormatCompositeKey()} values not found data in {typeName}", token, validKeys));
 
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails)
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFirst(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails)
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
-                                .TryMap (x => GetContext().Set<T>().FirstOrDefault(filter)!)
+                                .TryMap (x => GetContext().Set<TEntity>().FirstOrDefault(filter)!)
                                 .TryBind(x => x.FailIfNull(notFoundErrorDetails));
         return result;
     }
 
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryFirst(Expression<Func<T, bool>> filter)
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryFirst(Expression<Func<TEntity, bool>> filter)
         => TryFirst(filter, $"The query did not return any elements");
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default!)
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryFirstAsync(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default!)
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
-                                    .TryMapAsync (async x => (await GetContext().Set<T>().FirstOrDefaultAsync(filter, token))!) 
+                                    .TryMapAsync (async x => (await GetContext().Set<TEntity>().FirstOrDefaultAsync(filter, token))!)
                                     .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
         return result;
     }
 
-    /// <summary>
-    /// Obtiene el primer elemento. Captura cualquier excepción producida y la convierte en un resultado
-    /// fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual Task<MlResult<T>> TryFirstAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
+    /// <inheritdoc/>
+    public virtual Task<MlResult<TEntity>> TryFirstAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default!)
         => TryFirstAsync(filter, $"The query did not return any elements", token);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryGetLast(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails)
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryGetLast(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails)
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
-                                .TryMap (x => GetContext().Set<T>().AsNoTracking().Where(filter).AsEnumerable().LastOrDefault()!)
+                                .TryMap (x => GetContext().Set<TEntity>().AsNoTracking().Where(filter).AsEnumerable().LastOrDefault()!)
                                 .TryBind(x => x.FailIfNull(notFoundErrorDetails));
 
         return result;
     }
 
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<T> TryGetLast(Expression<Func<T, bool>> filter)
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryGetLast(Expression<Func<TEntity, bool>> filter)
         => TryGetLast(filter, $"The query did not return any elements");
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="notFoundErrorDetails">Valor de <c>notFoundErrorDetails</c>.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<T>> TryGetLastAsync(Expression<Func<T, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default!)
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryGetLastAsync(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default!)
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
-                                    .TryMapAsync (async x => (await GetContext().Set<T>().AsNoTracking().Where(filter).ToListAsync(token)).LastOrDefault()!)
+                                    .TryMapAsync (async x => (await GetContext().Set<TEntity>().AsNoTracking().Where(filter).ToListAsync(token)).LastOrDefault()!)
                                     .TryBindAsync(x => x.FailIfNullAsync(notFoundErrorDetails));
 
         return result;
     }
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Last</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual Task<MlResult<T>> TryGetLastAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
+    /// <inheritdoc/>
+    public virtual Task<MlResult<TEntity>> TryGetLastAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default!)
         => TryGetLastAsync(filter, $"The query did not return any elements", token);
 
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryGetLastBy(Expression<Func<TEntity, bool>> filter,
+                                             Expression<Func<TEntity, object>> orderByField,
+                                             SortDirection orderBy = SortDirection.Ascending)
+        => TryGetLastBy(filter, orderByField, "The query did not return any elements", orderBy);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Data</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryGetData(Expression<Func<T, bool>> filter)
+    /// <inheritdoc/>
+    public virtual MlResult<TEntity> TryGetLastBy(Expression<Func<TEntity, bool>> filter,
+                                             Expression<Func<TEntity, object>> orderByField,
+                                             MlErrorDetails notFoundErrorDetails,
+                                             SortDirection orderBy = SortDirection.Ascending)
     {
         var result = EnsureFp.NotNull(filter, "The filter cannot be null")
-                                .TryMap(x => (IEnumerable<T>)GetContext().Set<T>().AsNoTracking().Where(filter));
+            .TryMap(validFilter =>
+            {
+                if (orderByField is null)
+                    throw new ArgumentNullException(nameof(orderByField));
+
+                return GetContext().Set<TEntity>()
+                .AsNoTracking()
+                .Where(validFilter)
+                .OrderByStableForPagination(GetContext(), Reverse(orderBy), orderByField)
+                .FirstOrDefault()!;
+            })
+            .TryBind(item => item.FailIfNull(notFoundErrorDetails));
 
         return result;
     }
 
+    /// <inheritdoc/>
+    public virtual Task<MlResult<TEntity>> TryGetLastByAsync(Expression<Func<TEntity, bool>> filter,
+                                                        Expression<Func<TEntity, object>> orderByField,
+                                                        SortDirection orderBy = SortDirection.Ascending,
+                                                        CancellationToken token = default)
+        => TryGetLastByAsync(filter, orderByField, "The query did not return any elements", orderBy, token);
 
-    /// <summary>
-    /// Obtiene el elemento solicitado de <c>Data</c>. Captura cualquier excepción producida y la convierte
-    /// en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="filter">Expresión de filtrado aplicada a la consulta.</param>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryGetDataAsync(Expression<Func<T, bool>> filter, CancellationToken token = default!)
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<TEntity>> TryGetLastByAsync(Expression<Func<TEntity, bool>> filter,
+                                                              Expression<Func<TEntity, object>> orderByField,
+                                                              MlErrorDetails notFoundErrorDetails,
+                                                              SortDirection orderBy = SortDirection.Ascending,
+                                                              CancellationToken token = default)
     {
         var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
-                                    .TryMapAsync(async x => (IEnumerable<T>)await GetContext().Set<T>().AsNoTracking().Where(filter).ToListAsync(token));
+            .TryMapAsync(async validFilter =>
+            {
+                if (orderByField is null)
+                    throw new ArgumentNullException(nameof(orderByField));
+
+                return (await GetContext().Set<TEntity>()
+                .AsNoTracking()
+                .Where(validFilter)
+                .OrderByStableForPagination(GetContext(), Reverse(orderBy), orderByField)
+                .FirstOrDefaultAsync(token))!;
+            })
+            .TryBindAsync(item => item.FailIfNullAsync(notFoundErrorDetails));
+
+        return result;
+    }
+
+    private static SortDirection Reverse(SortDirection direction)
+        => direction == SortDirection.Ascending ? SortDirection.Descending : SortDirection.Ascending;
+
+
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryGetData(Expression<Func<TEntity, bool>> filter)
+    {
+        var result = EnsureFp.NotNull(filter, "The filter cannot be null")
+                                .TryMap(x => (IEnumerable<TEntity>)GetContext().Set<TEntity>().AsNoTracking().Where(filter).ToList());
 
         return result;
     }
 
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido.
-    /// </summary>
-    /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual MlResult<IEnumerable<T>> TryAll()
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryGetDataAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default!)
     {
-        var result = MlResult<IEnumerable<T>>._
-                            .TryMap(x => (IEnumerable<T>)GetContext().Set<T>().AsNoTracking());
+        var result = await EnsureFp.NotNullAsync(filter, "The filter cannot be null")
+                                    .TryMapAsync(async x => (IEnumerable<TEntity>)await GetContext().Set<TEntity>().AsNoTracking().Where(filter).ToListAsync(token));
 
         return result;
     }
 
 
-    /// <summary>
-    /// Indica si todos los elementos cumplen la condición. Captura cualquier excepción producida y la
-    /// convierte en un resultado fallido. Versión asíncrona.
-    /// </summary>
-    /// <param name="token">Token para cancelar la operación.</param>
-    /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
-    public virtual async Task<MlResult<IEnumerable<T>>> TryAllAsync(CancellationToken token = default!)
+    /// <inheritdoc/>
+    public virtual MlResult<IEnumerable<TEntity>> TryAll()
     {
-        var result = await MlResult<IEnumerable<T>>._
-                                .TryMapAsync(async x => (IEnumerable<T>)await GetContext().Set<T>().AsNoTracking().ToListAsync(token));
+        var result = MlResult<IEnumerable<TEntity>>._
+                            .TryMap(x => (IEnumerable<TEntity>)GetContext().Set<TEntity>().AsNoTracking().ToList());
+
+        return result;
+    }
+
+
+    /// <inheritdoc/>
+    public virtual async Task<MlResult<IEnumerable<TEntity>>> TryAllAsync(CancellationToken token = default!)
+    {
+        var result = await MlResult<IEnumerable<TEntity>>._
+                                .TryMapAsync(async x => (IEnumerable<TEntity>)await GetContext().Set<TEntity>().AsNoTracking().ToListAsync(token));
 
         return result;
     }

@@ -4,8 +4,7 @@
 /// Representa <c>CompositeKeyRestClientFp</c>.
 /// </summary>
 /// <typeparam name="TDto">Tipo del objeto de transferencia de datos.</typeparam>
-public class CompositeKeyRestClientFp<TDto>(ILogger<CompositeKeyRestClientFp<TDto>> _logger,
-                                      IRestClientFp<TDto>                _genClientFp) : ICompositeKeyRestClientFp<TDto>
+public class CompositeKeyRestClientFp<TDto>(IRestClientFp<TDto> _genClientFp) : ICompositeKeyRestClientFp<TDto>
 {
 
 
@@ -187,8 +186,7 @@ public class CompositeKeyRestClientFp<TDto>(ILogger<CompositeKeyRestClientFp<TDt
 /// </summary>
 /// <typeparam name="TRequest">Tipo de la petición.</typeparam>
 /// <typeparam name="TResponse">Tipo de la respuesta.</typeparam>
-public class CompositeKeyRestClientFp<TRequest, TResponse>(ILogger<CompositeKeyRestClientFp<TRequest, TResponse>> _logger,
-                                                     IRestClientFp<TRequest, TResponse>                _genClientFp) : ICompositeKeyRestClientFp<TRequest, TResponse>
+public class CompositeKeyRestClientFp<TRequest, TResponse>(IRestClientFp<TRequest, TResponse> _genClientFp) : ICompositeKeyRestClientFp<TRequest, TResponse>
 {
 
 

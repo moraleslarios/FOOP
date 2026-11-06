@@ -9,12 +9,18 @@ namespace MoralesLarios.OOFP.Shared.Pagination;
 /// <param name="PageNumber">Valor de <c>PageNumber</c>.</param>
 /// <param name="PageSize">Valor de <c>PageSize</c>.</param>
 /// <param name="TotalCount">Valor de <c>TotalCount</c>.</param>
-public record PagedResult<T>(                         IEnumerable<T> Items, 
-                                      [Range(0, int.MaxValue)] int            PageNumber,
-                                      [Range(0, int.MinValue)] int            PageSize, 
-                                      [Range(0, int.MinValue)] int            TotalCount) 
+public record PagedResult<T>(                         IEnumerable<T> Items,
+                                                  int            PageNumber,
+                                                  int            PageSize,
+                                                  int            TotalCount)
     : PageRequest(PageNumber, PageSize)
 {
+    /// <summary>
+    /// Gets the total number of matching items.
+    /// </summary>
+    [Range(0, int.MaxValue)]
+    public int TotalCount { get; init; } = TotalCount;
+
     /// <summary>
     /// Realiza la conversión implícita a <c>PagedResult&lt;T&gt;</c>.
     /// </summary>
