@@ -50,12 +50,12 @@ por ejemplo, `MoralesLarios.OOFP.Application` y `MoralesLarios.OOFP.AspNetCore.R
 |---------|------|-----------|
 | `Web/` | [`WebErrorDetailsKeys`](#3-weberrordetailskeys) | Claves del diccionario `Details` usadas en el flujo HTTP |
 
-El proyecto es deliberadamente **mínimo**: `net8.0`, sin `PackageReference` y
+El proyecto es deliberadamente **mínimo**: `net11.0`, sin `PackageReference` y
 **sin ningún `ProjectReference`**. Es la hoja del grafo de dependencias.
 
 ```text
 MoralesLarios.OOFP.Shared/
-├── MoralesLarios.OOFP.Shared.csproj   # net8.0, sin dependencias
+├── MoralesLarios.OOFP.Shared.csproj   # net11.0, sin dependencias
 └── Web/
     └── WebErrorDetailsKeys.cs         # claves de Details del flujo web
 ```

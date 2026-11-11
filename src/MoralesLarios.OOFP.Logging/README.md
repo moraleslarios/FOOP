@@ -80,10 +80,10 @@ public Task<MlResult<Pedido>> Crear(CrearPedidoDto dto)
 
 | Dependencia | Para qué |
 |---|---|
-| `Microsoft.Extensions.Logging.Abstractions` (8.0.1) | `ILogger`, `LogLevel` |
+| `Microsoft.Extensions.Logging.Abstractions` (11.0.0) | `ILogger`, `LogLevel` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | `MlResult<T>`, `MlErrorDetails`, `Match`, `Bind` |
 
-Destino: **`net8.0`**. Versión del paquete: **2.3.0**.
+Destino: **`net11.0`**. Versión del paquete: **2.0.0**.
 
 ```csharp
 using Microsoft.Extensions.Logging;

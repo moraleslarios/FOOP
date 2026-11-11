@@ -81,13 +81,13 @@ public Task<MlResult<Vino>> RenombrarAsync(int id, string nombre, CancellationTo
 
 | Dependencia | Versión | Para qué |
 |---|---|---|
-| `Microsoft.EntityFrameworkCore` | 8.0.3 | `DbContext`, `DbSet<T>`, `ToListAsync` |
-| `Microsoft.Extensions.DependencyInjection.Abstractions` | 8.0.0 | `IServiceCollection` y resolución de servicios |
+| `Microsoft.EntityFrameworkCore` | 11.0.0 | `DbContext`, `DbSet<T>`, `ToListAsync` |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 11.0.0 | `IServiceCollection` y resolución de servicios |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `EnsureFp`, `TryMap`, `FailIfNull` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | `PageRequest`, `PagedResult<T>` |
 | [`MoralesLarios.OOFP.ValueObjects`](../MoralesLarios.OOFP.ValueObjects/README.md) | — | `IntNonNegative` (conversiones de paginación) |
 
-Destino: **`net8.0`**. Versión del paquete: **2.0.0**.
+Destino: **`net11.0`**. Versión del paquete: **2.0.0**.
 
 `Microsoft.Extensions.DependencyInjection.Abstractions` se declara directamente porque `AddOofpRepositories` expone `IServiceCollection` en su API pública.
 

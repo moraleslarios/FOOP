@@ -106,9 +106,14 @@ dotnet add <PROYECTO.csproj> package <PAQUETE> --version 2.0.0
   edita **ahí** las versiones y deja los `<PackageReference>` sin atributo `Version`.
 - Si el repo usa `packages.config` (proyectos antiguos), migra con el gestor de NuGet; avisa al usuario
   porque `dotnet add package` no funciona ahí.
-- **Target framework**: la 2.0.0 requiere **`net8.0` o superior**. Si algún proyecto apunta a `net6.0`/`net7.0`
-  o a `netstandard2.x`, **detente** y avisa: *"El proyecto X apunta a `<TFM>`; MoralesLarios.OOFP 2.0.0
-  requiere net8.0 o superior. Actualiza el TFM antes de continuar."*
+- **Target framework**: OOFP 2.0.0 publica activos `net11.0` y deja de ser compatible con TFM
+  anteriores. Como parte de la migración, todos los proyectos .NET de la solución (bibliotecas,
+  aplicaciones, pruebas, muestras y herramientas), no solo los que referencian OOFP, deben quedar en
+  **`net11.0`**. Inventaría `<TargetFramework>` y `<TargetFrameworks>` en cada `.csproj` y las
+  propiedades centralizadas; en proyectos multitarjet, deja únicamente `net11.0`. Actualiza
+  `global.json` y CI si fijan un SDK anterior; actualiza imágenes de contenedor y paquetes
+  `Microsoft.Extensions.*`, `Microsoft.AspNetCore.*` y `Microsoft.EntityFrameworkCore.*` a versiones
+  11.x compatibles. Confirma que `dotnet --version` selecciona SDK 11; si no, detente y avisa.
 - Tras esta fase, ejecuta `dotnet restore`. **No compiles todavía** (habrá cientos de errores; es lo esperado).
 
 ---
@@ -415,6 +420,8 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 80 | Metadatos de validación de `PageRequest` y `PagedResult<T>` corregidos (**2.0.0**) | rangos imposibles en `PageRequest` y `PagedResult<T>` hacían que DataAnnotations rechazara entradas válidas; atributos de `PagedResult<T>` decoraban parámetros, no propiedades | `PageNumber` y `PageSize` reflejan los límites normalizados; `TotalCount` acepta cero y rechaza negativos; `MaxPageSize` se expone como constante | **Contrato de validación** (cambia el resultado de `Validator.TryValidateObject`) |
 | 81 | Se cierran tres nombres genéricos en los logs de `HttpApiInvoker` (**2.0.0**) | `DeleteByIdAsync<T`, `PostAsync<T` y `ActionEmptyAsync<T` omitían el cierre del genérico | los tres mensajes terminan en `>` | **Contrato textual** (cambia el contenido del log; no cambia ninguna firma) |
 | 82 | Mensajes de validación y parseo de clave compuesta mejorados (**2.0.0**) | el mensaje del validador automático era inglés ininteligible; el error de parseo filtraba `pkFields` y no explicaba el formato | mensajes gramaticales explican la causa y la acción/formato esperado | ⚠️ **Contrato · SILENCIOSA** (cambia el texto de errores visible al consumidor) |
+| 83 | Las lecturas EFCore crean error fallback si `notFoundErrorDetails` es nulo (**2.0.0**) | una consulta sin coincidencias podía devolver `IsFailure` con `FailureDetails = null` | `TryFind`, `TryFirst`, `TryGetLast` y `TryGetLastBy` sustituyen el valor nulo por detalles de error estándar | **Contrato defensivo** (el fallo vuelve a contener detalles válidos; sin cambio de firma) |
+| 84 | Los paquetes OOFP 2.0.0 pasan a exigir `net11.0` | los paquetes exponían activos `net8.0`/`net9.0` y admitían consumidores con TFM anteriores | los paquetes exponen solo activos `net11.0`; todos los proyectos .NET del consumidor deben actualizarse | **Restauración/compilación** (`NU1202` con un TFM anterior) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -2248,6 +2255,63 @@ ValidateWithFluentValidation|BuildKeyParseErrorMessage|Problems with automatic c
 Revisa las coincidencias que comparen el texto completo y actualízalas a la nueva redacción. No
 cambian las firmas de los métodos ni el resultado de validación.
 
+#### 83 — Las lecturas EFCore toleran detalles not-found nulos (2.0.0)
+
+Los overloads de lectura que aceptan `MlErrorDetails notFoundErrorDetails` podían recibir `null!`.
+Cuando la consulta no encontraba una entidad, `FailIfNull[Async]` producía un `MlResult` fallido cuyo
+`FailureDetails` también era `null`, de modo que cualquier consumidor que inspeccionara los errores
+podía fallar después con `NullReferenceException`. Ahora se usa un mensaje fallback cuando los
+detalles personalizados son nulos; si se proporcionan detalles, se conservan sin cambios.
+
+```csharp
+// ANTES: IsFailure era true, pero TryGetErrors devolvía null.
+var result = await repository.TryGetLastAsync(filter, notFoundErrorDetails: null!);
+
+// AHORA: el resultado fallido siempre contiene un MlErrorDetails utilizable.
+var result = await repository.TryGetLastAsync(filter, notFoundErrorDetails: null!);
+result.TryGetErrors(out var details); // true y details no es null
+```
+
+**Qué revisar:** normalmente no hay que cambiar llamadas. Si alguna pasaba explícitamente `null`
+como detalle not-found, ahora recibirá el mensaje fallback (la misma semántica que el overload sin
+detalles) en vez de un fallo malformado. Las firmas públicas no cambian.
+
+Busca las llamadas y los tests relevantes:
+
+```regex
+Try(?:Find|First|GetLast|GetLastBy)(?:Async)?\s*\(|notFoundErrorDetails\s*:\s*null
+```
+
+Revisa únicamente las coincidencias que usen el overload con detalles personalizados y pasen `null`;
+confirma que el resultado sigue siendo fallido y que `TryGetErrors` entrega detalles no nulos.
+
+#### 84 — Los paquetes OOFP 2.0.0 requieren .NET 11
+
+Los paquetes de la 2.0.0 ya no incluyen activos para `net8.0`, `net9.0` ni `net10.0`. Un consumidor
+que mantenga uno de esos TFM recibirá `NU1202` al restaurar; no basta con actualizar solo el proyecto
+que contiene la referencia directa a OOFP.
+
+```xml
+<!-- ANTES -->
+<TargetFramework>net8.0</TargetFramework>
+
+<!-- AHORA -->
+<TargetFramework>net11.0</TargetFramework>
+```
+
+**Qué hacer:** actualiza a `net11.0` todos los proyectos .NET del consumidor (producción, pruebas,
+muestras y herramientas), incluidos los que solo los referencian mediante `ProjectReference`.
+Actualiza las dependencias Microsoft a versiones 11.x compatibles, el SDK fijado en `global.json`,
+CI y las imágenes de contenedor que sigan una versión anterior. Comprueba que el entorno dispone del
+SDK 11 antes de continuar. Verifica que el hardware de destino cumple las nuevas bases (x86/x64
+requiere x86-64-v2; Windows Arm64 requiere LSE) y revisa las rupturas .NET 11 aplicables al
+consumidor, en especial E/S síncrona de Cosmos, streams de compresión vacíos, validación TAR/ZIP y
+excepciones no controladas de `BackgroundService`.
+
+**Cómo detectarlo:** busca `TargetFramework`, `TargetFrameworks`, `net8.0`, `net9.0`, `net10.0` y
+`NU1202` en todos los proyectos, props, configuración de CI y restore logs. No dejes TFM anteriores
+ni omitas proyectos de tests, muestras o herramientas.
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -2289,6 +2353,8 @@ dotnet build --nologo /p:WarningLevel=4
 ## Fase 5 — Verificación
 
 1. **Compilación limpia**:
+  Antes, confirma en todos los `.csproj` y propiedades centralizadas que cada proyecto .NET apunta a
+  `net11.0`, incluidos los que no estén dentro de la solución y los proyectos de herramientas.
    ```powershell
    dotnet build --nologo
    ```
@@ -2598,6 +2664,8 @@ dotnet build --nologo /p:WarningLevel=4
   Para el punto **80**, busca `PageRequest|PagedResult\s*<|Validator\.TryValidateObject|RangeAttribute`; revisa validaciones y reflexiones sobre los rangos, el tamaño máximo y `TotalCount`.
   Para el punto **81**, busca `DeleteByIdAsync|PostAsync|ActionEmptyAsync` en los tests, filtros y snapshots de logs; actualiza solo las expectativas de los tres mensajes que ahora cierran el genérico con `>`.
   Para el punto **82**, busca `ValidateWithFluentValidation|BuildKeyParseErrorMessage|Problems with automatic create instance|not be extract values of pkFields`; actualiza tests, snapshots y consumidores que comparaban literalmente los mensajes.
+  Para el punto **83**, busca `Try(?:Find|First|GetLast|GetLastBy)(?:Async)?\s*\(|notFoundErrorDetails\s*:\s*null`; si se pasaba `null` como detalles not-found, confirma que `TryGetErrors` devuelve `MlErrorDetails` no nulos.
+  Para el punto **84**, busca `TargetFramework|net8\.0|net9\.0|net10\.0|NU1202`; confirma que todos los proyectos .NET, incluidos los que están fuera de la solución, apuntan a `net11.0`.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -2608,16 +2676,19 @@ dotnet build --nologo /p:WarningLevel=4
 
 ## Fase 6 — Informe final (OBLIGATORIO)
 
-En el apartado 5 del informe, incluye también el punto **79**: indica si había argumentos nombrados en los puentes de longitud, qué etiquetas se actualizaron y confirma que se conservaron los métodos puente, las llamadas posicionales y la alternativa `CreateFromLength` de los tres avisos. Incluye el punto **80** indicando si el consumidor validaba `PageRequest` o `PagedResult<T>` con DataAnnotations, qué expectativas cambian y si dependía de los límites `[1, 1000]` para página y tamaño. Para el punto **81**, indica si tests, filtros o snapshots comparaban literalmente los tres logs y confirma que, si existían, se actualizaron para incluir `>`. Para el punto **82**, indica si el consumidor comparaba los mensajes de creación automática del validador o de parseo de clave compuesta y confirma que se actualizaron las expectativas al nuevo texto.
+En el apartado 5 del informe, incluye también el punto **79**: indica si había argumentos nombrados en los puentes de longitud, qué etiquetas se actualizaron y confirma que se conservaron los métodos puente, las llamadas posicionales y la alternativa `CreateFromLength` de los tres avisos. Incluye el punto **80** indicando si el consumidor validaba `PageRequest` o `PagedResult<T>` con DataAnnotations, qué expectativas cambian y si dependía de los límites `[1, 1000]` para página y tamaño. Para el punto **81**, indica si tests, filtros o snapshots comparaban literalmente los tres logs y confirma que, si existían, se actualizaron para incluir `>`. Para el punto **82**, indica si el consumidor comparaba los mensajes de creación automática del validador o de parseo de clave compuesta y confirma que se actualizaron las expectativas al nuevo texto. Para el punto **83**, indica si se pasaba explícitamente `null` como `notFoundErrorDetails` y confirma que el fallo resultante ahora conserva detalles no nulos.
+
+Para el punto **84**, indica cuántos proyectos .NET se actualizaron, sus TFM anteriores y confirma que no quedan proyectos, referencias Microsoft, SDKs de CI o imágenes de contenedor en versiones anteriores a .NET 11; informa también si el hardware de destino y las rupturas de comportamiento .NET 11 aplican al consumidor.
 
 Entrega al usuario, **en español**, un informe con:
 
 1. **Paquetes**: tabla de antiguo → nuevo → versión instalada, por proyecto.
-2. **Ficheros modificados**: número total y desglose por proyecto.
+2. **Ficheros modificados**: número total y desglose por proyecto; incluye la tabla de todos los proyectos
+  .NET con su TFM anterior y el `net11.0` final, e indica los cambios de SDK, CI y paquetes asociados.
 3. **Cambios de nomenclatura aplicados**: número total y los 10 más frecuentes.
 4. **Cambios semánticos revisados** (sección 3.2): qué se encontró y qué se hizo en cada caso.
 5. **Cambios de comportamiento revisados** (sección 3.3): tabla con los puntos 17, 27, 28, 29, 31, 32, 34, 35,
-    36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, 45, 46, 47, 48 y 49, y los puntos 62, 63 y 64 del ciclo de vida, además de los puntos **73, 74, 75, 76, 77, 78, 79, 80, 81 y 82** de EFCore/Http/ValueObjects, indicando, para cada uno, si **afecta** al proyecto, qué se
+    36, 37, —si migras a la 2.1.1— 38, 39, 40, 41, 42 y 43 y —si migras a la 2.2.0— 44, 45, 46, 47, 48 y 49, y los puntos 62, 63 y 64 del ciclo de vida, además de los puntos **73, 74, 75, 76, 77, 78, 79, 80, 81, 82 y 83** de EFCore/Http/ValueObjects, indicando, para cada uno, si **afecta** al proyecto, qué se
    cambió y **qué debe validar el usuario** (en especial: URL emitidas, cabecera `Location`, `type` de
    `ProblemDetails`, resultados paginados y el texto de los mensajes de error por defecto). Para el
    punto **40**, enumera **explícitamente** las cuatro verificaciones silenciosas del punto 4 de la
@@ -2734,7 +2805,8 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 
 | Versión | Puntos de la 3.3 | Resumen de la ruptura |
 | --- | --- | --- |
-| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82 | Renombrado masivo de la API y correcciones de comportamiento. El punto **61** centraliza la planificación en `2.0.0`: las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 nunca se publicaron. Los puntos **62–66** unifican los ciclos de vida en `Scoped`; **67–70** completan el cambio de namespace y la simplificación de EFCore. El punto **71** añade `UnitOfWork` a `IEfRepository<T>`: afecta al compilador solo si el consumidor implementaba esas interfaces. El punto **72** retira el autocommit de las escrituras directas: esas llamadas ahora requieren `TryCommit[Async]` o `TryExecuteInTransaction[Async]` (**ruptura silenciosa**); `CrudServiceFp` conserva la persistencia automática. Los puntos **73–74** cambian la respuesta a claves `null` y el momento de ejecución/captura de `TryGetData`/`TryAll` síncronos; **75** añade la operación ordenada para obtener una sola fila; **76** estabiliza las páginas con clave EF y deja fallar las entidades keyless; **77** cambia a `TEntity` el nombre genérico observable por reflexión; **78** retira el parámetro `ILogger<>` de cuatro constructores públicos REST; **79** normaliza las etiquetas de argumentos nombrados de los puentes de longitud y corrige tres mensajes `[Obsolete]`; **80** corrige los rangos de DataAnnotations para paginación, de modo que validación refleja los valores que los records normalizan; **81** cierra el genérico en tres mensajes de log de `HttpApiInvoker`; **82** mejora los textos de fallo al instanciar validadores y al interpretar claves compuestas. |
+| 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83 | Renombrado masivo de la API y correcciones de comportamiento. El punto **61** centraliza la planificación en `2.0.0`: las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 nunca se publicaron. Los puntos **62–66** unifican los ciclos de vida en `Scoped`; **67–70** completan el cambio de namespace y la simplificación de EFCore. El punto **71** añade `UnitOfWork` a `IEfRepository<T>`: afecta al compilador solo si el consumidor implementaba esas interfaces. El punto **72** retira el autocommit de las escrituras directas: esas llamadas ahora requieren `TryCommit[Async]` o `TryExecuteInTransaction[Async]` (**ruptura silenciosa**); `CrudServiceFp` conserva la persistencia automática. Los puntos **73–74** cambian la respuesta a claves `null` y el momento de ejecución/captura de `TryGetData`/`TryAll` síncronos; **75** añade la operación ordenada para obtener una sola fila; **76** estabiliza las páginas con clave EF y deja fallar las entidades keyless; **77** cambia a `TEntity` el nombre genérico observable por reflexión; **78** retira el parámetro `ILogger<>` de cuatro constructores públicos REST; **79** normaliza las etiquetas de argumentos nombrados de los puentes de longitud y corrige tres mensajes `[Obsolete]`; **80** corrige los rangos de DataAnnotations para paginación, de modo que validación refleja los valores que los records normalizan; **81** cierra el genérico en tres mensajes de log de `HttpApiInvoker`; **82** mejora los textos de fallo al instanciar validadores y al interpretar claves compuestas; **83** evita resultados fallidos con `FailureDetails = null` si se pasa `null` a los overloads read not-found.
+| 2.0.0 (TFM) | 84 | Los paquetes requieren `net11.0`; actualiza todos los proyectos del consumidor, sus dependencias Microsoft y el SDK. |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 | 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |

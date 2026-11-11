@@ -71,20 +71,20 @@ Si la clave falta, el `Fail` dice: `No value found configured with the key 'Api:
 
 | Dependencia | Versión | Para qué |
 |---|---|---|
-| `Microsoft.Extensions.Configuration` | 9.0.2 | `ConfigurationBuilder` |
-| `Microsoft.Extensions.Configuration.Abstractions` | 9.0.2 | `IConfiguration`, `GetConnectionString` |
-| `Microsoft.Extensions.Configuration.Binder` | 9.0.2 | 🔑 `GetValue<T>()` — la conversión de tipos |
-| `Microsoft.Extensions.DependencyInjection.Abstractions` | 9.0.2 | `IServiceCollection` |
+| `Microsoft.Extensions.Configuration` | 11.0.0 | `ConfigurationBuilder` |
+| `Microsoft.Extensions.Configuration.Abstractions` | 11.0.0 | `IConfiguration`, `GetConnectionString` |
+| `Microsoft.Extensions.Configuration.Binder` | 11.0.0 | 🔑 `GetValue<T>()` — la conversión de tipos |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 11.0.0 | `IServiceCollection` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `EnsureFp`, `MapEnsure` |
 
-Destino: **`net8.0`**. Versión del paquete: **1.0.2**. Genera paquete NuGet al compilar (`GeneratePackageOnBuild`).
+Destino: **`net11.0`**. Versión del paquete: **2.0.0**. Genera paquete NuGet al compilar (`GeneratePackageOnBuild`).
 
 ```csharp
 using MoralesLarios.OOFP.Configuration;          // RegisterServices
 using MoralesLarios.OOFP.Configuration.Config;   // IMlConfigurationReader
 ```
 
-> ⚠️ **Las dependencias son 9.0.2 pero el destino es `net8.0`.** Funciona (los paquetes 9.x soportan `net8.0`), pero si tu aplicación fija las de la versión 8.x tendrás que resolver la unificación de versiones.
+Las dependencias Microsoft y el TFM están alineados en la versión 11.
 
 ---
 

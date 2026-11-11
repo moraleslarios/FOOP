@@ -89,12 +89,12 @@ public class VinosController(ICrudServiceFp<Vino, VinoDto> _service)
 | Dependencia | Versión | Para qué |
 |---|---|---|
 | `Mapster` | 7.4.0 | 🔑 `Adapt<T>()`, el mapeo entidad ⇄ DTO |
-| `Microsoft.Extensions.Configuration.Abstractions` | 9.0.6 | ⚠️ Declarada pero **no se usa** |
+| `Microsoft.Extensions.Configuration.Abstractions` | 11.0.0 | ⚠️ Declarada pero **no se usa** |
 | [`MoralesLarios.OOFP.EntityFrameworkCore`](../MoralesLarios.OOFP.EntityFrameworkCore/README.md) | — | 🔑 `IEfRepository<TEntity>`, `ParseKeyValues` |
 | [`MoralesLarios.OOFP.Logging`](../MoralesLarios.OOFP.Logging/README.md) | — | 🔑 `LogMlResultInformationAsync`, `LogCompletedResultAsync` |
 | [`MoralesLarios.OOFP.Shared`](../MoralesLarios.OOFP.Shared/README.md) | — | Tipos internos compartidos |
 
-Destino: **`net8.0`**. Versión del paquete: **1.0.10**.
+Destino: **`net11.0`**. Versión del paquete: **2.0.0**.
 
 > ⚠️ **Arrastra `EntityFrameworkCore` como dependencia obligatoria.** El servicio depende de `IEfRepository<TEntity>` en el constructor, así que **no puedes usar esta capa con otro tipo de persistencia** (Dapper, MongoDB, un servicio remoto…) sin implementar tú `IEfRepository<T>`.
 

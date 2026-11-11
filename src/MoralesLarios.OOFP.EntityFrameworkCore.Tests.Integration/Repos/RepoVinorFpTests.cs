@@ -11,7 +11,7 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration.Repos;
 /// Pruebas de integración de los repositorios de Entity Framework Core sobre <c>TestDbContext</c>,
 /// usando exclusivamente la API pública de las 8 interfaces funcionales (sin <c>RegisterServices.GetRepository</c>).
 /// </summary>
-public class RepoVinorFpTests(IVinosRepo                    _sut,
+public class RepositoryWorkflowIntegrationTests(IVinosRepo                    _sut,
                                IEfReadRepository<Vino>       _vinosReadRepo,
                                IEfCreateRepository<Vino>     _vinosCreateRepo,
                                IEfUpdateRepository<Vino>     _vinosUpdateRepo,
@@ -115,41 +115,83 @@ public class RepoVinorFpTests(IVinosRepo                    _sut,
     }
 
     [Fact]
-    public async Task TryUpdateYTryRemove_ClavesNulas_DevuelvenFalloSinLanzar()
+    public void TryUpdate_NullKeyArray_ReturnsFailure()
     {
         object[] keyValues = null!;
-        var item = CreateUniqueVino(Guid.NewGuid().ToString("N"));
-        var results = new List<MlResult<Vino>>();
-        var exceptions = new List<Exception?>
-        {
-            Record.Exception(() => results.Add(_vinosUpdateRepo.TryUpdate(item, keyValues))),
-            await Record.ExceptionAsync(async () =>
-                results.Add(await _vinosUpdateRepo.TryUpdateAsync(item, CancellationToken.None, keyValues))),
-            Record.Exception(() => results.Add(_vinosDeleteRepo.TryRemove(keyValues))),
-            await Record.ExceptionAsync(async () =>
-                results.Add(await _vinosDeleteRepo.TryRemoveAsync(CancellationToken.None, keyValues)))
-        };
 
-        exceptions.Should().OnlyContain(exception => exception == null);
-        results.Should().HaveCount(4);
-        results.Should().OnlyContain(result => result.IsFailure);
+        var result = _vinosUpdateRepo.TryUpdate(CreateUniqueVino(Guid.NewGuid().ToString("N")), keyValues);
+
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be null");
     }
 
     [Fact]
-    public async Task Repositorios_ClavesVacias_DevuelvenFallo()
+    public async Task TryUpdateAsync_NullKeyArray_ReturnsFailure()
     {
-        var emptyKeys = Array.Empty<object>();
+        object[] keyValues = null!;
+
+        var result = await _vinosUpdateRepo.TryUpdateAsync(
+            CreateUniqueVino(Guid.NewGuid().ToString("N")), CancellationToken.None, keyValues);
+
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be null");
+    }
+
+    [Fact]
+    public void TryRemove_NullKeyArray_ReturnsFailure()
+    {
+        object[] keyValues = null!;
+
+        var result = _vinosDeleteRepo.TryRemove(keyValues);
+
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be null");
+    }
+
+    [Fact]
+    public async Task TryRemoveAsync_NullKeyArray_ReturnsFailure()
+    {
+        object[] keyValues = null!;
+
+        var result = await _vinosDeleteRepo.TryRemoveAsync(CancellationToken.None, keyValues);
+
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be null");
+    }
+
+    [Fact]
+    public async Task TryFind_EmptyKeyArray_ReturnsFailure()
+    {
+        var syncResult = _vinosReadRepo.TryFind(Array.Empty<object>());
+        var asyncResult = await _vinosReadRepo.TryFindAsync(default, Array.Empty<object>());
+
+        syncResult.IsFailure.Should().BeTrue();
+        asyncResult.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TryUpdate_EmptyKeyArray_ReturnsFailure()
+    {
         var item = CreateUniqueVino(Guid.NewGuid().ToString("N"));
+        var syncResult = _vinosUpdateRepo.TryUpdate(item, Array.Empty<object>());
+        var asyncResult = await _vinosUpdateRepo.TryUpdateAsync(item, CancellationToken.None, Array.Empty<object>());
 
-        var find = _vinosReadRepo.TryFind(emptyKeys);
-        var findAsync = await _vinosReadRepo.TryFindAsync(default, emptyKeys);
-        var update = _vinosUpdateRepo.TryUpdate(item, emptyKeys);
-        var updateAsync = await _vinosUpdateRepo.TryUpdateAsync(item, CancellationToken.None, emptyKeys);
-        var remove = _vinosDeleteRepo.TryRemove(emptyKeys);
-        var removeAsync = await _vinosDeleteRepo.TryRemoveAsync(CancellationToken.None, emptyKeys);
+        syncResult.IsFailure.Should().BeTrue();
+        asyncResult.IsFailure.Should().BeTrue();
+        syncResult.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be empty");
+        asyncResult.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be empty");
+    }
 
-        new[] { find, findAsync, update, updateAsync, remove, removeAsync }
-            .Should().OnlyContain(result => result.IsFailure);
+    [Fact]
+    public async Task TryRemove_EmptyKeyArray_ReturnsFailure()
+    {
+        var syncResult = _vinosDeleteRepo.TryRemove(Array.Empty<object>());
+        var asyncResult = await _vinosDeleteRepo.TryRemoveAsync(CancellationToken.None, Array.Empty<object>());
+
+        syncResult.IsFailure.Should().BeTrue();
+        asyncResult.IsFailure.Should().BeTrue();
+        syncResult.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be empty");
+        asyncResult.GetFailureDetailsOrThrow().ToString().Should().Contain("The object array pk cannot be empty");
     }
 
     [Fact]

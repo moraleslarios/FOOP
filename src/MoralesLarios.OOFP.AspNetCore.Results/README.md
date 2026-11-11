@@ -85,7 +85,7 @@ Referencias de proyecto:
 | `MoralesLarios.OOFP.Shared` | `PageRequest` (resultado de `GetPageRequest`) |
 | `MoralesLarios.OOFP.ValueObjects` | `MemberName`, `NotEmptyString`, `IntNonNegative` (tipos de las cabeceras) |
 
-> ⚠️ **Aviso sobre el paquete NuGet.** El proyecto compila contra `net8.0` pero referencia `Microsoft.AspNetCore.Mvc.Core` **2.1.0**, un paquete de la era .NET Core 2.1. En una aplicación ASP.NET Core moderna eso genera duplicidad de ensamblados y advertencias de resolución: lo correcto sería `<FrameworkReference Include="Microsoft.AspNetCore.App" />`. Ver [Particularidades reales del código fuente](#️-particularidades-reales-del-código-fuente).
+> El proyecto apunta a `net11.0` y obtiene MVC mediante `<FrameworkReference Include="Microsoft.AspNetCore.App" />`; no referencia el antiguo paquete NuGet `Microsoft.AspNetCore.Mvc.Core` 2.x.
 
 `GlobalUsings.cs` ya expone, sin que tengas que importar nada:
 
@@ -509,7 +509,7 @@ Métodos que expone (todos obsoletos): `ToRepoGetActionResult` (+2 `Async`), `To
 
 Cosas que **no** deducirías de las firmas y que conviene conocer antes de apoyarte en este proyecto:
 
-1. **`Microsoft.AspNetCore.Mvc.Core` 2.1.0 sobre `net8.0`.** El `.csproj` referencia un paquete NuGet de la era .NET Core 2.1. En una app ASP.NET Core moderna esto puede producir advertencias de resolución y ensamblados duplicados. Lo correcto sería `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
+1. **MVC llega por el framework compartido.** `Microsoft.AspNetCore.App` proporciona MVC con la versión del runtime .NET 11.
 
 2. **El paquete no registra servicios.** No existe `RegisterServices`. Si buscas un `AddOOFPWebApi()`, no lo hay: todo son extensiones estáticas.
 
@@ -856,7 +856,7 @@ return resultado.ToOkProblemDetailsResult();
 6. **`HttpRequestPaginationExtensions`** cierra el círculo en la dirección de entrada: cabeceras HTTP → *value objects* validados dentro del raíl.
 7. **`MlResultActionResultExtensionsLegacy` está obsoleta al completo** y contiene defectos reales; migra con la tabla de la sección correspondiente.
 8. **No hay `RegisterServices`**: basta con referenciar el proyecto, todo son extensiones estáticas.
-9. **Puntos a vigilar**: paquete MVC 2.1.0 sobre `net8.0`, `type` y `Location` con valores literales del autor, nomenclatura asimétrica en POST y el contrato por reflexión con `MlProblemDetails`.
+9. **Puntos a vigilar**: `type` y `Location` con valores literales del autor, nomenclatura asimétrica en POST y el contrato por reflexión con `MlProblemDetails`.
 
 ---
 

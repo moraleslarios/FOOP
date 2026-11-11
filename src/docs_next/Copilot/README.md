@@ -93,7 +93,7 @@ te entregará un informe final.
 | Fase | Acción |
 | --- | --- |
 | **0** | Reconocimiento: verifica git limpio, inventaría referencias, captura línea base de build y crea rama `chore/oofp-upgrade-2`. |
-| **1** | Paquetes NuGet: `dotnet remove`/`dotnet add` de los 14 paquetes renombrados + subida de versión del resto. Valida que el TFM sea `net8.0`+. |
+| **1** | Paquetes NuGet: `dotnet remove`/`dotnet add` de los 14 paquetes renombrados + subida de versión del resto. Actualiza todos los proyectos .NET a `net11.0`. |
 | **2** | `using` y namespaces: 13 namespaces raíz + 4 internos, aplicados de más largo a más corto. |
 | **3** | API: 231 renombrados que rompen + 187 con puente `[Obsolete]`, más 9 bloques de **cambios semánticos** que requieren revisión manual. |
 | **4** | Compilación iterativa: resuelve `CS0246` → `CS0234` → `CS0117`/`CS1061` → `CS0618`. |
@@ -106,8 +106,9 @@ te entregará un informe final.
 
 1. **Confirma tu trabajo en git.** El prompt lo comprueba, pero más vale prevenir: la migración toca
    muchos ficheros.
-2. **Requisito de framework**: la versión 2.0.0 exige **`net8.0` o superior**. Si tu proyecto apunta a
-   `net6.0`, `net7.0` o `netstandard2.x`, actualiza el TFM primero.
+2. **Requisito de framework**: los paquetes de la versión 2.0.0 requieren **`net11.0`**. Actualiza
+   todos los proyectos .NET del consumidor (incluidos tests, muestras y herramientas), las dependencias
+   Microsoft, el SDK de CI y las imágenes de contenedor antes de compilar.
 3. **Lee la sección 3.2 del prompt** ("Cambios con SEMÁNTICA distinta"). Hay cambios que **compilan pero se
    comportan de otra forma**:
    - las factorías de value objects **invirtieron** el significado de `From…` / `By…`;

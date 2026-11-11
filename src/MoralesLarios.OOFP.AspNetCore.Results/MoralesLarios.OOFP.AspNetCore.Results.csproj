@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Version>2.0.0</Version>
@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <!-- Punto 34: el metapaquete Microsoft.AspNetCore.Mvc.Core 2.1.0 esta fuera de soporte y
-         arrastra ensamblados de ASP.NET Core 2.x. En net8.0 lo correcto es referenciar el
+         arrastra ensamblados de ASP.NET Core 2.x. En net11.0 lo correcto es referenciar el
          framework compartido, que aporta MVC con la version del runtime en uso. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

@@ -1,6 +1,6 @@
 # Pendientes · Épicas de ejecución por hacer
 
-> **Estado global:** 🔄 7 épicas pendientes (3 parciales) · 8 completadas y archivadas (7 EFCore, 1 Http)
+> **Estado global:** 🔄 7 épicas pendientes (3 parciales) · 9 completadas y archivadas (7 EFCore, 1 Http, 1 Framework)
 > **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) (puntos 38-63) · [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) (puntos 64-89)
 > **Plan maestro del que se desgajan:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md)
 
@@ -13,6 +13,9 @@ usuario con criterios de aceptación verificables.
 
 La épica de limpieza de código muerto ya está completada y archivada en
 [`Realizados/Http/`](../Realizados/Http/README.md).
+
+La migración de todos los proyectos a .NET 11 ya está completada y archivada en
+[`Realizados/Framework/`](../Realizados/Framework/README.md).
 
 Los puntos **1-37** (prioridad crítica y alta) y el **objetivo 9** (documentación XML) están
 cerrados y no generan épica.

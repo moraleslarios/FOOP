@@ -98,6 +98,14 @@ Plan en [`Realizados/Http/README.md`](Realizados/Http/README.md).
 |---|---|
 | [Limpieza de código muerto en Http y controladores](Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) | ✅ · US-01…06 |
 
+### 3.5 Frameworks
+
+Plan en [`Realizados/Framework/README.md`](Realizados/Framework/README.md).
+
+| Épica | Estado |
+|---|---|
+| [Migración de todos los proyectos a .NET 11](Realizados/Framework/Epica-Actualizacion-Net11.md) | ✅ |
+
 ---
 
 ## 4. De dónde viene cada documento

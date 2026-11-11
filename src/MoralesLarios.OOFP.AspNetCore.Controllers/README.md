@@ -96,11 +96,11 @@ public class OrdersController(ICrudServiceFp<Order, OrderDto> svc)
 <PackageReference Include="MoralesLarios.OOFP.AspNetCore.Controllers" Version="1.0.5" />
 ```
 
-`TargetFramework`: **`net8.0`** · `ImplicitUsings`: habilitado · `Nullable`: habilitado.
+`TargetFramework`: **`net11.0`** · `ImplicitUsings`: habilitado · `Nullable`: habilitado.
 
 | Referencia | Tipo | Para qué |
 |---|---|---|
-| `Microsoft.AspNetCore.Mvc.Core` **2.3.9** | NuGet | `ControllerBase`, `[ApiController]`, `[HttpGet]`, `IActionResult` |
+| `Microsoft.AspNetCore.App` | `FrameworkReference` | `ControllerBase`, `[ApiController]`, `[HttpGet]`, `IActionResult` |
 | `MoralesLarios.OOFP.AspNetCore.Results` | Proyecto | `MlResults`, `MlResultActionResultExtensions`, `ProblemDetailsInfo` |
 | `MoralesLarios.OOFP.Application` | Proyecto | `ICrudServiceFp<,>`, `ICrudServiceFp<,,>`, `MlProblemDetails` |
 

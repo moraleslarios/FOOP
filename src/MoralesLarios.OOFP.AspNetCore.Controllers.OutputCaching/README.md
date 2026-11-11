@@ -42,10 +42,10 @@ Ofrece:
 | Dependencia                                       | Tipo               |
 |---------------------------------------------------|--------------------|
 | `Microsoft.AspNetCore.App` (framework)            | `FrameworkReference` |
-| `Microsoft.AspNetCore.OutputCaching` (incluido)   | Implícito ASP.NET 8  |
+| `Microsoft.AspNetCore.OutputCaching` (incluido)   | Implícito ASP.NET 11 |
 | `MoralesLarios.OOFP.AspNetCore.Controllers`               | `ProjectReference`   |
 
-Target framework: **`net8.0`**.
+Target framework: **`net11.0`**.
 La caché se basa enteramente en `Microsoft.AspNetCore.OutputCaching`, no en el
 viejo `ResponseCaching`.
 

@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Data.Sqlite;
@@ -13,316 +12,6 @@ namespace MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration;
 
 public class UnitOfWorkTransactionTests
 {
-    [Fact]
-    public void ContratosGenericosDeEntidad_ExponenNombreTEntityEnMetadatos()
-    {
-        var entityTypes = new[]
-        {
-            typeof(IEfCreateRepository<>),
-            typeof(IEfDeleteRepository<>),
-            typeof(IEfReadRepository<>),
-            typeof(IEfOrderedReadRepository<>),
-            typeof(IEfUpdateRepository<>),
-            typeof(IEfWriteRepository<>),
-            typeof(IEfPagedReadRepository<>),
-            typeof(IEfPagedRepository<>),
-            typeof(IEfRepository<>),
-            typeof(IEfPaginator<>),
-            typeof(EfCreateRepository<,>),
-            typeof(EfDeleteRepository<,>),
-            typeof(EfReadRepository<,>),
-            typeof(EfUpdateRepository<,>),
-            typeof(EfWriteRepository<,>),
-            typeof(EfCrudRepository<,>),
-            typeof(EfPagedReadRepository<,>),
-            typeof(EfPagedRepository<,>)
-        };
-
-        entityTypes.Select(type => type.GetGenericArguments()[0].Name)
-            .Should().OnlyContain(name => name == "TEntity");
-        typeof(RegisterServices).GetMethod(nameof(RegisterServices.AddOofpRepositories))!
-            .GetGenericArguments().Select(parameter => parameter.Name)
-            .Should().Equal("TEntity", "TContext");
-        typeof(MoralesLarios.OOFP.EntityFrameworkCore.Helpers.Extensions)
-            .GetMethod(nameof(MoralesLarios.OOFP.EntityFrameworkCore.Helpers.Extensions.PrivateOrderBy))!
-            .GetGenericArguments()[0].Name.Should().Be("TEntity");
-    }
-
-    [Fact]
-    public async Task Repository_ExponeLaUnidadDeTrabajoScopedYEspecificaPorContexto()
-    {
-        await using var database = await TestDatabase.CreateAsync();
-        var specific = database.Scope.ServiceProvider
-                                .GetRequiredService<IMlUnitOfWork<CountingTestDbContext>>();
-
-        typeof(IMlUnitOfWork).IsAssignableFrom(typeof(IMlUnitOfWork<CountingTestDbContext>))
-                             .Should().BeTrue();
-        database.Repository.UnitOfWork.Should().BeSameAs(specific);
-        database.Scope.ServiceProvider.GetRequiredService<IMlUnitOfWork>()
-                .Should().BeSameAs(specific);
-    }
-
-    [Fact]
-    public async Task RepositoriosDelMismoScope_CompartenLaMismaReferenciaDeDbContext()
-    {
-        await using var database = await TestDatabase.CreateAsync();
-        var createRepository = database.Scope.ServiceProvider.GetRequiredService<IEfCreateRepository<Vino>>();
-        var updateRepository = database.Scope.ServiceProvider.GetRequiredService<IEfUpdateRepository<Vino>>();
-
-        ((IGetContextable)createRepository).GetContext().Should().BeSameAs(database.Context);
-        ((IGetContextable)updateRepository).GetContext().Should().BeSameAs(database.Context);
-        ((IGetContextable)createRepository).GetContext()
-            .Should().BeSameAs(((IGetContextable)updateRepository).GetContext());
-    }
-
-            [Fact]
-            public async Task Paginacion_SinSelectorYConEmpates_OrdenaPorClavePrimaria()
-            {
-                await using var database = await TestDatabase.CreateAsync();
-                var tag = $"Paginacion {Guid.NewGuid():N}";
-                var wines = Enumerable.Range(0, 3).Select(index => CreateVino($"{tag} {index}")).ToArray();
-                database.Context.Vinos.AddRange(wines);
-                await database.Context.SaveChangesAsync();
-                var repository = database.Scope.ServiceProvider.GetRequiredService<IEfPagedRepository<Vino>>();
-
-                var withoutSelector = await repository.TryGetDataPaginationAsync(
-                    new PageRequest(1, 2),
-                    SortDirection.Descending,
-                    filter: vino => vino.Nombre.StartsWith(tag));
-                var nullSelectorsAndFilter = repository.TryGetDataPagination(
-                    new PageRequest(1, 2),
-                    orderByField: null,
-                    filter: null);
-                var withoutSelectorNextPage = await repository.TryGetDataPaginationAsync(
-                    new PageRequest(2, 2),
-                    SortDirection.Descending,
-                    filter: vino => vino.Nombre.StartsWith(tag));
-
-                withoutSelector.IsFailure.Should().BeFalse();
-                nullSelectorsAndFilter.IsFailure.Should().BeFalse();
-                withoutSelectorNextPage.IsFailure.Should().BeFalse();
-                withoutSelector.GetValueOrThrow().Items.Select(vino => vino.Id)
-                    .Concat(withoutSelectorNextPage.GetValueOrThrow().Items.Select(vino => vino.Id))
-                    .Should().Equal(wines.Select(vino => vino.Id).OrderDescending());
-
-                var tiedSelector = await repository.TryGetDataPaginationAsync(
-                    new PageRequest(1, 2),
-                    SortDirection.Descending,
-                    orderByField: vino => vino.Año,
-                    filter: vino => vino.Nombre.StartsWith(tag));
-                var tiedSelectorNextPage = await repository.TryGetDataPaginationAsync(
-                    new PageRequest(2, 2),
-                    SortDirection.Descending,
-                    orderByField: vino => vino.Año,
-                    filter: vino => vino.Nombre.StartsWith(tag));
-
-                tiedSelector.IsFailure.Should().BeFalse();
-                tiedSelectorNextPage.IsFailure.Should().BeFalse();
-                tiedSelector.GetValueOrThrow().Items.Select(vino => vino.Id)
-                    .Concat(tiedSelectorNextPage.GetValueOrThrow().Items.Select(vino => vino.Id))
-                    .Should().Equal(wines.Select(vino => vino.Id).OrderDescending());
-
-                var ascendingPage = repository.TryGetDataPagination(
-                    new PageRequest(1, 2),
-                    SortDirection.Ascending,
-                    orderByField: vino => vino.Año,
-                    filter: vino => vino.Nombre.StartsWith(tag));
-                var ascendingNextPage = repository.TryGetDataPagination(
-                    new PageRequest(2, 2),
-                    SortDirection.Ascending,
-                    orderByField: vino => vino.Año,
-                    filter: vino => vino.Nombre.StartsWith(tag));
-
-                ascendingPage.GetValueOrThrow().Items.Select(vino => vino.Id)
-                    .Concat(ascendingNextPage.GetValueOrThrow().Items.Select(vino => vino.Id))
-                    .Should().Equal(wines.Select(vino => vino.Id).Order());
-            }
-
-            [Fact]
-            public async Task TryGetLastBy_SelectorEmpatado_UsaClavePrimariaYLimitaResultado()
-            {
-                var interceptor = new CommandCaptureInterceptor();
-                await using var database = await TestDatabase.CreateAsync(commandInterceptor: interceptor);
-                var tag = $"Último ordenado {Guid.NewGuid():N}";
-                var wines = Enumerable.Range(0, 3).Select(index => CreateVino($"{tag} {index}")).ToArray();
-                database.Context.Vinos.AddRange(wines);
-                await database.Context.SaveChangesAsync();
-                interceptor.Commands.Clear();
-                var repository = database.Scope.ServiceProvider.GetRequiredService<IEfOrderedReadRepository<Vino>>();
-                var filter = (Expression<Func<Vino, bool>>)(vino => vino.Nombre.StartsWith(tag));
-                Expression<Func<Vino, object>> tiedSelector = vino => vino.Año;
-
-                var last = repository.TryGetLastBy(filter, tiedSelector, SortDirection.Ascending);
-                var syncCommand = interceptor.Commands.Last();
-                var lastAsync = await repository.TryGetLastByAsync(filter, tiedSelector, SortDirection.Ascending);
-                var asyncCommand = interceptor.Commands.Last();
-                var firstByDescending = await repository.TryGetLastByAsync(filter, tiedSelector, SortDirection.Descending);
-                var descendingCommand = interceptor.Commands.Last();
-                var canceled = await repository.TryGetLastByAsync(
-                    filter,
-                    tiedSelector,
-                    SortDirection.Ascending,
-                    new CancellationToken(canceled: true));
-                var notFound = await repository.TryGetLastByAsync(
-                    vino => vino.Nombre == "no encontrado",
-                    tiedSelector,
-                    SortDirection.Ascending);
-
-                last.IsFailure.Should().BeFalse();
-                last.GetValueOrThrow().Id.Should().Be(wines.Max(vino => vino.Id));
-                lastAsync.IsFailure.Should().BeFalse();
-                lastAsync.GetValueOrThrow().Id.Should().Be(wines.Max(vino => vino.Id));
-                firstByDescending.IsFailure.Should().BeFalse();
-                firstByDescending.GetValueOrThrow().Id.Should().Be(wines.Min(vino => vino.Id));
-                canceled.IsFailure.Should().BeTrue();
-                notFound.IsFailure.Should().BeTrue();
-                syncCommand.Should().Contain("LIMIT 1");
-                asyncCommand.Should().Contain("LIMIT 1");
-                descendingCommand.Should().Contain("LIMIT 1");
-            }
-
-            [Fact]
-            public async Task Paginacion_EntidadSinClavePrimaria_DevuelveFallo()
-            {
-                await using var database = await TestDatabase.CreateAsync();
-                var repository = database.Scope.ServiceProvider.GetRequiredService<IEfPagedRepository<KeylessVino>>();
-
-                var result = repository.TryGetDataPagination(
-                    new PageRequest(1, 10),
-                    orderByField: vino => vino.Nombre);
-
-                result.IsFailure.Should().BeTrue();
-            }
-
-            [Fact]
-            public async Task OrdenEstable_ClavePrimariaCompuesta_DesempataTodasLasPropiedades()
-            {
-                await using var database = await TestDatabase.CreateAsync();
-                var tag = $"Clave compuesta {Guid.NewGuid():N}";
-                var rows = new[]
-                {
-                    new CompositeKeyVino(2, 1, tag, 10),
-                    new CompositeKeyVino(1, 2, tag, 10),
-                    new CompositeKeyVino(1, 1, tag, 10)
-                };
-                database.Context.Set<CompositeKeyVino>().AddRange(rows);
-                await database.Context.SaveChangesAsync();
-                var pagedRepository = database.Scope.ServiceProvider
-                    .GetRequiredService<IEfPagedRepository<CompositeKeyVino>>();
-                var orderedRepository = database.Scope.ServiceProvider
-                    .GetRequiredService<IEfOrderedReadRepository<CompositeKeyVino>>();
-                var filter = (Expression<Func<CompositeKeyVino, bool>>)(row => row.Tag == tag);
-
-                var pageOne = pagedRepository.TryGetDataPagination(
-                    new PageRequest(1, 2),
-                    SortDirection.Ascending,
-                    row => row.SortValue,
-                    filter);
-                var pageTwo = pagedRepository.TryGetDataPagination(
-                    new PageRequest(2, 2),
-                    SortDirection.Ascending,
-                    row => row.SortValue,
-                    filter);
-                var last = await orderedRepository.TryGetLastByAsync(filter, row => row.SortValue);
-                var pageKeys = pageOne.GetValueOrThrow().Items.Concat(pageTwo.GetValueOrThrow().Items)
-                    .Select(row => (row.BodegaId, row.VinoId));
-
-                pageKeys.Should().Equal((1, 1), (1, 2), (2, 1));
-                last.GetValueOrThrow().Should().BeEquivalentTo(rows[0]);
-            }
-
-    [Fact]
-    public void DosContextos_ResuelvenLaUnidadDeTrabajoGenericaCorrecta()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddOptions();
-        services.AddScoped<CountingTestDbContext>(_ =>
-            new CountingTestDbContext(new DbContextOptionsBuilder<CountingTestDbContext>().Options));
-        services.AddScoped<AlternateTestDbContext>(_ =>
-            new AlternateTestDbContext(new DbContextOptionsBuilder<AlternateTestDbContext>().Options));
-        services.AddOofpRepositories<Vino, CountingTestDbContext>();
-        services.AddOofpRepositories<Cata, AlternateTestDbContext>();
-
-        using var provider = services.BuildServiceProvider();
-        using var scope = provider.CreateScope();
-        var repositoryA = scope.ServiceProvider.GetRequiredService<IEfRepository<Vino>>();
-        var repositoryB = scope.ServiceProvider.GetRequiredService<IEfRepository<Cata>>();
-        var contextA = scope.ServiceProvider.GetRequiredService<CountingTestDbContext>();
-        var contextB = scope.ServiceProvider.GetRequiredService<AlternateTestDbContext>();
-        var unitOfWorkA = scope.ServiceProvider.GetRequiredService<IMlUnitOfWork<CountingTestDbContext>>();
-        var unitOfWorkB = scope.ServiceProvider.GetRequiredService<IMlUnitOfWork<AlternateTestDbContext>>();
-
-        repositoryA.UnitOfWork.Should().BeSameAs(unitOfWorkA);
-        repositoryB.UnitOfWork.Should().BeSameAs(unitOfWorkB);
-        ((IGetContextable)repositoryA).GetContext().Should().BeSameAs(contextA);
-        ((IGetContextable)repositoryB).GetContext().Should().BeSameAs(contextB);
-        unitOfWorkA.Should().NotBeSameAs(unitOfWorkB);
-    }
-
-    [Fact]
-    public async Task ResolverElAgregadoMilVecesEnElMismoScope_DevuelveLaMismaInstancia()
-    {
-        await using var database = await TestDatabase.CreateAsync();
-        var first = database.Scope.ServiceProvider.GetRequiredService<IEfRepository<Vino>>();
-
-        for (var index = 0; index < 1_000; index++)
-        {
-            database.Scope.ServiceProvider.GetRequiredService<IEfRepository<Vino>>()
-                    .Should().BeSameAs(first);
-        }
-    }
-
-    [Fact]
-    public async Task TryAddAsync_SoloMarcaCambiosHastaElCommit()
-    {
-        await using var database = await TestDatabase.CreateAsync();
-        var vino = CreateVino();
-
-        var result = await database.Repository.TryAddAsync(vino);
-
-        result.IsFailure.Should().BeFalse();
-        database.Context.SaveChangesCallCount.Should().Be(0);
-        database.UnitOfWork.HasPendingChanges.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task TodosLosMetodosDeEscritura_SoloMarcanCambiosHastaElCommit()
-    {
-        await using var database = await TestDatabase.CreateAsync();
-        var existing = Enumerable.Range(0, 16).Select(_ => CreateVino()).ToArray();
-        database.Context.Vinos.AddRange(existing);
-        await database.Context.SaveChangesAsync();
-        database.Context.SaveChangesCallCount = 0;
-
-        var create = database.Scope.ServiceProvider.GetRequiredService<IEfCreateRepository<Vino>>();
-        var update = database.Scope.ServiceProvider.GetRequiredService<IEfUpdateRepository<Vino>>();
-        var delete = database.Scope.ServiceProvider.GetRequiredService<IEfDeleteRepository<Vino>>();
-
-        create.TryAdd(CreateVino()).IsSuccess.Should().BeTrue();
-        (await create.TryAddAsync(CreateVino())).IsSuccess.Should().BeTrue();
-        create.TryAddRange(new[] { CreateVino(), CreateVino() }).IsSuccess.Should().BeTrue();
-        (await create.TryAddRangeAsync(new[] { CreateVino(), CreateVino() })).IsSuccess.Should().BeTrue();
-
-        update.TryUpdate(existing[0]).IsSuccess.Should().BeTrue();
-        (await update.TryUpdateAsync(existing[1])).IsSuccess.Should().BeTrue();
-        update.TryUpdate(existing[2], existing[2].Id).IsSuccess.Should().BeTrue();
-        (await update.TryUpdateAsync(existing[3], CancellationToken.None, existing[3].Id)).IsSuccess.Should().BeTrue();
-        update.TryUpdateRange(existing[4..6]).IsSuccess.Should().BeTrue();
-        (await update.TryUpdateRangeAsync(existing[6..8])).IsSuccess.Should().BeTrue();
-
-        delete.TryRemove(existing[8]).IsSuccess.Should().BeTrue();
-        delete.TryRemove(existing[9].Id).IsSuccess.Should().BeTrue();
-        (await delete.TryRemoveAsync(existing[10])).IsSuccess.Should().BeTrue();
-        (await delete.TryRemoveAsync(CancellationToken.None, existing[11].Id)).IsSuccess.Should().BeTrue();
-        delete.TryRemoveRange(existing[12..14]).IsSuccess.Should().BeTrue();
-        (await delete.TryRemoveRangeAsync(existing[14..16])).IsSuccess.Should().BeTrue();
-
-        database.Context.SaveChangesCallCount.Should().Be(0);
-        database.UnitOfWork.HasPendingChanges.Should().BeTrue();
-        (await database.Context.Vinos.AsNoTracking().CountAsync()).Should().Be(16);
-    }
-
     [Fact]
     public async Task TryCommitAsync_PersisteCambiosYDevuelveFilasAfectadas()
     {
@@ -596,7 +285,7 @@ public class UnitOfWorkTransactionTests
                                                      x.Message.Contains("confirm", StringComparison.OrdinalIgnoreCase));
     }
 
-    private static Vino CreateVino(string? nombre = null)
+    internal static Vino CreateVino(string? nombre = null)
         => new()
         {
             Nombre = nombre ?? $"Vino UoW {Guid.NewGuid():N}",
@@ -606,7 +295,7 @@ public class UnitOfWorkTransactionTests
             Comentarios = "Prueba de unidad de trabajo"
         };
 
-    private sealed class CountingTestDbContext(DbContextOptions<CountingTestDbContext> options)
+    internal sealed class CountingTestDbContext(DbContextOptions<CountingTestDbContext> options)
         : DbContext(options)
     {
         public DbSet<Vino> Vinos => Set<Vino>();
@@ -640,34 +329,34 @@ public class UnitOfWorkTransactionTests
         }
     }
 
-    private sealed class AlternateTestDbContext(DbContextOptions<AlternateTestDbContext> options)
+    internal sealed class AlternateTestDbContext(DbContextOptions<AlternateTestDbContext> options)
         : DbContext(options)
     {
     }
 
-    private sealed class KeylessVino
+    internal sealed class KeylessVino
     {
         public string Nombre { get; set; } = string.Empty;
     }
 
-    private sealed record CompositeKeyVino(int BodegaId, int VinoId, string Tag, int SortValue);
+    internal sealed record CompositeKeyVino(int BodegaId, int VinoId, string Tag, int SortValue);
 
-    private sealed class TestDatabase(SqliteConnection connection,
-                                      ServiceProvider provider,
-                                      AsyncServiceScope scope,
-                                      DbContextOptions<CountingTestDbContext> options,
-                                      CountingTestDbContext context,
-                                      IEfRepository<Vino> repository) : IAsyncDisposable
+    internal sealed class TestDatabase(SqliteConnection connection,
+                                       ServiceProvider provider,
+                                       AsyncServiceScope scope,
+                                       DbContextOptions<CountingTestDbContext> options,
+                                       CountingTestDbContext context,
+                                       IEfRepository<Vino> repository) : IAsyncDisposable
     {
-        public AsyncServiceScope Scope { get; } = scope;
-        public DbContextOptions<CountingTestDbContext> Options { get; } = options;
-        public CountingTestDbContext Context { get; } = context;
-        public IEfRepository<Vino> Repository { get; } = repository;
-        public IMlUnitOfWork UnitOfWork => Repository.UnitOfWork;
+        internal AsyncServiceScope Scope { get; } = scope;
+        internal DbContextOptions<CountingTestDbContext> Options { get; } = options;
+        internal CountingTestDbContext Context { get; } = context;
+        internal IEfRepository<Vino> Repository { get; } = repository;
+        internal IMlUnitOfWork UnitOfWork => Repository.UnitOfWork;
 
-        public static async Task<TestDatabase> CreateAsync(bool enableDiagnostics = false,
-                                                           WarningCaptureLoggerProvider? loggerProvider = null,
-                                                           DbCommandInterceptor? commandInterceptor = null)
+        internal static async Task<TestDatabase> CreateAsync(bool enableDiagnostics = false,
+                                                             WarningCaptureLoggerProvider? loggerProvider = null,
+                                                             DbCommandInterceptor? commandInterceptor = null)
         {
             var connection = new SqliteConnection("Data Source=:memory:");
             await connection.OpenAsync();
@@ -708,7 +397,7 @@ public class UnitOfWorkTransactionTests
         }
     }
 
-    private sealed class WarningCaptureLoggerProvider : ILoggerProvider
+    internal sealed class WarningCaptureLoggerProvider : ILoggerProvider
     {
         public List<(LogLevel Level, string Message)> Entries { get; } = [];
 
@@ -719,7 +408,7 @@ public class UnitOfWorkTransactionTests
         }
     }
 
-    private sealed class CommandCaptureInterceptor : DbCommandInterceptor
+    internal sealed class CommandCaptureInterceptor : DbCommandInterceptor
     {
         public List<string> Commands { get; } = [];
 

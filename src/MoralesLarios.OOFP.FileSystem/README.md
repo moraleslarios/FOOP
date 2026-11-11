@@ -68,11 +68,11 @@ Si el fichero no existe, obtienes un `Fail` con el mensaje `"C:\tmp\x.txt not ex
 
 | Dependencia | Versión | Para qué |
 |---|---|---|
-| `Microsoft.Extensions.DependencyInjection.Abstractions` | 9.0.6 | `IServiceCollection` |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 11.0.0 | `IServiceCollection` |
 | [`MoralesLarios.OOFP`](../MoralesLarios.OOFP.Core/README.md) | — | `MlResult<T>`, `Map` |
 | [`MoralesLarios.OOFP.ValueObjects.FileSystem`](../MoralesLarios.OOFP.ValueObjects.FileSystem/README.md) | — | 🔑 `ExistingFilePath`, `ExistingDirectoryPath` |
 
-Destino: **`net8.0`**. Versión del paquete: **1.0.0**.
+Destino: **`net11.0`**. Versión del paquete: **2.0.0**.
 
 ```csharp
 using MoralesLarios.OOFP.FileSystem;              // IMlFileSystem, AddOOFPIO

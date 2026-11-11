@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EntityFr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration", "MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration\MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration.csproj", "{6CB874CC-07E1-4B4A-90A6-A9447343D3DF}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.EntityFrameworkCore.Tests.Unit", "MoralesLarios.OOFP.EntityFrameworkCore.Tests.Unit\MoralesLarios.OOFP.EntityFrameworkCore.Tests.Unit.csproj", "{A3C94706-1957-4B2D-8F35-010F14EBF5AA}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoralesLarios.OOFP.Core.Tests.Unit", "MoralesLarios.OOFP.Core.Tests.Unit\MoralesLarios.OOFP.Core.Tests.Unit.csproj", "{EE89C980-EFE8-4239-8716-0211019190CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoralesLarios.OOFP.Logging.Sample", "MoralesLarios.OOFP.Logging.Sample\MoralesLarios.OOFP.Logging.Sample.csproj", "{E7D3F48B-7B1A-4B71-AECB-C3715ECBA640}"
@@ -447,6 +449,18 @@ Global
 		{7F927F9C-AA3F-49AD-89A4-208D6846590C}.Release|x64.Build.0 = Release|Any CPU
 		{7F927F9C-AA3F-49AD-89A4-208D6846590C}.Release|x86.ActiveCfg = Release|Any CPU
 		{7F927F9C-AA3F-49AD-89A4-208D6846590C}.Release|x86.Build.0 = Release|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Debug|x64.Build.0 = Debug|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Debug|x86.Build.0 = Debug|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Release|x64.ActiveCfg = Release|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Release|x64.Build.0 = Release|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Release|x86.ActiveCfg = Release|Any CPU
+		{A3C94706-1957-4B2D-8F35-010F14EBF5AA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

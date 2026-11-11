@@ -101,10 +101,10 @@ indentado) dentro de `MlErrorDetails`.
 ## Instalación y dependencias
 
 ```xml
-<TargetFramework>net8.0</TargetFramework>
+<TargetFramework>net11.0</TargetFramework>
 <Version>1.0.14</Version>
 
-<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
+<PackageReference Include="Microsoft.Extensions.Http" Version="11.0.0" />
 
 <ProjectReference Include="..\MoralesLarios.OOFP.Core\MoralesLarios.OOFP.Core.csproj" />
 <ProjectReference Include="..\MoralesLarios.OOFP.Logging\MoralesLarios.OOFP.Logging.csproj" />
@@ -123,9 +123,7 @@ indentado) dentro de `MlErrorDetails`.
 | `MoralesLarios.OOFP.ValueObjects` | `ServiceKey` (nombre del cliente), `MemberName`, `NotEmptyString`, `IntNonNegative`. |
 | `MoralesLarios.OOFP.Validation.DataAnnotations` | `DataAnnotationsValidator.ValidateAsync(parameters)` sobre los records de parámetros. |
 
-> ⚠️ Ten en cuenta que `Microsoft.Extensions.Http` está en la versión **9.0.6** mientras el
-> `TargetFramework` es **net8.0**. Funciona (el paquete es compatible hacia atrás), pero conviene alinear
-> ambos: o subes a `net9.0` o bajas el paquete a `8.0.*`.
+`Microsoft.Extensions.Http` y el `TargetFramework` están alineados en la versión 11.
 
 Los `global using` del proyecto (`GlobalUsings.cs`) ya incluyen `MoralesLarios.OOFP.Types`,
 `MoralesLarios.OOFP.Helpers`, `…ValueObjects`, `…HttpClients.ParamsInfo` y `…HttpClients.Helpers`,
@@ -751,7 +749,7 @@ Estas son observaciones verificadas leyendo la implementación. Consúltalas ant
 19. **Mezcla de idiomas en los mensajes**: los de `EnsureFp` en el manager están en español
     (`"itemBody no puede ser nulo"`) y los de los helpers de cabeceras en inglés
     (`"client cannot be null if we want to set information in the header. "`, con espacio final).
-20. **`Microsoft.Extensions.Http` 9.0.6 sobre `net8.0`**: desalineación de versiones.
+20. **`Microsoft.Extensions.Http` 11.0.0 sobre `net11.0`**: versiones alineadas.
 
 ---
 
