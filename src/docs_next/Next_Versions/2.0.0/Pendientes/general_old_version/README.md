@@ -3,7 +3,8 @@
 > **Origen:** [`Next_Versions/2.0.0/Realizados/Temas Pendientes/`](../../Realizados/Temas%20Pendientes/README.md) · el inventario general escrito **antes** del renombrado 2.0.0
 > **Auditado contra:** commit `dab05b4` (rama `release/2.0.0-nomenclatura`, 2026-11-12) · auditoría **estática** (lectura y búsqueda en código y tests; los tests de regresión citados existen, no se volvieron a ejecutar en esta auditoría)
 > **Versión destino:** 2.0.0 (nada publicado todavía) · el 3.0.0 solo recibe lo explícitamente diferido
-> **Estado:** ⬜ Plan creado · 0 de 6 épicas nuevas iniciadas
+> **Estado:** 🔄 En curso · G1 con US-01, US-03, US-04, US-05 y US-08 hechas y US-02/US-07 a medias; G2-G6 sin iniciar
+> **Finalizado:** las auditorías [`01`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) y [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) viven en [`Realizados/general_old_version/`](../../Realizados/general_old_version/README.md)
 
 ---
 
@@ -32,7 +33,7 @@ siete épicas pendientes que ya existen en [`Pendientes/`](../README.md).
 | 🟢 Baja | 64-89 | 15 | 10 | 1 |
 | **Total** | **89** | **42** | **24** | **23** |
 
-Detalle punto a punto, con evidencia y destino: [`01-Auditoria-Inventario-89-Puntos.md`](01-Auditoria-Inventario-89-Puntos.md).
+Detalle punto a punto, con evidencia y destino: [`01-Auditoria-Inventario-89-Puntos.md`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md).
 
 ### 2.2 Documentos complementarios
 
@@ -46,22 +47,22 @@ Detalle punto a punto, con evidencia y destino: [`01-Auditoria-Inventario-89-Pun
 | `Profesionalizacion-Ingenieria-y-Calidad.md` | 17 tareas | 3 | 7 | 7 | [G1](Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md) · [G6](Epica-G6-Pruebas-Calidad-y-Rendimiento.md) |
 | `Profesionalizacion-Diseno-API-y-Producto.md` | 20 líneas de trabajo | 0 | 12 | 8 | [Backlog 3.0](04-Backlog-3.0-y-Descartados.md) |
 
-Detalle: [`02-Auditoria-Documentos-Complementarios.md`](02-Auditoria-Documentos-Complementarios.md).
+Detalle: [`02-Auditoria-Documentos-Complementarios.md`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md).
 
 ### 2.2.1 Cobertura de los 15 documentos de `Temas Pendientes/`
 
 | Documento | Tratamiento |
 |---|---|
-| `Mejoras-Prioridad-Critica-y-Alta.md` (1-37) | Auditado punto a punto en [`01`](01-Auditoria-Inventario-89-Puntos.md) §2.1-2.2 |
-| `Mejoras-Prioridad-Media.md` (38-63) | Auditado en [`01`](01-Auditoria-Inventario-89-Puntos.md) §2.3 |
-| `Mejoras-Prioridad-Baja.md` (64-89) | Auditado en [`01`](01-Auditoria-Inventario-89-Puntos.md) §2.4 |
+| `Mejoras-Prioridad-Critica-y-Alta.md` (1-37) | Auditado punto a punto en [`01`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) §2.1-2.2 |
+| `Mejoras-Prioridad-Media.md` (38-63) | Auditado en [`01`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) §2.3 |
+| `Mejoras-Prioridad-Baja.md` (64-89) | Auditado en [`01`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) §2.4 |
 | `Plan-Ejecucion-Prioridad-Media.md` | Su auditoría previa (2 ✅, 5 🟨, 19 ⬜, commit `9ffd376`) **se reauditó**: hoy hay 4 ✅, 5 🟨 y 17 ⬜, porque las épicas de EFCore cerraron los puntos 39 y 40. Sus fases 1-5 y su orden ya están absorbidos por las épicas de [`Pendientes/`](../README.md) y por el [plan maestro](03-Plan-Maestro.md). Es histórico |
-| `Analisis-Nomenclatura-ValueObjects.md` | [`02`](02-Auditoria-Documentos-Complementarios.md) §1 → [G4](Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md) |
-| `Consejos-Nomenclatura.md`, `Plan-Renombrados-2.0.0.md` | [`02`](02-Auditoria-Documentos-Complementarios.md) §2 → [G5](Epica-G5-Cierre-Renombrado-y-Puentes.md) |
-| `consejos_mejora_mlresult.md` | [`02`](02-Auditoria-Documentos-Complementarios.md) §3 → [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
-| `Revision-Map-Bind-ExecSelf.md` | [`02`](02-Auditoria-Documentos-Complementarios.md) §4 → [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
-| `PendingTasks-legacy.md` | [`02`](02-Auditoria-Documentos-Complementarios.md) → [Backlog](04-Backlog-3.0-y-Descartados.md) |
-| `Profesionalizacion-Ingenieria-y-Calidad.md`, `Profesionalizacion-Diseno-API-y-Producto.md` | [`02`](02-Auditoria-Documentos-Complementarios.md) → [G1](Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md), [G6](Epica-G6-Pruebas-Calidad-y-Rendimiento.md), [Backlog](04-Backlog-3.0-y-Descartados.md) |
+| `Analisis-Nomenclatura-ValueObjects.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §1 → [G4](Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md) |
+| `Consejos-Nomenclatura.md`, `Plan-Renombrados-2.0.0.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §2 → [G5](Epica-G5-Cierre-Renombrado-y-Puentes.md) |
+| `consejos_mejora_mlresult.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §3 → [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
+| `Revision-Map-Bind-ExecSelf.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §4 → [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
+| `PendingTasks-legacy.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) → [Backlog](04-Backlog-3.0-y-Descartados.md) |
+| `Profesionalizacion-Ingenieria-y-Calidad.md`, `Profesionalizacion-Diseno-API-y-Producto.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) → [G1](Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md), [G6](Epica-G6-Pruebas-Calidad-y-Rendimiento.md), [Backlog](04-Backlog-3.0-y-Descartados.md) |
 | `README.md` | Índice de la carpeta; su resumen de 89 puntos es la fuente que se auditó |
 | `_MOVIDOS.md` | Nota de trazabilidad sin tareas. Sigue siendo correcta |
 | `_Seccion-para-README.md` | Sin tareas: era un fragmento temporal y su sección **ya está pegada** en `src/README.md` (L264). Es un resto que debe borrarse ([G5-US-03](Epica-G5-Cierre-Renombrado-y-Puentes.md)) |
@@ -119,7 +120,7 @@ decisiones del propietario) y [`04-Backlog-3.0-y-Descartados.md`](04-Backlog-3.0
 6. **Los números de migración no se reservan.** Cada ruptura recibirá su número `MIG-nn` **al implementarse**
    (el último usado hoy es el 84). Las épicas solo indican *qué* hay que registrar en los seis sitios.
 7. **Las referencias antiguas se traducen.** Tabla de equivalencias en
-   [`01-Auditoria-Inventario-89-Puntos.md`](01-Auditoria-Inventario-89-Puntos.md#4-equivalencias-de-nombres).
+   [`01-Auditoria-Inventario-89-Puntos.md`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md#4-equivalencias-de-nombres).
 
 ## 5. Qué NO hace este plan
 

@@ -2,7 +2,7 @@
 
 > **Versión destino:** 2.0.0
 > **Proyectos:** todos los `*.Tests.Unit` y `*.Tests.Integration` + proyecto nuevo de *benchmarks*
-> **Origen:** `Profesionalizacion-Ingenieria-y-Calidad.md` (estrategia de pruebas) · vacíos detectados en la [auditoría de los 89 puntos](01-Auditoria-Inventario-89-Puntos.md) · `consejos_mejora_mlresult.md` MR19
+> **Origen:** `Profesionalizacion-Ingenieria-y-Calidad.md` (estrategia de pruebas) · vacíos detectados en la [auditoría de los 89 puntos](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) · `consejos_mejora_mlresult.md` MR19
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo:** L · **Riesgo:** 🟢 bajo (solo añade pruebas y mediciones)
 > **Compatibilidad:** ✅ Aditiva

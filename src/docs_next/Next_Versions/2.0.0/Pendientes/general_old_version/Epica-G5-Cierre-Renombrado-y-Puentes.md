@@ -2,7 +2,7 @@
 
 > **Versión destino:** 2.0.0 (cierre y decisión) · 3.0.0 (retirada de puentes, si se mantienen)
 > **Proyecto:** transversal (documentación, `*.Obsolete.cs` y herramientas de inventario)
-> **Origen:** `Plan-Renombrados-2.0.0.md` (4 criterios de cierre) · `Consejos-Nomenclatura.md` · INV-18, 72, 73 · [auditoría](02-Auditoria-Documentos-Complementarios.md#2-consejos-nomenclaturamd-y-plan-renombrados-200md)
+> **Origen:** `Plan-Renombrados-2.0.0.md` (4 criterios de cierre) · `Consejos-Nomenclatura.md` · INV-18, 72, 73 · [auditoría](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#2-consejos-nomenclaturamd-y-plan-renombrados-200md)
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo:** M · **Riesgo:** 🟡 medio (la decisión de puentes cambia la promesa de migración gradual)
 > **Compatibilidad:** Depende de D-G5-1: **retirar** puentes es una ruptura de compilación; **conservarlos** no cambia nada
@@ -66,9 +66,9 @@ prompt de migración documenta **187 puentes `[Obsolete]`** con el mensaje «Wil
 **Criterios de aceptación**
 
 - [ ] Cada documento de `Temas Pendientes/` recibe un **aviso de histórico** de dos líneas al principio que enlaza con este plan; **el contenido no se reescribe**.
-- [ ] `Consejos-Nomenclatura.md` deja de afirmar que todos los niveles están hechos y remite al estado de [`02-Auditoria`](02-Auditoria-Documentos-Complementarios.md).
+- [ ] `Consejos-Nomenclatura.md` deja de afirmar que todos los niveles están hechos y remite al estado de [`02-Auditoria`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md).
 - [ ] Se corrige la contradicción entre `Epica-Simplificacion-Repositorios-EFCore.md` (L684, retira `BuildServiceProvider`) y `Epica-Unidad-de-Trabajo-y-Transacciones.md` (L59, afirma que se conserva).
-- [ ] Las épicas desactualizadas ([lista](01-Auditoria-Inventario-89-Puntos.md#3-correcciones-al-inventario-original)) corrigen las líneas y afirmaciones citadas.
+- [ ] Las épicas desactualizadas ([lista](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md#3-correcciones-al-inventario-original)) corrigen las líneas y afirmaciones citadas.
 - [x] Se borra `Temas Pendientes/_Seccion-para-README.md` (su contenido ya está en `src/README.md`).
 
 ### G5-US-04 · Nombre del repositorio y de la carpeta raíz · N6 · XS

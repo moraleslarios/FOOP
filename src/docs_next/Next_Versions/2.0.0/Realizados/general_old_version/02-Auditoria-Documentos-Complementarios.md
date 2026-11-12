@@ -18,7 +18,7 @@
 
 ## 1. Análisis de nomenclatura de `ValueObjects` (N1-N21)
 
-**Resultado:** 1 resuelto · 10 parciales · 10 pendientes. Destino de todo lo abierto: [G4](Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md).
+**Resultado:** 1 resuelto · 10 parciales · 10 pendientes. Destino de todo lo abierto: [G4](../../Pendientes/general_old_version/Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md).
 
 | N | Propuesta | Estado | Evidencia | Qué falta | Ruptura |
 |---:|---|:---:|---|---|:---:|
@@ -73,13 +73,13 @@ Los dos documentos **no coinciden entre sí**: `Consejos-Nomenclatura.md` (L699)
 | Criterio C · inventario sin nombres antiguos | ⬜ | Los antiguos viven en `*.Obsolete.cs` |
 | Criterio D · docs sin nombres antiguos | ⬜ | Sin barrido completo |
 
-Destino: [G5](Epica-G5-Cierre-Renombrado-y-Puentes.md).
+Destino: [G5](../../Pendientes/general_old_version/Epica-G5-Cierre-Renombrado-y-Puentes.md).
 
 ---
 
 ## 3. Consejos de mejora de `MlResult` (MR1-MR23)
 
-**Resultado:** 7 ✅ · 10 🟨 · 6 ⬜. Destino de lo abierto: [G3](Epica-G3-Nucleo-MlResult-Robustez.md) y [backlog](04-Backlog-3.0-y-Descartados.md).
+**Resultado:** 7 ✅ · 10 🟨 · 6 ⬜. Destino de lo abierto: [G3](../../Pendientes/general_old_version/Epica-G3-Nucleo-MlResult-Robustez.md) y [backlog](../../Pendientes/general_old_version/04-Backlog-3.0-y-Descartados.md).
 
 | MR | Asunto | Estado | Evidencia | Qué falta | Ruptura |
 |---:|---|:---:|---|---|:---:|
@@ -128,7 +128,7 @@ Destino: [G5](Epica-G5-Cierre-Renombrado-y-Puentes.md).
 | R4d · indentación | 🟨 | las rutas originales quedaron obsoletas al trocear las clases |
 | R3 · `null` ambiguo entre `string` y `Func<Exception,string>` | ⬜ | sobrecargas de las familias `Try*` |
 
-Destino: [G3](Epica-G3-Nucleo-MlResult-Robustez.md).
+Destino: [G3](../../Pendientes/general_old_version/Epica-G3-Nucleo-MlResult-Robustez.md).
 
 ---
 
@@ -158,13 +158,13 @@ Destino: [G3](Epica-G3-Nucleo-MlResult-Robustez.md).
 | `CompleteWith*` → `TransformData` | ⬜ | renombrado sin ganancia semántica |
 | `MakeBind` | ⬜ | diferencia con `Bind` sin definir |
 
-Destino de las ideas abiertas: [backlog y descartes](04-Backlog-3.0-y-Descartados.md).
+Destino de las ideas abiertas: [backlog y descartes](../../Pendientes/general_old_version/04-Backlog-3.0-y-Descartados.md).
 
 ---
 
 ## 6. Profesionalización · ingeniería y calidad
 
-**Resultado:** 3 ✅ · 7 🟨 · 7 ⬜. Destino: [G1](Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md) y [G6](Epica-G6-Pruebas-Calidad-y-Rendimiento.md).
+**Resultado:** 3 ✅ · 7 🟨 · 7 ⬜. Destino: [G1](../../Pendientes/general_old_version/Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md) y [G6](../../Pendientes/general_old_version/Epica-G6-Pruebas-Calidad-y-Rendimiento.md).
 
 | Tarea | Estado | Evidencia | Falta |
 |---|:---:|---|---|
@@ -195,7 +195,7 @@ en 7 proyectos) y el criterio de qué hacer con la política de soporte de los p
 ## 7. Profesionalización · diseño de API y producto
 
 **Resultado:** 0 ✅ · 12 🟨 · 8 ⬜. Es un documento **estratégico**: casi nada es una tarea acotada de 2.0.0.
-Lo que sí lo es se absorbe en G1/G6; el resto pasa al [backlog 3.0](04-Backlog-3.0-y-Descartados.md).
+Lo que sí lo es se absorbe en G1/G6; el resto pasa al [backlog 3.0](../../Pendientes/general_old_version/04-Backlog-3.0-y-Descartados.md).
 
 | Línea de trabajo | Estado | Matiz verificado |
 |---|:---:|---|

@@ -2,7 +2,7 @@
 
 > **Versión destino:** 2.0.0
 > **Proyecto:** `MoralesLarios.OOFP.Core`
-> **Origen:** `consejos_mejora_mlresult.md` (MR4, 8, 9, 12, 14, 22…) · `Revision-Map-Bind-ExecSelf.md` (R2, R3, R4a) · [auditoría](02-Auditoria-Documentos-Complementarios.md#3-consejos-de-mejora-de-mlresult-mr1-mr23)
+> **Origen:** `consejos_mejora_mlresult.md` (MR4, 8, 9, 12, 14, 22…) · `Revision-Map-Bind-ExecSelf.md` (R2, R3, R4a) · [auditoría](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#3-consejos-de-mejora-de-mlresult-mr1-mr23)
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo:** M · **Riesgo:** 🟠 alto (cambia excepciones y estados límite que algún consumidor puede observar)
 > **Compatibilidad:** ⚠️ **silenciosa** en US-01…US-03; de compilación solo si se decide cambiar firmas (US-04)

@@ -2,7 +2,7 @@
 
 > **Versión destino:** 2.0.0 (decisiones y renombrados) · 3.0.0 (solo la retirada de puentes)
 > **Proyectos:** `MoralesLarios.OOFP.ValueObjects` · `MoralesLarios.OOFP.ValueObjects.FileSystem`
-> **Origen:** `Analisis-Nomenclatura-ValueObjects.md` (N1-N21) · INV-6 e INV-10 · [auditoría](02-Auditoria-Documentos-Complementarios.md#1-análisis-de-nomenclatura-de-valueobjects-n1-n21)
+> **Origen:** `Analisis-Nomenclatura-ValueObjects.md` (N1-N21) · INV-6 e INV-10 · [auditoría](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#1-análisis-de-nomenclatura-de-valueobjects-n1-n21)
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo:** XL · **Riesgo:** 🔴 muy alto (rompe compilación en la mayoría de las historias)
 > **Compatibilidad:** ⚠️ renombrados de tipos y parámetros públicos → anexo `oofp-upgrade-2.renames.md` **y** los seis sitios del prompt

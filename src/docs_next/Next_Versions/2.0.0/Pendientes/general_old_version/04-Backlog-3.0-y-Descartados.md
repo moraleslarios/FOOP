@@ -3,7 +3,7 @@
 > **Qué es:** lo que **no** entra en la 2.0.0, con el motivo. Cada línea tiene una razón de aplazamiento o de
 > descarte; si la razón desaparece, la línea vuelve a un plan.
 > **Origen:** `Profesionalizacion-Diseno-API-y-Producto.md`, `consejos_mejora_mlresult.md`, `PendingTasks-legacy.md`
-> y los consejos de nomenclatura. Auditoría: [`02`](02-Auditoria-Documentos-Complementarios.md).
+> y los consejos de nomenclatura. Auditoría: [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md).
 
 ## Índice
 

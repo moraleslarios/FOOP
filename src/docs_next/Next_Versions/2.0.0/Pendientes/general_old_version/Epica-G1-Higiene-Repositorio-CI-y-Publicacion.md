@@ -2,7 +2,7 @@
 
 > **Versión destino:** 2.0.0
 > **Proyecto:** repositorio completo (sin tocar la API pública)
-> **Origen:** `Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md` (Bloque 0) · omisiones detectadas en [la auditoría](02-Auditoria-Documentos-Complementarios.md#6-profesionalización--ingeniería-y-calidad)
+> **Origen:** `Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md` (Bloque 0) · omisiones detectadas en [la auditoría](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#6-profesionalización--ingeniería-y-calidad)
 > **Estado:** 🔄 En curso · G1-US-01 ✅ (pendiente solo D-G1-1: rotación por el propietario)
 > **Esfuerzo:** L · **Riesgo:** 🟢 bajo (no cambia comportamiento) · 🟠 solo la US-01 si hay que retirar secretos del historial
 > **Compatibilidad:** ✅ Aditiva. No requiere registro en `oofp-upgrade-2.prompt.md`

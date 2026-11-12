@@ -17,6 +17,15 @@ Esta regla se aplica en cada tarea que implemente o cierre historias de una épi
 6. Mantén un `README.md` índice por área bajo `Realizados/`, con enlaces a las épicas completadas y sus evidencias de verificación.
 7. Ejecuta el verificador de anclajes Markdown y revisa el diff para confirmar que no quedan enlaces a la ubicación anterior.
 
+## Documentos finalizados que no son épicas
+
+Auditorías, índices de trazabilidad y otros documentos de planificación cuyo trabajo ya terminó también salen de `Pendientes/`:
+
+- Muévelos con `git mv` a `Realizados/<carpeta>/`, usando **la misma subcarpeta que tenían en `Pendientes/`** (por ejemplo `general_old_version`) o, si es una carpeta de área ya existente (`EFCore`), esa área. Crea la subcarpeta y su `README.md` si no existen.
+- Los documentos vivos de esa carpeta (épicas pendientes, plan maestro, backlog) se quedan en `Pendientes/`; corrige los enlaces en ambos sentidos.
+- Una copia obsoleta de una épica ya archivada se elimina de `Pendientes/`; no se mueve.
+- Antes de dar la tarea por cerrada, revisa `Pendientes/` y mueve todo lo finalizado, aunque lo haya cerrado un commit anterior.
+
 ## Criterio de ubicación
 
 `Pendientes/` contiene épicas no iniciadas o parcialmente realizadas. `Realizados/<Área>/` contiene exclusivamente épicas con todas sus historias y su definición de terminado completadas. No dejes una épica completada en `Pendientes/` aunque se haya cerrado en una tarea o commit anterior.

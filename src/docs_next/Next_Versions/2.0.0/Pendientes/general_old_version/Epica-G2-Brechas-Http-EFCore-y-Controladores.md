@@ -2,7 +2,7 @@
 
 > **Versión destino:** 2.0.0
 > **Proyectos:** `MoralesLarios.OOFP.Http` · `AspNetCore.Controllers` · `AspNetCore.Results` · `Application` · `EntityFrameworkCore`
-> **Origen:** [INV-17, 18, 19, 23, 25, 26, 27, 29, 30, 31, 33 y 38](01-Auditoria-Inventario-89-Puntos.md) de `Mejoras-Prioridad-Critica-y-Alta.md` y `Mejoras-Prioridad-Media.md`
+> **Origen:** [INV-17, 18, 19, 23, 25, 26, 27, 29, 30, 31, 33 y 38](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) de `Mejoras-Prioridad-Critica-y-Alta.md` y `Mejoras-Prioridad-Media.md`
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo:** L · **Riesgo:** 🟠 alto (varias rupturas silenciosas)
 > **Compatibilidad:** ⚠️ cada US indica su tipo; **todas** las que rompen se registran en los seis sitios de `oofp-upgrade-2.prompt.md`

@@ -41,7 +41,7 @@ Plan de ejecución en [`Pendientes/README.md`](Pendientes/README.md) · **7 épi
 | [Servicio y paginación](Pendientes/Epica-Servicio-y-Paginacion.md) | `Application` |
 | [Validación](Pendientes/Epica-Validacion.md) | `Validation*` |
 
-Las épicas EFCore y su orden independiente se detallan en [`Pendientes/EntityFrameworkCore/README.md`](Pendientes/EntityFrameworkCore/README.md). El hallazgo #7 de su análisis está cubierto por la guía del proyecto y la épica UoW ya completada.
+Las épicas EFCore y su orden independiente se detallan en [`Realizados/EFCore/Trazabilidad-Analisis-EntityFrameworkCore.md`](Realizados/EFCore/Trazabilidad-Analisis-EntityFrameworkCore.md). El hallazgo #7 de su análisis está cubierto por la guía del proyecto y la épica UoW ya completada.
 
 ### 2.1 Inventario general antiguo · `general_old_version`
 
@@ -121,6 +121,15 @@ Plan en [`Realizados/Framework/README.md`](Realizados/Framework/README.md).
 | Épica | Estado |
 |---|---|
 | [Migración de todos los proyectos a .NET 11](Realizados/Framework/Epica-Actualizacion-Net11.md) | ✅ |
+
+### 3.6 Inventario general antiguo
+
+Plan en [`Realizados/general_old_version/README.md`](Realizados/general_old_version/README.md).
+
+| Documento | Estado |
+|---|---|
+| [Auditoría del inventario de 89 puntos](Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) | ✅ |
+| [Auditoría de los documentos complementarios](Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) | ✅ |
 
 ---
 
