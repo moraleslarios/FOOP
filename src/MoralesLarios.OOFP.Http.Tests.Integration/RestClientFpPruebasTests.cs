@@ -6,6 +6,7 @@ using MoralesLarios.OOFP.Http.Tests.Integration.Clients;
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration;
 
+[Trait("Category", "RequiresLocalServer")]
 public class RestClientFpPruebasTests(IPruebasClient _sut)
 {
     [Fact]

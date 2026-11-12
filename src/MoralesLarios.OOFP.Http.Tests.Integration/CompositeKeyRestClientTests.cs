@@ -2,6 +2,7 @@
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration;
 
+[Trait("Category", "RequiresLocalServer")]
 public class CompositeKeyRestClientTests(IPruebaComplexClient _sut)
 {
 

@@ -9,6 +9,7 @@ using System.Formats.Asn1;
 
 namespace MoralesLarios.OOFP.Http.Tests.Integration;
 
+[Trait("Category", "RequiresLocalServer")]
 public class UnitTest1(IHttpApiInvoker _sut)
 {
     //    [Fact]

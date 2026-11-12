@@ -95,7 +95,7 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 **Criterios de aceptación**
 
 - [x] `.github/workflows/ci.yml`: restaura, compila en Release `--no-incremental` y ejecuta `dotnet test` de la solución en Windows y Linux, con el SDK de `global.json`. *(El *job* de Linux es informativo (`continue-on-error`) hasta que G6-US-04 elimine las rutas de Windows de las pruebas. El flujo no se ha podido ejecutar en GitHub desde local: el equivalente local, 0 errores y 1.715 tests en verde, sí.)*
-- [ ] Las pruebas que requieran un servidor local se separan con un `Trait`/categoría y no bloquean el flujo por defecto (ver [G6-US-04](Epica-G6-Pruebas-Calidad-y-Rendimiento.md)).
+- [x] Las pruebas que requieran un servidor local se separan con un `Trait`/categoría y no bloquean el flujo por defecto (ver [G6-US-04](Epica-G6-Pruebas-Calidad-y-Rendimiento.md)). *(Las cinco clases HTTP que usan endpoints locales llevan `Category=RequiresLocalServer`; el CI excluye esa categoría. La selección explícita `--filter "Category=RequiresLocalServer"` enumera las 33 pruebas.)*
 - [x] El *workflow* `prompt-migracion.yml` existente se conserva.
 - [x] Se compilan también `MlDoc` y `MlRename` (están fuera de la solución).
 - [ ] **D-G1-4:** análisis de seguridad (CodeQL) y publicación automática quedan para una segunda iteración y requieren decisión del propietario sobre credenciales de publicación.
