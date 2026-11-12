@@ -3,7 +3,7 @@
 > **Origen:** [`Next_Versions/2.0.0/Realizados/Temas Pendientes/`](../../Realizados/Temas%20Pendientes/README.md) · el inventario general escrito **antes** del renombrado 2.0.0
 > **Auditado contra:** commit `dab05b4` (rama `release/2.0.0-nomenclatura`, 2026-11-12) · auditoría **estática** (lectura y búsqueda en código y tests; los tests de regresión citados existen, no se volvieron a ejecutar en esta auditoría)
 > **Versión destino:** 2.0.0 (nada publicado todavía) · el 3.0.0 solo recibe lo explícitamente diferido
-> **Estado:** 🔄 En curso · G1 con US-01, US-03, US-04, US-05 y US-08 hechas y US-02/US-07 a medias; G2-G6 sin iniciar
+> **Estado:** 🔄 En curso · G1: US-03/05/08 hechas; US-01/02/04/07 parciales; US-06 pendiente. G2-G6 sin iniciar
 > **Finalizado:** las auditorías [`01`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) y [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) viven en [`Realizados/general_old_version/`](../../Realizados/general_old_version/README.md)
 
 ---

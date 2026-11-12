@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0
 > **Proyecto:** repositorio completo (sin tocar la API pública)
 > **Origen:** `Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md` (Bloque 0) · omisiones detectadas en [la auditoría](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#6-profesionalización--ingeniería-y-calidad)
-> **Estado:** 🔄 En curso · G1-US-01 ✅ (pendiente solo D-G1-1: rotación por el propietario)
+> **Estado:** 🔄 En curso · US-01/03/05/08 ✅ (US-01 aún requiere decidir rotación); US-02/04/07 parciales; US-06 pendiente
 > **Esfuerzo:** L · **Riesgo:** 🟢 bajo (no cambia comportamiento) · 🟠 solo la US-01 si hay que retirar secretos del historial
 > **Compatibilidad:** ✅ Aditiva. No requiere registro en `oofp-upgrade-2.prompt.md`
 
@@ -74,9 +74,10 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 **Criterios de aceptación**
 
 - [x] `LICENSE` en la raíz (**D-G1-2:** el código ya declara Apache-2.0 en sus cabeceras; el propietario confirma la licencia). *(Añadido con el texto Apache-2.0 y `Copyright 2023 Juan Francisco Morales Larios`, tomado de las cabeceras. **El propietario debe confirmarlo.**)*
-- [ ] `Directory.Build.props` (o `.csproj` de cada paquete) define `Authors`, `Description`, `PackageTags`, `PackageLicenseExpression`, `RepositoryUrl`, `PackageProjectUrl`, `PackageReadmeFile`, `PackageIcon` si procede.
-- [ ] `SourceLink`, `IncludeSymbols`/`snupkg`, `Deterministic` y `ContinuousIntegrationBuild` (solo en CI).
-- [ ] `dotnet pack -c Release` de los 17 proyectos con versión termina sin avisos de metadatos (`NU5xxx`) y el `.nuspec` resultante se revisa a mano en uno de ellos.
+- [x] `Directory.Build.props` define `Authors`, `Description`, `PackageTags`, `RepositoryUrl`, `PackageProjectUrl` y `PackageReadmeFile`; el README se incluye en el paquete. *(Revisado en el `.nuspec` de Core. No hay icono que incluir.)*
+- [ ] `PackageLicenseExpression` pendiente de confirmar Apache-2.0 (D-G1-2); no se declara una licencia en los paquetes hasta tener aprobación del propietario.
+- [x] Source Link, `IncludeSymbols`/`snupkg`, `Deterministic` y `ContinuousIntegrationBuild` (solo en CI). *(`Microsoft.SourceLink.GitHub` 11.0.100; sin avisos `NU19xx` en el empaquetado.)*
+- [x] `dotnet pack -c Release` de los 19 proyectos empaquetables termina sin avisos de metadatos (`NU5xxx`); se inspecciona el `.nuspec` de Core. *(19 `.nupkg` y 19 `.snupkg`, 0 errores.)*
 
 **Compatibilidad:** Aditiva.
 
