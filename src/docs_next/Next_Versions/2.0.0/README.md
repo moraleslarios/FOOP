@@ -43,6 +43,22 @@ Plan de ejecución en [`Pendientes/README.md`](Pendientes/README.md) · **7 épi
 
 Las épicas EFCore y su orden independiente se detallan en [`Pendientes/EntityFrameworkCore/README.md`](Pendientes/EntityFrameworkCore/README.md). El hallazgo #7 de su análisis está cubierto por la guía del proyecto y la épica UoW ya completada.
 
+### 2.1 Inventario general antiguo · `general_old_version`
+
+Auditoría (2026-11-12) de `Temas Pendientes/` contra el código y plan para lo que sigue abierto, en
+[`Pendientes/general_old_version/README.md`](Pendientes/general_old_version/README.md) · **6 épicas nuevas**.
+
+| Épica | Resultado |
+| --- | --- |
+| [G1 · Higiene del repositorio, CI y publicación](Pendientes/general_old_version/Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md) | Credenciales fuera del repo, licencia, SDK fijado, CI |
+| [G2 · Brechas de Http, EFCore y controladores](Pendientes/general_old_version/Epica-G2-Brechas-Http-EFCore-y-Controladores.md) | 12 puntos del inventario sin historia previa |
+| [G3 · Robustez del núcleo `MlResult`](Pendientes/general_old_version/Epica-G3-Nucleo-MlResult-Robustez.md) | Invariantes y excepciones |
+| [G4 · `ValueObjects`: nomenclatura y diseño](Pendientes/general_old_version/Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md) | 20 puntos N decididos antes de publicar |
+| [G5 · Cierre del renombrado y puentes](Pendientes/general_old_version/Epica-G5-Cierre-Renombrado-y-Puentes.md) | Criterios A-D y política de puentes |
+| [G6 · Pruebas, calidad y rendimiento](Pendientes/general_old_version/Epica-G6-Pruebas-Calidad-y-Rendimiento.md) | Red de seguridad, leyes, cobertura, *benchmarks* |
+
+El [plan maestro](Pendientes/general_old_version/03-Plan-Maestro.md) ordena estas seis junto a las siete anteriores.
+
 ---
 
 ## 3. Realizados · trabajo ya implementado
