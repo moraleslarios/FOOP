@@ -1088,7 +1088,7 @@ Se dejó **deliberadamente fuera** del alcance de la 2.0.0 lo siguiente:
 
 Las decisiones abiertas (`D-1` a `D-11`) y el detalle de lo que queda para la
 siguiente versión están documentados en
-[`Temas Pendientes/Plan-Renombrados-2.0.0.md`](../Temas%20Pendientes/Plan-Renombrados-2.0.0.md).
+[`Temas Pendientes/Plan-Renombrados-2.0.0.md`](../Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Plan-Renombrados-2.0.0.md).
 
 ---
 

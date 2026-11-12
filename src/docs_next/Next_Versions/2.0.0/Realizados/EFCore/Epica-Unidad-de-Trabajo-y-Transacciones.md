@@ -1,9 +1,9 @@
 # Épica · Unidad de trabajo y transacciones en `MoralesLarios.OOFP.EntityFrameworkCore`
 
 > **Versión destino:** `2.0.0`
-> **Origen:** punto **40** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
+> **Origen:** punto **40** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
 > (*"No hay unidad de trabajo: un `SaveChanges` por operación"*), sacado de la versión `2.0.0` por su coste y su riesgo.
-> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tarea 4.4.
+> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tarea 4.4.
 > **Estado:** ✅ Completada · US-01 … US-11 implementadas y verificadas
 > **Esfuerzo estimado:** **XL** (~5-7 jornadas) · **Riesgo:** 🔴 Alto (ruptura de comportamiento silenciosa)
 
@@ -1535,6 +1535,6 @@ public class UnitOfWorkTransactionTests(TestDbFixture fixture) : IClassFixture<T
 
 ## Ver también
 
-- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · punto 40, origen de esta épica
-- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
-- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37
+- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · punto 40, origen de esta épica
+- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
+- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37

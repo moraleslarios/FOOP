@@ -1,10 +1,10 @@
 # Épica · Validación en `MoralesLarios.OOFP.Validation*`
 
 > **Versión destino:** `2.0.0`
-> **Origen:** puntos **56**, **57**, **58** y **59** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
+> **Origen:** puntos **56**, **57**, **58** y **59** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md)
 > (*"`where T : class` en lugar de restricción de tipo propio"*, *"sin acceso al contenedor de servicios"*,
 > *"métodos `Async` que no son asíncronos"*, *"se descarta `MemberNames`"*).
-> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 5, tareas 5.1, 5.2, 5.3 y 5.4.
+> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 5, tareas 5.1, 5.2, 5.3 y 5.4.
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo estimado:** **M** (~1-2 jornadas) · **Riesgo:** 🟠 Alto (la tarea 5.1 toca `Core`; la 5.3 rompe compatibilidad)
 
@@ -1166,10 +1166,10 @@ validaciones que antes pasaban.
 
 ## Ver también
 
-- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 56, 57, 58 y 59, origen de esta épica
-- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 5, tareas 5.1 a 5.4
+- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 56, 57, 58 y 59, origen de esta épica
+- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 5, tareas 5.1 a 5.4
 - [`Epica-Serializacion-y-Errores-Http.md`](Epica-Serializacion-y-Errores-Http.md) · **tarea 2.2 (punto 46): depende de US-01**; hay que diseñar `MlError` una sola vez
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) · consumidor final del `Target` para construir `ProblemDetails`
 - [`Epica-Servicio-y-Paginacion.md`](Epica-Servicio-y-Paginacion.md) · la otra ruptura de la `2.1.0`
 - [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, completada y archivada
-- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37
+- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37

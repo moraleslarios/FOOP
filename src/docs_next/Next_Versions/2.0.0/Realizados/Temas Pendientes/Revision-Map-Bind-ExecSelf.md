@@ -97,7 +97,7 @@ Los 4 warnings que quedan son `CS8604` en `Helpers/EnsureFp.Strings.cs` (líneas
       se corrigieron (`…IfFailed…`, `…Different…`, `MergeFailureErrors`) y los antiguos quedaron
       como puentes `[Obsolete]` en los ficheros `*.Obsolete.cs`, vigentes durante toda la rama 2.x.
       Detalle en
-      [`Cambios Realizados/Renombrados-v2.0.0.md`](../Cambios%20Realizados/Renombrados-v2.0.0.md).
+      [`Cambios Realizados/Renombrados-v2.0.0.md`](../../../../Cambios%20Realizados/Renombrados-v2.0.0.md).
 
 ---
 

@@ -238,7 +238,7 @@ mutación con `With`, elevación a `Task`) que merecen cuatro clases con nombre 
 
 > **Nota aparte**: `With<T>(this T, params Action<T>[])` **muta** el objeto recibido y lo devuelve.
 > En una librería funcional, un método llamado `With` que muta en vez de copiar es
-> contraintuitivo. Se analiza en [`05-Superficie-de-API-y-Arquitectura.md`](05-Superficie-de-API-y-Arquitectura.md).
+> contraintuitivo. Se analiza en `05-Superficie-de-API-y-Arquitectura.md`.
 
 ---
 
@@ -276,7 +276,7 @@ documentación en un idioma y ve los errores en otro.
 Además, `"Not right value"` no es inglés idiomático; lo esperable sería `"No value"` o
 `"<null>"`. Y `ToString()` devolviendo un mensaje de error en lugar de una representación
 estructurada rompe la expectativa de `ToString()` → se trata en
-[`02-Interoperabilidad-BCL.md`](02-Interoperabilidad-BCL.md) (`IFormattable`).
+`02-Interoperabilidad-BCL.md` (`IFormattable`).
 
 > La localización completa es objeto de la épica
 > [`Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md).
@@ -366,7 +366,7 @@ El impacto real se ve en la **documentación del propio proyecto**:
 El README documenta `Value` y `ErrorsDetails`, miembros que **no existen**: los reales son
 `SuccessValue` y `FailureDetails`, y además son `internal protected` (inaccesibles desde fuera).
 Esta deriva documental se trata en
-[`08-Calidad-Pruebas-y-Documentacion.md`](08-Calidad-Pruebas-y-Documentacion.md).
+`08-Calidad-Pruebas-y-Documentacion.md`.
 
 ---
 
@@ -445,12 +445,12 @@ catch (Exception ex)      // ← captura TODO
 
 `catch (Exception)` captura también `OperationCanceledException` (convirtiendo una cancelación
 limpia en un error de negocio), `OutOfMemoryException` y `StackOverflowException`-adyacentes.
-Esto se analiza en profundidad en [`03-Modelo-de-Error.md`](03-Modelo-de-Error.md).
+Esto se analiza en profundidad en `03-Modelo-de-Error.md`.
 
 > **Propuesta de nomenclatura**: no renombrar los 1.000 métodos, pero:
 > - documentar la semántica propia en la documentación XML de cada familia (`<remarks>` compartido);
 > - introducir, en los sitios donde sí tiene sentido la semántica BCL, el prefijo `TryGet`
->   (`TryGetValue`, `TryGetErrors`), que es inequívoco → ver [`02-Interoperabilidad-BCL.md`](02-Interoperabilidad-BCL.md);
+>   (`TryGetValue`, `TryGetErrors`), que es inequívoco → ver `02-Interoperabilidad-BCL.md`;
 > - excluir `OperationCanceledException` del `catch`.
 
 ---
@@ -777,7 +777,7 @@ Criterios de aceptación:
 - [ ] Todos los literales de clave son `public const string` (no propiedades).
 - [ ] Los nombres antiguos permanecen como puentes `[Obsolete]` en `Constants.Obsolete.cs`.
 - [ ] CA1707 no aparece en el núcleo tras activar los analizadores (ver
-      [`08-Calidad-Pruebas-y-Documentacion.md`](08-Calidad-Pruebas-y-Documentacion.md)).
+      `08-Calidad-Pruebas-y-Documentacion.md`).
 - [ ] La ruptura está registrada en `oofp-upgrade-2.prompt.md` §3.3 y en el anexo de renombrados.
 
 **Mapa de renombrados**:
@@ -943,7 +943,7 @@ graph TD
 |----|----------|----------|---------------|
 | **D-01** | ¿Las claves de metadatos deben ser `const` o `static readonly`? | (a) `const`: cero indirección, pero el consumidor incrusta el valor y una ruptura binaria si cambia · (b) `static readonly`: compatible binariamente, coste despreciable | **(b) `static readonly`**: el valor se resuelve en ejecución, así que una corrección futura llega al consumidor sin recompilar. El coste de rendimiento es nulo para claves de diccionario |
 | **D-02** | ¿Se mantiene el prefijo `Ml` en los tipos? | (a) mantener · (b) eliminar | **(a) mantener**: la eliminación sería la ruptura más grande posible sin ningún beneficio funcional |
-| **D-03** | ¿Qué hacer con `MlResult.Empty()` / `EmptyAsync()`? | (a) dejarlos · (b) `[Obsolete]` en favor de `Discard` · (c) redefinirlos como `MlResult<Unit>` | **(b)**: `Empty()` devuelve `MlResult<object>`, que obliga al consumidor a arrastrar `object`. `Discard` cubre el caso. Si se quiere un tipo explícito, introducir `Unit` (ver [`02-Interoperabilidad-BCL.md`](02-Interoperabilidad-BCL.md)) |
+| **D-03** | ¿Qué hacer con `MlResult.Empty()` / `EmptyAsync()`? | (a) dejarlos · (b) `[Obsolete]` en favor de `Discard` · (c) redefinirlos como `MlResult<Unit>` | **(b)**: `Empty()` devuelve `MlResult<object>`, que obliga al consumidor a arrastrar `object`. `Discard` cubre el caso. Si se quiere un tipo explícito, introducir `Unit` (ver `02-Interoperabilidad-BCL.md`) |
 | **D-04** | ¿Se renombra la familia `Try*`? | (a) no tocar (1.000+ métodos) · (b) renombrar a `Catching*` · (c) no tocar pero documentar | **(c)**: la ruptura de (b) no es rentable; la confusión se mitiga con un `<remarks>` compartido y con `TryGet*` para los casos de semántica BCL |
 | **D-05** | ¿Idioma por defecto de los mensajes de error? | (a) inglés (actual) · (b) castellano (coherente con la documentación) · (c) inglés + recursos localizados | **(c)**: inglés como neutro (es lo que esperan los paquetes NuGet) + `.resx` para castellano. Queda en manos de la épica de localización |
 | **D-06** | ¿`With<T>` debe copiar en vez de mutar? | (a) dejar la mutación y renombrar a `Mutate` · (b) implementar copia real · (c) eliminarlo | **(a)**: renombrar a `Mutate` deja claro el comportamiento; implementar copia genérica para cualquier `T : class` no es viable sin reflexión costosa |
@@ -956,7 +956,7 @@ graph TD
       con **0 errores** y **`CS1591 = 0`**.
 - [ ] Los **1.060 tests** están en verde.
 - [ ] El número de advertencias no supera la línea base de **238** (y baja en al menos las 4 de
-      `EnsureFp.Strings.cs` si se acomete [`04-Nulabilidad-Genericos-y-Contratos.md`](04-Nulabilidad-Genericos-y-Contratos.md)).
+      `EnsureFp.Strings.cs` si se acomete `04-Nulabilidad-Genericos-y-Contratos.md`).
 - [ ] CA1707 no se dispara en el núcleo con los analizadores activados.
 - [ ] Cada ruptura de las US-03, US-04, US-05, US-06 y US-07 está registrada en
       [`../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) §3.3,
@@ -1228,10 +1228,10 @@ public static class TaskLiftExtensions
 ## Ver también
 
 - [`README.md`](README.md) — índice del análisis del núcleo.
-- [`02-Interoperabilidad-BCL.md`](02-Interoperabilidad-BCL.md) — `TryGetValue`, `Unit`, `IFormattable`.
-- [`03-Modelo-de-Error.md`](03-Modelo-de-Error.md) — localización de los mensajes y `catch (Exception)`.
-- [`04-Nulabilidad-Genericos-y-Contratos.md`](04-Nulabilidad-Genericos-y-Contratos.md) — ambigüedad de sobrecargas y operadores implícitos.
-- [`08-Calidad-Pruebas-y-Documentacion.md`](08-Calidad-Pruebas-y-Documentacion.md) — activación de analizadores y deriva del `README.md`.
+- `02-Interoperabilidad-BCL.md` — `TryGetValue`, `Unit`, `IFormattable`.
+- `03-Modelo-de-Error.md` — localización de los mensajes y `catch (Exception)`.
+- `04-Nulabilidad-Genericos-y-Contratos.md` — ambigüedad de sobrecargas y operadores implícitos.
+- `08-Calidad-Pruebas-y-Documentacion.md` — activación de analizadores y deriva del `README.md`.
 - [`../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) — campaña de erratas públicas.
 - [`../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md) — localización de mensajes.
 - [Framework Design Guidelines · Naming Guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/naming-guidelines)

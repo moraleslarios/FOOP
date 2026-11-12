@@ -1,7 +1,7 @@
 # Épica · Limpieza de código muerto en `Http`, `AspNetCore.Controllers` y `EntityFrameworkCore`
 
 > **Versión destino:** 2.0.0
-> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **64, 68, 69, 70** y **85**
+> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **64, 68, 69, 70** y **85**
 > **Plan del que se desgaja:** bloque «Código muerto y archivos vacíos» (64-70) + punto 85 de «Coherencia y documentación»
 > **Estado:** ✅ Completada · US-01…06 resueltas
 > **Esfuerzo:** S (~½ jornada el tramo mecánico; ~1 jornada con la decisión del `ILogger`)
@@ -497,7 +497,7 @@ compilador avisará en su siguiente compilación.
       `IDE0005` (`using` innecesario) y `CS1591` si no estuviera ya.
 - [x] Un miembro privado no usado queda señalado por `IDE0051`; si ningún analizador integrado
     cubre parámetros de constructor primario, se evalúa añadir uno externo (ver el documento
-    [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md)).
+    [`Profesionalizacion-Ingenieria-y-Calidad.md`](../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md)).
 - [x] La solución compila en `Release --no-incremental` con **0 errores**, `CS1591 = 0` y una
     línea base actual de **392 avisos**.
 - [x] Ninguna regla nueva se activa como **error** en esta épica: el endurecimiento a error es
@@ -578,7 +578,7 @@ graph TD
 - [x] La suite completa queda en verde: **1.677/1.677 pruebas**.
 - [x] La ruptura de US-05 está documentada en `oofp-upgrade-2.prompt.md` §3.3, punto 78.
 - [x] Puntos **65, 66 y 67** marcados como ✅ resueltos en
-    [`Mejoras-Prioridad-Baja.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md).
+    [`Mejoras-Prioridad-Baja.md`](../Temas%20Pendientes/Mejoras-Prioridad-Baja.md).
 - [x] `.editorconfig` con las cuatro reglas de US-06 y la línea base de avisos registrada.
 
 ---
@@ -958,6 +958,6 @@ public class CompositeKeyRestClientFp<TDto>(IRestClientFp<TDto> _genClientFp)
 
 - [Índice de épicas completadas de Http](README.md)
 - [Épicas pendientes de la versión](../../Pendientes/README.md)
-- [`Mejoras-Prioridad-Baja.md`](../../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
-- [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — analizadores y `.editorconfig` (US-06)
+- [`Mejoras-Prioridad-Baja.md`](../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
+- [`Profesionalizacion-Ingenieria-y-Calidad.md`](../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — analizadores y `.editorconfig` (US-06)
 - [`oofp-upgrade-2.prompt.md`](../../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) — §3.3, registro de rupturas de compatibilidad

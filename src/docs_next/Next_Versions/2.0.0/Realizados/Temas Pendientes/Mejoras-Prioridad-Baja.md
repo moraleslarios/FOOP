@@ -35,28 +35,28 @@
 
 Los **26 puntos** (64-89) se han auditado contra el código de la 2.0.0 y **todos** están gestionados
 en las cuatro épicas de prioridad baja (una completada y archivada; tres pendientes) de
-[`Next_Versions/2.0.0/Pendientes`](../Next_Versions/2.0.0/Pendientes/README.md).
+[`Next_Versions/2.0.0/Pendientes`](../../Pendientes/README.md).
 
 | Punto | Estado | Épica que lo gestiona |
 |---|---|---|
-| 64 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-01 |
-| 65 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
-| 66 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
-| 67 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
-| 68 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-02 |
-| 69 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-03 |
-| 70 | ✅ Resuelto en 2.0.0 · ruptura registrada en el punto 78 | [Limpieza de código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-05 |
-| 71-76 | 🟡 Parciales | [Erratas en identificadores públicos](../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) · avisos, parámetros y documentación de puentes aún pendientes |
-| 77-80 | 🟡 Parciales | [Mensajes, idioma e instrumentación](../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md) · mensajes corregidos; infraestructura, idioma y plantillas aún pendientes |
-| 81 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-01 resuelta; demás contratos pendientes |
-| 82 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-02 |
-| 83 | ✅ Resuelto en 2.0.0 | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-03; genéricos cerrados y ruptura textual en punto 81 del prompt |
-| 84 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-04 |
-| 85 | ✅ Resuelto en 2.0.0 | [Código muerto](../Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) y [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) (constancia) |
-| 86 | 🟡 Parcial | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-05 |
-| 87 | ⬜ Vivo | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-06 |
-| 88 | ✅ Resuelto en 2.0.0 | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · §1 (constancia) |
-| 89 | ⬜ Vivo · 13 proyectos, no 2 | [Coherencia y documentación](../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-07 |
+| 64 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-01 |
+| 65 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 66 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 67 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · §1 (constancia) |
+| 68 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-02 |
+| 69 | ✅ Resuelto en 2.0.0 | [Limpieza de código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-03 |
+| 70 | ✅ Resuelto en 2.0.0 · ruptura registrada en el punto 78 | [Limpieza de código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) · US-05 |
+| 71-76 | 🟡 Parciales | [Erratas en identificadores públicos](../../Pendientes/Epica-Erratas-Identificadores-Publicos.md) · avisos, parámetros y documentación de puentes aún pendientes |
+| 77-80 | 🟡 Parciales | [Mensajes, idioma e instrumentación](../../Pendientes/Epica-Mensajes-Y-Localizacion.md) · mensajes corregidos; infraestructura, idioma y plantillas aún pendientes |
+| 81 | 🟡 Parcial | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-01 resuelta; demás contratos pendientes |
+| 82 | 🟡 Parcial | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-02 |
+| 83 | ✅ Resuelto en 2.0.0 | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-03; genéricos cerrados y ruptura textual en punto 81 del prompt |
+| 84 | 🟡 Parcial | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-04 |
+| 85 | ✅ Resuelto en 2.0.0 | [Código muerto](../../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) y [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) (constancia) |
+| 86 | 🟡 Parcial | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-05 |
+| 87 | ⬜ Vivo | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-06 |
+| 88 | ✅ Resuelto en 2.0.0 | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · §1 (constancia) |
+| 89 | ⬜ Vivo · 13 proyectos, no 2 | [Coherencia y documentación](../../Pendientes/Epica-Coherencia-Y-Documentacion.md) · US-07 |
 
 **Leyenda:** ✅ resuelto durante la 2.0.0 · 🟡 parcial (el renombrado de la 2.0.0 arregló una parte,
 el resto sigue vivo) · ⬜ vivo, pendiente de la 2.1.0.
@@ -248,7 +248,7 @@ el resto sigue vivo) · ⬜ vivo, pendiente de la 2.1.0.
 
 - [`Mejoras-Prioridad-Critica-y-Alta.md`](Mejoras-Prioridad-Critica-y-Alta.md) — prioridades 🔴 crítica y 🟠 alta.
 - [`Mejoras-Prioridad-Media.md`](Mejoras-Prioridad-Media.md) — rendimiento, diseño y API pública.
-- [`Next_Versions/2.0.0/Pendientes/README.md`](../Next_Versions/2.0.0/Pendientes/README.md) — las 9 épicas de la versión 2.1.0.
+- [`Next_Versions/2.0.0/Pendientes/README.md`](../../Pendientes/README.md) — las 9 épicas de la versión 2.1.0.
 - [`Profesionalizacion-Ingenieria-y-Calidad.md`](Profesionalizacion-Ingenieria-y-Calidad.md) ·
   [`Profesionalizacion-Diseno-API-y-Producto.md`](Profesionalizacion-Diseno-API-y-Producto.md)
 - [`Consejos-Nomenclatura.md`](Consejos-Nomenclatura.md) — propuesta de renombrado.

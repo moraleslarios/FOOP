@@ -66,7 +66,7 @@ Dos problemas encadenados:
    la compilación **sigue pasando con 0 errores** al quitar el `global using` (comprobado en copia desechable,
    punto 03). El `README` del proyecto ya lo reconoce («declarada pero no se usa»), y la planificación existente
    lo lista en
-   [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) (línea 131).
+   [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) (línea 131).
 2. **Desajuste de versión mayor.** El proyecto apunta a `net8.0` y el resto de paquetes `Microsoft.Extensions.*`
    que resuelve son de la serie 8 (`DependencyInjection 8.0.0`, `Logging 8.0.0`, `…Abstractions 8.0.1`, según
    `obj/project.assets.json`); este paquete es el **único de la serie 9** (`9.0.6`). Lo arrastra cualquier
@@ -329,4 +329,4 @@ global using static MoralesLarios.OOFP.Shared.Web.WebErrorDetailsKeys;
 - [`README.md`](README.md) — índice de la carpeta.
 - [`../Core/README.md`](../Core/README.md) — hallazgo 10 (metadatos NuGet) y roadmap de empaquetado.
 - [`../Logging/README.md`](../Logging/README.md) — hallazgo G2 (`GlobalUsings` redundantes).
-- [`../../Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — ya lista `Configuration.Abstractions 9.0.6`.
+- [`../../Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../../Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — ya lista `Configuration.Abstractions 9.0.6`.

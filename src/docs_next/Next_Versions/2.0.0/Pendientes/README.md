@@ -1,8 +1,8 @@
 # Pendientes · Épicas de ejecución por hacer
 
 > **Estado global:** 🔄 7 épicas pendientes (3 parciales) + 6 épicas nuevas en [`general_old_version/`](general_old_version/README.md) · 9 completadas y archivadas (7 EFCore, 1 Http, 1 Framework)
-> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) (puntos 38-63) · [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) (puntos 64-89)
-> **Plan maestro del que se desgajan:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md)
+> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) (puntos 38-63) · [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) (puntos 64-89)
+> **Plan maestro del que se desgajan:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md)
 
 Esta carpeta contiene **7 épicas pendientes** del inventario transversal de los puntos **38 a 89**.
 Las épicas de simplificación de repositorios, unidad de trabajo, lecturas, paginación, selección del último,
@@ -296,9 +296,9 @@ el tipo que citaban se renombró.
 
 - [`Realizados/EFCore/README.md`](../Realizados/EFCore/README.md) · épica de repositorios ya completada
 - [`Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · cierre del punto 40
-- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · auditoría y plan por fases
-- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · catálogo original de puntos 38-63
-- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) · catálogo original de puntos 64-89
-- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37
-- [`Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) · analizadores, `.editorconfig` y calidad transversal
+- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · auditoría y plan por fases
+- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) · catálogo original de puntos 38-63
+- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) · catálogo original de puntos 64-89
+- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37
+- [`Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../Realizados/Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) · analizadores, `.editorconfig` y calidad transversal
 - [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) · §3.3, registro de rupturas de compatibilidad

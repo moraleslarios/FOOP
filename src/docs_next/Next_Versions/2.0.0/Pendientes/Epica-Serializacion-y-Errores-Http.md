@@ -1,10 +1,10 @@
 # Épica · Serialización y errores HTTP en `MoralesLarios.OOFP.Http`
 
 > **Versión destino:** `2.0.0`
-> **Origen:** puntos **45**, **46** y **47** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
+> **Origen:** puntos **45**, **46** y **47** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md)
 > (*"No se pueden configurar las `JsonSerializerOptions`"*, *"El código de estado HTTP se pierde como texto"*,
 > *"Métodos públicos que no están en las interfaces"*), más los colaterales **42**, **44** y **63**.
-> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 2 (tareas 2.1, 2.2, 2.3) y fase 1 (tareas 1.3, 1.4, 1.5).
+> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 2 (tareas 2.1, 2.2, 2.3) y fase 1 (tareas 1.3, 1.4, 1.5).
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo estimado:** **L** (~1-2 jornadas) · **Riesgo:** 🟢 Bajo en lo aditivo · 🟠 Alto en la forma del error
 
@@ -1431,8 +1431,8 @@ public class HttpSerializationContractTests(HttpFixture fixture)
 
 ## Ver también
 
-- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 42, 44, 45, 46, 47 y 63, origen de esta épica
-- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
+- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 42, 44, 45, 46, 47 y 63, origen de esta épica
+- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) · el otro lado del protocolo (puntos 43, 48-52, 60, 61)
 - [`Epica-Validacion.md`](Epica-Validacion.md) · diseño conjunto de `MlError.Details` (punto 59) y decisión sobre `*Async` (punto 58)
 - [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, completada

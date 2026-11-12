@@ -2,12 +2,12 @@
 
 > **Versión destino:** `2.0.0`
 > **Origen:** puntos **43**, **48**, **49**, **50**, **51**, **52**, **60** y **61** de
-> [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
+> [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md)
 > (*"Rutas incoherentes entre verbos"*, *"Nombres de parámetro distintos entre simple y dúplex"*,
 > *"PUT y DELETE con cuerpo"*, *"`[ApiController]` en la clase base"*, *"Sin `[ProducesResponseType]`"*,
 > *"`Activator.CreateInstance` para descubrir la clave primaria"*, *"Clave compuesta sin decodificar"*,
 > *"Atributo que nadie lee"*).
-> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 3, tareas 3.1 a 3.6.
+> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 3, tareas 3.1 a 3.6.
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo estimado:** **XL** (~3-4 jornadas) · **Riesgo:** 🔴 Muy alto (**rompe URLs y clientes publicados**)
 
@@ -1678,8 +1678,8 @@ public class RestContractTests(WebAppFixture fixture)
 
 ## Ver también
 
-- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 43, 48, 49, 50, 51, 52, 60 y 61, origen de esta épica
-- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
+- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 43, 48, 49, 50, 51, 52, 60 y 61, origen de esta épica
+- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · plan de la `2.0.0`, del que se desgaja
 - [`Epica-Serializacion-y-Errores-Http.md`](Epica-Serializacion-y-Errores-Http.md) · el lado cliente del mismo protocolo (puntos 42, 44, 45, 46, 47)
 - [`Epica-Servicio-y-Paginacion.md`](Epica-Servicio-y-Paginacion.md) · la paginación del `GET` de colección (punto 41)
 - [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · punto 40, completada

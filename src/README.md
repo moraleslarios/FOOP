@@ -47,7 +47,7 @@ mismo idioma, con las mismas convenciones de nombres (`Bind*`, `Map*`, `Match*`,
 | Transformar el valor de un resultado válido | [`docs/Map/1_Map.md`](docs/Map/1_Map.md) |
 | Salir del carril y devolver un valor concreto | [`docs/Match/1_Match.md`](docs/Match/1_Match.md) |
 | Ver la referencia archivo a archivo del núcleo | [`docs/core-types/README.md`](docs/core-types/README.md) |
-| Saber qué hay que arreglar y en qué orden | [`Temas Pendientes/README.md`](./Temas%20Pendientes/README.md) |
+| Saber qué hay que arreglar y en qué orden | [`Temas Pendientes/README.md`](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/README.md) |
 
 ---
 
@@ -252,9 +252,9 @@ puentes `[Obsolete]` en todo lo que se podía mantener compatible.
 
 | Documento | Contenido |
 |---|---|
-| [📋 **Renombrados de la v2.0.0**](./Cambios%20Realizados/Renombrados-v2.0.0.md) | El registro completo: una tabla por nivel con el nombre **antes** y **después**, si tiene puente `[Obsolete]`, la guía de migración rápida, los cambios de contrato y lo que se dejó deliberadamente fuera. |
+| [📋 **Renombrados de la v2.0.0**](./docs_next/Cambios%20Realizados/Renombrados-v2.0.0.md) | El registro completo: una tabla por nivel con el nombre **antes** y **después**, si tiene puente `[Obsolete]`, la guía de migración rápida, los cambios de contrato y lo que se dejó deliberadamente fuera. |
 | [📐 **CONTRIBUTING.md**](./CONTRIBUTING.md) | La guía de estilo que salió de ese trabajo: sufijos con significado fijo, prefijos prohibidos, parámetros de tipo genérico, booleanos, factorías, diseño de API pública y política de cambios que rompen compatibilidad. |
-| [🧾 `_registro.csv`](./Cambios%20Realizados/_registro.csv) | La fuente de datos en bruto del documento anterior, por si quieres filtrar o procesar los cambios con tus propias herramientas. |
+| [🧾 `_registro.csv`](./docs_next/Cambios%20Realizados/_registro.csv) | La fuente de datos en bruto del documento anterior, por si quieres filtrar o procesar los cambios con tus propias herramientas. |
 
 > ⚠️ **Si vienes de la 1.x**, empieza por la *guía de migración rápida* del primer documento: los
 > paquetes NuGet cambiaron de nombre, así que ese es el primer paso obligatorio.
@@ -263,21 +263,21 @@ puentes `[Obsolete]` en todo lo que se podía mantener compatible.
 
 ## 🗂️ Temas pendientes: mejoras, nomenclatura y profesionalización
 
-La carpeta [**`Temas Pendientes`**](./Temas%20Pendientes/README.md) reúne los documentos de trabajo
+La carpeta [**`Temas Pendientes`**](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/README.md) reúne los documentos de trabajo
 sobre el estado de la solución: qué hay que arreglar, en qué orden y qué cambiaría para
 profesionalizar la biblioteca. Ninguno de ellos modifica código: son inventarios y guías de decisión.
 
 | Documento | Contenido |
 |---|---|
-| [🗂️ **Índice de la carpeta**](./Temas%20Pendientes/README.md) | Resumen global de los 89 puntos, resumen por proyecto, plan de trabajo por bloques y orden de lectura recomendado. |
-| [🔴🟠 Mejoras de prioridad crítica y alta](./Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) | Puntos 1-37: bugs que producen resultados incorrectos, seguridad, inyección de dependencias, culturas y contratos rotos. |
-| [🟡 Mejoras de prioridad media](./Temas%20Pendientes/Mejoras-Prioridad-Media.md) | Puntos 38-63: rendimiento y acceso a datos, diseño de API y coherencia funcional. |
-| [🟢 Mejoras de prioridad baja](./Temas%20Pendientes/Mejoras-Prioridad-Baja.md) | Puntos 64-89: código muerto, erratas en identificadores públicos, mensajes al usuario y documentación. |
-| [🔤 Consejos de nomenclatura](./Temas%20Pendientes/Consejos-Nomenclatura.md) | Propuesta de renombrado en 10 niveles (solución, proyectos, carpetas, tipos, métodos y propiedades), con tablas «nombre actual → nombre propuesto» y una estrategia de migración con `[Obsolete]`. |
-| [🏗️ Profesionalización (1/2): ingeniería y calidad](./Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) | Higiene del repositorio, `Directory.Build.props`, gestión centralizada de paquetes, analizadores, nulabilidad, estrategia de pruebas, metadatos NuGet, SemVer, CI/CD y seguridad de la cadena de suministro. |
-| [🎨 Profesionalización (2/2): diseño de API y producto](./Temas%20Pendientes/Profesionalizacion-Diseno-API-y-Producto.md) | Superficie pública, asincronía y cancelación, modelo de errores tipado, i18n, rendimiento de `MlResult<T>`, arquitectura por capas, observabilidad, documentación como producto, comunidad y hoja de ruta en 4 fases. |
+| [🗂️ **Índice de la carpeta**](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/README.md) | Resumen global de los 89 puntos, resumen por proyecto, plan de trabajo por bloques y orden de lectura recomendado. |
+| [🔴🟠 Mejoras de prioridad crítica y alta](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) | Puntos 1-37: bugs que producen resultados incorrectos, seguridad, inyección de dependencias, culturas y contratos rotos. |
+| [🟡 Mejoras de prioridad media](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) | Puntos 38-63: rendimiento y acceso a datos, diseño de API y coherencia funcional. |
+| [🟢 Mejoras de prioridad baja](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) | Puntos 64-89: código muerto, erratas en identificadores públicos, mensajes al usuario y documentación. |
+| [🔤 Consejos de nomenclatura](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Consejos-Nomenclatura.md) | Propuesta de renombrado en 10 niveles (solución, proyectos, carpetas, tipos, métodos y propiedades), con tablas «nombre actual → nombre propuesto» y una estrategia de migración con `[Obsolete]`. |
+| [🏗️ Profesionalización (1/2): ingeniería y calidad](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) | Higiene del repositorio, `Directory.Build.props`, gestión centralizada de paquetes, analizadores, nulabilidad, estrategia de pruebas, metadatos NuGet, SemVer, CI/CD y seguridad de la cadena de suministro. |
+| [🎨 Profesionalización (2/2): diseño de API y producto](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Profesionalizacion-Diseno-API-y-Producto.md) | Superficie pública, asincronía y cancelación, modelo de errores tipado, i18n, rendimiento de `MlResult<T>`, arquitectura por capas, observabilidad, documentación como producto, comunidad y hoja de ruta en 4 fases. |
 
-**Por dónde empezar:** el [índice de la carpeta](./Temas%20Pendientes/README.md) → los puntos 🔴 críticos
+**Por dónde empezar:** el [índice de la carpeta](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/README.md) → los puntos 🔴 críticos
 → la fase 1 de la hoja de ruta (credibilidad del repositorio, sin cambios de comportamiento).
 
 ---
@@ -294,4 +294,4 @@ profesionalizar la biblioteca. Ninguno de ellos modifica código: son inventario
 - 📘 [README general del repositorio](../README.md)
 - 📘 [README del núcleo `MoralesLarios.OOFP`](MoralesLarios.OOFP.Core/README.md)
 - 📘 [Introducción técnica y mapa de la documentación](docs/1_Intro.md)
-- 🗂️ [Temas pendientes](./Temas%20Pendientes/README.md)
+- 🗂️ [Temas pendientes](./docs_next/Next_Versions/2.0.0/Realizados/Temas%20Pendientes/README.md)

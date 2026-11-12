@@ -1,7 +1,7 @@
 # Épica · Coherencia de contratos y documentación (`Shared`, `Http`, `AspNetCore.Controllers`)
 
 > **Versión destino:** 2.0.0
-> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **81-89**
+> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **81-89**
 > **Plan del que se desgaja:** bloque «Coherencia y documentación» (81-89)
 > **Estado:** 🟡 Parcial · US-01 y US-03 resueltas; US-02, US-04…09 pendientes
 > **Esfuerzo:** M (~1 jornada el tramo mecánico; ~2 jornadas con los `README` y los `[ProducesResponseType]`)
@@ -239,7 +239,7 @@ Durante la auditoría aparecieron defectos que el inventario no recogía:
 - La conversión de los literales de log a plantillas con nombre y `EventId` → [épica de mensajes y localización](Epica-Mensajes-Y-Localizacion.md). Esta épica solo cierra el `>` que falta.
 - La eliminación de los puentes `[Obsolete]` de la 2.0.0 → 3.0.0.
 - Rediseñar el contrato REST completo (verbos, rutas, `ProblemDetails`) → [épica de contrato REST](Epica-Contrato-Rest.md). Aquí solo se **declara** el status que el código ya devuelve.
-- Activar analizadores y `.editorconfig` → [`Profesionalizacion-Ingenieria-y-Calidad.md`](../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md).
+- Activar analizadores y `.editorconfig` → [`Profesionalizacion-Ingenieria-y-Calidad.md`](../Realizados/Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md).
 
 ---
 
@@ -876,10 +876,10 @@ public virtual async Task<IActionResult> DeleteAsync(string ids, CancellationTok
 ## Ver también
 
 - [`Next_Versions/2.0.0/Pendientes/README.md`](README.md) — índice de todas las épicas de la versión 2.1.0
-- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
+- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
 - [`Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md`](Epica-Mensajes-Y-Localizacion.md) — plantillas de log con nombre y `EventId` (solapa con el punto 83)
 - [`Next_Versions/2.0.0/Realizados/Http/Epica-Limpieza-Codigo-Muerto.md`](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) — punto 85, compartido con esta épica
 - [`Next_Versions/2.0.0/Pendientes/Epica-Servicio-y-Paginacion.md`](Epica-Servicio-y-Paginacion.md) — `params object[] pk` de `ICrudServiceFp` (hallazgo colateral 5)
 - [`Next_Versions/2.0.0/Pendientes/Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) — rediseño completo del contrato REST (US-06 solo declara el status actual)
-- [`Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../../../Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — analizadores y `.editorconfig`
+- [`Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md`](../Realizados/Temas%20Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md) — analizadores y `.editorconfig`
 - [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md) — §3.3, registro de rupturas de compatibilidad

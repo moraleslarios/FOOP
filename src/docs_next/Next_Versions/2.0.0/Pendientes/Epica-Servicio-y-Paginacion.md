@@ -1,9 +1,9 @@
 # Épica · Servicio y paginación en `MoralesLarios.OOFP.Application`
 
 > **Versión destino:** `2.0.0`
-> **Origen:** puntos **41**, **53** y **54** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md)
+> **Origen:** puntos **41**, **53** y **54** de [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md)
 > (*"`GetPagedAsync` no pagina"*, *"`MapAsync` donde debería haber `TryMapAsync`"*, *"mensajes con el tipo equivocado"*).
-> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tareas 4.1, 4.2 y 4.3.
+> **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tareas 4.1, 4.2 y 4.3.
 > **Estado:** ⬜ No iniciada
 > **Esfuerzo estimado:** **M** (~1-2 jornadas) · **Riesgo:** 🔴 Alto (cambia la firma de un método público muy usado)
 
@@ -943,8 +943,8 @@ notas de versión con el mismo énfasis que la ruptura de firma.
 
 ## Ver también
 
-- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 41, 53 y 54, origen de esta épica
-- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../../../Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tareas 4.1, 4.2 y 4.3
+- [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) · puntos 41, 53 y 54, origen de esta épica
+- [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 4, tareas 4.1, 4.2 y 4.3
 - [`Unidad de trabajo y transacciones`](../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md) · tarea 4.4 (punto 40), completada y archivada
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) · la otra ruptura de la `2.1.0`; conviene publicarlas juntas
-- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37
+- [`Temas Pendientes/Mejoras-Prioridad-Critica-y-Alta.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Critica-y-Alta.md) · puntos 1-37

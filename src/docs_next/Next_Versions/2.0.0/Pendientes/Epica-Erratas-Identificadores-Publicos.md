@@ -1,7 +1,7 @@
 # Épica · Erratas en identificadores públicos
 
 > **Versión destino:** 2.0.0 (saneado) · 3.0.0 (retirada de puentes)
-> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **71, 72, 73, 74, 75** y **76**
+> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **71, 72, 73, 74, 75** y **76**
 > **Plan del que se desgaja:** bloque «Erratas en identificadores públicos» (71-76)
 > **Estado:** 🟡 Parcial · US-01 y US-03 aplicadas; US-02 absorbida por el punto 46; US-04…07 pendientes
 > **Esfuerzo:** M (~1 jornada el saneado de 2.1.0; la retirada de puentes es trabajo de 3.0.0)
@@ -810,7 +810,7 @@ public void BindSaveValueInDetailsIfFailed_Should_Merge_Errors() { /* … */ }
 - [`Epica-Coherencia-Y-Documentacion.md`](Epica-Coherencia-Y-Documentacion.md) — puntos 81-89;
   incluye el renombrado de `EndpointPattern` y el parámetro genérico `K` → `TKey`.
 - [`Epica-Limpieza-Codigo-Muerto.md`](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) — puntos 64-70 y 85.
-- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md)
+- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md)
   — inventario de origen, puntos 64-89.
 - [`CONTRIBUTING.md`](../../../../CONTRIBUTING.md) — guía de estilo viva, con la columna «A evitar».
 - [`Cambios Realizados/Renombrados-v2.0.0.md`](../../../Cambios%20Realizados/Renombrados-v2.0.0.md)

@@ -69,7 +69,7 @@ prompt de migración documenta **187 puentes `[Obsolete]`** con el mensaje «Wil
 - [ ] `Consejos-Nomenclatura.md` deja de afirmar que todos los niveles están hechos y remite al estado de [`02-Auditoria`](02-Auditoria-Documentos-Complementarios.md).
 - [ ] Se corrige la contradicción entre `Epica-Simplificacion-Repositorios-EFCore.md` (L684, retira `BuildServiceProvider`) y `Epica-Unidad-de-Trabajo-y-Transacciones.md` (L59, afirma que se conserva).
 - [ ] Las épicas desactualizadas ([lista](01-Auditoria-Inventario-89-Puntos.md#3-correcciones-al-inventario-original)) corrigen las líneas y afirmaciones citadas.
-- [ ] Se borra `Temas Pendientes/_Seccion-para-README.md` (su contenido ya está en `src/README.md`).
+- [x] Se borra `Temas Pendientes/_Seccion-para-README.md` (su contenido ya está en `src/README.md`).
 
 ### G5-US-04 · Nombre del repositorio y de la carpeta raíz · N6 · XS
 

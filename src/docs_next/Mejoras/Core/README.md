@@ -136,18 +136,18 @@ Y lo que hay en exceso:
 
 | # | Hallazgo | Documento | Prioridad | Rompe |
 |--:|----------|-----------|-----------|:-----:|
-| 1 | **Cancelación inexistente**: 3.436 firmas `async` sin `CancellationToken` | [02](02-Interoperabilidad-BCL.md) | 🔴 crítica | no (aditivo) |
-| 2 | **Sin `ConfigureAwait(false)`**: riesgo de deadlock en hosts con `SynchronizationContext` | [02](02-Interoperabilidad-BCL.md) | 🔴 crítica | no |
-| 3 | **`MlError` no tiene `Code`**: imposible mapear a RFC 7807 / `ProblemDetails` sin heurísticas de texto | [03](03-Modelo-de-Error.md) | 🔴 crítica | no (aditivo) |
-| 4 | **`MlErrorDetails.Metadata` expone un `Dictionary<string,object>` mutable** y `Errors` un `IEnumerable<MlError>` perezoso | [03](03-Modelo-de-Error.md) | 🟠 alta | sí |
-| 5 | **21 `implicit operator`** con solapamientos peligrosos (`T` vs `MlError` vs `string`) | [04](04-Nulabilidad-Genericos-y-Contratos.md) | 🟠 alta | sí |
-| 6 | **Sin integración LINQ** (`Select`/`SelectMany`/`Where`): no se puede usar la sintaxis `from … in` | [02](02-Interoperabilidad-BCL.md) | 🟡 media | no (aditivo) |
+| 1 | **Cancelación inexistente**: 3.436 firmas `async` sin `CancellationToken` | 02 | 🔴 crítica | no (aditivo) |
+| 2 | **Sin `ConfigureAwait(false)`**: riesgo de deadlock en hosts con `SynchronizationContext` | 02 | 🔴 crítica | no |
+| 3 | **`MlError` no tiene `Code`**: imposible mapear a RFC 7807 / `ProblemDetails` sin heurísticas de texto | 03 | 🔴 crítica | no (aditivo) |
+| 4 | **`MlErrorDetails.Metadata` expone un `Dictionary<string,object>` mutable** y `Errors` un `IEnumerable<MlError>` perezoso | 03 | 🟠 alta | sí |
+| 5 | **21 `implicit operator`** con solapamientos peligrosos (`T` vs `MlError` vs `string`) | 04 | 🟠 alta | sí |
+| 6 | **Sin integración LINQ** (`Select`/`SelectMany`/`Where`): no se puede usar la sintaxis `from … in` | 02 | 🟡 media | no (aditivo) |
 | 7 | **`MlResult<T>` es `record` (heap)**: una asignación por paso de cadena | [06](06-Rendimiento.md) | 🟡 media | sí |
 | 8 | **Mensajes en inglés incrustados** (`"Not right value"`, `"MlError:"`, `"Details:"`) | [01](01-Nomenclatura-y-Estandares.md) | 🟡 media | no |
 | 9 | **Miembro público llamado `_`** (`MlResult._`, `MlResult<T>._`) | [01](01-Nomenclatura-y-Estandares.md) | 🟡 media | sí |
-| 10 | **Un `.csproj` sin metadatos NuGet, sin SourceLink, sin analizadores, sin multi-targeting** | [07](07-Empaquetado-y-Compatibilidad.md) | 🟠 alta | no |
-| 11 | **20.134 líneas en 2 ficheros** (55,9 % del proyecto) → inmantenible | [05](05-Superficie-de-API-y-Arquitectura.md) | 🟡 media | no |
-| 12 | **417 parámetros `= null!`**: la nulabilidad declarada miente al consumidor | [04](04-Nulabilidad-Genericos-y-Contratos.md) | 🟠 alta | sí |
+| 10 | **Un `.csproj` sin metadatos NuGet, sin SourceLink, sin analizadores, sin multi-targeting** | 07 | 🟠 alta | no |
+| 11 | **20.134 líneas en 2 ficheros** (55,9 % del proyecto) → inmantenible | 05 | 🟡 media | no |
+| 12 | **417 parámetros `= null!`**: la nulabilidad declarada miente al consumidor | 04 | 🟠 alta | sí |
 
 ---
 
@@ -156,13 +156,13 @@ Y lo que hay en exceso:
 | Documento | Contenido | Hallazgos |
 |-----------|-----------|----------:|
 | [`01-Nomenclatura-y-Estandares.md`](01-Nomenclatura-y-Estandares.md) | Convenciones de nombres de .NET, erratas públicas, PascalCase en parámetros, el miembro `_`, disciplina del sufijo `Async`, semántica de `Try*`, literales en inglés | 14 |
-| [`02-Interoperabilidad-BCL.md`](02-Interoperabilidad-BCL.md) | `CancellationToken`, `ConfigureAwait`, `ValueTask`, `IAsyncEnumerable`, LINQ (`Select`/`SelectMany`/`Where`), `IEquatable`, `IFormattable`, `IParsable`, `Deconstruct`, `TryGetValue`, `System.Text.Json`, pattern matching | 16 |
-| [`03-Modelo-de-Error.md`](03-Modelo-de-Error.md) | `MlError.Code`/`Severity`/`MemberPath`, inmutabilidad de `MlErrorDetails`, `ExceptionDispatchInfo`, RFC 7807, `Activity`/OpenTelemetry, localización | 13 |
-| [`04-Nulabilidad-Genericos-y-Contratos.md`](04-Nulabilidad-Genericos-y-Contratos.md) | Los 443 `null!`, los 4 CS8604 vivos, restricciones `notnull`, inferencia de `TException`, ambigüedad de sobrecargas, los 21 operadores implícitos | 12 |
-| [`05-Superficie-de-API-y-Arquitectura.md`](05-Superficie-de-API-y-Arquitectura.md) | Explosión combinatoria de sobrecargas, troceado de los ficheros gigantes, `PublicAPI.Shipped.txt`, higiene de `EditorBrowsable`, generadores de código, tipo no genérico `MlResult` | 11 |
+| `02-Interoperabilidad-BCL.md` | `CancellationToken`, `ConfigureAwait`, `ValueTask`, `IAsyncEnumerable`, LINQ (`Select`/`SelectMany`/`Where`), `IEquatable`, `IFormattable`, `IParsable`, `Deconstruct`, `TryGetValue`, `System.Text.Json`, pattern matching | 16 |
+| `03-Modelo-de-Error.md` | `MlError.Code`/`Severity`/`MemberPath`, inmutabilidad de `MlErrorDetails`, `ExceptionDispatchInfo`, RFC 7807, `Activity`/OpenTelemetry, localización | 13 |
+| `04-Nulabilidad-Genericos-y-Contratos.md` | Los 443 `null!`, los 4 CS8604 vivos, restricciones `notnull`, inferencia de `TException`, ambigüedad de sobrecargas, los 21 operadores implícitos | 12 |
+| `05-Superficie-de-API-y-Arquitectura.md` | Explosión combinatoria de sobrecargas, troceado de los ficheros gigantes, `PublicAPI.Shipped.txt`, higiene de `EditorBrowsable`, generadores de código, tipo no genérico `MlResult` | 11 |
 | [`06-Rendimiento.md`](06-Rendimiento.md) | `record` → `readonly struct`, camino feliz sin asignaciones, cierres, `AggressiveInlining`, `ArrayPool`, BenchmarkDotNet | 9 |
-| [`07-Empaquetado-y-Compatibilidad.md`](07-Empaquetado-y-Compatibilidad.md) | Multi-targeting, `Directory.Build.props`, metadatos NuGet, SourceLink, builds deterministas, AOT/trimming, SemVer, limpieza del bloque `Scc*` | 12 |
-| [`08-Calidad-Pruebas-y-Documentacion.md`](08-Calidad-Pruebas-y-Documentacion.md) | Analizadores, `.editorconfig`, `TreatWarningsAsErrors`, pruebas basadas en propiedades, mutación, cobertura, `<example>`/`<exception>`, sitio DocFX, guía de migración | 10 |
+| `07-Empaquetado-y-Compatibilidad.md` | Multi-targeting, `Directory.Build.props`, metadatos NuGet, SourceLink, builds deterministas, AOT/trimming, SemVer, limpieza del bloque `Scc*` | 12 |
+| `08-Calidad-Pruebas-y-Documentacion.md` | Analizadores, `.editorconfig`, `TreatWarningsAsErrors`, pruebas basadas en propiedades, mutación, cobertura, `<example>`/`<exception>`, sitio DocFX, guía de migración | 10 |
 
 **Total: 97 hallazgos documentados.**
 
@@ -254,11 +254,11 @@ estaba recogido en otro documento, se referencia en lugar de repetirse:
 | Documento existente | Qué cubre ya | Cómo se relaciona |
 |---------------------|--------------|-------------------|
 | [`../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) | Campaña de erratas `Faild`, `Diferent`, `Erros`, `Alwais`, `Lenght`, `FusionFailErros` | El documento [01](01-Nomenclatura-y-Estandares.md) **referencia** esa épica y sólo añade las erratas no cubiertas (`Succes`, `Valu`, `Aggregat`, `Witout`, `printipal`) |
-| [`../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md) | Centralización y localización de mensajes | El documento [03](03-Modelo-de-Error.md) aporta el inventario de literales **del núcleo** |
-| [`../../Next_Versions/2.0.0/Pendientes/Epica-Serializacion-y-Errores-Http.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Serializacion-y-Errores-Http.md) | RFC 7807 y serialización en la capa HTTP | El documento [03](03-Modelo-de-Error.md) aporta los **cambios en el núcleo** que esa épica necesita (`MlError.Code`) |
-| [`../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) | Coherencia de la documentación XML | El documento [08](08-Calidad-Pruebas-y-Documentacion.md) añade `<example>`, `<exception>` y el sitio DocFX |
-| [`../../Temas Pendientes/Revision-Map-Bind-ExecSelf.md`](../../Temas%20Pendientes/Revision-Map-Bind-ExecSelf.md) | Revisión R1-R4 de los combinadores | El documento [04](04-Nulabilidad-Genericos-y-Contratos.md) retoma los puntos de inferencia de `TException` y ambigüedad de sobrecargas |
-| [`../../Temas Pendientes/consejos_mejora_mlresult.md`](../../Temas%20Pendientes/consejos_mejora_mlresult.md) | Consejos previos sobre `MlResult` | Base histórica; este análisis la supera en alcance y aporta medidas |
+| [`../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Mensajes-Y-Localizacion.md) | Centralización y localización de mensajes | El documento 03 aporta el inventario de literales **del núcleo** |
+| [`../../Next_Versions/2.0.0/Pendientes/Epica-Serializacion-y-Errores-Http.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Serializacion-y-Errores-Http.md) | RFC 7807 y serialización en la capa HTTP | El documento 03 aporta los **cambios en el núcleo** que esa épica necesita (`MlError.Code`) |
+| [`../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) | Coherencia de la documentación XML | El documento 08 añade `<example>`, `<exception>` y el sitio DocFX |
+| [`../../Temas Pendientes/Revision-Map-Bind-ExecSelf.md`](../../Next_Versions/2.0.0/Realizados/Temas%20Pendientes/Revision-Map-Bind-ExecSelf.md) | Revisión R1-R4 de los combinadores | El documento 04 retoma los puntos de inferencia de `TException` y ambigüedad de sobrecargas |
+| [`../../Temas Pendientes/consejos_mejora_mlresult.md`](../../Next_Versions/2.0.0/Realizados/Temas%20Pendientes/consejos_mejora_mlresult.md) | Consejos previos sobre `MlResult` | Base histórica; este análisis la supera en alcance y aporta medidas |
 
 ---
 
@@ -311,6 +311,6 @@ Cualquier historia de estos documentos sólo se considera terminada cuando:
 ## Ver también
 
 - [`../../Next_Versions/2.0.0/Pendientes/README.md`](../../Next_Versions/2.0.0/Pendientes/README.md) — índice de las 9 épicas de la versión 2.1.
-- [`../../Temas Pendientes/README.md`](../../Temas%20Pendientes/README.md) — índice de temas pendientes.
+- [`../../Temas Pendientes/README.md`](../../Next_Versions/2.0.0/Realizados/Temas%20Pendientes/README.md) — índice de temas pendientes.
 - [`../../../MoralesLarios.OOFP.Core/README.md`](../../../MoralesLarios.OOFP.Core/README.md) — documentación funcional del núcleo.
 - [Framework Design Guidelines](https://learn.microsoft.com/dotnet/standard/design-guidelines/) — referencia normativa usada en todo el análisis.

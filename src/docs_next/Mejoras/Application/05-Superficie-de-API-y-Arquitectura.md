@@ -413,4 +413,4 @@ public class CrudServiceFp<TEntity, TDto>(IEfRepository<TEntity> repo, ILogger<C
 - [`03-Modelo-de-Error.md`](03-Modelo-de-Error.md) — los `MapAsync` y el contrato del problema HTTP.
 - [`../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Coherencia-Y-Documentacion.md) — `params object[] pk` tras opcionales.
 - [`../../Next_Versions/2.0.0/Pendientes/Epica-Servicio-y-Paginacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Servicio-y-Paginacion.md) — criterio de tipo en los mensajes.
-- [`../../Next_Versions/2.0.0/Pendientes/Epica-Simplificacion-Repositorios-EFCore.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Simplificacion-Repositorios-EFCore.md) — los repositorios.
+- [`../../Next_Versions/2.0.0/Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md`](../../Next_Versions/2.0.0/Realizados/EFCore/Epica-Simplificacion-Repositorios-EFCore.md) — los repositorios.

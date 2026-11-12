@@ -1,7 +1,7 @@
 # Épica · Mensajes al usuario, idioma e instrumentación de logs
 
 > **Versión destino:** 2.0.0
-> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **77, 78, 79** y **80**
+> **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — puntos **77, 78, 79** y **80**
 > **Plan del que se desgaja:** bloque «Mensajes al usuario» (77-80)
 > **Estado:** 🟡 Parcial · US-02 resuelta y US-03 parcial; infraestructura, literales de Http y logs estructurados pendientes
 > **Esfuerzo:** L (~5-6 jornadas con las siete historias; ~3 jornadas sin US-07)
@@ -746,7 +746,7 @@ baja a ~**3,75 jornadas** y el riesgo máximo a 🟡.
       documentados en §3.3 de
       [`Copilot/.github/prompts/oofp-upgrade-2.prompt.md`](../../../Copilot/.github/prompts/oofp-upgrade-2.prompt.md).
 - [ ] Los puntos **77, 78, 79** y **80** quedan marcados en
-      [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md)
+      [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md)
       con su veredicto y el enlace a esta épica.
 - [ ] `scripts/check-md-links2.ps1`, `scripts/check-md-anchors4.ps1` y
       `scripts/check-md-encoding.ps1` pasan sin regresiones.
@@ -1087,7 +1087,7 @@ var result = _logger.LogMlResultInformationAsync(ApplicationEvents.GetPagedStart
 ## Ver también
 
 - [`Next_Versions/2.0.0/Pendientes/README.md`](README.md) — índice de todas las épicas de la versión 2.1.0
-- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../../../Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
+- [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) — documento de origen (puntos 64-89)
 - [`Epica-Contrato-Rest.md`](Epica-Contrato-Rest.md) — códigos de error tipados que eliminan el reconocimiento por texto (H-7)
 - [`Epica-Limpieza-Codigo-Muerto.md`](../Realizados/Http/Epica-Limpieza-Codigo-Muerto.md) — los `ILogger` no usados de los clientes REST
 - [`Epica-Erratas-Identificadores-Publicos.md`](Epica-Erratas-Identificadores-Publicos.md) — erratas en nombres públicos (puntos 71-76)
