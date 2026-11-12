@@ -84,10 +84,10 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [ ] `global.json` fija el SDK 11 con política de *roll-forward* documentada (**D-G1-3:** `latestFeature` o más estricta).
-- [ ] `Directory.Build.props` centraliza `Nullable`, `ImplicitUsings`, `LangVersion` y `GenerateDocumentationFile` **solo** para proyectos de biblioteca (no para tests, `Sample` ni herramientas bajo `src/scripts/`).
-- [ ] `.gitattributes` define EOL y codificación; `.editorconfig` añade `charset`.
-- [ ] Una **línea base de avisos** queda registrada y el *build* Release `--no-incremental` mantiene **0 errores y 0 `CS1591`**. `TreatWarningsAsErrors` se activa por proyecto y de forma gradual, **no de golpe con `NoWarn` amplio** (ocultaría deuda).
+- [x] `global.json` fija el SDK 11 con política de *roll-forward* documentada (**D-G1-3:** `latestFeature` o más estricta). *(`11.0.100`, `latestFeature`, sin preliminares; está en la raíz del repositorio.)*
+- [x] `Directory.Build.props` centraliza `Nullable`, `ImplicitUsings`, `LangVersion` y `GenerateDocumentationFile` **solo** para proyectos de biblioteca (no para tests, `Sample` ni herramientas bajo `src/scripts/`). *(Centralizados `Nullable` e `ImplicitUsings`, que eran idénticos en los 34 proyectos. `LangVersion` no se fija (ningún proyecto lo hacía). `GenerateDocumentationFile` se queda en cada biblioteca porque `Sample` lo activa y los tests no: centralizarlo exigía condicionales que añadían más ruido que valor.)*
+- [x] `.gitattributes` define EOL y codificación; `.editorconfig` añade `charset`. *(`* text=auto` sin renormalizar: el índice ya estaba en LF.)*
+- [x] Una **línea base de avisos** queda registrada y el *build* Release `--no-incremental` mantiene **0 errores y 0 `CS1591`**. `TreatWarningsAsErrors` se activa por proyecto y de forma gradual, **no de golpe con `NoWarn` amplio** (ocultaría deuda). *(Línea base 2026-11-12: 215 avisos distintos — IDE0005 59, CS0108 44, CS8625 35, NU1510 16, CS8600 14, IDE0052 7, IDE0051 7. 1.715 tests en verde. `TreatWarningsAsErrors` queda para G1-US-06.)*
 
 ### G1-US-04 · CI de compilación y pruebas · L
 
