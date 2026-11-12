@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      microsoft:
+        patterns: [ "Microsoft.*", "System.*" ]
+      pruebas:
+        patterns: [ "xunit*", "Xunit*", "Moq", "moq", "FluentAssertions", "AutoFixture*", "coverlet*" ]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
