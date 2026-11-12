@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
-    <NoWarn>$(NoWarn);NU1510</NoWarn> <!-- se conserva la referencia: el nuspec debe seguir declarando la dependencia -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +15,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
