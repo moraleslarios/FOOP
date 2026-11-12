@@ -286,6 +286,24 @@ que comprueban nombres antiguos y comentarios que usan correctamente la palabra 
 > UTF-8 sin BOM como Windows-1252 y corrompe los acentos. Los caracteres no ASCII se construyen
 > con `[string][char]0xNNNN`.
 
+### Secretos y configuración local
+
+Ningún fichero versionado contiene contraseñas, `User Id` ni nombres de equipo. Los `appsettings.test.json`
+usan valores ficticios (`*.example.invalid`) y `Integrated Security=true`. Si una prueba necesita una
+credencial real, no la escribas en el repositorio:
+
+```powershell
+dotnet user-secrets init --project <proyecto-de-tests>
+dotnet user-secrets set "ConnectionStrings:DemoDb" "<cadena-real>" --project <proyecto-de-tests>
+```
+
+O usa una variable de entorno (`ConnectionStrings__DemoDb`). Antes de cada PR comprueba que no se
+cuela ninguna credencial:
+
+```powershell
+git grep -n -i -E "passw[o]rd=|p[w]d=|user [i]d=" -- . ":!src/docs_next"
+```
+
 ---
 
 ## Documentación

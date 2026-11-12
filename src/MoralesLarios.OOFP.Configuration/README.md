@@ -306,7 +306,7 @@ Dado este `appsettings.json`:
   },
   "Proxy": {
     "UseProxy": "true",
-    "ProxyUrl": "proxy.ceca.es"
+    "ProxyUrl": "proxy.example.invalid"
   }
 }
 ```
