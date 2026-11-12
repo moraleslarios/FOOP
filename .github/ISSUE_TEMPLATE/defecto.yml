@@ -1,0 +1,31 @@
+name: Defecto
+description: Algo no se comporta como indica la documentación
+labels: [bug]
+body:
+  - type: input
+    id: paquete
+    attributes:
+      label: Paquete y versión
+      placeholder: MoralesLarios.OOFP.Core 2.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: reproduccion
+    attributes:
+      label: Pasos o código mínimo para reproducirlo
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Resultado esperado y resultado obtenido
+    validations:
+      required: true
+  - type: textarea
+    id: entorno
+    attributes:
+      label: Entorno
+      description: SDK de .NET (`dotnet --version`) y sistema operativo
+  - type: markdown
+    attributes:
+      value: No pegues credenciales ni cadenas de conexión reales.

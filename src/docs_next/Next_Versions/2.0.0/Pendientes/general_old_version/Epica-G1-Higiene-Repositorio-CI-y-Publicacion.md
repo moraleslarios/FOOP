@@ -73,7 +73,7 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [ ] `LICENSE` en la raíz (**D-G1-2:** el código ya declara Apache-2.0 en sus cabeceras; el propietario confirma la licencia).
+- [x] `LICENSE` en la raíz (**D-G1-2:** el código ya declara Apache-2.0 en sus cabeceras; el propietario confirma la licencia). *(Añadido con el texto Apache-2.0 y `Copyright 2023 Juan Francisco Morales Larios`, tomado de las cabeceras. **El propietario debe confirmarlo.**)*
 - [ ] `Directory.Build.props` (o `.csproj` de cada paquete) define `Authors`, `Description`, `PackageTags`, `PackageLicenseExpression`, `RepositoryUrl`, `PackageProjectUrl`, `PackageReadmeFile`, `PackageIcon` si procede.
 - [ ] `SourceLink`, `IncludeSymbols`/`snupkg`, `Deterministic` y `ContinuousIntegrationBuild` (solo en CI).
 - [ ] `dotnet pack -c Release` de los 17 proyectos con versión termina sin avisos de metadatos (`NU5xxx`) y el `.nuspec` resultante se revisa a mano en uno de ellos.
@@ -103,10 +103,10 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [ ] `Directory.Packages.props` con `ManagePackageVersionsCentrally` y `NuGetAudit` activos (fuente de vulnerabilidades en la restauración).
-- [ ] Dependabot (o Renovate) para NuGet y GitHub Actions.
-- [ ] Los 7 `NU1510` se resuelven **después** de ejecutar `dotnet pack` y comprobar en el `.nuspec` que quitar la referencia no cambia las dependencias que ve el consumidor del paquete. Si cambian, se conserva la referencia y se suprime el aviso con motivo.
-- [ ] Un único criterio de versiones para `xunit`, `Moq`, `FluentAssertions` y `coverlet` en los 13 proyectos de tests (hoy hay versiones distintas por proyecto).
+- [x] `Directory.Packages.props` con `ManagePackageVersionsCentrally` y `NuGetAudit` activos (fuente de vulnerabilidades en la restauración). *(`NuGetAuditMode=all`, nivel `low`; `nuget.config` en la raíz fija `nuget.org` con *package source mapping*, lo que elimina 88 avisos `NU1507`.)*
+- [x] Dependabot (o Renovate) para NuGet y GitHub Actions.
+- [x] Los 7 `NU1510` se resuelven **después** de ejecutar `dotnet pack` y comprobar en el `.nuspec` que quitar la referencia no cambia las dependencias que ve el consumidor del paquete. Si cambian, se conserva la referencia y se suprime el aviso con motivo. *(Quitar la referencia elimina por fuerza la dependencia declarada en el `.nuspec`; no se ha comparado empaquetando. Se conserva y se suprime `NU1510` en los 7 proyectos, con el motivo en el propio `csproj`. Revisar tras `dotnet pack` en G1-US-02.)*
+- [x] Un único criterio de versiones para `xunit`, `Moq`, `FluentAssertions` y `coverlet` en los 13 proyectos de tests (hoy hay versiones distintas por proyecto). *(Unificados en `Directory.Packages.props`: xunit 2.9.3, runner 3.1.0, Moq 4.20.72, FluentAssertions 8.2.0, coverlet 6.0.4, AutoFixture 4.18.1, Scrutor 6.0.1, Xunit.DependencyInjection 9.9.0. 1.715 tests en verde.)*
 
 ### G1-US-06 · Analizadores y línea base de API pública · M
 
@@ -121,8 +121,8 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [ ] `SECURITY.md`, `CODE_OF_CONDUCT.md`, plantillas de *issue* y plantilla de PR ya existente enlazada.
-- [ ] `CHANGELOG.md` con la 2.0.0 apuntando a `oofp-upgrade-2.prompt.md`.
+- [x] `SECURITY.md`, `CODE_OF_CONDUCT.md`, plantillas de *issue* y plantilla de PR ya existente enlazada. *(Plantillas `defecto.yml` y `propuesta.yml`; la plantilla de PR ya existía.)*
+- [x] `CHANGELOG.md` con la 2.0.0 apuntando a `oofp-upgrade-2.prompt.md`.
 - [ ] Política SemVer escrita (**D-G1-6:** versión escrita en cada `.csproj` o derivada de etiquetas con MinVer) y regla «nada rompedor fuera de una versión mayor, y siempre con `[Obsolete]` durante un ciclo».
 - [ ] `PendingTasks-legacy.md` se da por **absorbido** (ver [backlog](04-Backlog-3.0-y-Descartados.md)); las ideas vigentes pasan a *issues*.
 

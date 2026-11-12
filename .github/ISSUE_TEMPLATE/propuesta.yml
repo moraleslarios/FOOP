@@ -1,0 +1,28 @@
+name: Propuesta
+description: Una mejora de la API o de la documentación
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Problema que resuelve
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Propuesta
+      description: Firma o ejemplo de uso deseado
+    validations:
+      required: true
+  - type: dropdown
+    id: ruptura
+    attributes:
+      label: ¿Rompe compatibilidad?
+      description: Un cambio que rompe compilación, contrato o binario solo entra en una versión mayor.
+      options:
+        - No
+        - Sí
+        - No lo sé
+    validations:
+      required: true
