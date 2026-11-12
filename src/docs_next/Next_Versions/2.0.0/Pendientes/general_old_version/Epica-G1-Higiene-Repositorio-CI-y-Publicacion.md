@@ -93,10 +93,10 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [ ] `.github/workflows/ci.yml`: restaura, compila en Release `--no-incremental` y ejecuta `dotnet test` de la solución en Windows y Linux, con el SDK de `global.json`.
+- [x] `.github/workflows/ci.yml`: restaura, compila en Release `--no-incremental` y ejecuta `dotnet test` de la solución en Windows y Linux, con el SDK de `global.json`. *(El *job* de Linux es informativo (`continue-on-error`) hasta que G6-US-04 elimine las rutas de Windows de las pruebas. El flujo no se ha podido ejecutar en GitHub desde local: el equivalente local, 0 errores y 1.715 tests en verde, sí.)*
 - [ ] Las pruebas que requieran un servidor local se separan con un `Trait`/categoría y no bloquean el flujo por defecto (ver [G6-US-04](Epica-G6-Pruebas-Calidad-y-Rendimiento.md)).
-- [ ] El *workflow* `prompt-migracion.yml` existente se conserva.
-- [ ] Se compilan también `MlDoc` y `MlRename` (están fuera de la solución).
+- [x] El *workflow* `prompt-migracion.yml` existente se conserva.
+- [x] Se compilan también `MlDoc` y `MlRename` (están fuera de la solución).
 - [ ] **D-G1-4:** análisis de seguridad (CodeQL) y publicación automática quedan para una segunda iteración y requieren decisión del propietario sobre credenciales de publicación.
 
 ### G1-US-05 · Gestión central de paquetes y limpieza de referencias redundantes · M
@@ -130,9 +130,9 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [ ] `src/scripts/check-md-links2.ps1` → `rotos = 0` y `check-md-anchors4.ps1` → `rotos = 0`.
-- [ ] Los enlaces rotos de `README.md` (`./Temas%20Pendientes/…`, `./Cambios%20Realizados/…`), de `Mejoras/Core/*` (ficheros `02`…`08` inexistentes), de `Mejoras/Application/*` (épicas movidas a `Realizados/`) y de `Temas Pendientes/*` se corrigen o se retiran con motivo.
-- [ ] Ambos verificadores se ejecutan en `ci.yml`.
+- [x] `src/scripts/check-md-links2.ps1` → `rotos = 0` y `check-md-anchors4.ps1` → `rotos = 0`.
+- [x] Los enlaces rotos de `README.md` (`./Temas%20Pendientes/…`, `./Cambios%20Realizados/…`), de `Mejoras/Core/*` (ficheros `02`…`08` inexistentes), de `Mejoras/Application/*` (épicas movidas a `Realizados/`) y de `Temas Pendientes/*` se corrigen o se retiran con motivo. *(Los enlaces a los ficheros `02`…`08` de `Mejoras/Core` que nunca se redactaron pasan a texto sin enlace; `Temas Pendientes` vive ahora en `Realizados/Temas Pendientes/`; se borra `_Seccion-para-README.md`, ya integrado en `src/README.md`.)*
+- [x] Ambos verificadores se ejecutan en `ci.yml`.
 
 ---
 
