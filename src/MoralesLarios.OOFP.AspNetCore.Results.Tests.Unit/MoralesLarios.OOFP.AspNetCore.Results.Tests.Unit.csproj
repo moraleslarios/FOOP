@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MoralesLarios.OOFP.AspNetCore.Results\MoralesLarios.OOFP.AspNetCore.Results.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Application\MoralesLarios.OOFP.Application.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.Http\MoralesLarios.OOFP.Http.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,8 @@
 # Profesionalización (1 de 2): ingeniería, calidad y distribución
 
+> **Aviso historico:** documento previo a 2.0.0; la infraestructura se actualizo y las tareas abiertas tienen epica.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas vigentes](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Consejos para llevar `MoralesLarios.OOFP` de «biblioteca personal que funciona» a **biblioteca
 > profesional publicable**, centrados en *cómo se construye, se prueba, se empaqueta y se distribuye*.

@@ -162,9 +162,20 @@ public partial record MlResult<T>
 
 
     internal MlResult(T                    t                                                        ) => (SuccessValue, FailureDetails, IsSuccess) = (t       , new MlErrorDetails()                                    , true );
-    internal MlResult(MlErrorDetails                                         errorsDetails         ) => (SuccessValue, FailureDetails, IsSuccess) = (default!, errorsDetails                                            , false);
-    internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorDetails(errors, details)                     , false);
-    internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, new MlErrorDetails(new List<MlError> { error }, details), false);
+    internal MlResult(MlErrorDetails                                         errorsDetails         ) => (SuccessValue, FailureDetails, IsSuccess) = (default!, NormalizeFailureDetails(errorsDetails), false);
+    internal MlResult(IEnumerable<MlError> errors, Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, NormalizeFailureDetails(new MlErrorDetails(errors, details)), false);
+    internal MlResult(MlError              error , Dictionary<string, object> details        = null!) => (SuccessValue, FailureDetails, IsSuccess) = (default!, NormalizeFailureDetails(new MlErrorDetails(new List<MlError> { error }, details)), false);
+
+    private static MlErrorDetails NormalizeFailureDetails(MlErrorDetails? errorsDetails)
+    {
+        var failureDetails = errorsDetails ?? new MlErrorDetails();
+        var errors = failureDetails.Errors?.ToList() ?? new List<MlError>();
+
+        if (errors.Count > 0) return failureDetails;
+
+        errors.Add(MlError.FromErrorMessage(EnsureFpMessages.FailureWithoutErrorDetails));
+        return new MlErrorDetails(errors, failureDetails.Metadata);
+    }
 
 
 

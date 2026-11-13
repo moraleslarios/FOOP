@@ -5,6 +5,7 @@
 
 
 
+using Microsoft.Data.Sqlite;
 using MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.Repos;
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.TestSupport;
@@ -15,14 +16,29 @@ public static class RegisterServices
     public static IServiceCollection AddInfrastructureTests(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        if (!string.IsNullOrEmpty(connectionString))
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            EnsureDatabaseDirectoryExists(connectionString);
+            throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required for integration tests.");
         }
 
-        // Configure SQLite Database
+        var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var seedPath = Path.Combine(AppContext.BaseDirectory, "App_Data", "jfcatas.db");
+        if (!File.Exists(seedPath))
+        {
+            throw new FileNotFoundException("The SQLite integration seed database was not copied to the test output.", seedPath);
+        }
+
+        using (var seedConnection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = seedPath }.ToString()))
+        {
+            seedConnection.Open();
+            seedConnection.BackupDatabase(connection);
+        }
+
+        services.AddSingleton(connection);
         services.AddDbContext<TestDbContext>(options =>
-            options.UseSqlite(connectionString));
+            options.UseSqlite(connection));
 
         services.AddOofpRepositories<Vino, TestDbContext>();
         services.AddOofpRepositories<Cata                , TestDbContext>();
@@ -37,33 +53,5 @@ public static class RegisterServices
 
         return services;
     }
-
-    private static void EnsureDatabaseDirectoryExists(string connectionString)
-    {
-        try
-        {
-            // Extract the Data Source path from the connection string
-            var dataSourceStart = connectionString.IndexOf("Data Source=", StringComparison.OrdinalIgnoreCase);
-            if (dataSourceStart >= 0)
-            {
-                var pathStart = dataSourceStart + "Data Source=".Length;
-                var pathEnd = connectionString.IndexOf(';', pathStart);
-                var dbPath = pathEnd > 0 ? connectionString.Substring(pathStart, pathEnd - pathStart) : connectionString.Substring(pathStart);
-
-                // Get the directory from the database file path
-                var directory = Path.GetDirectoryName(dbPath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-            }
-        }
-        catch (Exception)
-        {
-            // Silently continue if directory creation fails
-            // Azure might have different permissions or directory structure
-        }
-    }
-
 }
 

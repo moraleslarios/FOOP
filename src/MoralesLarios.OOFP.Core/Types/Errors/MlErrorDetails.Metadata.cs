@@ -9,6 +9,23 @@ using System.Text.RegularExpressions;
 namespace MoralesLarios.OOFP.Types.Errors;
 
 /// <summary>
+/// Motivo por el que no se pudo obtener un valor de metadatos.
+/// </summary>
+public enum MlMetadataLookupFailureReason
+{
+    /// <summary>La clave existe y el valor tiene el tipo esperado.</summary>
+    None = 0,
+    /// <summary>La clave proporcionada es <see langword="null"/>.</summary>
+    NullKey = 1,
+    /// <summary>La clave no existe en los metadatos.</summary>
+    KeyNotFound = 2,
+    /// <summary>La clave existe, pero su valor es <see langword="null"/>.</summary>
+    NullValue = 3,
+    /// <summary>La clave existe, pero su valor no es del tipo esperado.</summary>
+    TypeMismatch = 4
+}
+
+/// <summary>
 /// Contrato de metadatos de <see cref="MlErrorDetails"/>: catálogo de claves reservadas, accesores de
 /// lectura sin efectos secundarios y operaciones de incorporación que no modifican la instancia de partida.
 /// </summary>
@@ -251,17 +268,51 @@ public partial class MlErrorDetails : IEquatable<MlErrorDetails>
     /// <see langword="true"/> si la clave existe y su valor es de tipo <typeparamref name="T"/>; en
     /// caso contrario, <see langword="false"/>.
     /// </returns>
-    /// <remarks>No lanza ninguna excepción y no modifica la instancia.</remarks>
+    /// <remarks>No lanza ninguna excepción ni modifica la instancia. Para distinguir los motivos del fallo, use la sobrecarga que devuelve <see cref="MlMetadataLookupFailureReason"/>.</remarks>
     public bool TryGetMetadata<T>(string key, [MaybeNullWhen(false)] out T value)
+        => TryGetMetadata(key, out value, out _);
+
+    /// <summary>
+    /// Intenta obtener el metadato asociado a la clave indicada e informa por qué falló la búsqueda.
+    /// </summary>
+    /// <typeparam name="T">Tipo esperado del valor.</typeparam>
+    /// <param name="key">Clave identificativa del metadato.</param>
+    /// <param name="value">Valor obtenido, o el valor predeterminado de <typeparamref name="T"/>.</param>
+    /// <param name="failureReason">Motivo del fallo, o <see cref="MlMetadataLookupFailureReason.None"/> si tuvo éxito.</param>
+    /// <returns><see langword="true"/> si se obtuvo un valor del tipo esperado.</returns>
+    /// <remarks>No lanza ninguna excepción ni modifica la instancia.</remarks>
+    public bool TryGetMetadata<T>(string key, [MaybeNullWhen(false)] out T value, out MlMetadataLookupFailureReason failureReason)
     {
-        if (key is not null && Metadata.TryGetValue(key, out var raw) && raw is T typed)
+        if (key is null)
+        {
+            value = default;
+            failureReason = MlMetadataLookupFailureReason.NullKey;
+            return false;
+        }
+
+        if (! Metadata.TryGetValue(key, out var raw))
+        {
+            value = default;
+            failureReason = MlMetadataLookupFailureReason.KeyNotFound;
+            return false;
+        }
+
+        if (raw is null)
+        {
+            value = default;
+            failureReason = MlMetadataLookupFailureReason.NullValue;
+            return false;
+        }
+
+        if (raw is T typed)
         {
             value = typed;
+            failureReason = MlMetadataLookupFailureReason.None;
             return true;
         }
 
         value = default;
-
+        failureReason = MlMetadataLookupFailureReason.TypeMismatch;
         return false;
     }
 

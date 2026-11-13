@@ -28,7 +28,9 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                        CancellationToken          ct      = default)
     {
         var result = await _logger.LogMlResultInformationAsync($"Consultando datos a la url {url}")
-                                    .BindAsync( _             => new HttpRequestMessage(HttpMethod.Get, url).TrySetHeadersAsync(headers ?? []))
+                                    .BindAsync( _             => TryConfigureRequestAsync(
+                                                                        new HttpRequestMessage(HttpMethod.Get, url),
+                                                                        request => request.TrySetHeadersAsync(headers ?? [])))
                                     .BindAsync(requestMessage => InternalHttpActionAsync<HttpRequestMessage, T>(clientName, requestMessage, url, ct));
         return result!;
     }
@@ -86,10 +88,12 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                           CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
                             .TryMapAsync( _             => JsonSerializer.Serialize(itemBody))
-                            .BindAsync  (jsonBody       => new HttpRequestMessage(HttpMethod.Post, url)
-                                                                      {
-                                                                          Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
-                                                                      }.TrySetHeadersAsync(headers ?? []))
+                            .BindAsync  (jsonBody       => TryConfigureRequestAsync(
+                                new HttpRequestMessage(HttpMethod.Post, url)
+                                {
+                                    Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+                                },
+                                request => request.TrySetHeadersAsync(headers ?? [])))
                             .BindAsync  (requestMessage => ActionPostAsync<TResult>(clientName,
                                                                               requestMessage, 
                                                                               url, 
@@ -136,10 +140,12 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                         CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
                             .TryMapAsync( _             => JsonSerializer.Serialize(itemBody))
-                            .BindAsync  (jsonBody       => new HttpRequestMessage(HttpMethod.Post, url)
-                                                                      {
-                                                                          Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
-                                                                      }.TrySetHeadersAsync(headers ?? []))
+                            .BindAsync  (jsonBody       => TryConfigureRequestAsync(
+                                new HttpRequestMessage(HttpMethod.Post, url)
+                                {
+                                    Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+                                },
+                                request => request.TrySetHeadersAsync(headers ?? [])))
                             .BindAsync  (requestMessage => ActionPostAsync<T>(clientName,
                                                                               requestMessage, 
                                                                               url, 
@@ -163,10 +169,12 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                            CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
                             .TryMapAsync( _             => JsonSerializer.Serialize(itemBody))
-                            .BindAsync  (jsonBody       => new HttpRequestMessage(HttpMethod.Post, url)
-                                                                      {
-                                                                          Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
-                                                                      }.TrySetHeadersAsync(headers ?? []))
+                            .BindAsync  (jsonBody       => TryConfigureRequestAsync(
+                                new HttpRequestMessage(HttpMethod.Post, url)
+                                {
+                                    Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+                                },
+                                request => request.TrySetHeadersAsync(headers ?? [])))
                             .BindAsync  (requestMessage => ActionPostAsync<TResponse>(clientName,
                                                                               requestMessage, 
                                                                               url, 
@@ -190,10 +198,12 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                            CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
                             .TryMapAsync( _             => JsonSerializer.Serialize(itemBody))
-                            .BindAsync  (jsonBody       => new HttpRequestMessage(HttpMethod.Put, url)
-                                                                      {
-                                                                          Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
-                                                                      }.TrySetHeadersAsync(headers ?? []))
+                            .BindAsync  (jsonBody       => TryConfigureRequestAsync(
+                                new HttpRequestMessage(HttpMethod.Put, url)
+                                {
+                                    Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+                                },
+                                request => request.TrySetHeadersAsync(headers ?? [])))
                             .BindAsync  (requestMessage => ActionEmptyAsync<T>(clientName,
                                                                                "Put",
                                                                                requestMessage, 
@@ -218,10 +228,12 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                               CancellationToken          ct      = default)
         => await EnsureFp.NotNullAsync(itemBody, $"{nameof(itemBody)} no puede ser nulo")
                             .TryMapAsync( _             => JsonSerializer.Serialize(itemBody))
-                            .BindAsync  (jsonBody       => new HttpRequestMessage(HttpMethod.Delete, url)
-                                                                      {
-                                                                          Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
-                                                                      }.TrySetHeadersAsync(headers ?? []))
+                            .BindAsync  (jsonBody       => TryConfigureRequestAsync(
+                                new HttpRequestMessage(HttpMethod.Delete, url)
+                                {
+                                    Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+                                },
+                                request => request.TrySetHeadersAsync(headers ?? [])))
                             .BindAsync  (requestMessage => ActionEmptyAsync<T>(clientName,
                                                                                "Delete",
                                                                                requestMessage, 
@@ -244,15 +256,13 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                   CancellationToken          ct      = default)
     {
         var result = await MlResult.EmptyAsync()
-                                    .BindAsync           ( _       => new HttpRequestMessage(HttpMethod.Delete, url).TrySetHeadersAsync(headers ?? []))
-                                    .TryBindAsync        (request  => _httpClientFactory.CreateClient(clientName)
-                                                                                            .CombineAll(request))
+                                    .BindAsync           ( _       => TryConfigureRequestAsync(
+                                        new HttpRequestMessage(HttpMethod.Delete, url),
+                                        request => request.TrySetHeadersAsync(headers ?? [])))
+                                    .TryBindAsync        (request  => CreateClientForRequest(clientName, request))
                                     .ExecSelfIfValidAsync(tuple    => _logger.LogMlResultInformationAsync($"Haciendo Delete a la url {BuildRequestUri(tuple.Item1.BaseAddress?.ToString() ?? string.Empty, url ?? string.Empty)}"))
-                                    .TryMapAsync         (tuple    => tuple.Item1.SendAsync(tuple.Item2, ct))
-                                    .BindAsync           (async response => response.IsSuccessStatusCode
-                                                                        ? response.ToMlResultValid()
-                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
-                                    .TryMapAsync         ( _       => EmptyValue.Create())
+                                        .TryMapAsync         (tuple    => SendAndDisposeRequestAsync(tuple.Item1, tuple.Item2, ct))
+                                        .BindAsync           (ReadEmptyResponseAndDisposeAsync)
                                             .LogActionResultAsync(_logger, $"{nameof(DeleteByIdAsync)}<{typeof(T).Name}>");
 
         return result!;
@@ -298,7 +308,9 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                                                     string             url = null!,
                                                                                                     CancellationToken  ct = default!)
     {
-        var result = await MlResult.EmptyAsync()
+        using (requestMessage)
+        {
+            var result = await MlResult.EmptyAsync()
                                     .TryMapAsync         ( _     => _httpClientFactory.CreateClient(clientName))
                                     .ExecSelfIfValidAsync(client => InternalLogUrl(_logger,
                                                                                     client.BaseAddress?.ToString()!,
@@ -306,11 +318,11 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                     .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
                                     .BindAsync           (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
-                                    //.ExecSelfIfValidAsync(actionValid: response => response.Dispose())
-                                    .TryMapAsync(response => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: ct))
+                                                                        : (await ReadErrorDescriptionAndDisposeAsync(response)).ToMlResultFail<HttpResponseMessage>())
+                                    .TryMapAsync(response => ReadContentAndDisposeAsync<TResponse>(response, ct))
                                             .LogActionResultAsync(_logger, $"{nameof(InternalHttpActionAsync)}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
-        return result;
+            return result;
+        }
     }
 
 
@@ -326,15 +338,15 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
     protected virtual async Task<MlResult<TResponse?>> SendAndReadAsync<TRequest, TResponse>(ApiCallOptions<TRequest> parameters, HttpClient client, MemberName methodName)
     {
         var result = await EnsureFp.NotNullAsync(parameters.RequestBody, $"{nameof(parameters.RequestBody)} no puede ser nulo")
-                                    .TryMapAsync(_ => JsonSerializer.Serialize(parameters.RequestBody))
-
-
-
-                                    .TryMapAsync( _       => client.PostAsJsonAsync(parameters.Url, parameters.RequestBody, parameters.CancellationToken))
+                                    .TryMapAsync(_ => new HttpRequestMessage(HttpMethod.Post, parameters.Url)
+                                    {
+                                        Content = JsonContent.Create(parameters.RequestBody)
+                                    })
+                                    .TryMapAsync(request => SendAndDisposeRequestAsync(client, request, parameters.CancellationToken))
                                     .BindAsync  (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
-                                    .TryMapAsync(response => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: parameters.CancellationToken))
+                                                                        : (await ReadErrorDescriptionAndDisposeAsync(response)).ToMlResultFail<HttpResponseMessage>())
+                                    .TryMapAsync(response => ReadContentAndDisposeAsync<TResponse>(response, parameters.CancellationToken))
                                             .LogActionResultAsync(_logger, $"{methodName}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
         return result;
     }
@@ -354,17 +366,20 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                  string             url = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                                  CancellationToken  ct  = default)
     {
-        var result = await MlResult.EmptyAsync()
+        using (requestMessage)
+        {
+            var result = await MlResult.EmptyAsync()
                                     .TryMapAsync         ( _       => _httpClientFactory.CreateClient(clientName))
                                     .ExecSelfIfValidAsync(client   => _logger.LogMlResultInformationAsync($"Haciendo post a la url {BuildRequestUri(client.BaseAddress?.ToString() ?? string.Empty, url ?? string.Empty)}"))
                                     .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
                                     .BindAsync           (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
-                                    .TryMapAsync         (response => response.Content.ReadFromJsonAsync<T>(cancellationToken: ct))
+                                                                        : (await ReadErrorDescriptionAndDisposeAsync(response)).ToMlResultFail<HttpResponseMessage>())
+                                    .TryMapAsync         (response => ReadContentAndDisposeAsync<T>(response, ct))
                                             .LogActionResultAsync(_logger, $"{nameof(PostAsync)}<{typeof(T).Name}>");
 
-        return result!;
+            return result!;
+        }
     }
 
     /// <summary>
@@ -383,17 +398,17 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                       string             url = null!, // es un parámetro opcional ya que el post de add, normalmente lleva ya la url completa en el BaseAddress. Esto solo se rellenaría en caso de que no hubiera BaseAddress del cliente registrado
                                                                       CancellationToken  ct  = default)
     {
-        var result = await MlResult.EmptyAsync()
+        using (requestMessage)
+        {
+            var result = await MlResult.EmptyAsync()
                                     .TryMapAsync         ( _       => _httpClientFactory.CreateClient(clientName))
                                     .ExecSelfIfValidAsync(client   => _logger.LogMlResultInformationAsync($"Haciendo {action} a la url {BuildRequestUri(client.BaseAddress?.ToString() ?? string.Empty, url ?? string.Empty)}"))
                                     .TryMapAsync         (client   => client.SendAsync(requestMessage, ct))
-                                    .BindAsync           (async response => response.IsSuccessStatusCode
-                                                                        ? response.ToMlResultValid()
-                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
-                                    .MapAsync            ( _       => EmptyValue.Create().ToAsync())
+                                    .BindAsync           (ReadEmptyResponseAndDisposeAsync)
                                             .LogActionResultAsync(_logger, $"{nameof(ActionEmptyAsync)}<{typeof(T).Name}>");
 
-        return result!;
+            return result!;
+        }
     }
 
     /// <summary>
@@ -464,12 +479,19 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
     /// <param name="pageNumber">Número de pagina solicitada, comenzando en uno.</param>
     /// <param name="pageSize">Número de elementos por pagina.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use BuildPagedRequest to scope pagination headers to one HttpRequestMessage. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     protected virtual Task<MlResult<HttpClient>> InternalAddPagInfoAsync(ILogger<HttpApiInvoker> logger,
                                                                          HttpClient                        client,
                                                                          IntNonNegative                    pageNumber,
                                                                          IntNonNegative                    pageSize)
         => logger.LogMlResultInformationAsync($"Añadiendo información a las cabeceras del httpClient: PageNumber {pageNumber}, PageSize {pageSize}")
-                                .BindAsync(_ => client.AddPaginationHeadersAsync(pageNumber, pageSize));
+                                .BindAsync(_ => EnsureFp.NotNull(client, "client cannot be null")
+                                    .TryExecSelfIfValid(_ =>
+                                    {
+                                        client.DefaultRequestHeaders.Add(global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageNumber, ((int)pageNumber).ToString());
+                                        client.DefaultRequestHeaders.Add(global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageSize, ((int)pageSize).ToString());
+                                    })
+                                    .Map(_ => client));
 
 
     /// <summary>
@@ -483,8 +505,15 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                      IntNonNegative              pageNumber,
                                                                      IntNonNegative              pageSize,
                                                                      Dictionary<string, string>? headers = null!)
-        => new HttpRequestMessage(method, url).TrySetHeaders(headers ?? [])
-                                .Bind(request => request.AddPaginationHeaders(pageNumber, pageSize));
+    {
+        var request = new HttpRequestMessage(method, url);
+        var result = request.TrySetHeaders(headers ?? [])
+                            .Bind(_ => request.AddPaginationHeaders(pageNumber, pageSize));
+
+        if (result.IsFailure) request.Dispose();
+
+        return result;
+    }
 
 
     /// <summary>
@@ -502,11 +531,11 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
                                                                        CancellationToken   ct = default)
     {
         var result = await BuildPagedRequest(method, parameters.Url, parameters.PageNumber, parameters.PageSize, parameters.Headers).ToAsync()
-                                    .TryMapAsync(request        => client.SendAsync(request, ct))
+                                    .TryMapAsync(request        => SendAndDisposeRequestAsync(client, request, ct))
                                     .BindAsync  (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
-                                    .TryMapAsync(response       => response.Content.ReadFromJsonAsync<T>(cancellationToken: ct));
+                                                                        : (await ReadErrorDescriptionAndDisposeAsync(response)).ToMlResultFail<HttpResponseMessage>())
+                                    .TryMapAsync(response       => ReadContentAndDisposeAsync<T>(response, ct));
         return result!;
     }
 
@@ -524,22 +553,95 @@ public class HttpApiInvoker(IHttpClientFactory                _httpClientFactory
     {
         var result = await EnsureFp.NotNullAsync(parameters.RequestBody, $"{nameof(parameters.RequestBody)} no puede ser nulo")
                                     .TryMapAsync( _             => JsonSerializer.Serialize(parameters.RequestBody))
-                                    .BindAsync  (jsonBody       => new HttpRequestMessage(HttpMethod.Post, parameters.Url)
-                                                                             {
-                                                                                 Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
-                                                                             }.TrySetHeadersAsync(parameters.Headers ?? []))
-                                    .BindAsync  (request        => request.AddPaginationHeadersAsync(parameters.PageNumber, parameters.PageSize))
-                                    .TryMapAsync(request        => client.SendAsync(request, parameters.CancellationToken))
+                                    .BindAsync  (jsonBody       => TryConfigureRequestAsync(
+                                        new HttpRequestMessage(HttpMethod.Post, parameters.Url)
+                                        {
+                                            Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+                                        },
+                                        request => request.TrySetHeadersAsync(parameters.Headers ?? [])))
+                                    .BindAsync  (request        => TryConfigureRequestAsync(
+                                        request,
+                                        configured => configured.AddPaginationHeadersAsync(parameters.PageNumber, parameters.PageSize)))
+                                        .TryMapAsync(request        => SendAndDisposeRequestAsync(client, request, parameters.CancellationToken))
                                     .BindAsync  (async response => response.IsSuccessStatusCode
                                                                         ? response.ToMlResultValid()
-                                                                        : (await response.ReadErrorDescriptionAsync()).ToMlResultFail<HttpResponseMessage>())
-                                    .TryMapAsync(response       => response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: parameters.CancellationToken))
+                                                        : (await ReadErrorDescriptionAndDisposeAsync(response)).ToMlResultFail<HttpResponseMessage>())
+                                        .TryMapAsync(response       => ReadContentAndDisposeAsync<TResponse>(response, parameters.CancellationToken))
                                             .LogActionResultAsync(_logger, $"{methodName}<{typeof(TRequest).Name}, {typeof(TResponse).Name}>");
         return result;
     }
 
 
     #endregion
+
+    private static async Task<HttpResponseMessage> SendAndDisposeRequestAsync(
+        HttpClient client,
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        using (request) return await client.SendAsync(request, cancellationToken);
+    }
+
+    private MlResult<(HttpClient, HttpRequestMessage)> CreateClientForRequest(
+        ServiceKey clientName,
+        HttpRequestMessage request)
+    {
+        var ownershipTransferred = false;
+
+        try
+        {
+            var result = _httpClientFactory.CreateClient(clientName).CombineAll(request);
+            ownershipTransferred = result.IsSuccess;
+            return result;
+        }
+        finally
+        {
+            if (!ownershipTransferred) request.Dispose();
+        }
+    }
+
+    private static async Task<MlResult<HttpRequestMessage>> TryConfigureRequestAsync(
+        HttpRequestMessage request,
+        Func<HttpRequestMessage, Task<MlResult<HttpRequestMessage>>> configure)
+    {
+        try
+        {
+            var result = await configure(request);
+            if (result.IsFailure) request.Dispose();
+            return result;
+        }
+        catch
+        {
+            request.Dispose();
+            throw;
+        }
+    }
+
+    private static async Task<string> ReadErrorDescriptionAndDisposeAsync(HttpResponseMessage response)
+    {
+        using (response) return await response.ReadErrorDescriptionAsync();
+    }
+
+    private static async Task<TResponse?> ReadContentAndDisposeAsync<TResponse>(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        using (response) return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: cancellationToken);
+    }
+
+    private static async Task<MlResult<EmptyValue>> ReadEmptyResponseAndDisposeAsync(HttpResponseMessage response)
+    {
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorDescription = await response.ReadErrorDescriptionAsync();
+                return errorDescription.ToMlResultFail<EmptyValue>();
+            }
+
+            return MlResult<EmptyValue>.Valid(EmptyValue.Create());
+        }
+    }
 
 }
 

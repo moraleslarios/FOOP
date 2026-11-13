@@ -404,7 +404,7 @@ public class RepositoryWorkflowIntegrationTests(IVinosRepo                    _s
         // configuración histórica con ASP.NET Core Identity que ya no existe en el modelo actual
         // de TestDbContext. Para satisfacerla sin tocar el modelo ni la infraestructura compartida,
         // se inserta una fila mínima válida en AspNetUsers y se elimina al finalizar el test.
-        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+        await _dbContext.Database.ExecuteSqlAsync(
             $"INSERT INTO AspNetUsers (Id, EmailConfirmed, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnabled, AccessFailedCount) VALUES ({tag}, 0, 0, 0, 0, 0)");
 
         var puntuacion = new VinosCatasPuntuacion
@@ -435,7 +435,7 @@ public class RepositoryWorkflowIntegrationTests(IVinosRepo                    _s
         await _vinosDeleteRepo.TryRemoveAsync(vino);
         await _catasRepo.TryRemoveAsync(cata);
         await CommitChangesAsync();
-        await _dbContext.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM AspNetUsers WHERE Id = {tag}");
+        await _dbContext.Database.ExecuteSqlAsync($"DELETE FROM AspNetUsers WHERE Id = {tag}");
     }
 
 

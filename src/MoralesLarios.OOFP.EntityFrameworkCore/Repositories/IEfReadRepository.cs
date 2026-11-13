@@ -39,14 +39,18 @@ public interface IEfReadRepository<TEntity> where TEntity : class
     /// <returns>The first matching entity or a failed result.</returns>
     MlResult<TEntity> TryFirst(Expression<Func<TEntity, bool>> filter);
     /// <summary>
-    /// Asynchronously returns the last entity yielded by the filtered query. No explicit ordering is applied.
+    /// Asynchronously returns the last entity yielded by the filtered query. No explicit ordering is applied;
+    /// all matching rows are materialized in memory. Use <c>IEfOrderedReadRepository.TryGetLastByAsync</c>
+    /// to order in the database and retrieve one row.
     /// </summary>
     /// <param name="filter">The predicate used to filter entities.</param>
     /// <param name="token">A token that can cancel the query.</param>
     /// <returns>A task containing the last entity yielded by the query or a failed result.</returns>
     Task<MlResult<TEntity>> TryGetLastAsync(Expression<Func<TEntity, bool>> filter, CancellationToken token = default);
     /// <summary>
-    /// Returns the last entity yielded by the filtered query. No explicit ordering is applied.
+    /// Returns the last entity yielded by the filtered query. No explicit ordering is applied; all matching
+    /// rows are materialized in memory. Use <c>IEfOrderedReadRepository.TryGetLastBy</c>
+    /// to order in the database and retrieve one row.
     /// </summary>
     /// <param name="filter">The predicate used to filter entities.</param>
     /// <returns>The last entity yielded by the query or a failed result.</returns>
@@ -106,14 +110,18 @@ public interface IEfReadRepository<TEntity> where TEntity : class
     /// <returns>A task containing the first matching entity or a failed result.</returns>
     Task<MlResult<TEntity>> TryFirstAsync(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails, CancellationToken token = default);
     /// <summary>
-    /// Returns the last entity yielded by the filtered query, using the supplied not-found error details. No explicit ordering is applied.
+    /// Returns the last entity yielded by the filtered query, using the supplied not-found error details.
+    /// No explicit ordering is applied; all matching rows are materialized in memory. Use
+    /// <c>IEfOrderedReadRepository.TryGetLastBy</c> to order in the database and retrieve one row.
     /// </summary>
     /// <param name="filter">The predicate used to filter entities.</param>
     /// <param name="notFoundErrorDetails">The error details returned when no entity matches.</param>
     /// <returns>The last entity yielded by the query or a failed result.</returns>
     MlResult<TEntity> TryGetLast(Expression<Func<TEntity, bool>> filter, MlErrorDetails notFoundErrorDetails);
     /// <summary>
-    /// Asynchronously returns the last entity yielded by the filtered query, using the supplied not-found error details. No explicit ordering is applied.
+    /// Asynchronously returns the last entity yielded by the filtered query, using the supplied not-found error details.
+    /// No explicit ordering is applied; all matching rows are materialized in memory. Use
+    /// <c>IEfOrderedReadRepository.TryGetLastByAsync</c> to order in the database and retrieve one row.
     /// </summary>
     /// <param name="filter">The predicate used to filter entities.</param>
     /// <param name="notFoundErrorDetails">The error details returned when no entity matches.</param>

@@ -1,0 +1,20 @@
+{
+  "generatedOn": "2026-11-13",
+  "source": "Windows 11; .NET 11.0.0; dotnet test -c Release --filter Category!=RequiresLocalServer; unique source lines across Cobertura reports, excluding obj.",
+  "projects": [
+    { "name": "MoralesLarios.OOFP.Application", "linesCovered": 105, "linesValid": 407 },
+    { "name": "MoralesLarios.OOFP.AspNetCore.Controllers", "linesCovered": 103, "linesValid": 254 },
+    { "name": "MoralesLarios.OOFP.AspNetCore.Results", "linesCovered": 188, "linesValid": 409 },
+    { "name": "MoralesLarios.OOFP.Configuration", "linesCovered": 13, "linesValid": 18 },
+    { "name": "MoralesLarios.OOFP.Core", "linesCovered": 2182, "linesValid": 10362 },
+    { "name": "MoralesLarios.OOFP.EntityFrameworkCore", "linesCovered": 514, "linesValid": 665 },
+    { "name": "MoralesLarios.OOFP.EntityFrameworkCore.TestSupport", "linesCovered": 91, "linesValid": 170 },
+    { "name": "MoralesLarios.OOFP.Http", "linesCovered": 107, "linesValid": 419 },
+    { "name": "MoralesLarios.OOFP.Logging", "linesCovered": 356, "linesValid": 903 },
+    { "name": "MoralesLarios.OOFP.Shared", "linesCovered": 6, "linesValid": 9 },
+    { "name": "MoralesLarios.OOFP.Validation.DataAnnotations", "linesCovered": 25, "linesValid": 39 },
+    { "name": "MoralesLarios.OOFP.Validation.FluentValidation", "linesCovered": 22, "linesValid": 30 },
+    { "name": "MoralesLarios.OOFP.ValueObjects", "linesCovered": 338, "linesValid": 523 },
+    { "name": "MoralesLarios.OOFP.ValueObjects.FileSystem", "linesCovered": 22, "linesValid": 44 }
+  ]
+}

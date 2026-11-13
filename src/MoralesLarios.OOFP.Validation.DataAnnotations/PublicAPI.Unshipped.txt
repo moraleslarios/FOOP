@@ -1,0 +1,23 @@
+#nullable enable
+MoralesLarios.OOFP.Validation.DataAnnotations.DataAnnotationsValidator
+MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions
+static MoralesLarios.OOFP.Validation.DataAnnotations.DataAnnotationsValidator.Validate<T>(System.Collections.Generic.IEnumerable<T>! source) -> MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.DataAnnotationsValidator.Validate<T>(T source) -> MoralesLarios.OOFP.Types.MlResult<T>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.DataAnnotationsValidator.ValidateAsync<T>(System.Collections.Generic.IEnumerable<T>! source) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.DataAnnotationsValidator.ValidateAsync<T>(System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<T>!>! sourceAsync) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.DataAnnotationsValidator.ValidateAsync<T>(System.Threading.Tasks.Task<T>! sourceAsync) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.DataAnnotationsValidator.ValidateAsync<T>(T source) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateDataAnnotations(this object! source) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateObject(this object! source) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataAnnotations<T>(this System.Collections.Generic.IEnumerable<T>! source) -> MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataannotations<T>(this System.Collections.Generic.IEnumerable<T>! source) -> MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataAnnotations<T>(this T source) -> MoralesLarios.OOFP.Types.MlResult<T>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataannotations<T>(this T source) -> MoralesLarios.OOFP.Types.MlResult<T>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataAnnotationsAsync<T>(this System.Collections.Generic.IEnumerable<T>! source) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataannotationsAsync<T>(this System.Collections.Generic.IEnumerable<T>! source) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataAnnotationsAsync<T>(this System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<T>!>! sourceAsync) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataannotationsAsync<T>(this System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<T>!>! sourceAsync) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<T>!>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataAnnotationsAsync<T>(this System.Threading.Tasks.Task<T>! sourceAsync) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataannotationsAsync<T>(this System.Threading.Tasks.Task<T>! sourceAsync) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataAnnotationsAsync<T>(this T source) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<T>!>!
+static MoralesLarios.OOFP.Validation.DataAnnotations.Helpers.Extensions.ValidateWithDataannotationsAsync<T>(this T source) -> System.Threading.Tasks.Task<MoralesLarios.OOFP.Types.MlResult<T>!>!

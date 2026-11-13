@@ -1,10 +1,15 @@
 # Mejoras del proyecto `MoralesLarios.OOFP.Logging`
 
 > **Proyectos analizados** · `src/MoralesLarios.OOFP.Logging` y `src/MoralesLarios.OOFP.Logging.Sample`
-> **Versión actual** · 2.0.0 · `net8.0`
+> **Versión del snapshot** · 2.0.0 · `net8.0`
 > **Fecha del análisis** · tras el commit `2193ea7` (rama `release/2.0.0-nomenclatura`)
 > **Objetivo** · identificar todas las mejoras que hacen la capa de *logging* **más compatible con `Microsoft.Extensions.Logging`** y **más estándar** respecto a las convenciones de diseño de .NET
 > **Naturaleza** · documento de análisis y planificación. No contiene cambios de código aplicados.
+
+> **Vigencia:** esta es una fotografía histórica posterior a `2193ea7`, no el estado actual. La solución
+> hoy usa `net11.0` y `MoralesLarios.OOFP.Logging.Tests.Unit` existe con 230 pruebas. Consulta la
+> [épica G6](../../Next_Versions/2.0.0/Pendientes/general_old_version/Epica-G6-Pruebas-Calidad-y-Rendimiento.md)
+> para la evidencia de pruebas vigente.
 
 ---
 
@@ -52,8 +57,9 @@ proyectos**:
 | `MoralesLarios.OOFP.Extensions.Loggers` | **no existe en disco** · entrada fantasma del árbol del editor, no está en la solución | ❌ |
 | `MoralesLarios.OOFP.Extensions.Loggers.Console.Tests` | **no existe en disco** · ídem | ❌ |
 
-> **Dato relevante.** `MoralesLarios.OOFP.Logging.Tests.Unit` **tampoco existe**. Los 347 métodos de
-> extensión públicos no tienen **ni un solo test directo**. Ver el hallazgo
+> **Dato relevante.** `MoralesLarios.OOFP.Logging.Tests.Unit` sí existe; esta auditoría conserva un
+> diagnóstico histórico que ya no refleja el árbol actual. El proyecto tiene 230 pruebas; la cobertura
+> de los 347 métodos de extensión públicos sigue siendo un tema de revisión. Ver el hallazgo
 > [T1](#55-cobertura-de-pruebas).
 
 ### 1.2 Quién consume este proyecto
@@ -187,7 +193,7 @@ Y lo que hay en exceso:
 | # | Hallazgo | Ref. | Prioridad | Rompe |
 |--:|----------|------|-----------|:-----:|
 | 1 | **Bug funcional** · `LogMlResultIfFailWithExceptionAsync` delega en `…WithValueAsync`, así que lee la excepción con `GetMetadataValue<Exception>()` en lugar de `GetException()` | [F1](#51-corrección-funcional) | 🔴 crítica | sí (silenciosa al corregir) |
-| 2 | **Cobertura directa = 0** · no existe `MoralesLarios.OOFP.Logging.Tests.Unit`; 347 métodos públicos sin un solo test | [T1](#55-cobertura-de-pruebas) | 🔴 crítica | no |
+| 2 | **Cobertura de Logging · revisar** · el proyecto de tests existe hoy; esta cifra pertenece al snapshot histórico | [T1](#55-cobertura-de-pruebas) | 🔴 crítica histórica | no |
 | 3 | **134 `validBuilMessage`** · errata en un parámetro público, que convive con `failBuildMessage` bien escrito en la misma firma | [N1](#52-nomenclatura-y-estándares) | 🔴 alta | sí (compilación) |
 | 4 | **84 `faildMessage`** · errata en un parámetro público | [N2](#52-nomenclatura-y-estándares) | 🔴 alta | sí (compilación) |
 | 5 | **Nunca se comprueba `IsEnabled`** · el mensaje se construye siempre, aunque el nivel esté desactivado | [D1](#53-diseño-y-alineamiento-con-la-bcl) | 🟠 alta | no (aditivo) |
@@ -283,8 +289,8 @@ Detalle completo en [`01-Nomenclatura-y-Estandares.md`](01-Nomenclatura-y-Estand
 
 | # | Hallazgo | Evidencia |
 |---|----------|-----------|
-| **T1** | **No existe `MoralesLarios.OOFP.Logging.Tests.*`** ⇒ cobertura directa de los 347 métodos públicos = **0**. Es la causa raíz de que [F1](#51-corrección-funcional) sobreviviera a dos versiones | ausencia en la solución |
-| **T2** | Única cobertura existente: **indirecta**, vía los 33 tests de `MoralesLarios.OOFP.Http.Tests.Integration` | ver [§1.2](#12-quién-consume-este-proyecto) |
+| **T1** | En el snapshot del análisis no existía `MoralesLarios.OOFP.Logging.Tests.*`. El proyecto actual tiene 230 pruebas; no se ha verificado aquí cobertura directa exhaustiva de los 347 métodos públicos. | Estado actual: existe `MoralesLarios.OOFP.Logging.Tests.Unit` |
+| **T2** | El snapshot contaba solo cobertura **indirecta** vía `MoralesLarios.OOFP.Http.Tests.Integration`; ahora también existe cobertura directa en el proyecto de tests de Logging. | Ver [§1.2](#12-quién-consume-este-proyecto) y la épica G6 |
 | **T3** | La matriz real a cubrir es **6 niveles × 7 regiones × {sync, async}**, y la paridad perfecta de [§2.2](#22-superficie-pública) permite generarla sistemáticamente | — |
 | **T4** | Sin `InternalsVisibleTo`, un futuro proyecto de tests no podría verificar nada interno | `MoralesLarios.OOFP.Logging.csproj` |
 

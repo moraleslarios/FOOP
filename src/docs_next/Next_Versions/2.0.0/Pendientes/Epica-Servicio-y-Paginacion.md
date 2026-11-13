@@ -30,7 +30,7 @@
 
 ## 1. Contexto y problema
 
-`CrudServiceFp<TDto, TEntity, TKey>` es la clase de servicio genérica sobre la que se apoya toda la
+`CrudServiceFp<TEntity, TDto>` y su variante dúplex `CrudServiceFp<TEntity, TRequest, TResponse>` son las clases de servicio genéricas sobre las que se apoya toda la
 capa de aplicación. Tiene **2 problemas de contrato** y **1 problema de diagnóstico**:
 
 1. **Un método llamado `GetPagedAsync` que no pagina.** No recibe página ni tamaño de página, y en su
@@ -46,7 +46,7 @@ capa de aplicación. Tiene **2 problemas de contrato** y **1 problema de diagnó
 
 | Fichero | Líneas |
 |---|---|
-| `MoralesLarios.OOFP.Application/Services/CrudServiceFp.cs` | **27-39** (`GetPagedAsync` simple), **322-334** (`GetPagedAsync` dúplex), **271** y **568** (`MapAsync` + `Adapt`), **264** y **561** (firmas sin factoría de éxito), **438** y **521** (`typeof(TEntity).Name`), **539**, **547**, **548**, **584** (`typeof(TResponse).Name`) |
+| `MoralesLarios.OOFP.Application/Services/CrudServiceFp.cs` | **27-39** (`GetPagedAsync` simple), **327-337** (`GetPagedAsync` dúplex), **275** y **577** (`MapAsync` + `Adapt`), **268** y **570** (firmas sin factoría de éxito), **444** y **529** (`typeof(TEntity).Name`), **547**, **556**, **557**, **594** (`typeof(TResponse).Name`) |
 | `MoralesLarios.OOFP.Application/Services/ICrudServiceFp.cs` | **25-28** (declaración simple), **179** (declaración dúplex) |
 | `MoralesLarios.OOFP.EntityFrameworkCore/Repositories/IEfPaginator.cs` | **24**, **34**, **44**, **55** (los 4 métodos de paginación que nadie llama) |
 | `MoralesLarios.OOFP.EntityFrameworkCore/Repositories/EfPagedReadRepository.cs` | **11-13**, **135-158** (`TryQueryPage`) |
@@ -268,7 +268,7 @@ var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying pa
 - **Depende de:** US-01, US-02
 - **Prerrequisito de:** US-09
 - **Proyecto afectado:** `MoralesLarios.OOFP.Application`
-- **Justificación:** punto 41; `CrudServiceFp.cs` L322-334 e `ICrudServiceFp.cs` L179.
+- **Justificación:** punto 41; `CrudServiceFp.cs` L327-337 e `ICrudServiceFp.cs` L179.
 
 **Criterios de aceptación**
 
@@ -287,11 +287,11 @@ var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"Querying pa
 - **Depende de:** nada
 - **Prerrequisito de:** US-07
 - **Proyecto afectado:** `MoralesLarios.OOFP.Application`
-- **Justificación:** punto 53; plan fase 4, tarea 4.2. `CrudServiceFp.cs` **L271** y **L568**.
+- **Justificación:** punto 53; plan fase 4, tarea 4.2. `CrudServiceFp.cs` **L275** y **L577**.
 
 **Criterios de aceptación**
 
-- [ ] `L271` y `L568` usan `.TryMapAsync(_ => dto.Adapt<TEntity>(), "<mensaje>")` en lugar de `.MapAsync(...)`.
+- [ ] `L275` y `L577` usan `.TryMapAsync(_ => dto.Adapt<TEntity>(), "<mensaje>")` en lugar de `.MapAsync(...)`.
 - [ ] El mensaje de error identifica el par de tipos involucrado (`TDto` → `TEntity`).
 - [ ] Hay un test que registra un mapeo que lanza y comprueba que el resultado es **fallido**, no una excepción.
 - [ ] El estilo coincide con el que ya usa `CreateAsync` (L107-122), que ya hace `TryMapAsync` en esa misma proyección.
@@ -312,11 +312,11 @@ criterio a los borrados.
 - **Depende de:** US-05
 - **Prerrequisito de:** nada
 - **Proyecto afectado:** `MoralesLarios.OOFP.Application`
-- **Justificación:** punto 53, apartado *"+ factoría de mensaje de éxito"*; firmas `CrudServiceFp.cs` **L264** y **L561**.
+- **Justificación:** punto 53, apartado *"+ factoría de mensaje de éxito"*; firmas `CrudServiceFp.cs` **L268** y **L570**.
 
 **Criterios de aceptación**
 
-- [ ] Las firmas de L264 y L561 incluyen `Func<…, string> successMessageFactory = null!` en la misma posición que el resto de métodos.
+- [ ] Las firmas de L268 y L570 incluyen `Func<…, string> successMessageFactory = null!` en la misma posición que el resto de métodos.
 - [ ] Si llega `null`, se mantiene **literalmente** el mensaje por defecto actual (no es una ruptura de comportamiento).
 - [ ] Las declaraciones de `ICrudServiceFp` se actualizan.
 - [ ] Un test comprueba que la factoría se invoca y que su texto llega al logger.
@@ -337,7 +337,7 @@ criterio a los borrados.
 
 - [ ] Se parte del recuento confirmado: **22 llamadas a `Adapt`**, **16 dentro de `MapAsync`**, **6 en `TryMapAsync`**.
 - [ ] Cada uno de los 16 queda clasificado en una tabla: *convertido a `TryMapAsync`* / *seguro, se documenta por qué*.
-- [ ] Se convierten como mínimo los que proyectan **entrada del consumidor** (`GetPagedAsync` L34, `FindByIdProblemsDetailsAsync` L83, `UpdateAsync` L174 y los de las variantes dúplex) según el criterio acordado en **D-5**.
+- [ ] Se convierten como mínimo los que proyectan **entrada del consumidor** (`GetPagedAsync` L34, `FindByIdProblemsDetailsAsync` L83, `UpdateAsync` L170 y los de las variantes dúplex) según el criterio acordado en **D-5**.
 - [ ] La tabla queda en el documento de la épica (§8.5) y referenciada desde el `README` del proyecto.
 
 ---
@@ -355,8 +355,8 @@ criterio a los borrados.
 **Criterios de aceptación**
 
 - [ ] Se documenta el criterio en una sola frase al principio de `CrudServiceFp.cs`: **`TResponse`/`TDto` en todo mensaje que pueda llegar al consumidor; `TEntity` solo en trazas internas.**
-- [ ] `L438` y `L521` dejan de usar `typeof(TEntity).Name` y usan el tipo que el método realmente recibe (`TRequest`/`TResponse`).
-- [ ] Los usos ya correctos de `typeof(TResponse).Name` (**L539, L547, L548, L584**) se dejan tal cual y se citan como referencia del criterio.
+- [ ] `L444` y `L529` dejan de usar `typeof(TEntity).Name` y usan el tipo que el método realmente recibe (`TRequest`/`TResponse`).
+- [ ] Los usos ya correctos de `typeof(TResponse).Name` (**L547, L556, L557, L594**) se dejan tal cual y se citan como referencia del criterio.
 - [ ] Cualquier test que compare el texto se actualiza en el mismo commit.
 
 **Notas técnicas**
@@ -369,7 +369,7 @@ criterio a los borrados.
         => DeleteProblemDetailsAsync(typeof(TEntity).Name.BuildEntityNotFoundError(pk), ct, initialMessage, failMessageBuilder, pk);
 ```
 
-El caso de L521 merece debate: el método **no tiene** un DTO de entrada, solo claves. Resolver en **D-6**.
+El caso de L529 merece debate: el método **no tiene** un DTO de entrada, solo claves. Resolver en **D-6**.
 
 ---
 
@@ -448,7 +448,7 @@ graph TD
 | **D-3** | ¿`_repo` expone ya `IEfPaginator<TEntity>`? | (a) sí, no hay nada que hacer · (b) elevar el tipo declarado a `IEfPagedRepository<TEntity>` · (c) inyectar un segundo `IEfPaginator<TEntity>` opcional | Verificar antes de empezar; si no lo expone, **(b)** (es la interfaz que ya compone los 20 + 4 métodos) |
 | **D-4** | ¿Cómo se proyecta `PagedResult<TEntity>` → `PagedResult<TDto>`? | (a) añadir `MapItems` a `PagedResult<T>` · (b) construirlo a mano en el servicio · (c) registrar la conversión en Mapster | **(a)**: es reutilizable y evita repetir los 4 argumentos en cada método |
 | **D-5** | ¿Qué `MapAsync` de los 16 se convierten en `TryMapAsync`? | (a) todos · (b) solo los que proyectan entrada del consumidor · (c) solo los 2 del punto 53 | **(b)**: `Adapt` de entidad→DTO con configuración estable es seguro; el de DTO→entidad depende de datos externos |
-| **D-6** | En los métodos que **solo reciben claves** (L521), ¿qué tipo se nombra en el error? | (a) `TResponse`/`TDto` · (b) `TEntity` porque es lo que no se ha encontrado · (c) un nombre lógico configurable | **(a)** para el mensaje que sale, **(b)** para la traza; el criterio de US-08 ya lo cubre |
+| **D-6** | En los métodos que **solo reciben claves** (L529), ¿qué tipo se nombra en el error? | (a) `TResponse`/`TDto` · (b) `TEntity` porque es lo que no se ha encontrado · (c) un nombre lógico configurable | **(a)** para el mensaje que sale, **(b)** para la traza; el criterio de US-08 ya lo cubre |
 
 ---
 
@@ -456,9 +456,9 @@ graph TD
 
 - [ ] `GetPagedAsync` (simple y dúplex) recibe `PageRequest` y llama a `TryAllPaginationAsync`.
 - [ ] Existe `GetAllAsync` en las 2 variantes, documentado como no acotado.
-- [ ] `L271` y `L568` usan `TryMapAsync`; las firmas `L264`/`L561` admiten factoría de éxito.
+- [ ] `L275` y `L577` usan `TryMapAsync`; las firmas `L268`/`L570` admiten factoría de éxito.
 - [ ] Los 16 `MapAsync` están clasificados en la tabla de §8.5 y los acordados en **D-5** están convertidos.
-- [ ] `L438` y `L521` ya no usan `typeof(TEntity).Name` en mensajes de salida.
+- [ ] `L444` y `L529` ya no usan `typeof(TEntity).Name` en mensajes de salida.
 - [ ] La solución compila en `Release --no-incremental` con **0 errores y `CS1591 = 0`**.
 - [ ] Los **1.027 tests** existentes siguen en verde (ajustando los que comparan cadenas de mensaje).
 - [ ] Los tests de catálogo de US-09 están en `Application.Tests.Unit` y pasan.
@@ -625,7 +625,7 @@ El compilador obliga a elegir. Eso es precisamente el valor de la ruptura: **nad
 
 ### 8.3 · La variante dúplex (US-04)
 
-**Hoy — `CrudServiceFp.cs`, L322-334**
+**Hoy — `CrudServiceFp.cs`, L327-337**
 
 El cuerpo es **idéntico** al simple, cambiando `TDto` por `TResponse`:
 
@@ -663,7 +663,7 @@ migre de la simple a la dúplex (o al revés) asumirá que se comportan igual.
 
 ### 8.4 · `MapAsync` frente a `TryMapAsync`: por qué importa (US-05, US-06)
 
-**Hoy — `CrudServiceFp.cs`, L264-271 (borrado por DTO, variante simple)**
+**Hoy — `CrudServiceFp.cs`, L268-275 (borrado por DTO, variante simple)**
 
 ```csharp
     public virtual Task<MlResult<TDto>> DeleteAsync(TDto                         dto,
@@ -672,7 +672,7 @@ migre de la simple a la dúplex (o al revés) asumirá que se comportan igual.
                                                     Func<MlErrorDetails, string> failMessageBuilder = null!)
     {
         var result = _logger.LogMlResultInformationAsync(initialMessage ?? $"...")
-                            .MapAsync( _ => dto.Adapt<TEntity>())        // ← L271
+                            .MapAsync( _ => dto.Adapt<TEntity>())        // ← L275
                             .BindAsync( entity => _repo.TryRemoveAsync(entity, ct))
                             .MapAsync ( bdData => bdData.Adapt<TDto>())
                             .LogCompletedResultAsync(...);
@@ -680,7 +680,7 @@ migre de la simple a la dúplex (o al revés) asumirá que se comportan igual.
     }
 ```
 
-La misma estructura se repite en **L561-568** para la variante dúplex.
+La misma estructura se repite en **L570-577** para la variante dúplex.
 
 El problema es concreto. Si Mapster no tiene configuración para `TDto → TEntity`, o si una propiedad
 no es convertible, `Adapt` lanza. Y dentro de `MapAsync`, esa excepción **no se captura**:
@@ -767,10 +767,10 @@ La tabla que US-07 exige rellenar (muestra con los casos ya identificados):
 | 2 | `FindByIdProblemsDetailsAsync` L83 | entidad → `TDto` | `MapAsync` | 🟢 seguro (salida de BD) |
 | 3 | `CreateAsync` L107-122 (entrada) | `TDto` → entidad | `TryMapAsync` | ✅ ya correcto — **patrón de referencia** |
 | 4 | `CreateAsync` L107-122 (salida) | entidad → `TDto` | `MapAsync` | 🟢 seguro |
-| 5 | `UpdateAsync` L174 | `TDto` → entidad | `MapAsync` | 🔴 **convertir** (entrada del consumidor) |
-| 6 | `DeleteAsync` L271 | `TDto` → entidad | `MapAsync` | 🔴 **convertir** (US-05) |
-| 7 | `GetPagedAsync` dúplex L329 | entidad → `TResponse` | `MapAsync` | ⚠️ revisar (igual que #1) |
-| 8 | `DeleteAsync` dúplex L568 | `TRequest` → entidad | `MapAsync` | 🔴 **convertir** (US-05) |
+| 5 | `UpdateAsync` L170 | `TDto` → entidad | `TryMapAsync` | ✅ ya convertido (entrada del consumidor) |
+| 6 | `DeleteAsync` L275 | `TDto` → entidad | `MapAsync` | 🔴 **convertir** (US-05) |
+| 7 | `GetPagedAsync` dúplex L334 | entidad → `TResponse` | `MapAsync` | ⚠️ revisar (igual que #1) |
+| 8 | `DeleteAsync` dúplex L577 | `TRequest` → entidad | `MapAsync` | 🔴 **convertir** (US-05) |
 | … | *(resto hasta 22)* | | | *pendiente de clasificar* |
 
 Criterio de clasificación acordado (**D-5**, opción b):
@@ -799,19 +799,19 @@ Criterio de clasificación acordado (**D-5**, opción b):
 
 ### 8.6 · `TResponse` frente a `TEntity` en los mensajes (US-08)
 
-**Hoy — `CrudServiceFp.cs`, L432-438**
+**Hoy — `CrudServiceFp.cs`, L444**
 
 ```csharp
         => UpdateAsync(dtoRequest, typeof(TEntity).Name.BuildEntityNotFoundError(pk), ct, initialMessage, successMessageFactory, failMessageBuilder, pk);
 ```
 
-**Hoy — `CrudServiceFp.cs`, L517-521**
+**Hoy — `CrudServiceFp.cs`, L529**
 
 ```csharp
         => DeleteProblemDetailsAsync(typeof(TEntity).Name.BuildEntityNotFoundError(pk), ct, initialMessage, failMessageBuilder, pk);
 ```
 
-**Hoy — los casos que YA son correctos (L539, L547, L548, L584)**
+**Hoy — los casos que YA son correctos (L547, L556, L557, L594)**
 
 ```csharp
         ... typeof(TResponse).Name ...
@@ -836,10 +836,10 @@ GET    /customers/42   → "CustomerResponse not found. Key: 42"       ← TResp
 **Después**
 
 ```csharp
-    // L438
+    // L444
         => UpdateAsync(dtoRequest, typeof(TResponse).Name.BuildEntityNotFoundError(pk), ct, initialMessage, successMessageFactory, failMessageBuilder, pk);
 
-    // L521
+    // L529
         => DeleteProblemDetailsAsync(typeof(TResponse).Name.BuildEntityNotFoundError(pk), ct, initialMessage, failMessageBuilder, pk);
 ```
 
@@ -858,9 +858,9 @@ Y el criterio documentado una sola vez, arriba del fichero:
 
 | Punto | Antes | Después |
 |---|---|---|
-| L438 | `typeof(TEntity).Name` | `typeof(TResponse).Name` |
-| L521 | `typeof(TEntity).Name` | `typeof(TResponse).Name` |
-| L539, L547, L548, L584 | `typeof(TResponse).Name` | sin cambios ✅ |
+| L444 | `typeof(TEntity).Name` | `typeof(TResponse).Name` |
+| L529 | `typeof(TEntity).Name` | `typeof(TResponse).Name` |
+| L547, L556, L557, L594 | `typeof(TResponse).Name` | sin cambios ✅ |
 | Coherencia entre verbos HTTP | ❌ | ✅ |
 | Filtración del nombre de la entidad | sí | no |
 
@@ -913,12 +913,12 @@ Y el test de railway, que es el que de verdad protege US-05:
         await act.Should().NotThrowAsync("el fallo de mapeo debe viajar como MlResult, no como excepción");
 
         var result = await sut.DeleteAsync(new CustomerDto { Id = 1 });
-        result.SecureFailErrorsDetails().Should().NotBeNull();
+        result.GetFailureDetailsOrThrow().Should().NotBeNull();
     }
 ```
 
 > Recuerda que `MlResult<T>.Value` y `.ErrorsDetails` son `internal protected`: en tests hay que usar
-> `SecureValidValue()` y `SecureFailErrorsDetails()`.
+> `GetValueOrThrow()` y `GetFailureDetailsOrThrow()`.
 
 ---
 

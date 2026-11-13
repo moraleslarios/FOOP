@@ -560,9 +560,7 @@ public static partial class MlResultCollections
 
                                 List<Task<MlResult<TResult>>> tasks = colec.Select(item => completeFuncTransformAsync(item)).ToList();
 
-                                await Task.WhenAll(tasks);
-
-                                List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
+                                var partialData = await Task.WhenAll(tasks);
 
                                 var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
@@ -591,9 +589,7 @@ public static partial class MlResultCollections
 
                                 List<Task<MlResult<TResult>>> tasks = colec.Select((item, index) => completeFuncTransformAsync(item, index)).ToList();
 
-                                await Task.WhenAll(tasks);
-
-                                List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
+                                var partialData = await Task.WhenAll(tasks);
 
                                 var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
@@ -622,9 +618,7 @@ public static partial class MlResultCollections
 
                                 List<Task<MlResult<TResult>>> tasks = colec.Select(item => completeFuncTransformAsync(item)).ToList();
 
-                                await Task.WhenAll(tasks);
-
-                                List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
+                                var partialData = await Task.WhenAll(tasks);
 
                                 var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :
@@ -653,9 +647,7 @@ public static partial class MlResultCollections
 
                                 List<Task<MlResult<TResult>>> tasks = colec.Select((item, index) => completeFuncTransformAsync(item, index)).ToList();
 
-                                await Task.WhenAll(tasks);
-
-                                List<MlResult<TResult>> partialData = tasks.Select(t => t.Result).ToList();
+                                var partialData = await Task.WhenAll(tasks);
 
                                 var result = partialData.Any(x => x.IsFailure) ?
                                              MergeFailureErrors(partialData) :

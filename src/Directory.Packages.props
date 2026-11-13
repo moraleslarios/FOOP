@@ -5,16 +5,20 @@
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.AutoMoq" Version="4.18.1" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.16.0-preview.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="FluentAssertions" Version="8.2.0" />
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
+    <PackageVersion Include="FsCheck" Version="3.6.0" />
     <PackageVersion Include="mapster" Version="7.4.0" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.339" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.9.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="11.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.14.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="11.0.0" />

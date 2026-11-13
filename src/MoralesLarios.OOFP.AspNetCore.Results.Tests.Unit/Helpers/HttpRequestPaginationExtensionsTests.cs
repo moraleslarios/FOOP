@@ -2,6 +2,7 @@
 // moraleslarios@gmail.com
 // Licensed under the Apache License, Version 2.0
 
+using MoralesLarios.OOFP.Http.Helpers;
 
 
 namespace MoralesLarios.OOFP.AspNetCore.Results.Tests.Unit.Helpers;
@@ -205,6 +206,30 @@ public class HttpRequestPaginationExtensionsTests
         MlResult<(IntNonNegative PageNumber, IntNonNegative PageSize)> expected = (1, 10);
 
         result.ToString().Should().Be(expected.ToString());
+    }
+
+
+    [Fact]
+    public void AddPaginationHeaders_ClientRequestIsReadAsExpectedByServer()
+    {
+        using var clientRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.ejemplo.com/items");
+        var added = clientRequest.AddPaginationHeaders(
+            IntNonNegative.CreateFromInt(2), IntNonNegative.CreateFromInt(25));
+
+        added.IsSuccess.Should().BeTrue();
+        clientRequest.Headers.GetValues("X-Page-Number").Should().Equal("2");
+        clientRequest.Headers.GetValues("X-Page-Size").Should().Equal("25");
+
+        var serverRequest = new DefaultHttpContext().Request;
+        foreach (var header in clientRequest.Headers)
+            serverRequest.Headers[header.Key] = header.Value.ToArray();
+
+        var parsed = serverRequest.GetPaginationHeaders();
+
+        parsed.IsSuccess.Should().BeTrue();
+        var pagination = parsed.GetValueOrThrow();
+        ((int)pagination.PageNumber).Should().Be(2);
+        ((int)pagination.PageSize).Should().Be(25);
     }
 
     [Fact]

@@ -18,11 +18,10 @@ public static partial class MlResponseWebExtensions
     public const int DefaultMaxErrorBodyLength = 2_048;
 
     /// <summary>
-    /// Punto 17: permite desactivar por completo la inclusion del cuerpo de la respuesta en la
-    /// descripcion del error. Util en entornos donde el cuerpo puede contener informacion
-    /// sensible (trazas de servidor, datos personales, etc.).
+    /// Controla la inclusion del cuerpo de la respuesta en la descripcion del error. Es <see langword="false"/>
+    /// por defecto para no exponer informacion sensible; el consumidor puede habilitarlo explicitamente.
     /// </summary>
-    public static bool IncludeResponseBodyInErrors { get; set; } = true;
+    public static bool IncludeResponseBodyInErrors { get; set; } = false;
 
     /// <summary>
     /// Lee el cuerpo de una respuesta HTTP fallida y construye una descripción legible del error.

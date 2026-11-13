@@ -1,0 +1,39 @@
+#nullable enable
+const MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.SearchPattern = "^(?:[a-zA-Z]:[\\\\\\/]|\\\\\\\\[^\\\\\\/]+[\\\\\\/][^\\\\\\/]+[\\\\\\/]?|\\.{1,2}[\\\\\\/])?(?:[^<>:\"/\\\\|?*\\x00-\\x1F]+[\\\\\\/])*[^<>:\"/\\\\|?*\\x00-\\x1F]*$" -> string!
+const MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.SearchPattern = "^(?:[a-zA-Z]:[\\\\\\/]|\\\\\\\\[^\\\\\\/]+[\\\\\\/][^\\\\\\/]+[\\\\\\/]?|\\.{1,2}[\\\\\\/])?(?:[^<>:\"/\\\\|?*\\x00-\\x1F]+[\\\\\\/])*[^<>:\"/\\\\|?*\\\\\\/\\x00-\\x1F]+$" -> string!
+MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath
+MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.DirectoryPath(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value) -> void
+MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath
+MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.ExistingDirectoryPath(string! directoryStr) -> void
+MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath
+MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.ExistingFilePath(string! pathStr) -> void
+MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath
+MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.FilePath(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value) -> void
+static MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.CreateFromPath(string! value) -> MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.FromPath(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.implicit operator MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath!(string! value) -> MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.implicit operator string!(MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.DirectoryPath.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.ByString(string! directoryStr, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.CreateFromPath(string! directoryStr) -> MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.FormatErrorMessage(string! directoryStr) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.FromPath(string! directoryStr, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.implicit operator MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath!(string! directoryStr) -> MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.implicit operator string!(MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath! directoryStrObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingDirectoryPath.IsValid(string! directoryStr) -> bool
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.ByString(string! pathStr, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.CreateFromPath(string! pathStr) -> MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.FormatErrorMessage(string! pathStr) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.FromPath(string! pathStr, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.implicit operator MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath!(string! pathStr) -> MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.implicit operator string!(MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath! pathStrObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath.IsValid(string! pathStr) -> bool
+static MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.CreateFromPath(string! value) -> MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.FromPath(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath!>!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.implicit operator MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath!(string! value) -> MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.implicit operator string!(MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.FileSystem.FilePath.IsValid(string! value) -> bool

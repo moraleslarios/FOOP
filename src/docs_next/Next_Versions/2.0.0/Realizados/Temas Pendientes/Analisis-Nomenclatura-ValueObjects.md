@@ -1,5 +1,8 @@
 # Análisis de nomenclatura — `MoralesLarios.OOFP.ValueObjects`
 
+> **Aviso historico:** documento redactado antes de 2.0.0; los nombres propuestos pueden estar obsoletos.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas actuales](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Revisión **nombre a nombre** de los 30 tipos públicos del proyecto `MoralesLarios.OOFP.ValueObjects`,
 > con el problema detectado, el nombre propuesto y alternativas.

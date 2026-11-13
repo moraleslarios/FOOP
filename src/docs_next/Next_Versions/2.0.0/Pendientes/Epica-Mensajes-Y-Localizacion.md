@@ -46,31 +46,31 @@ estructurales:
 
 | Punto | Proyecto(s) | Estado real tras la auditoría | Naturaleza |
 |---|---|---|---|
-| 77 | `Validation`, `Validation.DataAnnotations`, `Validation.FluentValidation` | 🟡 **parcial** — las erratas citadas: **0**; queda 1 mensaje con inglés deficiente | Mensaje aislado + falta de recursos |
-| 78 | `AspNetCore.Controllers` | 🟡 **parcial** — `isn't null` / `diferent type` / `soported`: **0**; quedan 2 mensajes malos y 1 puente obsoleto | Inglés incorrecto en respuesta HTTP |
+| 77 | `Validation`, `Validation.DataAnnotations`, `Validation.FluentValidation` | 🟡 **parcial** — erratas y el mensaje de creación automática corregidos; falta infraestructura común de recursos | Mensajes aislados + falta de recursos |
+| 78 | `AspNetCore.Controllers` | 🟡 **parcial** — las erratas y el mensaje de parseo de clave se corrigieron; permanece el puente obsoleto | Falta reconciliar idioma y puentes HTTP |
 | 79 | `Http`, `AspNetCore.Results`, `AspNetCore.Controllers` | 🔴 **vivo** — 33 apariciones de castellano en bibliotecas | Idioma impuesto por la biblioteca |
 | 80 | `Application`, `Logging` | 🔴 **vivo** — 30 llamadas, 0 plantillas nombradas, 0 `EventId` | Logs no consultables |
 
-### Punto 77 — las erratas citadas ya no existen; el agujero es la falta de recursos
+### Punto 77 — el mensaje de creación automática quedó corregido; falta la infraestructura de recursos
 
 Búsqueda exhaustiva de `"source no be null"`, `"source no be empty"`, `" no be "`,
 `no be (null|empty)` y sus interpolaciones equivalentes: **0 apariciones**. Los cuatro proyectos de
-validación existen y sus mensajes son correctos. Sobrevive **un único** literal con inglés
-deficiente:
+validación existen y el literal de creación automática se corrigió en 2.0.0. El siguiente bloque conserva el
+ejemplo anterior solo como evidencia histórica:
 
 ```csharp
-// MoralesLarios.OOFP.Validation.FluentValidation/Helpers/Extensions.cs, L38
+// Ejemplo anterior a la corrección (no es el texto actual):
 return MlResult<T>.Fail($"Problems with automatic create instance of {typeof(TValidator).Name}");
 //                       ← «Problems with automatic create instance of» no es inglés gramatical;
 //                         además no dice QUÉ hacer (registrar el validador en el contenedor)
 ```
 
-### Punto 78 — el inglés deficiente viaja hoy en respuestas HTTP
+### Punto 78 — el mensaje de parseo de clave se corrigió; el puente antiguo permanece
 
 `"isn't null"`, `"is diferent type"`, `"diferent type"`, `"soported"`, `"not soported"` y
-`"suported"`: **0 apariciones**. Pero el mensaje más visible del proyecto —el que se devuelve
-cuando una clave compuesta no se puede interpretar— sigue siendo ininteligible, y se emite desde
-**6 puntos** del controlador base:
+`"suported"`: **0 apariciones**. El mensaje de parseo de clave compuesta también se corrigió; el código
+vigente describe una clave primaria separada por comas. El siguiente bloque conserva el mensaje anterior
+como evidencia histórica:
 
 ```csharp
 // MoralesLarios.OOFP.AspNetCore.Controllers/Helpers/Extensions.cs, L129

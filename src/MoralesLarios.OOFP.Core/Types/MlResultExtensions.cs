@@ -357,9 +357,10 @@ public static partial class MlResultExtensions
     /// <param name="source">Resultado de origen sobre el que se aplica la operación.</param>
     /// <param name="exceptionMessage">Mensaje descriptivo.</param>
     /// <returns>Valor de tipo <c>T</c> obtenido por la operación.</returns>
-    public static T GetValueOrThrow<T>(this MlResult<T> source, string exceptionMessage = "Cannot obtain the secure value from MlResult in Fail state")
+    /// <exception cref="MlResultFailureException">El resultado está en estado de fallo; la excepción expone sus detalles.</exception>
+    public static T GetValueOrThrow<T>(this MlResult<T> source, string exceptionMessage = EnsureFpMessages.CannotGetValueFromFailedResult)
         => source.Match(valid: x => x,
-                        fail : _ => throw new InvalidProgramException(exceptionMessage));
+                        fail : errors => throw new MlResultFailureException(errors, exceptionMessage));
 
     /// <summary>
     /// Obtiene el elemento solicitado de <c>ValueOrThrow</c>. Versión asíncrona.
@@ -368,9 +369,10 @@ public static partial class MlResultExtensions
     /// <param name="sourceAsync">Tarea que produce el resultado de origen.</param>
     /// <param name="exceptionMessage">Mensaje descriptivo.</param>
     /// <returns>Tarea que produce el valor de tipo <c>T</c> obtenido por la operación.</returns>
-    public static async Task<T> GetValueOrThrowAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = "Cannot obtain the secure value from MlResult in Fail state")
+    /// <exception cref="MlResultFailureException">El resultado está en estado de fallo; la excepción expone sus detalles.</exception>
+    public static async Task<T> GetValueOrThrowAsync<T>(this Task<MlResult<T>> sourceAsync, string exceptionMessage = EnsureFpMessages.CannotGetValueFromFailedResult)
         => await sourceAsync.MatchAsync(valid     : x => x,
-                                        failAsync : _ => throw new InvalidProgramException(exceptionMessage));
+                                        failAsync : errors => Task.FromException<T>(new MlResultFailureException(errors, exceptionMessage)));
 
     /// <summary>
     /// Obtiene el elemento solicitado de <c>FailureDetailsOrThrow</c>.

@@ -116,7 +116,10 @@ public static partial class Extensions
     public static object[] ParseKeyValues<TEntity>(this string ids, Func<TEntity, object[]> pkFields)
         where TEntity : class
     {
-        var result = ParseKeyValues(ids.Split(','), pkFields);
+        var values = ids.Split(MoralesLarios.OOFP.Shared.Web.MlCompositeKey.Separator)
+                        .Select(Uri.UnescapeDataString)
+                        .ToArray();
+        var result = ParseKeyValues(values, pkFields);
 
         return result;
     }

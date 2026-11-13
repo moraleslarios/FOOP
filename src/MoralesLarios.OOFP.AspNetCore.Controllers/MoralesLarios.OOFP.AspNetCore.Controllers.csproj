@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MoralesLarios.OOFP.Shared\MoralesLarios.OOFP.Shared.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.AspNetCore.Results\MoralesLarios.OOFP.AspNetCore.Results.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Application\MoralesLarios.OOFP.Application.csproj" />
   </ItemGroup>

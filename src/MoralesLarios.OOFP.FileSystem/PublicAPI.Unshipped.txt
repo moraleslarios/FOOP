@@ -1,0 +1,12 @@
+#nullable enable
+MoralesLarios.OOFP.FileSystem.IMlFileSystem
+MoralesLarios.OOFP.FileSystem.IMlFileSystem.EnumerateFiles(string! directoryStr) -> MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath!>!>!
+MoralesLarios.OOFP.FileSystem.IMlFileSystem.ReadAllLines(string! filePathStr) -> MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<string!>!>!
+MoralesLarios.OOFP.FileSystem.IMlFileSystem.ReadAllText(string! filePathStr) -> MoralesLarios.OOFP.Types.MlResult<string!>!
+MoralesLarios.OOFP.FileSystem.MlFileSystem
+MoralesLarios.OOFP.FileSystem.MlFileSystem.EnumerateFiles(string! directoryStr) -> MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<MoralesLarios.OOFP.ValueObjects.FileSystem.ExistingFilePath!>!>!
+MoralesLarios.OOFP.FileSystem.MlFileSystem.MlFileSystem() -> void
+MoralesLarios.OOFP.FileSystem.MlFileSystem.ReadAllLines(string! filePathStr) -> MoralesLarios.OOFP.Types.MlResult<System.Collections.Generic.IEnumerable<string!>!>!
+MoralesLarios.OOFP.FileSystem.MlFileSystem.ReadAllText(string! filePathStr) -> MoralesLarios.OOFP.Types.MlResult<string!>!
+MoralesLarios.OOFP.FileSystem.RegisterServices
+static MoralesLarios.OOFP.FileSystem.RegisterServices.AddOOFPIO(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

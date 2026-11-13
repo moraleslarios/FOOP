@@ -5,7 +5,7 @@
 > (*"No se pueden configurar las `JsonSerializerOptions`"*, *"El código de estado HTTP se pierde como texto"*,
 > *"Métodos públicos que no están en las interfaces"*), más los colaterales **42**, **44** y **63**.
 > **Plan del que se desgaja:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md) · fase 2 (tareas 2.1, 2.2, 2.3) y fase 1 (tareas 1.3, 1.4, 1.5).
-> **Estado:** ⬜ No iniciada
+> **Estado:** 🟡 En curso · US-06 ✅; el resto pendiente
 > **Esfuerzo estimado:** **L** (~1-2 jornadas) · **Riesgo:** 🟢 Bajo en lo aditivo · 🟠 Alto en la forma del error
 
 ---
@@ -366,12 +366,11 @@ mover el ciclo de vida (US-06) hay que garantizar que **sigue siendo así**.
 
 **Criterios de aceptación**
 
-- [ ] Las 9 creaciones de `HttpRequestMessage` usan `using` (o se liberan en un `finally`).
-- [ ] Toda respuesta se libera **después** de haber leído su contenido, nunca antes.
-- [ ] La línea comentada de L310 desaparece (no se descomenta: se sustituye por el `using` correcto).
-- [ ] Un test de integración hace 1.000 llamadas seguidas y comprueba que no crece el número de
-      `HttpResponseMessage` vivos (ver D-6 sobre cómo medirlo).
-- [ ] Los 33 tests de `MoralesLarios.OOFP.Http.Tests.Integration` siguen en verde.
+- [x] Todas las peticiones creadas por `HttpApiInvoker` se liberan tras el envío; si falla su configuración o la creación del cliente, también se liberan.
+- [x] Las respuestas se liberan después de leer el cuerpo o el error; las operaciones vacías las liberan al comprobar el estado.
+- [x] La línea comentada del `Dispose()` desaparece; la propiedad del ciclo de vida queda en los helpers que leen/envían.
+- [x] Tests con `HttpMessageHandler` falso cubren 1.000 solicitudes en éxito/error y las rutas `SendAndReadAsync`/`ActionEmptyAsync`, contando la liberación de requests y contenidos de respuesta (D-6).
+- [x] Los 33 tests de `MoralesLarios.OOFP.Http.Tests.Integration` siguen en verde (112,5 s).
 
 **⚠️ Riesgo principal**
 `ReadFromJsonAsync` sobre una respuesta ya liberada lanza `ObjectDisposedException`. El orden correcto es:
@@ -542,7 +541,7 @@ graph TD
 | D-3 | ¿`MlError.Details` se diseña aquí o en la épica de validación? | (a) aquí, y validación se adapta · (b) en validación, y esta épica espera · (c) diseño conjunto en un solo cambio de `Core` | **(c)**: los puntos 46 y 59 cambian el mismo tipo. Un solo cambio de `MlError` con `Details` tipado, consumido por los dos |
 | D-4 | ¿Dónde van las constantes `MlHttpErrorKeys`? | (a) `MoralesLarios.OOFP.Http` · (b) `MoralesLarios.OOFP.Shared` · (c) `MoralesLarios.OOFP.Core` | **(b)**: es el mismo criterio que ya se aplicó a `MlPaginationHeaders` al cerrar el punto 55 |
 | D-5 | ¿`PublicApiAnalyzers` solo en `Http` o en toda la solución? | (a) solo `Http` ahora · (b) toda la solución en esta épica · (c) toda la solución en una épica aparte | **(a) + (c)**: aquí se valida el mecanismo en un proyecto; la extensión a 30 proyectos es un trabajo propio |
-| D-6 | ¿Cómo se verifica que no hay fuga de `HttpResponseMessage`? | (a) `HttpMessageHandler` falso que cuenta `Dispose` · (b) `GC.GetTotalMemory` (frágil) · (c) no verificar | **(a)**: determinista, rápido y no depende del recolector |
+| D-6 | ¿Cómo se verifica que no hay fuga de `HttpResponseMessage`? | (a) `HttpMessageHandler` falso que cuenta `Dispose` · (b) `GC.GetTotalMemory` (frágil) · (c) no verificar | **Resuelta:** (a), test determinista de 1.000 llamadas que cuenta Dispose de request y contenido response |
 | D-7 | ¿`ReadErrorDescriptionAsync` se marca `[Obsolete]` o se elimina? | (a) `[Obsolete]` hasta `3.0.0` · (b) eliminar ahora · (c) mantener las dos sin aviso | **(a)**: es pública, está documentada y hay consumidores; el aviso da un ciclo de margen |
 
 ---
@@ -1302,7 +1301,7 @@ internal sealed class ClienteFalso : IRestClientFp<FacturaDto> { /* 7 miembros *
 ### 8.11 · US-10 · Tests propuestos
 
 > Recordatorio: `MlResult<T>.Value` y `.ErrorsDetails` son `internal protected`. En los tests hay que usar
-> `SecureValidValue()` y `SecureFailErrorsDetails()`.
+> `GetValueOrThrow()` y `GetFailureDetailsOrThrow()`.
 
 ```csharp
 public class HttpSerializationContractTests(HttpFixture fixture)
@@ -1329,7 +1328,7 @@ public class HttpSerializationContractTests(HttpFixture fixture)
         var result = await invoker.GetAsync<FacturaDto>("facturas", "id-str/42");
 
         result.IsValid.Should().BeTrue();
-        result.SecureValidValue().NombreCliente.Should().Be("ACME");
+        result.GetValueOrThrow().NombreCliente.Should().Be("ACME");
     }
 
     [Theory]
@@ -1343,7 +1342,7 @@ public class HttpSerializationContractTests(HttpFixture fixture)
         var result = await invoker.GetAsync<FacturaDto>("facturas", "id-str/42");
 
         result.IsFail.Should().BeTrue();
-        result.SecureFailErrorsDetails()
+        result.GetFailureDetailsOrThrow()
               .Details[MlHttpErrorKeys.StatusCode].Should().Be(status);     // ← clave CONSTANTE
     }
 
@@ -1355,7 +1354,7 @@ public class HttpSerializationContractTests(HttpFixture fixture)
 
         var result = await invoker.GetAsync<FacturaDto>("facturas", "id-str/42");
 
-        var message = result.SecureFailErrorsDetails().Message;
+        var message = result.GetFailureDetailsOrThrow().Message;
         message.Should().Contain("409").And.Contain("Conflict");
         message.Should().NotContain("                ");      // ← sin la indentación del literal verbatim
     }
@@ -1370,7 +1369,7 @@ public class HttpSerializationContractTests(HttpFixture fixture)
                                                 respondWith: """{"secreto":"no debe salir"}""");
 
             var result = await invoker.GetAsync<FacturaDto>("facturas", "id-str/42");
-            var errors = result.SecureFailErrorsDetails();
+            var errors = result.GetFailureDetailsOrThrow();
 
             errors.Message.Should().NotContain("no debe salir");
             errors.Details[MlHttpErrorKeys.StatusCode].Should().Be(500);

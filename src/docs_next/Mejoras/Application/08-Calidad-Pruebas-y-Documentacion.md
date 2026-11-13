@@ -206,18 +206,17 @@ carga y no se usa).
 
 ### Punto 05 — La planificación existente arrastra datos obsoletos
 
-Al contrastar los documentos de planificación con el árbol de trabajo (`HEAD` = `04b8ee3`) aparecen tres desajustes:
+Al contrastar los documentos de planificación con el árbol de trabajo (`HEAD` = `04b8ee3`) se detectaron tres desajustes. Se conserva el hallazgo y se indica su estado tras G5-US-03:
 
-| Documento | Afirma | Realidad |
-|-----------|--------|----------|
-| [`Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) (l. 38 y 53) | `AddScopedtGenServicesFpWithoutReposGeneral` **«corregido con puente»** en `Application/RegisterServices.Obsolete.cs` (2 declaraciones obsoletas) | El fichero **no existe** en el árbol de trabajo y `RegisterServices.cs` sólo tiene 2 métodos; 0 apariciones de `AddScopedt…` en `src/` |
-| [`Epica-Servicio-y-Paginacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Servicio-y-Paginacion.md) (l. 33) | «`CrudServiceFp<TDto, TEntity, TKey>`» | Las clases reales son `CrudServiceFp<TEntity, TDto>` y `CrudServiceFp<TEntity, TRequest, TResponse>`; **no existe** un parámetro `TKey` en el servicio |
-| [`../Logging/README.md`](../Logging/README.md) (§1.1) | «`MoralesLarios.OOFP.Logging.Tests.Unit` **tampoco existe**» | Existe y tiene **230** pruebas activas |
+| Documento | Desajuste detectado | Estado tras la revisión |
+|-----------|---------------------|--------------------------|
+| [`Epica-Erratas-Identificadores-Publicos.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Erratas-Identificadores-Publicos.md) (ubicación antigua: l. 38 y 53) | La versión inicial decía que `AddScopedtGenServicesFpWithoutReposGeneral` tenía puente y lo contaba entre los puentes activos. | La épica actual dice que se retiró sin puente; el archivo no existe. La tabla de erratas cuenta ahora 49 declaraciones en 12 ficheros y excluye `Scopedt`. |
+| [`Epica-Servicio-y-Paginacion.md`](../../Next_Versions/2.0.0/Pendientes/Epica-Servicio-y-Paginacion.md) (l. 33) | La introducción identificaba `CrudServiceFp<TDto, TEntity, TKey>`. | La introducción ahora usa las aridades reales: `CrudServiceFp<TEntity, TDto>` y `CrudServiceFp<TEntity, TRequest, TResponse>`. |
+| [`../Logging/README.md`](../Logging/README.md) (§1.1) | «`MoralesLarios.OOFP.Logging.Tests.Unit` **tampoco existe**». | El proyecto existe y tiene 230 pruebas; el README ahora distingue ese estado de la cobertura pendiente de los 347 métodos públicos. |
 
-El primero es el más importante: la épica de erratas da por cerrado con puente un cambio cuyo puente **ya no
-está**. Es coherente con el historial (el `git log` del fichero incluye `9d84ec2`, *«unificar el ciclo de vida de la
-inyección de dependencias en Transient»*) y con el `README` del proyecto (l. 409, «ahora son dos»), pero el documento de planificación no lo
-refleja, de modo que un lector creería que un consumidor 1.x **tiene** puente cuando no lo tiene.
+Los tres desajustes quedan reconciliados en sus documentos fuente. En particular, el nombre `Scopedt` se conserva
+solo como referencia histórica de la API 1.x; el consumidor no dispone de un puente y migra a
+`AddCrudServicesFpWithoutRepositories()` según MIG-62 y el anexo de renombrados.
 
 | Aspecto | Valor |
 |---------|-------|

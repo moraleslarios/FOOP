@@ -24,6 +24,41 @@ public class MlResultTests
     }
 
 
+    [Fact]
+    public void Fail_WithoutErrors_UsesDefaultError()
+    {
+        var results = new[]
+        {
+            MlResult<int>.Fail(new MlErrorDetails()),
+            MlResult<int>.Fail(Array.Empty<MlError>()),
+            MlResult<int>.Fail()
+        };
+
+        foreach (var result in results)
+        {
+            result.IsFailure.Should().BeTrue();
+            result.GetFailureDetailsOrThrow().GetErrorMessages()
+                .Should().ContainSingle().Which.Should().Be("The MlResult failed without error details.");
+        }
+    }
+
+
+    [Fact]
+    public async Task FailAsync_WithoutErrors_UsesDefaultError()
+    {
+        var result = await MlResult<int>.FailAsync(new MlErrorDetails());
+
+        result.IsFailure.Should().BeTrue();
+        result.GetFailureDetailsOrThrow().GetErrorMessages()
+            .Should().ContainSingle().Which.Should().Be("The MlResult failed without error details.");
+    }
+
+
+    [Fact]
+    public void MlErrorDetails_ToString_WithoutErrorsOrMetadata_ReturnsDefaultMessage()
+        => new MlErrorDetails().ToString().Should().Be("The MlResult failed without error details.");
+
+
 
     [Fact]
     public void ToString_IsFail_withErrors_withDetails_OK()

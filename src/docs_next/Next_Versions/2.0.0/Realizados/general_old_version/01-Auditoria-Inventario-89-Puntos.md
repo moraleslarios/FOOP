@@ -172,18 +172,18 @@ Errores del propio inventario que conviene no arrastrar:
 | 35-37 | Siguen sin marcar | Resueltos y con prueba |
 | — | Las casillas de los tres documentos siguen sin reflejar nada | Se sustituyen por la columna «Estado» de esta auditoría |
 
-**Documentación contradictoria dentro de las épicas archivadas:** `Epica-Simplificacion-Repositorios-EFCore.md`
-(L684) registra la retirada de `BuildServiceProvider`, mientras `Epica-Unidad-de-Trabajo-y-Transacciones.md`
-(L59) afirma que se conserva. El código confirma la retirada (INV-20 ✅); conviene corregir la segunda (G5-US-03).
+**Documentación histórica de UoW:** `Epica-Unidad-de-Trabajo-y-Transacciones.md` conserva la propuesta inicial de mantener
+`BuildServiceProvider()`/`GetRepository<T>()` y añade inmediatamente la resolución posterior que registra su retirada.
+La contradicción está reconciliada con el código actual (INV-20 ✅; G5-US-03).
 
 **Épicas pendientes desactualizadas frente al código:**
 
-- *Contrato REST* figura «⬜ No iniciada», pero las cuatro bases ya son `abstract` (INV-51) y ya se valida el número de componentes de la clave (INV-60).
-- *Serialización y errores HTTP* afirma que falta `GetClientName` en la clase; ya existe en `RestClientFp.cs:26` y solo falta en la interfaz.
-- *Servicio y paginación*: varias líneas citadas para INV-53 y INV-54 se han desplazado (hoy `CrudServiceFp.cs:275,577` y `:444,529`).
-- *Erratas* describe puentes `Scopedt` en `Application/RegisterServices.Obsolete.cs`, fichero que ya no existe.
-- *Coherencia* describe rangos imposibles como defecto vivo; el código, sus tests y su propio *checklist* los dan por corregidos.
-- *Mensajes* presenta el inglés de validación como defecto vivo; ya está corregido.
+- *Contrato REST* sigue sin iniciar como épica completa; las cuatro bases son `abstract` y el parseo valida la clave (INV-51/60), pero falta el test de catálogo y siguen pendientes las historias de contrato.
+- *Serialización y errores HTTP* distingue correctamente el estado actual: `RestClientFp.GetClientName()` existe; falta añadirlo a `IRestClientFp`, historia aún pendiente.
+- *Servicio y paginación*: las referencias se actualizaron en la épica el 2026-11-13; `CrudServiceFp.cs` sitúa las proyecciones en L275/L577 y los mensajes con `TEntity` en L444/L529.
+- *Erratas* ya no afirma que exista un puente `Scopedt`: el método se retiró sin puente y MIG-62/anexo indican `AddCrudServicesFpWithoutRepositories()`.
+- *Coherencia* ya marca los rangos imposibles como hallazgos históricos resueltos en US-01; el código y los tests usan los rangos corregidos.
+- *Mensajes* ya marca como corregido el mensaje de creación automática de FluentValidation; el ejemplo mal redactado queda identificado como anterior a la corrección.
 
 ---
 

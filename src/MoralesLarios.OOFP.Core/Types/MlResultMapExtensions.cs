@@ -7609,6 +7609,8 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static MlResult<TResult> MapAlways<T, TResult>(this MlResult<T>   source, 
                                                                Func<TResult> funcAlways)
     {
+        if (funcAlways is null) return EnsureFpMessages.NotNull(nameof(funcAlways)).ToMlResultFail<TResult>();
+
         var partialResult = funcAlways();
 
         if (partialResult is null) return "The parameter 'funcAlways' returned null when executed.".ToMlResultFail<TResult>();
@@ -7630,6 +7632,8 @@ public static MlResult<T> MapIfFailWithExceptionError<T, TException>(this MlResu
     public static async Task<MlResult<TResult>> MapAlwaysAsync<T, TResult>(this MlResult<T>         source, 
                                                                                 Func<Task<TResult>> funcAlwaysAsync)
     {
+        if (funcAlwaysAsync is null) return await EnsureFpMessages.NotNull(nameof(funcAlwaysAsync)).ToMlResultFailAsync<TResult>();
+
         var partialResult = await funcAlwaysAsync();
 
         if (partialResult is null) return await "The parameter 'funcAlwaysAsync' returned null when executed.".ToMlResultFailAsync<TResult>();

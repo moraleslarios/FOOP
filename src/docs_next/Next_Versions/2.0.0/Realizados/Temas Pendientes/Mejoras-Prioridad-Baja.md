@@ -1,5 +1,8 @@
 # Mejoras pendientes · 🟢 Prioridad baja
 
+> **Aviso historico:** inventario redactado antes de 2.0.0; los nombres y estados pueden estar obsoletos.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas actuales](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Última parte del inventario de mejoras. Aquí están los puntos de **prioridad baja**: limpieza,
 > coherencia, mensajes y documentación. Nada de esto rompe nada hoy, pero **todo junto es lo que

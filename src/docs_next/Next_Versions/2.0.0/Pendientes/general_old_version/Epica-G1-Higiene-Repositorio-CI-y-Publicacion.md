@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0
 > **Proyecto:** repositorio completo (sin tocar la API pública)
 > **Origen:** `Temas Pendientes/Profesionalizacion-Ingenieria-y-Calidad.md` (Bloque 0) · omisiones detectadas en [la auditoría](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#6-profesionalización--ingeniería-y-calidad)
-> **Estado:** 🔄 En curso · US-01/03/05/08 ✅ (US-01 aún requiere decidir rotación); US-02/04/07 parciales; US-06 pendiente
+> **Estado:** 🔄 En curso · US-02/03/05/06/08 ✅; US-01/04/07 parciales
 > **Esfuerzo:** L · **Riesgo:** 🟢 bajo (no cambia comportamiento) · 🟠 solo la US-01 si hay que retirar secretos del historial
 > **Compatibilidad:** ✅ Aditiva. No requiere registro en `oofp-upgrade-2.prompt.md`
 
@@ -73,9 +73,9 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [x] `LICENSE` en la raíz (**D-G1-2:** el código ya declara Apache-2.0 en sus cabeceras; el propietario confirma la licencia). *(Añadido con el texto Apache-2.0 y `Copyright 2023 Juan Francisco Morales Larios`, tomado de las cabeceras. **El propietario debe confirmarlo.**)*
+- [x] `LICENSE` en la raíz (**D-G1-2:** el código ya declara Apache-2.0 en sus cabeceras; el propietario confirma la licencia). *(Autorizado por el propietario el 2026-11-13; `LICENSE` usa Apache-2.0 y `Copyright 2023 Juan Francisco Morales Larios`.)*
 - [x] `Directory.Build.props` define `Authors`, `Description`, `PackageTags`, `RepositoryUrl`, `PackageProjectUrl` y `PackageReadmeFile`; el README se incluye en el paquete. *(Revisado en el `.nuspec` de Core. No hay icono que incluir.)*
-- [ ] `PackageLicenseExpression` pendiente de confirmar Apache-2.0 (D-G1-2); no se declara una licencia en los paquetes hasta tener aprobación del propietario.
+- [x] `PackageLicenseExpression` usa Apache-2.0 (D-G1-2). *(`Directory.Build.props` lo emite en los 19 paquetes y el `.nuspec` de Core lo confirma.)*
 - [x] Source Link, `IncludeSymbols`/`snupkg`, `Deterministic` y `ContinuousIntegrationBuild` (solo en CI). *(`Microsoft.SourceLink.GitHub` 11.0.100; sin avisos `NU19xx` en el empaquetado.)*
 - [x] `dotnet pack -c Release` de los 19 proyectos empaquetables termina sin avisos de metadatos (`NU5xxx`); se inspecciona el `.nuspec` de Core. *(19 `.nupkg` y 19 `.snupkg`, 0 errores.)*
 
@@ -94,7 +94,7 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 **Criterios de aceptación**
 
-- [x] `.github/workflows/ci.yml`: restaura, compila en Release `--no-incremental` y ejecuta `dotnet test` de la solución en Windows y Linux, con el SDK de `global.json`. *(El *job* de Linux es informativo (`continue-on-error`) hasta que G6-US-04 elimine las rutas de Windows de las pruebas. El flujo no se ha podido ejecutar en GitHub desde local: el equivalente local, 0 errores y 1.715 tests en verde, sí.)*
+- [x] `.github/workflows/ci.yml`: restaura, compila en Release `--no-incremental` y ejecuta `dotnet test` de la solución en Windows y Linux, con el SDK de `global.json`. *(El *job* de Linux es informativo (`continue-on-error`) hasta que G6-US-04 elimine las rutas de Windows de las pruebas. GitHub CI no se pudo ejecutar localmente; el equivalente local pasa build y 1.781 tests con el filtro CI. Los 33 tests HTTP locales pasan por separado.)*
 - [x] Las pruebas que requieran un servidor local se separan con un `Trait`/categoría y no bloquean el flujo por defecto (ver [G6-US-04](Epica-G6-Pruebas-Calidad-y-Rendimiento.md)). *(Las cinco clases HTTP que usan endpoints locales llevan `Category=RequiresLocalServer`; el CI excluye esa categoría. La selección explícita `--filter "Category=RequiresLocalServer"` enumera las 33 pruebas.)*
 - [x] El *workflow* `prompt-migracion.yml` existente se conserva.
 - [x] Se compilan también `MlDoc` y `MlRename` (están fuera de la solución).
@@ -107,16 +107,16 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 - [x] `Directory.Packages.props` con `ManagePackageVersionsCentrally` y `NuGetAudit` activos (fuente de vulnerabilidades en la restauración). *(`NuGetAuditMode=all`, nivel `low`; `nuget.config` en la raíz fija `nuget.org` con *package source mapping*, lo que elimina 88 avisos `NU1507`.)*
 - [x] Dependabot (o Renovate) para NuGet y GitHub Actions.
 - [x] Los 7 `NU1510` se resuelven **después** de ejecutar `dotnet pack` y comprobar en el `.nuspec` que quitar la referencia no cambia las dependencias que ve el consumidor del paquete. Si cambian, se conserva la referencia y se suprime el aviso con motivo. *(Los siete `.nuspec` previos no declaraban esas dependencias; se retiraron las referencias redundantes y las supresiones locales. Los siete proyectos vuelven a empaquetar sin `NU1510`.)*
-- [x] Un único criterio de versiones para `xunit`, `Moq`, `FluentAssertions` y `coverlet` en los 13 proyectos de tests (hoy hay versiones distintas por proyecto). *(Unificados en `Directory.Packages.props`: xunit 2.9.3, runner 3.1.0, Moq 4.20.72, FluentAssertions 8.2.0, coverlet 6.0.4, AutoFixture 4.18.1, Scrutor 6.0.1, Xunit.DependencyInjection 9.9.0. 1.715 tests en verde.)*
+- [x] Un único criterio de versiones para `xunit`, `Moq`, `FluentAssertions` y `coverlet` en los 14 proyectos de tests (hoy hay versiones distintas por proyecto). *(Unificados en `Directory.Packages.props`: xunit 2.9.3, runner 3.1.0, Moq 4.20.72, FluentAssertions 8.2.0, coverlet 6.0.4, AutoFixture 4.18.1, Scrutor 6.0.1, Xunit.DependencyInjection 9.9.0. La base inicial fue 1.715 tests; hoy hay 1.781 tests en el filtro CI y 33 locales.)*
 
 ### G1-US-06 · Analizadores y línea base de API pública · M
 
 **Criterios de aceptación**
 
-- [ ] Conjunto de analizadores elegido (**D-G1-5**) y activado en modo *advertencia* con una línea base de avisos.
-- [ ] `PublicApiAnalyzers` en los proyectos de biblioteca con `PublicAPI.Unshipped.txt` completo: como **nada se ha publicado**, toda la API va en `Unshipped` hasta la primera publicación, que la moverá a `Shipped`.
-- [ ] Una guarda automática detecta `global using` duplicados (INV-88 ✅ hoy, sin vigilancia).
-- [ ] Documentado en `CONTRIBUTING.md`: cualquier cambio de API pública exige actualizar el fichero de API y el prompt de migración.
+- [x] Conjunto de analizadores elegido (**D-G1-5**) y activado en modo *advertencia* con una línea base de avisos. *(Roslyn built-in + Meziantou.Analyzer 3.0.339 + Microsoft.CodeAnalysis.PublicApiAnalyzers 5.6.0; build Release: 15.266 avisos de analyzer y 0 errores. Top: MA0219 7.352, MA0004 3.876, MA0042 1.184, RS0026 910, MA0154 466, RS0027 368. RS0016=0 tras baseline.)*
+- [x] `PublicApiAnalyzers` en los proyectos de biblioteca con `PublicAPI.Unshipped.txt` completo: como **nada se ha publicado**, toda la API va en `Unshipped` hasta la primera publicación, que la moverá a `Shipped`. *(16 bibliotecas; toda la API actual está en `Unshipped`, `Shipped` solo contiene `#nullable enable`.)*
+- [x] Una guarda automática detecta `global using` duplicados (INV-88 ✅ hoy, sin vigilancia). *(`check-duplicate-global-usings.ps1` se ejecuta en el job Markdown del CI; localmente no encontró duplicados.)*
+- [x] Documentado en `CONTRIBUTING.md`: cualquier cambio de API pública exige actualizar el fichero de API y el prompt de migración.
 
 ### G1-US-07 · Gobernanza y política de versiones · S
 
@@ -124,8 +124,9 @@ nombres de equipo personales. El proyecto de integración de EFCore ya usa SQLit
 
 - [x] `SECURITY.md`, `CODE_OF_CONDUCT.md`, plantillas de *issue* y plantilla de PR ya existente enlazada. *(Plantillas `defecto.yml` y `propuesta.yml`; la plantilla de PR ya existía.)*
 - [x] `CHANGELOG.md` con la 2.0.0 apuntando a `oofp-upgrade-2.prompt.md`.
-- [ ] Política SemVer escrita (**D-G1-6:** versión escrita en cada `.csproj` o derivada de etiquetas con MinVer) y regla «nada rompedor fuera de una versión mayor, y siempre con `[Obsolete]` durante un ciclo».
-- [ ] `PendingTasks-legacy.md` se da por **absorbido** (ver [backlog](04-Backlog-3.0-y-Descartados.md)); las ideas vigentes pasan a *issues*.
+- [x] Política SemVer escrita (**D-G1-6:** versión escrita en cada `.csproj` o derivada de etiquetas con MinVer) y regla «nada rompedor fuera de una versión mayor, y siempre con `[Obsolete]` durante un ciclo». *(Se elige versión manual en cada `.csproj` hasta después de la primera publicación; las rupturas requieren versión mayor y puente `[Obsolete]` durante un ciclo cuando sea viable.)*
+- [x] `PendingTasks-legacy.md` queda **absorbido**: sus 24 ideas están clasificadas como resueltas, parciales o diferidas/descartadas en la [auditoría §5](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#5-pendingtasks-legacymd) y el [backlog](04-Backlog-3.0-y-Descartados.md).
+- [ ] Crear GitHub issues para las ideas abiertas de ese inventario. *(Pendiente externo: `gh` no está instalado en este entorno; no se crearon issues remotas.)*
 
 ### G1-US-08 · Reparar los enlaces Markdown rotos · S
 

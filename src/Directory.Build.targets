@@ -1,4 +1,15 @@
 <Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Application' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.AspNetCore.Controllers' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.AspNetCore.Results' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Configuration' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Core' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.EntityFrameworkCore' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.FileSystem' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Http' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Logging' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Shared' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Validation' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Validation.DataAnnotations' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.Validation.FluentValidation' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.ValueObjects' Or '$(MSBuildProjectName)' == 'MoralesLarios.OOFP.ValueObjects.FileSystem'">
+    <EnableOofpAnalyzers>true</EnableOofpAnalyzers>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(EnableOofpAnalyzers)' == 'true'">
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)/PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(IsPackable)' != 'false' and Exists('$(MSBuildProjectDirectory)/README.md')">
     <None Update="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>

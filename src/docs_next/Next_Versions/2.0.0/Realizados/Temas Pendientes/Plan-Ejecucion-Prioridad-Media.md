@@ -1,5 +1,8 @@
 # Plan de ejecución · 🟡 Mejoras de prioridad media (puntos 38-63)
 
+> **Aviso historico:** plan redactado antes de 2.0.0; su orden fue absorbido por las epicas actuales.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas vigentes](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Resultado de la **auditoría del código real** (rama `release/2.0.0-nomenclatura`, commit `9ffd376`) frente a
 > [`Mejoras-Prioridad-Media.md`](Mejoras-Prioridad-Media.md), más el **plan de ejecución** de lo que queda.

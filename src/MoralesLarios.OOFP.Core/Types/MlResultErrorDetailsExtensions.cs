@@ -21,9 +21,9 @@ public static partial class MlResultErrorDetailsExtensions
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
     /// <remarks>
     /// Es una consulta sin efectos secundarios: cuando la clave no existe o su valor no es del tipo
-    /// esperado, el fallo devuelto lleva los errores de <paramref name="source"/> más un error
-    /// explicativo, pero <paramref name="source"/> no se modifica. Llamar varias veces al método
-    /// produce siempre el mismo resultado.
+    /// esperado, o el valor almacenado es <see langword="null"/>, el fallo devuelto lleva los errores
+    /// de <paramref name="source"/> más un error explicativo, pero <paramref name="source"/> no se
+    /// modifica. Llamar varias veces al método produce siempre el mismo resultado.
     /// </remarks>
     public static MlResult<T> GetDetail<T>(this MlErrorDetails source, string key)
         => source.TryGetMetadata<T>(key, out var value)

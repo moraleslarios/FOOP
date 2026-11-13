@@ -31,12 +31,4 @@ public record PageRequest(int PageNumber, int PageSize)
      public static implicit operator PageRequest((int pageNumber, int pageSize) value)
         => new PageRequest(value.pageNumber, value.pageSize);
 
-    /// <summary>
-    /// Realiza la conversión implícita a <c>PageRequest</c>.
-    /// </summary>
-    /// <param name="value">Valor sobre el que se opera.</param>
-    /// <returns>Valor de tipo <c>PageRequest</c> obtenido por la operación.</returns>
-    public static implicit operator PageRequest((IntNonNegative pageNumber, IntNonNegative pageSize) value)
-        => new PageRequest(value.pageNumber, value.pageSize);
-
 }

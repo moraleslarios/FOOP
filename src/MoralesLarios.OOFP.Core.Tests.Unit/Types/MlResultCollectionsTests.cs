@@ -3,10 +3,42 @@
 // Licensed under the Apache License, Version 2.0
 
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace MoralesLarios.OOFP.Core.Tests.Unit.Types;
 public class MlResultCollectionsTests
 {
+    private sealed class PumpingSynchronizationContext : SynchronizationContext, IDisposable
+    {
+        private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _workItems = new();
+
+        public override void Post(SendOrPostCallback callback, object? state)
+            => _workItems.Add((callback, state));
+
+        public void Run(Func<Task> operation)
+        {
+            var previous = SynchronizationContext.Current;
+            SynchronizationContext.SetSynchronizationContext(this);
+
+            try
+            {
+                var task = operation();
+                while (!task.IsCompleted)
+                {
+                    var workItem = _workItems.Take();
+                    workItem.Callback(workItem.State);
+                }
+
+                task.GetAwaiter().GetResult();
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(previous);
+            }
+        }
+
+        public void Dispose() => _workItems.Dispose();
+    }
 
 
     [Fact]
@@ -202,6 +234,47 @@ public class MlResultCollectionsTests
         var resultValue = result.Match(x => x, x => new List<TestType2>());
 
         resultValue.All(x => x.Date == DateTime.MinValue).Should().BeTrue();
+    }
+
+
+    [Fact]
+    public void TraverseParallelAsync_AllOverloadsCompleteUnderSingleThreadSynchronizationContext()
+    {
+        using var context = new PumpingSynchronizationContext();
+        var items = new[] { 1, 2, 3 };
+
+        context.Run(async () =>
+        {
+            var taskSourceResult = await Task.FromResult<IEnumerable<int>>(items)
+                .TraverseParallelAsync(async item =>
+                {
+                    await Task.Yield();
+                    return MlResult<int>.Valid(item);
+                });
+            var taskSourceIndexedResult = await Task.FromResult<IEnumerable<int>>(items)
+                .TraverseParallelAsync(async (item, index) =>
+                {
+                    await Task.Yield();
+                    return MlResult<int>.Valid(item + index);
+                });
+            var enumerableResult = await ((IEnumerable<int>)items)
+                .TraverseParallelAsync(async item =>
+                {
+                    await Task.Yield();
+                    return MlResult<int>.Valid(item);
+                });
+            var enumerableIndexedResult = await ((IEnumerable<int>)items)
+                .TraverseParallelAsync(async (item, index) =>
+                {
+                    await Task.Yield();
+                    return MlResult<int>.Valid(item + index);
+                });
+
+            taskSourceResult.GetValueOrThrow().Should().Equal(items);
+            taskSourceIndexedResult.GetValueOrThrow().Should().Equal(items.Select((item, index) => item + index));
+            enumerableResult.GetValueOrThrow().Should().Equal(items);
+            enumerableIndexedResult.GetValueOrThrow().Should().Equal(items.Select((item, index) => item + index));
+        });
     }
 
 

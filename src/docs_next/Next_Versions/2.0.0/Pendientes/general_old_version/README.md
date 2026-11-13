@@ -3,7 +3,7 @@
 > **Origen:** [`Next_Versions/2.0.0/Realizados/Temas Pendientes/`](../../Realizados/Temas%20Pendientes/README.md) · el inventario general escrito **antes** del renombrado 2.0.0
 > **Auditado contra:** commit `dab05b4` (rama `release/2.0.0-nomenclatura`, 2026-11-12) · auditoría **estática** (lectura y búsqueda en código y tests; los tests de regresión citados existen, no se volvieron a ejecutar en esta auditoría)
 > **Versión destino:** 2.0.0 (nada publicado todavía) · el 3.0.0 solo recibe lo explícitamente diferido
-> **Estado:** 🔄 En curso · G1: US-03/05/08 hechas; US-01/02/04/07 parciales; US-06 pendiente. G2-G6 sin iniciar
+> **Estado:** 🔄 En curso · G1: US-02/03/05/06/08 hechas; US-01/04/07 parciales. G2: US-08/09/10 hechas; G3: US-01/02/03/04/05/06/07 archivada; G4 sin iniciar; G5-US-01 parcial; G6-US-01 parcial y US-02/03/04/05/06 completadas
 > **Finalizado:** las auditorías [`01`](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) y [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) viven en [`Realizados/general_old_version/`](../../Realizados/general_old_version/README.md)
 
 ---
@@ -40,8 +40,8 @@ Detalle punto a punto, con evidencia y destino: [`01-Auditoria-Inventario-89-Pun
 | Documento original | Tareas | ✅ | 🟨 | ⬜ | Dónde se trata lo pendiente |
 |---|---:|---:|---:|---:|---|
 | `Analisis-Nomenclatura-ValueObjects.md` (N1-N21) | 21 | 1 | 10 | 10 | [G4](Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md) |
-| `consejos_mejora_mlresult.md` (MR1-MR23) | 23 | 7 | 10 | 6 | [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
-| `Revision-Map-Bind-ExecSelf.md` | 16 | 12 | 3 | 1 | [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
+| `consejos_mejora_mlresult.md` (MR1-MR23) | 23 | 7 | 10 | 6 | [G3 completada](../../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md) |
+| `Revision-Map-Bind-ExecSelf.md` | 16 | 12 | 3 | 1 | [G3 completada](../../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md) |
 | `PendingTasks-legacy.md` | 24 ideas | 14 | 7 | 3 | [Backlog y descartes](04-Backlog-3.0-y-Descartados.md) |
 | `Consejos-Nomenclatura.md` + `Plan-Renombrados-2.0.0.md` | 4 criterios de cierre | 0 | 0 | 4 | [G5](Epica-G5-Cierre-Renombrado-y-Puentes.md) |
 | `Profesionalizacion-Ingenieria-y-Calidad.md` | 17 tareas | 3 | 7 | 7 | [G1](Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md) · [G6](Epica-G6-Pruebas-Calidad-y-Rendimiento.md) |
@@ -59,8 +59,8 @@ Detalle: [`02-Auditoria-Documentos-Complementarios.md`](../../Realizados/general
 | `Plan-Ejecucion-Prioridad-Media.md` | Su auditoría previa (2 ✅, 5 🟨, 19 ⬜, commit `9ffd376`) **se reauditó**: hoy hay 4 ✅, 5 🟨 y 17 ⬜, porque las épicas de EFCore cerraron los puntos 39 y 40. Sus fases 1-5 y su orden ya están absorbidos por las épicas de [`Pendientes/`](../README.md) y por el [plan maestro](03-Plan-Maestro.md). Es histórico |
 | `Analisis-Nomenclatura-ValueObjects.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §1 → [G4](Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md) |
 | `Consejos-Nomenclatura.md`, `Plan-Renombrados-2.0.0.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §2 → [G5](Epica-G5-Cierre-Renombrado-y-Puentes.md) |
-| `consejos_mejora_mlresult.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §3 → [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
-| `Revision-Map-Bind-ExecSelf.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §4 → [G3](Epica-G3-Nucleo-MlResult-Robustez.md) |
+| `consejos_mejora_mlresult.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §3 → [G3 completada](../../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md) |
+| `Revision-Map-Bind-ExecSelf.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) §4 → [G3 completada](../../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md) |
 | `PendingTasks-legacy.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) → [Backlog](04-Backlog-3.0-y-Descartados.md) |
 | `Profesionalizacion-Ingenieria-y-Calidad.md`, `Profesionalizacion-Diseno-API-y-Producto.md` | [`02`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md) → [G1](Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md), [G6](Epica-G6-Pruebas-Calidad-y-Rendimiento.md), [Backlog](04-Backlog-3.0-y-Descartados.md) |
 | `README.md` | Índice de la carpeta; su resumen de 89 puntos es la fuente que se auditó |
@@ -85,16 +85,17 @@ en ninguna parte, y por eso nace este plan, son 12 puntos de prioridad alta/medi
 de `ValueObjects`, la robustez del núcleo `MlResult`, el cierre formal del renombrado y toda la infraestructura
 de ingeniería (CI, licencia, secretos, publicación).
 
-## 3. Las seis épicas nuevas
+## 3. Épicas nuevas del inventario antiguo
 
 | Épica | Resultado verificable | Tamaño | Riesgo | Rompe compatibilidad |
 |---|---|:---:|:---:|---|
 | [G1 · Higiene del repositorio, CI y publicación](Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md) | Credenciales fuera del repo, `LICENSE`, `global.json`, CI de build y tests, metadatos NuGet | L | 🟢 | No |
 | [G2 · Brechas de Http, EFCore y controladores](Epica-G2-Brechas-Http-EFCore-y-Controladores.md) | 12 puntos 17-38 sin historia en ninguna épica quedan resueltos | L | 🟠 | Sí, varias silenciosas |
-| [G3 · Robustez del núcleo `MlResult`](Epica-G3-Nucleo-MlResult-Robustez.md) | Invariantes de `MlErrorDetails`, excepciones y ambigüedades cubiertas por tests | M | 🟠 | Sí, silenciosa y de compilación |
 | [G4 · `ValueObjects`: nomenclatura y diseño](Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md) | Los 20 puntos N pendientes decididos y aplicados **antes** de publicar | XL | 🔴 | Sí, de compilación |
 | [G5 · Cierre del renombrado y puentes `[Obsolete]`](Epica-G5-Cierre-Renombrado-y-Puentes.md) | Criterios A-D del plan de renombrados cumplidos y política de puentes decidida | M | 🟡 | Depende de la decisión |
-| [G6 · Pruebas, calidad y rendimiento](Epica-G6-Pruebas-Calidad-y-Rendimiento.md) | Red de seguridad de regresión, leyes monádicas, cobertura y *benchmarks* | L | 🟢 | No |
+| [G6 · Pruebas, calidad y rendimiento](Epica-G6-Pruebas-Calidad-y-Rendimiento.md) | Red de regresión, leyes, cobertura, *benchmarks* y guardias arquitectónicas | L | 🟢 | Sí, dependencia transitiva (MIG-85) |
+
+G3 se completó y archivó en [`Realizados/Core`](../../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md).
 
 Complementos: [`03-Plan-Maestro.md`](03-Plan-Maestro.md) (orden, dependencias, solapes, definición de terminado y
 decisiones del propietario) y [`04-Backlog-3.0-y-Descartados.md`](04-Backlog-3.0-y-Descartados.md).

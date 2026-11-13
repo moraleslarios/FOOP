@@ -46,7 +46,7 @@ public partial class RestClientFp<TDto>(IHttpApiInvoker _apiInvoker,
     public virtual Task<MlResult<TDto>> GetByIdAsync(NotEmptyString             idStr,
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
-        => _apiInvoker.GetAsync<TDto>(_clientName, $"id-str/{idStr}", headers, ct);
+        => _apiInvoker.GetAsync<TDto>(_clientName, $"id-str/{RestClientPathEncoding.EscapeSimpleId(idStr.ToString())}", headers, ct);
 
     /// <summary>
     /// Envia la petición mediante el verbo HTTP POST. Versión asíncrona.
@@ -84,7 +84,7 @@ public partial class RestClientFp<TDto>(IHttpApiInvoker _apiInvoker,
                                                       TDto                       itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
-        => _apiInvoker.PutAsync(_clientName, itemBody, idStr, headers, ct);
+        => _apiInvoker.PutAsync(_clientName, itemBody, RestClientPathEncoding.EscapeSimpleId(idStr.ToString()), headers, ct);
 
 
     /// <summary>
@@ -109,7 +109,37 @@ public partial class RestClientFp<TDto>(IHttpApiInvoker _apiInvoker,
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(NotEmptyString             idStr, 
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
-        => _apiInvoker.DeleteByIdAsync<TDto>(_clientName, $"{idStr}", headers, ct);
+        => _apiInvoker.DeleteByIdAsync<TDto>(_clientName,
+                             NotEmptyString.CreateFromString(RestClientPathEncoding.EscapeSimpleId(idStr.ToString())),
+                             headers,
+                             ct);
+
+        internal Task<MlResult<TDto>> GetByCompositeKeyAsync(NotEmptyString encodedCompositeKey,
+                                 Dictionary<string, string> headers,
+                                 CancellationToken ct)
+        => _apiInvoker.GetAsync<TDto>(_clientName,
+                          $"id-str/{RestClientPathEncoding.EscapeCompositeKey(encodedCompositeKey.ToString())}",
+                          headers,
+                          ct);
+
+        internal Task<MlResult<EmptyValue>> PutByCompositeKeyAsync(NotEmptyString encodedCompositeKey,
+                                       TDto itemBody,
+                                       Dictionary<string, string> headers,
+                                       CancellationToken ct)
+        => _apiInvoker.PutAsync(_clientName,
+                    itemBody,
+                    RestClientPathEncoding.EscapeCompositeKey(encodedCompositeKey.ToString()),
+                    headers,
+                    ct);
+
+        internal Task<MlResult<EmptyValue>> DeleteByCompositeKeyAsync(NotEmptyString encodedCompositeKey,
+                                      Dictionary<string, string> headers,
+                                      CancellationToken ct)
+        => _apiInvoker.DeleteByIdAsync<TDto>(
+            _clientName,
+            NotEmptyString.CreateFromString(RestClientPathEncoding.EscapeCompositeKey(encodedCompositeKey.ToString())),
+            headers,
+            ct);
 
 
 
@@ -170,7 +200,7 @@ public partial class RestClientFp<TRequest, TResponse>(IHttpApiInvoker _apiInvok
     public virtual Task<MlResult<TResponse>> GetByIdAsync(NotEmptyString             idStr,
                                                      Dictionary<string, string> headers = null!, 
                                                      CancellationToken          ct      = default)
-        => _apiInvoker.GetAsync<TResponse>(_clientName, $"id-str/{idStr}", headers, ct);
+        => _apiInvoker.GetAsync<TResponse>(_clientName, $"id-str/{RestClientPathEncoding.EscapeSimpleId(idStr.ToString())}", headers, ct);
 
     /// <summary>
     /// Envia la petición mediante el verbo HTTP POST. Versión asíncrona.
@@ -208,7 +238,7 @@ public partial class RestClientFp<TRequest, TResponse>(IHttpApiInvoker _apiInvok
                                                       TRequest                   itemBody,
                                                       Dictionary<string, string> headers = null!, 
                                                       CancellationToken          ct      = default)
-        => _apiInvoker.PutAsync(_clientName, itemBody, idStr, headers, ct);
+        => _apiInvoker.PutAsync(_clientName, itemBody, RestClientPathEncoding.EscapeSimpleId(idStr.ToString()), headers, ct);
 
 
     /// <summary>
@@ -233,7 +263,38 @@ public partial class RestClientFp<TRequest, TResponse>(IHttpApiInvoker _apiInvok
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(NotEmptyString             idStr, 
                                                          Dictionary<string, string> headers = null!, 
                                                          CancellationToken          ct      = default)
-        => _apiInvoker.DeleteByIdAsync<TResponse>(_clientName, $"{idStr}", headers, ct);
+        => _apiInvoker.DeleteByIdAsync<TResponse>(
+            _clientName,
+            NotEmptyString.CreateFromString(RestClientPathEncoding.EscapeSimpleId(idStr.ToString())),
+            headers,
+            ct);
+
+        internal Task<MlResult<TResponse>> GetByCompositeKeyAsync(NotEmptyString encodedCompositeKey,
+                                      Dictionary<string, string> headers,
+                                      CancellationToken ct)
+        => _apiInvoker.GetAsync<TResponse>(_clientName,
+                           $"id-str/{RestClientPathEncoding.EscapeCompositeKey(encodedCompositeKey.ToString())}",
+                           headers,
+                           ct);
+
+        internal Task<MlResult<EmptyValue>> PutByCompositeKeyAsync(NotEmptyString encodedCompositeKey,
+                                       TRequest itemBody,
+                                       Dictionary<string, string> headers,
+                                       CancellationToken ct)
+        => _apiInvoker.PutAsync(_clientName,
+                    itemBody,
+                    RestClientPathEncoding.EscapeCompositeKey(encodedCompositeKey.ToString()),
+                    headers,
+                    ct);
+
+        internal Task<MlResult<EmptyValue>> DeleteByCompositeKeyAsync(NotEmptyString encodedCompositeKey,
+                                      Dictionary<string, string> headers,
+                                      CancellationToken ct)
+        => _apiInvoker.DeleteByIdAsync<TResponse>(
+            _clientName,
+            NotEmptyString.CreateFromString(RestClientPathEncoding.EscapeCompositeKey(encodedCompositeKey.ToString())),
+            headers,
+            ct);
 
 
 

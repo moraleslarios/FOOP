@@ -48,7 +48,12 @@ jobs:
           dotnet build src/scripts/tools/MlRename/MlRename.csproj -c Release -v q
 
       - name: Pruebas
-        run: dotnet test src/MoralesLarios.OOFP.sln -c Release --no-build --filter "Category!=RequiresLocalServer" --logger "trx;LogFileName=resultados.trx" --results-directory TestResults
+        run: dotnet test src/MoralesLarios.OOFP.sln -c Release --no-build --filter "Category!=RequiresLocalServer" --collect:"XPlat Code Coverage" --logger "trx;LogFileName=resultados.trx" --results-directory TestResults
+
+      - name: Cobertura por biblioteca
+        if: always()
+        shell: pwsh
+        run: ./src/scripts/coverage-summary.ps1 -ReportsPath TestResults -BaselinePath src/scripts/coverage-baseline.json -FailOnDecrease
 
       - name: Subir resultados de las pruebas
         if: always()
@@ -77,3 +82,11 @@ jobs:
           $salida = powershell -NoProfile -ExecutionPolicy Bypass -File src/scripts/check-md-anchors4.ps1
           $salida | Select-Object -Last 20
           if (-not ($salida | Select-String -Pattern 'rotos = 0\s*$' -Quiet)) { exit 1 }
+
+      - name: Global usings duplicados
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File src/scripts/check-duplicate-global-usings.ps1
+
+      - name: Dependencias arquitectonicas
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File src/scripts/check-project-architecture.ps1

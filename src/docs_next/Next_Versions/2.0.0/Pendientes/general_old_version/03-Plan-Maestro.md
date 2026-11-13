@@ -26,7 +26,7 @@ graph TD
     end
     subgraph O1["Ola 1 · Sin ruptura"]
         G2a["G2 · EFCore/Application<br/>US-09 · US-10"]
-        G3a["G3-US-05 · US-04 · US-06"]
+        G3a["G3 · Robustez MlResult<br/>✅ completada"]
         G6b["G6-US-02…US-05"]
         COH1["Coherencia · documentación"]
     end
@@ -36,7 +36,6 @@ graph TD
         REST --> G2b["G2 · controladores y Http"]
         REST --> SRV["Servicio y paginación"]
         SRV --> VALB["Validación · tramo B"]
-        G3b["G3 · excepciones e invariantes"]
         ERR["Erratas públicas"] --> MSG["Mensajes y localización"]
     end
     subgraph O3["Ola 3 · Vocabulario antes de publicar"]
@@ -70,7 +69,7 @@ graph TD
 | Historia | Contenido |
 |---|---|
 | G2-US-09 · G2-US-10 | Una consulta al actualizar; destino de `TryGetLast` |
-| G3-US-04 · US-05 · US-06 | Pruebas de compilación, `MapAlways`, auditoría de `.Result` |
+| [G3 · Robustez del núcleo `MlResult`](../../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md) | ✅ Completada: excepciones, invariantes, ambigüedades y auditoría async |
 | G6-US-02 · US-03 · US-04 · US-05 · US-06 | Leyes, cobertura, integración reproducible, *benchmarks*, arquitectura |
 | [Coherencia](../Epica-Coherencia-Y-Documentacion.md) | Lo que es documentación y metadatos |
 | G1-US-05 · US-06 | Paquetes centrales, analizadores, línea base de API |
@@ -118,8 +117,8 @@ se mantienen allí.
 | D-G1-1 | Rotar o purgar credenciales ya versionadas | G1-US-01 (purga) | Rotar; **no reescribir historial sin tu autorización** |
 | D-G1-2 | Licencia | G1-US-02 | Apache-2.0 (cabeceras actuales) |
 | D-G2-4 | Cuerpo remoto en errores por defecto | G2-US-08 | Desactivado |
-| D-G2-5 | `TryGetLast` antiguo | G2-US-10 | Obsoletar |
-| D-G3-1 | Excepción de `GetValueOrThrow` | G3-US-01 | Tipo propio con detalles |
+| D-G2-5 | `TryGetLast` antiguo | G2-US-10 | **Resuelta:** conservar y documentar el coste; no añadir `[Obsolete]` |
+| D-G3-1 | Excepción de `GetValueOrThrow` | G3-US-01 | **Resuelta:** `MlResultFailureException : InvalidOperationException` con `ErrorDetails` |
 | D-G3-2 | Fallo sin errores | G3-US-02 | Error por defecto |
 | D-G4-1…5 | Matriz N1-N21 | G4 completa | Decidir todo antes de publicar |
 | D-G5-1 | Política de puentes | G5-US-02 | Retirar los que sustituyen nombres intermedios |

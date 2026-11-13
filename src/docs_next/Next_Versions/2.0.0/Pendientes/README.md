@@ -1,6 +1,6 @@
 # Pendientes · Épicas de ejecución por hacer
 
-> **Estado global:** 🔄 7 épicas pendientes (3 parciales) + 6 épicas nuevas en [`general_old_version/`](general_old_version/README.md) · 9 completadas y archivadas (7 EFCore, 1 Http, 1 Framework)
+> **Estado global:** 🔄 7 épicas pendientes (3 parciales) + 5 épicas nuevas en [`general_old_version/`](general_old_version/README.md) · 10 completadas y archivadas (7 EFCore, 1 Http, 1 Framework, G3/Core)
 > **Origen:** [`Temas Pendientes/Mejoras-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Media.md) (puntos 38-63) · [`Temas Pendientes/Mejoras-Prioridad-Baja.md`](../Realizados/Temas%20Pendientes/Mejoras-Prioridad-Baja.md) (puntos 64-89)
 > **Plan maestro del que se desgajan:** [`Temas Pendientes/Plan-Ejecucion-Prioridad-Media.md`](../Realizados/Temas%20Pendientes/Plan-Ejecucion-Prioridad-Media.md)
 
@@ -66,16 +66,17 @@ El hallazgo **7** del análisis EFCore ya está cubierto por la guía del proyec
 Plan para cerrar lo que sigue abierto de `Temas Pendientes/` (89 puntos, nomenclatura de `ValueObjects`, consejos
 de `MlResult` y profesionalización). **42 de los 89 puntos están hechos, 24 parciales y 23 pendientes.**
 Incluye la auditoría con evidencia, el [plan maestro](general_old_version/03-Plan-Maestro.md) que ordena estas siete
-épicas junto a las nuevas, y seis épicas propias:
+épicas junto a las nuevas, y seis épicas propias (G3 ya completada):
 
 | # | Épica | Resultado | Esfuerzo | Riesgo |
 |---|---|---|---|---|
 | G1 | [Higiene del repositorio, CI y publicación](general_old_version/Epica-G1-Higiene-Repositorio-CI-y-Publicacion.md) | Credenciales fuera del repo, licencia, SDK fijado, CI, metadatos NuGet | **L** | 🟢 |
 | G2 | [Brechas de Http, EFCore y controladores](general_old_version/Epica-G2-Brechas-Http-EFCore-y-Controladores.md) | 12 puntos 17-38 sin historia previa | **L** | 🟠 |
-| G3 | [Robustez del núcleo `MlResult`](general_old_version/Epica-G3-Nucleo-MlResult-Robustez.md) | Invariantes y excepciones del núcleo | **M** | 🟠 |
 | G4 | [`ValueObjects`: nomenclatura y diseño](general_old_version/Epica-G4-ValueObjects-Nomenclatura-y-Diseno.md) | 20 puntos N decididos antes de publicar | **XL** | 🔴 |
 | G5 | [Cierre del renombrado y puentes](general_old_version/Epica-G5-Cierre-Renombrado-y-Puentes.md) | Criterios A-D y política de puentes | **M** | 🟡 |
 | G6 | [Pruebas, calidad y rendimiento](general_old_version/Epica-G6-Pruebas-Calidad-y-Rendimiento.md) | Red de seguridad, leyes, cobertura, *benchmarks* | **L** | 🟢 |
+
+G3 está completada y archivada en [`Realizados/Core`](../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md).
 
 > **Leyenda de esfuerzo:** XS (<2 h) · S (½ jornada) · M (1 jornada) · L (2 jornadas) · XL (3+ jornadas)
 > **Leyenda de riesgo:** 🟢 bajo · 🟡 medio · 🟠 alto · 🔴 muy alto (rompe compatibilidad)

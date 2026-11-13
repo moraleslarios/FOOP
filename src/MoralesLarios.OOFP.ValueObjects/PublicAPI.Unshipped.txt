@@ -1,0 +1,381 @@
+#nullable enable
+abstract MoralesLarios.OOFP.ValueObjects.ValueObject.GetAtomicValues() -> System.Collections.Generic.IEnumerable<object!>!
+const MoralesLarios.OOFP.ValueObjects.Endpoint.EndpointPattern = "^https://[A-Za-z0-9.-]+(?::[1-9][0-9]{0,4})?$" -> string!
+const MoralesLarios.OOFP.ValueObjects.Endpoint.ValidationPattern = "^https://[A-Za-z0-9.-]+(?::[1-9][0-9]{0,4})?$" -> string!
+const MoralesLarios.OOFP.ValueObjects.Mail.EndpointPattern = "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$" -> string!
+const MoralesLarios.OOFP.ValueObjects.Mail.ValidationPattern = "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$" -> string!
+MoralesLarios.OOFP.ValueObjects.Age
+MoralesLarios.OOFP.ValueObjects.Age.Age(int value) -> void
+MoralesLarios.OOFP.ValueObjects.DecimalBetween
+MoralesLarios.OOFP.ValueObjects.DecimalBetween.DecimalBetween(decimal value, decimal minLength, decimal maxLength) -> void
+MoralesLarios.OOFP.ValueObjects.DecimalLessThan
+MoralesLarios.OOFP.ValueObjects.DecimalLessThan.DecimalLessThan(decimal value, decimal length) -> void
+MoralesLarios.OOFP.ValueObjects.DecimalMoreThan
+MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.DecimalMoreThan(decimal value, decimal length) -> void
+MoralesLarios.OOFP.ValueObjects.DecimalNonNegative
+MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.DecimalNonNegative(decimal value) -> void
+MoralesLarios.OOFP.ValueObjects.DoubleBetween
+MoralesLarios.OOFP.ValueObjects.DoubleBetween.DoubleBetween(double value, double minLength, double maxLength) -> void
+MoralesLarios.OOFP.ValueObjects.DoubleLessThan
+MoralesLarios.OOFP.ValueObjects.DoubleLessThan.DoubleLessThan(double value, double length) -> void
+MoralesLarios.OOFP.ValueObjects.DoubleMoreThan
+MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.DoubleMoreThan(double value, double length) -> void
+MoralesLarios.OOFP.ValueObjects.DoubleNonNegative
+MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.DoubleNonNegative(double value) -> void
+MoralesLarios.OOFP.ValueObjects.EmptyValue
+MoralesLarios.OOFP.ValueObjects.EmptyValue.EmptyValue(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.Endpoint
+MoralesLarios.OOFP.ValueObjects.Endpoint.Endpoint(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value) -> void
+MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>
+MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.GetEnumValue() -> TEnum
+MoralesLarios.OOFP.ValueObjects.IdLite
+MoralesLarios.OOFP.ValueObjects.IdLite.IdLite(int value) -> void
+MoralesLarios.OOFP.ValueObjects.IntBetween
+MoralesLarios.OOFP.ValueObjects.IntBetween.IntBetween(int value, int minLength, int maxLength) -> void
+MoralesLarios.OOFP.ValueObjects.IntLessThan
+MoralesLarios.OOFP.ValueObjects.IntLessThan.IntLessThan(int value, int length) -> void
+MoralesLarios.OOFP.ValueObjects.IntMoreThan
+MoralesLarios.OOFP.ValueObjects.IntMoreThan.IntMoreThan(int value, int length) -> void
+MoralesLarios.OOFP.ValueObjects.IntNonNegative
+MoralesLarios.OOFP.ValueObjects.Mail
+MoralesLarios.OOFP.ValueObjects.Mail.Mail(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value) -> void
+MoralesLarios.OOFP.ValueObjects.MemberName
+MoralesLarios.OOFP.ValueObjects.NotEmptyString
+MoralesLarios.OOFP.ValueObjects.NotEmptyString.NotEmptyString(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.RegexValue
+MoralesLarios.OOFP.ValueObjects.RegexValue.Pattern.get -> string!
+MoralesLarios.OOFP.ValueObjects.RegexValue.RegexValue(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value, string! pattern) -> void
+MoralesLarios.OOFP.ValueObjects.ServiceKey
+MoralesLarios.OOFP.ValueObjects.StringAsByte
+MoralesLarios.OOFP.ValueObjects.StringAsByte.StringAsByte(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsDecimal
+MoralesLarios.OOFP.ValueObjects.StringAsDecimal.StringAsDecimal(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsDouble
+MoralesLarios.OOFP.ValueObjects.StringAsDouble.StringAsDouble(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsFloat
+MoralesLarios.OOFP.ValueObjects.StringAsFloat.StringAsFloat(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsInt
+MoralesLarios.OOFP.ValueObjects.StringAsInt.StringAsInt(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsLong
+MoralesLarios.OOFP.ValueObjects.StringAsLong.StringAsLong(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>
+MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.StringAsNumeric(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.Value -> TValue
+MoralesLarios.OOFP.ValueObjects.StringAsSByte
+MoralesLarios.OOFP.ValueObjects.StringAsSByte.StringAsSByte(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsShort
+MoralesLarios.OOFP.ValueObjects.StringAsShort.StringAsShort(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsUInt
+MoralesLarios.OOFP.ValueObjects.StringAsUInt.StringAsUInt(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsULong
+MoralesLarios.OOFP.ValueObjects.StringAsULong.StringAsULong(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringAsUShort
+MoralesLarios.OOFP.ValueObjects.StringAsUShort.StringAsUShort(string! value) -> void
+MoralesLarios.OOFP.ValueObjects.StringLengthBetween
+MoralesLarios.OOFP.ValueObjects.StringLengthBetween.StringLengthBetween(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value, int minLength, int maxLength) -> void
+MoralesLarios.OOFP.ValueObjects.StringMaxLength
+MoralesLarios.OOFP.ValueObjects.StringMaxLength.StringMaxLength(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value, int length) -> void
+MoralesLarios.OOFP.ValueObjects.StringMinLength
+MoralesLarios.OOFP.ValueObjects.StringMinLength.StringMinLength(MoralesLarios.OOFP.ValueObjects.NotEmptyString! value, int length) -> void
+MoralesLarios.OOFP.ValueObjects.ValueObject
+MoralesLarios.OOFP.ValueObjects.ValueObject.GetCopy() -> MoralesLarios.OOFP.ValueObjects.ValueObject!
+MoralesLarios.OOFP.ValueObjects.ValueObject.ValueObject() -> void
+MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>
+MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>.Value -> TValue
+MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>.ValueObject(TValue value) -> void
+MoralesLarios.OOFP.ValueObjects.Void
+MoralesLarios.OOFP.ValueObjects.Void.Void(string! value) -> void
+override MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.GetAtomicValues() -> System.Collections.Generic.IEnumerable<object!>!
+override MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.ToString() -> string?
+override MoralesLarios.OOFP.ValueObjects.ValueObject.Equals(object? obj) -> bool
+override MoralesLarios.OOFP.ValueObjects.ValueObject.GetHashCode() -> int
+override MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>.GetAtomicValues() -> System.Collections.Generic.IEnumerable<object!>!
+override MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>.ToString() -> string?
+static MoralesLarios.OOFP.ValueObjects.Age.ByInt(int value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.Age!>!
+static MoralesLarios.OOFP.ValueObjects.Age.CreateFromInt(int value) -> MoralesLarios.OOFP.ValueObjects.Age!
+static MoralesLarios.OOFP.ValueObjects.Age.FormatErrorMessage(int value) -> string!
+static MoralesLarios.OOFP.ValueObjects.Age.FromInt(int value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.Age!>!
+static MoralesLarios.OOFP.ValueObjects.Age.implicit operator int(MoralesLarios.OOFP.ValueObjects.Age! valueObject) -> int
+static MoralesLarios.OOFP.ValueObjects.Age.implicit operator MoralesLarios.OOFP.ValueObjects.Age!(int value) -> MoralesLarios.OOFP.ValueObjects.Age!
+static MoralesLarios.OOFP.ValueObjects.Age.IsValid(int value) -> bool
+static MoralesLarios.OOFP.ValueObjects.DecimalBetween.ByDecimalLength(decimal value, decimal minLength, decimal maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalBetween!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalBetween.CreateFromDecimalLength(decimal value, decimal minLength, decimal maxLength) -> MoralesLarios.OOFP.ValueObjects.DecimalBetween!
+static MoralesLarios.OOFP.ValueObjects.DecimalBetween.FormatErrorMessage(decimal value, decimal minLength, decimal maxLength) -> string!
+static MoralesLarios.OOFP.ValueObjects.DecimalBetween.FromDecimalLength(decimal value, decimal minLength, decimal maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalBetween!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalBetween.implicit operator decimal(MoralesLarios.OOFP.ValueObjects.DecimalBetween! valueObject) -> decimal
+static MoralesLarios.OOFP.ValueObjects.DecimalBetween.implicit operator MoralesLarios.OOFP.ValueObjects.DecimalBetween!((decimal value, decimal minLength, decimal maxLength) tupleValues) -> MoralesLarios.OOFP.ValueObjects.DecimalBetween!
+static MoralesLarios.OOFP.ValueObjects.DecimalBetween.IsValid(decimal value, decimal minLength, decimal maxLength) -> bool
+static MoralesLarios.OOFP.ValueObjects.DecimalLessThan.ByDecimalLength(decimal value, decimal length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalLessThan!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalLessThan.CreateFromDecimalLength(decimal value, decimal length) -> MoralesLarios.OOFP.ValueObjects.DecimalLessThan!
+static MoralesLarios.OOFP.ValueObjects.DecimalLessThan.FormatErrorMessage(decimal value, decimal length) -> string!
+static MoralesLarios.OOFP.ValueObjects.DecimalLessThan.FromDecimalLength(decimal value, decimal length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalLessThan!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalLessThan.implicit operator decimal(MoralesLarios.OOFP.ValueObjects.DecimalLessThan! valueObject) -> decimal
+static MoralesLarios.OOFP.ValueObjects.DecimalLessThan.implicit operator MoralesLarios.OOFP.ValueObjects.DecimalLessThan!((decimal value, decimal length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.DecimalLessThan!
+static MoralesLarios.OOFP.ValueObjects.DecimalLessThan.IsValid(decimal value, decimal length) -> bool
+static MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.ByDecimalLength(decimal value, decimal length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalMoreThan!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.CreateFromDecimalLength(decimal value, decimal length) -> MoralesLarios.OOFP.ValueObjects.DecimalMoreThan!
+static MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.FormatErrorMessage(decimal value, decimal length) -> string!
+static MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.FromDecimalLength(decimal value, decimal length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalMoreThan!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.implicit operator decimal(MoralesLarios.OOFP.ValueObjects.DecimalMoreThan! valueObject) -> decimal
+static MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.implicit operator MoralesLarios.OOFP.ValueObjects.DecimalMoreThan!((decimal value, decimal length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.DecimalMoreThan!
+static MoralesLarios.OOFP.ValueObjects.DecimalMoreThan.IsValid(decimal value, decimal length) -> bool
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.ByDecimal(decimal value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalNonNegative!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.CreateFromDecimal(decimal value) -> MoralesLarios.OOFP.ValueObjects.DecimalNonNegative!
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.FormatErrorMessage(decimal value) -> string!
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.FromDecimal(decimal value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DecimalNonNegative!>!
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.implicit operator decimal(MoralesLarios.OOFP.ValueObjects.DecimalNonNegative! valueObject) -> decimal
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.implicit operator MoralesLarios.OOFP.ValueObjects.DecimalNonNegative!(decimal value) -> MoralesLarios.OOFP.ValueObjects.DecimalNonNegative!
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.IsValid(decimal value) -> bool
+static MoralesLarios.OOFP.ValueObjects.DecimalNonNegative.limit.get -> decimal
+static MoralesLarios.OOFP.ValueObjects.DoubleBetween.ByDoubleLength(double value, double minLength, double maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleBetween!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleBetween.CreateFromDoubleLength(double value, double minLength, double maxLength) -> MoralesLarios.OOFP.ValueObjects.DoubleBetween!
+static MoralesLarios.OOFP.ValueObjects.DoubleBetween.FormatErrorMessage(double value, double minLength, double maxLength) -> string!
+static MoralesLarios.OOFP.ValueObjects.DoubleBetween.FromDoubleLength(double value, double minLength, double maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleBetween!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleBetween.implicit operator double(MoralesLarios.OOFP.ValueObjects.DoubleBetween! valueObject) -> double
+static MoralesLarios.OOFP.ValueObjects.DoubleBetween.implicit operator MoralesLarios.OOFP.ValueObjects.DoubleBetween!((double value, double minLength, double maxLength) tupleValues) -> MoralesLarios.OOFP.ValueObjects.DoubleBetween!
+static MoralesLarios.OOFP.ValueObjects.DoubleBetween.IsValid(double value, double minLength, double maxLength) -> bool
+static MoralesLarios.OOFP.ValueObjects.DoubleLessThan.ByDoubleLength(double value, double length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleLessThan!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleLessThan.CreateFromDoubleLength(double value, double length) -> MoralesLarios.OOFP.ValueObjects.DoubleLessThan!
+static MoralesLarios.OOFP.ValueObjects.DoubleLessThan.FormatErrorMessage(double value, double length) -> string!
+static MoralesLarios.OOFP.ValueObjects.DoubleLessThan.FromDoubleLength(double value, double length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleLessThan!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleLessThan.implicit operator double(MoralesLarios.OOFP.ValueObjects.DoubleLessThan! valueObject) -> double
+static MoralesLarios.OOFP.ValueObjects.DoubleLessThan.implicit operator MoralesLarios.OOFP.ValueObjects.DoubleLessThan!((double value, double length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.DoubleLessThan!
+static MoralesLarios.OOFP.ValueObjects.DoubleLessThan.IsValid(double value, double length) -> bool
+static MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.ByDoubleLength(double value, double length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleMoreThan!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.CreateFromDoubleLength(double value, double length) -> MoralesLarios.OOFP.ValueObjects.DoubleMoreThan!
+static MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.FormatErrorMessage(double value, double length) -> string!
+static MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.FromDoubleLength(double value, double length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleMoreThan!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.implicit operator double(MoralesLarios.OOFP.ValueObjects.DoubleMoreThan! valueObject) -> double
+static MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.implicit operator MoralesLarios.OOFP.ValueObjects.DoubleMoreThan!((double value, double length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.DoubleMoreThan!
+static MoralesLarios.OOFP.ValueObjects.DoubleMoreThan.IsValid(double value, double length) -> bool
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.ByDouble(double value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleNonNegative!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.CreateFromDouble(double value) -> MoralesLarios.OOFP.ValueObjects.DoubleNonNegative!
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.FormatErrorMessage(double value) -> string!
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.FromDouble(double value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.DoubleNonNegative!>!
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.implicit operator double(MoralesLarios.OOFP.ValueObjects.DoubleNonNegative! valueObject) -> double
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.implicit operator MoralesLarios.OOFP.ValueObjects.DoubleNonNegative!(double value) -> MoralesLarios.OOFP.ValueObjects.DoubleNonNegative!
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.IsValid(double value) -> bool
+static MoralesLarios.OOFP.ValueObjects.DoubleNonNegative.limit.get -> double
+static MoralesLarios.OOFP.ValueObjects.EmptyValue.Create() -> MoralesLarios.OOFP.ValueObjects.EmptyValue!
+static MoralesLarios.OOFP.ValueObjects.EmptyValue.CreateAsync() -> System.Threading.Tasks.Task<MoralesLarios.OOFP.ValueObjects.EmptyValue!>!
+static MoralesLarios.OOFP.ValueObjects.Endpoint.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.Endpoint!>!
+static MoralesLarios.OOFP.ValueObjects.Endpoint.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.Endpoint!
+static MoralesLarios.OOFP.ValueObjects.Endpoint.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.Endpoint.FromString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.Endpoint!>!
+static MoralesLarios.OOFP.ValueObjects.Endpoint.implicit operator MoralesLarios.OOFP.ValueObjects.Endpoint!(string! value) -> MoralesLarios.OOFP.ValueObjects.Endpoint!
+static MoralesLarios.OOFP.ValueObjects.Endpoint.implicit operator string!(MoralesLarios.OOFP.ValueObjects.Endpoint! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.Endpoint.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!>!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.CreateFromEnum(TEnum enumValue) -> MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.FromString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!>!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.implicit operator MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!(string! value) -> MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.implicit operator MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!(TEnum value) -> MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.implicit operator string!(MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.implicit operator TEnum(MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>! valueObject) -> TEnum
+static MoralesLarios.OOFP.ValueObjects.EnumRangeValueObject<TEnum>.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.IdLite.BuildErrorMessIdLite(int value) -> string!
+static MoralesLarios.OOFP.ValueObjects.IdLite.ByInt(int value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IdLite!>!
+static MoralesLarios.OOFP.ValueObjects.IdLite.CreateFromInt(int value) -> MoralesLarios.OOFP.ValueObjects.IdLite!
+static MoralesLarios.OOFP.ValueObjects.IdLite.FromInt(int value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IdLite!>!
+static MoralesLarios.OOFP.ValueObjects.IdLite.implicit operator int(MoralesLarios.OOFP.ValueObjects.IdLite! valueObject) -> int
+static MoralesLarios.OOFP.ValueObjects.IdLite.implicit operator MoralesLarios.OOFP.ValueObjects.IdLite!(int value) -> MoralesLarios.OOFP.ValueObjects.IdLite!
+static MoralesLarios.OOFP.ValueObjects.IdLite.IsValid(int value) -> bool
+static MoralesLarios.OOFP.ValueObjects.IntBetween.ByIntLength(int value, int minLength, int maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntBetween!>!
+static MoralesLarios.OOFP.ValueObjects.IntBetween.CreateFromIntLength(int value, int minLength, int maxLength) -> MoralesLarios.OOFP.ValueObjects.IntBetween!
+static MoralesLarios.OOFP.ValueObjects.IntBetween.FormatErrorMessage(int value, int minLength, int maxLength) -> string!
+static MoralesLarios.OOFP.ValueObjects.IntBetween.FromIntLenght(int value, int minLength, int maxLength) -> MoralesLarios.OOFP.ValueObjects.IntBetween!
+static MoralesLarios.OOFP.ValueObjects.IntBetween.FromIntLength(int value, int minLength, int maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntBetween!>!
+static MoralesLarios.OOFP.ValueObjects.IntBetween.implicit operator int(MoralesLarios.OOFP.ValueObjects.IntBetween! valueObject) -> int
+static MoralesLarios.OOFP.ValueObjects.IntBetween.implicit operator MoralesLarios.OOFP.ValueObjects.IntBetween!((int value, int minLength, int maxLength) tupleValues) -> MoralesLarios.OOFP.ValueObjects.IntBetween!
+static MoralesLarios.OOFP.ValueObjects.IntBetween.IsValid(int value, int minLength, int maxLength) -> bool
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.ByIntLength(int value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntLessThan!>!
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.CreateFromIntLength(int value, int length) -> MoralesLarios.OOFP.ValueObjects.IntLessThan!
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.FormatErrorMessage(int value, int length) -> string!
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.FromIntLenght(int value, int length) -> MoralesLarios.OOFP.ValueObjects.IntLessThan!
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.FromIntLength(int value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntLessThan!>!
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.implicit operator int(MoralesLarios.OOFP.ValueObjects.IntLessThan! valueObject) -> int
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.implicit operator MoralesLarios.OOFP.ValueObjects.IntLessThan!((int value, int length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.IntLessThan!
+static MoralesLarios.OOFP.ValueObjects.IntLessThan.IsValid(int value, int length) -> bool
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.ByIntLength(int value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntMoreThan!>!
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.CreateFromIntLength(int value, int length) -> MoralesLarios.OOFP.ValueObjects.IntMoreThan!
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.FormatErrorMessage(int value, int length) -> string!
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.FromIntLenght(int value, int length) -> MoralesLarios.OOFP.ValueObjects.IntMoreThan!
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.FromIntLength(int value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntMoreThan!>!
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.implicit operator int(MoralesLarios.OOFP.ValueObjects.IntMoreThan! valueObject) -> int
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.implicit operator MoralesLarios.OOFP.ValueObjects.IntMoreThan!((int value, int length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.IntMoreThan!
+static MoralesLarios.OOFP.ValueObjects.IntMoreThan.IsValid(int value, int length) -> bool
+static MoralesLarios.OOFP.ValueObjects.IntNonNegative.ByInt(int value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntNonNegative!>!
+static MoralesLarios.OOFP.ValueObjects.IntNonNegative.CreateFromInt(int value) -> MoralesLarios.OOFP.ValueObjects.IntNonNegative!
+static MoralesLarios.OOFP.ValueObjects.IntNonNegative.FormatErrorMessage(int value) -> string!
+static MoralesLarios.OOFP.ValueObjects.IntNonNegative.FromInt(int value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.IntNonNegative!>!
+static MoralesLarios.OOFP.ValueObjects.IntNonNegative.implicit operator int(MoralesLarios.OOFP.ValueObjects.IntNonNegative! valueObject) -> int
+static MoralesLarios.OOFP.ValueObjects.IntNonNegative.implicit operator MoralesLarios.OOFP.ValueObjects.IntNonNegative!(int value) -> MoralesLarios.OOFP.ValueObjects.IntNonNegative!
+static MoralesLarios.OOFP.ValueObjects.IntNonNegative.IsValid(int value) -> bool
+static MoralesLarios.OOFP.ValueObjects.Mail.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.Mail!>!
+static MoralesLarios.OOFP.ValueObjects.Mail.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.Mail!
+static MoralesLarios.OOFP.ValueObjects.Mail.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.Mail.FromString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.Mail!>!
+static MoralesLarios.OOFP.ValueObjects.Mail.implicit operator MoralesLarios.OOFP.ValueObjects.Mail!(string! value) -> MoralesLarios.OOFP.ValueObjects.Mail!
+static MoralesLarios.OOFP.ValueObjects.Mail.implicit operator string!(MoralesLarios.OOFP.ValueObjects.Mail! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.Mail.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.MemberName.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.MemberName!>!
+static MoralesLarios.OOFP.ValueObjects.MemberName.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.MemberName!
+static MoralesLarios.OOFP.ValueObjects.MemberName.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.MemberName.FromString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.MemberName!>!
+static MoralesLarios.OOFP.ValueObjects.MemberName.implicit operator MoralesLarios.OOFP.ValueObjects.MemberName!(string! value) -> MoralesLarios.OOFP.ValueObjects.MemberName!
+static MoralesLarios.OOFP.ValueObjects.MemberName.implicit operator string!(MoralesLarios.OOFP.ValueObjects.MemberName! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.MemberName.IsValid(string! value, int length) -> bool
+static MoralesLarios.OOFP.ValueObjects.MemberName.MinLenght.get -> int
+static MoralesLarios.OOFP.ValueObjects.MemberName.MinLength.get -> int
+static MoralesLarios.OOFP.ValueObjects.NotEmptyString.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.NotEmptyString!>!
+static MoralesLarios.OOFP.ValueObjects.NotEmptyString.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.NotEmptyString!
+static MoralesLarios.OOFP.ValueObjects.NotEmptyString.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.NotEmptyString.FromString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.NotEmptyString!>!
+static MoralesLarios.OOFP.ValueObjects.NotEmptyString.implicit operator MoralesLarios.OOFP.ValueObjects.NotEmptyString!(string! value) -> MoralesLarios.OOFP.ValueObjects.NotEmptyString!
+static MoralesLarios.OOFP.ValueObjects.NotEmptyString.implicit operator string!(MoralesLarios.OOFP.ValueObjects.NotEmptyString! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.NotEmptyString.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.RegexValue.ByRegex(string! value, string! pattern, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.RegexValue!>!
+static MoralesLarios.OOFP.ValueObjects.RegexValue.CreateFromRegex(string! value, string! pattern) -> MoralesLarios.OOFP.ValueObjects.RegexValue!
+static MoralesLarios.OOFP.ValueObjects.RegexValue.FormatErrorMessage(string! value, string! pattern) -> string!
+static MoralesLarios.OOFP.ValueObjects.RegexValue.FromRegex(string! value, string! pattern, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.RegexValue!>!
+static MoralesLarios.OOFP.ValueObjects.RegexValue.implicit operator MoralesLarios.OOFP.ValueObjects.RegexValue!((string! value, string! pattern) tupleValues) -> MoralesLarios.OOFP.ValueObjects.RegexValue!
+static MoralesLarios.OOFP.ValueObjects.RegexValue.implicit operator string!(MoralesLarios.OOFP.ValueObjects.RegexValue! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.RegexValue.IsValid(string! value, string! pattern) -> bool
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.ByString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.ServiceKey!>!
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.ServiceKey!
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.FromString(string! value, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.ServiceKey!>!
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.implicit operator MoralesLarios.OOFP.ValueObjects.ServiceKey!(string! value) -> MoralesLarios.OOFP.ValueObjects.ServiceKey!
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.implicit operator string!(MoralesLarios.OOFP.ValueObjects.ServiceKey! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.IsValid(string! value, int length) -> bool
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.MinLenght.get -> int
+static MoralesLarios.OOFP.ValueObjects.ServiceKey.MinLength.get -> int
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsByte!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsByte!
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsByte!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsByte!
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsByte!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.implicit operator byte(MoralesLarios.OOFP.ValueObjects.StringAsByte! ValueObjectFp) -> byte
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsByte! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsByte.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsDecimal!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsDecimal!
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsDecimal!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsDecimal!
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsDecimal!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.implicit operator decimal(MoralesLarios.OOFP.ValueObjects.StringAsDecimal! ValueObjectFp) -> decimal
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsDecimal! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsDecimal.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsDouble!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsDouble!
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsDouble!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsDouble!
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsDouble!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.implicit operator double(MoralesLarios.OOFP.ValueObjects.StringAsDouble! ValueObjectFp) -> double
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsDouble! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsDouble.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsFloat!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsFloat!
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsFloat!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsFloat!
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsFloat!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.implicit operator float(MoralesLarios.OOFP.ValueObjects.StringAsFloat! ValueObjectFp) -> float
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsFloat! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsFloat.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsInt!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsInt!
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsInt!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsInt!
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsInt!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.implicit operator int(MoralesLarios.OOFP.ValueObjects.StringAsInt! ValueObjectFp) -> int
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsInt! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsInt.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsLong!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsLong!
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsLong!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsLong!
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsLong!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.implicit operator long(MoralesLarios.OOFP.ValueObjects.StringAsLong! ValueObjectFp) -> long
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsLong! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsLong.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>!
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>!
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.implicit operator TValue(MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>! ValueObjectFp) -> TValue
+static MoralesLarios.OOFP.ValueObjects.StringAsNumeric<TValue>.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsSByte!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsSByte!
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsSByte!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsSByte!
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsSByte!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.implicit operator sbyte(MoralesLarios.OOFP.ValueObjects.StringAsSByte! ValueObjectFp) -> sbyte
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsSByte! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsSByte.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsShort!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsShort!
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsShort!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsShort!
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsShort!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.implicit operator short(MoralesLarios.OOFP.ValueObjects.StringAsShort! ValueObjectFp) -> short
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsShort! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsShort.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsUInt!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsUInt!
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsUInt!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsUInt!
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsUInt!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsUInt! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.implicit operator uint(MoralesLarios.OOFP.ValueObjects.StringAsUInt! ValueObjectFp) -> uint
+static MoralesLarios.OOFP.ValueObjects.StringAsUInt.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsULong!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsULong!
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsULong!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsULong!
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsULong!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsULong! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.implicit operator ulong(MoralesLarios.OOFP.ValueObjects.StringAsULong! ValueObjectFp) -> ulong
+static MoralesLarios.OOFP.ValueObjects.StringAsULong.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.ByString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsUShort!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.CreateFromString(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsUShort!
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.explicit operator MoralesLarios.OOFP.ValueObjects.StringAsUShort!(string! value) -> MoralesLarios.OOFP.ValueObjects.StringAsUShort!
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.FormatErrorMessage(string! value) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.FromString(string! value) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringAsUShort!>!
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringAsUShort! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.implicit operator ushort(MoralesLarios.OOFP.ValueObjects.StringAsUShort! ValueObjectFp) -> ushort
+static MoralesLarios.OOFP.ValueObjects.StringAsUShort.IsValid(string! value) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.ByStringLength(string! value, int minLength, int maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringLengthBetween!>!
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.CreateFromLength(string! value, int minLength, int maxLength) -> MoralesLarios.OOFP.ValueObjects.StringLengthBetween!
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.FormatErrorMessage(string! value, int minLength, int maxLength) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.FromLength(string! value, int minLength, int maxLength, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringLengthBetween!>!
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.FromStringLenght(string! value, int minLength, int maxLength) -> MoralesLarios.OOFP.ValueObjects.StringLengthBetween!
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.implicit operator MoralesLarios.OOFP.ValueObjects.StringLengthBetween!((string! value, int minLength, int maxLength) tupleValues) -> MoralesLarios.OOFP.ValueObjects.StringLengthBetween!
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringLengthBetween! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringLengthBetween.IsValid(string! value, int minLength, int maxLength) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.ByStringLength(string! value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringMaxLength!>!
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.CreateFromLength(string! value, int length) -> MoralesLarios.OOFP.ValueObjects.StringMaxLength!
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.FormatErrorMessage(string! value, int length) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.FromLength(string! value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringMaxLength!>!
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.FromStringLenght(string! value, int length) -> MoralesLarios.OOFP.ValueObjects.StringMaxLength!
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.implicit operator MoralesLarios.OOFP.ValueObjects.StringMaxLength!((string! value, int length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.StringMaxLength!
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringMaxLength! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringMaxLength.IsValid(string! value, int length) -> bool
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.ByStringLength(string! value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringMinLength!>!
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.CreateFromLength(string! value, int length) -> MoralesLarios.OOFP.ValueObjects.StringMinLength!
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.FormatErrorMessage(string! value, int length) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.FromLength(string! value, int length, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<MoralesLarios.OOFP.ValueObjects.StringMinLength!>!
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.FromStringLenght(string! value, int length) -> MoralesLarios.OOFP.ValueObjects.StringMinLength!
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.implicit operator MoralesLarios.OOFP.ValueObjects.StringMinLength!((string! value, int length) tupleValues) -> MoralesLarios.OOFP.ValueObjects.StringMinLength!
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.implicit operator string!(MoralesLarios.OOFP.ValueObjects.StringMinLength! valueObject) -> string!
+static MoralesLarios.OOFP.ValueObjects.StringMinLength.IsValid(string! value, int length) -> bool
+static MoralesLarios.OOFP.ValueObjects.ValueObject.EqualOperator(MoralesLarios.OOFP.ValueObjects.ValueObject! left, MoralesLarios.OOFP.ValueObjects.ValueObject! right) -> bool
+static MoralesLarios.OOFP.ValueObjects.ValueObject.NotEqualOperator(MoralesLarios.OOFP.ValueObjects.ValueObject! left, MoralesLarios.OOFP.ValueObjects.ValueObject! right) -> bool
+static MoralesLarios.OOFP.ValueObjects.ValueObject.operator !=(MoralesLarios.OOFP.ValueObjects.ValueObject! left, MoralesLarios.OOFP.ValueObjects.ValueObject! right) -> bool
+static MoralesLarios.OOFP.ValueObjects.ValueObject.operator ==(MoralesLarios.OOFP.ValueObjects.ValueObject! left, MoralesLarios.OOFP.ValueObjects.ValueObject! right) -> bool
+static MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>.explicit operator MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>!(TValue value) -> MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>!
+static MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>.implicit operator TValue(MoralesLarios.OOFP.ValueObjects.ValueObject<TValue>! ValueObjectFp) -> TValue
+static MoralesLarios.OOFP.ValueObjects.Void.Create() -> MoralesLarios.OOFP.ValueObjects.Void!

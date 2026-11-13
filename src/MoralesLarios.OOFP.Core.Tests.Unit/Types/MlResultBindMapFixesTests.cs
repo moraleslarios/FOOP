@@ -27,6 +27,13 @@ public class MlResultBindMapFixesTests
     private static MlResult<int> FailSourceWithException(Exception ex)
         => MlResult<int>.Fail(MlErrorDetails.FromErrorMessageWithException(ex.Message, ex));
 
+    private static void AssertNullDelegateFailure<T>(MlResult<T> result, string parameterName)
+    {
+        result.IsFailure.Should().BeTrue();
+        result.TryGetErrors(out var errorsDetails).Should().BeTrue();
+        errorsDetails!.GetErrorMessages().Should().ContainSingle().Which.Should().Be($"'{parameterName}' cannot be null.");
+    }
+
     /// <summary>
     /// Fuente asincrona que cuenta cuantas veces se ha materializado la Task subyacente.
     /// Permite demostrar que los overloads con <c>Task&lt;MlResult&lt;T&gt;&gt;</c>
@@ -427,6 +434,89 @@ public class MlResultBindMapFixesTests
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().Should().Be("always");
+    }
+
+
+    [Fact]
+    public async Task MapAlwaysAsync_TaskSource_WaitsForIncompleteSourceBeforeInvokingDelegate()
+    {
+        var source = new TaskCompletionSource<MlResult<int>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var delegateInvoked = false;
+
+        var mapped = source.Task.MapAlwaysAsync(funcAlwaysAsync: () =>
+        {
+            delegateInvoked = true;
+            return Task.FromResult("always");
+        });
+
+        mapped.IsCompleted.Should().BeFalse();
+        delegateInvoked.Should().BeFalse();
+
+        source.SetResult(FailSource());
+
+        var result = await mapped;
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("always");
+        delegateInvoked.Should().BeTrue();
+    }
+
+
+    [Fact]
+    public void MapAlways_NullDelegate_ReturnsFailure()
+    {
+        Func<string> funcAlways = null!;
+
+        var result = ValidSource().MapAlways(funcAlways);
+
+        AssertNullDelegateFailure(result, nameof(funcAlways));
+    }
+
+
+    [Fact]
+    public async Task MapAlwaysAsync_ResultWithAsyncDelegateNull_ReturnsFailure()
+    {
+        Func<Task<string>> funcAlwaysAsync = null!;
+
+        var result = await ValidSource().MapAlwaysAsync(funcAlwaysAsync);
+
+        AssertNullDelegateFailure(result, nameof(funcAlwaysAsync));
+    }
+
+
+    [Fact]
+    public async Task MapAlwaysAsync_ResultWithSyncDelegateNull_ReturnsFailure()
+    {
+        Func<string> funcAlways = null!;
+
+        var result = await ValidSource().MapAlwaysAsync(funcAlways);
+
+        AssertNullDelegateFailure(result, nameof(funcAlways));
+    }
+
+
+    [Fact]
+    public async Task MapAlwaysAsync_TaskSourceWithAsyncDelegateNull_ReturnsFailure()
+    {
+        Task<MlResult<int>> source = ValidSource().ToAsync();
+        Func<Task<string>> funcAlwaysAsync = null!;
+
+        var result = await source.MapAlwaysAsync(funcAlwaysAsync);
+
+        AssertNullDelegateFailure(result, nameof(funcAlwaysAsync));
+    }
+
+
+    [Fact]
+    public async Task MapAlwaysAsync_TaskSourceWithSyncDelegateNull_ReturnsFailure()
+    {
+        Task<MlResult<int>> source = ValidSource().ToAsync();
+        Func<string> funcAlways = null!;
+
+        var result = await source.MapAlwaysAsync(funcAlways);
+
+        AssertNullDelegateFailure(result, nameof(funcAlways));
     }
 
 

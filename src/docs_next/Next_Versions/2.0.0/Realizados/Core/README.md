@@ -38,6 +38,8 @@ El reparto no es arbitrario: agrupa los hallazgos por **la superficie que tocan*
 | 3 | [Nomenclatura de la superficie pública](Epica-03-Miembros-Publicos-y-Firmas.md) | `MlResult.cs` · `MlError.cs` · `MlErrorDetails.cs` · `EnsureFp.*` · `Extensions.cs` | US-11 … US-16 | **L** (~3,0 j) | 🟠 / 🔴 | ⬜ |
 | 4 | [El contenedor de metadatos de `MlErrorDetails`](Epica-04-Modelo-de-Metadatos-de-Error.md) | `MlErrorDetails.cs` · `MlErrorDetails.Metadata.cs` · `MlErrorDetailsActions.cs` · `MlResultErrorDetailsExtensions.cs` · `Helpers/Extensions/Extensions.cs` · `Helpers/Constants.cs` | US-17 … US-25 | **XL** (~4,75 j) | 🔴 / 🟡 | ✅ |
 
+Épica transversal completada del plan general antiguo: [G3 · Robustez del núcleo `MlResult`](Epica-G3-Nucleo-MlResult-Robustez.md) · US-01…07.
+
 > **Leyenda de estado** · ✅ completada · 🔄 en curso · ⬜ no iniciada
 
 > **Leyenda de esfuerzo** · XS (<2 h) · S (½ jornada) · M (1 jornada) · L (2 jornadas) · XL (3+ jornadas)

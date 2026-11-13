@@ -29,8 +29,14 @@ public class CompositeKeyRestClientFp<TDto>(IRestClientFp<TDto> _genClientFp) : 
     public virtual async Task<MlResult<TDto>> GetByIdAsync(       Dictionary<string, string> headers = null!,
                                                                   CancellationToken          ct      = default,
                                                            params object[]                   keyValues)
-        => await NotEmptyString.FromString(FormatCompositeKey(keyValues))
-                                     .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
+    {
+        if (_genClientFp is RestClientFp<TDto> client && GetType() == typeof(CompositeKeyRestClientFp<TDto>) && UsesDefaultPathMethods(client))
+            return await NotEmptyString.FromString(FormatCompositeKeyForUrl(keyValues))
+                                       .BindAsync(pkValuesStr => client.GetByCompositeKeyAsync(pkValuesStr, headers, ct));
+
+        return await NotEmptyString.FromString(FormatCompositeKey(keyValues))
+                                   .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
+    }
 
 
         /// <summary>
@@ -83,8 +89,14 @@ public class CompositeKeyRestClientFp<TDto>(IRestClientFp<TDto> _genClientFp) : 
                                                              Dictionary<string, string> headers = null!, 
                                                              CancellationToken          ct      = default,
                                                       params object[]                   keyValues)
-        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
-                         .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
+    {
+        if (_genClientFp is RestClientFp<TDto> client && GetType() == typeof(CompositeKeyRestClientFp<TDto>) && UsesDefaultPathMethods(client))
+            return NotEmptyString.FromString(FormatCompositeKeyForUrl(keyValues))
+                                 .BindAsync(pkValuesStr => client.PutByCompositeKeyAsync(pkValuesStr, itemBody, headers, ct));
+
+        return NotEmptyString.FromString(FormatCompositeKey(keyValues))
+                             .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
+    }
 
     /// <summary>
     /// Envia la petición mediante el verbo HTTP PUT de <c>ById</c>. Versión asíncrona.
@@ -122,8 +134,14 @@ public class CompositeKeyRestClientFp<TDto>(IRestClientFp<TDto> _genClientFp) : 
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
                                                                 CancellationToken          ct      = default,
                                                          params object[]                   keyValues)
-        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
-                            .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
+    {
+        if (_genClientFp is RestClientFp<TDto> client && GetType() == typeof(CompositeKeyRestClientFp<TDto>) && UsesDefaultPathMethods(client))
+            return NotEmptyString.FromString(FormatCompositeKeyForUrl(keyValues))
+                                 .BindAsync(pkValuesStr => client.DeleteByCompositeKeyAsync(pkValuesStr, headers, ct));
+
+        return NotEmptyString.FromString(FormatCompositeKey(keyValues))
+                             .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
+    }
 
     /// <summary>
     /// Elimina el elemento indicado de <c>ById</c>. Versión asíncrona.
@@ -145,9 +163,27 @@ public class CompositeKeyRestClientFp<TDto>(IRestClientFp<TDto> _genClientFp) : 
     /// <returns>Representación textual obtenida.</returns>
     protected virtual string FormatCompositeKey(object[] pkValues)
     {
-        var result = string.Join(",", (pkValues ?? Array.Empty<object>()).Select(FormatCompositeKeyValue));
+        var result = string.Join(MoralesLarios.OOFP.Shared.Web.MlCompositeKey.Separator,
+                                 (pkValues ?? Array.Empty<object>()).Select(FormatCompositeKeyValue));
 
         return result;
+    }
+
+    private string FormatCompositeKeyForUrl(object[] pkValues)
+        => string.Join(MoralesLarios.OOFP.Shared.Web.MlCompositeKey.Separator,
+                       (pkValues ?? Array.Empty<object>())
+                           .Select(FormatCompositeKeyValue)
+                           .Select(Uri.EscapeDataString));
+
+    private static bool UsesDefaultPathMethods(RestClientFp<TDto> client)
+    {
+        var clientType = client.GetType();
+        return clientType.GetMethod(nameof(IRestClientFp<TDto>.GetByIdAsync),
+                                    [typeof(NotEmptyString), typeof(Dictionary<string, string>), typeof(CancellationToken)])?.DeclaringType == typeof(RestClientFp<TDto>)
+               && clientType.GetMethod(nameof(IRestClientFp<TDto>.PutByIdAsync),
+                                       [typeof(NotEmptyString), typeof(TDto), typeof(Dictionary<string, string>), typeof(CancellationToken)])?.DeclaringType == typeof(RestClientFp<TDto>)
+               && clientType.GetMethod(nameof(IRestClientFp<TDto>.DeleteByIdAsync),
+                                       [typeof(NotEmptyString), typeof(Dictionary<string, string>), typeof(CancellationToken)])?.DeclaringType == typeof(RestClientFp<TDto>);
     }
 
     /// <summary>
@@ -211,8 +247,14 @@ public class CompositeKeyRestClientFp<TRequest, TResponse>(IRestClientFp<TReques
     public virtual async Task<MlResult<TResponse>> GetByIdAsync(       Dictionary<string, string> headers = null!,
                                                                        CancellationToken          ct      = default,
                                                                 params object[]                   keyValues)
-        => await NotEmptyString.FromString(FormatCompositeKey(keyValues))
-                                     .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
+    {
+        if (_genClientFp is RestClientFp<TRequest, TResponse> client && GetType() == typeof(CompositeKeyRestClientFp<TRequest, TResponse>) && UsesDefaultPathMethods(client))
+            return await NotEmptyString.FromString(FormatCompositeKeyForUrl(keyValues))
+                                       .BindAsync(pkValuesStr => client.GetByCompositeKeyAsync(pkValuesStr, headers, ct));
+
+        return await NotEmptyString.FromString(FormatCompositeKey(keyValues))
+                                   .BindAsync(pkValuesStr => _genClientFp.GetByIdAsync(pkValuesStr, headers, ct));
+    }
 
 
         /// <summary>
@@ -265,8 +307,14 @@ public class CompositeKeyRestClientFp<TRequest, TResponse>(IRestClientFp<TReques
                                                              Dictionary<string, string> headers = null!, 
                                                              CancellationToken          ct      = default,
                                                       params object[]                   keyValues)
-        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
-                         .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
+    {
+        if (_genClientFp is RestClientFp<TRequest, TResponse> client && GetType() == typeof(CompositeKeyRestClientFp<TRequest, TResponse>) && UsesDefaultPathMethods(client))
+            return NotEmptyString.FromString(FormatCompositeKeyForUrl(keyValues))
+                                 .BindAsync(pkValuesStr => client.PutByCompositeKeyAsync(pkValuesStr, itemBody, headers, ct));
+
+        return NotEmptyString.FromString(FormatCompositeKey(keyValues))
+                             .BindAsync(pkValuesStr => _genClientFp.PutByIdAsync(pkValuesStr, itemBody, headers, ct));
+    }
 
     /// <summary>
     /// Envia la petición mediante el verbo HTTP PUT de <c>ById</c>. Versión asíncrona.
@@ -304,8 +352,14 @@ public class CompositeKeyRestClientFp<TRequest, TResponse>(IRestClientFp<TReques
     public virtual Task<MlResult<EmptyValue>> DeleteByIdAsync(       Dictionary<string, string> headers = null!, 
                                                                 CancellationToken          ct      = default,
                                                          params object[]                   keyValues)
-        => NotEmptyString.FromString(FormatCompositeKey(keyValues))
-                            .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
+    {
+        if (_genClientFp is RestClientFp<TRequest, TResponse> client && GetType() == typeof(CompositeKeyRestClientFp<TRequest, TResponse>) && UsesDefaultPathMethods(client))
+            return NotEmptyString.FromString(FormatCompositeKeyForUrl(keyValues))
+                                 .BindAsync(pkValuesStr => client.DeleteByCompositeKeyAsync(pkValuesStr, headers, ct));
+
+        return NotEmptyString.FromString(FormatCompositeKey(keyValues))
+                             .BindAsync(pkValuesStr => _genClientFp.DeleteByIdAsync(pkValuesStr, headers, ct));
+    }
 
     /// <summary>
     /// Elimina el elemento indicado de <c>ById</c>. Versión asíncrona.
@@ -327,9 +381,27 @@ public class CompositeKeyRestClientFp<TRequest, TResponse>(IRestClientFp<TReques
     /// <returns>Representación textual obtenida.</returns>
     protected virtual string FormatCompositeKey(object[] pkValues)
     {
-        var result = string.Join(",", (pkValues ?? Array.Empty<object>()).Select(FormatCompositeKeyValue));
+        var result = string.Join(MoralesLarios.OOFP.Shared.Web.MlCompositeKey.Separator,
+                                 (pkValues ?? Array.Empty<object>()).Select(FormatCompositeKeyValue));
 
         return result;
+    }
+
+    private string FormatCompositeKeyForUrl(object[] pkValues)
+        => string.Join(MoralesLarios.OOFP.Shared.Web.MlCompositeKey.Separator,
+                       (pkValues ?? Array.Empty<object>())
+                           .Select(FormatCompositeKeyValue)
+                           .Select(Uri.EscapeDataString));
+
+    private static bool UsesDefaultPathMethods(RestClientFp<TRequest, TResponse> client)
+    {
+        var clientType = client.GetType();
+        return clientType.GetMethod(nameof(IRestClientFp<TRequest, TResponse>.GetByIdAsync),
+                                    [typeof(NotEmptyString), typeof(Dictionary<string, string>), typeof(CancellationToken)])?.DeclaringType == typeof(RestClientFp<TRequest, TResponse>)
+               && clientType.GetMethod(nameof(IRestClientFp<TRequest, TResponse>.PutByIdAsync),
+                                       [typeof(NotEmptyString), typeof(TRequest), typeof(Dictionary<string, string>), typeof(CancellationToken)])?.DeclaringType == typeof(RestClientFp<TRequest, TResponse>)
+               && clientType.GetMethod(nameof(IRestClientFp<TRequest, TResponse>.DeleteByIdAsync),
+                                       [typeof(NotEmptyString), typeof(Dictionary<string, string>), typeof(CancellationToken)])?.DeclaringType == typeof(RestClientFp<TRequest, TResponse>);
     }
 
     /// <summary>

@@ -1,7 +1,20 @@
+ [CmdletBinding()]
+param(
+    [string]$RootPath,
+    [string]$OutputPath
+)
+
 $ErrorActionPreference = 'Stop'
 
-$root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$out  = Join-Path $env:TEMP 'inventario-nomenclatura.txt'
+if ([string]::IsNullOrWhiteSpace($RootPath)) {
+    $RootPath = Join-Path $PSScriptRoot '..'
+}
+$root = (Resolve-Path -LiteralPath $RootPath).Path
+
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Join-Path $env:TEMP 'inventario-nomenclatura.txt'
+}
+$out = $OutputPath
 
 # Nivel|Termino|Regex  (regex vacio => \bTermino\b)
 $defs = @'

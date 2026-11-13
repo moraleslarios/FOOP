@@ -329,8 +329,36 @@ public class MlErrorDetailsMetadataTests
     {
         var origen = MlErrorDetails.FromErrorDetails("error", "a", 7);
 
-        origen.TryGetMetadata<int>(null!, out var valor).Should().BeFalse();
+        origen.TryGetMetadata<int>(null!, out var valor, out var failureReason).Should().BeFalse();
         valor.Should().Be(default);
+        failureReason.Should().Be(MlMetadataLookupFailureReason.NullKey);
+    }
+
+
+    [Fact]
+    public void TryGetMetadata_ValorNuloAusenteYTipoIncorrecto_DevuelveRazones()
+    {
+        var details = MlErrorDetails.FromErrorMessageDetails("error", new Dictionary<string, object>
+        {
+            ["nulo"] = null!,
+            ["texto"] = "siete"
+        });
+
+        details.HasMetadata("nulo").Should().BeTrue();
+        details.TryGetMetadata<string>("nulo", out var nullValue, out var nullReason).Should().BeFalse();
+        nullValue.Should().BeNull();
+        nullReason.Should().Be(MlMetadataLookupFailureReason.NullValue);
+
+        details.TryGetMetadata<int>("ausente", out var missingValue, out var missingReason).Should().BeFalse();
+        missingValue.Should().Be(0);
+        missingReason.Should().Be(MlMetadataLookupFailureReason.KeyNotFound);
+
+        details.TryGetMetadata<int>("texto", out var wrongTypeValue, out var wrongTypeReason).Should().BeFalse();
+        wrongTypeValue.Should().Be(0);
+        wrongTypeReason.Should().Be(MlMetadataLookupFailureReason.TypeMismatch);
+
+        details.TryGetMetadata<string>("texto", out _, out var successReason).Should().BeTrue();
+        successReason.Should().Be(MlMetadataLookupFailureReason.None);
     }
 
 

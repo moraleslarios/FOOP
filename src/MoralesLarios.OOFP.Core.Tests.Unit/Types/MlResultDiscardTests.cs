@@ -14,6 +14,19 @@ public class MlResultDiscardTests
 {
 
     [Fact]
+    public void MlResultOfT_Discard_IsValidWithDefaultValue()
+    {
+        var referenceResult = MlResult<string>.Discard;
+        var valueResult = MlResult<int>.Discard;
+
+        referenceResult.IsSuccess.Should().BeTrue();
+        referenceResult.TryGetValue(out var referenceValue).Should().BeTrue();
+        referenceValue.Should().BeNull();
+        valueResult.IsSuccess.Should().BeTrue();
+        valueResult.GetValueOrThrow().Should().Be(default);
+    }
+
+    [Fact]
     public void MlResult_Discard_EsValido()
     {
         var result = MlResult.Discard;

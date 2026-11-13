@@ -45,7 +45,7 @@
 >   contenedor lo rastrearía y el repositorio destruiría un `DbContext` ajeno. Se cumple la regla
 >   general del apéndice: *quien no construye un `IDisposable`, no lo destruye*.
 >
-> **Pendiente y matizado:**
+> **Contexto previo a la implementación:**
 >
 > - ⬜ **US-01 · sigue pendiente, pero el contenedor ya aporta la mitad del camino.** Con los
 >   repositorios en `Scoped`, dos repositorios resueltos en la misma petición son **la misma
@@ -61,6 +61,8 @@
 > - El apéndice (tabla de los 3 métodos de registro, los ejemplos con
 >   `AddOofpRepositoriesTransient`/`Singleton` y la tabla de compatibilidad) **describe el estado
 >   anterior a la 2.0.0** y se conserva como material histórico.
+
+**Resolución posterior (2.0.0):** `BuildServiceProvider()` y `RegisterServices.GetRepository<T>()` se retiraron. Los repositorios se resuelven desde el proveedor del ámbito y comparten el `DbContext` scoped; la retirada está registrada en la [épica de simplificación](Epica-Simplificacion-Repositorios-EFCore.md) y validada en la definición de terminado de esta épica.
 
 ---
 

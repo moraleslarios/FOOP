@@ -57,6 +57,8 @@ public static class EnsureFpMessages
     #endregion
 
     internal const string DEFAULT_PARAM_NAME = "value";
+    internal const string CannotGetValueFromFailedResult = "Cannot obtain the secure value from MlResult in Fail state";
+    internal const string FailureWithoutErrorDetails = "The MlResult failed without error details.";
 
     internal static string SafeName(string? paramName)
         => string.IsNullOrWhiteSpace(paramName) ? DEFAULT_PARAM_NAME : paramName!;

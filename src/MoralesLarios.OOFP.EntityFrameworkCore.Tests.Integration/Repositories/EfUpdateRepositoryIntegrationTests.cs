@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Logging.Abstractions;
+using MoralesLarios.OOFP.Application.Services;
 using MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration;
+using MoralesLarios.OOFP.Types.Errors;
 
 namespace MoralesLarios.OOFP.EntityFrameworkCore.Tests.Integration.Repositories;
 
@@ -48,6 +51,39 @@ public class EfUpdateRepositoryIntegrationTests
         database.Context.ChangeTracker.Clear();
         (await database.Context.Vinos.AsNoTracking().SingleAsync(vino => vino.Id == stored.Id))
             .Comentarios.Should().Be(detached.Comentarios);
+    }
+
+
+    [Fact]
+    public async Task CrudServiceUpdateAsync_ByKey_ExecutesOneSelectForTrackedEntity()
+    {
+        var interceptor = new UnitOfWorkTransactionTests.CommandCaptureInterceptor();
+        await using var database = await UnitOfWorkTransactionTests.TestDatabase.CreateAsync(
+            commandInterceptor: interceptor);
+        var stored = UnitOfWorkTransactionTests.CreateVino();
+        database.Context.Vinos.Add(stored);
+        await database.Context.SaveChangesAsync();
+        database.Context.ChangeTracker.Clear();
+        interceptor.Commands.Clear();
+        var updatedComments = "comentarios actualizados por servicio";
+        var dto = UnitOfWorkTransactionTests.CreateVino(stored.Nombre);
+        dto.Id = stored.Id;
+        dto.Comentarios = updatedComments;
+        var service = new CrudServiceFp<Vino, Vino>(
+            database.Repository,
+            NullLogger<CrudServiceFp<Vino, Vino>>.Instance);
+
+        var result = await service.UpdateAsync(
+            dto,
+            MlErrorDetails.FromErrorMessage("no encontrado"),
+            CancellationToken.None,
+            pk: new object[] { dto.Id });
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Comentarios.Should().Be(updatedComments);
+        interceptor.Commands
+            .Where(command => command.TrimStart().StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+            .Should().ContainSingle();
     }
 
     private static async Task<Vino[]> AddWinesAsync(

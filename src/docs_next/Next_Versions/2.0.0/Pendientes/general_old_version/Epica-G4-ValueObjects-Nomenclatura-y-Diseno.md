@@ -92,7 +92,7 @@ Cada decisión queda escrita en la tabla de la [US-00](#g4-us-00--matriz-de-deci
 - [ ] Decidido entre `Void`, `EmptyValue` y `Unit` (D-G4-2); queda **uno** como canónico.
 - [ ] `Void.Create()` desaparece o queda marcado.
 - [ ] `IdLite`→`Int32Id` decidido; `Int64Id` solo se crea si hay un caso de uso real (el antiguo `Id` se eliminó).
-- [ ] Coordina con [G3-US-07](Epica-G3-Nucleo-MlResult-Robustez.md) (`Discard`).
+- [ ] Coordina con G3-US-07, ya completada en [la épica archivada](../../Realizados/Core/Epica-G3-Nucleo-MlResult-Robustez.md) (`Discard`).
 
 **Compatibilidad:** **Compilación**.
 

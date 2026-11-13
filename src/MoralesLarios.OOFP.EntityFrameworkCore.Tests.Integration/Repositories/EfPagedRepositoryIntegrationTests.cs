@@ -57,6 +57,24 @@ public class EfPagedRepositoryIntegrationTests
             .Should().Equal(wines.Take(2).Select(vino => vino.Id));
     }
 
+
+    [Fact]
+    public async Task TryGetDataPagination_FilteredSyncResult_CountsOnlyMatchingRows()
+    {
+        await using var database = await UnitOfWorkTransactionTests.TestDatabase.CreateAsync();
+        var prefix = $"filtrado {Guid.NewGuid():N}";
+        var matching = await AddWinesAsync(database, prefix);
+        await AddWinesAsync(database, $"no coincide {Guid.NewGuid():N}");
+        var repository = database.Scope.ServiceProvider.GetRequiredService<IEfPagedRepository<Vino>>();
+        Expression<Func<Vino, bool>> filter = vino => vino.Nombre.StartsWith(prefix);
+
+        var result = repository.TryGetDataPagination(new PageRequest(1, 2), filter: filter);
+        var page = result.GetValueOrThrow();
+
+        page.TotalCount.Should().Be(3);
+        page.Items.Select(vino => vino.Id).Should().Equal(matching.Take(2).Select(vino => vino.Id));
+    }
+
     [Fact]
     public async Task TryGetDataPagination_KeylessEntity_ReturnsMissingPrimaryKeyFailure()
     {

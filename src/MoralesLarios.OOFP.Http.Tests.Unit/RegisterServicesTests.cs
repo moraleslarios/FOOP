@@ -3,6 +3,9 @@
 // Licensed under the Apache License, Version 2.0
 
 using System.Reflection;
+using Microsoft.Extensions.Http;
+using MoralesLarios.OOFP.Types;
+using RichardSzalay.MockHttp;
 
 namespace MoralesLarios.OOFP.Http.Tests.Unit;
 
@@ -103,5 +106,65 @@ public class RegisterServicesTests
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("clientName no puede ser null");
+    }
+
+
+    [Fact]
+    public async Task AddCompositeKeyRestClient_GetByIdAsync_SendsRequestThroughConfiguredClient()
+    {
+        var handler = new MockHttpMessageHandler();
+        handler.Expect(HttpMethod.Get, "https://api.ejemplo.com/id-str/42")
+               .Respond("application/json", "\"respuesta\"");
+        using var provider = CreateHttpProvider(handler);
+
+         var client = (TestClient)provider.GetRequiredService<ITestClient>();
+         var result = await client.GetByIdAsync(NotEmptyString.CreateFromString("42"));
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("respuesta");
+        handler.VerifyNoOutstandingExpectation();
+    }
+
+
+    [Fact]
+    public async Task GetByIdAsync_IdentifierWithSlash_UsesOneEncodedPathSegment()
+    {
+        var handler = new MockHttpMessageHandler();
+        handler.Expect(HttpMethod.Get, "https://api.ejemplo.com/id-str/uno%252Fdos")
+               .Respond("application/json", "\"respuesta\"");
+        using var provider = CreateHttpProvider(handler);
+
+         var client = (TestClient)provider.GetRequiredService<ITestClient>();
+         var result = await client.GetByIdAsync(NotEmptyString.CreateFromString("uno/dos"));
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().Be("respuesta");
+        handler.VerifyNoOutstandingExpectation();
+    }
+
+
+    private static ServiceProvider CreateHttpProvider(MockHttpMessageHandler handler)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IHttpMessageHandlerBuilderFilter>(
+            new TestMessageHandlerBuilderFilter(handler));
+        services.AddMlHttp();
+        services.AddCompositeKeyRestClient<ITestClient, TestClient, string>(
+            () => ServiceKey.CreateFromString("request-test"),
+            client => client.BaseAddress = new Uri("https://api.ejemplo.com/"));
+        return services.BuildServiceProvider();
+    }
+
+
+    private sealed class TestMessageHandlerBuilderFilter(HttpMessageHandler handler)
+        : IHttpMessageHandlerBuilderFilter
+    {
+        public Action<HttpMessageHandlerBuilder> Configure(Action<HttpMessageHandlerBuilder> next)
+            => builder =>
+            {
+                next(builder);
+                builder.PrimaryHandler = handler;
+            };
     }
 }

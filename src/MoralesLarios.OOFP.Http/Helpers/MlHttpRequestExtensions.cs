@@ -18,6 +18,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="headerKey">Clave identificativa.</param>
     /// <param name="headerValue">Valor sobre el que se opera.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<HttpClient> AddHeader(this HttpClient client, MemberName headerKey, string headerValue)
     {
         var result = EnsureFp.NotNull(client, $"{nameof(client)} cannot be null if we want to set information in the header. ")
@@ -33,6 +34,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="headerKey">Clave identificativa.</param>
     /// <param name="headerValue">Valor sobre el que se opera.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<HttpClient>> AddHeaderAsync(this HttpClient client, MemberName headerKey, string headerValue)
         => client.AddHeader(headerKey, headerValue).ToAsync();
 
@@ -44,6 +46,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="headerKey">Clave identificativa.</param>
     /// <param name="headerValue">Valor sobre el que se opera.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<HttpClient> AddIntHeader(this HttpClient client, MemberName headerKey, int headerValue)
     {
         var result = EnsureFp.NotNull(client, $"{nameof(client)} cannot be null if we want to set information in the header. ")
@@ -59,6 +62,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="headerKey">Clave identificativa.</param>
     /// <param name="headerValue">Valor sobre el que se opera.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<HttpClient>> AddIntHeaderAsync(this HttpClient client, MemberName headerKey, int headerValue)
         => client.AddIntHeader(headerKey, headerValue).ToAsync();
 
@@ -68,6 +72,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="client">Cliente utilizado para la llamada.</param>
     /// <param name="pageNumber">Número de pagina solicitada, comenzando en uno.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope pagination headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<HttpClient> AddPageNumberHeader(this HttpClient client, IntNonNegative pageNumber)
         => AddIntHeader(client, global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageNumber, (int)pageNumber);
 
@@ -77,6 +82,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="client">Cliente utilizado para la llamada.</param>
     /// <param name="pageNumber">Número de pagina solicitada, comenzando en uno.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope pagination headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<HttpClient>> AddPageNumberHeaderAsync(this HttpClient client, IntNonNegative pageNumber)
         => client.AddPageNumberHeader(pageNumber).ToAsync();
 
@@ -86,6 +92,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="client">Cliente utilizado para la llamada.</param>
     /// <param name="pageSize">Número de elementos por pagina.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope pagination headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<HttpClient> AddPageSizeHeader(this HttpClient client, IntNonNegative pageSize)
         => AddIntHeader(client, global::MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageSize, (int)pageSize);
 
@@ -95,6 +102,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="client">Cliente utilizado para la llamada.</param>
     /// <param name="pageSize">Número de elementos por pagina.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope pagination headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<HttpClient>> AddPageSizeHeaderAsync(this HttpClient client, IntNonNegative pageSize)
         => client.AddPageSizeHeader(pageSize).ToAsync();
 
@@ -105,6 +113,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="pageNumber">Número de pagina solicitada, comenzando en uno.</param>
     /// <param name="pageSize">Número de elementos por pagina.</param>
     /// <returns>Resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope pagination headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static MlResult<HttpClient> AddPaginationHeaders(this HttpClient client, IntNonNegative pageNumber, IntNonNegative pageSize)
         => AddPageNumberHeader(client, pageNumber)
             .Bind( _ => AddPageSizeHeader(client, pageSize));
@@ -116,6 +125,7 @@ public static partial class MlHttpRequestExtensions
     /// <param name="pageNumber">Número de pagina solicitada, comenzando en uno.</param>
     /// <param name="pageSize">Número de elementos por pagina.</param>
     /// <returns>Tarea que produce el resultado válido con el valor obtenido, o resultado fallido con los detalles del error.</returns>
+    [global::System.Obsolete("Use the HttpRequestMessage overload to scope pagination headers to one request. Will be removed in 3.0.0.", false), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static Task<MlResult<HttpClient>> AddPaginationHeadersAsync(this HttpClient client, IntNonNegative pageNumber, IntNonNegative pageSize)
         => client.AddPaginationHeaders(pageNumber, pageSize).ToAsync();
 

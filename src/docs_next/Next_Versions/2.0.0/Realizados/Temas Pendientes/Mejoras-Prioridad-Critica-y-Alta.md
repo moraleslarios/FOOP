@@ -1,5 +1,8 @@
 # Mejoras pendientes · 🔴 Prioridad crítica y 🟠 alta
 
+> **Aviso historico:** inventario redactado antes de 2.0.0; los nombres y estados pueden estar obsoletos.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas actuales](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento.** El primer tramo del inventario de mejoras de la solución: **lo que hay
 > que arreglar antes que nada**. Cada entrada indica el **proyecto**, el **archivo o clase** y el
 > **método** donde está el problema, qué consecuencia tiene y una propuesta concreta de arreglo. La

@@ -1,5 +1,8 @@
 # Revisión de `MlResultActionsMap`, `MlResultActionsBind` y `MlResultActionsExecSelf`
 
+> **Aviso historico:** revision del nucleo anterior a 2.0.0; varios nombres citados ya fueron renombrados.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas vigentes](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Cierre de la revisión exhaustiva de los tres ficheros de métodos extensores más grandes del núcleo
 > (`MoralesLarios.OOFP`). Recoge **lo que se arregló** y, sobre todo, **lo que se decidió NO tocar y por qué**.

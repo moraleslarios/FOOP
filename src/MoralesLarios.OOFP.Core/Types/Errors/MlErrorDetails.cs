@@ -274,7 +274,7 @@ public partial class MlErrorDetails(IEnumerable<MlError>       Errors  = null!,
 
         var result = sb.ToString().TrimEnd();
 
-        return result;
+        return result.Length == 0 ? EnsureFpMessages.FailureWithoutErrorDetails : result;
     }
 
 

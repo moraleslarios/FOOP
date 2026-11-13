@@ -1,5 +1,8 @@
 ﻿# Consejos de nomenclatura para MoralesLarios.OOFP
 
+> **Aviso historico:** propuesta redactada antes de 2.0.0; las decisiones vigentes estan en las epicas actuales.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas vigentes](../../Pendientes/README.md).
+
 > 📌 **Este documento no cambia ni una línea de código.** Es una propuesta de renombrados,
 > ordenada por proyecto, con el nombre actual, el nombre sugerido y el motivo. Sirve como
 > hoja de ruta para ir mejorando la legibilidad de la biblioteca poco a poco.
@@ -697,6 +700,8 @@ juntos en la misma versión mayor**.
 ---
 
 ## Checklist de ejecución
+
+> **Estado actual:** las marcas siguientes registran la propuesta original; no son evidencia de que todos los nombres hayan desaparecido del codigo y la documentacion vigentes. Consulta la [auditoria del inventario](../general_old_version/02-Auditoria-Documentos-Complementarios.md#2-consejos-nomenclaturamd-y-plan-renombrados-200md) y el estado de [G5-US-01](../../Pendientes/general_old_version/Epica-G5-Cierre-Renombrado-y-Puentes.md).
 
 Marca cada nivel cuando esté cerrado (renombrado + `[Obsolete]` + docs actualizadas + tests en verde).
 

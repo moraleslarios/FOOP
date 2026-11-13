@@ -151,9 +151,21 @@ Si el *diff* contiene algo no previsto → `git checkout -- .` y se reintenta co
       `Helpers/EnsureFp.Strings.cs` y **ningún CS0618** (nadie dentro de la solución usa un puente).
 - [ ] Tests: **mismo resultado que la línea base** proyecto a proyecto (núcleo: 781 en verde). Se
       compara el **número** de tests, no solo que estén verdes, para detectar tests perdidos.
-- [ ] `scripts/inventario-nomenclatura.ps1` → **0** para cada nombre antiguo, salvo en ficheros
-      `*.Obsolete.cs` y en `Temas Pendientes/` / `Cambios Realizados/`.
-- [ ] Ningún `.md` de la solución (fuera de esas dos carpetas) cita un nombre antiguo.
+- [ ] `check-old-names.ps1 -IncludeCs` → **0 hallazgos C# fuera de la whitelist**; el inventario de 157 términos conserva las columnas antes/después.
+- [ ] En `.md` fuera de las carpetas históricas, cada nombre antiguo está identificado como referencia 1.x, puente `[Obsolete]` o historial de renombrado, con la alternativa vigente cuando aplica; ningún snippet recomienda el nombre antiguo para código nuevo.
+
+### Verificación G5-US-01 · 2026-11-13
+
+Ejecución sobre el árbol de trabajo basado en `HEAD 53331ee`; **no es una verificación de un commit ni se creó commit**.
+
+| Criterio | Resultado | Evidencia |
+|---|---|---|
+| A · Build y `CS0618` | ✅ | Build Release `--no-incremental`: exit 0, sin errores, `CS0618`, `CS1591`, `CS0419`, `RS0016` ni `RS0048`. |
+| B · Tests | ✅ | 1.814/1.814 aprobados, 0 fallidos/omitidos, 14 proyectos; incluye los 33 tests HTTP locales. La línea base de 1.715 no baja. |
+| C · Inventario de nombres | ✅ | Inventario de 157 términos; `check-old-names.ps1 -IncludeCs`: 0 hallazgos C# fuera de la whitelist. Los nombres restantes en Markdown se clasificaron por su función documental. |
+| D · Barrido Markdown | ✅ | 36 coincidencias revisadas: 16 en `docs_next`, 13 en `docs`, 3 en `CONTRIBUTING.md` y 4 en READMEs de proyecto. Son referencias explícitas de migración, historial o puentes aún públicos; se retiraron 16 usos de `Secure*` obsoletos de ejemplos activos. No quedan snippets de épicas activas que recomienden esos puentes. |
+
+Los reportes se escribieron en rutas únicas bajo `%TEMP%`; los `_oldnames*.log` preexistentes no se sobrescribieron.
 
 ---
 

@@ -422,6 +422,14 @@ Además de los renombrados, la 2.0.0 **corrige defectos de la 1.x**. Esas correc
 | 82 | Mensajes de validación y parseo de clave compuesta mejorados (**2.0.0**) | el mensaje del validador automático era inglés ininteligible; el error de parseo filtraba `pkFields` y no explicaba el formato | mensajes gramaticales explican la causa y la acción/formato esperado | ⚠️ **Contrato · SILENCIOSA** (cambia el texto de errores visible al consumidor) |
 | 83 | Las lecturas EFCore crean error fallback si `notFoundErrorDetails` es nulo (**2.0.0**) | una consulta sin coincidencias podía devolver `IsFailure` con `FailureDetails = null` | `TryFind`, `TryFirst`, `TryGetLast` y `TryGetLastBy` sustituyen el valor nulo por detalles de error estándar | **Contrato defensivo** (el fallo vuelve a contener detalles válidos; sin cambio de firma) |
 | 84 | Los paquetes OOFP 2.0.0 pasan a exigir `net11.0` | los paquetes exponían activos `net8.0`/`net9.0` y admitían consumidores con TFM anteriores | los paquetes exponen solo activos `net11.0`; todos los proyectos .NET del consumidor deben actualizarse | **Restauración/compilación** (`NU1202` con un TFM anterior) |
+| 85 | `Shared` deja de arrastrar `ValueObjects` como dependencia transitiva | `Internals` (que se fusiona en `Shared`) declaraba una referencia a `ValueObjects` | `Shared` ya no referencia `ValueObjects`; el consumidor que use esos tipos lo declara directamente | **Compilación/restauración** (solo si se dependía de la transitividad) |
+| 86 | `MapAlways` devuelve un fallo ante un delegado nulo (**2.0.0**) | `MapAlways` y sus variantes invocaban el delegado sin validarlo y lanzaban `NullReferenceException` | un delegado nulo produce `MlResult` fallido con el mensaje estándar del parámetro | ⚠️ **Contrato · SILENCIOSA** (cambia una excepción por un fallo controlado) |
+| 87 | `GetValueOrThrow` usa una excepción propia con detalles (**2.0.0**) | `SecureValidValue[Async]` lanzaban `InvalidProgramException` sin exponer los errores del resultado | se lanza `MlResultFailureException : InvalidOperationException`, con `ErrorDetails`; se conserva el mensaje por defecto | ⚠️ **Contrato · SILENCIOSA** para catches específicos de `InvalidProgramException` |
+| 88 | Los fallos sin errores reciben un error predeterminado (**2.0.0**) | `Fail` podía crear un fallo sin errores y `MlErrorDetails.ToString()` devolvía vacío | las fábricas añaden un error predeterminado si no hay errores y `ToString()` devuelve el fallback cuando no hay datos | ⚠️ **Contrato · SILENCIOSA** (cambia `Errors` y el texto de `ToString()`) |
+| 89 | `TryGetMetadata` informa la razón de una búsqueda fallida (**2.0.0**) | el overload existente solo devolvía `false` ante cualquier fallo | un overload aditivo devuelve `MlMetadataLookupFailureReason`; el overload booleano se conserva | ✅ **Aditivo** (sin cambios necesarios a las llamadas existentes) |
+| 90 | El cuerpo HTTP remoto deja de incluirse por defecto (**2.0.0**) | `IncludeResponseBodyInErrors` empezaba en `true` y los errores podían incorporar el cuerpo remoto | empieza en `false`; el consumidor puede activar explícitamente el cuerpo | ⚠️ **Contrato · SILENCIOSA** (cambia el texto del error; mitiga filtración de datos) |
+| 91 | Los overloads y helper de cabeceras sobre `HttpClient` quedan obsoletos (**2.0.0**) | `AddHeader*`, `AddIntHeader*`, `Add*Page*` e `InternalAddPagInfoAsync` mutaban `DefaultRequestHeaders` | generan `CS0618`; usa overloads de `HttpRequestMessage` | **Compilación** (warning `[Obsolete]`, puede ser error con warnings-as-errors) |
+| 92 | Los identificadores REST se codifican como segmentos y las claves compuestas se separan antes de decodificar (**2.0.0**) | IDs interpolados sin escape; una coma de dato podía confundirse con el separador y `/` creaba más segmentos | clientes OOFP codifican el ID; el servidor divide las claves compuestas antes de decodificar cada parte | ⚠️ **Contrato · SILENCIOSA** (cambia las URLs emitidas y la interpretación de claves reservadas) |
 
 #### 17 — El cuerpo del error HTTP se trunca
 
@@ -2312,6 +2320,124 @@ excepciones no controladas de `BackgroundService`.
 `NU1202` en todos los proyectos, props, configuración de CI y restore logs. No dejes TFM anteriores
 ni omitas proyectos de tests, muestras o herramientas.
 
+#### 85 — `Shared` deja de arrastrar `ValueObjects` como dependencia transitiva
+
+En 1.x, `MoralesLarios.OOFP.Internals` declaraba una referencia de paquete a `MoralesLarios.OOFP.ValueObjects`. Al fusionarse `Internals` en `Shared`, la 2.0.0 retiró esa arista para que `Shared` no dependa de otra biblioteca.
+
+**Qué hacer:** si el consumidor usa tipos de `MoralesLarios.OOFP.ValueObjects`, añade una referencia directa al paquete en cada proyecto que los use. No añadas la referencia si solo consumes `Shared.Pagination` o `Shared.Web`.
+
+**Cómo detectarlo:** busca los `using`/nombres cualificados de ValueObjects y las referencias a Internals/Shared:
+```regex
+using\s+(global::)?MoralesLarios\.OOFP\.ValueObjects|MoralesLarios\.OOFP\.ValueObjects
+PackageReference\s+Include="MoralesLarios\.OOFP\.(Internals|Shared)"
+```
+Por cada proyecto con usos de ValueObjects, confirma que declara el paquete directamente y no depende de la transitividad de Internals/Shared.
+
+**Ruptura de compilación/restauración:** afecta solo a consumidores que usaban tipos de ValueObjects sin declarar su paquete.
+
+#### 86 — `MapAlways` devuelve un fallo ante un delegado nulo
+
+En 1.x, `MapAlways` y sus variantes invocaban directamente el delegado; si era `null`, escapaba `NullReferenceException`. En 2.0.0 devuelven un `MlResult` fallido con el mensaje estándar `'<nombre del parámetro>' cannot be null.`. Las firmas no cambian.
+
+**Qué hacer:** busca los usos de `MapAlways` cuyo delegado pueda ser nulo y los tests que esperaban `NullReferenceException`. Valida el delegado antes de llamar o trata el `MlResult` fallido; elimina la expectativa de excepción accidental.
+
+**Cómo detectarlo:**
+```regex
+MapAlways(?:Async)?|(?:funcAlways|funcAlwaysAsync)\s*=\s*null|NullReferenceException
+```
+Revisa cada coincidencia: actualiza solo los casos que pasaban un delegado nulo o fijaban la excepción anterior.
+
+**Ruptura silenciosa:** una llamada con delegado nulo compila igual, pero ahora devuelve un resultado fallido en vez de lanzar.
+
+#### 87 — `GetValueOrThrow` usa una excepción propia con detalles
+
+En 1.x, `SecureValidValue[Async]` lanzaban `InvalidProgramException` al acceder a un fallo. En 2.0.0, `GetValueOrThrow[Async]` y los puentes `SecureValidValue[Async]` lanzan `MlResultFailureException`, derivada de `InvalidOperationException`, y exponen el `MlErrorDetails` en `ErrorDetails`. El mensaje por defecto y las firmas se conservan.
+
+**Qué hacer:** si capturabas específicamente `InvalidProgramException`, cambia el filtro a `MlResultFailureException`; lee `ex.ErrorDetails` para recuperar los errores originales. Los catches de `InvalidOperationException` siguen capturando la excepción nueva.
+
+**Cómo detectarlo:** busca `catch\s*\(\s*InvalidProgramException|GetValueOrThrow(?:Async)?|SecureValidValue(?:Async)?`. Revisa solo los catches asociados a estas llamadas y actualiza los tests que afirmaban el tipo anterior.
+
+**Ruptura silenciosa:** las llamadas compilan igual, pero un `catch (InvalidProgramException)` deja de capturar el fallo.
+
+#### 88 — Los fallos sin errores reciben un error predeterminado
+
+En 1.x, `Fail(new MlErrorsDetails())` podía producir `IsFailure == true` con `Errors` vacío, y `ToString()` de detalles sin errores ni metadatos devolvía `string.Empty`. En 2.0.0, toda fábrica de fallo sin errores añade `The MlResult failed without error details.` y conserva los metadatos; `MlErrorDetails.ToString()` devuelve ese mismo texto cuando no hay errores ni metadatos.
+
+**Qué hacer:** revisa las comprobaciones que esperaban una colección vacía después de `Fail` o una cadena vacía de `ToString()`. Trata el error predeterminado como cualquier otro error; los metadatos existentes se conservan.
+
+**Cómo detectarlo:** busca `Fail(?:Async)?(?:<[^>]+>)?\s*\(|new\s+MlErrors?Details\s*\(\s*\)|ToString\(\)`. Actualiza solo las expectativas que dependían de un fallo sin mensajes o de una representación vacía.
+
+**Ruptura silenciosa:** las firmas no cambian, pero los fallos vacíos ahora contienen un `MlError` y la representación vacía deja de serlo.
+
+#### 89 — `TryGetMetadata` informa la razón de una búsqueda fallida
+
+2.0.0 añade `TryGetMetadata<T>(key, out value, out MlMetadataLookupFailureReason)`. Devuelve `None` al encontrar el valor; ante un fallo distingue `NullKey`, `KeyNotFound`, `NullValue` y `TypeMismatch`. El overload existente de dos parámetros conserva su firma y sigue devolviendo `false` para esos fallos.
+
+**Qué hacer:** no cambies las llamadas existentes. Si necesitas reaccionar de forma distinta a cada causa, usa el overload nuevo y discrimina por `failureReason`.
+
+**Cómo detectarlo:** busca `TryGetMetadata(?:<[^>]+>)?\s*\(`. Inspecciona los casos donde el consumidor quiera distinguir una clave ausente, un valor nulo y un tipo incorrecto; adopta el overload nuevo solo en esos casos.
+
+**Compatibilidad:** aditiva; no altera el comportamiento ni la resolución de overloads existente.
+
+#### 90 — El cuerpo HTTP remoto deja de incluirse por defecto
+
+En 1.x, `ReadErrorDescriptionAsync` incluía por defecto el cuerpo de una respuesta HTTP fallida, también cuando el error se propagaba desde `HttpApiInvoker`. En 2.0.0, `IncludeResponseBodyInErrors` empieza en `false` y la descripción incluye `[Contenido del error omitido por configuración]`. Para volver al comportamiento anterior, el consumidor debe establecer explícitamente `MlResponseWebExtensions.IncludeResponseBodyInErrors = true` al iniciar.
+
+**Qué hacer:** revisa las aserciones o consumidores que extraían datos del cuerpo remoto desde el mensaje de error. Si necesitas esos datos, habilita explícitamente la bandera y aplica tus controles de privacidad.
+
+**Cómo detectarlo:** busca `IncludeResponseBodyInErrors|ReadErrorDescriptionAsync|Detalle error`. Revisa comparaciones literales del mensaje y cualquier parseo del cuerpo incluido.
+
+**Ruptura silenciosa:** las llamadas compilan igual, pero el cuerpo remoto deja de aparecer en el texto de error por defecto.
+
+#### 91 — Los overloads de cabeceras sobre `HttpClient` quedan obsoletos
+
+En 1.x, `AddHeader[Async]`, `AddIntHeader[Async]`, `AddPageNumberHeader[Async]`, `AddPageSizeHeader[Async]`, `AddPaginationHeaders[Async]` e `InternalAddPagInfoAsync` mutaban `HttpClient.DefaultRequestHeaders`. En 2.0.0 se conservan como puentes funcionales, pero `[Obsolete]` genera `CS0618` y recomienda los overloads de `HttpRequestMessage`, que limitan las cabeceras a una sola petición.
+
+**Qué hacer:** crea un `HttpRequestMessage` por llamada y migra los diez overloads a las extensiones equivalentes sobre ese mensaje. Si derivabas de `HttpApiInvoker` y llamabas a `InternalAddPagInfoAsync`, construye la petición con `BuildPagedRequest`. No desactives el warning globalmente: `TreatWarningsAsErrors` puede convertirlo en error.
+
+**Cómo detectarlo:** busca `(?:AddHeader|AddIntHeader|AddPageNumberHeader|AddPageSizeHeader|AddPaginationHeaders)Async?\s*\(|InternalAddPagInfoAsync` y usos de `HttpClient.DefaultRequestHeaders`. Reemplaza cada mutación por la variante `HttpRequestMessage`/`BuildPagedRequest` y verifica que dos peticiones consecutivas con valores distintos no se contaminan.
+
+**Ruptura de compilación:** las firmas siguen presentes, pero cada llamada a los overloads `HttpClient` o al helper protegido emite `CS0618` hasta migrarse.
+
+#### 92 — Los identificadores REST se codifican como segmentos
+
+En 2.0.0, los clientes OOFP dejan de interpolar identificadores directamente en la URL. Cada ID simple se
+codifica para ocupar un segmento: ASP.NET Core consume una capa de percent-encoding al enlazar la ruta y el
+controlador decodifica el valor restante antes de convertirlo. Por eso el escape simple aparece en dos capas.
+
+```http
+Antes: GET /id-str/uno/dos
+Ahora: GET /id-str/uno%252Fdos
+```
+
+Para claves compuestas, `MlCompositeKey.Separator` es la coma literal: cada componente se escapa primero, se
+unen con la coma y se escapa una vez más el segmento exterior.
+
+```http
+Antes: /id-str/ACME,SL,42
+Ahora: /id-str/ACME%252CSL%2C42
+Valor ligado por ASP.NET: ACME%2CSL,42
+```
+
+El controlador divide por la coma literal y después decodifica cada componente. No decodifiques la clave
+compuesta completa antes de partirla: `ACME%2CSL,42` se convertiría en tres componentes.
+
+**Qué hacer:** si usas los `RestClientFp` / `CompositeKeyRestClientFp` incluidos, pasa los valores originales,
+sin pre-escaparlos; el cliente construye la ruta. Si construyes URLs manualmente, reproduce las dos capas y
+revisa cualquier implementación propia de `IRestClientFp`, subclase de `RestClientFp` que sobrescriba métodos
+por ID o derivada de `CompositeKeyRestClientFp`.
+
+**Cómo detectarlo:** busca llamadas de clientes por ID, composición de claves y URLs literales:
+
+```regex
+RestClientFp<|CompositeKeyRestClientFp<|id-str/|GetByIdAsync\s*\(|PutByIdAsync\s*\(|DeleteByIdAsync\s*\(|ParseKeyValues\s*\(|string\.Join\s*\(\s*['\"]
+```
+
+Actualiza las expectativas de rutas en tests, mocks y snapshots. Confirma que `/`, `?`, `#`, espacios, `%`, `+`,
+comas, acentos y componentes vacíos llegan como un único ID o como los componentes previstos.
+
+**Compatibilidad:** ruptura silenciosa; el código compila, pero cambia el valor de la URL y el texto que recibe el controlador para identificadores con caracteres reservados. Los IDs con `/` dejan de producir segmentos de ruta adicionales.
+
 ## Fase 4 — Compilar y resolver iterativamente
 
 1. ```powershell
@@ -2666,6 +2792,14 @@ dotnet build --nologo /p:WarningLevel=4
   Para el punto **82**, busca `ValidateWithFluentValidation|BuildKeyParseErrorMessage|Problems with automatic create instance|not be extract values of pkFields`; actualiza tests, snapshots y consumidores que comparaban literalmente los mensajes.
   Para el punto **83**, busca `Try(?:Find|First|GetLast|GetLastBy)(?:Async)?\s*\(|notFoundErrorDetails\s*:\s*null`; si se pasaba `null` como detalles not-found, confirma que `TryGetErrors` devuelve `MlErrorDetails` no nulos.
   Para el punto **84**, busca `TargetFramework|net8\.0|net9\.0|net10\.0|NU1202`; confirma que todos los proyectos .NET, incluidos los que están fuera de la solución, apuntan a `net11.0`.
+  Para el punto **85**, busca `using\s+(global::)?MoralesLarios\.OOFP\.ValueObjects|MoralesLarios\.OOFP\.ValueObjects` y `PackageReference\s+Include="MoralesLarios\.OOFP\.(Internals|Shared)"`; añade una referencia directa a `MoralesLarios.OOFP.ValueObjects` solo en los proyectos que usen esos tipos y hoy dependan de la transitividad de Internals/Shared.
+  Para el punto **86**, busca `MapAlways(?:Async)?|(?:funcAlways|funcAlwaysAsync)\s*=\s*null|NullReferenceException`; revisa cada llamada cuyo delegado pueda ser nulo y los tests que esperaban la excepción, y actualízalos para comprobar el `MlResult` fallido.
+  Para el punto **87**, busca `catch\s*\(\s*InvalidProgramException|GetValueOrThrow(?:Async)?|SecureValidValue(?:Async)?`; actualiza los catches específicos al tipo `MlResultFailureException` y usa `ErrorDetails` para inspeccionar el fallo.
+  Para el punto **88**, busca `Fail(?:Async)?(?:<[^>]+>)?\s*\(|new\s+MlErrors?Details\s*\(\s*\)|ToString\(\)`; actualiza las expectativas de `Errors` vacíos y cadenas vacías, y confirma que se preservan los metadatos.
+  Para el punto **89**, busca `TryGetMetadata(?:<[^>]+>)?\s*\(`; cambia a la nueva sobrecarga solo donde sea necesario distinguir `NullKey`, `KeyNotFound`, `NullValue` o `TypeMismatch`. Las llamadas actuales de dos parámetros siguen funcionando.
+  Para el punto **90**, busca `IncludeResponseBodyInErrors|ReadErrorDescriptionAsync|Detalle error`; actualiza expectativas de texto/cuerpo remoto y habilita explícitamente la bandera solo si el consumidor necesita incluir respuestas HTTP fallidas.
+  Para el punto **91**, busca `(?:AddHeader|AddIntHeader|AddPageNumberHeader|AddPageSizeHeader|AddPaginationHeaders)Async?\s*\(|InternalAddPagInfoAsync|DefaultRequestHeaders`; migra cada llamada de `HttpClient` a la extensión equivalente de `HttpRequestMessage` y el helper a `BuildPagedRequest`.
+  Para el punto **92**, busca `RestClientFp<|CompositeKeyRestClientFp<|id-str/|GetByIdAsync|PutByIdAsync|DeleteByIdAsync|ParseKeyValues|string\.Join`; revisa las URLs construidas manualmente, las implementaciones propias de los clientes y las expectativas literales de rutas. No pre-escapes los valores al usar los clientes OOFP incluidos; para claves compuestas confirma que el servidor parte primero y decodifica después.
 5. **Diff**:
    ```powershell
    git diff --stat
@@ -2679,6 +2813,15 @@ dotnet build --nologo /p:WarningLevel=4
 En el apartado 5 del informe, incluye también el punto **79**: indica si había argumentos nombrados en los puentes de longitud, qué etiquetas se actualizaron y confirma que se conservaron los métodos puente, las llamadas posicionales y la alternativa `CreateFromLength` de los tres avisos. Incluye el punto **80** indicando si el consumidor validaba `PageRequest` o `PagedResult<T>` con DataAnnotations, qué expectativas cambian y si dependía de los límites `[1, 1000]` para página y tamaño. Para el punto **81**, indica si tests, filtros o snapshots comparaban literalmente los tres logs y confirma que, si existían, se actualizaron para incluir `>`. Para el punto **82**, indica si el consumidor comparaba los mensajes de creación automática del validador o de parseo de clave compuesta y confirma que se actualizaron las expectativas al nuevo texto. Para el punto **83**, indica si se pasaba explícitamente `null` como `notFoundErrorDetails` y confirma que el fallo resultante ahora conserva detalles no nulos.
 
 Para el punto **84**, indica cuántos proyectos .NET se actualizaron, sus TFM anteriores y confirma que no quedan proyectos, referencias Microsoft, SDKs de CI o imágenes de contenedor en versiones anteriores a .NET 11; informa también si el hardware de destino y las rupturas de comportamiento .NET 11 aplican al consumidor.
+
+Para el punto **85**, indica si el consumidor usaba `ValueObjects` solo por la transitividad de `Internals`/`Shared`; si aplica, confirma que añadió la referencia directa y que restore/build pasan. Si no lo usaba, dilo expresamente.
+Para el punto **86**, indica si había llamadas con delegado nulo o tests que esperaban `NullReferenceException`; confirma que se manejan como `MlResult` fallido y que no cambió ninguna firma. Si no había esos usos, dilo expresamente.
+Para el punto **87**, indica si el consumidor capturaba `InvalidProgramException` alrededor de `SecureValidValue[Async]`/`GetValueOrThrow[Async]`; confirma que usa `MlResultFailureException`, conserva el mensaje esperado y accede a `ErrorDetails` cuando necesita los errores originales. Si no había catches específicos, dilo expresamente.
+Para el punto **88**, indica si se construían fallos sin errores o se esperaba `string.Empty` de `MlErrorDetails.ToString()`; confirma que se maneja el `MlError` predeterminado y que los metadatos se conservan. Si no había esas expectativas, dilo expresamente.
+Para el punto **89**, indica si se adoptó el overload de tres parámetros de `TryGetMetadata` para discriminar razones; enumera las razones usadas o confirma que no fue necesario migrar llamadas existentes.
+Para el punto **90**, indica si el consumidor dependía del cuerpo remoto dentro de los errores; confirma si actualizó las expectativas o habilitó `IncludeResponseBodyInErrors` explícitamente.
+Para el punto **91**, indica cuántas llamadas a los diez overloads o a `InternalAddPagInfoAsync` generaban `CS0618`, qué migró a `HttpRequestMessage`/`BuildPagedRequest` y confirma que no quedan mutaciones de `DefaultRequestHeaders` dependientes de esas extensiones.
+Para el punto **92**, indica si había IDs con `/`, `?`, `#`, espacios, `%`, `+`, comas, acentos o componentes vacíos; qué URLs o snapshots se actualizaron; y confirma que las claves compuestas se separan por la coma literal antes de decodificar cada componente. Distingue los clientes OOFP incluidos de cualquier implementación personalizada.
 
 Entrega al usuario, **en español**, un informe con:
 
@@ -2807,6 +2950,14 @@ posterior. Consulta la sección 3.3 para el detalle de cada punto.
 | --- | --- | --- |
 | 2.0.0 | 17, 27, 28, 29, 31, 32, 34, 35, 36, 37, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83 | Renombrado masivo de la API y correcciones de comportamiento. El punto **61** centraliza la planificación en `2.0.0`: las versiones 2.1.1, 2.2.0, 2.3.0 y 2.4.0 nunca se publicaron. Los puntos **62–66** unifican los ciclos de vida en `Scoped`; **67–70** completan el cambio de namespace y la simplificación de EFCore. El punto **71** añade `UnitOfWork` a `IEfRepository<T>`: afecta al compilador solo si el consumidor implementaba esas interfaces. El punto **72** retira el autocommit de las escrituras directas: esas llamadas ahora requieren `TryCommit[Async]` o `TryExecuteInTransaction[Async]` (**ruptura silenciosa**); `CrudServiceFp` conserva la persistencia automática. Los puntos **73–74** cambian la respuesta a claves `null` y el momento de ejecución/captura de `TryGetData`/`TryAll` síncronos; **75** añade la operación ordenada para obtener una sola fila; **76** estabiliza las páginas con clave EF y deja fallar las entidades keyless; **77** cambia a `TEntity` el nombre genérico observable por reflexión; **78** retira el parámetro `ILogger<>` de cuatro constructores públicos REST; **79** normaliza las etiquetas de argumentos nombrados de los puentes de longitud y corrige tres mensajes `[Obsolete]`; **80** corrige los rangos de DataAnnotations para paginación, de modo que validación refleja los valores que los records normalizan; **81** cierra el genérico en tres mensajes de log de `HttpApiInvoker`; **82** mejora los textos de fallo al instanciar validadores y al interpretar claves compuestas; **83** evita resultados fallidos con `FailureDetails = null` si se pasa `null` a los overloads read not-found.
 | 2.0.0 (TFM) | 84 | Los paquetes requieren `net11.0`; actualiza todos los proyectos del consumidor, sus dependencias Microsoft y el SDK. |
+| 2.0.0 (Shared) | 85 | `Shared` deja de traer `ValueObjects` transitivamente; declara el paquete directamente si usas sus tipos. |
+| 2.0.0 (Core) | 86 | `MapAlways` transforma un delegado nulo de `NullReferenceException` a un `MlResult` fallido. |
+| 2.0.0 (Core) | 87 | `GetValueOrThrow` pasa de `InvalidProgramException` a `MlResultFailureException`, que expone `ErrorDetails`. |
+| 2.0.0 (Core) | 88 | `Fail` añade un error predeterminado cuando no hay errores y `MlErrorDetails.ToString()` deja de devolver vacío. |
+| 2.0.0 (Core) | 89 | Nuevo overload aditivo de `TryGetMetadata` que diferencia clave nula/ausente, valor nulo y tipo incorrecto. |
+| 2.0.0 (Http) | 90 | `ReadErrorDescriptionAsync` deja de incluir el cuerpo remoto por defecto; activa `IncludeResponseBodyInErrors` si es necesario. |
+| 2.0.0 (Http) | 91 | Los overloads y `InternalAddPagInfoAsync` sobre `HttpClient` quedan `[Obsolete]`; migra a `HttpRequestMessage`/`BuildPagedRequest`. |
+| 2.0.0 (Http/Controllers) | 92 | Los clientes codifican IDs por segmento; las claves compuestas usan `MlCompositeKey.Separator`, se parten antes de decodificar cada componente y cambian las URLs con caracteres reservados. |
 | 2.1.1 | 38, 39, 40, 41, 42, 43 | Normalización de `Constants`, mensajes corregidos, `EnsureFpMessages` público, `ErrorMessage` retirado, **saneamiento del contenedor de metadatos de `MlErrorDetails`**, `TryGetValue` / `TryGetErrors` (aditivo) y **troceado de la clase `Extensions`**, además de la retirada de `MlResult._` en favor de `Discard` |
 | 2.3.0 | 53, 54, 55, 56, 57, 58, 59 | **242 firmas nuevas aditivas** y la **anotación `[StringSyntax]` de los 241 parámetros de plantilla** (punto 57, con `CA2254 = 0` medido en una sonda con analizadores estrictos): la familia `LogMlResult*Template`, que acepta una **plantilla de mensaje** y sus argumentos y los entrega a `ILogger.Log` **sin interpolar**, de modo que los marcadores viajan como **campos estructurados** en lugar de diluirse en la cadena (35 firmas), y su extensión a la **rama de fallo** en las cuatro familias `IfFail*` (172 firmas), con el tipo nuevo `MlResultLogErrorFields`, que **fija como contrato** los nombres de campo `ErrorMessage`, `ErrorCount` y `ExceptionType`. ✅ **Sin rupturas**: el sufijo `Template` deja el conjunto de nombres disjunto del anterior y no se ha modificado ninguna firma previa. Además, el **cruce del eje `EventId` con la plantilla** (35 firmas), que deja sin efecto la nota de la 2.2.0 según la cual los ejes no se combinaban: ahora `EventId` × plantilla **sí**, `ILogger<TCategory>` **no**. ⚠️ Y **una sola ruptura**, el punto 58: la sobrecarga `async` de `LogCompletedResult` que recibe una `Task<MlResult<T>>` recupera el sufijo `Async` que la épica 4 de la 2.2.0 le dejó a medias, con puente `[Obsolete]` hasta la 3.0.0 (`CS0618`). Y, para cerrar la versión, el punto 59: el `README.md` de `MoralesLarios.OOFP.Logging` **retira las seis afirmaciones** que decían que no había registro estructurado y documenta el raíl de plantillas de extremo a extremo; es documental, no hay nada que migrar, pero **invalida la mejor práctica 9 de la 2.2.0**, que mandaba bajarse a `ILogger` en un `ExecSelf`/`Match` para publicar campos |
 | 2.2.0 | 44, 45, 46, 47, 48, 49, 50, 51, 52 | Corrección de la **llamada cruzada** de `LogMlResultIfFailWithExceptionAsync` sobre `Task<MlResult<T>>` (esa sobrecarga **no registraba nada**), **normalización de la nomenclatura pública** de `MoralesLarios.OOFP.Logging` (`validBuilMessage` → `validBuildMessage`, `faildMessage` → `failBuildMessage`, `MyMethodFinalLog[Async]` → `LogActionResult[Async]`, clase `Extensions` → `MlResultLogActionExtensions`) y **unificación en inglés** del idioma de los mensajes que emite la librería. Además, **evaluación perezosa** del constructor de mensaje (`IsEnabled` antes de construir) y **56 firmas nuevas aditivas**: 35 con `EventId` y 21 con `ILogger<TCategory>`. ⚠️ **Tres rupturas silenciosas (44, 49 y 50)** |

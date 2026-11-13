@@ -6,8 +6,4 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MoralesLarios.OOFP.ValueObjects\MoralesLarios.OOFP.ValueObjects.csproj" />
-  </ItemGroup>
-
 </Project>

@@ -759,8 +759,8 @@ interpretar. De ahí la recomendación.
         var byDataAnnotations = invalid.ValidateWithDataAnnotations();
         var byFluent          = invalid.ValidateWithFluentValidation<Customer, CustomerValidator>();
 
-        var targetsA = byDataAnnotations.SecureFailErrorsDetails().Errors.Select(e => e.Target).OrderBy(x => x);
-        var targetsF = byFluent        .SecureFailErrorsDetails().Errors.Select(e => e.Target).OrderBy(x => x);
+        var targetsA = byDataAnnotations.GetFailureDetailsOrThrow().Errors.Select(e => e.Target).OrderBy(x => x);
+        var targetsF = byFluent        .GetFailureDetailsOrThrow().Errors.Select(e => e.Target).OrderBy(x => x);
 
         targetsF.Should().BeEquivalentTo(targetsA, "cambiar de motor de validación no debe cambiar el contrato de errores");
     }

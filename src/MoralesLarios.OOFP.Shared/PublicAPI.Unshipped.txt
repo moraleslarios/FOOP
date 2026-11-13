@@ -1,0 +1,48 @@
+#nullable enable
+const MoralesLarios.OOFP.Shared.Pagination.PageRequest.MaxPageSize = 1000 -> int
+const MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageNumber = "X-Page-Number" -> string!
+const MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders.PageSize = "X-Page-Size" -> string!
+const MoralesLarios.OOFP.Shared.Web.MlCompositeKey.Separator = ',' -> char
+const MoralesLarios.OOFP.Shared.Web.WebErrorDetailsKeys.DefaultCreatedLocation = "/" -> string!
+const MoralesLarios.OOFP.Shared.Web.WebErrorDetailsKeys.DefaultProblemType = "about:blank" -> string!
+const MoralesLarios.OOFP.Shared.Web.WebErrorDetailsKeys.ProblemsDetails = "ProblemsDetails" -> string!
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.Deconstruct(out System.Collections.Generic.IEnumerable<T>! Items, out int PageNumber, out int PageSize, out int TotalCount) -> void
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.Items.get -> System.Collections.Generic.IEnumerable<T>!
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.Items.init -> void
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.PagedResult(MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>! original) -> void
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.PagedResult(System.Collections.Generic.IEnumerable<T>! Items, int PageNumber, int PageSize, int TotalCount) -> void
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.TotalCount.get -> int
+MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.TotalCount.init -> void
+MoralesLarios.OOFP.Shared.Pagination.PageRequest
+MoralesLarios.OOFP.Shared.Pagination.PageRequest.Deconstruct(out int PageNumber, out int PageSize) -> void
+MoralesLarios.OOFP.Shared.Pagination.PageRequest.PageNumber.get -> int
+MoralesLarios.OOFP.Shared.Pagination.PageRequest.PageNumber.init -> void
+MoralesLarios.OOFP.Shared.Pagination.PageRequest.PageRequest(int PageNumber, int PageSize) -> void
+MoralesLarios.OOFP.Shared.Pagination.PageRequest.PageRequest(MoralesLarios.OOFP.Shared.Pagination.PageRequest! original) -> void
+MoralesLarios.OOFP.Shared.Pagination.PageRequest.PageSize.get -> int
+MoralesLarios.OOFP.Shared.Pagination.PageRequest.PageSize.init -> void
+MoralesLarios.OOFP.Shared.Web.MlPaginationHeaders
+MoralesLarios.OOFP.Shared.Web.MlCompositeKey
+MoralesLarios.OOFP.Shared.Web.WebErrorDetailsKeys
+override MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.<Clone>$() -> MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>!
+override MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.EqualityContract.get -> System.Type!
+override MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.Equals(object? obj) -> bool
+override MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.GetHashCode() -> int
+override MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.PrintMembers(System.Text.StringBuilder! builder) -> bool
+override MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.ToString() -> string!
+override MoralesLarios.OOFP.Shared.Pagination.PageRequest.Equals(object? obj) -> bool
+override MoralesLarios.OOFP.Shared.Pagination.PageRequest.GetHashCode() -> int
+override MoralesLarios.OOFP.Shared.Pagination.PageRequest.ToString() -> string!
+override sealed MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.Equals(MoralesLarios.OOFP.Shared.Pagination.PageRequest? other) -> bool
+static MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.implicit operator MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>!((System.Collections.Generic.IEnumerable<T>! items, int pageNumber, int pageSize, int totalCount) value) -> MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>!
+static MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.operator !=(MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>? left, MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>? right) -> bool
+static MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.operator ==(MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>? left, MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>? right) -> bool
+static MoralesLarios.OOFP.Shared.Pagination.PageRequest.implicit operator MoralesLarios.OOFP.Shared.Pagination.PageRequest!((int pageNumber, int pageSize) value) -> MoralesLarios.OOFP.Shared.Pagination.PageRequest!
+static MoralesLarios.OOFP.Shared.Pagination.PageRequest.operator !=(MoralesLarios.OOFP.Shared.Pagination.PageRequest? left, MoralesLarios.OOFP.Shared.Pagination.PageRequest? right) -> bool
+static MoralesLarios.OOFP.Shared.Pagination.PageRequest.operator ==(MoralesLarios.OOFP.Shared.Pagination.PageRequest? left, MoralesLarios.OOFP.Shared.Pagination.PageRequest? right) -> bool
+virtual MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>.Equals(MoralesLarios.OOFP.Shared.Pagination.PagedResult<T>? other) -> bool
+virtual MoralesLarios.OOFP.Shared.Pagination.PageRequest.<Clone>$() -> MoralesLarios.OOFP.Shared.Pagination.PageRequest!
+virtual MoralesLarios.OOFP.Shared.Pagination.PageRequest.EqualityContract.get -> System.Type!
+virtual MoralesLarios.OOFP.Shared.Pagination.PageRequest.Equals(MoralesLarios.OOFP.Shared.Pagination.PageRequest? other) -> bool
+virtual MoralesLarios.OOFP.Shared.Pagination.PageRequest.PrintMembers(System.Text.StringBuilder! builder) -> bool

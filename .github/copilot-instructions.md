@@ -3,6 +3,9 @@
 ## Project Guidelines
 - El usuario prefiere que las respuestas se den en castellano, y que **todos los documentos** (prompts,
   instrucciones, análisis, épicas) se escriban y traten en castellano.
+- Al escribir o modificar C#, cuando haya que tabular o alinear parámetros, cadenas fluent o argumentos
+   con nombre, sigue estrictamente `.github/prompts/fp-format.prompt.md` (`/fp-format`); no uses el
+   formateador del IDE para esas alineaciones.
 
 ## 🚨 Archivar épicas completadas
 

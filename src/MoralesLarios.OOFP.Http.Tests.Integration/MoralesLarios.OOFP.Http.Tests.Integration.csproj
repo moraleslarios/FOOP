@@ -32,6 +32,7 @@
     <ProjectReference Include="..\MoralesLarios.OOFP.Http\MoralesLarios.OOFP.Http.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Shared\MoralesLarios.OOFP.Shared.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Application\MoralesLarios.OOFP.Application.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.ValueObjects\MoralesLarios.OOFP.ValueObjects.csproj" />
   </ItemGroup>
 
   <ItemGroup>

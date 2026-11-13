@@ -149,6 +149,9 @@ Mail            m = Mail.CreateFromString("a@b.com"); // lanza si no es válido
   `async` hasta el borde.
 - Las operaciones que pueden fallar devuelven `MlResult` / `MlResult<T>`; las excepciones se
   reservan para errores de programación.
+- Toda API pública nueva o modificada actualiza `PublicAPI.Unshipped.txt` del proyecto afectado.
+  Si el cambio rompe compatibilidad, actualiza también los seis sitios aplicables del prompt de
+  migración antes de cerrar el PR.
 
 ---
 
@@ -240,8 +243,12 @@ Se añaden puentes [Obsolete] en MlErrorDetails.Obsolete.cs.
 
 - El `!` marca el cambio que rompe compatibilidad.
 - Commits **atómicos**: un nivel o un proyecto por commit.
-- **SemVer**: los renombrados con puente suben la **mayor** (el consumidor recibe `CS0618`);
-  la retirada de los puentes también.
+- **Versionado de paquetes**: cada paquete declara `<Version>` en su `.csproj`; mantenerlo manual
+  hasta la primera publicación. Revisar la transición a MinVer después, sin cambiar el esquema de
+  versión de una publicación ya existente.
+- **SemVer**: los cambios que rompen compatibilidad suben la versión **mayor** y se registran en el
+  prompt de migración. Los renombrados con puente `[Obsolete]` suben la mayor (el consumidor recibe
+  `CS0618`); la retirada de los puentes también.
 
 ---
 
@@ -269,6 +276,7 @@ Los scripts auxiliares de verificación están en `scripts/`:
 | `test.ps1` | Ejecuta la suite y resume el resultado por proyecto |
 | `check-md-links2.ps1` | Verifica los enlaces relativos entre `.md` |
 | `check-md-anchors4.ps1` | Verifica las anclas internas de los `.md` |
+| `check-duplicate-global-usings.ps1` | Falla si un proyecto declara dos veces el mismo `global using` |
 | `check-md-encoding.ps1` | Detecta problemas de codificación en los `.md` |
 | `check-old-names.ps1` | Busca identificadores antiguos en Markdown; añade `-IncludeCs` para revisar C# antes de introducir o renombrar API |
 | `generar-cambios-realizados.ps1` | Regenera el entregable de renombrados desde el CSV |
@@ -277,6 +285,12 @@ Antes de introducir o renombrar identificadores públicos, ejecuta desde `src/`:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-old-names.ps1 -IncludeCs
+```
+
+Antes de una PR, comprueba también que no se repiten directivas `global using`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-duplicate-global-usings.ps1
 ```
 
 La lista blanca C# está limitada a rutas y cantidades verificadas de puentes `[Obsolete]`, pruebas

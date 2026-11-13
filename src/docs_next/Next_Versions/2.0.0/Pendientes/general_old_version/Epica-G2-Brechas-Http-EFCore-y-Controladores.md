@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0
 > **Proyectos:** `MoralesLarios.OOFP.Http` · `AspNetCore.Controllers` · `AspNetCore.Results` · `Application` · `EntityFrameworkCore`
 > **Origen:** [INV-17, 18, 19, 23, 25, 26, 27, 29, 30, 31, 33 y 38](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md) de `Mejoras-Prioridad-Critica-y-Alta.md` y `Mejoras-Prioridad-Media.md`
-> **Estado:** ⬜ No iniciada
+> **Estado:** 🟡 En curso · US-05/06/08/09/10 ✅; US-01…04/07 pendientes
 > **Esfuerzo:** L · **Riesgo:** 🟠 alto (varias rupturas silenciosas)
 > **Compatibilidad:** ⚠️ cada US indica su tipo; **todas** las que rompen se registran en los seis sitios de `oofp-upgrade-2.prompt.md`
 
@@ -104,20 +104,33 @@ historia elimina la necesidad del `Func<TEntity, object[]>`, **esta se cierra al
 
 **Criterios de aceptación**
 
-- [ ] Cada segmento variable se escapa con `Uri.EscapeDataString` antes de componer la ruta.
-- [ ] Prueba con claves que contienen `/`, `?`, `#`, espacios, `%` y `,`.
-- [ ] Coordinada con [REST US-02](../Epica-Contrato-Rest.md) (el separador de clave compuesta debe seguir siendo distinguible tras escapar).
+- [x] Cada ID simple se escapa para ocupar un segmento y las claves compuestas escapan cada componente antes de unirlo con `MlCompositeKey.Separator`.
+- [x] Tests cubren `/`, `?`, `#`, espacios, `%`, `+`, `,` y acentos; la clave compuesta verifica el separador y los tres verbos.
+- [x] Coordinada con [REST US-02](../Epica-Contrato-Rest.md): el routing de ASP.NET decodifica una capa antes de la acción; la clave compuesta recibe un escape exterior para que su coma separadora siga siendo distinguible.
 
 **Compatibilidad:** **Silenciosa** (cambia la URL emitida para claves con caracteres reservados).
+
+**Nota de implementación (2026-11-13):** `RestClientFp` codifica IDs simples en dos capas para que el valor
+resista el decode que ASP.NET aplica al enlazar la ruta y llegue íntegro tras el decode del controlador. Para
+compuestas, el cliente codifica cada componente, los une con la coma literal y aplica el escape exterior una
+vez; el controlador parte primero y decodifica cada componente después. `EncodedRouteValueTests` demuestra que
+`%2C` se convierte en coma antes de la acción, mientras `%252C` llega como `%2C`; el test de `/` confirma que
+la barra codificada permanece dentro del valor de ruta. Los tests `Routing_DecodesSingleEncodedCommaBeforeController`,
+`Routing_PreservesComponentEscapeWhenPathIsDoubleEncoded` y `Routing_KeepsEncodedSlashInsideOneRouteValue`
+fijan esa frontera. Las firmas públicas no cambian. MIG-92 registra la
+ruptura silenciosa y el patrón de migración. Los wrappers derivados de `CompositeKeyRestClientFp`, las
+implementaciones personalizadas de `IRestClientFp` y las subclases de `RestClientFp` que sobrescriben
+métodos por ID conservan su delegación previa; deben revisar su propio formateo/transporte según el punto 92
+antes de usar valores reservados.
 
 ### G2-US-06 · Retirar la mutación de `DefaultRequestHeaders` · INV-29 · S
 
 **Criterios de aceptación**
 
-- [ ] Las extensiones sobre `HttpClient` que mutan `DefaultRequestHeaders` se marcan `[Obsolete]` con puente y la alternativa por petición.
-- [ ] Prueba que demuestra que dos llamadas consecutivas con distinta paginación no se contaminan.
+- [x] Los diez overloads de extensión sobre `HttpClient` y el helper protegido heredado `InternalAddPagInfoAsync` se marcan `[Obsolete]`; siguen funcionando como puentes hasta 3.0.0 y recomiendan `HttpRequestMessage`/`BuildPagedRequest`.
+- [x] `AddPaginationHeaders_HttpRequestMessage_KeepsConsecutiveRequestsIsolated` demuestra que dos llamadas consecutivas con distinta paginación no se contaminan; `HttpClientHeaderExtensions_AreObsoleteAndHavePerRequestAlternatives` fija los diez puentes.
 
-**Compatibilidad:** **Compilación** (`CS0618`) para quien las use; el camino del invocador no cambia.
+**Compatibilidad:** **Compilación** (`CS0618`) para llamadas existentes a los overloads o al helper protegido; MIG-91 registra la migración por petición.
 
 ### G2-US-07 · `Location` que apunta al recurso creado · INV-31 · M
 
@@ -133,19 +146,19 @@ historia elimina la necesidad del `Func<TEntity, object[]>`, **esta se cierra al
 
 **Criterios de aceptación**
 
-- [ ] Decisión D-G2-4: `IncludeResponseBodyInErrors` **desactivado por defecto**, o activado con truncado documentado.
-- [ ] El comportamiento por defecto tiene un test que lo fija.
-- [ ] El puente síncrono bloqueante se documenta como tal; su retirada se decide en [G5-US-02](Epica-G5-Cierre-Renombrado-y-Puentes.md).
+- [x] D-G2-4 resuelta: `IncludeResponseBodyInErrors` está **desactivado por defecto**; puede habilitarse explícitamente.
+- [x] El comportamiento por defecto está fijado por `ReadErrorDescriptionAsync_OmitsResponseBodyByDefault`.
+- [x] El puente síncrono bloqueante se documenta como tal; su retirada se decide en [G5-US-02](Epica-G5-Cierre-Renombrado-y-Puentes.md).
 
-**Compatibilidad:** **Silenciosa** si cambia el valor por defecto.
+**Compatibilidad:** **Silenciosa** (MIG-90): el cuerpo remoto deja de aparecer en las descripciones de error por defecto.
 
 ### G2-US-09 · Una sola consulta al actualizar · INV-33 · M
 
 **Criterios de aceptación**
 
-- [ ] `CrudServiceFp.UpdateAsync` no vuelve a buscar la entidad que acaba de rastrear.
-- [ ] Un test de integración con `CommandCaptureInterceptor` (ya existe) cuenta las consultas: **exactamente una** `SELECT` por actualización.
-- [ ] El tratamiento de errores y la unidad de trabajo no cambian (siguen las reglas de [la épica de UoW](../../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md)).
+- [x] `CrudServiceFp.UpdateAsync` no vuelve a buscar la entidad que acaba de rastrear.
+- [x] Un test de integración con `CommandCaptureInterceptor` cuenta las consultas: **exactamente una** `SELECT` por actualización. (`CrudServiceUpdateAsync_ByKey_ExecutesOneSelectForTrackedEntity`.)
+- [x] El tratamiento de errores y la unidad de trabajo no cambian (siguen las reglas de [la épica de UoW](../../Realizados/EFCore/Epica-Unidad-de-Trabajo-y-Transacciones.md)).
 
 **Compatibilidad:** Ninguna si se mantiene la firma pública.
 
@@ -153,11 +166,11 @@ historia elimina la necesidad del `Func<TEntity, object[]>`, **esta se cierra al
 
 **Criterios de aceptación**
 
-- [ ] Decisión D-G2-5: conservar los métodos antiguos documentando su coste, o marcarlos `[Obsolete]` con `TryGetLastBy` como sustituto.
-- [ ] Cualquiera que sea la opción, un test fija el comportamiento de los antiguos.
-- [ ] La XML-doc avisa de la materialización.
+- [x] Decisión D-G2-5: conservar `TryGetLast[Async]` sin `[Obsolete]` para no añadir `CS0618`; documentar su materialización y recomendar `TryGetLastBy[Async]` para consultas eficientes.
+- [x] Tests fijan el comportamiento de las variantes antiguas: ejecutan una SELECT sin `LIMIT` y devuelven el último elemento materializado (`TryGetLast_SynchronousQueryHasNoLimitClause`, `TryGetLastAsync_QueryHasNoLimitClause`).
+- [x] La XML-doc avisa de la materialización y enlaza la alternativa ordenada.
 
-**Compatibilidad:** **Compilación** (`CS0618`) si se marcan obsoletos; ninguna si solo se documenta.
+**Compatibilidad:** Ninguna; se conservan firmas y comportamiento.
 
 ---
 
@@ -174,7 +187,7 @@ graph LR
 | Orden | Historia | Tamaño | Tipo de ruptura |
 |---:|---|:---:|---|
 | 1 | US-09 · Una consulta al actualizar | M | — |
-| 2 | US-10 · `TryGetLast` | S | compilación (opcional) |
+| 2 | US-10 · `TryGetLast` | S | — (se conserva la API) |
 | 3 | US-08 · Cuerpo remoto por defecto | S | silenciosa |
 | 4 | US-05 · Escapar segmentos | S | silenciosa |
 | 5 | US-06 · `DefaultRequestHeaders` | S | compilación |
@@ -191,8 +204,8 @@ graph LR
 | D-G2-1 | Origen de la clave compuesta | modelo EF · `IKeySelector` | Modelo EF si REST US-01 lo implementa |
 | D-G2-2 | Formatos de fecha admitidos | solo ISO 8601 · ISO + los actuales | Solo ISO 8601 |
 | D-G2-3 | `Location` con clave compuesta | `CreatedAtAction` con ruta unificada · URL construida a mano | `CreatedAtAction` tras REST US-03 |
-| D-G2-4 | Cuerpo remoto en errores | desactivado por defecto · activo y truncado | Desactivado |
-| D-G2-5 | `TryGetLast` antiguo | conservar y documentar · obsoletar | Obsoletar con puente |
+| D-G2-4 | Cuerpo remoto en errores | desactivado por defecto · activo y truncado | **Resuelta:** desactivado; opt-in con `IncludeResponseBodyInErrors = true` |
+| D-G2-5 | `TryGetLast` antiguo | conservar y documentar · obsoletar | **Resuelta:** conservar sin `[Obsolete]` y advertir del coste; preserva compatibilidad y ofrece `TryGetLastBy[Async]` para limitar a una fila |
 
 ## 6. Definición de terminado
 

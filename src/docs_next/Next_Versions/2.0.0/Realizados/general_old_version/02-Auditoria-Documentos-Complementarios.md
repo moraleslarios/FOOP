@@ -79,7 +79,7 @@ Destino: [G5](../../Pendientes/general_old_version/Epica-G5-Cierre-Renombrado-y-
 
 ## 3. Consejos de mejora de `MlResult` (MR1-MR23)
 
-**Resultado:** 7 ✅ · 10 🟨 · 6 ⬜. Destino de lo abierto: [G3](../../Pendientes/general_old_version/Epica-G3-Nucleo-MlResult-Robustez.md) y [backlog](../../Pendientes/general_old_version/04-Backlog-3.0-y-Descartados.md).
+**Resultado de la auditoría original:** 7 ✅ · 10 🟨 · 6 ⬜. Seguimiento posterior: [G3 completada](../Core/Epica-G3-Nucleo-MlResult-Robustez.md); el resto se mantiene en el [backlog](../../Pendientes/general_old_version/04-Backlog-3.0-y-Descartados.md).
 
 | MR | Asunto | Estado | Evidencia | Qué falta | Ruptura |
 |---:|---|:---:|---|---|:---:|
@@ -128,7 +128,7 @@ Destino: [G5](../../Pendientes/general_old_version/Epica-G5-Cierre-Renombrado-y-
 | R4d · indentación | 🟨 | las rutas originales quedaron obsoletas al trocear las clases |
 | R3 · `null` ambiguo entre `string` y `Func<Exception,string>` | ⬜ | sobrecargas de las familias `Try*` |
 
-Destino: [G3](../../Pendientes/general_old_version/Epica-G3-Nucleo-MlResult-Robustez.md).
+Destino: [G3 completada](../Core/Epica-G3-Nucleo-MlResult-Robustez.md).
 
 ---
 

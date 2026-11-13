@@ -3,7 +3,7 @@
 > **Versión destino:** 2.0.0 (cierre y decisión) · 3.0.0 (retirada de puentes, si se mantienen)
 > **Proyecto:** transversal (documentación, `*.Obsolete.cs` y herramientas de inventario)
 > **Origen:** `Plan-Renombrados-2.0.0.md` (4 criterios de cierre) · `Consejos-Nomenclatura.md` · INV-18, 72, 73 · [auditoría](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md#2-consejos-nomenclaturamd-y-plan-renombrados-200md)
-> **Estado:** ⬜ No iniciada
+> **Estado:** 🟡 En curso · G5-US-01 parcial (A/B ✅; C/D pendientes); US-02/03/04 pendientes
 > **Esfuerzo:** M · **Riesgo:** 🟡 medio (la decisión de puentes cambia la promesa de migración gradual)
 > **Compatibilidad:** Depende de D-G5-1: **retirar** puentes es una ruptura de compilación; **conservarlos** no cambia nada
 
@@ -41,11 +41,11 @@ prompt de migración documenta **187 puentes `[Obsolete]`** con el mensaje «Wil
 
 **Criterios de aceptación**
 
-- [ ] **A** · `dotnet build -c Release --no-incremental` y recuento de `CS0618` en **código propio** (proyectos y tests): objetivo 0 fuera de los tests de contrato de los puentes.
-- [ ] **B** · `dotnet test -c Release`: **1.715 tests** pasados hoy (línea base de este plan). El número y los nombres de los tests no bajan.
-- [ ] **C** · `src/scripts/inventario-nomenclatura.ps1` y `check-old-names.ps1`: los nombres antiguos solo aparecen en `*.Obsolete.cs`, en `docs_next/Cambios Realizados/` y en el prompt de migración.
-- [ ] **D** · Barrido Markdown de nombres antiguos fuera de las carpetas históricas (`Cambios Realizados`, `Temas Pendientes`, `Realizados`).
-- [ ] Los cuatro resultados se anotan en `Plan-Renombrados-2.0.0.md` junto al commit verificado.
+- [x] **A** · Build Release `--no-incremental`: exit 0; `CS0618=0` fuera de los tests de contrato y sin `CS1591`.
+- [x] **B** · `dotnet test -c Release`: **1.814/1.814** aprobados en 14 proyectos, sin fallos ni omitidos; la línea base de 1.715 no baja.
+- [x] **C** · Inventario de 157 términos y `check-old-names.ps1 -IncludeCs`: 0 hallazgos C# fuera de la whitelist; las coincidencias Markdown se clasificaron manualmente.
+- [x] **D** · Las 36 coincidencias Markdown restantes (16 `docs_next`, 13 `docs`, 3 `CONTRIBUTING.md`, 4 READMEs) son referencias explícitas de migración, historial o puentes aún públicos; los ejemplos activos se actualizaron para no recomendar `Secure*` obsoletos.
+- [ ] Los cuatro resultados se anotan en `Plan-Renombrados-2.0.0.md` junto al commit verificado. *(La evidencia actual es del árbol de trabajo sobre `HEAD 53331ee`; no se creó commit.)*
 
 **Compatibilidad:** Ninguna.
 
@@ -65,10 +65,10 @@ prompt de migración documenta **187 puentes `[Obsolete]`** con el mensaje «Wil
 
 **Criterios de aceptación**
 
-- [ ] Cada documento de `Temas Pendientes/` recibe un **aviso de histórico** de dos líneas al principio que enlaza con este plan; **el contenido no se reescribe**.
-- [ ] `Consejos-Nomenclatura.md` deja de afirmar que todos los niveles están hechos y remite al estado de [`02-Auditoria`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md).
-- [ ] Se corrige la contradicción entre `Epica-Simplificacion-Repositorios-EFCore.md` (L684, retira `BuildServiceProvider`) y `Epica-Unidad-de-Trabajo-y-Transacciones.md` (L59, afirma que se conserva).
-- [ ] Las épicas desactualizadas ([lista](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md#3-correcciones-al-inventario-original)) corrigen las líneas y afirmaciones citadas.
+- [x] Los 11 documentos fuente de `Temas Pendientes/` reciben un aviso histórico de dos líneas con enlace al plan; el contenido original se conserva.
+- [x] `Consejos-Nomenclatura.md` aclara que sus casillas son el registro de la propuesta original y remite al estado auditado en [`02-Auditoria`](../../Realizados/general_old_version/02-Auditoria-Documentos-Complementarios.md).
+- [x] Se corrigió la contradicción entre `Epica-Simplificacion-Repositorios-EFCore.md` y `Epica-Unidad-de-Trabajo-y-Transacciones.md`: la segunda conserva el análisis previo y añade la resolución posterior de `BuildServiceProvider`/`GetRepository<T>()`.
+- [x] Las épicas desactualizadas ([lista](../../Realizados/general_old_version/01-Auditoria-Inventario-89-Puntos.md#3-correcciones-al-inventario-original)) corrigen las afirmaciones vigentes y las referencias de línea de Servicio y Paginación; los ejemplos anteriores quedan identificados como históricos.
 - [x] Se borra `Temas Pendientes/_Seccion-para-README.md` (su contenido ya está en `src/README.md`).
 
 ### G5-US-04 · Nombre del repositorio y de la carpeta raíz · N6 · XS
@@ -84,9 +84,9 @@ prompt de migración documenta **187 puentes `[Obsolete]`** con el mensaje «Wil
 
 **Criterios de aceptación**
 
-- [ ] `Pendientes/Epica-Limpieza-Codigo-Muerto.md` (sin seguimiento en git, **distinto** del archivado) se compara con `Realizados/Http/Epica-Limpieza-Codigo-Muerto.md`: lo que aporte se integra en la archivada y la copia de `Pendientes/` se elimina **con tu confirmación**.
-- [ ] Ninguna épica completada permanece en `Pendientes/` (regla `epicas-completadas.instructions.md`).
-- [ ] Los índices de `Pendientes/` y de `2.0.0/` coinciden con el contenido real de las carpetas.
+- [ ] La copia indicada de `Pendientes/Epica-Limpieza-Codigo-Muerto.md` no existe en el árbol ni está registrada en Git; solo existe la versión archivada en `Realizados/Http/`. Al faltar la copia, queda sin verificar si su contenido único se integró antes.
+- [x] Ninguna épica completada permanece en `Pendientes/`; la limpieza de código muerto solo aparece en `Realizados/Http/` y G3 solo en `Realizados/Core/`.
+- [x] Los índices de `Pendientes/` y de `2.0.0/` coinciden con el contenido real de las carpetas; verificados también los enlaces y anclas Markdown.
 
 ---
 

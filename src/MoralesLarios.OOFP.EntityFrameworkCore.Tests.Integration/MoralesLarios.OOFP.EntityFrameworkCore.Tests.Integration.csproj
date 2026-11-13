@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoralesLarios.OOFP.Core\MoralesLarios.OOFP.Core.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.Application\MoralesLarios.OOFP.Application.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.EntityFrameworkCore.TestSupport\MoralesLarios.OOFP.EntityFrameworkCore.TestSupport.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.EntityFrameworkCore\MoralesLarios.OOFP.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Shared\MoralesLarios.OOFP.Shared.csproj" />

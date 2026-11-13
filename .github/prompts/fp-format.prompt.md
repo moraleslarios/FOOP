@@ -278,7 +278,7 @@ Cuando hay múltiples sobrecargas estáticas seguidas, **se alinean por columnas
 
 ```csharp
 public static MlResult<T> Fail<T>(params MlError[]            errors)        => new(errors);
-public static MlResult<T> Fail<T>(       MlErrorDetails      errorsDetails) => new(errorsDetails);
+public static MlResult<T> Fail<T>(       MlErrorDetails       errorsDetails) => new(errorsDetails);
 public static MlResult<T> Fail<T>(       IEnumerable<MlError> errors       ) => new(errors);
 ```
 

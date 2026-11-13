@@ -5,6 +5,9 @@
 ********************************************************       PENDING TASKS       *********************************************************
 ********************************************************************************************************************************************
 
+> **Aviso historico:** lista de ideas previa a 2.0.0; se conserva como referencia y su estado actual puede diferir.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y el [backlog vigente](../../Pendientes/general_old_version/04-Backlog-3.0-y-Descartados.md).
+
 
                                                     1.- Hacer métodos Ex para los métodos 
 	                                                    - BindSaveValueInDetailsIfFaildFuncResult

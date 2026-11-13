@@ -1,0 +1,6 @@
+#nullable enable
+abstract MoralesLarios.OOFP.Validation.MlSelfValidatable<T>.Validate() -> MoralesLarios.OOFP.Types.MlResult<T!>!
+MoralesLarios.OOFP.Validation.IMlSelfValidatable<T>
+MoralesLarios.OOFP.Validation.IMlSelfValidatable<T>.Validate() -> MoralesLarios.OOFP.Types.MlResult<T!>!
+MoralesLarios.OOFP.Validation.MlSelfValidatable<T>
+MoralesLarios.OOFP.Validation.MlSelfValidatable<T>.MlSelfValidatable() -> void

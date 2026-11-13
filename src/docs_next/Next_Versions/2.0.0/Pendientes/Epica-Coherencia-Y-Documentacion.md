@@ -24,14 +24,14 @@
 
 ## 1. Contexto y problema
 
-El bloque «Coherencia y documentación» del inventario de prioridad baja recoge nueve observaciones heterogéneas que comparten una misma raíz: **el contrato que la biblioteca publica no coincide con lo que la biblioteca hace**. Un `[Range(0, int.MinValue)]` promete una validación que nunca puede pasar; un `<returns>` promete `200 OK` donde el código devuelve `204 No Content`; un parámetro opcional declarado `null!` promete no-nulabilidad donde se admite nulo; y trece proyectos de la solución no publican `README.md`, de modo que el único contrato visible es el código.
+El bloque «Coherencia y documentación» del inventario de prioridad baja recoge nueve observaciones heterogéneas detectadas antes de varias correcciones de 2.0.0. Entre ellas, un `[Range(0, int.MinValue)]` que no podía validar ningún valor; un `<returns>` que prometía `200 OK` donde se devolvía `204 No Content`; nulabilidad opcional mal documentada; y proyectos sin `README.md`. Los rangos de paginación y parte de los contratos documentales ya se corrigieron; la tabla distingue esos hallazgos del trabajo aún pendiente.
 
 El inventario se escribió **antes** de la campaña de renombrados de la 2.0.0, así que varios puntos apuntan a tipos que ya no existen con ese nombre. La auditoría previa a esta épica los ha reubicado uno a uno; la tabla siguiente refleja el estado **real** del código a día de hoy, no el del inventario.
 
 | Punto | Fichero | Líneas | Naturaleza |
 |---|---|---|---|
-| 81 | `MoralesLarios.OOFP.Shared/Pagination/PageRequest.cs` | 8-9 | 🟢 Metadato imposible · rango `[0, int.MinValue]` |
-| 81 | `MoralesLarios.OOFP.Shared/Pagination/PagedResult.cs` | 13-15 | 🟢 Metadato imposible + mínimo `0` donde debería ser `1` |
+| 81 | `MoralesLarios.OOFP.Shared/Pagination/PageRequest.cs` | 18-24 | ✅ Resuelto · rangos `[1, int.MaxValue]` y `[1, MaxPageSize]`, alineados con la normalización |
+| 81 | `MoralesLarios.OOFP.Shared/Pagination/PagedResult.cs` | 17-19 | ✅ Resuelto · atributos en propiedades; `TotalCount` acepta cero y rechaza negativos |
 | 82 | `MoralesLarios.OOFP.Http/Requests/ApiCallOptions.cs` | 11, 41 | 🟠 `Dictionary<string,string>? Headers = null!` · jerarquía incoherente |
 | 82 | `MoralesLarios.OOFP.Http/Requests/PagedApiCallOptions.cs` | 16, 54 | 🟠 Mismo defecto · herencia cruzada sin contrato común |
 | 83 | `MoralesLarios.OOFP.Http/HttpApiInvoker.cs` | 256, 365, 394 | 🟡 Literal interpolado con genérico sin cerrar |
@@ -45,6 +45,8 @@ El inventario se escribió **antes** de la campaña de renombrados de la 2.0.0, 
 | 89 | 13 de los 30 proyectos de la solución | — | 🟢 Sin `README.md` en la raíz |
 
 ### Punto 81 — `[Range(0, int.MinValue)]`, una validación que nunca se cumple
+
+> **Estado actual:** resuelto en G2. El código de abajo conserva el estado anterior como evidencia del hallazgo; la validación vigente usa los rangos indicados en la tabla.
 
 `PageRequest` es el contrato de entrada de toda la paginación de la biblioteca. Sus dos propiedades llevan un `[Range]` cuyo **máximo es menor que el mínimo**, de modo que `Validator.TryValidateObject` rechaza *cualquier* valor, incluido el valor correcto.
 

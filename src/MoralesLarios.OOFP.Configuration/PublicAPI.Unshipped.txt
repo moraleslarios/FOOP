@@ -1,0 +1,19 @@
+#nullable enable
+MoralesLarios.OOFP.Configuration.Config.IMlConfigurationReader
+MoralesLarios.OOFP.Configuration.Config.IMlConfigurationReader.ReadAppSettingKey(string! appSettingKey, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<object!>!
+MoralesLarios.OOFP.Configuration.Config.IMlConfigurationReader.ReadAppSettingKey(string! appSettingKey, string! errorMessage) -> MoralesLarios.OOFP.Types.MlResult<object!>!
+MoralesLarios.OOFP.Configuration.Config.IMlConfigurationReader.ReadAppSettingKey<T>(string! appSettingKey, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<T>!
+MoralesLarios.OOFP.Configuration.Config.IMlConfigurationReader.ReadAppSettingKey<T>(string! appSettingKey, string! errorMessage) -> MoralesLarios.OOFP.Types.MlResult<T>!
+MoralesLarios.OOFP.Configuration.Config.IMlConfigurationReader.ReadConnectionStringKey(string! connectionStringKey, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<string!>!
+MoralesLarios.OOFP.Configuration.Config.IMlConfigurationReader.ReadConnectionStringKey(string! connectionStringKey, string! errorMessage) -> MoralesLarios.OOFP.Types.MlResult<string!>!
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader.MlConfigurationReader(Microsoft.Extensions.Configuration.IConfiguration! configuration) -> void
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader.ReadAppSettingKey(string! appSettingKey, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<object!>!
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader.ReadAppSettingKey(string! appSettingKey, string! errorMessage) -> MoralesLarios.OOFP.Types.MlResult<object!>!
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader.ReadAppSettingKey<T>(string! appSettingKey, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<T>!
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader.ReadAppSettingKey<T>(string! appSettingKey, string! errorMessage) -> MoralesLarios.OOFP.Types.MlResult<T>!
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader.ReadConnectionStringKey(string! connectionStringKey, MoralesLarios.OOFP.Types.Errors.MlErrorDetails! errorsDetails = null) -> MoralesLarios.OOFP.Types.MlResult<string!>!
+MoralesLarios.OOFP.Configuration.Config.MlConfigurationReader.ReadConnectionStringKey(string! connectionStringKey, string! errorMessage) -> MoralesLarios.OOFP.Types.MlResult<string!>!
+MoralesLarios.OOFP.Configuration.RegisterServices
+static MoralesLarios.OOFP.Configuration.RegisterServices.AddMlConfigurationReader(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Microsoft.Extensions.Configuration.IConfiguration! configuration) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static MoralesLarios.OOFP.Configuration.RegisterServices.AddMlUtilitiesConfig(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Microsoft.Extensions.Configuration.IConfiguration! configuration) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

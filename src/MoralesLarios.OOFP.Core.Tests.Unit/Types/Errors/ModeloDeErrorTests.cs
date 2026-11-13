@@ -42,7 +42,9 @@ public class ModeloDeErrorTests
             nameof(MlErrorExtensions),
             nameof(MlErrorDetails),
             nameof(MlErrorDetailsExtensions),
-            nameof(MlErrorDetailsActions)
+            nameof(MlErrorDetailsActions),
+            nameof(MlMetadataLookupFailureReason),
+            nameof(MlResultFailureException)
         };
 
         var actuales = typeof(MlError).Assembly

@@ -1085,6 +1085,8 @@ Este patrón lanza excepción si el flujo no está en el estado esperado, lo que
 - `GetValueOrThrow()` → devuelve el valor; **lanza** si el resultado está en `fail`.
 - `GetFailureDetailsOrThrow()` → devuelve el detalle del error; **lanza** si el resultado es válido.
 
+Cuando `GetValueOrThrow[Async]` falla, lanza `MlResultFailureException`, derivada de `InvalidOperationException`. La propiedad `ErrorDetails` conserva los errores originales; el mensaje por defecto no cambia. Un `catch (InvalidProgramException)` anterior debe actualizarse al nuevo tipo.
+
 ⚠️ **Cuándo usarlos:** principalmente en **tests** y en puntos donde ya has comprobado el estado (`if (result.IsSuccess) …`). En código de producción, la vía recomendada es siempre `Match`, porque no puede lanzar y obliga a tratar ambas ramas.
 
 ### `CreateCompleteMlResult`
@@ -1998,6 +2000,18 @@ filosofía, convención de nombres y el
 | [`MlResultConversions`](../docs/core-types/MlResultConversions.md) | `ToMlResult*`, `TryToMlResult*`, boxing |
 | [`MlResultChangeReturnResult`](../docs/core-types/MlResultChangeReturnResult.md) | Cambiar el tipo de retorno conservando el estado |
 
+### Decisiones de robustez del núcleo (G3)
+
+| Decisión | Contrato |
+|---|---|
+| D-G3-1 | `GetValueOrThrow[Async]` lanza `MlResultFailureException : InvalidOperationException`; `ErrorDetails` conserva el fallo original. |
+| D-G3-2 | Un `MlResult` fallido sin errores recibe `The MlResult failed without error details.`; los metadatos existentes se conservan. |
+| D-G3-3 | Las conversiones ambiguas de `MlResult<MlError>` (`CS0457`) y `TryMap(..., null)` (`CS0121`) se documentan; las firmas no cambian. |
+| D-G3-4 | `ConfigureAwait(false)` no se aplica globalmente al núcleo; se reserva para operaciones de I/O cuando proceda. |
+| D-G3-5 | `MlResult<T>.Discard` es válido con `default(T)`; para tipos de referencia, `null` es un valor válido. `Unit` se decidirá junto con G4-US-03. |
+
+El overload aditivo `TryGetMetadata<T>(key, out value, out failureReason)` distingue `NullKey`, `KeyNotFound`, `NullValue` y `TypeMismatch`; `None` indica éxito. El overload booleano anterior conserva su comportamiento.
+
 ### Guías por concepto
 
 **`Bind` — encadenar operaciones que devuelven `MlResult`**
@@ -2077,6 +2091,15 @@ filosofía, convención de nombres y el
 - [MoralesLarios.OOFP.AspNetCore.Controllers](../MoralesLarios.OOFP.AspNetCore.Controllers/README.md)
 - [MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching](../MoralesLarios.OOFP.AspNetCore.Controllers.OutputCaching/README.md)
 - [MoralesLarios.OOFP.Application](../MoralesLarios.OOFP.Application/README.md)
+
+### Ambigüedades de compilación verificadas
+
+La suite `MlResultCompilationTests` compila fragmentos de consumidor con Roslyn y confirma dos casos:
+
+- `MlResult<MlError> result = error;` produce `CS0457` porque coinciden las conversiones implícitas desde `T` y desde `MlError`. Usa una construcción explícita (`MlResult<MlError>.Valid(error)` o `.Fail(error)`) según el estado deseado.
+- `source.TryMap(value => ..., null)` produce `CS0121` porque `null` puede enlazar tanto con el overload que recibe `string` como con el que recibe `Func<Exception, string>`. Pasa el mensaje o el delegado explícitamente.
+
+Se conservan las firmas públicas: estas ambigüedades ya existen y retirar o renombrar overloads rompería otros consumidores válidos.
 
 ---
 

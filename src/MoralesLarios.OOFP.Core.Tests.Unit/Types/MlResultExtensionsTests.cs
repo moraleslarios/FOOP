@@ -6,6 +6,22 @@ namespace MoralesLarios.OOFP.Core.Tests.Unit.Types;
 public class MlResultExtensionsTests
 {
 
+    [Fact]
+    public async Task GetValueOrThrow_FailedResult_ThrowsMlResultFailureExceptionWithDetails()
+    {
+        var failure = MlResult<int>.Fail(MlErrorDetails.FromErrorMessage("error original"));
+
+        failure.TryGetErrors(out var expectedDetails).Should().BeTrue();
+        var synchronous = Assert.Throws<MlResultFailureException>(() => failure.GetValueOrThrow());
+        var asynchronous = await Assert.ThrowsAsync<MlResultFailureException>(
+            () => Task.FromResult(failure).GetValueOrThrowAsync());
+
+        synchronous.Message.Should().Be("Cannot obtain the secure value from MlResult in Fail state");
+        asynchronous.Message.Should().Be("Cannot obtain the secure value from MlResult in Fail state");
+        synchronous.ErrorDetails.Should().BeSameAs(expectedDetails);
+        asynchronous.ErrorDetails.Should().BeSameAs(expectedDetails);
+    }
+
 
     #region MlErrorDetail
 

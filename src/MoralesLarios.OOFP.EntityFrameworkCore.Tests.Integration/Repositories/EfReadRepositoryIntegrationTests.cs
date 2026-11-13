@@ -146,6 +146,48 @@ public class EfReadRepositoryIntegrationTests
         result.GetValueOrThrow().Id.Should().Be(wines.Min(vino => vino.Id));
     }
 
+
+    [Fact]
+    public async Task TryGetLast_SynchronousQueryHasNoLimitClause()
+    {
+        var interceptor = new UnitOfWorkTransactionTests.CommandCaptureInterceptor();
+        await using var database = await UnitOfWorkTransactionTests.TestDatabase.CreateAsync(
+            commandInterceptor: interceptor);
+        var prefix = $"legacy last {Guid.NewGuid():N}";
+        await AddWinesAsync(database, prefix);
+        interceptor.Commands.Clear();
+        var repository = database.Scope.ServiceProvider.GetRequiredService<IEfReadRepository<Vino>>();
+
+        var result = repository.TryGetLast(vino => vino.Nombre.StartsWith(prefix));
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Nombre.Should().StartWith(prefix);
+        var select = interceptor.Commands.Should().ContainSingle().Which;
+        select.Should().Contain("SELECT");
+        select.Should().NotContain("LIMIT");
+    }
+
+
+    [Fact]
+    public async Task TryGetLastAsync_QueryHasNoLimitClause()
+    {
+        var interceptor = new UnitOfWorkTransactionTests.CommandCaptureInterceptor();
+        await using var database = await UnitOfWorkTransactionTests.TestDatabase.CreateAsync(
+            commandInterceptor: interceptor);
+        var prefix = $"legacy async last {Guid.NewGuid():N}";
+        await AddWinesAsync(database, prefix);
+        interceptor.Commands.Clear();
+        var repository = database.Scope.ServiceProvider.GetRequiredService<IEfReadRepository<Vino>>();
+
+        var result = await repository.TryGetLastAsync(vino => vino.Nombre.StartsWith(prefix));
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Nombre.Should().StartWith(prefix);
+        var select = interceptor.Commands.Should().ContainSingle().Which;
+        select.Should().Contain("SELECT");
+        select.Should().NotContain("LIMIT");
+    }
+
     [Fact]
     public async Task TryGetLastByAsync_CanceledToken_ReturnsFailure()
     {

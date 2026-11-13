@@ -1,5 +1,8 @@
 # Profesionalización (2 de 2): diseño de API, asincronía y producto
 
+> **Aviso historico:** documento de diseño previo a 2.0.0; las decisiones actuales se registran en las epicas.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas vigentes](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Consejos sobre **cómo está diseñada la biblioteca** y cómo se percibe desde fuera: forma de la API,
 > asincronía, cancelación, errores, rendimiento, observabilidad, arquitectura por capas, documentación

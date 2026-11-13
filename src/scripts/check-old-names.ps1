@@ -1,9 +1,17 @@
-param([switch]$IncludeCs)
+param(
+    [switch]$IncludeCs,
+    [string]$SourcePath,
+    [string]$MarkdownOutputPath,
+    [string]$CsOutputPath
+)
 
 $ErrorActionPreference = 'Stop'
-$src = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+if ([string]::IsNullOrWhiteSpace($SourcePath)) {
+    $SourcePath = Join-Path $PSScriptRoot '..'
+}
+$src = (Resolve-Path -LiteralPath $SourcePath).Path
 
-$excluir = @('Temas Pendientes', 'Cambios Realizados', '.github', 'node_modules', 'bin', 'obj')
+$excluir = @('Temas Pendientes', 'Cambios Realizados', 'Realizados', '.github', 'node_modules', 'bin', 'obj')
 
 $viejos = @(
  'NullToFailed','EmptyToFailed','BoolToResult','ProjectionWhile','ProjectionSplit',
@@ -31,8 +39,8 @@ $ficheros = Get-ChildItem -Path $src -Filter '*.md' -Recurse -File
 $tot = 0
 foreach ($f in $ficheros) {
     $rel = $f.FullName.Substring($src.Length + 1)
-    $salta = $false
-    foreach ($e in $excluir) { if ($rel.StartsWith($e)) { $salta = $true } }
+    $segments = $rel -split '[\\/]'
+    $salta = @($segments | Where-Object { $_ -in $excluir }).Count -gt 0
     if ($salta) { continue }
     $lineas = [System.IO.File]::ReadAllLines($f.FullName, [System.Text.Encoding]::UTF8)
     for ($i = 0; $i -lt $lineas.Count; $i++) {
@@ -45,9 +53,11 @@ foreach ($f in $ficheros) {
         }
     }
 }
-$p = Join-Path $PSScriptRoot '_oldnames.log'
-[System.IO.File]::WriteAllLines($p, $out, (New-Object System.Text.UTF8Encoding($true)))
-Write-Output ('coincidencias = ' + $tot)
+if ([string]::IsNullOrWhiteSpace($MarkdownOutputPath)) {
+    $MarkdownOutputPath = Join-Path $PSScriptRoot '_oldnames.log'
+}
+[System.IO.File]::WriteAllLines($MarkdownOutputPath, $out, (New-Object System.Text.UTF8Encoding($true)))
+Write-Output ('coincidencias = ' + $tot + ' -> ' + $MarkdownOutputPath)
 
 if ($IncludeCs) {
     $tokens = @('Alwais', 'Lenght', 'lenght', 'Faild', 'faild', 'Diferent', 'diferent', 'Erros', 'Scopedt', 'Adress', 'Enumrable', 'IAsyncf', 'soported', 'Bydouble', 'Fromdouble')
@@ -115,11 +125,13 @@ if ($IncludeCs) {
         if ($actual -ne $whitelist[$key]) { $findings.Add($key + '|esperadas=' + $whitelist[$key] + '|encontradas=' + $actual) }
     }
 
-    $csLog = Join-Path $PSScriptRoot '_oldnames-cs.log'
-    [System.IO.File]::WriteAllLines($csLog, $findings, (New-Object System.Text.UTF8Encoding($true)))
-    Write-Output ('hallazgos C# fuera de la lista blanca = ' + $findings.Count)
+    if ([string]::IsNullOrWhiteSpace($CsOutputPath)) {
+        $CsOutputPath = Join-Path $PSScriptRoot '_oldnames-cs.log'
+    }
+    [System.IO.File]::WriteAllLines($CsOutputPath, $findings, (New-Object System.Text.UTF8Encoding($true)))
+    Write-Output ('hallazgos C# fuera de la lista blanca = ' + $findings.Count + ' -> ' + $CsOutputPath)
     if ($findings.Count -gt 0) {
-        Get-Content $csLog
+        Get-Content $CsOutputPath
         exit 1
     }
 }

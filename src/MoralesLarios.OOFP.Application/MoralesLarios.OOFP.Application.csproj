@@ -14,6 +14,7 @@
     <ProjectReference Include="..\MoralesLarios.OOFP.EntityFrameworkCore\MoralesLarios.OOFP.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Logging\MoralesLarios.OOFP.Logging.csproj" />
     <ProjectReference Include="..\MoralesLarios.OOFP.Shared\MoralesLarios.OOFP.Shared.csproj" />
+    <ProjectReference Include="..\MoralesLarios.OOFP.ValueObjects\MoralesLarios.OOFP.ValueObjects.csproj" />
   </ItemGroup>
 
 </Project>

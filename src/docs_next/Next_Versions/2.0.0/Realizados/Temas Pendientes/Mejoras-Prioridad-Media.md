@@ -1,5 +1,8 @@
 # Mejoras pendientes · 🟡 Prioridad media
 
+> **Aviso historico:** inventario redactado antes de 2.0.0; los nombres y estados pueden estar obsoletos.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas actuales](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Continuación de [`Mejoras-Prioridad-Critica-y-Alta.md`](Mejoras-Prioridad-Critica-y-Alta.md) (que contiene las prioridades 🔴 **crítica** y 🟠 **alta**).
 > Aquí están los puntos de **prioridad media**: no producen datos incorrectos ni riesgos de seguridad,

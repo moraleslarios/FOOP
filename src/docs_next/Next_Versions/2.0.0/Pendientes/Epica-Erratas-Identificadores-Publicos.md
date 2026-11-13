@@ -35,13 +35,13 @@ El resultado es que las erratas siguen presentes en el ensamblado público, solo
 | 72 | `ChangeReturnResultAlwais*` | ⚠️ **Corregido con puente** | 15 declaraciones obsoletas en `MlResultChangeReturnResult.Obsolete.cs` |
 | 73 | `FromStringLenght`, `FromIntLenght`, `MinLenght` | ⚠️ **Corregido con puente defectuoso** | 8 declaraciones obsoletas en 8 ficheros de `ValueObjects`; **3 mensajes apuntan a un método que no existe** |
 | 74 | `Id.Bydouble` / `Id.Fromdouble` | ✅ **Resuelto sin rastro** | 0 ocurrencias; `ValueObjects/Id.cs` se eliminó en la limpieza de la 2.0.0 |
-| 75 | `AddScopedtGenServicesFpWithoutReposGeneral` | ⚠️ **Corregido con puente** | 2 declaraciones obsoletas en `Application/RegisterServices.Obsolete.cs` |
+| 75 | `AddScopedtGenServicesFpWithoutReposGeneral` | ⚠️ **Retirado sin puente en 2.0.0** | No existe `Application/RegisterServices.Obsolete.cs`; migra a `AddCrudServicesFpWithoutRepositories()` según MIG-62 y `oofp-upgrade-2.renames.md` |
 | 76 | `TEnumrable`, `BaseAdress` | ✅ **Resuelto sin rastro** | 0 ocurrencias de `TEnumrable`, `Enumrable`, `BaseAdress` y `Adress` |
 
-### 1.1 El problema real: 51 erratas vivas en la superficie pública
+### 1.1 El problema real: 49 erratas vivas en la superficie pública
 
-Hay **73 ficheros `*.Obsolete.cs`** en la solución. De ellos, **13 contienen puentes para erratas de
-grafía**, con **51 declaraciones públicas** que mantienen la palabra mal escrita:
+Hay **73 ficheros `*.Obsolete.cs`** en la solución. De ellos, **12 contienen puentes para erratas de
+grafía**, con **49 declaraciones públicas** que mantienen la palabra mal escrita:
 
 | Errata | Declaraciones obsoletas | Fichero de los puentes |
 |---|---|---|
@@ -50,10 +50,9 @@ grafía**, con **51 declaraciones públicas** que mantienen la palabra mal escri
 | `Lenght` | 8 | 8 ficheros de `ValueObjects` (uno por tipo) |
 | `Erros` | 6 | `Core/Types/MlResultCollections.Obsolete.cs` |
 | `Diferent` | 5 | `Core/Types/MlResultErrorDetailsExtensions.Obsolete.cs` |
-| `Scopedt` | 2 | `Application/RegisterServices.Obsolete.cs` |
-| **Total** | **51** | **13 ficheros** |
+| **Total** | **49** | **12 ficheros** |
 
-Los 51 usan el mismo patrón, que es **correcto y no hay que cambiarlo**:
+Los 49 puentes vigentes usan el mismo patrón, que es **correcto y no hay que cambiarlo**:
 
 ```csharp
 // MoralesLarios.OOFP.Core/Types/MlResultChangeReturnResult.Obsolete.cs, L22
@@ -64,7 +63,7 @@ public static MlResult<TResult> ChangeReturnResultAlwaisValid<T, TResult>(/* …
 ```
 
 `EditorBrowsableState.Never` los esconde de IntelliSense y `false` en el segundo argumento los deja
-como advertencia (CS0618) y no como error. **Ninguno de los 51 tiene una sola llamada** dentro de la
+como advertencia (CS0618) y no como error. **Ninguno de los 49 tiene una sola llamada** dentro de la
 solución: son puramente para consumidores externos.
 
 ### 1.2 Consecuencia
@@ -157,9 +156,10 @@ al construir los `<param>`:
 /// <param name="maxLenght">Valor de <c>maxLenght</c>.</param>
 ```
 
-Recuento de menciones de erratas **dentro de comentarios XML**: `Alwais` 15, `Lenght` 24, `Faild`
-15, `Erros` 6, `Diferent` 5, `Scopedt` 2. Total: **67**. Estas sí se pueden corregir **sin romper
-nada**, porque el texto de un `<summary>` no es parte del contrato.
+Recuento de menciones de erratas **dentro de comentarios XML** en los puentes vigentes: `Alwais` 15,
+`Lenght` 24, `Faild` 15, `Erros` 6 y `Diferent` 5. Total: **65**. Las dos menciones `Scopedt`
+pertenecían a `RegisterServices.Obsolete.cs`, retirado sin puente en 2.0.0. Estas menciones sí se
+pueden corregir **sin romper nada**, porque el texto de un `<summary>` no es parte del contrato.
 
 ### 2.4 🟢 Los tests perpetúan la errata en sus nombres
 
@@ -196,11 +196,11 @@ de ejecución.
   lista original y tres errores adicionales de `Dioferent`/`secuondaryFal`.
 - Ampliar el verificador `check-old-names.ps1` para que **también escanee `.cs`** y detecte erratas
   nuevas (hoy solo mira `.md`, y por eso estas se colaron).
-- Dejar por escrito el **plan de retirada** de los 51 puentes para la 3.0.0.
+- Dejar por escrito el **plan de retirada** de los 49 puentes vigentes para la 3.0.0.
 
 ### 3.2 Fuera
 
-- **Retirar** los 51 puentes `[Obsolete]`. Eso es, por definición, trabajo de una versión mayor
+- **Retirar** los 49 puentes `[Obsolete]` que siguen vigentes. Eso es, por definición, trabajo de una versión mayor
   (3.0.0) y aquí solo se documenta.
 - Renombrar `MlResultBucles.cs` / `MlResultBuclesTests.cs`: son **trabajo en curso del autor** y no
   se tocan en ninguna épica.
@@ -228,7 +228,7 @@ de ejecución.
 
 - [x] Los tres mensajes de los puentes de cadena recomiendan `CreateFromLength`, igual que el cuerpo;
       `FromLength` es una factoría distinta que devuelve `MlResult<T>`.
-- [ ] Se verifica, uno a uno, que **cada** uno de los 51 mensajes `[Obsolete]` nombra un miembro que
+- [ ] Se verifica, uno a uno, que **cada** uno de los 49 mensajes `[Obsolete]` nombra un miembro que
       existe de verdad, con la aridad genérica correcta.
 - [x] El mensaje distingue la factoría que **lanza** (`CreateFromLength`) de la que devuelve
       `MlResult<T>` (`FromLength`), y apunta a la que corresponde al cuerpo del puente.
@@ -511,7 +511,7 @@ y líneas concretas**, no patrones genéricos.
 
 ---
 
-### US-07 · Plan de retirada de los 51 puentes en la 3.0.0
+### US-07 · Plan de retirada de los 49 puentes en la 3.0.0
 
 > **Como** propietario de la biblioteca,
 > **quiero** un inventario cerrado de los puentes `[Obsolete]` con su fecha de retirada,
@@ -523,7 +523,7 @@ y líneas concretas**, no patrones genéricos.
 **Criterios de aceptación**
 
 - [ ] Documento `Next_Versions/3.0.0/Retirada-Puentes-Obsolete.md` con los **73** ficheros
-      `*.Obsolete.cs` y sus declaraciones, marcando cuáles son por **errata** (51) y cuáles por
+  `*.Obsolete.cs` y sus declaraciones, marcando cuáles son por **errata** (49) y cuáles por
       **renombrado semántico** (el resto).
 - [ ] Cada entrada lleva: nombre viejo, nombre nuevo **verificado**, fichero, línea y si el aviso
       es advertencia (`false`) o error (`true`).
@@ -545,8 +545,9 @@ paralelo que se desincronice.
 
 **Riesgo principal**
 
-Ejecutar la retirada sin una versión mayor. Los 51 puentes son el único camino de migración desde
-la 1.x; retirarlos en una menor sería una ruptura inadmisible.
+Ejecutar la retirada sin una versión mayor. Los 49 puentes conservados protegen sus renombrados
+desde la 1.x; retirarlos en una menor sería una ruptura inadmisible. `Scopedt` es la excepción: se
+retiró sin puente y la migración directa está registrada en MIG-62.
 
 ---
 
@@ -588,7 +589,7 @@ nada. US-02 y US-03 exigen esperar a la `2.1.0` por ser rupturas.
 | **D-1** | Los 3 avisos erróneos de §2.1, ¿apuntan a `CreateFromLength` (lo que hace el cuerpo) o a `FromLength` (el contrato funcional)? | a) `CreateFromLength`, fiel al cuerpo · b) `FromLength`, empujando al estilo `MlResult<T>` | **a)** El aviso debe describir un sustituto **equivalente**; `FromLength` tiene otro tipo de retorno y la migración no sería mecánica. Si se quiere empujar hacia `FromLength`, mencionarlo en el `<summary>`, no en el aviso |
 | **D-2** | ¿Se renombra `faildMessage`? | **Resuelta/absorbida**: el parámetro ya se llama `failBuildMessage` y la migración está en el punto 46. | No cambiarlo de nuevo a `failedMessage`; se conserva el nombre vigente para evitar una segunda ruptura innecesaria. |
 | **D-3** | Los parámetros de los 8 puentes (US-03), ¿se sanean o se dejan congelados? | a) Sanear · b) Dejarlos: un puente es una foto del pasado | **a)** El consumidor de un puente ya recibe CS0618 en esa línea; el coste marginal es nulo y la superficie pública queda limpia |
-| **D-4** | ¿Los 51 avisos pasan de advertencia (`false`) a error (`true`) en la 2.1.0? | a) Mantener `false` hasta la 3.0.0 · b) Pasar a `true` en 2.1.0 como último aviso | **a)** `EditorBrowsableState.Never` ya los oculta. Pasar a `true` en una **menor** rompería compilaciones y contradiría el versionado semántico |
+| **D-4** | ¿Los 49 avisos vigentes pasan de advertencia (`false`) a error (`true`) en la 2.1.0? | a) Mantener `false` hasta la 3.0.0 · b) Pasar a `true` en 2.1.0 como último aviso | **a)** `EditorBrowsableState.Never` ya los oculta. Pasar a `true` en una **menor** rompería compilaciones y contradiría el versionado semántico |
 | **D-5** | ¿Se renombran los tests que ejercitan puentes obsoletos? | a) No: el nombre del test debe nombrar lo que prueba · b) Sí, por uniformidad | **a)** Un test llamado `ChangeReturnResultAlwaisValid_Delega_EnVersionNueva` es **autodocumentado**; «corregirlo» lo volvería engañoso |
 | **D-6** | ¿La 2.1.0 incluye el documento de la 3.0.0 (US-07)? | a) Sí, en `Next_Versions/3.0.0/` · b) Esperar a abrir la 3.0.0 | **a)** El conocimiento está fresco **ahora**; reauditar 73 ficheros dentro de un año cuesta mucho más |
 
@@ -611,7 +612,7 @@ nada. US-02 y US-03 exigen esperar a la `2.1.0` por ser rupturas.
   permanecen únicamente los nombres de método/propiedad puente expresamente conservados y la
   aserción que comprueba la ausencia de `faildMessage`.
 - [ ] Se auditan y registran todas las erratas de miembro `[Obsolete]` en el documento de la 3.0.0.
-- [ ] Las 51 erratas restantes están **exclusivamente** en nombres de miembro de puentes
+- [ ] Las 49 erratas restantes están **exclusivamente** en nombres de miembro de puentes
       `[Obsolete]`, inventariadas en el documento de la 3.0.0.
 
 ---
@@ -798,7 +799,7 @@ public void BindSaveValueInDetailsIfFailed_Should_Merge_Errors() { /* … */ }
 | US-04 | Ninguna. Solo documentación | — | — |
 | US-05 | Ninguna. Solo tests internos | — | — |
 | US-06 | Ninguna. Herramienta de verificación | — | — |
-| US-07 | Ninguna en 2.1.0. **Muy alta en 3.0.0** al retirar los 51 puentes | ✅ CS0117 / CS1061 | Los puentes **son** el puente |
+| US-07 | Ninguna en 2.1.0. **Muy alta en 3.0.0** al retirar los 49 puentes vigentes | ✅ CS0117 / CS1061 | Los 49 puentes protegidos son la vía compatible; `Scopedt` ya se retiró sin puente en 2.0.0 |
 
 ---
 

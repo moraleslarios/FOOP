@@ -1,5 +1,8 @@
 # Auditoría de `MlResult<T>` y `MlErrorsDetails`
 
+> **Aviso historico:** documento redactado antes de 2.0.0; las firmas y nombres citados pueden estar obsoletos.
+> Consulta el [plan de renombrados 2.0.0](Plan-Renombrados-2.0.0.md) y las [epicas actuales](../../Pendientes/README.md).
+
 > 📌 **Qué es este documento**
 > Revisión a fondo de los **dos tipos centrales** de `MoralesLarios.OOFP`: `MlResult` / `MlResult<T>` y
 > `MlErrorsDetails` (más sus satélites `MlError`, `MlErrorsDetailsActions` y `MlResultActionsErrorsDetails`).

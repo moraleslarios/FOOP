@@ -258,17 +258,19 @@ correcto y hay que implementarlas explícitamente (`TypeDescriptor.GetConverter`
 
 **Criterios de aceptación**
 
-- [ ] El separador de clave compuesta es una **constante pública documentada** (ver D-4).
-- [ ] Cada componente pasa por `Uri.UnescapeDataString` **después** de partir, nunca antes.
-- [ ] Una clave `ACME%2CSL,42` se interpreta como dos componentes: `ACME,SL` y `42`.
+- [x] El separador de clave compuesta es la constante pública documentada `MlCompositeKey.Separator` (D-4).
+- [x] Cada componente pasa por `Uri.UnescapeDataString` **después** de partir, nunca antes.
+- [x] Una clave `ACME%2CSL,42` se interpreta como dos componentes: `ACME,SL` y `42`.
 - [ ] Un número de componentes distinto del esperado produce un `400` con mensaje claro (ya lo hace L145: conservarlo).
-- [ ] El cliente (`MoralesLarios.OOFP.Http`) codifica con el mismo criterio con el que el servidor decodifica.
-- [ ] Hay un test paramétrico con, al menos: valor con coma, con espacio, con `/`, con `+`, con acento y vacío.
+- [x] El cliente incluido (`MoralesLarios.OOFP.Http`) codifica componentes y segmento exterior de acuerdo con el decode real del routing.
+- [x] Tests cubren coma, espacio, `/`, `+`, acento y componente vacío; `TestServer` fija el comportamiento de `%2C`, `%252C` y `%2F`.
 
 **Notas técnicas**
-Decodificar **antes** de partir es el error clásico: `Uri.UnescapeDataString("ACME%2CSL,42")` devuelve
-`"ACME,SL,42"`, que ya no se puede partir. El orden correcto es: partir por el separador → decodificar cada
-trozo.
+El enrutamiento de ASP.NET consume una capa de percent-encoding antes de invocar la acción: un `%2C` en el
+cable ya llega como coma. Por eso el cliente envía `ACME%252CSL%2C42`; la acción recibe `ACME%2CSL,42`,
+parte por `MlCompositeKey.Separator` y decodifica cada trozo. Decodificar la cadena compuesta antes de partir
+la convertiría en tres componentes. Las rutas y respuestas REST de esta épica siguen pendientes; solo queda
+resuelta la convención compartida y su transporte.
 
 ---
 
@@ -449,7 +451,7 @@ internal sealed class CompositeKeyOperationFilter(IMlPrimaryKeyResolver _resolve
             var target = operation.Parameters.FirstOrDefault(p => p.Name == parameter.Name);
             if (target is null) continue;
 
-            var parts = info.SecureValidValue().Parts;
+            var parts = info.GetValueOrThrow().Parts;
             target.Description = $"Clave compuesta de {parts.Count} componentes separados por "
                                + $"'{MlCompositeKey.Separator}': "
                                + string.Join(", ", parts.Select(p => $"{p.Name} ({p.ClrType.Name})"));
@@ -633,7 +635,7 @@ graph TD
 | D-1 | ¿Qué patrón de ruta se elige? | (a) `{id}` para todos (eliminar `id-str/`) · (b) `id-str/{id}` para todos · (c) `{id}` para clave simple y `key/{ids}` para compuesta | **(a)**: es la convención REST universal, la más corta y la que esperan los generadores de clientes. `id-str/` sólo existe por un accidente histórico |
 | D-2 | ¿Se mantienen las rutas antiguas un ciclo? | (a) no, ruptura limpia · (b) sí, duplicadas y marcadas `[ApiExplorerSettings(IgnoreApi = true)]` hasta `3.0.0` · (c) sí, con `301` a la nueva | **(b)**: duplicar el atributo de ruta cuesta una línea, no aparece en OpenAPI y da un ciclo completo de margen. La opción (c) es incorrecta: `301` no preserva el verbo en todos los clientes |
 | D-3 | ¿Cómo se llama el parámetro de cuerpo? | (a) `dto` en las 4 (lo de la simple) · (b) `dtoRequest` en las 4 (lo de la dúplex) · (c) `request` / `body`, neutro | **(c) `request`**: `dto` no dice nada del sentido, `dtoRequest` mezcla dos conceptos. `request` es el término del dominio HTTP y es el que usan los generadores |
-| D-4 | ¿Cuál es el separador de clave compuesta? | (a) `,` (lo actual) · (b) `/` con ruta `{*ids}` · (c) `--` o `~`, poco probable en datos | **(a) documentado como constante**, con `Uri.EscapeDataString` obligatorio en el cliente. Cambiarlo añadiría una ruptura más a una épica que ya tiene dos |
+| D-4 ✅ | ¿Cuál es el separador de clave compuesta? | (a) `,` (lo actual) · (b) `/` con ruta `{*ids}` · (c) `--` o `~`, poco probable en datos | **(a) `MlCompositeKey.Separator`**. El cliente escapa cada componente y el segmento exterior; el servidor separa antes de decodificar. Verificado con `TestServer` y registrado en MIG-92. |
 | D-5 | ¿Dónde se cachea la clave primaria? | (a) `ConcurrentDictionary<Type, MlPrimaryKeyInfo>` estático · (b) `IMemoryCache` inyectado · (c) `Lazy<T>` por tipo genérico cerrado | **(a)**: el modelo de EF Core no cambia en ejecución; un diccionario estático es lo más simple y no añade dependencia. Ojo con las pruebas que usan varios modelos: la clave del diccionario debe incluir el tipo de `DbContext` |
 | D-6 | ¿Las sobrecargas con cuerpo se eliminan o se marcan? | (a) eliminar las 4 · (b) marcar las 4 `[Obsolete]` un ciclo · (c) eliminar los 2 `DELETE`, marcar los 2 `PUT` | **(c)**: el `DELETE` con cuerpo no tiene defensa posible y su uso es residual; el `PUT` con el recurso completo en el cuerpo es un patrón con cierto sentido y merece un ciclo de aviso |
 | D-7 | ¿Se implementa o se elimina `CompositeKeyParameterAttribute`? | (a) implementar el `IOperationFilter` · (b) eliminar el atributo y sus 12 usos · (c) implementarlo generando la info desde el modelo, sin datos en el atributo | **(c)**: documentar la clave compuesta en OpenAPI tiene valor real, pero los datos deben venir de `IMlPrimaryKeyResolver` (US-01). Un atributo con datos duplicados del modelo se desincroniza el primer día |
@@ -1261,7 +1263,7 @@ internal sealed class CompositeKeyOperationFilter(IMlPrimaryKeyResolver _resolve
         var info       = _resolver.Resolve(entityType);
         if (info.IsFail) return;
 
-        var parts = info.SecureValidValue().Parts;
+        var parts = info.GetValueOrThrow().Parts;
         if (parts.Count <= 1) return;                       // clave simple: nada que documentar
 
         foreach (var parameter in operation.Parameters.Where(EsParametroDeClave))
@@ -1474,7 +1476,7 @@ Task<FacturaDto> FacturasGetByIdAsync(string id);
 ### 8.11 · US-10 · Tests propuestos
 
 > Recordatorio: `MlResult<T>.Value` y `.ErrorsDetails` son `internal protected`. En los tests hay que usar
-> `SecureValidValue()` y `SecureFailErrorsDetails()`.
+> `GetValueOrThrow()` y `GetFailureDetailsOrThrow()`.
 
 ```csharp
 public class RestContractTests(WebAppFixture fixture)
@@ -1603,7 +1605,7 @@ public class RestContractTests(WebAppFixture fixture)
         var result = resolver.ParseKey<Cliente>("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 
         result.IsValid.Should().BeTrue();
-        result.SecureValidValue()[0].Should().BeOfType<Guid>();     // ← hoy sería string o excepción
+        result.GetValueOrThrow()[0].Should().BeOfType<Guid>();     // ← hoy sería string o excepción
     }
 
     [Fact]
@@ -1611,8 +1613,8 @@ public class RestContractTests(WebAppFixture fixture)
     {
         var resolver = fixture.Services.GetRequiredService<IMlPrimaryKeyResolver>();
 
-        var primera = resolver.Resolve<Pedido>().SecureValidValue();
-        var segunda = resolver.Resolve<Pedido>().SecureValidValue();
+        var primera = resolver.Resolve<Pedido>().GetValueOrThrow();
+        var segunda = resolver.Resolve<Pedido>().GetValueOrThrow();
 
         segunda.Should().BeSameAs(primera);        // ← misma instancia: viene de la caché
     }
@@ -1622,7 +1624,7 @@ public class RestContractTests(WebAppFixture fixture)
     {
         var resolver = fixture.Services.GetRequiredService<IMlPrimaryKeyResolver>();
 
-        resolver.Resolve<Pedido>().SecureValidValue().Parts
+        resolver.Resolve<Pedido>().GetValueOrThrow().Parts
                 .Select(p => p.Name).Should().ContainInOrder("Codigo", "Id");   // el orden del modelo
     }
 

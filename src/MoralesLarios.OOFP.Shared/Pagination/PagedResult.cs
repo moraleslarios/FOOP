@@ -1,6 +1,4 @@
-﻿using MoralesLarios.OOFP.ValueObjects;
-
-namespace MoralesLarios.OOFP.Shared.Pagination;
+﻿namespace MoralesLarios.OOFP.Shared.Pagination;
 /// <summary>
 /// Representa <c>PagedResult</c>.
 /// </summary>

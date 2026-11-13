@@ -40,7 +40,7 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
     public virtual async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
-                                    .TryMapAsync( _    => id.ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
+                                    .TryMapAsync( _    => Uri.UnescapeDataString(id).ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
 
                                     .MatchAsync(
                                                     fail      : _     => MlResults.NotFound(detail: $"Path {id} not exists or is of a different type than PK of '{typeof(TPk).Name}' was not found."),
@@ -77,7 +77,7 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
     public virtual async Task<IActionResult> PutAsync(string id, [FromBody] TDto dto, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
-                                    .TryMapAsync( _    => id.ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
+                                    .TryMapAsync( _    => Uri.UnescapeDataString(id).ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.UpdateAsync(dto                 : dto,
                                                                                                   notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
@@ -111,7 +111,7 @@ public abstract class MlCrudControllerBase<TEntity, TDto, TPk>(ICrudServiceFp<TE
     public virtual async Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
-                                    .TryMapAsync( _    => id.ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
+                                    .TryMapAsync( _    => Uri.UnescapeDataString(id).ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
@@ -183,7 +183,7 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
     public virtual async Task<IActionResult> GetByIdAsync(string id, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
-                                    .TryMapAsync( _    => id.ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
+                                    .TryMapAsync( _    => Uri.UnescapeDataString(id).ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
 
                                     .MatchAsync(
                                                     fail      : _     => MlResults.NotFound(detail: $"Path {id} not exists or is of a different type than PK of '{typeof(TPk).Name}' was not found."),
@@ -220,7 +220,7 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
     public virtual async Task<IActionResult> PutAsync(string id, [FromBody] TRequest dto, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
-                                    .TryMapAsync( _    => id.ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
+                                    .TryMapAsync( _    => Uri.UnescapeDataString(id).ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.UpdateAsync(dtoRequest          : dto,
                                                                                                   notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
@@ -254,7 +254,7 @@ public abstract class MlCrudControllerBase<TEntity, TRequest, TResponse, TPk>(IC
     public virtual async Task<IActionResult> DeleteAsync(string id, CancellationToken ct = default!)
     {
         var result = await EnsureFp.NotNullAsync(id, $"{nameof(id)} must not be null")
-                                    .TryMapAsync( _    => id.ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
+                                    .TryMapAsync( _    => Uri.UnescapeDataString(id).ConvertToType(typeof(TPk)), ex => $"{nameof(id)} can't be converted to {typeof(TPk).Name}. ex: {ex.Message}")
                                     .BindAsync  (idObj => _genServiceFp.DeleteProblemDetailsAsync(notFoundErrorDetails: MlProblemDetails.NotFoundError(),
                                                                                                   ct                  : ct, 
                                                                                                   pk                  : idObj))
