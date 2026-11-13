@@ -156,7 +156,7 @@ Si el *diff* contiene algo no previsto → `git checkout -- .` y se reintenta co
 
 ### Verificación G5-US-01 · 2026-11-13
 
-Ejecución sobre el árbol de trabajo basado en `HEAD 53331ee`; **no es una verificación de un commit ni se creó commit**.
+Ejecución realizada sobre el árbol exacto que quedó registrado en el commit `bba9f89` (build y tests ejecutados antes de crear el commit, sin cambios de código posteriores).
 
 | Criterio | Resultado | Evidencia |
 |---|---|---|

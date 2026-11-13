@@ -45,7 +45,7 @@ prompt de migración documenta **187 puentes `[Obsolete]`** con el mensaje «Wil
 - [x] **B** · `dotnet test -c Release`: **1.814/1.814** aprobados en 14 proyectos, sin fallos ni omitidos; la línea base de 1.715 no baja.
 - [x] **C** · Inventario de 157 términos y `check-old-names.ps1 -IncludeCs`: 0 hallazgos C# fuera de la whitelist; las coincidencias Markdown se clasificaron manualmente.
 - [x] **D** · Las 36 coincidencias Markdown restantes (16 `docs_next`, 13 `docs`, 3 `CONTRIBUTING.md`, 4 READMEs) son referencias explícitas de migración, historial o puentes aún públicos; los ejemplos activos se actualizaron para no recomendar `Secure*` obsoletos.
-- [ ] Los cuatro resultados se anotan en `Plan-Renombrados-2.0.0.md` junto al commit verificado. *(La evidencia actual es del árbol de trabajo sobre `HEAD 53331ee`; no se creó commit.)*
+- [x] Los cuatro resultados se anotan en `Plan-Renombrados-2.0.0.md` junto al commit verificado `bba9f89`. *(Build y tests se ejecutaron sobre el mismo árbol antes de crear el commit.)*
 
 **Compatibilidad:** Ninguna.
 
